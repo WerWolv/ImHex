@@ -24,7 +24,8 @@ namespace hex::plugin::builtin {
 
         struct Occurrence {
             Region region;
-            enum class DecodeType { ASCII, Binary, UTF16LE, UTF16BE } decodeType;
+            enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
+            std::endian endian = std::endian::native;
         };
 
         struct BinaryPattern {
@@ -38,7 +39,8 @@ namespace hex::plugin::builtin {
                 Strings,
                 Sequence,
                 Regex,
-                BinaryPattern
+                BinaryPattern,
+                Value
             } mode = Mode::Strings;
 
             struct Strings {
@@ -55,7 +57,7 @@ namespace hex::plugin::builtin {
                 bool m_lineFeeds = false;
             } strings;
 
-            struct Bytes {
+            struct Sequence {
                 std::string sequence;
             } bytes;
 
@@ -68,6 +70,18 @@ namespace hex::plugin::builtin {
                 std::string input;
                 std::vector<ViewFind::BinaryPattern> pattern;
             } binaryPattern;
+
+            struct Value {
+                std::string inputMin, inputMax;
+                std::endian endian = std::endian::native;
+
+                enum class Type {
+                    U8 = 0, U16 = 1, U32 = 2, U64 = 3,
+                    I8 = 4, I16 = 5, I32 = 6, I64 = 7,
+                    F32 = 8, F64 = 9
+                } type = Type::U8;
+            } value;
+
         } m_searchSettings, m_decodeSettings;
 
         using OccurrenceTree = interval_tree::IntervalTree<u64, Occurrence>;
@@ -80,12 +94,14 @@ namespace hex::plugin::builtin {
         bool m_settingsValid = false;
 
     private:
-        static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, SearchSettings::Strings settings);
-        static std::vector<Occurrence> searchSequence(Task &task, prv::Provider *provider, Region searchRegion, SearchSettings::Bytes settings);
-        static std::vector<Occurrence> searchRegex(Task &task, prv::Provider *provider, Region searchRegion, SearchSettings::Regex settings);
-        static std::vector<Occurrence> searchBinaryPattern(Task &task, prv::Provider *provider, Region searchRegion, SearchSettings::BinaryPattern settings);
+        static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Strings &settings);
+        static std::vector<Occurrence> searchSequence(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Sequence &settings);
+        static std::vector<Occurrence> searchRegex(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Regex &settings);
+        static std::vector<Occurrence> searchBinaryPattern(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::BinaryPattern &settings);
+        static std::vector<Occurrence> searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings);
 
         static std::vector<BinaryPattern> parseBinaryPatternString(std::string string);
+        static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValueInput(const std::string &input, SearchSettings::Value::Type type);
 
         void runSearch();
         std::string decodeValue(prv::Provider *provider, Occurrence occurrence) const;
