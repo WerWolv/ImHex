@@ -9,8 +9,6 @@
 #include <filesystem>
 #include <cstdio>
 
-#include <mbedtls/ssl.h>
-
 #include <curl/curl.h>
 #include <nlohmann/json.hpp>
 
@@ -52,13 +50,13 @@ namespace hex {
 
         auto *cfg = static_cast<mbedtls_ssl_config *>(sslctx);
 
-        static mbedtls_x509_crt crt;
-        mbedtls_x509_crt_init(&crt);
+        auto crt = static_cast<mbedtls_x509_crt*>(userData);
+        mbedtls_x509_crt_init(crt);
 
         auto cacert = romfs::get("cacert.pem").string();
-        mbedtls_x509_crt_parse(&crt, reinterpret_cast<const u8 *>(cacert.data()), cacert.size());
+        mbedtls_x509_crt_parse(crt, reinterpret_cast<const u8 *>(cacert.data()), cacert.size());
 
-        mbedtls_ssl_conf_ca_chain(cfg, &crt, nullptr);
+        mbedtls_ssl_conf_ca_chain(cfg, crt, nullptr);
 
         return CURLE_OK;
     }
@@ -114,6 +112,7 @@ namespace hex {
         curl_easy_setopt(this->m_ctx, CURLOPT_CAPATH, nullptr);
         curl_easy_setopt(this->m_ctx, CURLOPT_SSLCERTTYPE, "PEM");
         curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
+        curl_easy_setopt(this->m_ctx, CURLOPT_SSL_CTX_DATA, &this->m_caCert);
 #endif
 
         curl_easy_setopt(this->m_ctx, CURLOPT_PROXY, Net::s_proxyUrl.c_str());

@@ -43,18 +43,20 @@ namespace hex::init {
         return std::async(std::launch::async, [this] {
             bool status = true;
 
-            u32 tasksCompleted = 0;
+            std::atomic<u32> tasksCompleted = 0;
             for (const auto &[name, task, async] : this->m_tasks) {
-                if (!async) {
-                    std::lock_guard guard(this->m_progressMutex);
-                    this->m_currTaskName = name;
-                }
+                auto runTask = [&, task = task, name = name] {
+                    {
+                        std::lock_guard guard(this->m_progressMutex);
+                        this->m_currTaskName = name;
+                    }
 
-                auto runTask = [&, task = task] {
                     if (!task())
                         status = false;
 
                     tasksCompleted++;
+
+                    this->m_progress = float(tasksCompleted) / this->m_tasks.size();
                 };
 
                 try {
@@ -68,18 +70,14 @@ namespace hex::init {
                     log::error("Init task '{}' threw an exception: {}", name, e.what());
                     status = false;
                 }
-
-                {
-                    std::lock_guard guard(this->m_progressMutex);
-                    this->m_progress += 1.0F / this->m_tasks.size();
-                }
             }
 
-            while (tasksCompleted < this->m_tasks.size())
+            while (tasksCompleted < this->m_tasks.size()) {
                 std::this_thread::sleep_for(100ms);
+            }
 
             // Small extra delay so the last progress step is visible
-            std::this_thread::sleep_for(200ms);
+            std::this_thread::sleep_for(100ms);
 
             return status;
         });

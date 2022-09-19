@@ -11,6 +11,7 @@
 
 #include <nlohmann/json_fwd.hpp>
 #include <curl/system.h>
+#include <mbedtls/ssl.h>
 
 #include <hex/helpers/fs.hpp>
 
@@ -60,6 +61,7 @@ namespace hex {
 
     private:
         CURL *m_ctx;
+        mbedtls_x509_crt m_caCert;
         curl_slist *m_headers = nullptr;
 
         std::mutex m_transmissionActive;

@@ -324,9 +324,9 @@ namespace hex::init {
 
     std::vector<Task> getInitTasks() {
         return {
-            { "Checking for updates...",    checkForUpdates,     false },
-            { "Downloading information...", downloadInformation, true },
-            { "Loading fonts...",           loadFonts,           true },
+            { "Checking for updates...",    checkForUpdates,     true  },
+            { "Downloading information...", downloadInformation, true  },
+            { "Loading fonts...",           loadFonts,           true  },
             { "Creating directories...",    createDirectories,   false },
             { "Loading settings...",        loadSettings,        false },
             { "Loading plugins...",         loadPlugins,         false },
