@@ -394,7 +394,17 @@ namespace hex {
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("0x{0:04X}", chunkSize);
                     ImGui::TableNextColumn();
+                    ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+                    ImGui::SameLine(0, 0);
+
+                    ImGui::TextUnformatted("[");
+                    ImGui::SameLine(0, 0);
+                    ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", endIndex - i);
+                    ImGui::SameLine(0, 0);
+                    ImGui::TextUnformatted("]");
+
                     ImGui::TableNextColumn();
+                    ImGui::TextFormatted("[ ... ]");
 
                     if (chunkOpen) {
                         iteratable.forEachEntry(i, endIndex, [&](u64, auto *entry){
