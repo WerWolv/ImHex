@@ -379,7 +379,7 @@ namespace hex {
                         displayEnd += DisplayEndStep;
                     break;
                 } else {
-                    auto endIndex = std::min(iteratable.getEntryCount(), i + ChunkSize);
+                    auto endIndex = std::min<u64>(iteratable.getEntryCount(), i + ChunkSize);
 
                     auto startOffset = iteratable.getEntry(i)->getOffset();
                     auto endOffset = iteratable.getEntry(endIndex - 1)->getOffset();
