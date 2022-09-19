@@ -6,11 +6,6 @@
 
 namespace hex {
 
-    template<typename T>
-    concept ArrayPattern = requires(u64 displayEnd, T pattern, std::function<void(int, pl::ptrn::Pattern&)> fn) {
-        { pattern.forEachArrayEntry(displayEnd, fn) } -> std::same_as<void>;
-    };
-
     class PatternDrawer : public pl::PatternVisitor {
     public:
         PatternDrawer() = default;
@@ -36,24 +31,10 @@ namespace hex {
     private:
         void draw(pl::ptrn::Pattern& pattern);
 
-        template<ArrayPattern T>
-        void drawArray(T& pattern) {
-            bool opened = this->drawArrayRoot(pattern, pattern.getEntryCount(), pattern.isInlined());
+        constexpr static auto ChunkSize = 512;
+        constexpr static auto DisplayEndStep = 64;
 
-            if (opened) {
-                auto& displayEnd = this->getDisplayEnd(pattern);
-                pattern.forEachArrayEntry(displayEnd, [&] (u64 idx, auto &entry){
-                    this->drawArrayNode(idx, displayEnd, entry);
-                });
-            }
-
-            this->drawArrayEnd(pattern, opened, pattern.isInlined());
-        }
-
-        bool drawArrayRoot(pl::ptrn::Pattern& pattern, size_t entryCount, bool isInlined);
-        void drawArrayNode(u64 idx, u64& displayEnd, pl::ptrn::Pattern& pattern);
-        void drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened, bool inlined);
-
+        void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
 
     private:

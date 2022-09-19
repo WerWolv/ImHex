@@ -119,12 +119,14 @@ namespace hex {
 
     }
 
+
+
     void PatternDrawer::visit(pl::ptrn::PatternArrayDynamic& pattern) {
-        this->drawArray(pattern);
+        drawArray(pattern, pattern, pattern.isInlined());
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternArrayStatic& pattern) {
-        this->drawArray(pattern);
+        drawArray(pattern, pattern, pattern.isInlined());
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternBitfieldField& pattern) {
@@ -272,8 +274,8 @@ namespace hex {
         }
 
         if (open) {
-            pattern.forEachMember([&](auto &member){
-                this->draw(member);
+            pattern.forEachEntry(0, pattern.getMembers().size(), [&](u64, auto *member){
+                this->draw(*member);
             });
 
             if (!pattern.isInlined())
@@ -302,8 +304,8 @@ namespace hex {
         }
 
         if (open) {
-            pattern.forEachMember([&](auto &member) {
-                this->draw(member);
+            pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, auto *member) {
+                this->draw(*member);
             });
 
             if (!pattern.isInlined())
@@ -331,9 +333,9 @@ namespace hex {
         pattern.accept(*this);
     }
 
-    bool PatternDrawer::drawArrayRoot(pl::ptrn::Pattern& pattern, size_t entryCount, bool isInlined) {
-        if (entryCount == 0)
-            return false;
+    void PatternDrawer::drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined) {
+        if (iteratable.getEntryCount() == 0)
+            return;
 
         bool open = true;
         if (!isInlined) {
@@ -354,7 +356,7 @@ namespace hex {
 
             ImGui::TextUnformatted("[");
             ImGui::SameLine(0, 0);
-            ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", entryCount);
+            ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", iteratable.getEntryCount());
             ImGui::SameLine(0, 0);
             ImGui::TextUnformatted("]");
 
@@ -362,35 +364,50 @@ namespace hex {
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
-        return open;
-    }
+        if (open) {
+            u64 chunkCount = 0;
+            for (u64 i = 0; i < iteratable.getEntryCount(); i += ChunkSize) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
 
-    void PatternDrawer::drawArrayNode(u64 idx, u64& displayEnd, pl::ptrn::Pattern& pattern) {
-        u64 lastVisible = displayEnd - 1;
+                chunkCount++;
 
-        ImGui::PushID(reinterpret_cast<void*>(pattern.getOffset()));
+                auto &displayEnd = this->getDisplayEnd(pattern);
+                if (chunkCount > displayEnd) {
+                    ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                        displayEnd += DisplayEndStep;
+                    break;
+                } else {
+                    auto endIndex = std::min(iteratable.getEntryCount(), i + ChunkSize);
 
-        if (idx < lastVisible) {
-            this->draw(pattern);
-        } else if (idx == lastVisible) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
+                    auto startOffset = iteratable.getEntry(i)->getOffset();
+                    auto endOffset = iteratable.getEntry(endIndex - 1)->getOffset();
+                    auto endSize = iteratable.getEntry(endIndex - 1)->getSize();
 
-            ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
-            if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                displayEnd += DisplayEndStep;
-        }
+                    size_t chunkSize = (endOffset - startOffset) + endSize;
 
-        ImGui::PopID();
-    }
+                    auto chunkOpen = ImGui::TreeNode(hex::format("[{} ... {}]", i, endIndex - 1).c_str());
+                    ImGui::TableNextColumn();
+                    drawColorColumn(pattern);
+                    ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", startOffset, startOffset + chunkSize - (pattern.getSize() == 0 ? 0 : 1));
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("0x{0:04X}", chunkSize);
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
 
-    void PatternDrawer::drawArrayEnd(pl::ptrn::Pattern& pattern, bool opened, bool inlined) {
-        if (opened) {
-            if (!inlined)
+                    if (chunkOpen) {
+                        iteratable.forEachEntry(i, endIndex, [&](u64, auto *entry){
+                            this->draw(*entry);
+                        });
+
+                        ImGui::TreePop();
+                    }
+                }
+            }
+
+            if (!isInlined)
                 ImGui::TreePop();
-        } else {
-            auto& displayEnd = this->getDisplayEnd(pattern);
-            displayEnd = DisplayEndDefault;
         }
     }
 
