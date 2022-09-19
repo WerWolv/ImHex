@@ -70,7 +70,6 @@ namespace hex::plugin::builtin::prv {
         #if defined(OS_WINDOWS)
 
             HANDLE m_file    = INVALID_HANDLE_VALUE;
-            HANDLE m_mapping = INVALID_HANDLE_VALUE;
 
         #else
 

@@ -14,7 +14,7 @@ namespace hex::plugin::builtin::prv {
 
     bool FileProvider::isAvailable() const {
         #if defined(OS_WINDOWS)
-            return this->m_file != INVALID_HANDLE_VALUE && this->m_mapping != INVALID_HANDLE_VALUE && this->m_mappedFile != nullptr;
+            return this->m_file != INVALID_HANDLE_VALUE && this->m_mappedFile != nullptr;
         #else
             return this->m_file != -1 && this->m_mappedFile != nullptr;
         #endif
@@ -232,34 +232,26 @@ namespace hex::plugin::builtin::prv {
             }
 
             if (this->m_fileSize > 0) {
-                this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
-                if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE) {
+                HANDLE mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
+                ON_SCOPE_EXIT { CloseHandle(mapping); };
 
-                    this->m_mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
+                if (mapping == nullptr || mapping == INVALID_HANDLE_VALUE) {
+                    mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
 
-                    if (this->m_mapping == nullptr || this->m_mapping == INVALID_HANDLE_VALUE)
+                    if (mapping == nullptr || mapping == INVALID_HANDLE_VALUE)
                         return false;
                 }
 
-                auto mappingCleanup = SCOPE_GUARD {
-                    CloseHandle(this->m_mapping);
-
-                    this->m_mapping  = nullptr;
-                    this->m_readable = false;
-                };
-
-                this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
+                this->m_mappedFile = MapViewOfFile(mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
                 if (this->m_mappedFile == nullptr) {
 
-                    this->m_mappedFile = MapViewOfFile(this->m_mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
+                    this->m_mappedFile = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
                     if (this->m_mappedFile == nullptr) {
                         this->m_readable = false;
 
                         return false;
                     }
                 }
-
-                mappingCleanup.release();
             } else if (!this->m_emptyFile) {
                 this->m_emptyFile = true;
                 this->resize(1);
@@ -308,8 +300,6 @@ namespace hex::plugin::builtin::prv {
 
             if (this->m_mappedFile != nullptr)
                 ::UnmapViewOfFile(this->m_mappedFile);
-            if (this->m_mapping != nullptr)
-                ::CloseHandle(this->m_mapping);
             if (this->m_file != nullptr)
                 ::CloseHandle(this->m_file);
 
