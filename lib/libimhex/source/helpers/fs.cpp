@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <filesystem>
 
+#include <hex/ui/view.hpp>
+
 namespace hex::fs {
 
     std::optional<std::fs::path> getExecutablePath() {
@@ -94,9 +96,25 @@ namespace hex::fs {
                 hex::unreachable();
         }
 
-        if (result == NFD_OKAY && outPath != nullptr) {
-            callback(reinterpret_cast<char8_t*>(outPath));
-            NFD::FreePath(outPath);
+        if (result == NFD_OKAY){
+            if(outPath != nullptr) {
+                callback(reinterpret_cast<char8_t*>(outPath));
+                NFD::FreePath(outPath);
+            }
+        }else if(result==NFD_ERROR){
+            View::showErrorPopup(
+                "There was an error while opening the file picker. Maybe you do not have a xdg-desktop-portal backend install on your system\n"
+                "On KDE, it is xdg-desktop-portal-kde\n"
+                "On Gnome it is xdg-desktop-portal-kde\n"
+                "On wlroots it is xdg-desktop-portal-wlr\n"
+                "Else, you can try to use xdg-desktop-portal-gtk\n"
+                "\n"
+                "Reboot after installation\n"
+                "\n"
+                "Still isn't working ? Submit an issue at https://github.com/WerWolv/ImHex/issues\n"
+                "\n"
+                "In the meantime you can still open a file by dragging it into the window !"
+            );
         }
 
         NFD::Quit();
