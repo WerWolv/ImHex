@@ -15,6 +15,7 @@
 #include <imgui.h>
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <fonts/codicons_font.h>
 
 namespace hex::plugin::builtin {
 
@@ -66,22 +67,17 @@ namespace hex::plugin::builtin {
     class NodeString : public dp::Node {
     public:
         NodeString() : Node("hex.builtin.nodes.constants.string.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "") }) {
-            this->m_value.resize(0xFFF, 0x00);
+
         }
 
         void drawNode() override {
             ImGui::PushItemWidth(100);
-            ImGui::InputText("##string", reinterpret_cast<char *>(this->m_value.data()), this->m_value.size() - 1);
+            ImGui::InputTextIcon("##string", ICON_VS_SYMBOL_KEY, this->m_value);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            std::vector<u8> output(std::strlen(this->m_value.c_str()) + 1, 0x00);
-            std::strcpy(reinterpret_cast<char *>(output.data()), this->m_value.c_str());
-
-            output.pop_back();
-
-            this->setBufferOnOutput(0, output);
+            this->setBufferOnOutput(0, { this->m_value.begin(), this->m_value.end() });
         }
 
         void store(nlohmann::json &j) override {

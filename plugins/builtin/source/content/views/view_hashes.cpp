@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
 
             ImGui::NewLine();
 
-            ImGui::InputText("##Name", this->m_newHashName);
+            ImGui::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, this->m_newHashName);
             ImGui::SameLine();
 
             ImGui::BeginDisabled(this->m_newHashName.empty() || this->m_selectedHash == nullptr);

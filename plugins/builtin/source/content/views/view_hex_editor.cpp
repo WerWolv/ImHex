@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::SetKeyboardFocusHere();
                 ImGui::SetNextFrameWantCaptureKeyboard(true);
-                if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                     if (auto result = this->m_evaluator.evaluate(this->m_input); result.has_value()) {
                         const auto inputResult = result.value();
                         u64 newAddress = 0x00;
@@ -160,7 +160,7 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
             if (ImGui::BeginTabBar("##find_tabs")) {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
-                    if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
+                    if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_NUMERIC, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
                         if (!this->m_input.empty()) {
                             this->m_shouldSearch = true;
                             this->m_backwards = false;
@@ -177,7 +177,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.string"_lang)) {
-                    if (ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                    if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                        if (!this->m_input.empty()) {
                             this->m_shouldSearch = true;
                             this->m_backwards = false;

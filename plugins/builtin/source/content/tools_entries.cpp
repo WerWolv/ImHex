@@ -113,8 +113,8 @@ namespace hex::plugin::builtin {
             static auto replacePattern = [] { std::string s; s.reserve(0xFFF); return s; }();
             static auto regexOutput    = [] { std::string s; s.reserve(0xFFF); return s; }();
 
-            bool changed1 = ImGui::InputText("hex.builtin.tools.regex_replacer.pattern"_lang, regexPattern);
-            bool changed2 = ImGui::InputText("hex.builtin.tools.regex_replacer.replace"_lang, replacePattern);
+            bool changed1 = ImGui::InputTextIcon("hex.builtin.tools.regex_replacer.pattern"_lang, ICON_VS_REGEX, regexPattern);
+            bool changed2 = ImGui::InputTextIcon("hex.builtin.tools.regex_replacer.replace"_lang, ICON_VS_REGEX, replacePattern);
             bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput, ImVec2(0, 0));
 
             if (changed1 || changed2 || changed3) {
@@ -420,7 +420,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputText("##input", mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+            if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 ImGui::SetKeyboardFocusHere();
                 evaluate = true;
             }
@@ -448,75 +448,45 @@ namespace hex::plugin::builtin {
         }
 
         void drawBaseConverter() {
-            static char buffer[4][0x1000] = { { '0' }, { '0' }, { '0' }, { '0' } };
-
-            static auto CharFilter = [](ImGuiInputTextCallbackData *data) -> int {
-                switch (*static_cast<u32 *>(data->UserData)) {
-                    case 16:
-                        return std::isxdigit(data->EventChar);
-                    case 10:
-                        return std::isdigit(data->EventChar);
-                    case 8:
-                        return std::isdigit(data->EventChar) && data->EventChar < '8';
-                    case 2:
-                        return data->EventChar == '0' || data->EventChar == '1';
-                    default:
-                        return false;
-                }
-            };
+            static std::array<std::string, 4> buffers;
 
             static auto ConvertBases = [](u8 base) {
                 u64 number;
 
-                errno = 0;
                 switch (base) {
                     case 16:
-                        number = std::strtoull(buffer[1], nullptr, base);
+                        number = std::strtoull(buffers[1].c_str(), nullptr, base);
                         break;
                     case 10:
-                        number = std::strtoull(buffer[0], nullptr, base);
+                        number = std::strtoull(buffers[0].c_str(), nullptr, base);
                         break;
                     case 8:
-                        number = std::strtoull(buffer[2], nullptr, base);
+                        number = std::strtoull(buffers[2].c_str(), nullptr, base);
                         break;
                     case 2:
-                        number = std::strtoull(buffer[3], nullptr, base);
+                        number = std::strtoull(buffers[3].c_str(), nullptr, base);
                         break;
                     default:
                         return;
                 }
 
-                auto base10String = std::to_string(number);
-                auto base16String = hex::format("0x{0:X}", number);
-                auto base8String  = hex::format("{0:#o}", number);
-                auto base2String  = hex::toBinaryString(number);
-
-                std::strncpy(buffer[0], base10String.c_str(), sizeof(buffer[0]) - 1);
-                std::strncpy(buffer[1], base16String.c_str(), sizeof(buffer[1]) - 1);
-                std::strncpy(buffer[2], base8String.c_str(), sizeof(buffer[2]) - 1);
-                std::strncpy(buffer[3], base2String.c_str(), sizeof(buffer[3]) - 1);
-
-                buffer[0][0xFFF] = '\x00';
-                buffer[1][0xFFF] = '\x00';
-                buffer[2][0xFFF] = '\x00';
-                buffer[3][0xFFF] = '\x00';
+                buffers[0] = std::to_string(number);
+                buffers[1] = hex::format("0x{0:X}", number);
+                buffers[2]  = hex::format("{0:#o}", number);
+                buffers[3]  = hex::toBinaryString(number);
             };
 
-            u8 base = 10;
-            if (ImGui::InputText("hex.builtin.tools.base_converter.dec"_lang, buffer[0], 20 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
-                ConvertBases(base);
+            if (ImGui::InputTextIcon("hex.builtin.tools.base_converter.dec"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[0]))
+                ConvertBases(10);
 
-            base = 16;
-            if (ImGui::InputText("hex.builtin.tools.base_converter.hex"_lang, buffer[1], 16 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
-                ConvertBases(base);
+            if (ImGui::InputTextIcon("hex.builtin.tools.base_converter.hex"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[1]))
+                ConvertBases(16);
 
-            base = 8;
-            if (ImGui::InputText("hex.builtin.tools.base_converter.oct"_lang, buffer[2], 22 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
-                ConvertBases(base);
+            if (ImGui::InputTextIcon("hex.builtin.tools.base_converter.oct"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[2]))
+                ConvertBases(8);
 
-            base = 2;
-            if (ImGui::InputText("hex.builtin.tools.base_converter.bin"_lang, buffer[3], 64 + 1, ImGuiInputTextFlags_CallbackCharFilter, CharFilter, &base))
-                ConvertBases(base);
+            if (ImGui::InputTextIcon("hex.builtin.tools.base_converter.bin"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[3]))
+                ConvertBases(2);
         }
 
         void drawPermissionsCalculator() {
@@ -691,7 +661,7 @@ namespace hex::plugin::builtin {
 
             bool startSearch;
 
-            startSearch = ImGui::InputText("##search", searchString, ImGuiInputTextFlags_EnterReturnsTrue);
+            startSearch = ImGui::InputTextIcon("##search", ICON_VS_SYMBOL_KEY, searchString, ImGuiInputTextFlags_EnterReturnsTrue);
             ImGui::SameLine();
 
             ImGui::BeginDisabled((searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready) || searchString.empty());

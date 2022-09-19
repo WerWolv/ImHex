@@ -602,7 +602,7 @@ namespace hex::plugin::builtin {
 
                         mode = SearchSettings::Mode::Sequence;
 
-                        ImGui::InputText("hex.builtin.common.value"_lang, settings.sequence);
+                        ImGui::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_KEY, settings.sequence);
 
                         this->m_settingsValid = !settings.sequence.empty() && !hex::decodeByteString(settings.sequence).empty();
 
@@ -613,7 +613,7 @@ namespace hex::plugin::builtin {
 
                         mode = SearchSettings::Mode::Regex;
 
-                        ImGui::InputText("hex.builtin.view.find.regex.pattern"_lang, settings.pattern);
+                        ImGui::InputTextIcon("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, settings.pattern);
 
                         try {
                             std::regex regex(settings.pattern);
@@ -634,7 +634,7 @@ namespace hex::plugin::builtin {
 
                         mode = SearchSettings::Mode::BinaryPattern;
 
-                        ImGui::InputText("hex.builtin.view.find.binary_pattern"_lang, settings.input);
+                        ImGui::InputTextIcon("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, settings.input);
 
                         settings.pattern = parseBinaryPatternString(settings.input);
                         this->m_settingsValid = !settings.pattern.empty();
@@ -648,8 +648,8 @@ namespace hex::plugin::builtin {
 
                         bool edited = false;
 
-                        if (ImGui::InputText("hex.builtin.view.find.value.min"_lang, settings.inputMin)) edited = true;
-                        if (ImGui::InputText("hex.builtin.view.find.value.max"_lang, settings.inputMax)) edited = true;
+                        if (ImGui::InputTextIcon("hex.builtin.view.find.value.min"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) edited = true;
+                        if (ImGui::InputTextIcon("hex.builtin.view.find.value.max"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMax)) edited = true;
 
                         const std::array<std::string, 10> InputTypes = {
                                 "hex.builtin.common.type.u8"_lang,

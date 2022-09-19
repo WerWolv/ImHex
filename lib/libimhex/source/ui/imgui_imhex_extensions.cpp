@@ -563,6 +563,33 @@ namespace ImGui {
         return ImGui::InputText(label, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
     }
 
+    bool InputTextIcon(const char *label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags) {
+        auto window             = ImGui::GetCurrentWindow();
+        const ImGuiID id        = window->GetID(label);
+        const ImGuiStyle &style = GImGui->Style;
+
+
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
+        const ImVec2 icon_frame_size = CalcTextSize(icon) + style.FramePadding * 2.0f;
+        const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), icon_frame_size.x, label_size.y + style.FramePadding.y * 2.0f);
+        const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
+
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
+
+        bool value_changed = ImGui::InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
+
+        if (value_changed)
+            MarkItemEdited(GImGui->LastItemData.ID);
+
+        RenderNavHighlight(frame_bb, id);
+        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
+
+        RenderFrame(frame_bb.Min, frame_bb.Min + icon_frame_size, GetColorU32(ImGuiCol_TableBorderStrong), true, style.FrameRounding);
+        RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y * 2), icon);
+
+        return value_changed;
+    }
+
     bool InputTextWithHint(const char *label, const char *hint, std::string &buffer, ImGuiInputTextFlags flags) {
         return ImGui::InputTextWithHint(label, hint, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
     }
