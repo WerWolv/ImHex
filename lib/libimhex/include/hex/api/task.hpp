@@ -19,7 +19,7 @@ namespace hex {
     class Task {
     public:
         Task() = default;
-        Task(std::string unlocalizedName, u64 maxValue, std::function<void(Task &)> function);
+        Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -28,6 +28,7 @@ namespace hex {
         void update(u64 value = 0);
         void setMaxValue(u64 value);
 
+        [[nodiscard]] bool isBackgroundTask() const;
         [[nodiscard]] bool isFinished() const;
         [[nodiscard]] bool hadException() const;
         [[nodiscard]] bool wasInterrupted() const;
@@ -56,6 +57,7 @@ namespace hex {
         std::function<void()> m_interruptCallback;
 
         bool m_shouldInterrupt = false;
+        bool m_background = true;
 
         bool m_interrupted = false;
         bool m_finished = false;
@@ -89,6 +91,7 @@ namespace hex {
         constexpr static auto NoProgress = 0;
 
         static TaskHolder createTask(std::string name, u64 maxValue, std::function<void(Task &)> function);
+        static TaskHolder createBackgroundTask(std::string name, std::function<void(Task &)> function);
         static void collectGarbage();
 
         static size_t getRunningTaskCount();

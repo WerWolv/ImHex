@@ -144,6 +144,8 @@ namespace hex {
         });
 
         EventManager::subscribe<RequestOpenPopup>(this, [this](auto name) {
+            std::scoped_lock lock(this->m_popupMutex);
+
             this->m_popupsToOpen.push_back(name);
         });
 
@@ -424,15 +426,17 @@ namespace hex {
                 ImGui::EndPopup();
             }
         }
+        {
+            std::scoped_lock lock(this->m_popupMutex);
+            this->m_popupsToOpen.remove_if([](const auto &name) {
+                if (ImGui::IsPopupOpen(name.c_str()))
+                    return true;
+                else
+                    ImGui::OpenPopup(name.c_str());
 
-        this->m_popupsToOpen.remove_if([](const auto &name) {
-            if (ImGui::IsPopupOpen(name.c_str()))
-                return true;
-            else
-                ImGui::OpenPopup(name.c_str());
-
-            return false;
-        });
+                return false;
+            });
+        }
 
         TaskManager::runDeferredCalls();
 

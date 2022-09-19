@@ -9,11 +9,11 @@ namespace hex {
 
     std::mutex TaskManager::s_deferredCallsMutex;
 
-    std::list<std::shared_ptr<Task>> TaskManager::s_tasks;
+    std::list<std::shared_ptr<Task>> TaskManager::s_tasks, s_backgroundTasks;
     std::list<std::function<void()>> TaskManager::s_deferredCalls;
 
-    Task::Task(std::string unlocalizedName, u64 maxValue, std::function<void(Task &)> function)
-    : m_unlocalizedName(std::move(unlocalizedName)), m_currValue(0), m_maxValue(maxValue) {
+    Task::Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
+    : m_unlocalizedName(std::move(unlocalizedName)), m_currValue(0), m_maxValue(maxValue), m_background(background) {
         this->m_thread = std::thread([this, func = std::move(function)] {
             try {
                 func(*this);
@@ -81,6 +81,12 @@ namespace hex {
 
     void Task::setInterruptCallback(std::function<void()> callback) {
         this->m_interruptCallback = std::move(callback);
+    }
+
+    bool Task::isBackgroundTask() const {
+        std::scoped_lock lock(this->m_mutex);
+
+        return this->m_background;
     }
 
     bool Task::isFinished() const {
@@ -164,13 +170,20 @@ namespace hex {
 
 
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, std::function<void(Task &)> function) {
-        s_tasks.emplace_back(std::make_shared<Task>(std::move(name), maxValue, std::move(function)));
+        s_tasks.emplace_back(std::make_shared<Task>(std::move(name), maxValue, false, std::move(function)));
 
         return TaskHolder(s_tasks.back());
     }
 
+    TaskHolder TaskManager::createBackgroundTask(std::string name, std::function<void(Task &)> function) {
+        s_backgroundTasks.emplace_back(std::make_shared<Task>(std::move(name), 0, true, std::move(function)));
+
+        return TaskHolder(s_backgroundTasks.back());
+    }
+
     void TaskManager::collectGarbage() {
         std::erase_if(s_tasks, [](const auto &task) { return task->isFinished() && !task->hadException(); });
+        std::erase_if(s_backgroundTasks, [](const auto &task) { return task->isFinished(); });
     }
 
     std::list<std::shared_ptr<Task>> &TaskManager::getRunningTasks() {

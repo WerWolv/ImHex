@@ -52,40 +52,49 @@ namespace hex::plugin::builtin {
 
     };
 
+    static std::atomic<bool> s_recentProvidersUpdating = false;
     static std::list<RecentProvider> s_recentProviders;
 
     static void updateRecentProviders() {
-        s_recentProviders.clear();
+        TaskManager::createBackgroundTask("Updating recent files", [](auto&){
+            if (s_recentProvidersUpdating)
+                return;
 
-        // Query all recent providers
-        std::vector<std::fs::path> recentFilePaths;
-        for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
-            for (const auto &entry : std::fs::directory_iterator(folder)) {
-                if (entry.is_regular_file())
-                    recentFilePaths.push_back(entry.path());
+            s_recentProvidersUpdating = true;
+            ON_SCOPE_EXIT { s_recentProvidersUpdating = false; };
+
+            s_recentProviders.clear();
+
+            // Query all recent providers
+            std::vector<std::fs::path> recentFilePaths;
+            for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+                for (const auto &entry : std::fs::directory_iterator(folder)) {
+                    if (entry.is_regular_file())
+                        recentFilePaths.push_back(entry.path());
+                }
             }
-        }
 
-        // Sort recent provider files by last modified time
-        std::sort(recentFilePaths.begin(), recentFilePaths.end(), [](const auto &a, const auto &b) {
-            return std::fs::last_write_time(a) > std::fs::last_write_time(b);
+            // Sort recent provider files by last modified time
+            std::sort(recentFilePaths.begin(), recentFilePaths.end(), [](const auto &a, const auto &b) {
+                return std::fs::last_write_time(a) > std::fs::last_write_time(b);
+            });
+
+            std::unordered_set<RecentProvider, RecentProvider::HashFunction> uniqueProviders;
+            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < 5; i++) {
+                auto &path = recentFilePaths[i];
+                try {
+                    auto jsonData = nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString());
+                    uniqueProviders.insert(RecentProvider {
+                        .displayName    = jsonData["displayName"],
+                        .type           = jsonData["type"],
+                        .filePath       = path,
+                        .data           = jsonData
+                    });
+                } catch (...) { }
+            }
+
+            std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentProviders));
         });
-
-        std::unordered_set<RecentProvider, RecentProvider::HashFunction> uniqueProviders;
-        for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < 5; i++) {
-            auto &path = recentFilePaths[i];
-            try {
-                auto jsonData = nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString());
-                uniqueProviders.insert(RecentProvider {
-                    .displayName    = jsonData["displayName"],
-                    .type           = jsonData["type"],
-                    .filePath       = path,
-                    .data           = jsonData
-                });
-            } catch (...) { }
-        }
-
-        std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentProviders));
     }
 
     static void loadRecentProvider(const RecentProvider &recentProvider) {
@@ -227,13 +236,15 @@ namespace hex::plugin::builtin {
             ImGui::UnderlinedText("hex.builtin.welcome.start.recent"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
-                for (const auto &recentProvider : s_recentProviders) {
-                    ImGui::PushID(&recentProvider);
-                    ON_SCOPE_EXIT { ImGui::PopID(); };
+                if (!s_recentProvidersUpdating) {
+                    for (const auto &recentProvider : s_recentProviders) {
+                        ImGui::PushID(&recentProvider);
+                        ON_SCOPE_EXIT { ImGui::PopID(); };
 
-                    if (ImGui::BulletHyperlink(recentProvider.displayName.c_str())) {
-                        loadRecentProvider(recentProvider);
-                        break;
+                        if (ImGui::BulletHyperlink(recentProvider.displayName.c_str())) {
+                            loadRecentProvider(recentProvider);
+                            break;
+                        }
                     }
                 }
             }
@@ -500,7 +511,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
-            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProviders.empty())) {
+            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProvidersUpdating && !s_recentProviders.empty())) {
                 // Copy to avoid changing list while iteration
                 auto recentProviders = s_recentProviders;
                 for (auto &recentProvider : recentProviders) {

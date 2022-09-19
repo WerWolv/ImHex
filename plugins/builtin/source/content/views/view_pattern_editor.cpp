@@ -114,58 +114,60 @@ namespace hex::plugin::builtin {
             patternLanguageData.runtime = std::make_unique<pl::PatternLanguage>();
             ContentRegistry::PatternLanguage::configureRuntime(*patternLanguageData.runtime, provider);
 
-            if (!this->m_autoLoadPatterns)
-                return;
+            TaskManager::createBackgroundTask("Analyzing file content", [this, provider, &data = patternLanguageData](auto &) {
+                if (!this->m_autoLoadPatterns)
+                    return;
 
-            // Copy over current pattern source code to the new provider
-            if (!this->m_syncPatternSourceCode) {
-                patternLanguageData.sourceCode = this->m_textEditor.GetText();
-            }
-
-            auto &runtime = patternLanguageData.runtime;
-
-            auto mimeType = magic::getMIMEType(provider);
-
-            bool foundCorrectType = false;
-            runtime->addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
-                hex::unused(runtime);
-
-                if (value == mimeType) {
-                    foundCorrectType = true;
-                    return true;
+                // Copy over current pattern source code to the new provider
+                if (!this->m_syncPatternSourceCode) {
+                    data.sourceCode = this->m_textEditor.GetText();
                 }
-                return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
+
+                auto &runtime = data.runtime;
+
+                auto mimeType = magic::getMIMEType(provider);
+
+                bool foundCorrectType = false;
+                runtime->addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
+                    hex::unused(runtime);
+
+                    if (value == mimeType) {
+                        foundCorrectType = true;
+                        return true;
+                    }
+                    return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
+                });
+
+                this->m_possiblePatternFiles.clear();
+
+                std::error_code errorCode;
+                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                    for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                        foundCorrectType = false;
+                        if (!entry.is_regular_file())
+                            continue;
+
+                        fs::File file(entry.path(), fs::File::Mode::Read);
+                        if (!file.isValid())
+                            continue;
+
+                        runtime->getInternals().preprocessor->preprocess(*runtime, file.readString());
+
+                        if (foundCorrectType)
+                            this->m_possiblePatternFiles.push_back(entry.path());
+
+                        runtime->reset();
+                    }
+                }
+
+                runtime->addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
+
+                if (!this->m_possiblePatternFiles.empty()) {
+                    this->m_selectedPatternFile = 0;
+                    EventManager::post<RequestOpenPopup>("hex.builtin.view.pattern_editor.accept_pattern"_lang);
+                    this->m_acceptPatternWindowOpen = true;
+                }
             });
-
-            this->m_possiblePatternFiles.clear();
-
-            std::error_code errorCode;
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
-                for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
-                    foundCorrectType = false;
-                    if (!entry.is_regular_file())
-                        continue;
-
-                    fs::File file(entry.path(), fs::File::Mode::Read);
-                    if (!file.isValid())
-                        continue;
-
-                    runtime->getInternals().preprocessor->preprocess(*runtime, file.readString());
-
-                    if (foundCorrectType)
-                        this->m_possiblePatternFiles.push_back(entry.path());
-
-                    runtime->reset();
-                }
-            }
-
-            runtime->addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
-
-            if (!this->m_possiblePatternFiles.empty()) {
-                this->m_selectedPatternFile = 0;
-                EventManager::post<RequestOpenPopup>("hex.builtin.view.pattern_editor.accept_pattern"_lang);
-                this->m_acceptPatternWindowOpen = true;
-            }
         });
 
         EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {

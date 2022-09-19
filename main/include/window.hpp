@@ -52,6 +52,7 @@ namespace hex {
 
         ImGui::Texture m_logoTexture = { nullptr };
 
+        std::mutex m_popupMutex;
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
 
