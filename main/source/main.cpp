@@ -33,8 +33,8 @@ int main(int argc, char **argv, char **envp) {
 
             init::WindowSplash splashWindow;
 
-            for (const auto &[name, task] : init::getInitTasks())
-                splashWindow.addStartupTask(name, task);
+            for (const auto &[name, task, async] : init::getInitTasks())
+                splashWindow.addStartupTask(name, task, async);
 
             if (!splashWindow.loop())
                 ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
@@ -42,7 +42,7 @@ int main(int argc, char **argv, char **envp) {
 
         // Clean up
         ON_SCOPE_EXIT {
-            for (const auto &[name, task] : init::getExitTasks())
+            for (const auto &[name, task, async] : init::getExitTasks())
                 task();
         };
 

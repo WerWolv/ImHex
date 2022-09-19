@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <chrono>
+#include <mutex>
 
 #include <fmt/core.h>
 #include <fmt/color.h>
@@ -30,6 +31,9 @@ namespace hex::log {
 
         template<typename... T>
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
+            static std::mutex logMutex;
+            std::scoped_lock lock(logMutex);
+
             auto dest = getDestination();
 
             printPrefix(dest, ts, level);

@@ -40,7 +40,7 @@ namespace hex::init {
         auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
         if (latestVersion != currVersion)
-            ImHexApi::System::getInitArguments().insert({ "update-available", latestVersion.data() });
+            ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
         return true;
     }
@@ -52,7 +52,7 @@ namespace hex::init {
         if (tip.code != 200)
             return false;
 
-        ImHexApi::System::getInitArguments().insert({ "tip-of-the-day", tip.body });
+        ImHexApi::System::impl::addInitArgument("tip-of-the-day", tip.body);
 
         return true;
     }
@@ -99,7 +99,7 @@ namespace hex::init {
         }
 
         if (!result)
-            ImHexApi::System::getInitArguments().insert({ "folder-creation-error", {} });
+            ImHexApi::System::impl::addInitArgument("folder-creation-error");
 
         return result;
     }
@@ -246,7 +246,7 @@ namespace hex::init {
         if (plugins.empty()) {
             log::error("No plugins found!");
 
-            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
+            ImHexApi::System::impl::addInitArgument("no-plugins");
             return false;
         }
 
@@ -274,17 +274,17 @@ namespace hex::init {
 
         if (loadErrors == plugins.size()) {
             log::error("No plugins loaded successfully!");
-            ImHexApi::System::getInitArguments().insert({ "no-plugins", {} });
+            ImHexApi::System::impl::addInitArgument("no-plugins");
             return false;
         }
 
         if (builtinPlugins == 0) {
             log::error("Built-in plugin not found!");
-            ImHexApi::System::getInitArguments().insert({ "no-builtin-plugin", {} });
+            ImHexApi::System::impl::addInitArgument("no-builtin-plugin");
             return false;
         } else if (builtinPlugins > 1) {
             log::error("Found more than one built-in plugin!");
-            ImHexApi::System::getInitArguments().insert({ "multiple-builtin-plugins", {} });
+            ImHexApi::System::impl::addInitArgument("multiple-builtin-plugins");
             return false;
         }
 
@@ -324,20 +324,20 @@ namespace hex::init {
 
     std::vector<Task> getInitTasks() {
         return {
-            {"Checking for updates...",     checkForUpdates    },
-            { "Downloading information...", downloadInformation},
-            { "Creating directories...",    createDirectories  },
-            { "Loading settings...",        loadSettings       },
-            { "Loading plugins...",         loadPlugins        },
-            { "Loading fonts...",           loadFonts          },
+            { "Checking for updates...",    checkForUpdates,     false },
+            { "Downloading information...", downloadInformation, true },
+            { "Loading fonts...",           loadFonts,           true },
+            { "Creating directories...",    createDirectories,   false },
+            { "Loading settings...",        loadSettings,        false },
+            { "Loading plugins...",         loadPlugins,         false },
         };
     }
 
     std::vector<Task> getExitTasks() {
         return {
-            {"Saving settings...",          storeSettings   },
-            { "Cleaning up shared data...", deleteSharedData},
-            { "Unloading plugins...",       unloadPlugins   },
+            { "Saving settings...",         storeSettings,    false },
+            { "Cleaning up shared data...", deleteSharedData, false },
+            { "Unloading plugins...",       unloadPlugins,    false },
         };
     }
 

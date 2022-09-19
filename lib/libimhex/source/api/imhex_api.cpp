@@ -385,6 +385,13 @@ namespace hex {
                 s_portableVersion = enabled;
             }
 
+            void addInitArgument(const std::string &key, const std::string &value) {
+                static std::mutex initArgumentsMutex;
+                std::scoped_lock lock(initArgumentsMutex);
+
+                getInitArguments()[key] = value;
+            }
+
         }
 
 

@@ -19,8 +19,8 @@ namespace hex::init {
 
         bool loop();
 
-        void addStartupTask(const std::string &taskName, const TaskFunction &task) {
-            this->m_tasks.emplace_back(taskName, task);
+        void addStartupTask(const std::string &taskName, const TaskFunction &task, bool async) {
+            this->m_tasks.emplace_back(taskName, task, async);
         }
 
     private:
@@ -37,7 +37,7 @@ namespace hex::init {
 
         std::future<bool> processTasksAsync();
 
-        std::vector<std::pair<std::string, TaskFunction>> m_tasks;
+        std::vector<std::tuple<std::string, TaskFunction, bool>> m_tasks;
 
         std::string m_gpuVendor;
     };

@@ -171,6 +171,8 @@ namespace hex {
                 void setGPUVendor(const std::string &vendor);
 
                 void setPortableVersion(bool enabled);
+
+                void addInitArgument(const std::string &key, const std::string &value = { });
             }
 
             struct ProgramArguments {
