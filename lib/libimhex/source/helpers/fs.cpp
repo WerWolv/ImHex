@@ -75,6 +75,11 @@ namespace hex::fs {
         return result;
     }
 
+    static std::function<void()> s_fileBrowserErrorCallback;
+    void setFileBrowserErrorCallback(const std::function<void()> &callback) {
+        s_fileBrowserErrorCallback = callback;
+    }
+
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();
 
@@ -94,9 +99,14 @@ namespace hex::fs {
                 hex::unreachable();
         }
 
-        if (result == NFD_OKAY && outPath != nullptr) {
-            callback(reinterpret_cast<char8_t*>(outPath));
-            NFD::FreePath(outPath);
+        if (result == NFD_OKAY){
+            if(outPath != nullptr) {
+                callback(reinterpret_cast<char8_t*>(outPath));
+                NFD::FreePath(outPath);
+            }
+        } else if (result==NFD_ERROR) {
+            if (s_fileBrowserErrorCallback != nullptr)
+                    s_fileBrowserErrorCallback();
         }
 
         NFD::Quit();

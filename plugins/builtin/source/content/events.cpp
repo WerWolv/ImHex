@@ -123,6 +123,14 @@ namespace hex::plugin::builtin {
             ProviderExtraData::erase(provider);
         });
 
+        fs::setFileBrowserErrorCallback([]{
+            #if defined(NFD_PORTAL)
+                View::showErrorPopup("hex.builtin.popup.error.file_dialog.portal"_lang);
+            #else
+                View::showErrorPopup("hex.builtin.popup.error.file_dialog.common"_lang);
+            #endif
+        });
+
     }
 
 }
