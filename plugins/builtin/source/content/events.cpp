@@ -78,7 +78,9 @@ namespace hex::plugin::builtin {
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
-                        ProjectFile::load(path);
+                        if (!ProjectFile::load(path)) {
+                            View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
+                        }
                     });
             }
         });

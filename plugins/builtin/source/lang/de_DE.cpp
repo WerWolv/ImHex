@@ -115,6 +115,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.close_provider.desc", "Es wurden ungespeicherte Änderungen an diesem Provider vorgenommen.\nBist du sicher, dass du ihn schliessen willst?" },
                 { "hex.builtin.popup.error.read_only", "Schreibzugriff konnte nicht erlangt werden. Datei wurde im Lesemodus geöffnet." },
                 { "hex.builtin.popup.error.open", "Öffnen der Datei fehlgeschlagen!" },
+                { "hex.builtin.popup.error.project.load", "Laden des Projektes fehlgeschlagen!" },
+                { "hex.builtin.popup.error.project.save", "Speichern des Projektes fehlgeschlagen!!" },
                 { "hex.builtin.popup.error.create", "Erstellen der neuen Datei fehlgeschlagen!" },
                 { "hex.builtin.popup.error.task_exception", "Fehler in Task '{}':\n\n{}" },
 

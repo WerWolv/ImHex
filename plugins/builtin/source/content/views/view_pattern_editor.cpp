@@ -302,6 +302,7 @@ namespace hex::plugin::builtin {
 
         ProjectFile::registerPerProviderHandler({
             .basePath = "pattern_source_code.hexpat",
+            .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 std::string sourceCode = tar.readString(basePath);
 

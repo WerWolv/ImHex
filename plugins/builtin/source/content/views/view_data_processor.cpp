@@ -34,6 +34,7 @@ namespace hex::plugin::builtin {
 
         ProjectFile::registerPerProviderHandler({
             .basePath = "data_processor.json",
+            .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 auto save = tar.readString(basePath);
 

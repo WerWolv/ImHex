@@ -19,12 +19,14 @@ namespace hex {
         struct Handler {
             using Function = std::function<bool(const std::fs::path &, Tar &tar)>;
             std::fs::path basePath;
+            bool required;
             Function load, store;
         };
 
         struct ProviderHandler {
             using Function = std::function<bool(prv::Provider *provider, const std::fs::path &, Tar &tar)>;
             std::fs::path basePath;
+            bool required;
             Function load, store;
         };
 

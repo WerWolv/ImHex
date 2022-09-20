@@ -116,6 +116,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Não foi possível obter acesso de gravação. Arquivo aberto no modo somente leitura." },
                 { "hex.builtin.popup.error.open", "Falha ao abrir o arquivo!" },
                 { "hex.builtin.popup.error.create", "Falha ao criar um novo arquivo!" },
+                //{ "hex.builtin.popup.error.project.load", "Failed to load project!" },
+                //{ "hex.builtin.popup.error.project.save", "Failed to save project!" },
                 //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "File" },

@@ -103,6 +103,7 @@ namespace hex::plugin::builtin {
 
         ProjectFile::registerPerProviderHandler({
             .basePath = "bookmarks.json",
+            .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
                 auto fileContent = tar.read(basePath);
                 if (fileContent.empty())

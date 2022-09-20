@@ -116,6 +116,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "Impossibile scrivere sul File. File aperto solo in modalità lettura" },
                 { "hex.builtin.popup.error.open", "Impossibile aprire il File!" },
                 { "hex.builtin.popup.error.create", "Impossibile creare il nuovo File!" },
+                //{ "hex.builtin.popup.error.project.load", "Failed to load project!" },
+                //{ "hex.builtin.popup.error.project.save", "Failed to save project!" },
                 //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
 
                 { "hex.builtin.menu.file", "File" },

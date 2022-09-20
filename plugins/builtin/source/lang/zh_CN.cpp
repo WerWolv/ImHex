@@ -116,6 +116,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "无法获得写权限，文件以只读方式打开。" },
                 { "hex.builtin.popup.error.open", "打开文件失败！" },
                 { "hex.builtin.popup.error.create", "创建新文件失败！" },
+                //{ "hex.builtin.popup.error.project.load", "Failed to load project!" },
+                //{ "hex.builtin.popup.error.project.save", "Failed to save project!" },
                 { "hex.builtin.popup.error.task_exception", "任务 '{}' 异常：\n\n{}" },
 
                 { "hex.builtin.menu.file", "文件" },

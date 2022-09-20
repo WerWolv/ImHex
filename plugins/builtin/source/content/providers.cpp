@@ -24,6 +24,7 @@ namespace hex::plugin::builtin {
 
         ProjectFile::registerHandler({
              .basePath = "providers",
+             .required = true,
              .load = [](const std::fs::path &basePath, Tar &tar) {
                  auto json = nlohmann::json::parse(tar.readString(basePath / "providers.json"));
                  auto providerIds = json["providers"].get<std::vector<int>>();
@@ -33,13 +34,14 @@ namespace hex::plugin::builtin {
                      auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
 
                      auto provider = ImHexApi::Provider::createProvider(providerSettings["type"].get<std::string>(), true);
+                     ON_SCOPE_EXIT { if (!success) ImHexApi::Provider::remove(provider, true); };
                      if (provider == nullptr) {
                          success = false;
                          continue;
                      }
 
                      provider->loadSettings(providerSettings["settings"]);
-                     if (!provider->open())
+                     if (!provider->open() || !provider->isAvailable() || !provider->isReadable())
                          success = false;
                      else
                          EventManager::post<EventProviderOpened>(provider);

@@ -45,6 +45,10 @@ namespace hex {
                 log::info("{}", e.what());
                 result = false;
             }
+
+            if (!result && handler.required) {
+                return false;
+            }
         }
 
         for (const auto &provider : ImHexApi::Provider::getProviders()) {
@@ -57,12 +61,16 @@ namespace hex {
                     log::info("{}", e.what());
                     result = false;
                 }
+
+                if (!result && handler.required) {
+                    return false;
+                }
             }
         }
 
         ProjectFile::s_currProjectPath = filePath;
 
-        return result;
+        return true;
     }
 
     bool ProjectFile::store(std::optional<std::fs::path> filePath) {

@@ -64,7 +64,9 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"}
                 },
                     [](const auto &path) {
-                        ProjectFile::load(path);
+                        if (!ProjectFile::load(path)) {
+                            View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
+                        }
                     });
             }
 
@@ -75,7 +77,9 @@ namespace hex::plugin::builtin {
                             path.replace_extension(".hexproj");
                         }
 
-                        ProjectFile::store(path);
+                        if (!ProjectFile::load(path)) {
+                            View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
+                        }
                     });
             }
         });

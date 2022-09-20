@@ -15,6 +15,7 @@ namespace hex::plugin::builtin {
 
         ProjectFile::registerPerProviderHandler({
             .basePath = "patches.json",
+            .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 auto json = nlohmann::json::parse(tar.read(basePath));
                 provider->getPatches() = json["patches"].get<std::map<u64, u8>>();
