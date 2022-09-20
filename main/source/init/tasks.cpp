@@ -133,7 +133,7 @@ namespace hex::init {
             0x0100, 0xFFF0, 0
         };
 
-        auto fontFile = ImHexApi::System::getCustomFontPath();
+        const auto &fontFile = ImHexApi::System::getCustomFontPath();
         float fontSize = ImHexApi::System::getFontSize();
         if (fontFile.empty()) {
             // Load default font if no custom one has been specified

@@ -494,11 +494,11 @@ namespace hex::plugin::builtin {
             }
         }
 
+        ImHexApi::System::impl::setCustomFontPath(fontFile);
+
         // If a custom font has been loaded now, also load the font size
         float fontSize = ImHexApi::System::DefaultFontSize * ImHexApi::System::getGlobalScale();
         if (!fontFile.empty()) {
-            ImHexApi::System::impl::setCustomFontPath(fontFile);
-
             fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
         }
 
