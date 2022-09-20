@@ -104,9 +104,9 @@ namespace hex::fs {
         }else if(result==NFD_ERROR){
             #if defined(OS_LINUX)
             View::showErrorPopup(
-                "There was an error while opening the file browser. Maybe you do not have a xdg-desktop-portal backend install on your system\n"
+                "There was an error while opening the file browser. Maybe you do not have a xdg-desktop-portal backend installed on your system\n"
                 "On KDE, it is xdg-desktop-portal-kde\n"
-                "On Gnome it is xdg-desktop-portal-kde\n"
+                "On Gnome it is xdg-desktop-portal-gnome\n"
                 "On wlroots it is xdg-desktop-portal-wlr\n"
                 "Else, you can try to use xdg-desktop-portal-gtk\n"
                 "\n"
