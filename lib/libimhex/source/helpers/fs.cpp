@@ -20,8 +20,6 @@
 #include <algorithm>
 #include <filesystem>
 
-#include <hex/ui/view.hpp>
-
 namespace hex::fs {
 
     std::optional<std::fs::path> getExecutablePath() {
@@ -77,6 +75,11 @@ namespace hex::fs {
         return result;
     }
 
+    static std::function<void()> s_fileBrowserErrorCallback;
+    void setFileBrowserErrorCallback(const std::function<void()> &callback) {
+        s_fileBrowserErrorCallback = callback;
+    }
+
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath) {
         NFD::Init();
 
@@ -101,24 +104,9 @@ namespace hex::fs {
                 callback(reinterpret_cast<char8_t*>(outPath));
                 NFD::FreePath(outPath);
             }
-        }else if(result==NFD_ERROR){
-            #if defined(OS_LINUX)
-            View::showErrorPopup(
-                "There was an error while opening the file browser. Maybe you do not have a xdg-desktop-portal backend installed on your system\n"
-                "On KDE, it is xdg-desktop-portal-kde\n"
-                "On Gnome it is xdg-desktop-portal-gnome\n"
-                "On wlroots it is xdg-desktop-portal-wlr\n"
-                "Else, you can try to use xdg-desktop-portal-gtk\n"
-                "\n"
-                "Reboot after installation\n"
-                "\n"
-                "Still isn't working ? Submit an issue at https://github.com/WerWolv/ImHex/issues\n"
-                "\n"
-                "In the meantime you can still open a file by dragging it into the window !"
-            );
-            #else
-            View::showErrorPopup("There was an error while opening the file browser");
-            #endif
+        } else if (result==NFD_ERROR) {
+            if (s_fileBrowserErrorCallback != nullptr)
+                    s_fileBrowserErrorCallback();
         }
 
         NFD::Quit();

@@ -117,6 +117,21 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.open", "Öffnen der Datei fehlgeschlagen!" },
                 { "hex.builtin.popup.error.create", "Erstellen der neuen Datei fehlgeschlagen!" },
                 { "hex.builtin.popup.error.task_exception", "Fehler in Task '{}':\n\n{}" },
+                { "hex.builtin.popup.error.file_dialog.portal",
+                    "Ein Fehler trat beim öffnen des Dateibrowser auf! Der Grund dafür kann sein, dass dein System kein xdg-desktop-portal Backend korrekt installiert hat.\n"
+                    "\n"
+                    "Auf KDE wird xdg-desktop-portal-kde benötigt.\n"
+                    "Auf Gnome wird xdg-desktop-portal-gnome benötigt.\n"
+                    "Auf wlroots wird xdg-desktop-portal-wlr benötigt.\n"
+                    "Andernfalls kann xdg-desktop-portal-gtk.\n"
+                    "\n"
+                    "Starte dein System neu nach der Installation.\n"
+                    "\n"
+                    "Falls der Dateibrowser immer noch nicht funktionieren sollte, erstelle ein Issue auf https://github.com/WerWolv/ImHex/issues\n"
+                    "\n"
+                    "In der Zwischenzeit können Dateien immer noch geöffnet werden, in dem sie auf das ImHex Fenster gezogen werden."
+                },
+                { "hex.builtin.popup.error.file_dialog.common", "Ein Fehler trat beim öffnen des Dateibrowser auf!" },
 
                 { "hex.builtin.menu.file", "Datei" },
                     { "hex.builtin.file.open_file", "Datei öffnen..." },

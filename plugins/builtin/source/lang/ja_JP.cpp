@@ -117,6 +117,21 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.open", "ファイルを開けませんでした。" },
                 { "hex.builtin.popup.error.create", "新しいファイルを作成できませんでした。" },
                 //{ "hex.builtin.popup.error.task_exception", "Exception thrown in Task '{}':\n\n{}" },
+                //{ "hex.builtin.popup.error.file_dialog.portal",
+                //    "There was an error while opening the file browser. This might be caused by your system not having a xdg-desktop-portal backend installed correctly.\n"
+                //    "\n"
+                //    "On KDE, it's xdg-desktop-portal-kde.\n"
+                //    "On Gnome it's xdg-desktop-portal-gnome.\n"
+                //    "On wlroots it's xdg-desktop-portal-wlr.\n"
+                //    "Otherwise, you can try to use xdg-desktop-portal-gtk.\n"
+                //    "\n"
+                //    "Reboot your system after installing it.\n"
+                //    "\n"
+                //    "If the file browser still doesn't work after this, submit an issue at https://github.com/WerWolv/ImHex/issues\n"
+                //    "\n"
+                //    "In the meantime files can still be opened by dragging them onto the ImHex window!"
+                //},
+                //{ "hex.builtin.popup.error.file_dialog.common", "An error occurred while opening the file browser!" },
 
                 { "hex.builtin.menu.file", "ファイル" },
                     //{ "hex.builtin.menu.file.create_file", "New File..." },

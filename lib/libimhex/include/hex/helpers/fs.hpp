@@ -75,17 +75,16 @@ namespace hex::fs {
 
     std::fs::path toShortPath(const std::fs::path &path);
 
-    enum class DialogMode
-    {
+    enum class DialogMode {
         Open,
         Save,
         Folder
     };
 
+    void setFileBrowserErrorCallback(const std::function<void()> &callback);
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {});
 
-    enum class ImHexPath
-    {
+    enum class ImHexPath {
         Patterns,
         PatternsInclude,
         Magic,
