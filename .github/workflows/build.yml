@@ -101,6 +101,17 @@ jobs:
         cpack
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
+    - name: 🗝️ Sign Windows Installer
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      shell: powershell
+      env:
+        WIN_SIGN_CERT: ${{ secrets.WIN_SIGN_CERT }}
+        WIN_SIGN_PW: ${{ secrets.WIN_SIGN_PW }}
+      run: |
+        $buffer = [System.Convert]::FromBase64String($env:WIN_SIGN_CERT)
+        $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::New($buffer, $env:WIN_SIGN_PW)
+        Get-ChildItem -Path ./build -Filter *.msi -Recurse | Set-AuthenticodeSignature -HashAlgorithm SHA256 -Certificate $certificate -TimestampServer http://timestamp.digicert.com
+
     - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v3
       with:
