@@ -288,4 +288,15 @@ namespace hex::prv {
             return { Region { address, *nextRegionAddress - address }, insideValidRegion };
     }
 
+
+    u32 Provider::getID() const {
+        return this->m_id;
+    }
+
+    void Provider::setID(u32 id) {
+        this->m_id = id;
+        if (id > s_idCounter)
+            s_idCounter = id + 1;
+    }
+
 }

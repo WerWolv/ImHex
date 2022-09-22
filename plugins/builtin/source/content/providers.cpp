@@ -40,6 +40,7 @@ namespace hex::plugin::builtin {
                          continue;
                      }
 
+                     provider->setID(id);
                      provider->loadSettings(providerSettings["settings"]);
                      if (!provider->open() || !provider->isAvailable() || !provider->isReadable())
                          success = false;

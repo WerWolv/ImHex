@@ -86,9 +86,8 @@ namespace hex::prv {
         virtual void drawLoadInterface();
         virtual void drawInterface();
 
-        [[nodiscard]] u32 getID() const {
-            return this->m_id;
-        }
+        [[nodiscard]] u32 getID() const;
+        void setID(u32 id);
 
         [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings = { }) const;
         virtual void loadSettings(const nlohmann::json &settings);

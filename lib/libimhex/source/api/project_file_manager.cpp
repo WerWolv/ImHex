@@ -36,6 +36,10 @@ namespace hex {
                 return false;
         }
 
+        for (const auto &provider : ImHexApi::Provider::getProviders()) {
+            ImHexApi::Provider::remove(provider);
+        }
+
         bool result = true;
         for (const auto &handler : ProjectFile::getHandlers()) {
             try {

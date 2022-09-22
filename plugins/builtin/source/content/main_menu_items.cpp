@@ -77,8 +77,8 @@ namespace hex::plugin::builtin {
                             path.replace_extension(".hexproj");
                         }
 
-                        if (!ProjectFile::load(path)) {
-                            View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
+                        if (!ProjectFile::store(path)) {
+                            View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);
                         }
                     });
             }
