@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
             if (!ImHexApi::Provider::isValid() || region.address == (size_t)-1) {
                 this->m_validBytes = 0;
             } else {
-                this->m_validBytes   = u64(provider->getSize() - region.address);
+                this->m_validBytes   = u64(provider->getActualSize() - region.address);
                 this->m_startAddress = region.address;
             }
 
