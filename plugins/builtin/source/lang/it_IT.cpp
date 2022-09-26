@@ -142,6 +142,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.menu.file.clear_recent", "Pulisci" },
                     { "hex.builtin.menu.file.open_other", "Apri altro..." },
                     { "hex.builtin.menu.file.close", "Chiudi" },
+                    //{ "hex.builtin.menu.file.reload_file", "Reload File" },
                     { "hex.builtin.menu.file.quit", "Uscita ImHex" },
                     { "hex.builtin.menu.file.open_project", "Apri un Progetto..." },
                     { "hex.builtin.menu.file.save_project", "Salva Progetto..." },

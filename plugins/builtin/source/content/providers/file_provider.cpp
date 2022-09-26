@@ -13,11 +13,7 @@
 namespace hex::plugin::builtin::prv {
 
     bool FileProvider::isAvailable() const {
-        #if defined(OS_WINDOWS)
-            return this->m_file != INVALID_HANDLE_VALUE && this->m_mappedFile != nullptr;
-        #else
-            return this->m_file != -1 && this->m_mappedFile != nullptr;
-        #endif
+        return this->m_mappedFile != nullptr;
     }
 
     bool FileProvider::isReadable() const {
@@ -59,7 +55,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset + size) > this->getRealTimeSize() || buffer == nullptr || size == 0)
+        if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(buffer, reinterpret_cast<u8 *>(this->m_mappedFile) + offset, size);
@@ -151,20 +147,6 @@ namespace hex::plugin::builtin::prv {
         Provider::insert(offset, size);
     }
 
-    size_t FileProvider::getRealTimeSize() {
-#if defined(OS_LINUX)
-        if (struct stat newStats; (this->m_fileStatsValid = fstat(this->m_file, &newStats) == 0)) {
-            if (static_cast<off_t>(this->m_fileSize) != newStats.st_size ||
-                std::memcmp(&newStats.st_mtim, &this->m_fileStats.st_mtim, sizeof(newStats.st_mtim))) {
-                this->m_fileStats = newStats;
-                this->m_fileSize  = this->m_fileStats.st_size;
-                msync(this->m_mappedFile, this->m_fileStats.st_size, MS_INVALIDATE);
-            }
-        }
-#endif
-        return getActualSize();
-    }
-
     size_t FileProvider::getActualSize() const {
         return this->m_fileSize;
     }
@@ -208,35 +190,30 @@ namespace hex::plugin::builtin::prv {
             this->m_fileStatsValid = wstat(path.c_str(), &this->m_fileStats) == 0;
 
             LARGE_INTEGER fileSize = {};
-            this->m_file           = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            auto file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
 
-            GetFileSizeEx(this->m_file, &fileSize);
+            GetFileSizeEx(file, &fileSize);
             this->m_fileSize = fileSize.QuadPart;
-            CloseHandle(this->m_file);
+            CloseHandle(file);
 
-            this->m_file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-            if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
-                this->m_file     = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            if (file == nullptr || file == INVALID_HANDLE_VALUE) {
+                file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
                 this->m_writable = false;
             }
 
-            auto fileCleanup = SCOPE_GUARD {
-                CloseHandle(this->m_file);
-
-                this->m_readable = false;
-                this->m_file     = nullptr;
-            };
-
-            if (this->m_file == nullptr || this->m_file == INVALID_HANDLE_VALUE) {
+            if (file == nullptr || file == INVALID_HANDLE_VALUE) {
                 return false;
             }
 
+            ON_SCOPE_EXIT { CloseHandle(file); };
+
             if (this->m_fileSize > 0) {
-                HANDLE mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
+                HANDLE mapping = CreateFileMapping(file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
                 ON_SCOPE_EXIT { CloseHandle(mapping); };
 
                 if (mapping == nullptr || mapping == INVALID_HANDLE_VALUE) {
-                    mapping = CreateFileMapping(this->m_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
+                    mapping = CreateFileMapping(file, nullptr, PAGE_READONLY, 0, 0, nullptr);
 
                     if (mapping == nullptr || mapping == INVALID_HANDLE_VALUE)
                         return false;
@@ -258,9 +235,6 @@ namespace hex::plugin::builtin::prv {
             } else {
                 return false;
             }
-
-            fileCleanup.release();
-
         #else
 
             const auto &path       = this->m_path.native();
@@ -268,27 +242,25 @@ namespace hex::plugin::builtin::prv {
 
             int mmapprot = PROT_READ | PROT_WRITE;
 
-            this->m_file = ::open(path.c_str(), O_RDWR);
-            if (this->m_file == -1) {
-                this->m_file     = ::open(path.c_str(), O_RDONLY);
+            auto file = ::open(path.c_str(), O_RDWR);
+            if (file == -1) {
+                file = ::open(path.c_str(), O_RDONLY);
                 this->m_writable = false;
                 mmapprot &= ~(PROT_WRITE);
             }
 
-            if (this->m_file == -1) {
+            if (file == -1) {
                 this->m_readable = false;
                 return false;
             }
 
+            ON_SCOPE_EXIT { close(file); };
+
             this->m_fileSize = this->m_fileStats.st_size;
 
-            this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, mmapprot, MAP_SHARED, this->m_file, 0);
-            if (this->m_mappedFile == MAP_FAILED) {
-                ::close(this->m_file);
-                this->m_file = -1;
-
+            this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, mmapprot, MAP_SHARED, file, 0);
+            if (this->m_mappedFile == MAP_FAILED)
                 return false;
-            }
 
         #endif
 
@@ -300,13 +272,11 @@ namespace hex::plugin::builtin::prv {
 
             if (this->m_mappedFile != nullptr)
                 ::UnmapViewOfFile(this->m_mappedFile);
-            if (this->m_file != nullptr)
-                ::CloseHandle(this->m_file);
 
         #else
 
-            ::munmap(this->m_mappedFile, this->m_fileSize);
-            ::close(this->m_file);
+            if (this->m_mappedFile != nullptr)
+                ::munmap(this->m_mappedFile, this->m_fileSize);
 
         #endif
     }

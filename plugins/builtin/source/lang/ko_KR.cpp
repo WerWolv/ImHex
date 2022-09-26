@@ -142,6 +142,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.menu.file.clear_recent", "최근 이력 지우기" },
                     { "hex.builtin.menu.file.open_other", "다른 공급자 열기..." },
                     { "hex.builtin.menu.file.close", "닫기" },
+                    //{ "hex.builtin.menu.file.reload_file", "Reload File" },
                     { "hex.builtin.menu.file.quit", "ImHex 종료하기" },
                     { "hex.builtin.menu.file.open_project", "프로젝트 열기..." },
                     { "hex.builtin.menu.file.save_project", "프로젝트 저장..." },

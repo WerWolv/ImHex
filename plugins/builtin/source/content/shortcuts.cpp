@@ -1,6 +1,8 @@
 #include <hex/api/keybinding.hpp>
 #include <hex/api/event.hpp>
 
+#include <hex/providers/provider.hpp>
+
 namespace hex::plugin::builtin {
 
     void registerShortcuts() {
@@ -16,7 +18,19 @@ namespace hex::plugin::builtin {
 
         // Close file
         ShortcutManager::addGlobalShortcut(CTRL + Keys::W, [] {
-            ImHexApi::Provider::remove(ImHexApi::Provider::get());
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::remove(ImHexApi::Provider::get());
+        });
+
+        // Reload file
+        ShortcutManager::addGlobalShortcut(CTRL + Keys::R, [] {
+            if (ImHexApi::Provider::isValid()) {
+                auto provider = ImHexApi::Provider::get();
+
+                provider->close();
+                if (!provider->open())
+                    ImHexApi::Provider::remove(provider, true);
+            }
         });
     }
 

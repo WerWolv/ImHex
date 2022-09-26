@@ -38,6 +38,14 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndMenu();
             }
+
+            if (ImGui::MenuItem("hex.builtin.menu.file.reload_file"_lang, "CTRL + R", false, !taskRunning && ImHexApi::Provider::isValid())) {
+                auto provider = ImHexApi::Provider::get();
+
+                provider->close();
+                if (!provider->open())
+                    ImHexApi::Provider::remove(provider, true);
+            }
         });
 
         /* File open, quit imhex */

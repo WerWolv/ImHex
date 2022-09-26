@@ -41,7 +41,6 @@ namespace hex::plugin::builtin::prv {
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] size_t getActualSize() const override;
-        [[nodiscard]] size_t getRealTimeSize();
 
         void save() override;
         void saveAs(const std::fs::path &path) override;
@@ -67,16 +66,6 @@ namespace hex::plugin::builtin::prv {
         std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
     protected:
-        #if defined(OS_WINDOWS)
-
-            HANDLE m_file    = INVALID_HANDLE_VALUE;
-
-        #else
-
-            int m_file = -1;
-
-        #endif
-
         std::fs::path m_path;
         void *m_mappedFile = nullptr;
         size_t m_fileSize  = 0;
