@@ -254,7 +254,7 @@ namespace hex::plugin::builtin::prv {
                 return false;
             }
 
-            ON_SCOPE_EXIT { close(file); };
+            ON_SCOPE_EXIT { ::close(file); };
 
             this->m_fileSize = this->m_fileStats.st_size;
 
