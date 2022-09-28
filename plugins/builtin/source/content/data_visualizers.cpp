@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -160,7 +161,9 @@ namespace hex::plugin::builtin {
         }
     };
 
-    template<std::floating_point T>
+    enum class Float16 : u16 {};
+
+    template<typename T>
     class DataVisualizerFloatingPoint : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
         DataVisualizerFloatingPoint() : DataVisualizer(ByteCount, CharCount) { }
@@ -193,6 +196,42 @@ namespace hex::plugin::builtin {
 
     private:
         constexpr static inline auto ByteCount = sizeof(T);
+        constexpr static inline auto CharCount = 14;
+
+        const static inline auto FormatStringUpperCase = hex::format("%{}G", CharCount);
+        const static inline auto FormatStringLowerCase = hex::format("%{}g", CharCount);
+
+        const char *getFormatString(bool upperCase) {
+            if (upperCase)
+                return FormatStringUpperCase.c_str();
+            else
+                return FormatStringLowerCase.c_str();
+        }
+    };
+
+    template<>
+    class DataVisualizerFloatingPoint<Float16> : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    public:
+        DataVisualizerFloatingPoint() : DataVisualizer(ByteCount, CharCount) { }
+
+        void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address);
+
+            if (size == ByteCount)
+                ImGui::Text(getFormatString(upperCase), hex::float16ToFloat32(*reinterpret_cast<const u16*>(data)));
+            else
+                ImGui::TextFormatted("{: {}s}", CharCount);
+        }
+
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
+            hex::unused(startedEditing);
+
+            this->draw(address, data, size, upperCase);
+            return false;
+        }
+
+    private:
+        constexpr static inline auto ByteCount = sizeof(Float16);
         constexpr static inline auto CharCount = 14;
 
         const static inline auto FormatStringUpperCase = hex::format("%{}G", CharCount);
@@ -262,6 +301,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i32>>("hex.builtin.visualizer.decimal.signed.32bit");
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerDecimal<i64>>("hex.builtin.visualizer.decimal.signed.64bit");
 
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<Float16>>("hex.builtin.visualizer.floating_point.16bit");
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<float>>("hex.builtin.visualizer.floating_point.32bit");
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<double>>("hex.builtin.visualizer.floating_point.64bit");
 
