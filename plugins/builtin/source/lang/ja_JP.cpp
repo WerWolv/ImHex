@@ -503,6 +503,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.wide", "Wide Character" },
                 { "hex.builtin.inspector.utf8", "UTF-8 code point" },
                 { "hex.builtin.inspector.string", "String" },
+                { "hex.builtin.inspector.string16", "Wide String" },
                 { "hex.builtin.inspector.time32", "time32_t" },
                 { "hex.builtin.inspector.time64", "time64_t" },
                 { "hex.builtin.inspector.time", "time_t" },

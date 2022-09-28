@@ -396,13 +396,14 @@ namespace hex::plugin::builtin {
             }
         );
 
+        constexpr static auto MaxStringLength = 32;
+
         ContentRegistry::DataInspector::add("hex.builtin.inspector.string", 1,
             [](auto buffer, auto endian, auto style) {
                 hex::unused(buffer, endian, style);
 
                 auto currSelection = ImHexApi::HexEditor::getSelection();
 
-                constexpr static auto MaxStringLength = 32;
 
                 std::string value, copyValue;
 
@@ -422,6 +423,45 @@ namespace hex::plugin::builtin {
                 }
 
                 return [value, copyValue] { ImGui::TextFormatted("\"{0}\"", value.c_str()); return copyValue; };
+            },
+            [](const std::string &value, std::endian endian) -> std::vector<u8> {
+                hex::unused(endian);
+
+                return hex::decodeByteString(value);
+            }
+        );
+
+        ContentRegistry::DataInspector::add("hex.builtin.inspector.string16", 2,
+            [](auto buffer, auto endian, auto style) {
+                hex::unused(buffer, endian, style);
+
+                auto currSelection = ImHexApi::HexEditor::getSelection();
+
+                std::string value, copyValue;
+
+                if (currSelection.has_value()) {
+                    std::u16string stringBuffer(std::min<size_t>(currSelection->size, 0x1000), 0x00);
+                    ImHexApi::Provider::get()->read(currSelection->address, stringBuffer.data(), stringBuffer.size());
+
+                    for (auto &c : stringBuffer)
+                        c = hex::changeEndianess(c, endian);
+
+                    auto it = std::remove_if(buffer.begin(), buffer.end(),
+                                             [](auto c) { return c == 0x00; });
+                    buffer.erase(it, buffer.end());
+
+                    value = copyValue = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>("Invalid").to_bytes(stringBuffer.data());
+
+                    if (value.size() > MaxStringLength) {
+                        value.resize(MaxStringLength);
+                        value += "...";
+                    }
+                } else {
+                    value = "";
+                    copyValue = "";
+                }
+
+                return [value, copyValue] { ImGui::TextFormatted("L\"{0}\"", value.c_str()); return copyValue; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);

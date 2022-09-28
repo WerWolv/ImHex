@@ -501,6 +501,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.wide", "宽字符" },
                 { "hex.builtin.inspector.utf8", "UTF-8 码位" },
                 { "hex.builtin.inspector.string", "字符串" },
+                //{ "hex.builtin.inspector.string16", "Wide String" },
                 { "hex.builtin.inspector.time32", "time32_t" },
                 { "hex.builtin.inspector.time64", "time64_t" },
                 { "hex.builtin.inspector.time", "time_t" },
