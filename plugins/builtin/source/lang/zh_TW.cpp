@@ -342,6 +342,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "縮放..." },
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "插入..." },
                     { "hex.builtin.view.hex_editor.menu.edit.remove", "移除..." },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.jump_to", "Jump to" },
 
                 { "hex.builtin.view.information.name", "資料資訊" },
                     { "hex.builtin.view.information.control", "控制" },

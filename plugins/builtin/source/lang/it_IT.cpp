@@ -344,6 +344,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.set_base", "Imposta indirizzo di base" },
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "Ridimensiona..." },
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "Inserisci..." },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.remove", "Remove..." },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.jump_to", "Jump to" },
 
                 { "hex.builtin.view.information.name", "Informazione sui Dati" },
                     { "hex.builtin.view.information.control", "Controllo" },

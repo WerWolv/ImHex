@@ -342,6 +342,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "크기 변경..." },
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "삽입..." },
                     { "hex.builtin.view.hex_editor.menu.edit.remove", "삭제..." },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.jump_to", "Jump to" },
 
                 { "hex.builtin.view.information.name", "데이터 정보" },
                     { "hex.builtin.view.information.control", "컨트롤" },

@@ -1624,8 +1624,9 @@ namespace hex::plugin::builtin {
 
         // Popups
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1200, [&] {
-            auto provider      = ImHexApi::Provider::get();
-            bool providerValid = ImHexApi::Provider::isValid();
+            auto provider       = ImHexApi::Provider::get();
+            bool providerValid  = ImHexApi::Provider::isValid();
+            auto selection      = ImHexApi::HexEditor::getSelection();
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.set_base"_lang, nullptr, false, providerValid && provider->isReadable())) {
                 this->openPopup<PopupBaseAddress>(provider->getBaseAddress());
@@ -1635,13 +1636,24 @@ namespace hex::plugin::builtin {
                 this->openPopup<PopupResize>(provider->getActualSize());
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.insert"_lang, nullptr, false, providerValid && provider->isResizable())) {
-                this->openPopup<PopupInsert>(this->getSelection().getStartAddress(), 0x00);
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.insert"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
+                this->openPopup<PopupInsert>(selection->getStartAddress(), 0x00);
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.remove"_lang, nullptr, false, providerValid && provider->isResizable())) {
-                auto selection = this->getSelection();
-                this->openPopup<PopupRemove>(selection.getStartAddress(), selection.getSize());
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.remove"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
+                this->openPopup<PopupRemove>(selection->getStartAddress(), selection->getSize());
+            }
+
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.jump_to"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
+                if (selection->getSize() <= sizeof(u64)) {
+                    u64 value = 0;
+                    provider->read(selection->getStartAddress(), &value, selection->getSize());
+
+                    if (value < provider->getBaseAddress() + provider->getActualSize()) {
+                        ImHexApi::HexEditor::setSelection(value, 1);
+                    }
+                }
+
             }
         });
     }

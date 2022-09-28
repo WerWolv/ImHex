@@ -344,6 +344,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.set_base", "ベースアドレスをセット" },
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "リサイズ…" },
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "挿入…" },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.remove", "Remove..." },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.jump_to", "Jump to" },
 
                 { "hex.builtin.view.information.name", "データ解析" },
                     { "hex.builtin.view.information.control", "コントロール" },
