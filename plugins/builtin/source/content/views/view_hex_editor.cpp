@@ -1160,12 +1160,12 @@ namespace hex::plugin::builtin {
             auto &selectionStart = ProviderExtraData::getCurrent().editor.selectionStart;
 
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left)) {
-                this->setSelection(*selectionStart, endAddress);
+                this->setSelection(selectionStart.value_or(address), endAddress);
                 this->scrollToSelection();
             }
             else if (ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
                 if (ImGui::GetIO().KeyShift)
-                    this->setSelection(*selectionStart, endAddress);
+                    this->setSelection(selectionStart.value_or(address), endAddress);
                 else
                     this->setSelection(address, endAddress);
 
