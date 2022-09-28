@@ -146,7 +146,7 @@ namespace hex::plugin::builtin {
                     ImGui::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
                 }
 
-                u32 id = 1;
+                int id = 1;
                 auto bookmarkToRemove = bookmarks.end();
                 for (auto iter = bookmarks.begin(); iter != bookmarks.end(); iter++) {
                     auto &[region, name, comment, color, locked] = *iter;
@@ -165,8 +165,25 @@ namespace hex::plugin::builtin {
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
 
+                    ON_SCOPE_EXIT {
+                        ImGui::PopID();
+                        ImGui::PopStyleColor(3);
+                        id++;
+                    };
+
                     bool open = true;
-                    if (ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &open)) {
+                    if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &open)) {
+                        if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == bookmarks.end())
+                            this->m_dragStartIterator = iter;
+
+                        if (ImGui::IsItemHovered() && this->m_dragStartIterator != bookmarks.end()) {
+                            std::iter_swap(iter, this->m_dragStartIterator);
+                            this->m_dragStartIterator = iter;
+                        }
+
+                        if (!ImGui::IsMouseDown(0))
+                            this->m_dragStartIterator = bookmarks.end();
+                    } else {
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.title.info"_lang);
                         ImGui::Separator();
                         ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size);
@@ -253,10 +270,6 @@ namespace hex::plugin::builtin {
 
                     if (!open)
                         bookmarkToRemove = iter;
-
-                    ImGui::PopID();
-                    ImGui::PopStyleColor(3);
-                    id++;
                 }
 
                 if (bookmarkToRemove != bookmarks.end()) {

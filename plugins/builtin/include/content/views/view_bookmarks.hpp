@@ -21,6 +21,8 @@ namespace hex::plugin::builtin {
         void registerMenuItems();
     private:
         std::string m_currFilter;
+
+        std::list<ImHexApi::Bookmarks::Entry>::iterator m_dragStartIterator;
     };
 
 }
