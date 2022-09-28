@@ -803,7 +803,7 @@ namespace hex::plugin::builtin {
 
                         std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors;
                         {
-                            for (u64 x = 0; x < columnCount; x++) {
+                            for (u64 x = 0; x <  std::ceil(float(validBytes) / bytesPerCell); x++) {
                                 const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + provider->getBaseAddress() + provider->getCurrentPageAddress();
 
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
