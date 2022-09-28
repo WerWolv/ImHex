@@ -831,6 +831,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.visualizer.decimal.unsigned.16bit", "无符号十进制（16 位）" },
                 { "hex.builtin.visualizer.decimal.unsigned.32bit", "无符号十进制（32 位）" },
                 { "hex.builtin.visualizer.decimal.unsigned.64bit", "无符号十进制（64 位）" },
+                { "hex.builtin.visualizer.floating_point.16bit", "单精度浮点（16 位）" },
                 { "hex.builtin.visualizer.floating_point.32bit", "单精度浮点（32 位）" },
                 { "hex.builtin.visualizer.floating_point.64bit", "双精度浮点（64 位）" },
                 { "hex.builtin.visualizer.hexii", "HexII" },

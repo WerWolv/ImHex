@@ -828,6 +828,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.visualizer.decimal.unsigned.16bit", "十進位無號數 (16 位元)" },
                 { "hex.builtin.visualizer.decimal.unsigned.32bit", "十進位無號數 (32 位元)" },
                 { "hex.builtin.visualizer.decimal.unsigned.64bit", "十進位無號數 (64 位元)" },
+                { "hex.builtin.visualizer.floating_point.16bit", "浮點數 (16 位元)" },
                 { "hex.builtin.visualizer.floating_point.32bit", "浮點數 (32 位元)" },
                 { "hex.builtin.visualizer.floating_point.64bit", "浮點數 (64 位元)" },
                 { "hex.builtin.visualizer.hexii", "HexII" },

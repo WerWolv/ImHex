@@ -830,6 +830,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.visualizer.decimal.unsigned.16bit", "Decimal Unsigned (16 bits)" },
                 { "hex.builtin.visualizer.decimal.unsigned.32bit", "Decimal Unsigned (32 bits)" },
                 { "hex.builtin.visualizer.decimal.unsigned.64bit", "Decimal Unsigned (64 bits)" },
+                { "hex.builtin.visualizer.floating_point.16bit", "Floating Point (16 bits)" },
                 { "hex.builtin.visualizer.floating_point.32bit", "Floating Point (32 bits)" },
                 { "hex.builtin.visualizer.floating_point.64bit", "Floating Point (64 bits)" },
                 { "hex.builtin.visualizer.hexii", "HexII" },

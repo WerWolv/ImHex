@@ -829,6 +829,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.visualizer.decimal.unsigned.16bit", "부호 없는 10진수 (16 비트)" },
                 { "hex.builtin.visualizer.decimal.unsigned.32bit", "부호 없는 10진수 (32 비트)" },
                 { "hex.builtin.visualizer.decimal.unsigned.64bit", "부호 없는 10진수 (64 비트)" },
+                { "hex.builtin.visualizer.floating_point.16bit", "부동소수점 (16 비트)" },
                 { "hex.builtin.visualizer.floating_point.32bit", "부동소수점 (32 비트)" },
                 { "hex.builtin.visualizer.floating_point.64bit", "부동소수점 (64 비트)" },
                 { "hex.builtin.visualizer.hexii", "HexII" },
