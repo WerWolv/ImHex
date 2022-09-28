@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
     ViewFind::ViewFind() : View("hex.builtin.view.find.name") {
         const static auto HighlightColor = [] { return (ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarPurple) & 0x00FFFFFF) | 0x70000000; };
 
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
             hex::unused(data, size);
 
             if (this->m_searchTask.isRunning())

@@ -66,7 +66,7 @@ namespace hex {
 
             namespace impl {
 
-                using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t)>;
+                using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t, bool)>;
 
                 std::map<u32, Highlighting> &getBackgroundHighlights();
                 std::map<u32, HighlightingFunction> &getBackgroundHighlightingFunctions();

@@ -29,10 +29,17 @@ namespace hex::plugin::builtin {
                 return true;
             }
         });
-    }
 
-    ViewPatches::~ViewPatches() {
+        ImHexApi::HexEditor::addForegroundHighlightingProvider([](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
+            if (!ImHexApi::Provider::isValid())
+                return std::nullopt;
 
+            auto &patches = ImHexApi::Provider::get()->getPatches();
+            if (patches.contains(offset) && patches[offset] != buffer[0])
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed);
+            else
+                return std::nullopt;
+        });
     }
 
     void ViewPatches::drawContent() {

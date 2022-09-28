@@ -460,8 +460,11 @@ namespace hex::plugin::builtin {
         this->registerEvents();
         this->registerMenuItems();
 
-        ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool hasColor) -> std::optional<color_t> {
             hex::unused(address);
+
+            if (hasColor)
+                return std::nullopt;
 
             if (!this->m_grayOutZero)
                 return std::nullopt;
@@ -484,10 +487,14 @@ namespace hex::plugin::builtin {
     }
 
     static std::optional<color_t> queryBackgroundColor(u64 address, const u8 *data, size_t size) {
+        std::optional<color_t> result;
         for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions()) {
-            if (auto color = callback(address, data, size); color.has_value())
+            if (auto color = callback(address, data, size, result.has_value()); color.has_value())
                 return color.value();
         }
+
+        if (result.has_value())
+            return result;
 
         for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getBackgroundHighlights()) {
             if (highlighting.getRegion().overlaps({ address, size }))
@@ -498,10 +505,14 @@ namespace hex::plugin::builtin {
     }
 
     static std::optional<color_t> queryForegroundColor(u64 address, const u8 *data, size_t size) {
+        std::optional<color_t> result;
         for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions()) {
-            if (auto color = callback(address, data, size); color.has_value())
-                return color.value();
+            if (auto color = callback(address, data, size, result.has_value()); color.has_value())
+                result = color;
         }
+
+        if (result.has_value())
+            return result;
 
         for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getForegroundHighlights()) {
             if (highlighting.getRegion().overlaps({ address, size }))

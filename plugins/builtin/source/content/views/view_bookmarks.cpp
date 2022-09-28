@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
             ImHexApi::Provider::markDirty();
         });
 
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size) -> std::optional<color_t> {
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
             hex::unused(data);
 
             for (const auto &bookmark : ProviderExtraData::getCurrent().bookmarks) {

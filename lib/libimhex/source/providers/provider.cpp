@@ -113,6 +113,8 @@ namespace hex::prv {
             this->writeRaw(patchAddress - this->getBaseAddress(), &patch, 1);
         }
         this->markDirty();
+
+        this->m_patches.emplace_back();
     }
 
 
