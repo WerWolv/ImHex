@@ -11,6 +11,7 @@ option(IMHEX_IGNORE_BAD_COMPILER "Allow compiling with an unsupported compiler" 
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_INCLUDE_DIRECTORIES_BEFORE ON)
 set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
