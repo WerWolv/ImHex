@@ -111,9 +111,9 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
 
             if (ImGui::BeginTable("##hashes", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 10))) {
-                ImGui::TableSetupColumn("hex.builtin.view.hashes.name"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.hashes.type"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.hashes.result"_lang, ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("hex.builtin.view.hashes.table.name"_lang);
+                ImGui::TableSetupColumn("hex.builtin.view.hashes.table.type"_lang);
+                ImGui::TableSetupColumn("hex.builtin.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
 
                 ImGui::TableHeadersRow();
 
