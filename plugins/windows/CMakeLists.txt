@@ -42,4 +42,10 @@ if (WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     setupCompilerWarnings(${PROJECT_NAME})
 
+    set(LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/romfs)
+    set(LIBROMFS_PROJECT_NAME ${PROJECT_NAME})
+    add_subdirectory(../../lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/libromfs)
+    set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBROMFS_LIBRARY})
+
 endif ()
