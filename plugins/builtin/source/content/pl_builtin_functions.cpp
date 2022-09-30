@@ -7,6 +7,7 @@
 #include <pl/core/evaluator.hpp>
 #include <pl/patterns/pattern.hpp>
 
+#include <llvm/Demangle/Demangle.h>
 namespace hex::plugin::builtin {
 
     void registerPatternLanguageFunctions() {
@@ -16,13 +17,23 @@ namespace hex::plugin::builtin {
         pl::api::Namespace nsHexCore = { "builtin", "hex", "core" };
         {
             /* get_selection() */
-            ContentRegistry::PatternLanguage::addDangerousFunction(nsHexCore, "get_selection", FunctionParameterCount::none(), [](Evaluator *, auto) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsHexCore, "get_selection", FunctionParameterCount::none(), [](Evaluator *, auto) -> std::optional<Token::Literal> {
                 if (!ImHexApi::HexEditor::isSelectionValid())
                     return std::numeric_limits<u128>::max();
 
                 auto selection = ImHexApi::HexEditor::getSelection();
 
                 return u128(u128(selection->getStartAddress()) << 64 | u128(selection->getSize()));
+            });
+        }
+
+        pl::api::Namespace nsHexDec = { "builtin", "hex", "dec" };
+        {
+            /* demangle(mangled_string) */
+            ContentRegistry::PatternLanguage::addFunction(nsHexDec, "demangle", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                const auto mangledString = Token::literalToString(params[0], false);
+
+                return llvm::demangle(mangledString);
             });
         }
 
