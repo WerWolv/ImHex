@@ -22,11 +22,11 @@
 
 namespace hex {
 
-    long double operator""_scaled(long double value) {
+    float operator""_scaled(long double value) {
         return value * ImHexApi::System::getGlobalScale();
     }
 
-    long double operator""_scaled(unsigned long long value) {
+    float operator""_scaled(unsigned long long value) {
         return value * ImHexApi::System::getGlobalScale();
     }
 
