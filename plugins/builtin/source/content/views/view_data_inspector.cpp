@@ -6,6 +6,11 @@
 
 #include <cstring>
 
+#include <hex/helpers/logger.hpp>
+#include <pl/pattern_language.hpp>
+#include <pl/core/evaluator.hpp>
+#include <pl/patterns/pattern.hpp>
+
 namespace hex::plugin::builtin {
 
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
@@ -32,9 +37,11 @@ namespace hex::plugin::builtin {
     void ViewDataInspector::drawContent() {
         if (this->m_shouldInvalidate) {
             this->m_shouldInvalidate = false;
-
             this->m_cachedData.clear();
+
             auto provider = ImHexApi::Provider::get();
+
+            // Decode bytes using registered inspectors
             for (auto &entry : ContentRegistry::DataInspector::getEntries()) {
                 if (this->m_validBytes < entry.requiredSize)
                     continue;
@@ -47,10 +54,69 @@ namespace hex::plugin::builtin {
                         byte ^= 0xFF;
                 }
 
-                this->m_cachedData.push_back({ entry.unlocalizedName, entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle), entry.editingFunction, false });
+                InspectorCacheEntry cacheEntry = {
+                        entry.unlocalizedName,
+                        entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle),
+                        entry.editingFunction,
+                        false
+                };
+
+                this->m_cachedData.push_back(cacheEntry);
+            }
+
+            // Decode bytes using custom inspectors defined using the pattern language
+            pl::PatternLanguage runtime;
+            ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
+
+            runtime.setDataSource([this, provider](u64 offset, u8 *buffer, size_t size) {
+                provider->read(offset, buffer, size);
+
+                if (this->m_invert) {
+                    for (size_t i = 0; i < size; i++)
+                        buffer[i] ^= 0xFF;
+                }
+            }, provider->getBaseAddress(), provider->getActualSize());
+
+            runtime.setDangerousFunctionCallHandler([]{ return false; });
+            runtime.setDefaultEndian(this->m_endian);
+            runtime.setStartAddress(this->m_startAddress);
+
+            std::map<std::string, pl::core::Token::Literal> inVariables = {
+                { "numberDisplayStyle", u128(this->m_numberDisplayStyle) }
+            };
+
+            bool ranSuccessfully = false;
+            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                auto inspectorFilePath = path / "inspectors.hexpat";
+
+                if (fs::exists(inspectorFilePath) && fs::isRegularFile(inspectorFilePath)) {
+                    ranSuccessfully = runtime.executeFile(inspectorFilePath, {}, inVariables, true);
+                    break;
+                }
+            }
+
+            if (ranSuccessfully) {
+                const auto &patterns = runtime.getAllPatterns();
+
+                for (const auto &pattern : patterns) {
+                    InspectorCacheEntry cacheEntry = {
+                            pattern->getDisplayName(),
+                            [value = pattern->getFormattedValue()]() {
+                                ImGui::TextUnformatted(value.c_str());
+                                return value;
+                            },
+                            std::nullopt,
+                            false
+                    };
+
+                    this->m_cachedData.push_back(cacheEntry);
+                }
+            } else {
+                auto error = runtime.getError().value();
+
+                log::error("Failed to execute inspectors.hexpat:\n {}", error.what());
             }
         }
-
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             auto provider = ImHexApi::Provider::get();
