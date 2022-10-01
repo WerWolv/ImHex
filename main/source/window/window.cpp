@@ -496,7 +496,7 @@ namespace hex {
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(this->m_window, &displayWidth, &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
+        glClearColor(0.00F, 0.00F, 0.00F, 1.00f);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

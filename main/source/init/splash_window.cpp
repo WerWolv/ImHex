@@ -126,7 +126,7 @@ namespace hex::init {
             int display_w, display_h;
             glfwGetFramebufferSize(this->m_window, &display_w, &display_h);
             glViewport(0, 0, display_w, display_h);
-            glClearColor(0, 0, 0, 0);
+            glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
             glClear(GL_COLOR_BUFFER_BIT);
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
