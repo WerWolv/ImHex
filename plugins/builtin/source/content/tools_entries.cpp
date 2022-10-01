@@ -16,7 +16,6 @@
 #include <chrono>
 #include <random>
 #include <regex>
-#include <limits>
 
 #include <llvm/Demangle/Demangle.h>
 #include <content/helpers/math_evaluator.hpp>
@@ -75,9 +74,8 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableHeadersRow();
 
-                u32 rowCount = 0;
                 for (u8 i = 0; i < 0x80 / 4; i++) {
-                    ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+                    ImGui::TableNextRow();
 
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("{0:03d}", i + 32 * tablePart);
@@ -92,10 +90,6 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("{0}", hex::makePrintable(i + 32 * tablePart));
-
-                    ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ((rowCount % 2) == 0) ? 0xFF101010 : 0xFF303030);
-
-                    rowCount++;
                 }
 
                 ImGui::EndTable();

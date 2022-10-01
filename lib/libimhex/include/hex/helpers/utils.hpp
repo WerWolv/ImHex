@@ -27,8 +27,8 @@ struct ImVec2;
 
 namespace hex {
 
-    long double operator""_scaled(long double value);
-    long double operator""_scaled(unsigned long long value);
+    float operator""_scaled(long double value);
+    float operator""_scaled(unsigned long long value);
     ImVec2 scaled(const ImVec2 &vector);
 
     template<typename T>
