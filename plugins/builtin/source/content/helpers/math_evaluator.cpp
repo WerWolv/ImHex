@@ -345,7 +345,7 @@ namespace hex {
                 evaluationStack.push(result);
             } else if (front.type == TokenType::Variable) {
                 if (this->m_variables.contains(front.name))
-                    evaluationStack.push(this->m_variables.at(front.name));
+                    evaluationStack.push(this->m_variables.at(front.name).value);
                 else {
                     this->setError("Unknown variable!");
                     return std::nullopt;
@@ -382,14 +382,14 @@ namespace hex {
     template<typename T>
     std::optional<T> MathEvaluator<T>::evaluate(const std::string &input) {
         auto inputQueue = parseInput(input);
-        if (!inputQueue.has_value())
+        if (!inputQueue.has_value() || inputQueue->empty())
             return std::nullopt;
 
         std::string resultVariable = "ans";
 
         {
             auto queueCopy = *inputQueue;
-            if (queueCopy.front().type == TokenType::Variable) {
+            if (queueCopy.front().type == TokenType::Variable && queueCopy.size() > 2) {
                 resultVariable = queueCopy.front().name;
                 queueCopy.pop();
                 if (queueCopy.front().type != TokenType::Operator || queueCopy.front().op != Operator::Assign)
@@ -407,16 +407,15 @@ namespace hex {
 
         auto result = evaluate(*postfixTokens);
 
-        if (result.has_value()) {
+        if (result.has_value() && !this->getVariables()[resultVariable].constant)
             this->setVariable(resultVariable, result.value());
-        }
 
         return result;
     }
 
     template<typename T>
-    void MathEvaluator<T>::setVariable(const std::string &name, T value) {
-        this->m_variables[name] = value;
+    void MathEvaluator<T>::setVariable(const std::string &name, T value, bool constant) {
+        this->m_variables[name] = { value, constant };
     }
 
     template<typename T>
@@ -435,6 +434,9 @@ namespace hex {
     template<typename T>
     void MathEvaluator<T>::registerStandardVariables() {
         this->setVariable("ans", 0);
+        this->setVariable("pi", std::numbers::pi, true);
+        this->setVariable("e", std::numbers::e, true);
+        this->setVariable("phi", std::numbers::phi, true);
     }
 
     template<typename T>

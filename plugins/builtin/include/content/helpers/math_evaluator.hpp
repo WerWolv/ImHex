@@ -16,15 +16,20 @@ namespace hex {
     public:
         MathEvaluator() = default;
 
+        struct Variable {
+            T value;
+            bool constant;
+        };
+
         std::optional<T> evaluate(const std::string &input);
 
         void registerStandardVariables();
         void registerStandardFunctions();
 
-        void setVariable(const std::string &name, T value);
+        void setVariable(const std::string &name, T value, bool constant = false);
         void setFunction(const std::string &name, const std::function<std::optional<T>(std::vector<T>)> &function, size_t minNumArgs, size_t maxNumArgs);
 
-        std::unordered_map<std::string, T> &getVariables() { return this->m_variables; }
+        std::unordered_map<std::string, Variable> &getVariables() { return this->m_variables; }
 
         [[nodiscard]] bool hasError() const {
             return this->m_lastError.has_value();
@@ -106,7 +111,7 @@ namespace hex {
         std::optional<std::queue<Token>> toPostfix(std::queue<Token> inputQueue);
         std::optional<T> evaluate(std::queue<Token> postfixTokens);
 
-        std::unordered_map<std::string, T> m_variables;
+        std::unordered_map<std::string, Variable> m_variables;
         std::unordered_map<std::string, std::function<std::optional<T>(std::vector<T>)>> m_functions;
 
         std::optional<std::string> m_lastError;

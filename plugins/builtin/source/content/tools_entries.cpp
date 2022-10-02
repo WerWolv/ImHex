@@ -385,7 +385,12 @@ namespace hex::plugin::builtin {
                     ImGui::TableSetupColumn("hex.builtin.tools.value"_lang);
 
                     ImGui::TableHeadersRow();
-                    for (const auto &[name, value] : mathEvaluator.getVariables()) {
+                    for (const auto &[name, variable] : mathEvaluator.getVariables()) {
+                        const auto &[value, constant] = variable;
+
+                        if (constant)
+                            continue;
+
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(name.c_str());
@@ -428,10 +433,9 @@ namespace hex::plugin::builtin {
             if (evaluate) {
                 try {
                     auto result = mathEvaluator.evaluate(mathInput);
-
+                    mathInput.clear();
                     if (result.has_value()) {
                         mathHistory.push_back(result.value());
-                        mathInput.clear();
                         lastMathError.clear();
                     }
 
