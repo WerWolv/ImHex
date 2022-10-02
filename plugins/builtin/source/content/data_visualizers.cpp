@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
         const static inline auto FormattingUpperCase = hex::format("%0{}X", CharCount);
         const static inline auto FormattingLowerCase = hex::format("%0{}x", CharCount);
 
-        const char *getFormatString(bool upperCase) {
+        static const char *getFormatString(bool upperCase) {
             if (upperCase)
                 return FormattingUpperCase.c_str();
             else
@@ -237,7 +237,7 @@ namespace hex::plugin::builtin {
         const static inline auto FormatStringUpperCase = hex::format("%{}G", CharCount);
         const static inline auto FormatStringLowerCase = hex::format("%{}g", CharCount);
 
-        const char *getFormatString(bool upperCase) {
+        static const char *getFormatString(bool upperCase) {
             if (upperCase)
                 return FormatStringUpperCase.c_str();
             else

@@ -35,14 +35,14 @@ namespace ImGui {
     public:
         Texture() = default;
         Texture(const ImU8 *buffer, int size);
-        Texture(const char *path);
+        explicit Texture(const char *path);
         Texture(const Texture&) = delete;
         Texture(Texture&& other) noexcept;
 
         ~Texture();
 
-        void operator=(const Texture&) = delete;
-        void operator=(Texture&& other) noexcept;
+        Texture& operator=(const Texture&) = delete;
+        Texture& operator=(Texture&& other) noexcept;
 
         [[nodiscard]] constexpr bool isValid() const noexcept {
             return this->m_textureId != nullptr;

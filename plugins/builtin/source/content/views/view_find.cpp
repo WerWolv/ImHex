@@ -183,7 +183,7 @@ namespace hex::plugin::builtin {
             case F64:   return parseNumericValue<double, double>(input);
             default:    return { false, { }, 0 };
         }
-    };
+    }
 
     template<typename T>
     static std::string formatBytes(const std::vector<u8> &bytes) {

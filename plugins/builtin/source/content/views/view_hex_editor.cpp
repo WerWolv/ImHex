@@ -1016,13 +1016,13 @@ namespace hex::plugin::builtin {
                             if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && providerData.selectionStart != providerData.selectionEnd)) {
                                 auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
-                                if (y == u64(clipper.DisplayStart + 3)) {
+                                if (y == (u64(clipper.DisplayStart) + 3)) {
                                     if (i128(*providerData.selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * 5);
 
                                     }
-                                } else if (y == u64(clipper.DisplayEnd - 3)) {
+                                } else if (y == (u64(clipper.DisplayStart) - 3)) {
                                     if (i128(*providerData.selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * (this->m_visibleRowCount - 1));

@@ -191,7 +191,7 @@ namespace hex::plugin::windows {
             View::showErrorPopup("hex.windows.view.tty_console.no_available_port"_lang);
             return true;    // If false, connect_error error popup will override this error popup
         }
-        this->m_portHandle = ::CreateFile(("\\\\.\\" + this->m_comPorts[this->m_selectedPort].first).c_str(),
+        this->m_portHandle = ::CreateFile((R"(\\.\)" + this->m_comPorts[this->m_selectedPort].first).c_str(),
             GENERIC_READ | GENERIC_WRITE,
             0,
             nullptr,

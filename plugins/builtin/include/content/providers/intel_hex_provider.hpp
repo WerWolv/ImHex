@@ -36,8 +36,8 @@ namespace hex::plugin::builtin::prv {
             return "hex.builtin.provider.intel_hex";
         }
 
-        bool hasFilePicker() const override { return true; }
-        bool handleFilePicker() override;
+        [[nodiscard]] bool hasFilePicker() const override { return true; }
+        [[nodiscard]] bool handleFilePicker() override;
 
         std::pair<Region, bool> getRegionValidity(u64 address) const override;
 

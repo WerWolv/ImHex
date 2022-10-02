@@ -20,10 +20,6 @@
 using ImGuiDataType = int;
 using ImGuiInputTextFlags = int;
 
-namespace pl {
-    class Evaluator;
-}
-
 namespace hex {
 
     class View;
@@ -61,7 +57,7 @@ namespace hex {
                     return name < other.name;
                 }
 
-                operator const std::string &() const {
+                explicit operator const std::string &() const {
                     return name;
                 }
             };
@@ -435,7 +431,7 @@ namespace hex {
 
             class Hash {
             public:
-                Hash(std::string unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
+                explicit Hash(std::string unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
 
                 class Function {
                 public:
@@ -498,6 +494,6 @@ namespace hex {
             }
 
         }
-    };
+    }
 
 }

@@ -642,11 +642,11 @@ namespace hex::plugin::builtin {
                                 ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value);
                                 variable.value = u128(value);
                             } else if (pl::core::Token::isFloatingPoint(variable.type)) {
-                                double value = hex::get_or<double>(variable.value, 0.0);
+                                auto value = hex::get_or<double>(variable.value, 0.0);
                                 ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value);
                                 variable.value = value;
                             } else if (variable.type == pl::core::Token::ValueType::Boolean) {
-                                bool value = hex::get_or<bool>(variable.value, false);
+                                auto value = hex::get_or<bool>(variable.value, false);
                                 ImGui::Checkbox(label.c_str(), &value);
                                 variable.value = value;
                             } else if (variable.type == pl::core::Token::ValueType::Character) {

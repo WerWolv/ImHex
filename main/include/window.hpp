@@ -50,7 +50,7 @@ namespace hex {
 
         double m_lastFrameTime = 0;
 
-        ImGui::Texture m_logoTexture = { nullptr };
+        ImGui::Texture m_logoTexture;
 
         std::mutex m_popupMutex;
         std::list<std::string> m_popupsToOpen;

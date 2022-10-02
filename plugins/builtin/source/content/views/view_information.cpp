@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             if (this->m_blockSize != 0)
-                this->m_entropyHandlePosition = region.getStartAddress() / this->m_blockSize;
+                this->m_entropyHandlePosition = region.getStartAddress() / double(this->m_blockSize);
         });
 
         EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {

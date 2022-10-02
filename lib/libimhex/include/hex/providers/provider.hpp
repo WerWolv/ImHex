@@ -97,7 +97,7 @@ namespace hex::prv {
         void markDirty(bool dirty = true) { this->m_dirty = dirty; }
         [[nodiscard]] bool isDirty() const { return this->m_dirty; }
 
-        virtual std::pair<Region, bool> getRegionValidity(u64 address) const;
+        [[nodiscard]] virtual std::pair<Region, bool> getRegionValidity(u64 address) const;
 
         void skipLoadInterface() { this->m_skipLoadInterface = true; }
         [[nodiscard]] bool shouldSkipLoadInterface() const { return this->m_skipLoadInterface; }

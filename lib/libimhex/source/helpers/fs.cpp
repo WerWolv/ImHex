@@ -194,7 +194,7 @@ namespace hex::fs {
             path = path / folder;
 
         return paths;
-    };
+    }
 
     std::vector<std::fs::path> getPluginPaths() {
         std::vector<std::fs::path> paths = getDataPaths();

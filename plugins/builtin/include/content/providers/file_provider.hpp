@@ -48,8 +48,8 @@ namespace hex::plugin::builtin::prv {
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
 
-        bool hasFilePicker() const override { return true; }
-        bool handleFilePicker() override;
+        [[nodiscard]] bool hasFilePicker() const override { return true; }
+        [[nodiscard]] bool handleFilePicker() override;
 
         void setPath(const std::fs::path &path);
 

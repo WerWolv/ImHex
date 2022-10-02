@@ -14,8 +14,10 @@
 #include <nlohmann/json.hpp>
 
 namespace {
-    static std::vector<std::fs::path> userFolders;
-    static void loadUserFoldersFromSetting(nlohmann::json &setting) {
+
+    std::vector<std::fs::path> userFolders;
+
+    void loadUserFoldersFromSetting(nlohmann::json &setting) {
         userFolders.clear();
         std::vector<std::string> paths = setting;
         for (const auto &path : paths) {
@@ -24,7 +26,8 @@ namespace {
             userFolders.emplace_back(uString);
         }
     }
-};
+
+}
 
 namespace hex::plugin::builtin {
 

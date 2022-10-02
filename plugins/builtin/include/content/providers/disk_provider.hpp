@@ -45,7 +45,7 @@ namespace hex::plugin::builtin::prv {
             return "hex.builtin.provider.disk";
         }
 
-        std::pair<Region, bool> getRegionValidity(u64 address) const override;
+        [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
     protected:
         void reloadDrives();

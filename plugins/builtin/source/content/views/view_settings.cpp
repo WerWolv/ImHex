@@ -50,10 +50,11 @@ namespace hex::plugin::builtin {
 
                 for (auto &it : sortedCategories) {
                     auto &[category, settings] = *it;
-                    if (ImGui::BeginTabItem(LangEntry(category))) {
-                        const std::string &categoryDesc = descriptions.count(category) ? descriptions.at(category) : category.name;
+                    if (ImGui::BeginTabItem(LangEntry(category.name))) {
+                        const std::string &categoryDesc = descriptions.contains(category.name) ? descriptions.at(category.name) : category.name;
+
                         LangEntry descriptionEntry{categoryDesc};
-                        ImGui::TextWrapped("%s", static_cast<const char*>(descriptionEntry));
+                        ImGui::TextFormattedWrapped("{}", descriptionEntry);
                         ImGui::InfoTooltip(descriptionEntry);
                         ImGui::Separator();
 
@@ -85,7 +86,7 @@ namespace hex::plugin::builtin {
         } else
             this->getWindowOpenState() = false;
 
-        if (this->getWindowOpenState() == false && this->m_restartRequested) {
+        if (!this->getWindowOpenState() && this->m_restartRequested) {
             View::showYesNoQuestionPopup("hex.builtin.view.settings.restart_question"_lang, ImHexApi::Common::restartImHex, [] {});
         }
     }
