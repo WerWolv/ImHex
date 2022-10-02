@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.processing", "处理" },
                 { "hex.builtin.common.filter", "过滤器" },
                 { "hex.builtin.common.value", "值" },
-                //{ "hex.builtin.common.type", "Type" },
+                { "hex.builtin.common.type", "类型" },
                     { "hex.builtin.common.type.u8", "uint8_t" },
                     { "hex.builtin.common.type.i8", "int8_t" },
                     { "hex.builtin.common.type.u16", "uint16_t" },
@@ -116,24 +116,24 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.popup.error.read_only", "无法获得写权限，文件以只读方式打开。" },
                 { "hex.builtin.popup.error.open", "打开文件失败！" },
                 { "hex.builtin.popup.error.create", "创建新文件失败！" },
-                //{ "hex.builtin.popup.error.project.load", "Failed to load project!" },
-                //{ "hex.builtin.popup.error.project.save", "Failed to save project!" },
+                { "hex.builtin.popup.error.project.load", "加载工程失败！" },
+                { "hex.builtin.popup.error.project.save", "保存工程失败！" },
                 { "hex.builtin.popup.error.task_exception", "任务 '{}' 异常：\n\n{}" },
-                //{ "hex.builtin.popup.error.file_dialog.portal",
-                //    "There was an error while opening the file browser. This might be caused by your system not having a xdg-desktop-portal backend installed correctly.\n"
-                //    "\n"
-                //    "On KDE, it's xdg-desktop-portal-kde.\n"
-                //    "On Gnome it's xdg-desktop-portal-gnome.\n"
-                //    "On wlroots it's xdg-desktop-portal-wlr.\n"
-                //    "Otherwise, you can try to use xdg-desktop-portal-gtk.\n"
-                //    "\n"
-                //    "Reboot your system after installing it.\n"
-                //    "\n"
-                //    "If the file browser still doesn't work after this, submit an issue at https://github.com/WerWolv/ImHex/issues\n"
-                //    "\n"
-                //    "In the meantime files can still be opened by dragging them onto the ImHex window!"
-                //},
-                //{ "hex.builtin.popup.error.file_dialog.common", "An error occurred while opening the file browser!" },
+                { "hex.builtin.popup.error.file_dialog.portal",
+                    "打开文件浏览器时发生了错误。这可能是由于您的系统没有正确安装 xdg-desktop-portal 后端。\n"
+                    "\n"
+                    "对于 KDE，请使用 xdg-desktop-portal-kde。\n"
+                    "对于 Gnome，请使用 xdg-desktop-portal-gnome。\n"
+                    "对于 wlroots，请使用 xdg-desktop-portal-wlr。\n"
+                    "其他情况，您可以尝试使用 xdg-desktop-portal-gtk。\n"
+                    "\n"
+                    "重启后请重启您的系统。\n"
+                    "\n"
+                    "如果在这之后文件浏览器仍然不能正常工作，请在 https://github.com/WerWolv/ImHex/issues 提交问题。\n"
+                    "\n"
+                    "与此同时，仍然可以通过将文件拖到 ImHex 窗口来打开它们！"
+                },
+                { "hex.builtin.popup.error.file_dialog.common", "尝试打开文件浏览器时发生了错误！" },
 
                 { "hex.builtin.menu.file", "文件" },
                     { "hex.builtin.menu.file.create_file", "新建文件..." },
@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.menu.file.clear_recent", "清除" },
                     { "hex.builtin.menu.file.open_other", "打开其他..." },
                     { "hex.builtin.menu.file.close", "关闭" },
-                    //{ "hex.builtin.menu.file.reload_file", "Reload File" },
+                    { "hex.builtin.menu.file.reload_file", "重新加载文件" },
                     { "hex.builtin.menu.file.quit", "退出 ImHex" },
                     { "hex.builtin.menu.file.open_project", "打开项目..." },
                     { "hex.builtin.menu.file.save_project", "保存项目..." },
@@ -337,7 +337,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.hex_editor.copy.swift", "Swift 数组" },
                         { "hex.builtin.view.hex_editor.copy.pascal", "Pascal 数组" },
                         { "hex.builtin.view.hex_editor.copy.base64", "Base64" },
-                        //{ "hex.builtin.view.hex_editor.copy.ascii", "Text Area" },
+                        { "hex.builtin.view.hex_editor.copy.ascii", "ASCII 文本" },
                         { "hex.builtin.view.hex_editor.copy.html", "HTML" },
                     { "hex.builtin.view.hex_editor.menu.edit.paste", "粘贴" },
                     { "hex.builtin.view.hex_editor.menu.edit.select_all", "全选" },
@@ -345,7 +345,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "修改大小..." },
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "插入..." },
                     { "hex.builtin.view.hex_editor.menu.edit.remove", "删除..." },
-                    //{ "hex.builtin.view.hex_editor.menu.edit.jump_to", "Jump to" },
+                    { "hex.builtin.view.hex_editor.menu.edit.jump_to", "转到" },
 
                 { "hex.builtin.view.information.name", "数据信息" },
                     { "hex.builtin.view.information.control", "控制" },
@@ -460,17 +460,17 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.find.strings.line_feeds", "换行" },
                     { "hex.builtin.view.find.sequences", "序列" },
                     { "hex.builtin.view.find.regex", "正则表达式" },
-                        // { "hex.builtin.view.find.regex.pattern", "Pattern" },
-                        // { "hex.builtin.view.find.regex.full_match", "Require full match" },
+                         { "hex.builtin.view.find.regex.pattern", "模式" },
+                         { "hex.builtin.view.find.regex.full_match", "要求完整匹配" },
                     { "hex.builtin.view.find.binary_pattern", "二进制模式" },
-                    //{ "hex.builtin.view.find.value", "Numeric Value" },
-                //          { "hex.builtin.view.find.value.min", "Minimum Value" },
-                //          { "hex.builtin.view.find.value.max", "Maximum Value" },
+                    { "hex.builtin.view.find.value", "数字值" },
+                          { "hex.builtin.view.find.value.min", "最小值" },
+                          { "hex.builtin.view.find.value.max", "最大值" },
                     { "hex.builtin.view.find.search", "搜索" },
                     { "hex.builtin.view.find.context.copy", "复制值" },
                     { "hex.builtin.view.find.context.copy_demangle", "复制值的还原名" },
                     { "hex.builtin.view.find.search.entries", "{} 个结果" },
-                    // { "hex.builtin.view.find.search.reset", "Reset" },
+                    { "hex.builtin.view.find.search.reset", "重置" },
 
                 { "hex.builtin.command.calc.desc", "计算器" },
                 { "hex.builtin.command.cmd.desc", "指令" },
@@ -502,7 +502,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.inspector.wide", "宽字符" },
                 { "hex.builtin.inspector.utf8", "UTF-8 码位" },
                 { "hex.builtin.inspector.string", "字符串" },
-                //{ "hex.builtin.inspector.string16", "Wide String" },
+                { "hex.builtin.inspector.string16", "宽字符串" },
                 { "hex.builtin.inspector.time32", "time32_t" },
                 { "hex.builtin.inspector.time64", "time64_t" },
                 { "hex.builtin.inspector.time", "time_t" },
@@ -783,7 +783,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.grey_zeros", "显示零字节为灰色" },
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "大写十六进制" },
                     { "hex.builtin.setting.hex_editor.visualizer", "数据处理器的数据可视化格式" },
-                    //{ "hex.builtin.setting.hex_editor.sync_scrolling", "Synchronize editor position" },
+                    { "hex.builtin.setting.hex_editor.sync_scrolling", "同步编辑器位置" },
                 { "hex.builtin.setting.folders", "扩展搜索路径" },
                     { "hex.builtin.setting.folders.description", "为模式、脚本和规则等指定额外的搜索路径" },
                     { "hex.builtin.setting.folders.add_folder", "添加新的目录" },
