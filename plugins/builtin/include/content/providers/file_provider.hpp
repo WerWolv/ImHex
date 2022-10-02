@@ -7,15 +7,12 @@
 #include <sys/stat.h>
 
 #if defined(OS_WINDOWS)
-
+    #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
-
 #else
-
     #include <sys/mman.h>
     #include <unistd.h>
     #include <sys/fcntl.h>
-
 #endif
 
 namespace hex::plugin::builtin::prv {

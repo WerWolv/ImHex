@@ -11,22 +11,17 @@
 
 #include <imgui.h>
 
+#if defined(OS_WINDOWS)
+    #include <winioctl.h>
+#elif defined(OS_LINUX) || defined(OS_MACOS)
+    #include <fcntl.h>
+    #include <unistd.h>
+    #include <sys/stat.h>
+    #include <sys/types.h>
+#endif
+
 #if defined(OS_LINUX)
-
-    #include <fcntl.h>
-    #include <unistd.h>
-    #include <sys/stat.h>
-    #include <sys/types.h>
-
     #define lseek lseek64
-
-#elif defined(OS_MACOS)
-
-    #include <fcntl.h>
-    #include <unistd.h>
-    #include <sys/stat.h>
-    #include <sys/types.h>
-
 #endif
 
 namespace hex::plugin::builtin::prv {
