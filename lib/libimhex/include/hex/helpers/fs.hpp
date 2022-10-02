@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -84,8 +86,8 @@ namespace hex::fs {
     void setFileBrowserErrorCallback(const std::function<void()> &callback);
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {});
 
-    enum class ImHexPath {
-        Patterns,
+    enum class ImHexPath : u32 {
+        Patterns = 0,
         PatternsInclude,
         Magic,
         Python,
@@ -96,7 +98,11 @@ namespace hex::fs {
         Constants,
         Encodings,
         Logs,
-        Recent
+        Recent,
+        Scripts,
+        Inspectors,
+
+        END
     };
 
     std::optional<std::fs::path> getExecutablePath();

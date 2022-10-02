@@ -7,6 +7,8 @@
 #include <cstring>
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/file.hpp>
+
 #include <pl/pattern_language.hpp>
 #include <pl/core/evaluator.hpp>
 #include <pl/patterns/pattern.hpp>
@@ -54,17 +56,20 @@ namespace hex::plugin::builtin {
                         byte ^= 0xFF;
                 }
 
-                InspectorCacheEntry cacheEntry = {
-                        entry.unlocalizedName,
-                        entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle),
-                        entry.editingFunction,
-                        false
-                };
-
-                this->m_cachedData.push_back(cacheEntry);
+                this->m_cachedData.push_back({
+                    entry.unlocalizedName,
+                    entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle),
+                    entry.editingFunction,
+                    false
+                });
             }
 
+
             // Decode bytes using custom inspectors defined using the pattern language
+            const std::map<std::string, pl::core::Token::Literal> inVariables = {
+                    { "numberDisplayStyle", u128(this->m_numberDisplayStyle) }
+            };
+
             pl::PatternLanguage runtime;
             ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
 
@@ -81,43 +86,42 @@ namespace hex::plugin::builtin {
             runtime.setDefaultEndian(this->m_endian);
             runtime.setStartAddress(this->m_startAddress);
 
-            std::map<std::string, pl::core::Token::Literal> inVariables = {
-                { "numberDisplayStyle", u128(this->m_numberDisplayStyle) }
-            };
+            for (const auto &folderPath : fs::getDefaultPaths(fs::ImHexPath::Inspectors)) {
+                for (const auto &filePath : std::fs::recursive_directory_iterator(folderPath)) {
+                    if (!filePath.exists() || !filePath.is_regular_file() || filePath.path().extension() != ".hexpat")
+                        continue;
 
-            bool ranSuccessfully = false;
-            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                auto inspectorFilePath = path / "inspectors.hexpat";
+                    fs::File file(filePath, fs::File::Mode::Read);
+                    if (file.isValid()) {
+                        auto inspectorCode = file.readString();
 
-                if (fs::exists(inspectorFilePath) && fs::isRegularFile(inspectorFilePath)) {
-                    ranSuccessfully = runtime.executeFile(inspectorFilePath, {}, inVariables, true);
-                    break;
-                }
-            }
+                        if (!inspectorCode.empty()) {
+                            if (runtime.executeString(inspectorCode, {}, inVariables, true)) {
+                                const auto &patterns = runtime.getAllPatterns();
 
-            if (ranSuccessfully) {
-                const auto &patterns = runtime.getAllPatterns();
+                                for (const auto &pattern : patterns) {
+                                    if (pattern->isHidden())
+                                        continue;
 
-                for (const auto &pattern : patterns) {
-                    InspectorCacheEntry cacheEntry = {
-                            pattern->getDisplayName(),
-                            [value = pattern->getFormattedValue()]() {
-                                ImGui::TextUnformatted(value.c_str());
-                                return value;
-                            },
-                            std::nullopt,
-                            false
-                    };
+                                    this->m_cachedData.push_back({
+                                        pattern->getDisplayName(),
+                                        [value = pattern->getFormattedValue()]() {
+                                            ImGui::TextUnformatted(value.c_str());
+                                            return value;
+                                        },
+                                        std::nullopt,
+                                        false
+                                    });
+                                }
+                            } else {
+                                const auto& error = runtime.getError();
 
-                    this->m_cachedData.push_back(cacheEntry);
-                }
-            } else {
-                const auto& error = runtime.getError();
-
-                if (error.has_value()) {
-                    log::error("Failed to execute inspectors.hexpat:\n {}", error.value().what());
-                } else {
-                    log::error("Failed to execute inspectors.hexpat");
+                                log::error("Failed to execute inspectors.hexpat!");
+                                if (error.has_value())
+                                    log::error("{}", error.value().what());
+                            }
+                        }
+                    }
                 }
             }
         }

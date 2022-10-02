@@ -209,6 +209,8 @@ namespace hex::fs {
         std::vector<std::fs::path> result;
 
         switch (path) {
+            case ImHexPath::END:
+                return { };
             case ImHexPath::Constants:
                 result = appendPath(getDataPaths(), "constants");
                 break;
@@ -244,6 +246,12 @@ namespace hex::fs {
                 break;
             case ImHexPath::Recent:
                 result = appendPath(getConfigPaths(), "recent");
+                break;
+            case ImHexPath::Scripts:
+                result = appendPath(getDataPaths(), "scripts");
+                break;
+            case ImHexPath::Inspectors:
+                result = appendPath(getDefaultPaths(ImHexPath::Scripts), "inspectors");
                 break;
         }
 

@@ -61,20 +61,6 @@ namespace hex::init {
         bool result = true;
 
         using enum fs::ImHexPath;
-        constexpr std::array paths = {
-            Patterns,
-            PatternsInclude,
-            Magic,
-            Plugins,
-            Resources,
-            Config,
-            Constants,
-            Yara,
-            Encodings,
-            Python,
-            Logs,
-            Recent
-        };
 
         // Check if ImHex is installed in portable mode
         {
@@ -87,8 +73,8 @@ namespace hex::init {
         }
 
         // Create all folders
-        for (auto path : paths) {
-            for (auto &folder : fs::getDefaultPaths(path, true)) {
+        for (u32 path = 0; path < u32(fs::ImHexPath::END); path++) {
+            for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(path), true)) {
                 try {
                     fs::createDirectories(folder);
                 } catch (...) {
