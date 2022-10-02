@@ -112,9 +112,13 @@ namespace hex::plugin::builtin {
                     this->m_cachedData.push_back(cacheEntry);
                 }
             } else {
-                auto error = runtime.getError().value();
+                const auto& error = runtime.getError();
 
-                log::error("Failed to execute inspectors.hexpat:\n {}", error.what());
+                if (error.has_value()) {
+                    log::error("Failed to execute inspectors.hexpat:\n {}", error.value().what());
+                } else {
+                    log::error("Failed to execute inspectors.hexpat");
+                }
             }
         }
 
