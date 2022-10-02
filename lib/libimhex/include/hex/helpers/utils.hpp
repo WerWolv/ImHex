@@ -335,7 +335,7 @@ namespace hex {
 
     namespace first_time_exec {
 
-#define FIRST_TIME [[maybe_unused]] static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
+        #define FIRST_TIME [[maybe_unused]] static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
 
         template<class F>
         class FirstTimeExecute {
@@ -358,7 +358,7 @@ namespace hex {
 
     namespace final_cleanup {
 
-#define FINAL_CLEANUP [[maybe_unused]] static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
+        #define FINAL_CLEANUP [[maybe_unused]] static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
 
         template<class F>
         class FinalCleanupExecute {

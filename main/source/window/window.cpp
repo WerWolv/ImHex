@@ -80,7 +80,7 @@ namespace hex {
         #else
             std::raise(signalNumber);
         #endif
-    };
+    }
 
     Window::Window() {
         {
@@ -199,9 +199,16 @@ namespace hex {
                 }
             }
 
-
             this->frameBegin();
-            this->frame();
+
+            try {
+                this->frame();
+            } catch (const std::exception &e) {
+                log::error("Exception thrown in main loop: {}", e.what());
+            } catch (...) {
+                log::error("Unknown exception thrown in main loop!");
+            }
+
             this->frameEnd();
 
             const auto targetFps = ImHexApi::System::getTargetFPS();

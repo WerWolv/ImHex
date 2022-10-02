@@ -1,7 +1,6 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <imgui.h>
-#include <imgui_freetype.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 #undef IMGUI_DEFINE_MATH_OPERATORS
@@ -69,12 +68,14 @@ namespace ImGui {
         other.m_textureId = nullptr;
     }
 
-    void Texture::operator=(Texture&& other) noexcept {
+    Texture& Texture::operator=(Texture&& other) noexcept {
         this->m_textureId = other.m_textureId;
         this->m_width = other.m_width;
         this->m_height = other.m_height;
 
         other.m_textureId = nullptr;
+        
+        return *this;
     }
 
     Texture::~Texture() {
@@ -103,8 +104,8 @@ namespace ImGui {
 
         ImGuiContext &g         = *GImGui;
         const ImGuiID id        = window->GetID(label);
-        ImVec2 label_size       = CalcTextSize(icon, NULL, false);
-        label_size.x += CalcTextSize(" ", NULL, false).x + CalcTextSize(label, NULL, false).x;
+        ImVec2 label_size       = CalcTextSize(icon, nullptr, false);
+        label_size.x += CalcTextSize(" ", nullptr, false).x + CalcTextSize(label, nullptr, false).x;
 
         ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
@@ -137,7 +138,7 @@ namespace ImGui {
 
         ImGuiContext &g         = *GImGui;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
@@ -154,7 +155,7 @@ namespace ImGui {
         // Render
         const ImU32 col = hovered ? GetColorU32(ImGuiCol_ButtonHovered) : GetColorU32(ImGuiCol_ButtonActive);
         PushStyleColor(ImGuiCol_Text, ImU32(col));
-        TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
+        TextEx(label, nullptr, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
         GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
         PopStyleColor();
 
@@ -170,7 +171,7 @@ namespace ImGui {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y) + ImVec2(g.FontSize + style.FramePadding.x * 2, 0.0f);
@@ -205,8 +206,8 @@ namespace ImGui {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 text_size  = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), NULL, true);
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+        const ImVec2 text_size  = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), nullptr, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
         if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
@@ -234,7 +235,7 @@ namespace ImGui {
         RenderTextWrapped(bb.Min + style.FramePadding * 2, label, nullptr, CalcWrapWidthForPos(window->DC.CursorPos, window->DC.TextWrapPos));
         PopStyleColor();
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text));
-        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, NULL, &text_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &bb);
         PopStyleColor();
 
         ImGui::PopStyleVar();
@@ -250,13 +251,13 @@ namespace ImGui {
     void UnderlinedText(const char *label, ImColor color, const ImVec2 &size_arg) {
         ImGuiWindow *window = GetCurrentWindow();
 
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos  = window->DC.CursorPos;
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         PushStyleColor(ImGuiCol_Text, ImU32(color));
-        TextEx(label, NULL, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
+        TextEx(label, nullptr, ImGuiTextFlags_NoWidthForLargeClippedText);    // Skip formatting
         GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(color));
         PopStyleColor();
     }
@@ -382,7 +383,7 @@ namespace ImGui {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(label);
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
 
@@ -401,7 +402,7 @@ namespace ImGui {
                                                                                           : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, label, NULL, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, label, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         // Automatically close popups
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
@@ -421,7 +422,7 @@ namespace ImGui {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(symbol);
-        const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
+        const ImVec2 label_size = CalcTextSize(symbol, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
 
@@ -442,7 +443,7 @@ namespace ImGui {
                                                                                                  : ImGuiCol_MenuBarBg);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, NULL, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -464,7 +465,7 @@ namespace ImGui {
         ImGuiContext &g         = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id        = window->GetID(symbol);
-        const ImVec2 label_size = CalcTextSize(symbol, NULL, true);
+        const ImVec2 label_size = CalcTextSize(symbol, nullptr, true);
 
         ImVec2 pos = window->DC.CursorPos;
 
@@ -485,7 +486,7 @@ namespace ImGui {
                                                                                           : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, NULL, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -609,7 +610,7 @@ namespace ImGui {
 
         ImGuiContext& g = *GImGui;
 
-        if (format == NULL)
+        if (format == nullptr)
             format = DataTypeGetInfo(data_type)->PrintFmt;
 
         char buf[64];
@@ -648,7 +649,7 @@ namespace ImGui {
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
         const ImGuiID id = window->GetID(label);
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         const ImVec2 size = ImVec2(CalcTextSize("0").x + style.FramePadding.x * 2, GetFrameHeight());
         const ImVec2 pos = window->DC.CursorPos;

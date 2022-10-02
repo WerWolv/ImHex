@@ -430,4 +430,4 @@ namespace hex {
         auto [value, success] = this->m_displayEnd.emplace(&pattern, DisplayEndDefault);
         return value->second;
     }
-};
+}

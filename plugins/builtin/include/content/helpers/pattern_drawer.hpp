@@ -40,4 +40,4 @@ namespace hex {
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
     };
-};
+}

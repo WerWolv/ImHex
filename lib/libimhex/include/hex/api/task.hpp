@@ -52,7 +52,7 @@ namespace hex {
         mutable std::mutex m_mutex;
 
         std::string m_unlocalizedName;
-        u64 m_currValue, m_maxValue;
+        u64 m_currValue = 0, m_maxValue = 0;
         std::thread m_thread;
         std::function<void()> m_interruptCallback;
 
