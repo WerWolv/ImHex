@@ -57,7 +57,15 @@ int main(int argc, char **argv, char **envp) {
                     EventManager::post<RequestOpenFile>(argv[i]);
             }
 
-            window.loop();
+            try {
+                window.loop();
+            } catch (const std::exception &e) {
+                log::fatal("Exception thrown in main loop: {}", e.what());
+                return EXIT_FAILURE;
+            } catch (...) {
+                log::fatal("Unknown exception thrown in main loop!");
+                return EXIT_FAILURE;
+            }
         }
 
     } while (shouldRestart);

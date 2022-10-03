@@ -18,6 +18,7 @@ namespace hex::plugin::builtin {
             struct {
                 std::string sourceCode;
                 std::unique_ptr<pl::PatternLanguage> runtime;
+                bool executionDone = true;
             } patternLanguage;
 
             std::list<ImHexApi::Bookmarks::Entry> bookmarks;

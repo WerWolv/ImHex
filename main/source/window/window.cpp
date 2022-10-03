@@ -9,6 +9,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <fmt/printf.h>
 
 #include <chrono>
 #include <csignal>
@@ -200,15 +201,7 @@ namespace hex {
             }
 
             this->frameBegin();
-
-            try {
-                this->frame();
-            } catch (const std::exception &e) {
-                log::error("Exception thrown in main loop: {}", e.what());
-            } catch (...) {
-                log::error("Unknown exception thrown in main loop!");
-            }
-
+            this->frame();
             this->frameEnd();
 
             const auto targetFps = ImHexApi::System::getTargetFPS();

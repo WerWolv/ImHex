@@ -445,30 +445,31 @@ namespace hex::plugin::builtin {
             }
 
             View::discardNavigationRequests();
+
+            if (!this->m_lastEvaluationProcessed) {
+                this->m_console = this->m_lastEvaluationLog;
+
+                if (!this->m_lastEvaluationResult) {
+                    if (this->m_lastEvaluationError) {
+                        TextEditor::ErrorMarkers errorMarkers = {
+                            { this->m_lastEvaluationError->line, this->m_lastEvaluationError->message }
+                        };
+                        this->m_textEditor.SetErrorMarkers(errorMarkers);
+                    }
+                } else {
+                    for (auto &[name, variable] : this->m_patternVariables) {
+                        if (variable.outVariable && this->m_lastEvaluationOutVars.contains(name))
+                            variable.value = this->m_lastEvaluationOutVars.at(name);
+                    }
+
+                    EventManager::post<EventHighlightingChanged>();
+                }
+
+                this->m_lastEvaluationProcessed = true;
+                ProviderExtraData::get(provider).patternLanguage.executionDone = true;
+            }
         }
         ImGui::End();
-
-        if (!this->m_lastEvaluationProcessed) {
-            this->m_console = this->m_lastEvaluationLog;
-
-            if (!this->m_lastEvaluationResult) {
-                if (this->m_lastEvaluationError) {
-                    TextEditor::ErrorMarkers errorMarkers = {
-                        { this->m_lastEvaluationError->line, this->m_lastEvaluationError->message }
-                    };
-                    this->m_textEditor.SetErrorMarkers(errorMarkers);
-                }
-            } else {
-                for (auto &[name, variable] : this->m_patternVariables) {
-                    if (variable.outVariable && this->m_lastEvaluationOutVars.contains(name))
-                        variable.value = this->m_lastEvaluationOutVars.at(name);
-                }
-
-                EventManager::post<EventHighlightingChanged>();
-            }
-
-            this->m_lastEvaluationProcessed = true;
-        }
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
@@ -814,19 +815,23 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code) {
+        auto provider = ImHexApi::Provider::get();
+        auto &patternLanguage = ProviderExtraData::get(provider).patternLanguage;
+
         this->m_runningEvaluators++;
+        patternLanguage.executionDone = false;
 
         this->m_textEditor.SetErrorMarkers({});
         this->m_console.clear();
 
-        auto provider = ImHexApi::Provider::get();
-        auto &runtime = ProviderExtraData::get(provider).patternLanguage.runtime;
 
-        ContentRegistry::PatternLanguage::configureRuntime(*runtime, provider);
+        ContentRegistry::PatternLanguage::configureRuntime(*patternLanguage.runtime, provider);
 
         EventManager::post<EventHighlightingChanged>();
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, &runtime, code](auto &task) {
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, &patternLanguage, code](auto &task) {
+            auto &runtime = patternLanguage.runtime;
+
             task.setInterruptCallback([&runtime] { runtime->abort(); });
 
             std::map<std::string, pl::core::Token::Literal> envVars;
