@@ -10,6 +10,7 @@
 #include <chrono>
 #include <memory>
 #include <list>
+#include <condition_variable>
 
 namespace hex {
 
@@ -28,6 +29,7 @@ namespace hex {
         void update(u64 value = 0);
         void setMaxValue(u64 value);
 
+        [[nodiscard]] bool isRunning() const;
         [[nodiscard]] bool isBackgroundTask() const;
         [[nodiscard]] bool isFinished() const;
         [[nodiscard]] bool hadException() const;
@@ -43,6 +45,8 @@ namespace hex {
 
         void setInterruptCallback(std::function<void()> callback);
 
+        void setRunning(bool running);
+
     private:
         void finish();
         void interruption();
@@ -52,16 +56,17 @@ namespace hex {
         mutable std::mutex m_mutex;
 
         std::string m_unlocalizedName;
-        u64 m_currValue = 0, m_maxValue = 0;
-        std::thread m_thread;
+        std::atomic<u64> m_currValue = 0, m_maxValue = 0;
         std::function<void()> m_interruptCallback;
+        std::function<void(Task &)> m_function;
 
-        bool m_shouldInterrupt = false;
-        bool m_background = true;
+        std::atomic<bool> m_running = false;
+        std::atomic<bool> m_shouldInterrupt = false;
+        std::atomic<bool> m_background = true;
 
-        bool m_interrupted = false;
-        bool m_finished = false;
-        bool m_hadException = false;
+        std::atomic<bool> m_interrupted = false;
+        std::atomic<bool> m_finished = false;
+        std::atomic<bool> m_hadException = false;
         std::string m_exceptionMessage;
 
         struct TaskInterruptor { virtual ~TaskInterruptor() = default; };
@@ -88,10 +93,14 @@ namespace hex {
     public:
         TaskManager() = delete;
 
+        static void init();
+        static void exit();
+
         constexpr static auto NoProgress = 0;
 
         static TaskHolder createTask(std::string name, u64 maxValue, std::function<void(Task &)> function);
         static TaskHolder createBackgroundTask(std::string name, std::function<void(Task &)> function);
+
         static void collectGarbage();
 
         static size_t getRunningTaskCount();
@@ -104,6 +113,12 @@ namespace hex {
 
         static std::list<std::shared_ptr<Task>> s_tasks;
         static std::list<std::function<void()>> s_deferredCalls;
+
+        static std::mutex s_queueMutex;
+        static std::condition_variable s_jobCondVar;
+        static std::vector<std::jthread> s_workers;
+
+        static void runner(const std::stop_token &stopToken);
     };
 
 }

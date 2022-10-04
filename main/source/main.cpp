@@ -33,6 +33,7 @@ int main(int argc, char **argv, char **envp) {
 
             init::WindowSplash splashWindow;
 
+            TaskManager::init();
             for (const auto &[name, task, async] : init::getInitTasks())
                 splashWindow.addStartupTask(name, task, async);
 
@@ -44,6 +45,7 @@ int main(int argc, char **argv, char **envp) {
         ON_SCOPE_EXIT {
             for (const auto &[name, task, async] : init::getExitTasks())
                 task();
+            TaskManager::exit();
         };
 
         // Main window

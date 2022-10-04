@@ -61,7 +61,7 @@ namespace hex::init {
 
                 try {
                     if (async) {
-                        std::thread(runTask).detach();
+                        TaskManager::createBackgroundTask(name, [runTask](auto&){ runTask(); });
                     } else {
                         runTask();
                     }

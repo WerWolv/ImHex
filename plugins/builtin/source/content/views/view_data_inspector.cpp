@@ -37,93 +37,105 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::drawContent() {
-        if (this->m_shouldInvalidate) {
+        if (this->m_shouldInvalidate && !this->m_updateTask.isRunning()) {
             this->m_shouldInvalidate = false;
-            this->m_cachedData.clear();
 
-            auto provider = ImHexApi::Provider::get();
+            this->m_updateTask = TaskManager::createBackgroundTask("Update Inspector",
+               [this, validBytes = this->m_validBytes, startAddress = this->m_startAddress, endian = this->m_endian, invert = this->m_invert, numberDisplayStyle = this->m_numberDisplayStyle](auto &) {
+                auto provider = ImHexApi::Provider::get();
 
-            // Decode bytes using registered inspectors
-            for (auto &entry : ContentRegistry::DataInspector::getEntries()) {
-                if (this->m_validBytes < entry.requiredSize)
-                    continue;
+                this->m_workData.clear();
 
-                std::vector<u8> buffer(this->m_validBytes > entry.maxSize ? entry.maxSize : this->m_validBytes);
-                provider->read(this->m_startAddress, buffer.data(), buffer.size());
-
-                if (this->m_invert) {
-                    for (auto &byte : buffer)
-                        byte ^= 0xFF;
-                }
-
-                this->m_cachedData.push_back({
-                    entry.unlocalizedName,
-                    entry.generatorFunction(buffer, this->m_endian, this->m_numberDisplayStyle),
-                    entry.editingFunction,
-                    false
-                });
-            }
-
-
-            // Decode bytes using custom inspectors defined using the pattern language
-            const std::map<std::string, pl::core::Token::Literal> inVariables = {
-                    { "numberDisplayStyle", u128(this->m_numberDisplayStyle) }
-            };
-
-            pl::PatternLanguage runtime;
-            ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
-
-            runtime.setDataSource([this, provider](u64 offset, u8 *buffer, size_t size) {
-                provider->read(offset, buffer, size);
-
-                if (this->m_invert) {
-                    for (size_t i = 0; i < size; i++)
-                        buffer[i] ^= 0xFF;
-                }
-            }, provider->getBaseAddress(), provider->getActualSize());
-
-            runtime.setDangerousFunctionCallHandler([]{ return false; });
-            runtime.setDefaultEndian(this->m_endian);
-            runtime.setStartAddress(this->m_startAddress);
-
-            for (const auto &folderPath : fs::getDefaultPaths(fs::ImHexPath::Inspectors)) {
-                for (const auto &filePath : std::fs::recursive_directory_iterator(folderPath)) {
-                    if (!filePath.exists() || !filePath.is_regular_file() || filePath.path().extension() != ".hexpat")
+                // Decode bytes using registered inspectors
+                for (auto &entry : ContentRegistry::DataInspector::getEntries()) {
+                    if (validBytes < entry.requiredSize)
                         continue;
 
-                    fs::File file(filePath, fs::File::Mode::Read);
-                    if (file.isValid()) {
-                        auto inspectorCode = file.readString();
+                    std::vector<u8> buffer(validBytes > entry.maxSize ? entry.maxSize : validBytes);
+                    provider->read(startAddress, buffer.data(), buffer.size());
 
-                        if (!inspectorCode.empty()) {
-                            if (runtime.executeString(inspectorCode, {}, inVariables, true)) {
-                                const auto &patterns = runtime.getAllPatterns();
+                    if (invert) {
+                        for (auto &byte : buffer)
+                            byte ^= 0xFF;
+                    }
 
-                                for (const auto &pattern : patterns) {
-                                    if (pattern->isHidden())
-                                        continue;
+                    this->m_workData.push_back({
+                        entry.unlocalizedName,
+                        entry.generatorFunction(buffer, endian, numberDisplayStyle),
+                        entry.editingFunction,
+                        false
+                    });
+                }
 
-                                    this->m_cachedData.push_back({
-                                        pattern->getDisplayName(),
-                                        [value = pattern->getFormattedValue()]() {
-                                            ImGui::TextUnformatted(value.c_str());
-                                            return value;
-                                        },
-                                        std::nullopt,
-                                        false
-                                    });
+
+                // Decode bytes using custom inspectors defined using the pattern language
+                const std::map<std::string, pl::core::Token::Literal> inVariables = {
+                        { "numberDisplayStyle", u128(numberDisplayStyle) }
+                };
+
+                pl::PatternLanguage runtime;
+                ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
+
+                runtime.setDataSource([invert, provider](u64 offset, u8 *buffer, size_t size) {
+                    provider->read(offset, buffer, size);
+
+                    if (invert) {
+                        for (size_t i = 0; i < size; i++)
+                            buffer[i] ^= 0xFF;
+                    }
+                }, provider->getBaseAddress(), provider->getActualSize());
+
+                runtime.setDangerousFunctionCallHandler([]{ return false; });
+                runtime.setDefaultEndian(endian);
+                runtime.setStartAddress(startAddress);
+
+                for (const auto &folderPath : fs::getDefaultPaths(fs::ImHexPath::Inspectors)) {
+                    for (const auto &filePath : std::fs::recursive_directory_iterator(folderPath)) {
+                        if (!filePath.exists() || !filePath.is_regular_file() || filePath.path().extension() != ".hexpat")
+                            continue;
+
+                        fs::File file(filePath, fs::File::Mode::Read);
+                        if (file.isValid()) {
+                            auto inspectorCode = file.readString();
+
+                            if (!inspectorCode.empty()) {
+                                if (runtime.executeString(inspectorCode, {}, inVariables, true)) {
+                                    const auto &patterns = runtime.getAllPatterns();
+
+                                    for (const auto &pattern : patterns) {
+                                        if (pattern->isHidden())
+                                            continue;
+
+                                        this->m_workData.push_back({
+                                            pattern->getDisplayName(),
+                                            [value = pattern->getFormattedValue()]() {
+                                                ImGui::TextUnformatted(value.c_str());
+                                                return value;
+                                            },
+                                            std::nullopt,
+                                            false
+                                        });
+                                    }
+                                } else {
+                                    const auto& error = runtime.getError();
+
+                                    log::error("Failed to execute inspectors.hexpat!");
+                                    if (error.has_value())
+                                        log::error("{}", error.value().what());
                                 }
-                            } else {
-                                const auto& error = runtime.getError();
-
-                                log::error("Failed to execute inspectors.hexpat!");
-                                if (error.has_value())
-                                    log::error("{}", error.value().what());
                             }
                         }
                     }
                 }
-            }
+
+                this->m_dataValid = true;
+
+            });
+        }
+
+        if (this->m_dataValid) {
+            this->m_dataValid = false;
+            this->m_cachedData = this->m_workData;
         }
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {

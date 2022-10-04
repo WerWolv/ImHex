@@ -411,13 +411,12 @@ namespace hex::plugin::builtin {
                     this->m_hasUnevaluatedChanges = false;
 
 
-                    std::thread([this, code = this->m_textEditor.GetText()]{
+                    TaskManager::createBackgroundTask("Pattern Parsing", [this, code = this->m_textEditor.GetText()](auto &){
                         this->parsePattern(code);
 
                         if (this->m_runAutomatically)
                             this->evaluatePattern(code);
-                    }).detach();
-
+                    });
                 }
             }
 
@@ -775,7 +774,8 @@ namespace hex::plugin::builtin {
 
             this->evaluatePattern(code);
             this->m_textEditor.SetText(code);
-            std::thread([this, code] { this->parsePattern(code); }).detach();
+
+            TaskManager::createBackgroundTask("Parse pattern", [this, code](auto&) { this->parsePattern(code); });
         }
     }
 

@@ -245,6 +245,9 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::BeginPopupContextItem("FrontTask", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
+                        if (task->isBackgroundTask())
+                            continue;
+
                         ImGui::PushID(&task);
                         ImGui::TextFormatted("{}", LangEntry(task->getUnlocalizedName()));
                         ImGui::SameLine();

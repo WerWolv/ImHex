@@ -33,7 +33,9 @@ namespace hex::plugin::builtin {
 
         u64 m_startAddress  = 0;
         size_t m_validBytes = 0;
-        std::vector<InspectorCacheEntry> m_cachedData;
+        std::atomic<bool> m_dataValid = false;
+        std::vector<InspectorCacheEntry> m_cachedData, m_workData;
+        TaskHolder m_updateTask;
 
         std::string m_editingValue;
     };

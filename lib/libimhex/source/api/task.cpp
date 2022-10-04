@@ -4,59 +4,47 @@
 #include <hex/helpers/logger.hpp>
 
 #include <algorithm>
+#include <ranges>
 
 namespace hex {
 
     std::mutex TaskManager::s_deferredCallsMutex;
 
-    std::list<std::shared_ptr<Task>> TaskManager::s_tasks, s_backgroundTasks;
+    std::list<std::shared_ptr<Task>> TaskManager::s_tasks;
     std::list<std::function<void()>> TaskManager::s_deferredCalls;
 
-    Task::Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
-    : m_unlocalizedName(std::move(unlocalizedName)), m_currValue(0), m_maxValue(maxValue), m_background(background) {
-        this->m_thread = std::thread([this, func = std::move(function)] {
-            try {
-                func(*this);
-            } catch (const TaskInterruptor &) {
-                this->interruption();
-            } catch (const std::exception &e) {
-                log::error("Exception in task {}: {}", this->m_unlocalizedName, e.what());
-                this->exception(e.what());
-            } catch (...) {
-                log::error("Exception in task {}", this->m_unlocalizedName);
-                this->exception("Unknown Exception");
-            }
+    std::mutex TaskManager::s_queueMutex;
+    std::condition_variable TaskManager::s_jobCondVar;
+    std::vector<std::jthread> TaskManager::s_workers;
 
-            this->finish();
-        });
-    }
+    Task::Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
+    : m_unlocalizedName(std::move(unlocalizedName)), m_currValue(0), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
 
     Task::Task(hex::Task &&other) noexcept {
-        std::scoped_lock thisLock(this->m_mutex);
-        std::scoped_lock otherLock(other.m_mutex);
+        {
+            std::scoped_lock thisLock(this->m_mutex);
+            std::scoped_lock otherLock(other.m_mutex);
 
-        this->m_thread = std::move(other.m_thread);
-        this->m_unlocalizedName = std::move(other.m_unlocalizedName);
+            this->m_function = std::move(other.m_function);
+            this->m_unlocalizedName = std::move(other.m_unlocalizedName);
+        }
 
-        this->m_maxValue = other.m_maxValue;
-        this->m_currValue = other.m_currValue;
+        this->m_maxValue    = u64(other.m_maxValue);
+        this->m_currValue   = u64(other.m_currValue);
 
-        this->m_finished = other.m_finished;
-        this->m_hadException = other.m_hadException;
-        this->m_interrupted = other.m_interrupted;
-        this->m_shouldInterrupt = other.m_shouldInterrupt;
+        this->m_finished        = bool(other.m_finished);
+        this->m_hadException    = bool(other.m_hadException);
+        this->m_interrupted     = bool(other.m_interrupted);
+        this->m_shouldInterrupt = bool(other.m_shouldInterrupt);
+        this->m_running         = bool(other.m_running);
     }
 
     Task::~Task() {
         if (!this->isFinished())
             this->interrupt();
-
-        this->m_thread.join();
     }
 
     void Task::update(u64 value) {
-        std::scoped_lock lock(this->m_mutex);
-
         this->m_currValue = value;
 
         if (this->m_shouldInterrupt)
@@ -64,15 +52,11 @@ namespace hex {
     }
 
     void Task::setMaxValue(u64 value) {
-        std::scoped_lock lock(this->m_mutex);
-
         this->m_maxValue = value;
     }
 
 
     void Task::interrupt() {
-        std::scoped_lock lock(this->m_mutex);
-
         this->m_shouldInterrupt = true;
 
         if (this->m_interruptCallback)
@@ -83,34 +67,32 @@ namespace hex {
         this->m_interruptCallback = std::move(callback);
     }
 
-    bool Task::isBackgroundTask() const {
-        std::scoped_lock lock(this->m_mutex);
+    void Task::setRunning(bool running) {
+        this->m_running = running;
+    }
 
+    bool Task::isBackgroundTask() const {
         return this->m_background;
     }
 
     bool Task::isFinished() const {
-        std::scoped_lock lock(this->m_mutex);
-
         return this->m_finished;
     }
 
     bool Task::hadException() const {
-        std::scoped_lock lock(this->m_mutex);
-
         return this->m_hadException;
     }
 
     bool Task::wasInterrupted() const {
-        std::scoped_lock lock(this->m_mutex);
-
         return this->m_interrupted;
     }
 
     void Task::clearException() {
-        std::scoped_lock lock(this->m_mutex);
-
         this->m_hadException = false;
+    }
+
+    bool Task::isRunning() const {
+        return this->m_running;
     }
 
     std::string Task::getExceptionMessage() const {
@@ -132,14 +114,10 @@ namespace hex {
     }
 
     void Task::finish() {
-        std::scoped_lock lock(this->m_mutex);
-
         this->m_finished = true;
     }
 
     void Task::interruption() {
-        std::scoped_lock lock(this->m_mutex);
-
         this->m_interrupted = true;
     }
 
@@ -169,21 +147,74 @@ namespace hex {
     }
 
 
+    void TaskManager::init() {
+        for (u32 i = 0; i < std::thread::hardware_concurrency(); i++)
+            TaskManager::s_workers.emplace_back(TaskManager::runner);
+    }
+
+    void TaskManager::exit() {
+        for (auto &task : TaskManager::s_tasks)
+            task->interrupt();
+
+        for (auto &thread : TaskManager::s_workers)
+            thread.request_stop();
+
+        s_jobCondVar.notify_all();
+
+        TaskManager::s_workers.clear();
+    }
+
+    void TaskManager::runner(const std::stop_token &stopToken) {
+        std::mutex mutex;
+        while (true) {
+            std::shared_ptr<Task> task;
+            {
+                std::unique_lock lock(s_queueMutex);
+                s_jobCondVar.wait(lock, [&] {
+                    return !s_tasks.empty() || stopToken.stop_requested();
+                });
+                if (stopToken.stop_requested())
+                    break;
+
+                task = s_tasks.front();
+                s_tasks.pop_front();
+            }
+
+            try {
+                task->m_function(*task);
+            } catch (const Task::TaskInterruptor &) {
+                task->interruption();
+            } catch (const std::exception &e) {
+                log::error("Exception in task {}: {}", task->m_unlocalizedName, e.what());
+                task->exception(e.what());
+            } catch (...) {
+                log::error("Exception in task {}", task->m_unlocalizedName);
+                task->exception("Unknown Exception");
+            }
+
+            task->finish();
+        }
+    }
+
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, std::function<void(Task &)> function) {
+        std::unique_lock lock(s_queueMutex);
         s_tasks.emplace_back(std::make_shared<Task>(std::move(name), maxValue, false, std::move(function)));
+        s_jobCondVar.notify_one();
 
         return TaskHolder(s_tasks.back());
     }
 
     TaskHolder TaskManager::createBackgroundTask(std::string name, std::function<void(Task &)> function) {
-        s_backgroundTasks.emplace_back(std::make_shared<Task>(std::move(name), 0, true, std::move(function)));
+        std::unique_lock lock(s_queueMutex);
+        s_tasks.emplace_back(std::make_shared<Task>(std::move(name), 0, true, std::move(function)));
+        s_jobCondVar.notify_one();
 
-        return TaskHolder(s_backgroundTasks.back());
+        return TaskHolder(s_tasks.back());
     }
 
     void TaskManager::collectGarbage() {
+        std::unique_lock lock(s_queueMutex);
         std::erase_if(s_tasks, [](const auto &task) { return task->isFinished() && !task->hadException(); });
-        std::erase_if(s_backgroundTasks, [](const auto &task) { return task->isFinished(); });
     }
 
     std::list<std::shared_ptr<Task>> &TaskManager::getRunningTasks() {
@@ -191,7 +222,11 @@ namespace hex {
     }
 
     size_t TaskManager::getRunningTaskCount() {
-        return s_tasks.size();
+        std::unique_lock lock(s_queueMutex);
+
+        return std::count_if(s_tasks.begin(), s_tasks.end(), [](const auto &task){
+            return !task->isBackgroundTask();
+        });
     }
 
 

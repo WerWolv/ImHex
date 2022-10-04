@@ -302,7 +302,7 @@ namespace hex::plugin::windows {
         if (this->m_transmitting)
             return;
 
-        auto transmitThread = std::thread([&, this] {
+        TaskManager::createBackgroundTask("Transmitting data", [&, this](auto&) {
             OVERLAPPED overlapped = { };
 
             overlapped.hEvent = ::CreateEvent(nullptr, true, false, nullptr);
@@ -322,7 +322,6 @@ namespace hex::plugin::windows {
 
             this->m_transmitting = false;
         });
-        transmitThread.detach();
     }
 
 }
