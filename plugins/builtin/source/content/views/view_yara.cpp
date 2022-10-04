@@ -46,10 +46,10 @@ namespace hex::plugin::builtin {
             } else {
                 ImGui::BeginDisabled(this->m_matcherTask.isRunning());
                 {
-                    if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, this->m_rules[this->m_selectedRule].first.string().c_str())) {
+                    if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, hex::toUTF8String(this->m_rules[this->m_selectedRule].first).c_str())) {
                         for (u32 i = 0; i < this->m_rules.size(); i++) {
                             const bool selected = (this->m_selectedRule == i);
-                            if (ImGui::Selectable(this->m_rules[i].first.string().c_str(), selected))
+                            if (ImGui::Selectable(hex::toUTF8String(this->m_rules[i].first).c_str(), selected))
                                 this->m_selectedRule = i;
 
                             if (selected)
@@ -203,7 +203,7 @@ namespace hex::plugin::builtin {
 
                     delete[] ptr;
                 },
-                fs::toShortPath(this->m_rules[this->m_selectedRule].second).string().data()
+                hex::toUTF8String(fs::toShortPath(this->m_rules[this->m_selectedRule].second)).data()
             );
 
             fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);

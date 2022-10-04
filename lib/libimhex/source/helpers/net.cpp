@@ -188,7 +188,7 @@ namespace hex {
             curl_mime *mime     = curl_mime_init(this->m_ctx);
             curl_mimepart *part = curl_mime_addpart(mime);
 
-            auto fileName = filePath.filename().string();
+            auto fileName = hex::toUTF8String(filePath.filename());
             curl_mime_data_cb(part, file.getSize(),
                 [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
                     auto file = static_cast<FILE*>(arg);

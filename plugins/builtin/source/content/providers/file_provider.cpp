@@ -152,13 +152,13 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::string FileProvider::getName() const {
-        return std::fs::path(this->m_path).filename().string();
+        return hex::toUTF8String(this->m_path.filename());
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() const {
         std::vector<std::pair<std::string, std::string>> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, this->m_path.string());
+        result.emplace_back("hex.builtin.provider.file.path"_lang, hex::toUTF8String(this->m_path));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStatsValid) {
@@ -284,11 +284,12 @@ namespace hex::plugin::builtin::prv {
     void FileProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        this->setPath(settings["path"].get<std::string>());
+        auto path = settings["path"].get<std::string>();
+        this->setPath(std::u8string(path.begin(), path.end()));
     }
 
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = this->m_path.string();
+        settings["path"] = hex::toUTF8String(this->m_path);
 
         return Provider::storeSettings(settings);
     }

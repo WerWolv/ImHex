@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
                         this->m_constants.push_back(constant);
                     }
                 } catch (...) {
-                    log::error("Failed to parse constants file {}", file.path().string());
+                    log::error("Failed to parse constants file {}", hex::toUTF8String(file.path()));
                     continue;
                 }
             }

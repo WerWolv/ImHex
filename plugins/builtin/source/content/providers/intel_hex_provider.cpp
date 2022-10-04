@@ -218,7 +218,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     [[nodiscard]] std::string IntelHexProvider::getName() const {
-        return hex::format("hex.builtin.provider.intel_hex.name"_lang, this->m_sourceFilePath.filename().string());
+        return hex::format("hex.builtin.provider.intel_hex.name"_lang, hex::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
     bool IntelHexProvider::handleFilePicker() {
@@ -250,11 +250,12 @@ namespace hex::plugin::builtin::prv {
     void IntelHexProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        this->m_sourceFilePath = settings["path"].get<std::string>();
+        auto path = settings["path"].get<std::string>();
+        this->m_sourceFilePath = std::u8string(path.begin(), path.end());
     }
 
     nlohmann::json IntelHexProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = this->m_sourceFilePath.string();
+        settings["path"] = hex::toUTF8String(this->m_sourceFilePath);
 
         return Provider::storeSettings(settings);
     }

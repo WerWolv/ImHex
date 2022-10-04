@@ -133,13 +133,13 @@ namespace hex {
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
 
         EventManager::subscribe<EventAbnormalTermination>(this, [this](int) {
-            ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
+            ImGui::SaveIniSettingsToDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
 
             if (!ImHexApi::Provider::isDirty())
                 return;
 
             for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (ProjectFile::store((std::fs::path(path) / CrashBackupFileName).string()))
+                if (ProjectFile::store(path / CrashBackupFileName))
                     break;
             }
         });
@@ -378,7 +378,7 @@ namespace hex {
                         const auto filePath = path / "builtin.hexplug";
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(filePath.string().c_str());
+                        ImGui::TextUnformatted(hex::toUTF8String(filePath).c_str());
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(fs::exists(filePath) ? ICON_VS_CHECK : ICON_VS_CLOSE);
                     }
@@ -746,7 +746,7 @@ namespace hex {
         }
 
         if (!this->m_imguiSettingsPath.empty() && fs::exists(this->m_imguiSettingsPath))
-            ImGui::LoadIniSettingsFromDisk(this->m_imguiSettingsPath.string().c_str());
+            ImGui::LoadIniSettingsFromDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
 
@@ -771,7 +771,7 @@ namespace hex {
         ImNodes::PopAttributeFlag();
         ImNodes::PopAttributeFlag();
 
-        ImGui::SaveIniSettingsToDisk(this->m_imguiSettingsPath.string().c_str());
+        ImGui::SaveIniSettingsToDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();

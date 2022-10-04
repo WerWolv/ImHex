@@ -68,7 +68,7 @@ namespace hex::fs {
     }
 
     static inline bool isSubPath(const std::fs::path& base, const std::fs::path& destination) {
-        const auto relative = std::fs::relative(destination, base).string();
+        const auto relative = std::fs::relative(destination, base).u8string();
 
         return relative.size() == 1 || (relative[0] != '.' && relative[1] != '.');
     }

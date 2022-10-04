@@ -27,7 +27,7 @@ namespace hex::magic {
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
             for (const auto &entry : std::fs::directory_iterator(dir, error)) {
                 if (entry.is_regular_file() && ((sourceFiles && entry.path().extension().empty()) || (!sourceFiles && entry.path().extension() == ".mgc"))) {
-                    magicFiles += fs::toShortPath(entry.path()).string() + MAGIC_PATH_SEPARATOR;
+                    magicFiles += hex::toUTF8String(fs::toShortPath(entry.path())) + MAGIC_PATH_SEPARATOR;
                 }
             }
         }

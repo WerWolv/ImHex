@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
                 for (auto &path : fs::getDefaultPaths(type))
-                    ImGui::TextUnformatted(path.string().c_str());
+                    ImGui::TextUnformatted(hex::toUTF8String(path).c_str());
             }
 
             ImGui::EndTable();

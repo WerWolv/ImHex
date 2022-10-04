@@ -78,7 +78,7 @@ namespace hex::init {
                 try {
                     fs::createDirectories(folder);
                 } catch (...) {
-                    log::error("Failed to create folder {}!", folder.string());
+                    log::error("Failed to create folder {}!", hex::toUTF8String(folder));
                     result = false;
                 }
             }
@@ -135,7 +135,7 @@ namespace hex::init {
             cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
             cfg.SizePixels = fontSize;
 
-            fonts->AddFontFromFileTTF(fontFile.string().c_str(), std::floor(fontSize), &cfg, ranges.Data);    // Needs conversion to char for Windows
+            fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), std::floor(fontSize), &cfg, ranges.Data);    // Needs conversion to char for Windows
         }
 
         cfg.MergeMode = true;
@@ -244,7 +244,7 @@ namespace hex::init {
             if (builtinPlugins > 1) continue;
 
             if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize plugin {}", plugin.getPath().filename().string());
+                log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }
@@ -253,7 +253,7 @@ namespace hex::init {
             if (plugin.isBuiltinPlugin()) continue;
 
             if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize plugin {}", plugin.getPath().filename().string());
+                log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }

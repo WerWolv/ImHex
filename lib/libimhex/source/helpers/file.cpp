@@ -17,12 +17,12 @@ namespace hex::fs {
                 this->m_file = _wfopen(path.c_str(), L"w+b");
         #else
             if (mode == File::Mode::Read)
-                this->m_file = fopen64(path.string().c_str(), "rb");
+                this->m_file = fopen64(hex::toUTF8String(path).c_str(), "rb");
             else if (mode == File::Mode::Write)
-                this->m_file = fopen64(path.string().c_str(), "r+b");
+                this->m_file = fopen64(hex::toUTF8String(path).c_str(), "r+b");
 
             if (mode == File::Mode::Create || (mode == File::Mode::Write && this->m_file == nullptr))
-                this->m_file = fopen64(path.string().c_str(), "w+b");
+                this->m_file = fopen64(hex::toUTF8String(path).c_str(), "w+b");
         #endif
     }
 
@@ -159,7 +159,7 @@ namespace hex::fs {
 
     bool File::remove() {
         this->close();
-        return std::remove(this->m_path.string().c_str()) == 0;
+        return std::remove(hex::toUTF8String(this->m_path).c_str()) == 0;
     }
 
     void File::disableBuffering() {

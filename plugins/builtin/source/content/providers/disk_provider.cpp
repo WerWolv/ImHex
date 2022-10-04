@@ -259,14 +259,14 @@ namespace hex::plugin::builtin::prv {
     }
 
     std::string DiskProvider::getName() const {
-        return this->m_path.string();
+        return hex::toUTF8String(this->m_path);
     }
 
     std::vector<std::pair<std::string, std::string>> DiskProvider::getDataInformation() const {
         return {
-            {"hex.builtin.provider.disk.selected_disk"_lang, this->m_path.string()                },
-            { "hex.builtin.provider.disk.disk_size"_lang,    hex::toByteString(this->m_diskSize)  },
-            { "hex.builtin.provider.disk.sector_size"_lang,  hex::toByteString(this->m_sectorSize)}
+            { "hex.builtin.provider.disk.selected_disk"_lang, hex::toUTF8String(this->m_path)       },
+            { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(this->m_diskSize)    },
+            { "hex.builtin.provider.disk.sector_size"_lang,   hex::toByteString(this->m_sectorSize)  }
         };
     }
 
@@ -341,7 +341,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     nlohmann::json DiskProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = this->m_path.string();
+        settings["path"] = hex::toUTF8String(this->m_path);
 
         return Provider::storeSettings(settings);
     }
@@ -349,7 +349,8 @@ namespace hex::plugin::builtin::prv {
     void DiskProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        this->setPath(settings["path"].get<std::string>());
+        auto path = settings["path"].get<std::string>();
+        this->setPath(std::u8string(path.begin(), path.end()));
         this->reloadDrives();
     }
 

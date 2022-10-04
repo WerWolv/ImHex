@@ -1,14 +1,10 @@
 #include "content/providers/motorola_srec_provider.hpp"
 
-#include <cstring>
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
-
-#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin::prv {
 
@@ -198,7 +194,7 @@ namespace hex::plugin::builtin::prv {
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {
-        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, this->m_sourceFilePath.filename().string());
+        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, hex::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
     bool MotorolaSRECProvider::handleFilePicker() {

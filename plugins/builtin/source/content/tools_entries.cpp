@@ -620,9 +620,11 @@ namespace hex::plugin::builtin {
                 if (response.code == 200) {
                     try {
                         auto json = nlohmann::json::parse(response.body);
-                        links.push_back({ currFile.filename().string(),
+                        links.push_back({
+                            hex::toUTF8String(currFile.filename()),
                             json["data"]["file"]["url"]["short"],
-                            json["data"]["file"]["metadata"]["size"]["readable"] });
+                            json["data"]["file"]["metadata"]["size"]["readable"]
+                        });
                     } catch (...) {
                         View::showErrorPopup("hex.builtin.tools.file_uploader.invalid_response"_lang);
                     }
@@ -975,7 +977,7 @@ namespace hex::plugin::builtin {
 
                     u32 index = 0;
                     for (auto &file : files) {
-                        if (ImGui::Selectable(std::fs::path(file).filename().string().c_str(), index == selectedIndex))
+                        if (ImGui::Selectable(hex::toUTF8String(file).c_str(), index == selectedIndex))
                             selectedIndex = index;
                         index++;
                     }
@@ -1067,7 +1069,7 @@ namespace hex::plugin::builtin {
 
                                 fs::File input(file, fs::File::Mode::Read);
                                 if (!input.isValid()) {
-                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, std::fs::path(file).filename().string()));
+                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, hex::toUTF8String(file)));
                                     return;
                                 }
 

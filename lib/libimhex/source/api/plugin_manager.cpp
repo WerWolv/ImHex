@@ -1,6 +1,7 @@
 #include <hex/api/plugin_manager.hpp>
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <filesystem>
 #include <system_error>
@@ -16,7 +17,7 @@ namespace hex {
                 return;
             }
         #else
-            this->m_handle = dlopen(path.string().c_str(), RTLD_LAZY);
+            this->m_handle = dlopen(hex::toUTF8String(path).c_str(), RTLD_LAZY);
 
             if (this->m_handle == nullptr) {
                 log::error("dlopen failed: {}!", dlerror());
@@ -68,7 +69,7 @@ namespace hex {
     bool Plugin::initializePlugin() const {
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != IMHEX_VERSION) {
-            log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", this->m_path.filename().string(), requestedVersion);
+            log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", hex::toUTF8String(this->m_path.filename()), requestedVersion);
             return false;
         }
 

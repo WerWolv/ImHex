@@ -315,7 +315,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     return fs::openFileBrowser(fs::DialogMode::Open, { {"TTF Font", "ttf"} },
                         [&](const std::fs::path &path) {
-                            fontPath = path.string();
+                            fontPath = hex::toUTF8String(path);
                             setting  = fontPath;
                         });
                 }
@@ -374,7 +374,7 @@ namespace hex::plugin::builtin {
             } else {
                 for (size_t n = 0; n < userFolders.size(); n++) {
                     const bool isSelected = (currentItemIndex == n);
-                    if (ImGui::Selectable(userFolders.at(n).string().c_str(), isSelected)) { currentItemIndex = n; }
+                    if (ImGui::Selectable(hex::toUTF8String(userFolders.at(n)).c_str(), isSelected)) { currentItemIndex = n; }
                     if (isSelected) { ImGui::SetItemDefaultFocus(); }
                 }
                 ImGui::EndListBox();
@@ -489,7 +489,7 @@ namespace hex::plugin::builtin {
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
                 auto path = dir / "font.ttf";
                 if (fs::exists(path)) {
-                    log::info("Loading custom front from {}", path.string());
+                    log::info("Loading custom front from {}", hex::toUTF8String(path));
 
                     fontFile = path;
                     break;
