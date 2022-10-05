@@ -56,7 +56,6 @@ jobs:
           glfw:p
           file:p
           mbedtls:p
-          python:p
           freetype:p
           dlfcn:p
 
@@ -73,15 +72,11 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        # Get path to mingw python library
-        PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//' | sed 's/ //')
-        PYTHON_LIB_PATH=$(cygpath -m $(which lib${PYTHON_LIB_NAME}.dll))
 
         cmake -G "MinGW Makefiles"                \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
           -DCREATE_PACKAGE=ON                     \
-          -DPython_LIBRARY="$PYTHON_LIB_PATH"     \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
@@ -503,7 +498,6 @@ jobs:
           libcurl-devel      \
           llvm-devel         \
           mbedtls-devel      \
-          python3-devel      \
           rpm-build          \
           yara-devel
           
