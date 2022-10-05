@@ -28,13 +28,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: 📜 Prepare Cache
-      id:    prep-ccache
-      shell: bash
-      run: |
-        mkdir -p "${CCACHE_DIR}"
-        echo "::set-output name=dir::$CCACHE_DIR"
-
     - name: 📜 Setup ccache
       uses:  hendrikmuhs/ccache-action@v1.2
       id:    cache-ccache
