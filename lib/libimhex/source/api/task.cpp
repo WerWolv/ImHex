@@ -10,7 +10,7 @@ namespace hex {
 
     std::mutex TaskManager::s_deferredCallsMutex;
 
-    std::list<std::shared_ptr<Task>> TaskManager::s_tasks;
+    std::list<std::shared_ptr<Task>> TaskManager::s_tasks, TaskManager::s_taskQueue;
     std::list<std::function<void()>> TaskManager::s_deferredCalls;
 
     std::mutex TaskManager::s_queueMutex;
@@ -177,13 +177,13 @@ namespace hex {
             {
                 std::unique_lock lock(s_queueMutex);
                 s_jobCondVar.wait(lock, [&] {
-                    return !s_tasks.empty() || stopToken.stop_requested();
+                    return !s_taskQueue.empty() || stopToken.stop_requested();
                 });
                 if (stopToken.stop_requested())
                     break;
 
-                task = std::move(s_tasks.front());
-                s_tasks.pop_front();
+                task = std::move(s_taskQueue.front());
+                s_taskQueue.pop_front();
             }
 
             try {
@@ -204,7 +204,10 @@ namespace hex {
 
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, std::function<void(Task &)> function) {
         std::unique_lock lock(s_queueMutex);
-        s_tasks.emplace_back(std::make_shared<Task>(std::move(name), maxValue, false, std::move(function)));
+        auto task = std::make_shared<Task>(std::move(name), maxValue, false, std::move(function));
+        s_tasks.emplace_back(task);
+        s_taskQueue.emplace_back(task);
+
         s_jobCondVar.notify_one();
 
         return TaskHolder(s_tasks.back());
@@ -212,7 +215,11 @@ namespace hex {
 
     TaskHolder TaskManager::createBackgroundTask(std::string name, std::function<void(Task &)> function) {
         std::unique_lock lock(s_queueMutex);
-        s_tasks.emplace_back(std::make_shared<Task>(std::move(name), 0, true, std::move(function)));
+
+        auto task = std::make_shared<Task>(std::move(name), 0, true, std::move(function));
+        s_tasks.emplace_back(task);
+        s_taskQueue.emplace_back(task);
+
         s_jobCondVar.notify_one();
 
         return TaskHolder(s_tasks.back());

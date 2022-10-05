@@ -108,6 +108,7 @@ namespace hex {
         static std::mutex s_deferredCallsMutex;
 
         static std::list<std::shared_ptr<Task>> s_tasks;
+        static std::list<std::shared_ptr<Task>> s_taskQueue;
         static std::list<std::function<void()>> s_deferredCalls;
 
         static std::mutex s_queueMutex;
