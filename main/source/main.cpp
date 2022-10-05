@@ -63,10 +63,10 @@ int main(int argc, char **argv, char **envp) {
                 window.loop();
             } catch (const std::exception &e) {
                 log::fatal("Exception thrown in main loop: {}", e.what());
-                return EXIT_FAILURE;
+                throw;
             } catch (...) {
                 log::fatal("Unknown exception thrown in main loop!");
-                return EXIT_FAILURE;
+                throw;
             }
         }
 

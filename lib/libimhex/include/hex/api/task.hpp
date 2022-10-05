@@ -29,7 +29,6 @@ namespace hex {
         void update(u64 value = 0);
         void setMaxValue(u64 value);
 
-        [[nodiscard]] bool isRunning() const;
         [[nodiscard]] bool isBackgroundTask() const;
         [[nodiscard]] bool isFinished() const;
         [[nodiscard]] bool hadException() const;
@@ -45,8 +44,6 @@ namespace hex {
 
         void setInterruptCallback(std::function<void()> callback);
 
-        void setRunning(bool running);
-
     private:
         void finish();
         void interruption();
@@ -60,7 +57,6 @@ namespace hex {
         std::function<void()> m_interruptCallback;
         std::function<void(Task &)> m_function;
 
-        std::atomic<bool> m_running = false;
         std::atomic<bool> m_shouldInterrupt = false;
         std::atomic<bool> m_background = true;
 

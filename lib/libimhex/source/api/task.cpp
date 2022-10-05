@@ -36,7 +36,6 @@ namespace hex {
         this->m_hadException    = bool(other.m_hadException);
         this->m_interrupted     = bool(other.m_interrupted);
         this->m_shouldInterrupt = bool(other.m_shouldInterrupt);
-        this->m_running         = bool(other.m_running);
     }
 
     Task::~Task() {
@@ -67,10 +66,6 @@ namespace hex {
         this->m_interruptCallback = std::move(callback);
     }
 
-    void Task::setRunning(bool running) {
-        this->m_running = running;
-    }
-
     bool Task::isBackgroundTask() const {
         return this->m_background;
     }
@@ -89,10 +84,6 @@ namespace hex {
 
     void Task::clearException() {
         this->m_hadException = false;
-    }
-
-    bool Task::isRunning() const {
-        return this->m_running;
     }
 
     std::string Task::getExceptionMessage() const {
@@ -130,20 +121,35 @@ namespace hex {
 
 
     bool TaskHolder::isRunning() const {
-        return !m_task.expired() && !m_task.lock()->isFinished();
+        if (this->m_task.expired())
+            return false;
+
+        auto task = this->m_task.lock();
+        return !task->isFinished();
     }
 
     bool TaskHolder::hadException() const {
-        return m_task.expired() || m_task.lock()->hadException();
+        if (this->m_task.expired())
+            return false;
+
+        auto task = this->m_task.lock();
+        return !task->hadException();
     }
 
     bool TaskHolder::wasInterrupted() const {
-        return m_task.expired() || m_task.lock()->wasInterrupted();
+        if (this->m_task.expired())
+            return false;
+
+        auto task = this->m_task.lock();
+        return !task->wasInterrupted();
     }
 
     void TaskHolder::interrupt() {
-        if (!this->m_task.expired())
-            this->m_task.lock()->interrupt();
+        if (this->m_task.expired())
+            return;
+
+        auto task = this->m_task.lock();
+        task->interrupt();
     }
 
 
@@ -176,7 +182,7 @@ namespace hex {
                 if (stopToken.stop_requested())
                     break;
 
-                task = s_tasks.front();
+                task = std::move(s_tasks.front());
                 s_tasks.pop_front();
             }
 

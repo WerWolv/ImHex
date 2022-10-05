@@ -37,6 +37,11 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::drawContent() {
+        if (this->m_dataValid) {
+            this->m_dataValid = false;
+            this->m_cachedData = std::move(this->m_workData);
+        }
+
         if (this->m_shouldInvalidate && !this->m_updateTask.isRunning()) {
             this->m_shouldInvalidate = false;
 
@@ -131,11 +136,6 @@ namespace hex::plugin::builtin {
                 this->m_dataValid = true;
 
             });
-        }
-
-        if (this->m_dataValid) {
-            this->m_dataValid = false;
-            this->m_cachedData = this->m_workData;
         }
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
