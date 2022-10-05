@@ -35,14 +35,13 @@ jobs:
         mkdir -p "${CCACHE_DIR}"
         echo "::set-output name=dir::$CCACHE_DIR"
 
-    - name: 📜 Restore ccache
-      uses:  actions/cache@v3
+    - name: 📜 Setup ccache
+      uses:  hendrikmuhs/ccache-action@v1.2
       id:    cache-ccache
       with:
-        path: |
-          ${{ steps.prep-ccache.outputs.dir }}
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        max-size: 50M
 
     - name: 📜 Restore CMakeCache
       uses:  actions/cache@v3
@@ -166,13 +165,12 @@ jobs:
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
         
-    - name: 📜 Restore ccache
-      uses: actions/cache@v3
+    - name: 📜 Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
-        path: |
-          ~/Library/Caches/ccache
         key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        max-size: 50M
 
         
     - name: 📜 Restore CMakeCache
@@ -260,13 +258,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: 📜 Restore ccache
-        uses: actions/cache@v3
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: |
-            ~/.cache/ccache
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
           
       - name: 📜 Restore other caches
         uses: actions/cache@v3
@@ -412,13 +409,12 @@ jobs:
         run: |
           dist/get_deps_archlinux.sh --noconfirm
 
-      - name: 📜 Restore ccache
-        uses: actions/cache@v3
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: |
-            ~/.cache/ccache
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
         
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
@@ -527,13 +523,12 @@ jobs:
         run: |
           dist/get_deps_fedora.sh
 
-      - name: 📜 Restore ccache
-        uses: actions/cache@v3
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: |
-            ~/.cache/ccache
           key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
    
       - name: 📜 Set version variable
         run: |
