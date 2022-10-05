@@ -157,7 +157,7 @@ jobs:
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        restore-keys: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build
         max-size: 50M
 
         
