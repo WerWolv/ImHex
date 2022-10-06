@@ -1222,6 +1222,8 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
 
         std::string clipboard = ImGui::GetClipboardText();
+        if (clipboard.empty())
+            return;
 
         // Check for non-hex characters
         bool isValidHexString = std::find_if(clipboard.begin(), clipboard.end(), [](char c) {

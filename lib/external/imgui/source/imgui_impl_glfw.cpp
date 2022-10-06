@@ -164,7 +164,10 @@ static void ImGui_ImplGlfw_ShutdownPlatformInterface();
 // Functions
 static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data)
 {
-    return glfwGetClipboardString((GLFWwindow*)user_data);
+    // IMHEX PATCH BEGIN
+    const char *data = glfwGetClipboardString((GLFWwindow*)user_data);
+    return data == nullptr ? "" : data;
+    // IMHEX PATCH END
 }
 
 static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
@@ -179,12 +182,12 @@ static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
         ImGuiContext& g = *GImGui;
         g.ClipboardHandlerData.clear();
         if (!::OpenClipboard(NULL))
-            return NULL;
+            return "";
         HANDLE wbuf_handle = ::GetClipboardData(CF_UNICODETEXT);
         if (wbuf_handle == NULL)
         {
             ::CloseClipboard();
-            return NULL;
+            return "";
         }
         if (const WCHAR* wbuf_global = (const WCHAR*)::GlobalLock(wbuf_handle))
         {
@@ -194,7 +197,7 @@ static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
         }
         ::GlobalUnlock(wbuf_handle);
         ::CloseClipboard();
-        return g.ClipboardHandlerData.Data;
+        return g.ClipboardHandlerData.Data == nullptr ? "" : g.ClipboardHandlerData.Data;
     }
 
     static void ImGui_ImplWin_SetClipboardText(void*, const char* text)
