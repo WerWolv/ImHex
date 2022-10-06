@@ -27,32 +27,32 @@ namespace hex::dp {
         Attribute(IOType ioType, Type type, std::string unlocalizedName);
         ~Attribute();
 
-        [[nodiscard]] u32 getId() const { return this->m_id; }
-        void setId(u32 id) { this->m_id = id; }
+        [[nodiscard]] int getId() const { return this->m_id; }
+        void setId(int id) { this->m_id = id; }
 
         [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
         [[nodiscard]] Type getType() const { return this->m_type; }
         [[nodiscard]] const std::string &getUnlocalizedName() const { return this->m_unlocalizedName; }
 
-        void addConnectedAttribute(u32 linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
-        void removeConnectedAttribute(u32 linkId) { this->m_connectedAttributes.erase(linkId); }
-        [[nodiscard]] std::map<u32, Attribute *> &getConnectedAttributes() { return this->m_connectedAttributes; }
+        void addConnectedAttribute(int linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
+        void removeConnectedAttribute(int linkId) { this->m_connectedAttributes.erase(linkId); }
+        [[nodiscard]] std::map<int, Attribute *> &getConnectedAttributes() { return this->m_connectedAttributes; }
 
         [[nodiscard]] Node *getParentNode() { return this->m_parentNode; }
 
         [[nodiscard]] std::optional<std::vector<u8>> &getOutputData() { return this->m_outputData; }
 
-        static void setIdCounter(u32 id) {
+        static void setIdCounter(int id) {
             if (id > Attribute::s_idCounter)
                 Attribute::s_idCounter = id;
         }
 
     private:
-        u32 m_id;
+        int m_id;
         IOType m_ioType;
         Type m_type;
         std::string m_unlocalizedName;
-        std::map<u32, Attribute *> m_connectedAttributes;
+        std::map<int, Attribute *> m_connectedAttributes;
         Node *m_parentNode = nullptr;
 
         std::optional<std::vector<u8>> m_outputData;
@@ -60,7 +60,7 @@ namespace hex::dp {
         friend class Node;
         void setParentNode(Node *node) { this->m_parentNode = node; }
 
-        static u32 s_idCounter;
+        static int s_idCounter;
     };
 
 }

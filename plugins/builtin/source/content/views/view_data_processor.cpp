@@ -49,12 +49,13 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderChanged>(this, [](const auto &, const auto &) {
+        EventManager::subscribe<EventProviderChanged>(this, [this](const auto &, const auto &) {
             auto &data = ProviderExtraData::getCurrent().dataProcessor;
             for (auto &node : data.nodes) {
                 node->setCurrentOverlay(nullptr);
             }
             data.dataOverlays.clear();
+            this->m_justSwitchedProvider = true;
         });
 
         EventManager::subscribe<EventDataChanged>(this, [this] {
@@ -103,7 +104,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewDataProcessor::eraseLink(u32 id) {
+    void ViewDataProcessor::eraseLink(int id) {
         auto &data = ProviderExtraData::getCurrent().dataProcessor;
 
         auto link = std::find_if(data.links.begin(), data.links.end(), [&id](auto link) { return link.getId() == id; });
@@ -124,14 +125,14 @@ namespace hex::plugin::builtin {
 
     void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
         auto &data = ProviderExtraData::getCurrent().dataProcessor;
-        for (u32 id : ids) {
+        for (int id : ids) {
             auto node = std::find_if(data.nodes.begin(), data.nodes.end(),
             [&id](const auto &node) {
                 return node->getId() == id;
             });
 
             for (auto &attr : (*node)->getAttributes()) {
-                std::vector<u32> linksToRemove;
+                std::vector<int> linksToRemove;
                 for (auto &[linkId, connectedAttr] : attr.getConnectedAttributes())
                     linksToRemove.push_back(linkId);
 
@@ -140,7 +141,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        for (u32 id : ids) {
+        for (int id : ids) {
             auto node = std::find_if(data.nodes.begin(), data.nodes.end(), [&id](const auto &node) { return node->getId() == id; });
 
             std::erase_if(data.endNodes, [&id](const auto &node) { return node->getId() == id; });
@@ -287,7 +288,7 @@ namespace hex::plugin::builtin {
 
             {
                 int nodeId;
-                if (ImNodes::IsNodeHovered(&nodeId) && data.currNodeError.has_value() && data.currNodeError->node->getId() == static_cast<u32>(nodeId)) {
+                if (ImNodes::IsNodeHovered(&nodeId) && data.currNodeError.has_value() && data.currNodeError->node->getId() == nodeId) {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted("hex.builtin.common.error"_lang);
                     ImGui::Separator();
@@ -305,7 +306,13 @@ namespace hex::plugin::builtin {
                     if (hasError)
                         ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
 
-                    ImNodes::BeginNode(node->getId());
+                    int nodeId = node->getId();
+                    if (!this->m_justSwitchedProvider)
+                        node->setPosition(ImNodes::GetNodeGridSpacePos(nodeId));
+                    else
+                        ImNodes::SetNodeGridSpacePos(nodeId, node->getPosition());
+
+                    ImNodes::BeginNode(nodeId);
 
                     ImNodes::BeginNodeTitleBar();
                     ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
@@ -341,6 +348,8 @@ namespace hex::plugin::builtin {
                     }
 
                     ImNodes::EndNode();
+
+                    ImNodes::SetNodeGridSpacePos(nodeId, node->getPosition());
 
                     if (hasError)
                         ImNodes::PopColorStyle();
@@ -379,9 +388,9 @@ namespace hex::plugin::builtin {
                         dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
                         for (auto &node : data.nodes) {
                             for (auto &attribute : node->getAttributes()) {
-                                if (attribute.getId() == static_cast<u32>(from))
+                                if (attribute.getId() == from)
                                     fromAttr = &attribute;
-                                else if (attribute.getId() == static_cast<u32>(to))
+                                else if (attribute.getId() == to)
                                     toAttr = &attribute;
                             }
                         }
@@ -429,6 +438,8 @@ namespace hex::plugin::builtin {
                     this->eraseNodes(selectedNodes);
                 }
             }
+
+            this->m_justSwitchedProvider = false;
         }
         ImGui::End();
     }
@@ -443,7 +454,7 @@ namespace hex::plugin::builtin {
         for (auto &node : data.nodes) {
             auto id              = node->getId();
             auto &currNodeOutput = output["nodes"][std::to_string(id)];
-            auto pos             = ImNodes::GetNodeGridSpacePos(id);
+            auto pos             = node->getPosition();
 
             currNodeOutput["type"] = node->getUnlocalizedName();
             currNodeOutput["pos"]  = {

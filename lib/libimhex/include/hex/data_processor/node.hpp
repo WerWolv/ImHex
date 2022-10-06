@@ -9,6 +9,7 @@
 #include <vector>
 
 #include <nlohmann/json_fwd.hpp>
+#include <imgui.h>
 
 namespace hex::prv {
     class Provider;
@@ -23,8 +24,8 @@ namespace hex::dp {
 
         virtual ~Node() = default;
 
-        [[nodiscard]] u32 getId() const { return this->m_id; }
-        void setId(u32 id) { this->m_id = id; }
+        [[nodiscard]] int getId() const { return this->m_id; }
+        void setId(int id) { this->m_id = id; }
 
         [[nodiscard]] const std::string &getUnlocalizedName() const { return this->m_unlocalizedName; }
         void setUnlocalizedName(const std::string &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
@@ -56,19 +57,28 @@ namespace hex::dp {
             this->m_processedInputs.clear();
         }
 
-        static void setIdCounter(u32 id) {
+        void setPosition(ImVec2 pos) {
+            this->m_position = pos;
+        }
+
+        [[nodiscard]] ImVec2 getPosition() const {
+            return this->m_position;
+        }
+
+        static void setIdCounter(int id) {
             if (id > Node::s_idCounter)
                 Node::s_idCounter = id;
         }
 
     private:
-        u32 m_id;
+        int m_id;
         std::string m_unlocalizedTitle, m_unlocalizedName;
         std::vector<Attribute> m_attributes;
         std::set<u32> m_processedInputs;
         prv::Overlay *m_overlay = nullptr;
+        ImVec2 m_position;
 
-        static u32 s_idCounter;
+        static int s_idCounter;
 
         Attribute *getConnectedInputAttribute(u32 index) {
             if (index >= this->getAttributes().size())

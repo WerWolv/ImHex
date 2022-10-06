@@ -20,12 +20,13 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
+        bool m_justSwitchedProvider = false;
         int m_rightClickedId = -1;
         ImVec2 m_rightClickedCoords;
 
         bool m_continuousEvaluation = false;
 
-        void eraseLink(u32 id);
+        void eraseLink(int id);
         void eraseNodes(const std::vector<int> &ids);
         void processNodes();
 

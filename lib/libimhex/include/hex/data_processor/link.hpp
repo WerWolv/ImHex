@@ -6,24 +6,24 @@ namespace hex::dp {
 
     class Link {
     public:
-        Link(u32 from, u32 to);
+        Link(int from, int to);
 
-        [[nodiscard]] u32 getId() const { return this->m_id; }
-        void setID(u32 id) { this->m_id = id; }
+        [[nodiscard]] int getId() const { return this->m_id; }
+        void setID(int id) { this->m_id = id; }
 
-        [[nodiscard]] u32 getFromId() const { return this->m_from; }
-        [[nodiscard]] u32 getToId() const { return this->m_to; }
+        [[nodiscard]] int getFromId() const { return this->m_from; }
+        [[nodiscard]] int getToId() const { return this->m_to; }
 
-        static void setIdCounter(u32 id) {
+        static void setIdCounter(int id) {
             if (id > Link::s_idCounter)
                 Link::s_idCounter = id;
         }
 
     private:
-        u32 m_id;
-        u32 m_from, m_to;
+        int m_id;
+        int m_from, m_to;
 
-        static u32 s_idCounter;
+        static int s_idCounter;
     };
 
 }
