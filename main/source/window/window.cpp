@@ -684,8 +684,9 @@ namespace hex {
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
+            bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", 1) != 0;
 
-            if (!sessionType || !hex::containsIgnoreCase(*sessionType, "wayland"))
+            if ((!sessionType || !hex::containsIgnoreCase(*sessionType, "wayland")) && multiWindowEnabled)
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         }
 

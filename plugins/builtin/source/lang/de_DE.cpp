@@ -770,6 +770,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.interface.wiki_explain_language", "Wikipedia Sprache" },
                     { "hex.builtin.setting.interface.fps", "FPS Limite" },
                     { "hex.builtin.setting.interface.fps.unlocked", "Unbegrenzt" },
+                    { "hex.builtin.setting.interface.multi_windows", "Multi-Window-Unterstützung aktivieren" },
                 { "hex.builtin.setting.hex_editor", "Hex Editor" },
                     { "hex.builtin.setting.hex_editor.highlight_color", "Auswahlfarbe" },
                     { "hex.builtin.setting.hex_editor.bytes_per_row", "Bytes pro Zeile" },

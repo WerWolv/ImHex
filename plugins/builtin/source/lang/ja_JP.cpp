@@ -776,6 +776,7 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.setting.interface.wiki_explain_language", "Wikipedia Language" },
                     { "hex.builtin.setting.interface.fps", "FPS制限" },
                     { "hex.builtin.setting.interface.fps.unlocked", "無制限" },
+                    //{ "hex.builtin.setting.interface.multi_windows", "Enable Multi Window support" },
                 { "hex.builtin.setting.hex_editor", "Hexエディタ" },
                     { "hex.builtin.setting.hex_editor.highlight_color", "選択範囲の色" },
                     { "hex.builtin.setting.hex_editor.bytes_per_row", "１行のバイト数" },

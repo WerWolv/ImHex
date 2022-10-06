@@ -780,6 +780,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.setting.interface.scaling.x2_0", "x4.0" },
                     { "hex.builtin.setting.interface.fps", "Limite FPS" },
                     { "hex.builtin.setting.interface.fps.unlocked", "Unblocca" },
+                    //{ "hex.builtin.setting.interface.multi_windows", "Enable Multi Window support" },
                 { "hex.builtin.setting.hex_editor", "Hex Editor" },
                     //{ "hex.builtin.setting.hex_editor.highlight_color", "Selection highlight color" },
                     //{ "hex.builtin.setting.hex_editor.bytes_per_row", "Bytes per row" },

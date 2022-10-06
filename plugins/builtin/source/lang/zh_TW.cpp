@@ -772,6 +772,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.interface.wiki_explain_language", "維基百科語言" },
                     { "hex.builtin.setting.interface.fps", "FPS 限制" },
                     { "hex.builtin.setting.interface.fps.unlocked", "解鎖" },
+                    //{ "hex.builtin.setting.interface.multi_windows", "Enable Multi Window support" },
                 { "hex.builtin.setting.hex_editor", "十六進位編輯器" },
                     //{ "hex.builtin.setting.hex_editor.highlight_color", "Selection highlight color" },
                     //{ "hex.builtin.setting.hex_editor.bytes_per_row", "Bytes per row" },

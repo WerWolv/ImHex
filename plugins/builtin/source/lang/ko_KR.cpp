@@ -773,6 +773,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.interface.wiki_explain_language", "Wikipedia 언어" },
                     { "hex.builtin.setting.interface.fps", "FPS 제한" },
                     { "hex.builtin.setting.interface.fps.unlocked", "제한 없음" },
+                    //{ "hex.builtin.setting.interface.multi_windows", "Enable Multi Window support" },
                 { "hex.builtin.setting.hex_editor", "헥스 편집기" },
                     { "hex.builtin.setting.hex_editor.highlight_color", "선택 영역 색상 하이라이트" },
                     { "hex.builtin.setting.hex_editor.bytes_per_row", "한 줄당 바이트 수" },

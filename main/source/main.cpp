@@ -20,9 +20,8 @@ int main(int argc, char **argv, char **envp) {
 
     bool shouldRestart = false;
 
-    EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
-
     do {
+        EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
         shouldRestart = false;
 
         // Initialization
