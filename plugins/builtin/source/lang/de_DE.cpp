@@ -267,9 +267,9 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hashes.hash", "Hash" },
                     { "hex.builtin.view.hashes.no_settings", "Keine Einstellungen verfügbar" },
                     { "hex.builtin.view.hashes.function", "Hashfunktion" },
-                    { "hex.builtin.view.hashes.name", "Name" },
-                    { "hex.builtin.view.hashes.type", "Typ" },
-                    { "hex.builtin.view.hashes.result", "Resultat" },
+                    { "hex.builtin.view.hashes.table.name", "Name" },
+                    { "hex.builtin.view.hashes.table.type", "Typ" },
+                    { "hex.builtin.view.hashes.table.result", "Resultat" },
                     { "hex.builtin.view.hashes.remove", "Hash entfernen" },
                     { "hex.builtin.view.hashes.hover_info", "Bewege die Maus über die seketierten Bytes im Hex Editor und halte SHIFT gedrückt, um die Hashes dieser Region anzuzeigen." },
 

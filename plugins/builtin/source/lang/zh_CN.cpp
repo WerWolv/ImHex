@@ -271,9 +271,9 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hashes.hash", "哈希" },
                     { "hex.builtin.view.hashes.no_settings", "没有可用哈希设置" },
                     { "hex.builtin.view.hashes.function", "哈希函数" },
-                    { "hex.builtin.view.hashes.name", "名称" },
-                    { "hex.builtin.view.hashes.type", "类型" },
-                    { "hex.builtin.view.hashes.result", "结果" },
+                    { "hex.builtin.view.hashes.table.name", "名称" },
+                    { "hex.builtin.view.hashes.table.type", "类型" },
+                    { "hex.builtin.view.hashes.table.result", "结果" },
                     { "hex.builtin.view.hashes.remove", "移除哈希" },
                     { "hex.builtin.view.hashes.hover_info", "将鼠标放在 Hex 编辑器的选区上，按住 SHIFT 来查看其哈希。" },
 

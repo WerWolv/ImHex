@@ -272,9 +272,9 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hashes.hash", "Hash" },
                     { "hex.builtin.view.hashes.no_settings", "No settings available" },
                     { "hex.builtin.view.hashes.function", "Hash function" },
-                    { "hex.builtin.view.hashes.name", "Name" },
-                    { "hex.builtin.view.hashes.type", "Type" },
-                    { "hex.builtin.view.hashes.result", "Result" },
+                    { "hex.builtin.view.hashes.table.name", "Name" },
+                    { "hex.builtin.view.hashes.table.type", "Type" },
+                    { "hex.builtin.view.hashes.table.result", "Result" },
                     { "hex.builtin.view.hashes.remove", "Remove hash" },
                     { "hex.builtin.view.hashes.hover_info", "Hover over the Hex Editor selection and hold down SHIFT to view the hashes of that region." },
 

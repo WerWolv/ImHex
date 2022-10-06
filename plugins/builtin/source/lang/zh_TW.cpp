@@ -271,9 +271,9 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hashes.hash", "雜湊" },
                     { "hex.builtin.view.hashes.no_settings", "無可用設定" },
                     { "hex.builtin.view.hashes.function", "雜湊函式" },
-                    { "hex.builtin.view.hashes.name", "名稱" },
-                    { "hex.builtin.view.hashes.type", "類型" },
-                    { "hex.builtin.view.hashes.result", "結果" },
+                    { "hex.builtin.view.hashes.table.name", "名稱" },
+                    { "hex.builtin.view.hashes.table.type", "類型" },
+                    { "hex.builtin.view.hashes.table.result", "結果" },
                     { "hex.builtin.view.hashes.remove", "移除雜湊" },
                     { "hex.builtin.view.hashes.hover_info", "懸停在十六進位編輯器的選取範圍上，並按住 Shift 以查看該區域的雜湊。" },
 
