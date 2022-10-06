@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
-            if (sortSpecs->SpecsDirty || sortedPatterns.empty()) {
+            if (!patterns.empty() && (sortSpecs->SpecsDirty || sortedPatterns.empty())) {
                 sortedPatterns.clear();
                 std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
                     return pattern.get();
@@ -110,18 +110,25 @@ namespace hex::plugin::builtin {
                 auto provider = ImHexApi::Provider::get();
                 auto &patternLanguage = ProviderExtraData::get(provider).patternLanguage;
 
-                if (provider->isReadable() && patternLanguage.runtime != nullptr && patternLanguage.executionDone) {
-                    auto &sortedPatterns = this->m_sortedPatterns[ImHexApi::Provider::get()];
-                    if (beginPatternTable(provider, ProviderExtraData::get(provider).patternLanguage.runtime->getAllPatterns(), sortedPatterns)) {
-                        ImGui::TableHeadersRow();
-
-                        if (!sortedPatterns.empty()) {
-                            for (auto &patterns : sortedPatterns)
-                                patterns->accept(this->m_patternDrawer);
-                        }
-
-                        ImGui::EndTable();
+                const auto &patterns = [&] -> const auto& {
+                    if (provider->isReadable() && patternLanguage.runtime != nullptr && patternLanguage.executionDone)
+                        return ProviderExtraData::get(provider).patternLanguage.runtime->getAllPatterns();
+                    else {
+                        static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
+                        return empty;
                     }
+                }();
+
+                auto &sortedPatterns = this->m_sortedPatterns[ImHexApi::Provider::get()];
+                if (beginPatternTable(provider, patterns, sortedPatterns)) {
+                    ImGui::TableHeadersRow();
+
+                    if (!sortedPatterns.empty()) {
+                        for (auto &pattern : sortedPatterns)
+                            pattern->accept(this->m_patternDrawer);
+                    }
+
+                    ImGui::EndTable();
                 }
             }
         }
