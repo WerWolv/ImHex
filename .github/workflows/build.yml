@@ -185,6 +185,7 @@ jobs:
     - name: ⬇️ Install dependencies
       run: |
         brew bundle --no-lock --file dist/Brewfile
+        rm -rf /usr/local/Cellar/capstone
 
     - name: ⬇️ Install classic glfw
       if: ${{! matrix.custom_glfw}}
