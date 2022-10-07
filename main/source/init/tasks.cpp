@@ -219,6 +219,8 @@ namespace hex::init {
         ProjectFile::getHandlers().clear();
         ProjectFile::getProviderHandlers().clear();
 
+        fs::setFileBrowserErrorCallback(nullptr);
+
         return true;
     }
 
