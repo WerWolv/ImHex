@@ -782,6 +782,8 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.setting.hex_editor.uppercase_hex", "Upper case Hex characters" },
                     { "hex.builtin.setting.hex_editor.visualizer", "Visualizador de Dados" },
                     //{ "hex.builtin.setting.hex_editor.sync_scrolling", "Synchronize editor position" },
+                    //{ "hex.builtin.setting.hex_editor.byte_padding", "Extra byte cell padding" },
+                    //{ "hex.builtin.setting.hex_editor.char_padding", "Extra character cell padding" },
                 { "hex.builtin.setting.folders", "Pastas" },
                     { "hex.builtin.setting.folders.description", "Especifique caminhos de pesquisa adicionais para padrões, scripts, regras Yara e muito mais" },
                     { "hex.builtin.setting.folders.add_folder", "Adicionar nova pasta" },

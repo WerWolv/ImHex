@@ -746,12 +746,12 @@ namespace hex::plugin::builtin {
                 if (isColumnSeparatorColumn(i, columnCount))
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 
-                ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + 6);
+                ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + 6 + this->m_byteCellPadding);
             }
 
             // ASCII column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_bytesPerRow);
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding) * this->m_bytesPerRow);
 
             // Custom encoding column
             ImGui::TableSetupColumn("");
@@ -856,7 +856,7 @@ namespace hex::plugin::builtin {
 
                             if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                 auto cellStartPos = getCellPosition();
-                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1, 0);
+                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1 + this->m_byteCellPadding, 0);
                                 auto maxCharsPerCell = this->m_currDataVisualizer->getMaxCharsPerCell();
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
@@ -910,7 +910,10 @@ namespace hex::plugin::builtin {
                         // Draw ASCII column
                         if (this->m_showAscii) {
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
-                            if (ImGui::BeginTable("##ascii_cell", this->m_bytesPerRow)) {
+                            if (ImGui::BeginTable("##ascii_column", this->m_bytesPerRow)) {
+                                for (u64 x = 0; x < this->m_bytesPerRow; x++)
+                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + this->m_characterCellPadding);
+
                                 ImGui::TableNextRow();
 
                                 for (u64 x = 0; x < this->m_bytesPerRow; x++) {
@@ -919,7 +922,7 @@ namespace hex::plugin::builtin {
                                     const u64 byteAddress = y * this->m_bytesPerRow + x + provider->getBaseAddress() + provider->getCurrentPageAddress();
 
                                     const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = CharacterSize;
+                                    const auto cellSize = CharacterSize + ImVec2(this->m_characterCellPadding, 0);
 
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
@@ -1523,6 +1526,20 @@ namespace hex::plugin::builtin {
 
                 if (syncScrolling.is_number())
                     this->m_syncScrolling = static_cast<int>(syncScrolling);
+            }
+
+            {
+                auto padding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding");
+
+                if (padding.is_number())
+                    this->m_byteCellPadding = static_cast<int>(padding);
+            }
+
+            {
+                auto padding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding");
+
+                if (padding.is_number())
+                    this->m_characterCellPadding = static_cast<int>(padding);
             }
 
         });

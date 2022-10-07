@@ -137,6 +137,7 @@ namespace hex::plugin::builtin {
         bool m_grayOutZero = true;
         bool m_showAscii = true;
         bool m_syncScrolling = false;
+        u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
 
         bool m_shouldOpenPopup = false;
         std::unique_ptr<Popup> m_currPopup;

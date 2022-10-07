@@ -780,6 +780,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "Hex Zeichen als Grossbuchstaben" },
                     { "hex.builtin.setting.hex_editor.visualizer", "Data visualizer" },
                     { "hex.builtin.setting.hex_editor.sync_scrolling", "Editorposition synchronisieren" },
+                    { "hex.builtin.setting.hex_editor.byte_padding", "Extra Byte-Zellenabstand" },
+                    { "hex.builtin.setting.hex_editor.char_padding", "Extra Character-Zellenabstand" },
                 { "hex.builtin.setting.folders", "Ordner" },
                     { "hex.builtin.setting.folders.description", "Gib zusätzliche Orderpfade an in welchen Pattern, Scripts, Yara Rules und anderes gesucht wird" },
                     { "hex.builtin.setting.folders.add_folder", "Neuer Ordner hinzufügen" },

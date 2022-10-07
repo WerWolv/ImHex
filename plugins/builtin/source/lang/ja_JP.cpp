@@ -786,6 +786,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.hex_editor.uppercase_hex", "16進数を大文字表記" },
                     { "hex.builtin.setting.hex_editor.visualizer", "データ表示方式" },
                     //{ "hex.builtin.setting.hex_editor.sync_scrolling", "Synchronize editor position" },
+                    //{ "hex.builtin.setting.hex_editor.byte_padding", "Extra byte cell padding" },
+                    //{ "hex.builtin.setting.hex_editor.char_padding", "Extra character cell padding" },
                 { "hex.builtin.setting.folders", "フォルダ" },
                     { "hex.builtin.setting.folders.description", "パターン、スクリプト、ルールなどのための検索パスを指定して追加できます。" },
                     { "hex.builtin.setting.folders.add_folder", "フォルダを追加…" },

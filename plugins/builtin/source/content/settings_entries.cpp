@@ -308,6 +308,28 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0, [](auto name, nlohmann::json &setting) {
+            static int padding = static_cast<int>(setting);
+
+            if (ImGui::SliderInt(name.data(), &padding, 0, 50)) {
+                setting = padding;
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", 0, [](auto name, nlohmann::json &setting) {
+            static int padding = static_cast<int>(setting);
+
+            if (ImGui::SliderInt(name.data(), &padding, 0, 50)) {
+                setting = padding;
+                return true;
+            }
+
+            return false;
+        });
+
 
         /* Fonts */
 
