@@ -11,6 +11,12 @@
 
 #include <nlohmann/json.hpp>
 
+#if defined(OS_WINDOWS)
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #include <shellapi.h>
+#endif
+
 namespace hex {
 
     namespace ImHexApi::Common {
@@ -397,6 +403,21 @@ namespace hex {
 
         const ProgramArguments &getProgramArguments() {
             return impl::s_programArguments;
+        }
+
+        std::optional<std::u8string> getProgramArgument(int index) {
+            if (index >= impl::s_programArguments.argc) {
+                return std::nullopt;
+            }
+
+            #if defined(OS_WINDOWS)
+                std::wstring wideArg = ::CommandLineToArgvW(::GetCommandLineW(), &impl::s_programArguments.argc)[index];
+                std::string byteArg = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().to_bytes(wideArg);
+
+                return std::u8string(byteArg.begin(), byteArg.end());
+            #else
+                return std::u8string(reinterpret_cast<const char8_t *>(impl::s_programArguments.argv[index]));
+            #endif
         }
 
 

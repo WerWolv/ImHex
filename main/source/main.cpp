@@ -54,8 +54,10 @@ int main(int argc, char **argv, char **envp) {
             if (argc == 1)
                 ;    // No arguments provided
             else if (argc >= 2) {
-                for (auto i = 1; i < argc; i++)
-                    EventManager::post<RequestOpenFile>(argv[i]);
+                for (auto i = 1; i < argc; i++) {
+                    if (auto argument = ImHexApi::System::getProgramArgument(i); argument.has_value())
+                        EventManager::post<RequestOpenFile>(argument.value());
+                }
             }
 
             try {

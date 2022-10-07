@@ -188,6 +188,7 @@ namespace hex {
             };
 
             const ProgramArguments &getProgramArguments();
+            std::optional<std::u8string> getProgramArgument(int index);
 
             float getTargetFPS();
             void setTargetFPS(float fps);
