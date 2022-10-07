@@ -276,6 +276,7 @@ namespace hex::plugin::builtin {
             auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address);
             if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
                 ImGui::BeginTooltip();
+
                 for (const auto &pattern : patterns) {
                     if (pattern->isHidden())
                         continue;
@@ -294,7 +295,6 @@ namespace hex::plugin::builtin {
                         ImGui::PopStyleColor(2);
                     }
                     ImGui::PopID();
-
                 }
                 ImGui::EndTooltip();
             }
@@ -716,7 +716,7 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
-            ImGui::TextFormatted("{} ", pattern->getFormattedValue());
+            ImGui::TextFormatted("{} ", hex::limitStringLength(pattern->getFormattedValue(), 64));
 
             if (ImGui::GetIO().KeyShift) {
                 ImGui::Indent();

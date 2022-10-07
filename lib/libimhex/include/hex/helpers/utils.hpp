@@ -304,6 +304,13 @@ namespace hex {
 
     std::optional<std::string> getEnvironmentVariable(const std::string &env);
 
+    inline std::string limitStringLength(const std::string &string, size_t maxLength) {
+        if (string.length() <= maxLength)
+            return string;
+
+        return string.substr(0, maxLength - 3) + "...";
+    }
+
     namespace scope_guard {
 
 #define SCOPE_GUARD   ::hex::scope_guard::ScopeGuardOnExit() + [&]()
