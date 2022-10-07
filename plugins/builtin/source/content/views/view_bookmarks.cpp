@@ -131,6 +131,42 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventProviderDeleted>(this);
     }
 
+    static void drawColorPopup(ImColor &color) {
+        static auto Palette = []{
+            constexpr static auto ColorCount = 36;
+            std::array<ImColor, ColorCount> result = { 0 };
+
+            u32 counter = 0;
+            for (auto &color : result) {
+                ImGui::ColorConvertHSVtoRGB(float(counter) / float(ColorCount - 1), 0.8F, 0.8F, color.Value.x, color.Value.y, color.Value.z);
+                color.Value.w = 0.7f;
+
+                counter++;
+            }
+
+            return result;
+        }();
+
+        ImGui::ColorPicker4("##picker", (float*)&color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview);
+
+        ImGui::Separator();
+
+        int id = 0;
+        for (const auto &paletteColor : Palette) {
+            ImGui::PushID(id);
+            if ((id % 9) != 0)
+                ImGui::SameLine(0.0f, ImGui::GetStyle().ItemSpacing.y);
+
+            constexpr static ImGuiColorEditFlags flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoDragDrop;
+            if (ImGui::ColorButton("##palette", paletteColor.Value, flags, ImVec2(20, 20))) {
+                color = paletteColor;
+            }
+
+            ImGui::PopID();
+            id++;
+        }
+    }
+
     void ViewBookmarks::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
 
@@ -247,8 +283,17 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.name"_lang);
                         ImGui::Separator();
 
-                        ImGui::ColorEdit4("hex.builtin.view.bookmarks.header.color"_lang, (float *)&headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha | (locked ? ImGuiColorEditFlags_NoPicker : ImGuiColorEditFlags_None));
-                        color = headerColor;
+                        if (ImGui::ColorButton("hex.builtin.view.bookmarks.header.color"_lang, headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha)) {
+                            if (!locked)
+                                ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
+                        }
+
+                        if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
+                            drawColorPopup(headerColor);
+                            color = headerColor;
+                            ImGui::EndPopup();
+                        }
+
                         ImGui::SameLine();
 
                         if (locked)
