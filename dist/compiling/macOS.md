@@ -16,7 +16,7 @@ OBJCXX=$(brew --prefix llvm)/bin/clang++  \
 PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
 MACOSX_DEPLOYMENT_TARGET="10.15"          \
 cmake                                     \
-  -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
+  -DCMAKE_BUILD_TYPE=Release              \
   -DCREATE_BUNDLE=ON                      \
   -DCREATE_PACKAGE=ON                     \
   -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
