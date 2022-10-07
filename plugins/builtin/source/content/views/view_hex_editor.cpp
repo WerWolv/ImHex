@@ -941,6 +941,7 @@ namespace hex::plugin::builtin {
                                             this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
                                         }
 
+                                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + this->m_characterCellPadding / 2);
                                         if (!isCurrRegionValid(byteAddress))
                                             ImGui::TextFormatted("?");
                                         else if (std::isprint(bytes[x]))
