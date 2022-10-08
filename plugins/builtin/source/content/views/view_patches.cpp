@@ -31,11 +31,18 @@ namespace hex::plugin::builtin {
         });
 
         ImHexApi::HexEditor::addForegroundHighlightingProvider([](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
+            hex::unused(buffer);
+
             if (!ImHexApi::Provider::isValid())
                 return std::nullopt;
 
-            auto &patches = ImHexApi::Provider::get()->getPatches();
-            if (patches.contains(offset) && patches[offset] != buffer[0])
+            auto provider = ImHexApi::Provider::get();
+
+            u8 byte = 0x00;
+            provider->readRaw(offset, &byte, sizeof(u8));
+
+            const auto &patches = provider->getPatches();
+            if (patches.contains(offset) && patches.at(offset) != byte)
                 return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed);
             else
                 return std::nullopt;
