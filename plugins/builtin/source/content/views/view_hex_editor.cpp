@@ -1017,21 +1017,20 @@ namespace hex::plugin::builtin {
                         // Scroll to the cursor if it's either at the top or bottom edge of the screen
                         if (this->m_shouldScrollToSelection && this->isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
-                            if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && providerData.selectionStart != providerData.selectionEnd && providerData.selectionEnd.has_value())) {
-                                auto scrollPerLine = ImGui::GetScrollMaxY() / (provider->getSize() / (long double)(this->m_bytesPerRow));
+                            if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && providerData.selectionStart != providerData.selectionEnd)) {
+                                auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
-                                auto scrollPos = ImGui::GetScrollY();
-                                auto scrollUpStartPos = scrollPos + scrollPerLine * 2;
-                                auto scrollDownStartPos = scrollPos + ImGui::GetWindowHeight() - scrollPerLine * 4;
+                                if (y == (u64(clipper.DisplayStart) + 3)) {
+                                    if (i128(*providerData.selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
+                                        this->m_shouldScrollToSelection = false;
+                                        ImGui::SetScrollHereY(fractionPerLine * 5);
 
-                                auto cursorPos = float(u64(*providerData.selectionEnd / this->m_bytesPerRow)) * CharacterSize.y;
-
-                                if (cursorPos <= scrollUpStartPos && y == u64(clipper.DisplayStart)) {
-                                    this->m_shouldScrollToSelection = false;
-                                    ImGui::SetScrollHereY(0.1F);
-                                } else if (cursorPos >= scrollDownStartPos && y == u64(clipper.DisplayEnd - 1)) {
-                                    this->m_shouldScrollToSelection = false;
-                                    ImGui::SetScrollHereY(0.95F);
+                                    }
+                                } else if (y == (u64(clipper.DisplayEnd) - 1)) {
+                                    if (i128(*providerData.selectionEnd - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow)) {
+                                        this->m_shouldScrollToSelection = false;
+                                        ImGui::SetScrollHereY(fractionPerLine * (this->m_visibleRowCount));
+                                    }
                                 }
                             }
 
@@ -1061,7 +1060,11 @@ namespace hex::plugin::builtin {
                     provider->setCurrentPage(provider->getPageOfAddress(newSelection.address).value_or(0));
 
                     const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
-                    ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + (static_cast<long double>(newSelection.getStartAddress() - pageAddress) / this->m_bytesPerRow) * CharacterSize.y, 0.5);
+                    auto scrollPos = (static_cast<long double>(newSelection.getStartAddress() - pageAddress) / this->m_bytesPerRow) * CharacterSize.y;
+                    bool scrollUpwards = scrollPos < ImGui::GetScrollY();
+                    const auto scrollFraction = scrollUpwards ? 0.0F : (1.0F - ((1.0F / this->m_visibleRowCount) * 2));
+                    
+                    ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + scrollPos, scrollFraction);
                 }
 
                 if (!this->m_syncScrolling) {
