@@ -34,6 +34,43 @@ namespace hex {
 
         using namespace ::std::literals::string_literals;
 
+        bool isPatternSelected(u64 address, u64 size) {
+            auto currSelection = ImHexApi::HexEditor::getSelection();
+            if (!currSelection.has_value())
+                return false;
+
+            return Region{ address, size }.overlaps(*currSelection);
+        }
+
+        template<typename T>
+        auto highlightWhenSelected(u64 address, u64 size, const T &callback) {
+            constexpr bool HasReturn = !requires(T t) { { t() } -> std::same_as<void>; };
+
+            auto selected = isPatternSelected(address, size);
+
+            if (selected)
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive));
+
+            if constexpr (HasReturn) {
+                auto result = callback();
+
+                if (selected)
+                    ImGui::PopStyleColor();
+
+                return result;
+            } else {
+                callback();
+
+                if (selected)
+                    ImGui::PopStyleColor();
+            }
+        }
+
+        template<typename T>
+        auto highlightWhenSelected(const pl::ptrn::Pattern& pattern, const T &callback) {
+            return highlightWhenSelected(pattern.getOffset(), pattern.getSize(), callback);
+        }
+
         void createLeafNode(const pl::ptrn::Pattern& pattern) {
             ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
                                                                 ImGuiTreeNodeFlags_NoTreePushOnOpen |
@@ -48,8 +85,9 @@ namespace hex {
                 ImGui::Unindent();
                 return false;
             }
-            else
-                return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+            else {
+                return highlightWhenSelected(pattern, [&]{ return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);});
+            }
         }
 
         void drawTypenameColumn(const pl::ptrn::Pattern& pattern, const std::string& pattern_name) {
@@ -60,7 +98,7 @@ namespace hex {
         }
 
         void drawNameColumn(const pl::ptrn::Pattern& pattern) {
-            ImGui::TextUnformatted(pattern.getDisplayName().c_str());
+            highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(pattern.getDisplayName().c_str()); });
             ImGui::TableNextColumn();
         }
 
@@ -387,7 +425,7 @@ namespace hex {
 
                     size_t chunkSize = (endOffset - startOffset) + endSize;
 
-                    auto chunkOpen = ImGui::TreeNode(hex::format("[{} ... {}]", i, endIndex - 1).c_str());
+                    auto chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{ return ImGui::TreeNodeEx(hex::format("[{} ... {}]", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth); });
                     ImGui::TableNextColumn();
                     drawColorColumn(pattern);
                     ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", startOffset, startOffset + chunkSize - (pattern.getSize() == 0 ? 0 : 1));

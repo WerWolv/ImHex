@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 using u8   = std::uint8_t;
 using u16  = std::uint16_t;
 using u32  = std::uint32_t;
@@ -20,29 +22,14 @@ namespace hex {
         u64 address;
         size_t size;
 
-        [[nodiscard]] constexpr bool isWithin(const Region &other) const {
-            return (this->getStartAddress() >= other.getStartAddress()) && (this->getEndAddress() <= other.getEndAddress()) && *this != Invalid() && other != Invalid();
-        }
+        [[nodiscard]] bool isWithin(const Region &other) const;
+        [[nodiscard]] bool overlaps(const Region &other) const;
 
-        [[nodiscard]] constexpr bool overlaps(const Region &other) const {
-            return (this->getEndAddress() >= other.getStartAddress()) && (this->getStartAddress() < other.getEndAddress()) && *this != Invalid() && other != Invalid();
-        }
+        [[nodiscard]] u64 getStartAddress() const;
+        [[nodiscard]] u64 getEndAddress() const;
+        [[nodiscard]] size_t getSize() const;
 
-        [[nodiscard]] constexpr u64 getStartAddress() const {
-            return this->address;
-        }
-
-        [[nodiscard]] constexpr u64 getEndAddress() const {
-            return this->address + this->size - 1;
-        }
-
-        [[nodiscard]] constexpr size_t getSize() const {
-            return this->size;
-        }
-
-        constexpr bool operator==(const Region &other) const {
-            return this->address == other.address && this->size == other.size;
-        }
+        bool operator==(const Region &other) const;
 
         constexpr static Region Invalid() {
             return { 0, 0 };
