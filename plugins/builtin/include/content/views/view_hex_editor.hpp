@@ -68,8 +68,11 @@ namespace hex::plugin::builtin {
             return data.selectionStart.has_value() && data.selectionEnd.has_value();
         }
 
-        void jumpToSelection() {
+        void jumpToSelection(bool center = true) {
             this->m_shouldJumpToSelection = true;
+
+            if (center)
+                this->m_centerOnJump = true;
         }
 
         void scrollToSelection() {
@@ -118,6 +121,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::HexEditor::DataVisualizer *m_currDataVisualizer;
 
         bool m_shouldJumpToSelection = false;
+        bool m_centerOnJump = false;
         bool m_shouldScrollToSelection = false;
         bool m_shouldJumpWhenOffScreen = false;
         bool m_shouldUpdateScrollPosition = false;

@@ -1043,9 +1043,9 @@ namespace hex::plugin::builtin {
                                 newSelection.address -= pageAddress;
 
                                 if ((newSelection.getStartAddress()) < u64(clipper.DisplayStart * this->m_bytesPerRow))
-                                    this->jumpToSelection();
+                                    this->jumpToSelection(false);
                                 if ((newSelection.getEndAddress()) > u64(clipper.DisplayEnd * this->m_bytesPerRow))
-                                    this->jumpToSelection();
+                                    this->jumpToSelection(false);
 
                             }
                         }
@@ -1062,8 +1062,13 @@ namespace hex::plugin::builtin {
                     const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
                     auto scrollPos = (static_cast<long double>(newSelection.getStartAddress() - pageAddress) / this->m_bytesPerRow) * CharacterSize.y;
                     bool scrollUpwards = scrollPos < ImGui::GetScrollY();
-                    const auto scrollFraction = scrollUpwards ? 0.0F : (1.0F - ((1.0F / this->m_visibleRowCount) * 2));
-                    
+                    auto scrollFraction = scrollUpwards ? 0.0F : (1.0F - ((1.0F / this->m_visibleRowCount) * 2));
+
+                    if (this->m_centerOnJump) {
+                        scrollFraction = 0.5F;
+                        this->m_centerOnJump = false;
+                    }
+
                     ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + scrollPos, scrollFraction);
                 }
 
