@@ -854,16 +854,18 @@ namespace hex::plugin::builtin {
                 return this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
+            ON_SCOPE_EXIT {
+                this->m_lastEvaluationLog     = runtime->getConsoleLog();
+                this->m_lastEvaluationOutVars = runtime->getOutVariables();
+                this->m_runningEvaluators--;
+
+                this->m_lastEvaluationProcessed = false;
+            };
+
             this->m_lastEvaluationResult = runtime->executeString(code, envVars, inVariables);
             if (!this->m_lastEvaluationResult) {
                 this->m_lastEvaluationError = runtime->getError();
             }
-
-            this->m_lastEvaluationLog     = runtime->getConsoleLog();
-            this->m_lastEvaluationOutVars = runtime->getOutVariables();
-            this->m_runningEvaluators--;
-
-            this->m_lastEvaluationProcessed = false;
         });
     }
 
