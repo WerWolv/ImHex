@@ -1,6 +1,3 @@
-# ftbfs without this
-%global _lto_cflags %{nil}
-
 Name:           imhex
 Version:        %{_version}
 Release:        0%{?dist}
