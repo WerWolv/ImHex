@@ -1,8 +1,5 @@
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
-
 #include <hex/helpers/types.hpp>
 #include <hex/helpers/intrinsics.hpp>
 
