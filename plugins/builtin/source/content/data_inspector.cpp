@@ -450,7 +450,8 @@ namespace hex::plugin::builtin {
                                              [](auto c) { return c == 0x00; });
                     buffer.erase(it, buffer.end());
 
-                    value = copyValue = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>("Invalid").to_bytes(stringBuffer.data());
+                    auto string = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>("Invalid").to_bytes(stringBuffer.data());
+                    value = copyValue = hex::encodeByteString({ string.begin(), string.end() });
 
                     if (value.size() > MaxStringLength) {
                         value.resize(MaxStringLength);
