@@ -523,9 +523,6 @@ namespace hex::plugin::builtin {
     }
 
     std::optional<color_t> ViewHexEditor::applySelectionColor(u64 byteAddress, std::optional<color_t> color) {
-        if (!color.has_value())
-            return std::nullopt;
-
         if (this->isSelectionValid()) {
             auto selection = this->getSelection();
 
@@ -873,12 +870,14 @@ namespace hex::plugin::builtin {
                                 if (y == u64(clipper.DisplayStart))
                                     cellSize.y -= (ImGui::GetStyle().CellPadding.y + 1);
 
+                                backgroundColor = applySelectionColor(byteAddress, backgroundColor);
+
                                 // Draw highlights and selection
                                 if (backgroundColor.has_value()) {
                                     auto drawList = ImGui::GetWindowDrawList();
 
                                     // Draw background color
-                                    drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, applySelectionColor(byteAddress, backgroundColor).value());
+                                    drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
 
                                     // Draw frame around mouse selection
                                     this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, cellSize);
@@ -935,12 +934,14 @@ namespace hex::plugin::builtin {
 
                                         auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
+                                        backgroundColor = applySelectionColor(byteAddress, backgroundColor);
+
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
                                             auto drawList = ImGui::GetWindowDrawList();
 
                                             // Draw background color
-                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, applySelectionColor(byteAddress, backgroundColor).value());
+                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
 
                                             this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
                                         }
@@ -993,12 +994,14 @@ namespace hex::plugin::builtin {
                                     if (x < validBytes && isCurrRegionValid(address)) {
                                         auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
 
+                                        backgroundColor = applySelectionColor(address, backgroundColor);
+
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
                                             auto drawList = ImGui::GetWindowDrawList();
 
                                             // Draw background color
-                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, applySelectionColor(address, backgroundColor).value());
+                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
 
                                             this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
                                         }
