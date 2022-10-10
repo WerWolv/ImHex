@@ -17,6 +17,7 @@ namespace hex::plugin::builtin {
 
             struct {
                 std::string sourceCode;
+                std::mutex runtimeMutex;
                 std::unique_ptr<pl::PatternLanguage> runtime;
                 bool executionDone = true;
             } patternLanguage;

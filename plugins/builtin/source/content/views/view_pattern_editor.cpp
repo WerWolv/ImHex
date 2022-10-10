@@ -123,6 +123,7 @@ namespace hex::plugin::builtin {
                     data.sourceCode = this->m_textEditor.GetText();
                 }
 
+                std::scoped_lock lock(data.runtimeMutex);
                 auto &runtime = data.runtime;
 
                 auto mimeType = magic::getMIMEType(provider);
@@ -830,6 +831,7 @@ namespace hex::plugin::builtin {
         EventManager::post<EventHighlightingChanged>();
 
         TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, &patternLanguage, code](auto &task) {
+            std::scoped_lock lock(patternLanguage.runtimeMutex);
             auto &runtime = patternLanguage.runtime;
 
             task.setInterruptCallback([&runtime] { runtime->abort(); });
