@@ -22,13 +22,12 @@ jobs:
       with:
         submodules: recursive
 
-    - name: 📜 Restore ccache
-      uses: actions/cache@v3
+    - name: 📜 Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
-        path: |
-          ~/.cache/ccache
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        max-size: 50M
         
 
     - name: 📜 Restore CMakeCache

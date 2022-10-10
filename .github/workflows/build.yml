@@ -28,21 +28,13 @@ jobs:
       with:
         submodules: recursive
 
-    - name: 📜 Prepare Cache
-      id:    prep-ccache
-      shell: bash
-      run: |
-        mkdir -p "${CCACHE_DIR}"
-        echo "::set-output name=dir::$CCACHE_DIR"
-
-    - name: 📜 Restore ccache
-      uses:  actions/cache@v3
+    - name: 📜 Setup ccache
+      uses:  hendrikmuhs/ccache-action@v1.2
       id:    cache-ccache
       with:
-        path: |
-          ${{ steps.prep-ccache.outputs.dir }}
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        max-size: 50M
 
     - name: 📜 Restore CMakeCache
       uses:  actions/cache@v3
@@ -64,37 +56,23 @@ jobs:
           glfw:p
           file:p
           mbedtls:p
-          python:p
           freetype:p
           dlfcn:p
-
-    - name: ⬇️ Install dependencies
-      run: |
-        curl --proto '=https' --tlsv1.2 -sSf https://win.rustup.rs > rustup-init.exe
-        ./rustup-init.exe -y --default-host=x86_64-pc-windows-gnu --default-toolchain=none
-        rm rustup-init.exe
-        $USERPROFILE/.cargo/bin/rustup.exe target add x86_64-pc-windows-gnu
-        $USERPROFILE/.cargo/bin/rustup.exe default nightly
 
     # Windows cmake build
     - name: 🛠️ Build
       run: |
         mkdir -p build
         cd build
-        # Get path to mingw python library
-        PYTHON_LIB_NAME=$(pkg-config --libs-only-l python3 | sed 's/^-l//' | sed 's/ //')
-        PYTHON_LIB_PATH=$(cygpath -m $(which lib${PYTHON_LIB_NAME}.dll))
 
         cmake -G "MinGW Makefiles"                \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
           -DCREATE_PACKAGE=ON                     \
-          -DPython_LIBRARY="$PYTHON_LIB_PATH"     \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
           -DCMAKE_CXX_FLAGS="-fuse-ld=lld"        \
-          -DRUST_PATH="$USERPROFILE/.cargo/bin/"  \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           ..
         mingw32-make -j4 install
@@ -166,13 +144,12 @@ jobs:
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
         
-    - name: 📜 Restore ccache
-      uses: actions/cache@v3
+    - name: 📜 Setup ccache
+      uses: hendrikmuhs/ccache-action@v1.2
       with:
-        path: |
-          ~/Library/Caches/ccache
         key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+        restore-keys: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build
+        max-size: 50M
 
         
     - name: 📜 Restore CMakeCache
@@ -260,13 +237,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: 📜 Restore ccache
-        uses: actions/cache@v3
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: |
-            ~/.cache/ccache
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
           
       - name: 📜 Restore other caches
         uses: actions/cache@v3
@@ -290,14 +266,7 @@ jobs:
           sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
-          sudo pip3 install appimage-builder==1.0.0
-
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs > rustup-init.sh
-          sh rustup-init.sh -y --default-toolchain none
-          rm rustup-init.sh
-          $HOME/.cargo/bin/rustup install nightly
-          $HOME/.cargo/bin/rustup target add x86_64-unknown-linux-gnu
-          $HOME/.cargo/bin/rustup default nightly
+          sudo pip3 install appimage-builder
 
       # Ubuntu cmake build
       - name: 🛠️ Build
@@ -311,7 +280,6 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
             -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-            -DRUST_PATH="$HOME/.cargo/bin/"           \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             ..
           make -j 4 install DESTDIR=DebDir
@@ -347,7 +315,6 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
             -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-            -DRUST_PATH="$HOME/.cargo/bin/"           \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             -DIMHEX_PLUGINS_IN_SHARE=ON               \
             -DIMHEX_USE_BUNDLED_CA=ON                 \
@@ -412,13 +379,12 @@ jobs:
         run: |
           dist/get_deps_archlinux.sh --noconfirm
 
-      - name: 📜 Restore ccache
-        uses: actions/cache@v3
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: |
-            ~/.cache/ccache
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
         
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
@@ -514,7 +480,6 @@ jobs:
           libcurl-devel      \
           llvm-devel         \
           mbedtls-devel      \
-          python3-devel      \
           rpm-build          \
           yara-devel
           
@@ -527,13 +492,12 @@ jobs:
         run: |
           dist/get_deps_fedora.sh
 
-      - name: 📜 Restore ccache
-        uses: actions/cache@v3
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: |
-            ~/.cache/ccache
           key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
    
       - name: 📜 Set version variable
         run: |
