@@ -522,6 +522,27 @@ namespace hex::plugin::builtin {
         return std::nullopt;
     }
 
+    std::optional<color_t> ViewHexEditor::applySelectionColor(u64 byteAddress, std::optional<color_t> color) {
+        if (!color.has_value())
+            return std::nullopt;
+
+        if (this->isSelectionValid()) {
+            auto selection = this->getSelection();
+
+            if (byteAddress >= selection.getStartAddress() && byteAddress <= selection.getEndAddress()) {
+                if (color.has_value())
+                    color = (ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF;
+                else
+                    color = this->m_selectionColor;
+            }
+        }
+
+        if (color.has_value())
+            color = (*color & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
+
+        return color;
+    }
+
     struct CustomEncodingData {
         std::string displayValue;
         size_t advance;
@@ -811,25 +832,7 @@ namespace hex::plugin::builtin {
                                 // Query cell colors
                                 if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                     const auto foregroundColor = queryForegroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
-                                    const auto backgroundColor = [&]{
-                                        auto color = queryBackgroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
-
-                                        if (this->isSelectionValid()) {
-                                            auto selection = this->getSelection();
-
-                                            if (byteAddress >= selection.getStartAddress() && byteAddress <= selection.getEndAddress()) {
-                                                if (color.has_value())
-                                                    color = (ImAlphaBlendColors(color.value(), this->m_selectionColor)) & 0x00FFFFFF;
-                                                else
-                                                    color = this->m_selectionColor;
-                                            }
-                                        }
-
-                                        if (color.has_value())
-                                            color = (*color & 0x00FFFFFF) | (this->m_selectionColor & 0xFF000000);
-
-                                        return color;
-                                    }();
+                                    const auto backgroundColor = queryBackgroundColor(byteAddress, &bytes[x * cellBytes], cellBytes);
 
                                     cellColors.emplace_back(
                                         foregroundColor,
@@ -862,8 +865,9 @@ namespace hex::plugin::builtin {
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
 
                                 if (isColumnSeparatorColumn(x + 1, columnCount)) {
-                                    if (this->isSelectionValid() && this->getSelection().getEndAddress() != x + y * columnCount)
-                                    cellSize.x += SeparatorColumWidth + 1;
+                                    auto separatorAddress = x + y * columnCount;
+                                    if ((this->isSelectionValid() && this->getSelection().overlaps({ separatorAddress, 1 }) && this->getSelection().getEndAddress() != separatorAddress) || cellColors[x] == cellColors[x + 1])
+                                        cellSize.x += SeparatorColumWidth + 1;
                                 }
 
                                 if (y == u64(clipper.DisplayStart))
@@ -874,7 +878,7 @@ namespace hex::plugin::builtin {
                                     auto drawList = ImGui::GetWindowDrawList();
 
                                     // Draw background color
-                                    drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
+                                    drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, applySelectionColor(byteAddress, backgroundColor).value());
 
                                     // Draw frame around mouse selection
                                     this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, cellSize);
@@ -936,7 +940,7 @@ namespace hex::plugin::builtin {
                                             auto drawList = ImGui::GetWindowDrawList();
 
                                             // Draw background color
-                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
+                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, applySelectionColor(byteAddress, backgroundColor).value());
 
                                             this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
                                         }
@@ -994,7 +998,7 @@ namespace hex::plugin::builtin {
                                             auto drawList = ImGui::GetWindowDrawList();
 
                                             // Draw background color
-                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
+                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, applySelectionColor(address, backgroundColor).value());
 
                                             this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
                                         }

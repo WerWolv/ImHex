@@ -114,6 +114,7 @@ namespace hex::plugin::builtin {
         void drawFooter(const ImVec2 &size);
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
+        std::optional<color_t> applySelectionColor(u64 byteAddress, std::optional<color_t> color);
 
     private:
         u16 m_bytesPerRow = 16;
