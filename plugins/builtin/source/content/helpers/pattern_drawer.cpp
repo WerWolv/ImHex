@@ -81,7 +81,7 @@ namespace hex {
         bool createTreeNode(const pl::ptrn::Pattern& pattern) {
             if (pattern.isSealed()) {
                 ImGui::Indent();
-                ImGui::TextUnformatted(pattern.getDisplayName().c_str());
+                highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(pattern.getDisplayName().c_str()); });
                 ImGui::Unindent();
                 return false;
             }
