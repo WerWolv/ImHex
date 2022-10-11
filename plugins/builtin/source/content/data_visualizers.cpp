@@ -51,8 +51,8 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = ByteCount * 2;
 
-        const static inline auto FormattingUpperCase = hex::format("%0{}X", CharCount);
-        const static inline auto FormattingLowerCase = hex::format("%0{}x", CharCount);
+        const static inline auto FormattingUpperCase = hex::format("%0{}llX", CharCount);
+        const static inline auto FormattingLowerCase = hex::format("%0{}llx", CharCount);
 
         const char *getFormatString(bool upperCase) {
             if (upperCase)
@@ -104,8 +104,8 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = 1;
         constexpr static inline auto CharCount = ByteCount * 2;
 
-        const static inline auto FormattingUpperCase = hex::format("%0{}X", CharCount);
-        const static inline auto FormattingLowerCase = hex::format("%0{}x", CharCount);
+        const static inline auto FormattingUpperCase = hex::format("%0{}llX", CharCount);
+        const static inline auto FormattingLowerCase = hex::format("%0{}llx", CharCount);
 
         static const char *getFormatString(bool upperCase) {
             if (upperCase)
