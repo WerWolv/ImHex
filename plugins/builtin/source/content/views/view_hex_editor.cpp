@@ -863,7 +863,8 @@ namespace hex::plugin::builtin {
 
                                 if (isColumnSeparatorColumn(x + 1, columnCount)) {
                                     auto separatorAddress = x + y * columnCount;
-                                    if ((this->isSelectionValid() && this->getSelection().overlaps({ separatorAddress, 1 }) && this->getSelection().getEndAddress() != separatorAddress) || cellColors[x] == cellColors[x + 1])
+                                    auto [nextForegroundColor, nextBackgroundColor] = cellColors[x + 1];
+                                    if ((this->isSelectionValid() && this->getSelection().overlaps({ separatorAddress, 1 }) && this->getSelection().getEndAddress() != separatorAddress) || backgroundColor == nextBackgroundColor)
                                         cellSize.x += SeparatorColumWidth + 1;
                                 }
 
