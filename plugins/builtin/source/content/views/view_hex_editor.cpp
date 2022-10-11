@@ -14,6 +14,8 @@
 
 namespace hex::plugin::builtin {
 
+    /* Popups */
+
     class PopupGoto : public ViewHexEditor::Popup {
     public:
 
@@ -453,6 +455,68 @@ namespace hex::plugin::builtin {
         u64 m_size;
     };
 
+
+    /* Data Visualizer */
+
+    class DataVisualizerAscii : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    public:
+        DataVisualizerAscii() : DataVisualizer(1, 1) { }
+
+        void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
+            hex::unused(address, upperCase);
+
+            if (size == 1) {
+                const u8 c = data[0];
+                if (std::isprint(c))
+                    ImGui::Text("%c", c);
+                else
+                    ImGui::TextDisabled(".");
+            }
+            else
+                ImGui::TextDisabled(".");
+        }
+
+        bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
+            hex::unused(address, startedEditing, upperCase);
+
+            if (size == 1) {
+                struct UserData {
+                    u8 *data;
+                    i32 maxChars;
+
+                    bool editingDone;
+                };
+
+                UserData userData = {
+                        .data = data,
+                        .maxChars = this->getMaxCharsPerCell(),
+
+                        .editingDone = false
+                };
+
+                ImGui::PushID(reinterpret_cast<void*>(address));
+                char buffer[2] = { std::isprint(data[0]) ? char(data[0]) : '.', 0x00 };
+                ImGui::InputText("##editing_input", buffer, 2, TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+                    auto &userData = *reinterpret_cast<UserData*>(data->UserData);
+
+                    if (data->BufTextLen >= userData.maxChars)
+                        userData.editingDone = true;
+
+                    return 0;
+                }, &userData);
+                ImGui::PopID();
+
+                data[0] = buffer[0];
+
+                return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter);
+            }
+            else
+                return false;
+        }
+    };
+
+    /* Hex Editor */
+
     ViewHexEditor::ViewHexEditor() : View("hex.builtin.view.hex_editor.name") {
         this->m_currDataVisualizer = ContentRegistry::HexEditor::impl::getVisualizers()["hex.builtin.visualizer.hexadecimal.8bit"];
 
@@ -614,7 +678,9 @@ namespace hex::plugin::builtin {
         ImGui::PopStyleVar();
     }
 
-    void ViewHexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered) {
+    void ViewHexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
+        static DataVisualizerAscii asciiVisualizer;
+
         auto provider = ImHexApi::Provider::get();
 
         if (this->m_shouldUpdateEditingValue) {
@@ -624,8 +690,11 @@ namespace hex::plugin::builtin {
             std::memcpy(this->m_editingBytes.data(), data, size);
         }
 
-        if (this->m_editingAddress != address) {
-            this->m_currDataVisualizer->draw(address, data, size, this->m_upperCaseHex);
+        if (this->m_editingAddress != address || this->m_editingCellType != cellType) {
+            if (cellType == CellType::Hex)
+                this->m_currDataVisualizer->draw(address, data, size, this->m_upperCaseHex);
+            else
+                asciiVisualizer.draw(address, data, size, this->m_upperCaseHex);
 
             if (hovered && provider->isWritable()) {
                 // Enter editing mode when double-clicking a cell
@@ -636,6 +705,7 @@ namespace hex::plugin::builtin {
 
                     this->m_editingBytes.resize(size);
                     std::memcpy(this->m_editingBytes.data(), data, size);
+                    this->m_editingCellType = cellType;
                 }
             }
         }
@@ -643,7 +713,13 @@ namespace hex::plugin::builtin {
             ImGui::SetKeyboardFocusHere();
             ImGui::SetNextFrameWantCaptureKeyboard(true);
 
-            if (this->m_currDataVisualizer->drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode) || this->m_shouldModifyValue) {
+            bool shouldExitEditingMode = true;
+            if (cellType == this->m_editingCellType && cellType == CellType::Hex)
+                shouldExitEditingMode = this->m_currDataVisualizer->drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
+            else if (cellType == this->m_editingCellType && cellType == CellType::ASCII)
+                shouldExitEditingMode = asciiVisualizer.drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
+
+            if (shouldExitEditingMode || this->m_shouldModifyValue) {
 
                 provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
 
@@ -663,12 +739,13 @@ namespace hex::plugin::builtin {
                 this->m_shouldUpdateEditingValue = true;
             }
 
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !hovered) {
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !hovered && !this->m_enteredEditingMode) {
                 this->m_editingAddress = std::nullopt;
                 this->m_shouldModifyValue = false;
             }
 
-            this->m_enteredEditingMode = false;
+            if (!this->m_editingAddress.has_value())
+                this->m_editingCellType = CellType::None;
         }
     }
 
@@ -896,7 +973,7 @@ namespace hex::plugin::builtin {
                                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                 ImGui::PushItemWidth((CharacterSize * maxCharsPerCell).x);
                                 if (isCurrRegionValid(byteAddress))
-                                    this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered);
+                                    this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
                                 else
                                     ImGui::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
                                 ImGui::PopItemWidth();
@@ -948,12 +1025,14 @@ namespace hex::plugin::builtin {
                                         }
 
                                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + this->m_characterCellPadding / 2);
+                                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                                        ImGui::PushItemWidth(CharacterSize.x);
                                         if (!isCurrRegionValid(byteAddress))
                                             ImGui::TextFormatted("?");
-                                        else if (std::isprint(bytes[x]))
-                                            ImGui::TextFormatted("{:c}", bytes[x]);
                                         else
-                                            ImGui::TextDisabled(".");
+                                            this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
+                                        ImGui::PopItemWidth();
+                                        ImGui::PopStyleVar();
                                     }
                                 }
 
@@ -1097,6 +1176,8 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
         ImGui::PopStyleVar();
+
+        this->m_enteredEditingMode = false;
     }
 
     void ViewHexEditor::drawFooter(const ImVec2 &size) {

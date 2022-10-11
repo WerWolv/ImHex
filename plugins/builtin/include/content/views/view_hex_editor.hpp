@@ -24,7 +24,9 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
 
-        void drawCell(u64 address, u8 *data, size_t size, bool hovered);
+        enum class CellType { None, Hex, ASCII };
+
+        void drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType);
         void drawPopup();
         void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize);
 
@@ -131,6 +133,7 @@ namespace hex::plugin::builtin {
 
         u16 m_visibleRowCount = 0;
 
+        CellType m_editingCellType = CellType::None;
         std::optional<u64> m_editingAddress;
         bool m_shouldModifyValue = false;
         bool m_enteredEditingMode = false;
