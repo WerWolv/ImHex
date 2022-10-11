@@ -19,11 +19,11 @@ namespace hex::plugin::builtin {
 
     ViewDataInspector::ViewDataInspector() : View("hex.builtin.view.data_inspector.name") {
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
-            auto provider = ImHexApi::Provider::get();
-
-            if (!ImHexApi::Provider::isValid() || region.address == (size_t)-1) {
+            if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
                 this->m_validBytes = 0;
             } else {
+                auto provider = ImHexApi::Provider::get();
+
                 this->m_validBytes   = u64(provider->getActualSize() - region.address);
                 this->m_startAddress = region.address;
             }
