@@ -586,7 +586,7 @@ namespace hex {
             }, &userData);
             ImGui::PopID();
 
-            return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Enter);
+            return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape);
         }
 
         void impl::addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer) {

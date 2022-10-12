@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
 
         void drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType);
         void drawPopup();
-        void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize);
+        void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize) const;
 
     public:
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        [[nodiscard]] Region getSelection() const {
+        [[nodiscard]] static Region getSelection() {
             auto &data = ProviderExtraData::getCurrent().editor;
 
             if (!isSelectionValid())
@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
             return { start, size };
         }
 
-        [[nodiscard]] bool isSelectionValid() const {
+        [[nodiscard]] static bool isSelectionValid() {
             auto &data = ProviderExtraData::getCurrent().editor;
 
             return data.selectionStart.has_value() && data.selectionEnd.has_value();
