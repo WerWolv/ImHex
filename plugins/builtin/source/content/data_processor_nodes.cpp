@@ -1058,7 +1058,9 @@ namespace hex::plugin::builtin {
         NodePatternLanguageOutVariable() : Node("hex.builtin.nodes.pattern_language.out_var.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
 
         void drawNode() override {
+            ImGui::PushItemWidth(100);
             ImGui::InputText("##name", this->m_name);
+            ImGui::PopItemWidth();
         }
 
         void process() override {
