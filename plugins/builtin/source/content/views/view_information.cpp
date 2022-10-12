@@ -208,7 +208,7 @@ namespace hex::plugin::builtin {
 
                             ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
                             if (ImPlot::BeginPlot("##distribution", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect)) {
-                                ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale);
+                                ImPlot::SetupAxes("hex.builtin.common.value"_lang, "hex.builtin.common.count"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale);
                                 ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
 
                                 static auto x = [] {
@@ -227,7 +227,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
 
                             if (ImPlot::BeginPlot("##entropy", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
-                                ImPlot::SetupAxes("Address", "Entropy", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+                                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                                 ImPlot::SetupAxesLimits(0, this->m_blockEntropy.size(), -0.1F, 1.1F, ImGuiCond_Always);
 
                                 ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());

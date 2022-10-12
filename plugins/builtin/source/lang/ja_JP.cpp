@@ -82,6 +82,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.choose_file", "ファイルを選択" },
                 // { "hex.builtin.common.processing", "Processing" },
                 { "hex.builtin.common.filter", "フィルタ" },
+                //{ "hex.builtin.common.count", "Count" },
                 { "hex.builtin.common.value", "値" },
                 //{ "hex.builtin.common.type", "Type" },
                     { "hex.builtin.common.type.u8", "uint8_t" },

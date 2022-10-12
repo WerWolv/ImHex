@@ -82,6 +82,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.choose_file", "选择文件" },
                 { "hex.builtin.common.processing", "处理" },
                 { "hex.builtin.common.filter", "过滤器" },
+                //{ "hex.builtin.common.count", "Count" },
                 { "hex.builtin.common.value", "值" },
                 { "hex.builtin.common.type", "类型" },
                     { "hex.builtin.common.type.u8", "uint8_t" },

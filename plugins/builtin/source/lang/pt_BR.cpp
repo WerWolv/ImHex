@@ -82,6 +82,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.common.choose_file", "Escolher arquivo" },
                 { "hex.builtin.common.processing", "Processando" },
                 //{ "hex.builtin.common.filter", "Filter" },
+                //{ "hex.builtin.common.count", "Count" },
                 //{ "hex.builtin.common.value", "Value" },
                 //{ "hex.builtin.common.type", "Type" },
                     { "hex.builtin.common.type.u8", "uint8_t" },
