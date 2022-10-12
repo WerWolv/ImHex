@@ -7,6 +7,8 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/providers/provider.hpp>
 
+#include <content/helpers/provider_extra_data.hpp>
+
 #include <cctype>
 #include <random>
 
@@ -1050,6 +1052,41 @@ namespace hex::plugin::builtin {
         std::array<ImU64, 256> m_counts = { 0 };
     };
 
+
+    class NodePatternLanguageOutVariable : public dp::Node {
+    public:
+        NodePatternLanguageOutVariable() : Node("hex.builtin.nodes.pattern_language.out_var.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+
+        void drawNode() override {
+            ImGui::InputText("##name", this->m_name);
+        }
+
+        void process() override {
+            auto &pl = ProviderExtraData::getCurrent().patternLanguage;
+
+            std::scoped_lock lock(pl.runtimeMutex);
+            const auto &outVars = pl.runtime->getOutVariables();
+
+            if (outVars.contains(this->m_name)) {
+                std::visit(overloaded {
+                    [](const std::string &) {},
+                    [](pl::ptrn::Pattern *) {},
+                    [this](auto &&value) {
+                        std::vector<u8> buffer(std::min<size_t>(sizeof(value), 8));
+                        std::memcpy(buffer.data(), &value, buffer.size());
+
+                        this->setBufferOnOutput(0, buffer);
+                    }
+                }, outVars.at(this->m_name));
+            } else {
+                throwNodeError(hex::format("Out variable '{}' has not been defined!", this->m_name));
+            }
+        }
+
+    private:
+        std::string m_name;
+    };
+
     void registerDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeInteger>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.int");
         ContentRegistry::DataProcessorNode::add<NodeFloat>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.float");
@@ -1104,6 +1141,8 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeVisualizerLayeredDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.layered_dist");
         ContentRegistry::DataProcessorNode::add<NodeVisualizerImage>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.image");
         ContentRegistry::DataProcessorNode::add<NodeVisualizerByteDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.byte_distribution");
+
+        ContentRegistry::DataProcessorNode::add<NodePatternLanguageOutVariable>("hex.builtin.nodes.pattern_language", "hex.builtin.nodes.pattern_language.out_var");
     }
 
 }
