@@ -402,8 +402,8 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getIntegerOnInput(0);
 
-            std::vector<u8> output(sizeof(u64), 0x00);
-            std::memcpy(output.data(), &input, sizeof(u64));
+            std::vector<u8> output(sizeof(input), 0x00);
+            std::memcpy(output.data(), &input, sizeof(input));
 
             this->setBufferOnOutput(1, output);
         }
@@ -416,13 +416,44 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            if (input.empty() || input.size() > sizeof(u64))
+            i64 output = 0;
+            if (input.empty() || input.size() > sizeof(output))
                 throwNodeError("Buffer is empty or bigger than 64 bits");
 
-            u64 output = 0;
             std::memcpy(&output, input.data(), input.size());
 
             this->setIntegerOnOutput(1, output);
+        }
+    };
+
+    class NodeCastFloatToBuffer : public dp::Node {
+    public:
+        NodeCastFloatToBuffer() : Node("hex.builtin.nodes.casting.float_to_buffer.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto input = this->getFloatOnInput(0);
+
+            std::vector<u8> output(sizeof(input), 0x00);
+            std::memcpy(output.data(), &input, sizeof(input));
+
+            this->setBufferOnOutput(1, output);
+        }
+    };
+
+    class NodeCastBufferToFloat : public dp::Node {
+    public:
+        NodeCastBufferToFloat() : Node("hex.builtin.nodes.casting.buffer_to_float.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            float output = 0;
+            if (input.empty() || input.size() != sizeof(output))
+                throwNodeError("Buffer is empty or not the right size to fit a float");
+
+            std::memcpy(&output, input.data(), input.size());
+
+            this->setFloatOnOutput(1, output);
         }
     };
 
@@ -1038,6 +1069,8 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataProcessorNode::add<NodeCastIntegerToBuffer>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.int_to_buffer");
         ContentRegistry::DataProcessorNode::add<NodeCastBufferToInteger>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.buffer_to_int");
+        ContentRegistry::DataProcessorNode::add<NodeCastFloatToBuffer>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.float_to_buffer");
+        ContentRegistry::DataProcessorNode::add<NodeCastBufferToFloat>("hex.builtin.nodes.casting", "hex.builtin.nodes.casting.buffer_to_float");
 
         ContentRegistry::DataProcessorNode::add<NodeArithmeticAdd>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.add");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticSubtract>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.sub");
