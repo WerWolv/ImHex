@@ -10,6 +10,8 @@ namespace hex {
     public:
         PatternDrawer() = default;
 
+        void draw(pl::ptrn::Pattern& pattern);
+
         void visit(pl::ptrn::PatternArrayDynamic& pattern) override;
         void visit(pl::ptrn::PatternArrayStatic& pattern) override;
         void visit(pl::ptrn::PatternBitfieldField& pattern) override;
@@ -29,8 +31,6 @@ namespace hex {
         void visit(pl::ptrn::PatternWideString& pattern) override;
 
     private:
-        void draw(pl::ptrn::Pattern& pattern);
-
         constexpr static auto ChunkSize = 512;
         constexpr static auto DisplayEndStep = 64;
 

@@ -124,8 +124,9 @@ namespace hex::plugin::builtin {
                     ImGui::TableHeadersRow();
 
                     if (!sortedPatterns.empty()) {
-                        for (auto &pattern : sortedPatterns)
-                            pattern->accept(this->m_patternDrawer);
+                        for (auto &pattern : sortedPatterns) {
+                            this->m_patternDrawer.draw(*pattern);
+                        }
                     }
 
                     ImGui::EndTable();
