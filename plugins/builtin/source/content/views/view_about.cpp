@@ -165,7 +165,7 @@ namespace hex::plugin::builtin {
                     if(fs::isDirectory(path)){
                         ImGui::TextUnformatted(hex::toUTF8String(path).c_str());
                     }else{
-                        ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), hex::toUTF8String(path).c_str());
+                        ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), hex::toUTF8String(path).c_str());
                     }
                 }
             }
