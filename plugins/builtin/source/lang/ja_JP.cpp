@@ -570,8 +570,12 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.casting", "データ変換" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "整数→バッファ" },
                         { "hex.builtin.nodes.casting.int_to_buffer.header", "整数→バッファ" },
-                { "hex.builtin.nodes.casting.buffer_to_int", "バッファ→整数" },
+                    { "hex.builtin.nodes.casting.buffer_to_int", "バッファ→整数" },
                         { "hex.builtin.nodes.casting.buffer_to_int.header", "バッファ→整数" },
+                    //{ "hex.builtin.nodes.casting.float_to_buffer", "Float to Buffer" },
+                        //{ "hex.builtin.nodes.casting.float_to_buffer.header", "Float to Buffer" },
+                    //{ "hex.builtin.nodes.casting.buffer_to_float", "Buffer to Float" },
+                        //{ "hex.builtin.nodes.casting.buffer_to_float.header", "Buffer to Float" },
 
                 { "hex.builtin.nodes.arithmetic", "演算" },
                     { "hex.builtin.nodes.arithmetic.add", "加算＋" },
@@ -649,6 +653,10 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.image.header", "画像ビジュアライザー" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "バイト分布" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "バイト分布" },
+
+                //{ "hex.builtin.nodes.pattern_language", "Pattern Language" },
+                    //{ "hex.builtin.nodes.pattern_language.out_var", "Out Variable" },
+                        //{ "hex.builtin.nodes.pattern_language.out_var.header", "Out Variable" },
 
 
                 { "hex.builtin.tools.demangler", "LLVMデマングラー" },

@@ -567,8 +567,12 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.casting", "数据转换" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "整数到缓冲区" },
                         { "hex.builtin.nodes.casting.int_to_buffer.header", "整数到缓冲区" },
-                { "hex.builtin.nodes.casting.buffer_to_int", "缓冲区到整数" },
+                    { "hex.builtin.nodes.casting.buffer_to_int", "缓冲区到整数" },
                         { "hex.builtin.nodes.casting.buffer_to_int.header", "缓冲区到整数" },
+                    //{ "hex.builtin.nodes.casting.float_to_buffer", "Float to Buffer" },
+                        //{ "hex.builtin.nodes.casting.float_to_buffer.header", "Float to Buffer" },
+                    //{ "hex.builtin.nodes.casting.buffer_to_float", "Buffer to Float" },
+                        //{ "hex.builtin.nodes.casting.buffer_to_float.header", "Buffer to Float" },
 
                 { "hex.builtin.nodes.arithmetic", "运算" },
                     { "hex.builtin.nodes.arithmetic.add", "加法" },
@@ -648,6 +652,10 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.image.header", "图像可视化" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "字节分布" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "字节分布" },
+
+                //{ "hex.builtin.nodes.pattern_language", "Pattern Language" },
+                    //{ "hex.builtin.nodes.pattern_language.out_var", "Out Variable" },
+                        //{ "hex.builtin.nodes.pattern_language.out_var.header", "Out Variable" },
 
 
                 { "hex.builtin.tools.demangler", "LLVM 名还原" },

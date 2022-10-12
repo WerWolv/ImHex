@@ -566,8 +566,12 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.casting", "데이터 변환" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "정수에서 버퍼로" },
                         { "hex.builtin.nodes.casting.int_to_buffer.header", "정수에서 버퍼로" },
-                { "hex.builtin.nodes.casting.buffer_to_int", "버퍼에서 정수로" },
+                    { "hex.builtin.nodes.casting.buffer_to_int", "버퍼에서 정수로" },
                         { "hex.builtin.nodes.casting.buffer_to_int.header", "버퍼에서 정수로" },
+                    //{ "hex.builtin.nodes.casting.float_to_buffer", "Float to Buffer" },
+                        //{ "hex.builtin.nodes.casting.float_to_buffer.header", "Float to Buffer" },
+                    //{ "hex.builtin.nodes.casting.buffer_to_float", "Buffer to Float" },
+                        //{ "hex.builtin.nodes.casting.buffer_to_float.header", "Buffer to Float" },
 
                 { "hex.builtin.nodes.arithmetic", "수학" },
                     { "hex.builtin.nodes.arithmetic.add", "덧셈" },
@@ -646,6 +650,10 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.image.header", "이미지 시각화" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "바이트 분포" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "바이트 분포" },
+
+                //{ "hex.builtin.nodes.pattern_language", "Pattern Language" },
+                    //{ "hex.builtin.nodes.pattern_language.out_var", "Out Variable" },
+                        //{ "hex.builtin.nodes.pattern_language.out_var.header", "Out Variable" },
 
 
                 { "hex.builtin.tools.demangler", "LLVM Demangler" },

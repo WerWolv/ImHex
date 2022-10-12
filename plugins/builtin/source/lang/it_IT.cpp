@@ -572,8 +572,12 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.casting", "Conversione Dati" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "Da Intero a Buffer" },
                         { "hex.builtin.nodes.casting.int_to_buffer.header", "Da Intero a Buffer" },
-                { "hex.builtin.nodes.casting.buffer_to_int", "Da Buffer a Intero" },
+                    { "hex.builtin.nodes.casting.buffer_to_int", "Da Buffer a Intero" },
                         { "hex.builtin.nodes.casting.buffer_to_int.header", "Da Buffer a Integer" },
+                    //{ "hex.builtin.nodes.casting.float_to_buffer", "Float to Buffer" },
+                        //{ "hex.builtin.nodes.casting.float_to_buffer.header", "Float to Buffer" },
+                    //{ "hex.builtin.nodes.casting.buffer_to_float", "Buffer to Float" },
+                        //{ "hex.builtin.nodes.casting.buffer_to_float.header", "Buffer to Float" },
 
                 { "hex.builtin.nodes.arithmetic", "Aritmetica" },
                     { "hex.builtin.nodes.arithmetic.add", "Addizione" },
@@ -654,6 +658,9 @@ namespace hex::plugin::builtin {
                     //{ "hex.builtin.nodes.visualizer.byte_distribution", "Byte Distribution" },
                         //{ "hex.builtin.nodes.visualizer.byte_distribution.header", "Byte Distribution" },
 
+                //{ "hex.builtin.nodes.pattern_language", "Pattern Language" },
+                    //{ "hex.builtin.nodes.pattern_language.out_var", "Out Variable" },
+                        //{ "hex.builtin.nodes.pattern_language.out_var.header", "Out Variable" },
 
                 { "hex.builtin.tools.demangler", "LLVM Demangler" },
                     { "hex.builtin.tools.demangler.mangled", "Nome Mangled" },

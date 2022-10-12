@@ -562,8 +562,12 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.casting", "Datenumwandlung" },
                     { "hex.builtin.nodes.casting.int_to_buffer", "Integral zu Buffer" },
                         { "hex.builtin.nodes.casting.int_to_buffer.header", "Integral zu Buffer" },
-                { "hex.builtin.nodes.casting.buffer_to_int", "Buffer zu Integral" },
+                    { "hex.builtin.nodes.casting.buffer_to_int", "Buffer zu Integral" },
                         { "hex.builtin.nodes.casting.buffer_to_int.header", "Buffer zu Integral" },
+                    { "hex.builtin.nodes.casting.float_to_buffer", "Float zu Buffer" },
+                        { "hex.builtin.nodes.casting.float_to_buffer.header", "Float zu Buffer" },
+                    { "hex.builtin.nodes.casting.buffer_to_float", "Buffer zu Float" },
+                        { "hex.builtin.nodes.casting.buffer_to_float.header", "Buffer zu Float" },
 
                 { "hex.builtin.nodes.arithmetic", "Arithmetisch" },
                     { "hex.builtin.nodes.arithmetic.add", "Addition" },
@@ -643,6 +647,10 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.image.header", "Bild" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "Byteverteilung" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "Byteverteilung" },
+
+                { "hex.builtin.nodes.pattern_language", "Pattern Language" },
+                    { "hex.builtin.nodes.pattern_language.out_var", "Out Variabel" },
+                        { "hex.builtin.nodes.pattern_language.out_var.header", "Out Variabel" },
 
 
                 { "hex.builtin.tools.demangler", "LLVM Demangler" },
