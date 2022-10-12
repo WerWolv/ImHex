@@ -15,6 +15,10 @@ namespace hex::plugin::builtin {
 
             this->m_sortedPatterns[ImHexApi::Provider::get()].clear();
         });
+
+        EventManager::subscribe<EventProviderClosed>([this](auto *provider) {
+            this->m_sortedPatterns[provider].clear();
+        });
     }
 
     ViewPatternData::~ViewPatternData() {
