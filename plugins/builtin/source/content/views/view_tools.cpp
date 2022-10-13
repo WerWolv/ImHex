@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
 
             if (!detached) continue;
 
-            ImGui::SetNextWindowSize(scaled(ImVec2(600, 0)), ImGuiCond_Appearing);
+            ImGui::SetNextWindowSize(scaled(ImVec2(600, 0)));
             if (ImGui::Begin(View::toWindowName(name).c_str(), &detached, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
                 function();
 
