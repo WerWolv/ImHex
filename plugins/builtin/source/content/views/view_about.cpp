@@ -161,8 +161,13 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted(name);
 
                 ImGui::TableNextColumn();
-                for (auto &path : fs::getDefaultPaths(type))
-                    ImGui::TextUnformatted(hex::toUTF8String(path).c_str());
+                for (auto &path : fs::getDefaultPaths(type, true)){
+                    if(fs::isDirectory(path)){
+                        ImGui::TextUnformatted(hex::toUTF8String(path).c_str());
+                    }else{
+                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), hex::toUTF8String(path).c_str());
+                    }
+                }
             }
 
             ImGui::EndTable();
