@@ -338,7 +338,7 @@ namespace hex {
         void add(const std::string &unlocalizedName, const impl::Callback &function) {
             log::debug("Registered new tool: {}", unlocalizedName);
 
-            getEntries().emplace_back(impl::Entry { unlocalizedName, function });
+            getEntries().emplace_back(impl::Entry { unlocalizedName, function, false });
         }
 
         std::vector<impl::Entry> &getEntries() {

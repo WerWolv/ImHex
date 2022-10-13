@@ -2,7 +2,7 @@
 
 #include <hex.hpp>
 
-#include <imgui.h>
+#include <hex/api/content_registry.hpp>
 #include <hex/ui/view.hpp>
 
 #include <array>
@@ -16,6 +16,9 @@ namespace hex::plugin::builtin {
         ~ViewTools() override = default;
 
         void drawContent() override;
+
+    private:
+        std::vector<ContentRegistry::Tools::impl::Entry>::iterator m_dragStartIterator;
     };
 
 }

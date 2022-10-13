@@ -47,18 +47,23 @@ namespace hex {
 
     void ImHexSettingsHandler_ReadLine(ImGuiContext *, ImGuiSettingsHandler *, void *, const char *line) {
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
-            std::string format = std::string(view->getUnlocalizedName()) + "=%d";
+            std::string format = view->getUnlocalizedName() + "=%d";
             sscanf(line, format.c_str(), &view->getWindowOpenState());
+        }
+        for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
+            std::string format = name + "=%d";
+            sscanf(line, format.c_str(), &detached);
         }
     }
 
     void ImHexSettingsHandler_WriteAll(ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
-        buf->reserve(buf->size() + 0x20);    // Ballpark reserve
-
         buf->appendf("[%s][General]\n", handler->TypeName);
 
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             buf->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
+        }
+        for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
+            buf->appendf("%s=%d\n", name.c_str(), detached);
         }
 
         buf->append("\n");

@@ -174,6 +174,7 @@ namespace hex {
                 struct Entry {
                     std::string name;
                     Callback function;
+                    bool detached;
                 };
 
             }
