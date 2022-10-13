@@ -543,6 +543,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.common.input.a", "Input A" },
                 { "hex.builtin.nodes.common.input.b", "Input B" },
                 { "hex.builtin.nodes.common.output", "Output" },
+                //{ "hex.builtin.nodes.common.width", "Width" },
+                //{ "hex.builtin.nodes.common.height", "Height" },
 
                 { "hex.builtin.nodes.display", "Mostra" },
                     { "hex.builtin.nodes.display.int", "Intero" },
@@ -656,6 +658,8 @@ namespace hex::plugin::builtin {
                        //{ "hex.builtin.nodes.visualizer.layered_dist.header", "Layered Distribution" },
                     //{ "hex.builtin.nodes.visualizer.image", "Image" },
                         //{ "hex.builtin.nodes.visualizer.image.header", "Image Visualizer" },
+                    //{ "hex.builtin.nodes.visualizer.image_rgba", "RGBA8 Image" },
+                        //{ "hex.builtin.nodes.visualizer.image_rgba.header", "RGBA8 Image Visualizer" },
                     //{ "hex.builtin.nodes.visualizer.byte_distribution", "Byte Distribution" },
                         //{ "hex.builtin.nodes.visualizer.byte_distribution.header", "Byte Distribution" },
 

@@ -516,6 +516,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.common.input.a", "Input A" },
                 { "hex.builtin.nodes.common.input.b", "Input B" },
                 { "hex.builtin.nodes.common.output", "Output" },
+                //{ "hex.builtin.nodes.common.width", "Width" },
+                //{ "hex.builtin.nodes.common.height", "Height" },
 
                 { "hex.builtin.nodes.constants", "상수" },
                     { "hex.builtin.nodes.constants.int", "정수" },
@@ -649,6 +651,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.layered_dist.header", "계층적 분포" },
                     { "hex.builtin.nodes.visualizer.image", "이미지" },
                         { "hex.builtin.nodes.visualizer.image.header", "이미지 시각화" },
+                    //{ "hex.builtin.nodes.visualizer.image_rgba", "RGBA8 Image" },
+                        //{ "hex.builtin.nodes.visualizer.image_rgba.header", "RGBA8 Image Visualizer" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "바이트 분포" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "바이트 분포" },
 

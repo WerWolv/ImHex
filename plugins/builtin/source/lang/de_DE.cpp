@@ -512,6 +512,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.common.input.a", "Input A" },
                 { "hex.builtin.nodes.common.input.b", "Input B" },
                 { "hex.builtin.nodes.common.output", "Output" },
+                { "hex.builtin.nodes.common.width", "Breite" },
+                { "hex.builtin.nodes.common.height", "Höhe" },
 
                 { "hex.builtin.nodes.constants", "Konstanten" },
                     { "hex.builtin.nodes.constants.int", "Integral" },
@@ -646,6 +648,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.layered_dist.header", "Geschichtete Verteilung" },
                     { "hex.builtin.nodes.visualizer.image", "Bild" },
                         { "hex.builtin.nodes.visualizer.image.header", "Bild" },
+                    { "hex.builtin.nodes.visualizer.image_rgba", "RGBA8 Bild" },
+                        { "hex.builtin.nodes.visualizer.image_rgba.header", "RGBA8 Bild" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "Byteverteilung" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "Byteverteilung" },
 

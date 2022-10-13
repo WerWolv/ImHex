@@ -517,6 +517,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.common.input.a", "输入 A" },
                 { "hex.builtin.nodes.common.input.b", "输入 B" },
                 { "hex.builtin.nodes.common.output", "输出" },
+                //{ "hex.builtin.nodes.common.width", "Width" },
+                //{ "hex.builtin.nodes.common.height", "Height" },
 
                 { "hex.builtin.nodes.constants", "常量" },
                     { "hex.builtin.nodes.constants.int", "整数" },
@@ -651,6 +653,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.layered_dist.header", "分层布局" },
                     { "hex.builtin.nodes.visualizer.image", "图像" },
                         { "hex.builtin.nodes.visualizer.image.header", "图像可视化" },
+                    //{ "hex.builtin.nodes.visualizer.image_rgba", "RGBA8 Image" },
+                        //{ "hex.builtin.nodes.visualizer.image_rgba.header", "RGBA8 Image Visualizer" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "字节分布" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "字节分布" },
 

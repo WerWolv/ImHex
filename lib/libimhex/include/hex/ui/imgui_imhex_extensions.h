@@ -34,7 +34,7 @@ namespace ImGui {
     class Texture {
     public:
         Texture() = default;
-        Texture(const ImU8 *buffer, int size);
+        Texture(const ImU8 *buffer, int size, int width = 0, int height = 0);
         explicit Texture(const char *path);
         Texture(const Texture&) = delete;
         Texture(Texture&& other) noexcept;

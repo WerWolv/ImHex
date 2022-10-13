@@ -1007,6 +1007,37 @@ namespace hex::plugin::builtin {
         ImGui::Texture m_texture;
     };
 
+    class NodeVisualizerImageRGBA : public dp::Node {
+    public:
+        NodeVisualizerImageRGBA() : Node("hex.builtin.nodes.visualizer.image_rgba.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.width"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.height") }) { }
+
+        void drawNode() override {
+            ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 200, 200)));
+            if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
+                ImGui::BeginTooltip();
+                ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 600, 600)));
+                ImGui::EndTooltip();
+            }
+        }
+
+        void process() override {
+            this->m_texture = { };
+
+            const auto rawData = this->getBufferOnInput(0);
+            const auto width = this->getIntegerOnInput(1);
+            const auto height = this->getIntegerOnInput(2);
+
+            const size_t requiredBytes = width * height * 4;
+            if (requiredBytes > rawData.size())
+                throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
+
+            this->m_texture = ImGui::Texture(rawData.data(), rawData.size(), width, height);
+        }
+
+    private:
+        ImGui::Texture m_texture;
+    };
+
     class NodeVisualizerByteDistribution : public dp::Node {
     public:
         NodeVisualizerByteDistribution() : Node("hex.builtin.nodes.visualizer.byte_distribution.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
@@ -1142,6 +1173,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeVisualizerDigram>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.digram");
         ContentRegistry::DataProcessorNode::add<NodeVisualizerLayeredDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.layered_dist");
         ContentRegistry::DataProcessorNode::add<NodeVisualizerImage>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.image");
+        ContentRegistry::DataProcessorNode::add<NodeVisualizerImageRGBA>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.image_rgba");
         ContentRegistry::DataProcessorNode::add<NodeVisualizerByteDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.byte_distribution");
 
         ContentRegistry::DataProcessorNode::add<NodePatternLanguageOutVariable>("hex.builtin.nodes.pattern_language", "hex.builtin.nodes.pattern_language.out_var");

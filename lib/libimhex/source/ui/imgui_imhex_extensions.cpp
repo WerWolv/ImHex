@@ -16,8 +16,17 @@
 
 namespace ImGui {
 
-    Texture::Texture(const ImU8 *buffer, int size) {
+    Texture::Texture(const ImU8 *buffer, int size, int width, int height) {
         unsigned char *imageData = stbi_load_from_memory(buffer, size, &this->m_width, &this->m_height, nullptr, 4);
+        if (imageData == nullptr) {
+            if (width * height * 4 > size)
+                return;
+
+            imageData = (unsigned char*) STBI_MALLOC(size);
+            std::memcpy(imageData, buffer, size);
+            this->m_width = width;
+            this->m_height = height;
+        }
         if (imageData == nullptr)
             return;
 

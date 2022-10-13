@@ -520,6 +520,8 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.nodes.common.input.a", "入力 A" },
                 { "hex.builtin.nodes.common.input.b", "入力 B" },
                 { "hex.builtin.nodes.common.output", "出力" },
+                //{ "hex.builtin.nodes.common.width", "Width" },
+                //{ "hex.builtin.nodes.common.height", "Height" },
 
                 { "hex.builtin.nodes.constants", "定数" },
                     { "hex.builtin.nodes.constants.int", "整数" },
@@ -652,6 +654,8 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.visualizer.layered_dist.header", "層状分布" },
                     { "hex.builtin.nodes.visualizer.image", "画像" },
                         { "hex.builtin.nodes.visualizer.image.header", "画像ビジュアライザー" },
+                    //{ "hex.builtin.nodes.visualizer.image_rgba", "RGBA8 Image" },
+                        //{ "hex.builtin.nodes.visualizer.image_rgba.header", "RGBA8 Image Visualizer" },
                     { "hex.builtin.nodes.visualizer.byte_distribution", "バイト分布" },
                         { "hex.builtin.nodes.visualizer.byte_distribution.header", "バイト分布" },
 
