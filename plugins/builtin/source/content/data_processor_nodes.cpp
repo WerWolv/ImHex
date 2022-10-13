@@ -808,7 +808,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             drawDigram(scaled({ 200, 200 }));
 
-            if (ImGui::IsItemHovered()) {
+            if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
                 drawDigram(scaled({ 600, 600 }));
                 ImGui::EndTooltip();
@@ -899,7 +899,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             drawLayeredDistribution(scaled({ 200, 200 }));
-            if (ImGui::IsItemHovered()) {
+            if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
                 drawLayeredDistribution(scaled({ 600, 600 }));
                 ImGui::EndTooltip();
@@ -990,7 +990,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 200, 200)));
-            if (ImGui::IsItemHovered()) {
+            if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
                 ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 600, 600)));
                 ImGui::EndTooltip();
@@ -1045,7 +1045,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             drawPlot(scaled({ 400, 300 }));
 
-            if (ImGui::IsItemHovered()) {
+            if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
                 drawPlot(scaled({ 700, 550 }));
                 ImGui::EndTooltip();
