@@ -41,7 +41,7 @@ namespace hex::plugin::builtin::prv {
 
         for (u64 i = 0; i < size; i++)
             if (getPatches().contains(offset + i))
-                reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
+                reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + i];
 
         if (overlays)
             this->applyOverlays(offset, buffer, size);
