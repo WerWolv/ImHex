@@ -37,6 +37,7 @@ detectOS()
 detectArch()
 addVersionDefines()
 configurePackingResources()
+setUninstallTarget()
 
 # Add ImHex sources
 add_subdirectory(lib/libimhex)
