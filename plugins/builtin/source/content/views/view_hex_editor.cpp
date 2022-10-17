@@ -1532,6 +1532,10 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isValid())
                 ImHexApi::Provider::get()->redo();
         });
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::Z, [] {
+            if (ImHexApi::Provider::isValid())
+                ImHexApi::Provider::get()->redo();
+        });
     }
 
     void ViewHexEditor::registerEvents() {
