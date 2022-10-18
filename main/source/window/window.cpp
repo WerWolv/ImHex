@@ -69,8 +69,8 @@ namespace hex {
         buf->append("\n");
     }
 
-    static void signalHandler(int signalNumber) {
-        log::fatal("Terminating with signal {}", signalNumber);
+    static void signalHandler(int signalNumber, std::string signalName) {
+        log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
         EventManager::post<EventAbnormalTermination>(signalNumber);
 
@@ -155,11 +155,16 @@ namespace hex {
             this->m_popupsToOpen.push_back(name);
         });
 
-		std::signal(SIGSEGV, signalHandler);
-		std::signal(SIGILL, signalHandler);
-		std::signal(SIGABRT, signalHandler);
-		std::signal(SIGFPE, signalHandler);
-        std::set_terminate([]{ signalHandler(SIGABRT); });
+        #define HANDLE_SIGNAL(name) \
+		std::signal(name, [](int signalNumber){ \
+            signalHandler(signalNumber, #name); \
+        });
+        HANDLE_SIGNAL(SIGSEGV)
+        HANDLE_SIGNAL(SIGILL)
+        HANDLE_SIGNAL(SIGABRT)
+        HANDLE_SIGNAL(SIGFPE)
+        #undef HANDLE_SIGNAL
+        std::set_terminate([]{ signalHandler(SIGABRT, "Unhandled C++ exception"); });
 
         auto logoData      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
