@@ -120,8 +120,11 @@ namespace hex {
 
     std::optional<i32> Net::execute() {
         CURLcode result = curl_easy_perform(this->m_ctx);
-        if (result != CURLE_OK)
-            log::error("Net request failed with error {0}: '{1}'", u32(result), curl_easy_strerror(result));
+        if (result != CURLE_OK){
+            char *url = NULL;
+            curl_easy_getinfo(this->m_ctx, CURLINFO_EFFECTIVE_URL, &url);
+            log::error("Net request '{0}' failed with error {1}: '{2}'", url, u32(result), curl_easy_strerror(result));
+        }
 
         long responseCode = 0;
         curl_easy_getinfo(this->m_ctx, CURLINFO_RESPONSE_CODE, &responseCode);
