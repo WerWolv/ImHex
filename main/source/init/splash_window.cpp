@@ -21,6 +21,7 @@
 #include <chrono>
 #include <future>
 #include <numeric>
+#include <chrono>
 
 using namespace std::literals::chrono_literals;
 
@@ -51,8 +52,14 @@ namespace hex::init {
                         this->m_currTaskName = name;
                     }
 
+                    using namespace std::chrono;
+
+                    auto startTime = high_resolution_clock::now();
                     if (!task())
                         status = false;
+                    auto endTime = high_resolution_clock::now();
+
+                    log::info("Task {} done in {}ms", name, duration_cast<milliseconds>(endTime-startTime).count());
 
                     tasksCompleted++;
 
