@@ -59,7 +59,7 @@ namespace hex::init {
                         status = false;
                     auto endTime = high_resolution_clock::now();
 
-                    log::info("Task {} done in {}ms", name, duration_cast<milliseconds>(endTime-startTime).count());
+                    log::info("Task {} finished in {} ms", name, duration_cast<milliseconds>(endTime-startTime).count());
 
                     tasksCompleted++;
 
