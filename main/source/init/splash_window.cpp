@@ -51,8 +51,12 @@ namespace hex::init {
                         this->m_currTaskName = name;
                     }
 
+                    auto startTime = std::chrono::high_resolution_clock::now();
                     if (!task())
                         status = false;
+                    auto endTime = std::chrono::high_resolution_clock::now();
+
+                    log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
 
                     tasksCompleted++;
 
@@ -119,7 +123,7 @@ namespace hex::init {
                 #endif
 
                 drawList->AddRectFilled(ImVec2(0, splashTexture.getSize().y - 5) * scale, ImVec2(splashTexture.getSize().x * this->m_progress, splashTexture.getSize().y) * scale, 0xFFFFFFFF);
-                drawList->AddText(ImVec2(15, splashTexture.getSize().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
+                drawList->AddText(ImVec2(15, splashTexture.getSize().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}...", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
             }
 
             ImGui::Render();
