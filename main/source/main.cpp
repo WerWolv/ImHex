@@ -60,15 +60,7 @@ int main(int argc, char **argv, char **envp) {
                 }
             }
 
-            try {
-                window.loop();
-            } catch (const std::exception &e) {
-                log::fatal("Exception thrown in main loop: {}", e.what());
-                throw;
-            } catch (...) {
-                log::fatal("Unknown exception thrown in main loop!");
-                throw;
-            }
+            window.loop();
         }
 
     } while (shouldRestart);
