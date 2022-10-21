@@ -379,6 +379,11 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.pattern_editor.accept_pattern.question", "選択したパターンを反映してよろしいですか？" },
                 { "hex.builtin.view.pattern_editor.menu.file.load_pattern", "パターンを読み込み…" },
                 { "hex.builtin.view.pattern_editor.menu.file.save_pattern", "パターンを保存…" },
+                //{ "hex.builtin.view.pattern_editor.menu.edit.place_pattern", "Place pattern..." },
+                //    { "hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin", "Built-in Type" },
+                //        { "hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single", "Single" },
+                //        { "hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array", "Array" },
+                //    { "hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom", "Custom Type" },
                 { "hex.builtin.view.pattern_editor.open_pattern", "パターンを開く" },
                 { "hex.builtin.view.pattern_editor.evaluating", "実行中…" }, //?
                 { "hex.builtin.view.pattern_editor.auto", "常に実行" }, //?

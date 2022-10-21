@@ -232,6 +232,17 @@ namespace hex {
         return result.substr(0, result.length() - delimiter.length());
     }
 
+    std::string replaceStrings(std::string string, const std::string &search, const std::string &replace) {
+        if (search.empty())
+            return string;
+
+        std::size_t pos;
+        while ((pos = string.find(search)) != std::string::npos)
+            string.replace(pos, search.size(), replace);
+
+        return string;
+    }
+
     std::string toEngineeringString(double value) {
         constexpr static std::array Suffixes = { "a", "f", "p", "n", "u", "m", "", "k", "M", "G", "T", "P", "E" };
 

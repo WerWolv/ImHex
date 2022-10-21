@@ -4,6 +4,7 @@
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/core/preprocessor.hpp>
+#include <pl/core/parser.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
 #include <pl/core/ast/ast_node_type_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
@@ -17,6 +18,7 @@
 #include <content/helpers/provider_extra_data.hpp>
 
 #include <nlohmann/json.hpp>
+#include <ranges>
 
 namespace hex::plugin::builtin {
 
@@ -89,247 +91,9 @@ namespace hex::plugin::builtin {
         this->m_envVarEntries.push_back({ 0, "", 0, EnvVarType::Integer });
         this->m_envVarIdCounter = 1;
 
-        EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
-            this->m_textEditor.SetText(code);
-        });
-
-        EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            {
-                auto syncPatternSource = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source");
-
-                if (syncPatternSource.is_number())
-                    this->m_syncPatternSourceCode = static_cast<int>(syncPatternSource);
-            }
-
-            {
-                auto autoLoadPatterns = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns");
-
-                if (autoLoadPatterns.is_number())
-                    this->m_autoLoadPatterns = static_cast<int>(autoLoadPatterns);
-            }
-        });
-
-        EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
-            auto &patternLanguageData = ProviderExtraData::get(provider).patternLanguage;
-            patternLanguageData.runtime = std::make_unique<pl::PatternLanguage>();
-            ContentRegistry::PatternLanguage::configureRuntime(*patternLanguageData.runtime, provider);
-
-            TaskManager::createBackgroundTask("Analyzing file content", [this, provider, &data = patternLanguageData](auto &) {
-                if (!this->m_autoLoadPatterns)
-                    return;
-
-                // Copy over current pattern source code to the new provider
-                if (!this->m_syncPatternSourceCode) {
-                    data.sourceCode = this->m_textEditor.GetText();
-                }
-
-                std::scoped_lock lock(data.runtimeMutex);
-                auto &runtime = data.runtime;
-
-                auto mimeType = magic::getMIMEType(provider);
-
-                bool foundCorrectType = false;
-                runtime->addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
-                    hex::unused(runtime);
-
-                    if (value == mimeType) {
-                        foundCorrectType = true;
-                        return true;
-                    }
-                    return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
-                });
-
-                this->m_possiblePatternFiles.clear();
-
-                std::error_code errorCode;
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
-                    for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
-                        foundCorrectType = false;
-                        if (!entry.is_regular_file())
-                            continue;
-
-                        fs::File file(entry.path(), fs::File::Mode::Read);
-                        if (!file.isValid())
-                            continue;
-
-                        runtime->getInternals().preprocessor->preprocess(*runtime, file.readString());
-
-                        if (foundCorrectType)
-                            this->m_possiblePatternFiles.push_back(entry.path());
-
-                        runtime->reset();
-                    }
-                }
-
-                runtime->addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
-
-                if (!this->m_possiblePatternFiles.empty()) {
-                    this->m_selectedPatternFile = 0;
-                    EventManager::post<RequestOpenPopup>("hex.builtin.view.pattern_editor.accept_pattern"_lang);
-                    this->m_acceptPatternWindowOpen = true;
-                }
-            });
-        });
-
-        EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
-            if (!this->m_syncPatternSourceCode) {
-                if (oldProvider != nullptr) ProviderExtraData::get(oldProvider).patternLanguage.sourceCode = this->m_textEditor.GetText();
-
-                if (newProvider != nullptr)
-                    this->m_textEditor.SetText(ProviderExtraData::get(newProvider).patternLanguage.sourceCode);
-                else
-                    this->m_textEditor.SetText("");
-
-                auto lines = this->m_textEditor.GetTextLines();
-                lines.pop_back();
-                this->m_textEditor.SetTextLines(lines);
-            }
-        });
-
-        /* Settings */
-        {
-
-            EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
-                switch (theme) {
-                    default:
-                    case 1: /* Dark theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
-                        break;
-                    case 2: /* Light theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
-                        break;
-                    case 3: /* Classic theme */
-                        this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
-                        break;
-                }
-            });
-        }
-
-        ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
-            fs::File file(path, fs::File::Mode::Read);
-
-            if (file.isValid()) {
-                EventManager::post<RequestSetPatternLanguageCode>(file.readString());
-                return true;
-            } else {
-                return false;
-            }
-        });
-
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
-            bool providerValid = ImHexApi::Provider::isValid();
-
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, nullptr, false, providerValid)) {
-
-                std::vector<std::fs::path> paths;
-
-                for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
-                    if (!fs::exists(imhexPath)) continue;
-
-                    std::error_code error;
-                    for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
-                        if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
-                            paths.push_back(entry.path());
-                        }
-                    }
-                }
-
-                View::showFileChooserPopup(paths, { {"Pattern File", "hexpat"} },
-                    [this](const std::fs::path &path) {
-                        this->loadPatternFile(path);
-                    });
-            }
-
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {
-                fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
-                    [this](const auto &path) {
-                        fs::File file(path, fs::File::Mode::Create);
-
-                        file.write(this->m_textEditor.GetText());
-                    });
-            }
-        });
-
-
-        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
-            hex::unused(data, size);
-
-            if (this->m_runningEvaluators != 0)
-                return std::nullopt;
-
-            std::optional<ImColor> color;
-            for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address)) {
-                if (pattern->isHidden())
-                    continue;
-
-                if (color.has_value())
-                    color = ImAlphaBlendColors(*color, pattern->getColor());
-                else
-                    color = pattern->getColor();
-            }
-
-            return color;
-        });
-
-        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
-            hex::unused(data, size);
-
-            auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address);
-            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
-                ImGui::BeginTooltip();
-
-                for (const auto &pattern : patterns) {
-                    if (pattern->isHidden())
-                        continue;
-
-                    auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                    ImGui::PushID(pattern);
-                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-
-                        this->drawPatternTooltip(pattern);
-
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
-                        ImGui::EndTable();
-                        ImGui::PopStyleColor(2);
-                    }
-                    ImGui::PopID();
-                }
-                ImGui::EndTooltip();
-            }
-        });
-
-        ProjectFile::registerPerProviderHandler({
-            .basePath = "pattern_source_code.hexpat",
-            .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                std::string sourceCode = tar.readString(basePath);
-
-                if (!this->m_syncPatternSourceCode)
-                    ProviderExtraData::get(provider).patternLanguage.sourceCode = sourceCode;
-
-                if (provider == ImHexApi::Provider::get())
-                    this->m_textEditor.SetText(sourceCode);
-
-                return true;
-            },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                std::string sourceCode;
-
-                if (provider == ImHexApi::Provider::get())
-                    ProviderExtraData::get(provider).patternLanguage.sourceCode = this->m_textEditor.GetText();
-
-                if (this->m_syncPatternSourceCode)
-                    sourceCode = this->m_textEditor.GetText();
-                else
-                    sourceCode = ProviderExtraData::get(provider).patternLanguage.sourceCode;
-
-                tar.write(basePath, sourceCode);
-                return true;
-            }
-        });
+        this->registerEvents();
+        this->registerMenuItems();
+        this->registerHandlers();
     }
 
     ViewPatternEditor::~ViewPatternEditor() {
@@ -867,6 +631,332 @@ namespace hex::plugin::builtin {
             this->m_lastEvaluationResult = runtime->executeString(code, envVars, inVariables);
             if (!this->m_lastEvaluationResult) {
                 this->m_lastEvaluationError = runtime->getError();
+            }
+        });
+    }
+
+    void ViewPatternEditor::registerEvents() {
+        EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
+            this->m_textEditor.SetText(code);
+        });
+
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+            {
+                auto syncPatternSource = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source");
+
+                if (syncPatternSource.is_number())
+                    this->m_syncPatternSourceCode = static_cast<int>(syncPatternSource);
+            }
+
+            {
+                auto autoLoadPatterns = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns");
+
+                if (autoLoadPatterns.is_number())
+                    this->m_autoLoadPatterns = static_cast<int>(autoLoadPatterns);
+            }
+        });
+
+        EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
+            auto &patternLanguageData = ProviderExtraData::get(provider).patternLanguage;
+            patternLanguageData.runtime = std::make_unique<pl::PatternLanguage>();
+            ContentRegistry::PatternLanguage::configureRuntime(*patternLanguageData.runtime, provider);
+
+            TaskManager::createBackgroundTask("Analyzing file content", [this, provider, &data = patternLanguageData](auto &) {
+                if (!this->m_autoLoadPatterns)
+                    return;
+
+                // Copy over current pattern source code to the new provider
+                if (!this->m_syncPatternSourceCode) {
+                    data.sourceCode = this->m_textEditor.GetText();
+                }
+
+                std::scoped_lock lock(data.runtimeMutex);
+                auto &runtime = data.runtime;
+
+                auto mimeType = magic::getMIMEType(provider);
+
+                bool foundCorrectType = false;
+                runtime->addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
+                    hex::unused(runtime);
+
+                    if (value == mimeType) {
+                        foundCorrectType = true;
+                        return true;
+                    }
+                    return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
+                });
+
+                this->m_possiblePatternFiles.clear();
+
+                std::error_code errorCode;
+                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                    for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                        foundCorrectType = false;
+                        if (!entry.is_regular_file())
+                            continue;
+
+                        fs::File file(entry.path(), fs::File::Mode::Read);
+                        if (!file.isValid())
+                            continue;
+
+                        runtime->getInternals().preprocessor->preprocess(*runtime, file.readString());
+
+                        if (foundCorrectType)
+                            this->m_possiblePatternFiles.push_back(entry.path());
+
+                        runtime->reset();
+                    }
+                }
+
+                runtime->addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
+
+                if (!this->m_possiblePatternFiles.empty()) {
+                    this->m_selectedPatternFile = 0;
+                    EventManager::post<RequestOpenPopup>("hex.builtin.view.pattern_editor.accept_pattern"_lang);
+                    this->m_acceptPatternWindowOpen = true;
+                }
+            });
+        });
+
+        EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
+            if (!this->m_syncPatternSourceCode) {
+                if (oldProvider != nullptr) ProviderExtraData::get(oldProvider).patternLanguage.sourceCode = this->m_textEditor.GetText();
+
+                if (newProvider != nullptr)
+                    this->m_textEditor.SetText(ProviderExtraData::get(newProvider).patternLanguage.sourceCode);
+                else
+                    this->m_textEditor.SetText("");
+
+                auto lines = this->m_textEditor.GetTextLines();
+                lines.pop_back();
+                this->m_textEditor.SetTextLines(lines);
+            }
+        });
+
+        EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
+            switch (theme) {
+                default:
+                case 1: /* Dark theme */
+                    this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
+                    break;
+                case 2: /* Light theme */
+                    this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
+                    break;
+                case 3: /* Classic theme */
+                    this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
+                    break;
+            }
+        });
+    }
+
+    static void createNestedMenu(const std::vector<std::string> &menus, const std::function<void()> &function) {
+        if (menus.empty())
+            return;
+
+        if (menus.size() == 1) {
+            if (ImGui::MenuItem(menus.front().c_str()))
+                function();
+        } else {
+            if (ImGui::BeginMenu(menus.front().c_str())) {
+                createNestedMenu({ menus.begin() + 1, menus.end() }, function);
+                ImGui::EndMenu();
+            }
+        }
+    }
+
+    void ViewPatternEditor::registerMenuItems() {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
+            bool providerValid = ImHexApi::Provider::isValid();
+
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, nullptr, false, providerValid)) {
+
+                std::vector<std::fs::path> paths;
+
+                for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                    if (!fs::exists(imhexPath)) continue;
+
+                    std::error_code error;
+                    for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
+                        if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
+                            paths.push_back(entry.path());
+                        }
+                    }
+                }
+
+                View::showFileChooserPopup(paths, { {"Pattern File", "hexpat"} },
+                [this](const std::fs::path &path) {
+                    this->loadPatternFile(path);
+                });
+            }
+
+            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {
+                fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
+                [this](const auto &path) {
+                    fs::File file(path, fs::File::Mode::Create);
+
+                    file.write(this->m_textEditor.GetText());
+                });
+            }
+        });
+
+        // Place Pattern Type...
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 3000, [this] {
+            bool available = ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && this->m_runningParsers == 0;
+            auto selection = ImHexApi::HexEditor::getSelection();
+
+            const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
+
+            const auto appendEditorText = [this](const std::string &text){
+                this->m_textEditor.SetCursorPosition(TextEditor::Coordinates { this->m_textEditor.GetTotalLines(), 0 });
+                this->m_textEditor.InsertText(hex::format("\n{0}", text));
+                this->m_hasUnevaluatedChanges = true;
+            };
+
+            const auto appendVariable = [&](const std::string &type) {
+                appendEditorText(hex::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
+            };
+
+            const auto appendArray = [&](const std::string &type, size_t size) {
+                appendEditorText(hex::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
+            };
+
+            if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern"_lang, available)) {
+                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
+                    constexpr static std::array<std::pair<const char *, size_t>, 21>  Types = {{
+                        { "u8", 1 }, { "u16", 2 }, { "u24", 3 }, { "u32", 4 }, { "u48", 6 }, { "u64", 8 }, { "u96", 12 }, { "u128", 16 },
+                        { "s8", 1 }, { "s16", 2 }, { "s24", 3 }, { "s32", 4 }, { "s48", 6 }, { "s64", 8 }, { "s96", 12 }, { "s128", 16 },
+                        { "float", 4 }, { "double", 8 },
+                        { "bool", 1 }, { "char", 1 }, { "char16", 2 }
+                    }};
+
+                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
+                        for (const auto &[type, size] : Types)
+                            if (ImGui::MenuItem(type))
+                                appendVariable(type);
+                        ImGui::EndMenu();
+                    }
+
+                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
+                        for (const auto &[type, size] : Types)
+                            if (ImGui::MenuItem(type))
+                                appendArray(type, size);
+                        ImGui::EndMenu();
+                    }
+
+                    ImGui::EndMenu();
+                }
+
+                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, !types.empty())) {
+                    for (const auto &[typeName, type] : types) {
+                        if (type->isTemplateType())
+                            continue;
+
+                        createNestedMenu(hex::splitString(typeName, "::"), [&] {
+                            std::string variableName;
+                            for (char &c : hex::replaceStrings(typeName, "::", "_"))
+                                variableName += static_cast<char>(std::tolower(c));
+                            variableName += hex::format("_at_0x{:02X}", selection->getStartAddress());
+
+                            appendEditorText(hex::format("{0} {1} @ 0x{2:02X};", typeName, variableName, selection->getStartAddress()));
+                        });
+                    }
+                    ImGui::EndMenu();
+                }
+
+                ImGui::EndMenu();
+            }
+        });
+    }
+
+    void ViewPatternEditor::registerHandlers() {
+        ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
+            fs::File file(path, fs::File::Mode::Read);
+
+            if (file.isValid()) {
+                EventManager::post<RequestSetPatternLanguageCode>(file.readString());
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+        ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool) -> std::optional<color_t> {
+            hex::unused(data, size);
+
+            if (this->m_runningEvaluators != 0)
+                return std::nullopt;
+
+            std::optional<ImColor> color;
+            for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address)) {
+                if (pattern->isHidden())
+                    continue;
+
+                if (color.has_value())
+                    color = ImAlphaBlendColors(*color, pattern->getColor());
+                else
+                    color = pattern->getColor();
+            }
+
+            return color;
+        });
+
+        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
+            hex::unused(data, size);
+
+            auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address);
+            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
+                ImGui::BeginTooltip();
+
+                for (const auto &pattern : patterns) {
+                    if (pattern->isHidden())
+                        continue;
+
+                    auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                    ImGui::PushID(pattern);
+                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        this->drawPatternTooltip(pattern);
+
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                        ImGui::EndTable();
+                        ImGui::PopStyleColor(2);
+                    }
+                    ImGui::PopID();
+                }
+                ImGui::EndTooltip();
+            }
+        });
+
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "pattern_source_code.hexpat",
+            .required = false,
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                std::string sourceCode = tar.readString(basePath);
+
+                if (!this->m_syncPatternSourceCode)
+                    ProviderExtraData::get(provider).patternLanguage.sourceCode = sourceCode;
+
+                if (provider == ImHexApi::Provider::get())
+                    this->m_textEditor.SetText(sourceCode);
+
+                return true;
+            },
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                std::string sourceCode;
+
+                if (provider == ImHexApi::Provider::get())
+                    ProviderExtraData::get(provider).patternLanguage.sourceCode = this->m_textEditor.GetText();
+
+                if (this->m_syncPatternSourceCode)
+                    sourceCode = this->m_textEditor.GetText();
+                else
+                    sourceCode = ProviderExtraData::get(provider).patternLanguage.sourceCode;
+
+                tar.write(basePath, sourceCode);
+                return true;
             }
         });
     }

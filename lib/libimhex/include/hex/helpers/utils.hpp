@@ -201,6 +201,7 @@ namespace hex {
 
     std::vector<std::string> splitString(const std::string &string, const std::string &delimiter);
     std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter = "");
+    std::string replaceStrings(std::string string, const std::string &search, const std::string &replace);
 
     std::string toEngineeringString(double value);
 

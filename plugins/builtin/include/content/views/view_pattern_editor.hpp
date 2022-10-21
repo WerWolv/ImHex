@@ -104,6 +104,10 @@ namespace hex::plugin::builtin {
 
         void parsePattern(const std::string &code);
         void evaluatePattern(const std::string &code);
+
+        void registerEvents();
+        void registerMenuItems();
+        void registerHandlers();
     };
 
 }
