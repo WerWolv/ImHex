@@ -836,6 +836,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.intel_hex.name", "Intel Hex {0}" },
                 { "hex.builtin.provider.motorola_srec", "Motorola SREC 공급자" },
                     { "hex.builtin.provider.motorola_srec.name", "Motorola SREC {0}" },
+                //{ "hex.builtin.provider.mem_file", "Memory File" },
+                //    { "hex.builtin.provider.mem_file.unsaved", "Unsaved File" },
 
                 { "hex.builtin.layouts.default", "기본 값" },
 

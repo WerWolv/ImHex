@@ -145,6 +145,7 @@ namespace hex::plugin::builtin::prv {
         this->resize(newSize);
 
         Provider::insert(offset, size);
+        Provider::remove(offset, size);
     }
 
     size_t FileProvider::getActualSize() const {

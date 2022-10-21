@@ -21,7 +21,11 @@ namespace hex::plugin::builtin {
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
             if (ImGui::MenuItem("hex.builtin.menu.file.create_file"_lang, "CTRL + N", false, !taskRunning)) {
-                EventManager::post<RequestOpenWindow>("Create File");
+                auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                if (newProvider != nullptr && !newProvider->open())
+                    hex::ImHexApi::Provider::remove(newProvider);
+                else
+                    EventManager::post<EventProviderOpened>(newProvider);
             }
 
             if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, "CTRL + O", false, !taskRunning)) {

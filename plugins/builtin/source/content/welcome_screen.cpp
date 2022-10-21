@@ -208,8 +208,13 @@ namespace hex::plugin::builtin {
             ImGui::UnderlinedText("hex.builtin.welcome.header.start"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
-                if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang))
-                    EventManager::post<RequestOpenWindow>("Create File");
+                if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
+                    auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                    if (newProvider != nullptr && !newProvider->open())
+                        hex::ImHexApi::Provider::remove(newProvider);
+                    else
+                        EventManager::post<EventProviderOpened>(newProvider);
+                }
                 if (ImGui::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
                     EventManager::post<RequestOpenWindow>("Open File");
                 if (ImGui::IconHyperlink(ICON_VS_NOTEBOOK, "hex.builtin.welcome.start.open_project"_lang))

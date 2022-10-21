@@ -6,6 +6,7 @@
 #include "content/providers/disk_provider.hpp"
 #include "content/providers/intel_hex_provider.hpp"
 #include "content/providers/motorola_srec_provider.hpp"
+#include "content/providers/memory_file_provider.hpp"
 
 #include <hex/api/project_file_manager.hpp>
 #include <nlohmann/json.hpp>
@@ -21,6 +22,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<prv::GDBProvider>();
         ContentRegistry::Provider::add<prv::IntelHexProvider>();
         ContentRegistry::Provider::add<prv::MotorolaSRECProvider>();
+        ContentRegistry::Provider::add<prv::MemoryFileProvider>(false);
 
         ProjectFile::registerHandler({
              .basePath = "providers",

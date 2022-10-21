@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 
 #include <hex/ui/view.hpp>
@@ -303,8 +304,13 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(tasksRunning);
             {
                 // Create new file
-                if (ImGui::ToolBarButton(ICON_VS_FILE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray)))
-                    EventManager::post<RequestOpenWindow>("Create File");
+                if (ImGui::ToolBarButton(ICON_VS_FILE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
+                    auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                    if (newProvider != nullptr && !newProvider->open())
+                        hex::ImHexApi::Provider::remove(newProvider);
+                    else
+                        EventManager::post<EventProviderOpened>(newProvider);
+                }
 
                 // Open file
                 if (ImGui::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
