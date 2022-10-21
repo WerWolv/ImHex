@@ -8,11 +8,11 @@
 #include <vector>
 #include <variant>
 #include <map>
+#include <filesystem>
 
 #include <hex/helpers/concepts.hpp>
 #include <hex/api/task.hpp>
 #include <hex/api/keybinding.hpp>
-#include <hex/helpers/fs.hpp>
 
 using ImGuiID = unsigned int;
 struct ImVec2;
@@ -165,7 +165,7 @@ namespace hex {
 
                 void setBorderlessWindowMode(bool enabled);
 
-                void setCustomFontPath(const std::fs::path &path);
+                void setCustomFontPath(const std::filesystem::path &path);
                 void setFontSize(float size);
 
                 void setGPUVendor(const std::string &vendor);
@@ -205,7 +205,7 @@ namespace hex {
             std::map<std::string, std::string> &getInitArguments();
 
             constexpr static float DefaultFontSize = 13.0;
-            const std::fs::path &getCustomFontPath();
+            const std::filesystem::path &getCustomFontPath();
             float getFontSize();
 
             void setTheme(Theme theme);
@@ -214,8 +214,8 @@ namespace hex {
             void enableSystemThemeDetection(bool enabled);
             bool usesSystemThemeDetection();
 
-            const std::vector<std::fs::path> &getAdditionalFolderPaths();
-            void setAdditionalFolderPaths(const std::vector<std::fs::path> &paths);
+            const std::vector<std::filesystem::path> &getAdditionalFolderPaths();
+            void setAdditionalFolderPaths(const std::vector<std::filesystem::path> &paths);
 
             const std::string &getGPUVendor();
 

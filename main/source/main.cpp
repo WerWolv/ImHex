@@ -28,7 +28,7 @@ int main(int argc, char **argv, char **envp) {
         {
             Window::initNative();
 
-            hex::log::info("Welcome to ImHex!");
+            hex::log::info("Welcome to ImHex {}!", IMHEX_VERSION);
 
             init::WindowSplash splashWindow;
 
