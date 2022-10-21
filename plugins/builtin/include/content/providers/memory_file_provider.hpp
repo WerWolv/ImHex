@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
+#include <hex/api/localization.hpp>
 
 namespace hex::plugin::builtin::prv {
 
@@ -29,7 +30,7 @@ namespace hex::plugin::builtin::prv {
         void save() override;
         void saveAs(const std::fs::path &path) override;
 
-        [[nodiscard]] std::string getName() const override { return "hex.builtin.provider.mem_file.unsaved"; }
+        [[nodiscard]] std::string getName() const override { return LangEntry("hex.builtin.provider.mem_file.unsaved"); }
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override { return { }; }
 
         [[nodiscard]] std::string getTypeName() const override {

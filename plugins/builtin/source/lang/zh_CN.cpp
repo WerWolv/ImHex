@@ -341,6 +341,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.view.hex_editor.copy.ascii", "ASCII 文本" },
                         { "hex.builtin.view.hex_editor.copy.html", "HTML" },
                     { "hex.builtin.view.hex_editor.menu.edit.paste", "粘贴" },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.paste_all", "Paste all" },
                     { "hex.builtin.view.hex_editor.menu.edit.select_all", "全选" },
                     { "hex.builtin.view.hex_editor.menu.edit.set_base", "设置基地址" },
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "修改大小..." },

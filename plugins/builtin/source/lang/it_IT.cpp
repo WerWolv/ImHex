@@ -341,6 +341,7 @@ namespace hex::plugin::builtin {
                         //{ "hex.builtin.view.hex_editor.copy.ascii", "Text Area" },
                         { "hex.builtin.view.hex_editor.copy.html", "HTML" },
                     { "hex.builtin.view.hex_editor.menu.edit.paste", "Incolla" },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.paste_all", "Paste all" },
                     { "hex.builtin.view.hex_editor.menu.edit.select_all", "Seleziona tutti" },
                     { "hex.builtin.view.hex_editor.menu.edit.set_base", "Imposta indirizzo di base" },
                     { "hex.builtin.view.hex_editor.menu.edit.resize", "Ridimensiona..." },

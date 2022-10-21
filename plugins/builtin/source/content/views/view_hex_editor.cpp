@@ -1320,7 +1320,7 @@ namespace hex::plugin::builtin {
         ImGui::SetClipboardText(result.c_str());
     }
 
-    static void pasteBytes(const Region &selection) {
+    static void pasteBytes(const Region &selection, bool selectionCheck) {
         auto provider = ImHexApi::Provider::get();
 
         std::string clipboard = ImGui::GetClipboardText();
@@ -1343,8 +1343,14 @@ namespace hex::plugin::builtin {
         // Convert hex string to bytes
         std::vector<u8> buffer = crypt::decode16(clipboard);
 
+        if (!selectionCheck) {
+            if (selection.getStartAddress() + buffer.size() >= provider->getActualSize())
+                provider->resize(selection.getStartAddress() + buffer.size());
+        }
+
         // Write bytes
-        provider->write(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), std::min(selection.size, buffer.size()));
+        auto size = selectionCheck ? std::min(buffer.size(), selection.getSize()) : buffer.size();
+        provider->write(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), size);
     }
 
     static void copyString(const Region &selection) {
@@ -1520,7 +1526,13 @@ namespace hex::plugin::builtin {
         // Paste
         ShortcutManager::addShortcut(this, CTRL + Keys::V, [] {
             const auto selection = getSelection();
-            pasteBytes(selection);
+            pasteBytes(selection, true);
+        });
+
+        // Paste and resize
+        ShortcutManager::addShortcut(this, CTRL + SHIFT + Keys::V, [] {
+            const auto selection = getSelection();
+            pasteBytes(selection, false);
         });
 
         // Undo / Redo
@@ -1738,7 +1750,9 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste"_lang, "CTRL + V", false, selection.has_value()))
-                pasteBytes(*selection);
+                pasteBytes(*selection, true);
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste_all"_lang, "CTRL + V", false, selection.has_value()))
+                pasteBytes(*selection, false);
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.select_all"_lang, "CTRL + A", false, selection.has_value() && providerValid))
                 ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());

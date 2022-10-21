@@ -340,6 +340,7 @@ namespace hex::plugin::builtin {
                         //{ "hex.builtin.view.hex_editor.copy.ascii", "Text Area" },
                         { "hex.builtin.view.hex_editor.copy.html", "HTML" },
                     { "hex.builtin.view.hex_editor.menu.edit.paste", "貼り付け" },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.paste_all", "Paste all" },
                     { "hex.builtin.view.hex_editor.menu.edit.select_all", "すべて選択" },
                     { "hex.builtin.view.hex_editor.menu.edit.bookmark", "ブックマークを作成" },
                     { "hex.builtin.view.hex_editor.menu.edit.set_base", "ベースアドレスをセット" },
