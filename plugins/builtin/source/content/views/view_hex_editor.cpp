@@ -1751,7 +1751,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste"_lang, "CTRL + V", false, selection.has_value()))
                 pasteBytes(*selection, true);
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste_all"_lang, "CTRL + V", false, selection.has_value()))
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste_all"_lang, "CTRL + SHIFT + V", false, selection.has_value()))
                 pasteBytes(*selection, false);
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.select_all"_lang, "CTRL + A", false, selection.has_value() && providerValid))
