@@ -938,7 +938,7 @@ namespace hex::plugin::builtin {
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
 
-                                if (isColumnSeparatorColumn(x + 1, columnCount)) {
+                                if (isColumnSeparatorColumn(x + 1, columnCount) && cellColors.size() > x + 1) {
                                     auto separatorAddress = x + y * columnCount;
                                     auto [nextForegroundColor, nextBackgroundColor] = cellColors[x + 1];
                                     if ((isSelectionValid() && getSelection().overlaps({ separatorAddress, 1 }) && getSelection().getEndAddress() != separatorAddress) || backgroundColor == nextBackgroundColor)
