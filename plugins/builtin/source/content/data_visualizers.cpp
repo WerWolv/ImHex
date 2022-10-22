@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = 1;
         constexpr static inline auto CharCount = ByteCount * 2;
 
-        const static inline auto FormattingUpperCase = hex::format("%0{}{}}X", CharCount, getFormatLengthSpecifier<u8>());
+        const static inline auto FormattingUpperCase = hex::format("%0{}{}X", CharCount, getFormatLengthSpecifier<u8>());
         const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, getFormatLengthSpecifier<u8>());
 
         static const char *getFormatString(bool upperCase) {
