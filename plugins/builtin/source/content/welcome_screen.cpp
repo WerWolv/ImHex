@@ -504,7 +504,8 @@ namespace hex::plugin::builtin {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
                 fs::File recentFile(recentPath / fileName, fs::File::Mode::Create);
 
-                recentFile.write(provider->storeSettings().dump(4));
+                if (auto settings = provider->storeSettings(); !settings.is_null())
+                    recentFile.write(settings.dump(4));
             }
 
             updateRecentProviders();
