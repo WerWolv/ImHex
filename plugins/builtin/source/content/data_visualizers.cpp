@@ -23,6 +23,19 @@ namespace hex::plugin::builtin {
         else static_assert(hex::always_false<T>::value, "Invalid data type!");
     }
 
+    template<typename T>
+    constexpr const char *getFormatLengthSpecifier() {
+        if constexpr      (std::same_as<T, u8>)     return "hh";
+        else if constexpr (std::same_as<T, u16>)    return "h";
+        else if constexpr (std::same_as<T, u32>)    return "l";
+        else if constexpr (std::same_as<T, u64>)    return "ll";
+        else if constexpr (std::same_as<T, i8>)     return "hh";
+        else if constexpr (std::same_as<T, i16>)    return "h";
+        else if constexpr (std::same_as<T, i32>)    return "l";
+        else if constexpr (std::same_as<T, i64>)    return "ll";
+        else static_assert(hex::always_false<T>::value, "Invalid data type!");
+    }
+
     template<std::integral T>
     class DataVisualizerHexadecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
@@ -51,8 +64,8 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = ByteCount * 2;
 
-        const static inline auto FormattingUpperCase = hex::format("%0{}llX", CharCount);
-        const static inline auto FormattingLowerCase = hex::format("%0{}llx", CharCount);
+        const static inline auto FormattingUpperCase = hex::format("%0{}{}X", CharCount, getFormatLengthSpecifier<T>());
+        const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, getFormatLengthSpecifier<T>());
 
         const char *getFormatString(bool upperCase) {
             if (upperCase)
@@ -104,8 +117,8 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = 1;
         constexpr static inline auto CharCount = ByteCount * 2;
 
-        const static inline auto FormattingUpperCase = hex::format("%0{}llX", CharCount);
-        const static inline auto FormattingLowerCase = hex::format("%0{}llx", CharCount);
+        const static inline auto FormattingUpperCase = hex::format("%0{}{}}X", CharCount, getFormatLengthSpecifier<u8>());
+        const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, getFormatLengthSpecifier<u8>());
 
         static const char *getFormatString(bool upperCase) {
             if (upperCase)
@@ -154,7 +167,7 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = std::numeric_limits<T>::digits10 + 2;
 
-        const static inline auto FormatString = hex::format("%{}{}", CharCount, std::is_signed<T>::value ? "lld" : "llu");
+        const static inline auto FormatString = hex::format("%{}{}{}", CharCount, getFormatLengthSpecifier<T>(), std::is_signed<T>::value ? "d" : "u");
 
         const char *getFormatString() {
             return FormatString.c_str();
