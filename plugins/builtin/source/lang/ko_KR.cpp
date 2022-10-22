@@ -604,6 +604,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.buffer.slice.input.to", "끝" },
                     { "hex.builtin.nodes.buffer.repeat", "출력" },
                         { "hex.builtin.nodes.buffer.repeat.header", "버퍼 반복" },
+                        //{ "hex.builtin.nodes.buffer.repeat.input.buffer", "Input" },
                         { "hex.builtin.nodes.buffer.repeat.input.count", "개수" },
 
                 { "hex.builtin.nodes.control_flow", "데이터 플로우" },

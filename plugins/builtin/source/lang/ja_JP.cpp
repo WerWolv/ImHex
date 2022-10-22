@@ -607,6 +607,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.buffer.slice.input.to", "To" },
                     { "hex.builtin.nodes.buffer.repeat", "繰り返し" },
                         { "hex.builtin.nodes.buffer.repeat.header", "バッファを繰り返し" },
+                        //{ "hex.builtin.nodes.buffer.repeat.input.buffer", "Input" },
                         { "hex.builtin.nodes.buffer.repeat.input.count", "カウント" },
 
                 { "hex.builtin.nodes.control_flow", "制御フロー" },

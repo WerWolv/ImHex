@@ -162,12 +162,12 @@ namespace hex::plugin::builtin {
 
             for (u32 i = 0; i < data.endNodes.size(); i++)
                 data.dataOverlays.push_back(ImHexApi::Provider::get()->newOverlay());
+        }
 
-            u32 overlayIndex = 0;
-            for (auto endNode : data.endNodes) {
-                endNode->setCurrentOverlay(data.dataOverlays[overlayIndex]);
-                overlayIndex++;
-            }
+        u32 overlayIndex = 0;
+        for (auto endNode : data.endNodes) {
+            endNode->setCurrentOverlay(data.dataOverlays[overlayIndex]);
+            overlayIndex++;
         }
 
         data.currNodeError.reset();

@@ -603,6 +603,7 @@ namespace hex::plugin::builtin {
                         { "hex.builtin.nodes.buffer.slice.input.to", "Para" },
                     { "hex.builtin.nodes.buffer.repeat", "Repetir" },
                         { "hex.builtin.nodes.buffer.repeat.header", "Repetir buffer" },
+                        //{ "hex.builtin.nodes.buffer.repeat.input.buffer", "Input" },
                         { "hex.builtin.nodes.buffer.repeat.input.count", "Contar" },
 
                 { "hex.builtin.nodes.control_flow", "Control flow" },

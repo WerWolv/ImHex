@@ -29,7 +29,7 @@ namespace hex::dp {
         auto &outputData = attribute->getOutputData();
 
         if (!outputData.has_value())
-            throw std::runtime_error("No data available at connected attribute");
+            throwNodeError("No data available at connected attribute");
 
         return outputData.value();
     }
@@ -49,10 +49,10 @@ namespace hex::dp {
         auto &outputData = attribute->getOutputData();
 
         if (!outputData.has_value())
-            throw std::runtime_error("No data available at connected attribute");
+            throwNodeError("No data available at connected attribute");
 
         if (outputData->size() < sizeof(u64))
-            throw std::runtime_error("Not enough data provided for integer");
+            throwNodeError("Not enough data provided for integer");
 
         return *reinterpret_cast<i64 *>(outputData->data());
     }
@@ -72,10 +72,10 @@ namespace hex::dp {
         auto &outputData = attribute->getOutputData();
 
         if (!outputData.has_value())
-            throw std::runtime_error("No data available at connected attribute");
+            throwNodeError("No data available at connected attribute");
 
         if (outputData->size() < sizeof(float))
-            throw std::runtime_error("Not enough data provided for float");
+            throwNodeError("Not enough data provided for float");
 
         float result = 0;
         std::memcpy(&result, outputData->data(), sizeof(float));
@@ -84,24 +84,24 @@ namespace hex::dp {
 
     void Node::setBufferOnOutput(u32 index, const std::vector<u8> &data) {
         if (index >= this->getAttributes().size())
-            throw std::runtime_error("Attribute index out of bounds!");
+            throwNodeError("Attribute index out of bounds!");
 
         auto &attribute = this->getAttributes()[index];
 
         if (attribute.getIOType() != Attribute::IOType::Out)
-            throw std::runtime_error("Tried to set output data of an input attribute!");
+            throwNodeError("Tried to set output data of an input attribute!");
 
         attribute.getOutputData() = data;
     }
 
     void Node::setIntegerOnOutput(u32 index, i64 integer) {
         if (index >= this->getAttributes().size())
-            throw std::runtime_error("Attribute index out of bounds!");
+            throwNodeError("Attribute index out of bounds!");
 
         auto &attribute = this->getAttributes()[index];
 
         if (attribute.getIOType() != Attribute::IOType::Out)
-            throw std::runtime_error("Tried to set output data of an input attribute!");
+            throwNodeError("Tried to set output data of an input attribute!");
 
         std::vector<u8> buffer(sizeof(u64), 0);
         std::memcpy(buffer.data(), &integer, sizeof(u64));
@@ -111,12 +111,12 @@ namespace hex::dp {
 
     void Node::setFloatOnOutput(u32 index, float floatingPoint) {
         if (index >= this->getAttributes().size())
-            throw std::runtime_error("Attribute index out of bounds!");
+            throwNodeError("Attribute index out of bounds!");
 
         auto &attribute = this->getAttributes()[index];
 
         if (attribute.getIOType() != Attribute::IOType::Out)
-            throw std::runtime_error("Tried to set output data of an input attribute!");
+            throwNodeError("Tried to set output data of an input attribute!");
 
         std::vector<u8> buffer(sizeof(float), 0);
         std::memcpy(buffer.data(), &floatingPoint, sizeof(float));
@@ -126,7 +126,7 @@ namespace hex::dp {
 
     void Node::setOverlayData(u64 address, const std::vector<u8> &data) {
         if (this->m_overlay == nullptr)
-            throw std::runtime_error("Tried setting overlay data on a node that's not the end of a chain!");
+            throwNodeError("Tried setting overlay data on a node that's not the end of a chain!");
 
         this->m_overlay->setAddress(address);
         this->m_overlay->getData() = data;
