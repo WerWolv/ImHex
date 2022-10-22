@@ -18,7 +18,7 @@
 #include <content/helpers/provider_extra_data.hpp>
 
 #include <nlohmann/json.hpp>
-#include <ranges>
+#include <chrono>
 
 namespace hex::plugin::builtin {
 
@@ -626,7 +626,13 @@ namespace hex::plugin::builtin {
                 this->m_runningEvaluators--;
 
                 this->m_lastEvaluationProcessed = false;
+
+                this->m_lastEvaluationLog.emplace_back(
+                   pl::core::LogConsole::Level::Info,
+                   hex::format("Evaluation took {}", runtime->getLastRunningTime())
+                );
             };
+
 
             this->m_lastEvaluationResult = runtime->executeString(code, envVars, inVariables);
             if (!this->m_lastEvaluationResult) {
