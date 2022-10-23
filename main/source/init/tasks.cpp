@@ -45,18 +45,6 @@ namespace hex::init {
         return true;
     }
 
-    static bool downloadInformation() {
-        hex::Net net;
-
-        auto tip = net.getString(ImHexApiURL + "/tip"s, 200).get();
-        if (tip.code != 200)
-            return false;
-
-        ImHexApi::System::impl::addInitArgument("tip-of-the-day", tip.body);
-
-        return true;
-    }
-
     bool createDirectories() {
         bool result = true;
 
@@ -316,7 +304,6 @@ namespace hex::init {
             { "Loading settings",        loadSettings,        false },
             { "Loading plugins",         loadPlugins,         false },
             { "Checking for updates",    checkForUpdates,     true  },
-            { "Downloading information", downloadInformation, true  },
             { "Loading fonts",           loadFonts,           true  },
         };
     }

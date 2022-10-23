@@ -549,13 +549,15 @@ namespace hex::plugin::builtin {
             }
         }
 
-        if (ImHexApi::System::getInitArguments().contains("tip-of-the-day")) {
-            s_tipOfTheDay = ImHexApi::System::getInitArguments()["tip-of-the-day"];
+        auto tipsCategories = nlohmann::json::parse(romfs::get("tips.json").string());
 
-            bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
-            if (showTipOfTheDay)
-                TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.tip_of_the_day"_lang); });
-        }
+        srand(time(NULL));
+        auto chosenCategory = tipsCategories[rand()%tipsCategories.size()]["tips"];
+        s_tipOfTheDay = chosenCategory[rand()%chosenCategory.size()];
+
+        bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
+        if (showTipOfTheDay)
+            TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.tip_of_the_day"_lang); });
     }
 
 }
