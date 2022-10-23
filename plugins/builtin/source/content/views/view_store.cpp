@@ -27,7 +27,8 @@ namespace hex::plugin::builtin {
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
-                this->refresh();
+                if(this->m_requestStatus==RequestStatus::NotAttempted)
+                    this->refresh();
                 TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
