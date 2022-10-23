@@ -552,8 +552,10 @@ namespace hex::plugin::builtin {
 
         auto tipsCategories = nlohmann::json::parse(romfs::get("tips.json").string());
 
-        std::random_device rd;
-        std::mt19937 random(rd());
+        auto now = std::chrono::system_clock::now();
+        auto days_since_epoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
+        std::mt19937 random(days_since_epoch.count());
+
         auto chosenCategory = tipsCategories[random()%tipsCategories.size()]["tips"];
         s_tipOfTheDay = chosenCategory[random()%chosenCategory.size()];
 
