@@ -22,6 +22,7 @@
 #include <string>
 #include <list>
 #include <unordered_set>
+#include <random>
 
 namespace hex::plugin::builtin {
 
@@ -551,9 +552,10 @@ namespace hex::plugin::builtin {
 
         auto tipsCategories = nlohmann::json::parse(romfs::get("tips.json").string());
 
-        srand(time(NULL));
-        auto chosenCategory = tipsCategories[rand()%tipsCategories.size()]["tips"];
-        s_tipOfTheDay = chosenCategory[rand()%chosenCategory.size()];
+        std::random_device rd;
+        std::mt19937 random(rd());
+        auto chosenCategory = tipsCategories[random()%tipsCategories.size()]["tips"];
+        s_tipOfTheDay = chosenCategory[random()%chosenCategory.size()];
 
         bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
         if (showTipOfTheDay)
