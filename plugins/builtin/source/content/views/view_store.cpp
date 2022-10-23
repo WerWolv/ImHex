@@ -25,10 +25,9 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
-        this->refresh();
-
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
+                this->refresh();
                 TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
