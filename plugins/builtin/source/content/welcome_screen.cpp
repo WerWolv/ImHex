@@ -557,7 +557,8 @@ namespace hex::plugin::builtin {
         std::mt19937 random(days_since_epoch.count());
 
         auto chosenCategory = tipsCategories[random()%tipsCategories.size()]["tips"];
-        s_tipOfTheDay = chosenCategory[random()%chosenCategory.size()];
+        auto chosenTip = chosenCategory[random()%chosenCategory.size()];
+        s_tipOfTheDay = chosenTip.get<std::string>();
 
         bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
         if (showTipOfTheDay)
