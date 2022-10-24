@@ -127,7 +127,7 @@ jobs:
         shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
     - name: 💨 Publish Steam Nightly
-      uses: game-ci/steam-deploy@master
+      uses: game-ci/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
@@ -253,7 +253,7 @@ jobs:
         shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
     - name: 💨 Publish Steam Nightly
-      uses: game-ci/steam-deploy@master
+      uses: game-ci/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
@@ -400,7 +400,7 @@ jobs:
           shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
       - name: 💨 Publish Steam Nightly
-        uses: game-ci/steam-deploy@master
+        uses: game-ci/steam-deploy@main
         with:
           username: ${{ secrets.STEAM_USERNAME }}
           password: ${{ secrets.STEAM_PASSWORD }}
