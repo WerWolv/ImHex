@@ -120,14 +120,18 @@ jobs:
         path: |
           build/install/*
 
+    - name: 🗝️ Generate Steam TOTP
+      uses: CyberAndrii/steam-totp@v1
+      id: steam-totp
+      with:
+        shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
     - name: 💨 Publish Steam Nightly
-      uses: game-ci/steam-deploy@v1.2.0
+      uses: game-ci/steam-deploy@master
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
-        configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
-        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
-        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
+        totp: ${{ steps.steam-totp.outputs.code }}
         appId: 2186040
         buildDescription: v${{ env.IMHEX_VERSION }}
         rootPath: build
@@ -242,14 +246,18 @@ jobs:
         name: macOS DMG${{matrix.suffix}}
         path: build/*.dmg
 
+    - name: 🗝️ Generate Steam TOTP
+      uses: CyberAndrii/steam-totp@v1
+      id: steam-totp
+      with:
+        shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
     - name: 💨 Publish Steam Nightly
-      uses: game-ci/steam-deploy@v1.2.0
+      uses: game-ci/steam-deploy@master
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
-        configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
-        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
-        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
+        totp: ${{ steps.steam-totp.outputs.code }}
         appId: 2186040
         buildDescription: v${{ env.IMHEX_VERSION }}
         rootPath: build
@@ -385,14 +393,18 @@ jobs:
           name: Linux AppImage zsync
           path: 'build-appimage/*.AppImage.zsync'
 
+      - name: 🗝️ Generate Steam TOTP
+        uses: CyberAndrii/steam-totp@v1
+        id: steam-totp
+        with:
+          shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
       - name: 💨 Publish Steam Nightly
-        uses: game-ci/steam-deploy@v1.2.0
+        uses: game-ci/steam-deploy@master
         with:
           username: ${{ secrets.STEAM_USERNAME }}
           password: ${{ secrets.STEAM_PASSWORD }}
-          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
-          ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
-          ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
+          totp: ${{ steps.steam-totp.outputs.code }}
           appId: 2186040
           buildDescription: v${{ env.IMHEX_VERSION }}
           rootPath: AppImage
