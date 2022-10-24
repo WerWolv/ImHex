@@ -121,7 +121,7 @@ jobs:
           build/install/*
 
     - name: 💨 Publish Steam Nightly
-      uses: game-ci/steam-deploy@v1
+      uses: game-ci/steam-deploy@v1.2.0
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
@@ -243,7 +243,7 @@ jobs:
         path: build/*.dmg
 
     - name: 💨 Publish Steam Nightly
-      uses: game-ci/steam-deploy@v1
+      uses: game-ci/steam-deploy@v1.2.0
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
@@ -386,7 +386,7 @@ jobs:
           path: 'build-appimage/*.AppImage.zsync'
 
       - name: 💨 Publish Steam Nightly
-        uses: game-ci/steam-deploy@v1
+        uses: game-ci/steam-deploy@v1.2.0
         with:
           username: ${{ secrets.STEAM_USERNAME }}
           password: ${{ secrets.STEAM_PASSWORD }}
