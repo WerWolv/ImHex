@@ -120,6 +120,20 @@ jobs:
         path: |
           build/install/*
 
+    - name: 💨 Publish Steam Nightly
+      uses: game-ci/steam-deploy@v1
+      with:
+        username: ${{ secrets.STEAM_USERNAME }}
+        password: ${{ secrets.STEAM_PASSWORD }}
+        configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
+        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
+        appId: 2186040
+        buildDescription: v${{ env.IMHEX_VERSION }}
+        rootPath: build
+        depot1Path: install
+        releaseBranch: nightly
+
   # MacOS build
   macos:
     runs-on: macos-11
@@ -214,17 +228,33 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}"  \
           ..
         make -j4 package
+        make -j4 install
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
       with:
         name: macOS DMG${{matrix.suffix}}
         path: build/*.dmg
+
+    - name: 💨 Publish Steam Nightly
+      uses: game-ci/steam-deploy@v1
+      with:
+        username: ${{ secrets.STEAM_USERNAME }}
+        password: ${{ secrets.STEAM_PASSWORD }}
+        configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
+        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
+        appId: 2186040
+        buildDescription: v${{ env.IMHEX_VERSION }}
+        rootPath: build
+        depot2Path: install
+        releaseBranch: nightly
 
   # Ubuntu build
   ubuntu:
@@ -327,6 +357,8 @@ jobs:
           export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
           cd ..
+          mkdir AppImage
+          find . -name "*.AppImage" -exec cp '{}' AppImage/ \;
 
       #- name: ⬆️ Upload Flatpak
       #  uses: actions/upload-artifact@v3
@@ -352,6 +384,20 @@ jobs:
         with:
           name: Linux AppImage zsync
           path: 'build-appimage/*.AppImage.zsync'
+
+    - name: 💨 Publish Steam Nightly
+      uses: game-ci/steam-deploy@v1
+      with:
+        username: ${{ secrets.STEAM_USERNAME }}
+        password: ${{ secrets.STEAM_PASSWORD }}
+        configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
+        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
+        appId: 2186040
+        buildDescription: v${{ env.IMHEX_VERSION }}
+        rootPath: AppImage
+        depot3Path: .
+        releaseBranch: nightly          
 
   # ArchLinux build
   archlinux-build:
