@@ -385,19 +385,19 @@ jobs:
           name: Linux AppImage zsync
           path: 'build-appimage/*.AppImage.zsync'
 
-    - name: 💨 Publish Steam Nightly
-      uses: game-ci/steam-deploy@v1
-      with:
-        username: ${{ secrets.STEAM_USERNAME }}
-        password: ${{ secrets.STEAM_PASSWORD }}
-        configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
-        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
-        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
-        appId: 2186040
-        buildDescription: v${{ env.IMHEX_VERSION }}
-        rootPath: AppImage
-        depot3Path: .
-        releaseBranch: nightly          
+      - name: 💨 Publish Steam Nightly
+        uses: game-ci/steam-deploy@v1
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          password: ${{ secrets.STEAM_PASSWORD }}
+          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
+          ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
+          appId: 2186040
+          buildDescription: v${{ env.IMHEX_VERSION }}
+          rootPath: AppImage
+          depot3Path: .
+          releaseBranch: nightly          
 
   # ArchLinux build
   archlinux-build:
