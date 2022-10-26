@@ -28,5 +28,5 @@ make -j4 package
 ```
 
 If the build fails while trying to find the macOS libraries, make sure you have
-XCode installed with `xcode-select --install`. Homebrew will also help get the
+Xcode installed with `xcode-select --install`. Homebrew will also help get the
 most recent SDK installed and configured with `brew doctor`.

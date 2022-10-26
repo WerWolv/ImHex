@@ -2,11 +2,11 @@
 
 ## Official Releases
 
-The easiest way to install ImHex is to download the latest release from the [GitHub releases page](github.com/WerWolv/ImHex/releases/latest).
+The easiest way to install ImHex is to download the latest release from the [GitHub Releases page](https://github.com/WerWolv/ImHex/releases/latest).
 
 There's also a NoGPU version available for users who don't have a GPU or want to run ImHex in a VM without GPU passthrough.
 
-## Nighly Builds
+## Nightly Builds
 
 The GitHub Actions CI builds a new release package on every commit made to repository. These builds are available on the [GitHub Actions page](https://github.com/WerWolv/ImHex/actions?query=workflow%3A%22Build%22).
 These builds are not guaranteed to be stable and may contain bugs, however they also contain new features that are not yet available in the official releases.
@@ -15,7 +15,7 @@ These builds are not guaranteed to be stable and may contain bugs, however they 
 
 Build instructions for Windows, Linux and macOS can be found under `/dist/compiling`:
 - Windows: [Link](dist/compiling/windows.md)
-- macOS: [Link](dist/compiling/macOS.md)
+- macOS: [Link](dist/compiling/macos.md)
 - Linux: [Link](dist/compiling/linux.md)
 
 ## Package managers
