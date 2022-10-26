@@ -88,9 +88,6 @@ namespace hex::plugin::builtin {
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
 
-        this->m_envVarEntries.push_back({ 0, "", 0, EnvVarType::Integer });
-        this->m_envVarIdCounter = 1;
-
         this->registerEvents();
         this->registerMenuItems();
         this->registerHandlers();
@@ -109,6 +106,8 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
+                auto &extraData = ProviderExtraData::get(provider).patternLanguage;
+
                 auto textEditorSize = ImGui::GetContentRegionAvail();
                 textEditorSize.y *= 3.75 / 5.0;
                 textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
@@ -119,15 +118,15 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::BeginTabBar("##settings")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
-                        this->drawConsole(settingsSize);
+                        this->drawConsole(settingsSize, extraData.console);
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.env_vars"_lang)) {
-                        this->drawEnvVars(settingsSize);
+                        this->drawEnvVars(settingsSize, extraData.envVarEntries);
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.settings"_lang)) {
-                        this->drawVariableSettings(settingsSize);
+                        this->drawVariableSettings(settingsSize, extraData.patternVariables);
                         ImGui::EndTabItem();
                     }
 
@@ -142,7 +141,7 @@ namespace hex::plugin::builtin {
                         runtime->abort();
                 } else {
                     if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
-                        this->evaluatePattern(this->m_textEditor.GetText());
+                        this->evaluatePattern(this->m_textEditor.GetText(), provider);
                     }
                 }
 
@@ -176,12 +175,35 @@ namespace hex::plugin::builtin {
                     this->m_hasUnevaluatedChanges = false;
 
 
-                    TaskManager::createBackgroundTask("Pattern Parsing", [this, code = this->m_textEditor.GetText()](auto &){
-                        this->parsePattern(code);
+                    TaskManager::createBackgroundTask("Pattern Parsing", [this, code = this->m_textEditor.GetText(), provider](auto &){
+                        this->parsePattern(code, provider);
 
                         if (this->m_runAutomatically)
-                            this->evaluatePattern(code);
+                            this->evaluatePattern(code, provider);
                     });
+                }
+
+                if (!this->m_lastEvaluationProcessed) {
+                    extraData.console = extraData.lastEvaluationLog;
+
+                    if (!this->m_lastEvaluationResult) {
+                        if (extraData.lastEvaluationError) {
+                            TextEditor::ErrorMarkers errorMarkers = {
+                                    { extraData.lastEvaluationError->line, extraData.lastEvaluationError->message }
+                            };
+                            this->m_textEditor.SetErrorMarkers(errorMarkers);
+                        }
+                    } else {
+                        for (auto &[name, variable] : extraData.patternVariables) {
+                            if (variable.outVariable && extraData.lastEvaluationOutVars.contains(name))
+                                variable.value = extraData.lastEvaluationOutVars.at(name);
+                        }
+
+                        EventManager::post<EventHighlightingChanged>();
+                    }
+
+                    this->m_lastEvaluationProcessed = true;
+                    extraData.executionDone = true;
                 }
             }
 
@@ -209,43 +231,20 @@ namespace hex::plugin::builtin {
             }
 
             View::discardNavigationRequests();
-
-            if (!this->m_lastEvaluationProcessed) {
-                this->m_console = this->m_lastEvaluationLog;
-
-                if (!this->m_lastEvaluationResult) {
-                    if (this->m_lastEvaluationError) {
-                        TextEditor::ErrorMarkers errorMarkers = {
-                            { this->m_lastEvaluationError->line, this->m_lastEvaluationError->message }
-                        };
-                        this->m_textEditor.SetErrorMarkers(errorMarkers);
-                    }
-                } else {
-                    for (auto &[name, variable] : this->m_patternVariables) {
-                        if (variable.outVariable && this->m_lastEvaluationOutVars.contains(name))
-                            variable.value = this->m_lastEvaluationOutVars.at(name);
-                    }
-
-                    EventManager::post<EventHighlightingChanged>();
-                }
-
-                this->m_lastEvaluationProcessed = true;
-                ProviderExtraData::get(provider).patternLanguage.executionDone = true;
-            }
         }
         ImGui::End();
     }
 
-    void ViewPatternEditor::drawConsole(ImVec2 size) {
+    void ViewPatternEditor::drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console) {
         ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
         if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
             ImGuiListClipper clipper;
 
-            clipper.Begin(this->m_console.size());
+            clipper.Begin(console.size());
 
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    const auto &[level, message] = this->m_console[i];
+                    const auto &[level, message] = console[i];
 
                     switch (level) {
                         using enum pl::core::LogConsole::Level;
@@ -276,7 +275,9 @@ namespace hex::plugin::builtin {
         ImGui::PopStyleColor(1);
     }
 
-    void ViewPatternEditor::drawEnvVars(ImVec2 size) {
+    void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<PlData::EnvVar> &envVars) {
+        static u32 envVarCounter = 1;
+
         if (ImGui::BeginChild("##env_vars", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
             int index = 0;
             if (ImGui::BeginTable("##env_vars_table", 4, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
@@ -285,7 +286,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.38F);
                 ImGui::TableSetupColumn("Remove", ImGuiTableColumnFlags_WidthStretch, 0.12F);
 
-                for (auto iter = this->m_envVarEntries.begin(); iter != this->m_envVarEntries.end(); iter++) {
+                for (auto iter = envVars.begin(); iter != envVars.end(); iter++) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
@@ -299,7 +300,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginCombo("", Types[static_cast<int>(type)])) {
                         for (auto i = 0; i < IM_ARRAYSIZE(Types); i++) {
                             if (ImGui::Selectable(Types[i]))
-                                type = static_cast<EnvVarType>(i);
+                                type = static_cast<PlData::EnvVarType>(i);
                         }
 
                         ImGui::EndCombo();
@@ -316,28 +317,29 @@ namespace hex::plugin::builtin {
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                     switch (type) {
-                        case EnvVarType::Integer:
+                        using enum PlData::EnvVarType;
+                        case Integer:
                             {
                                 i64 displayValue = hex::get_or<i128>(value, 0);
                                 ImGui::InputScalar("###value", ImGuiDataType_S64, &displayValue);
                                 value = i128(displayValue);
                                 break;
                             }
-                        case EnvVarType::Float:
+                        case Float:
                             {
                                 auto displayValue = hex::get_or<double>(value, 0.0);
                                 ImGui::InputDouble("###value", &displayValue);
                                 value = displayValue;
                                 break;
                             }
-                        case EnvVarType::Bool:
+                        case Bool:
                             {
                                 auto displayValue = hex::get_or<bool>(value, false);
                                 ImGui::Checkbox("###value", &displayValue);
                                 value = displayValue;
                                 break;
                             }
-                        case EnvVarType::String:
+                        case String:
                             {
                                 auto displayValue = hex::get_or<std::string>(value, "");
                                 ImGui::InputText("###value", displayValue);
@@ -351,20 +353,20 @@ namespace hex::plugin::builtin {
 
                     if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         iter++;
-                        this->m_envVarEntries.insert(iter, { this->m_envVarIdCounter++, "", i128(0), EnvVarType::Integer });
+                        envVars.insert(iter, { envVarCounter++, "", i128(0), PlData::EnvVarType::Integer });
                         iter--;
                     }
 
                     ImGui::SameLine();
 
-                    ImGui::BeginDisabled(this->m_envVarEntries.size() <= 1);
+                    ImGui::BeginDisabled(envVars.size() <= 1);
                     {
                         if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                            bool isFirst = iter == this->m_envVarEntries.begin();
-                            this->m_envVarEntries.erase(iter);
+                            bool isFirst = iter == envVars.begin();
+                            envVars.erase(iter);
 
                             if (isFirst)
-                                iter = this->m_envVarEntries.begin();
+                                iter = envVars.begin();
                         }
                     }
                     ImGui::EndDisabled();
@@ -376,16 +378,16 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
-    void ViewPatternEditor::drawVariableSettings(ImVec2 size) {
+    void ViewPatternEditor::drawVariableSettings(ImVec2 size, std::map<std::string, PlData::PatternVariable> &patternVariables) {
         if (ImGui::BeginChild("##settings", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-            if (this->m_patternVariables.empty()) {
+            if (patternVariables.empty()) {
                 ImGui::TextFormattedCentered("hex.builtin.view.pattern_editor.no_in_out_vars"_lang);
             } else {
                 if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
                     ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4F);
                     ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.6F);
 
-                    for (auto &[name, variable] : this->m_patternVariables) {
+                    for (auto &[name, variable] : patternVariables) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
@@ -430,6 +432,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawAlwaysVisible() {
+        auto provider = ImHexApi::Provider::get();
 
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.accept_pattern"_lang, &this->m_acceptPatternWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
@@ -458,8 +461,8 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
             confirmButtons(
-                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [this] {
-                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile]);
+                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [this, provider] {
+                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile], provider);
                 ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
@@ -532,25 +535,26 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewPatternEditor::loadPatternFile(const std::fs::path &path) {
+    void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
         fs::File file(path, fs::File::Mode::Read);
         if (file.isValid()) {
             auto code = file.readString();
 
-            this->evaluatePattern(code);
+            this->evaluatePattern(code, provider);
             this->m_textEditor.SetText(code);
 
-            TaskManager::createBackgroundTask("Parse pattern", [this, code](auto&) { this->parsePattern(code); });
+            TaskManager::createBackgroundTask("Parse pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
     }
 
-    void ViewPatternEditor::parsePattern(const std::string &code) {
+    void ViewPatternEditor::parsePattern(const std::string &code, prv::Provider *provider) {
         this->m_runningParsers++;
 
         ContentRegistry::PatternLanguage::configureRuntime(*this->m_parserRuntime, nullptr);
         auto ast = this->m_parserRuntime->parseString(code);
+        auto &patternLanguage = ProviderExtraData::get(provider).patternLanguage;
 
-        this->m_patternVariables.clear();
+        patternLanguage.patternVariables.clear();
 
         if (ast) {
             for (auto &node : *ast) {
@@ -561,7 +565,7 @@ namespace hex::plugin::builtin {
                     auto builtinType = dynamic_cast<pl::core::ast::ASTNodeBuiltinType *>(type->getType().get());
                     if (builtinType == nullptr) continue;
 
-                    PatternVariable variable = {
+                    PlData::PatternVariable variable = {
                         .inVariable  = variableDecl->isInVariable(),
                         .outVariable = variableDecl->isOutVariable(),
                         .type        = builtinType->getType(),
@@ -569,8 +573,8 @@ namespace hex::plugin::builtin {
                     };
 
                     if (variable.inVariable || variable.outVariable) {
-                        if (!this->m_patternVariables.contains(variableDecl->getName()))
-                            this->m_patternVariables[variableDecl->getName()] = variable;
+                        if (!patternLanguage.patternVariables.contains(variableDecl->getName()))
+                            patternLanguage.patternVariables[variableDecl->getName()] = variable;
                     }
                 }
             }
@@ -579,15 +583,14 @@ namespace hex::plugin::builtin {
         this->m_runningParsers--;
     }
 
-    void ViewPatternEditor::evaluatePattern(const std::string &code) {
-        auto provider = ImHexApi::Provider::get();
+    void ViewPatternEditor::evaluatePattern(const std::string &code, prv::Provider *provider) {
         auto &patternLanguage = ProviderExtraData::get(provider).patternLanguage;
 
         this->m_runningEvaluators++;
         patternLanguage.executionDone = false;
 
         this->m_textEditor.SetErrorMarkers({});
-        this->m_console.clear();
+        patternLanguage.console.clear();
 
 
         ContentRegistry::PatternLanguage::configureRuntime(*patternLanguage.runtime, provider);
@@ -601,11 +604,11 @@ namespace hex::plugin::builtin {
             task.setInterruptCallback([&runtime] { runtime->abort(); });
 
             std::map<std::string, pl::core::Token::Literal> envVars;
-            for (const auto &[id, name, value, type] : this->m_envVarEntries)
+            for (const auto &[id, name, value, type] : patternLanguage.envVarEntries)
                 envVars.insert({ name, value });
 
             std::map<std::string, pl::core::Token::Literal> inVariables;
-            for (auto &[name, variable] : this->m_patternVariables) {
+            for (auto &[name, variable] : patternLanguage.patternVariables) {
                 if (variable.inVariable)
                     inVariables[name] = variable.value;
             }
@@ -621,13 +624,13 @@ namespace hex::plugin::builtin {
             });
 
             ON_SCOPE_EXIT {
-                this->m_lastEvaluationLog     = runtime->getConsoleLog();
-                this->m_lastEvaluationOutVars = runtime->getOutVariables();
+                patternLanguage.lastEvaluationLog     = runtime->getConsoleLog();
+                patternLanguage.lastEvaluationOutVars = runtime->getOutVariables();
                 this->m_runningEvaluators--;
 
                 this->m_lastEvaluationProcessed = false;
 
-                this->m_lastEvaluationLog.emplace_back(
+                patternLanguage.lastEvaluationLog.emplace_back(
                    pl::core::LogConsole::Level::Info,
                    hex::format("Evaluation took {}", runtime->getLastRunningTime())
                 );
@@ -636,7 +639,7 @@ namespace hex::plugin::builtin {
 
             this->m_lastEvaluationResult = runtime->executeString(code, envVars, inVariables);
             if (!this->m_lastEvaluationResult) {
-                this->m_lastEvaluationError = runtime->getError();
+                patternLanguage.lastEvaluationError = runtime->getError();
             }
         });
     }
@@ -722,6 +725,8 @@ namespace hex::plugin::builtin {
                     this->m_acceptPatternWindowOpen = true;
                 }
             });
+
+            patternLanguageData.envVarEntries.push_back({ 0, "", 0, PlData::EnvVarType::Integer });
         });
 
         EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
@@ -773,6 +778,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::registerMenuItems() {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
             bool providerValid = ImHexApi::Provider::isValid();
+            auto provider = ImHexApi::Provider::get();
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, nullptr, false, providerValid)) {
 
@@ -790,8 +796,8 @@ namespace hex::plugin::builtin {
                 }
 
                 View::showFileChooserPopup(paths, { {"Pattern File", "hexpat"} },
-                [this](const std::fs::path &path) {
-                    this->loadPatternFile(path);
+                [this, provider](const std::fs::path &path) {
+                    this->loadPatternFile(path, provider);
                 });
             }
 

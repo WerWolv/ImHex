@@ -15,16 +15,51 @@ namespace hex::plugin::builtin {
         struct Data {
             bool dataDirty = false;
 
-            struct {
+            struct PatternLanguage {
+                struct PatternVariable {
+                    bool inVariable;
+                    bool outVariable;
+
+                    pl::core::Token::ValueType type;
+                    pl::core::Token::Literal value;
+                };
+
+                enum class EnvVarType
+                {
+                    Integer,
+                    Float,
+                    String,
+                    Bool
+                };
+
+                struct EnvVar {
+                    u64 id;
+                    std::string name;
+                    pl::core::Token::Literal value;
+                    EnvVarType type;
+
+                    bool operator==(const EnvVar &other) const {
+                        return this->id == other.id;
+                    }
+                };
+
                 std::string sourceCode;
                 std::mutex runtimeMutex;
                 std::unique_ptr<pl::PatternLanguage> runtime;
+                std::vector<std::pair<pl::core::LogConsole::Level, std::string>> console;
                 bool executionDone = true;
+
+                std::optional<pl::core::err::PatternLanguageError> lastEvaluationError;
+                std::vector<std::pair<pl::core::LogConsole::Level, std::string>> lastEvaluationLog;
+                std::map<std::string, pl::core::Token::Literal> lastEvaluationOutVars;
+                std::map<std::string, PatternVariable> patternVariables;
+
+                std::list<EnvVar> envVarEntries;
             } patternLanguage;
 
             std::list<ImHexApi::Bookmarks::Entry> bookmarks;
 
-            struct {
+            struct DataProcessor {
                 std::list<dp::Node*> endNodes;
                 std::list<std::unique_ptr<dp::Node>> nodes;
                 std::list<dp::Link> links;
@@ -33,7 +68,7 @@ namespace hex::plugin::builtin {
                 std::optional<dp::Node::NodeError> currNodeError;
             } dataProcessor;
 
-            struct {
+            struct HexEditor {
                 std::optional<u64> selectionStart, selectionEnd;
                 float scrollPosition = 0.0F;
             } editor;
