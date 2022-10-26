@@ -144,7 +144,7 @@ namespace hex::init {
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, fontSize, &cfg, codiconsRange);
 
         bool enableUnicode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true);
-        if(enableUnicode)
+        if (enableUnicode)
             fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, fontSize, &cfg, unifontRange);
 
         fonts->Build();
