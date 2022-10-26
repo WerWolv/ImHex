@@ -267,6 +267,95 @@ namespace hex::plugin::builtin {
         std::optional<float> m_value;
     };
 
+    class NodeDisplayBuffer : public dp::Node {
+    public:
+        NodeDisplayBuffer() : Node("hex.builtin.nodes.display.buffer.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+
+        void drawNode() override {
+            static const std::string Header = " Address    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F                       ";
+
+            if (ImGui::BeginChild("##hex_view", scaled(ImVec2(ImGui::CalcTextSize(Header.c_str()).x, 200)), true)) {
+                ImGui::TextUnformatted(Header.c_str());
+
+                auto size = this->m_buffer.size();
+                ImGuiListClipper clipper;
+
+                clipper.Begin((size + 0x0F) / 0x10);
+
+                while (clipper.Step())
+                    for (auto y = clipper.DisplayStart; y < clipper.DisplayEnd; y++) {
+                        auto lineSize = ((size - y * 0x10) < 0x10) ? size % 0x10 : 0x10;
+
+                        std::string line = hex::format(" {:08X}:  ", y * 0x10);
+                        for (u32 x = 0; x < 0x10; x++) {
+                            if (x < lineSize)
+                                line += hex::format("{:02X} ", this->m_buffer[y * 0x10 + x]);
+                            else
+                                line += "   ";
+
+                            if (x == 7) line += " ";
+                        }
+
+                        line += "   ";
+
+                        for (u32 x = 0; x < lineSize; x++) {
+                            auto c = char(this->m_buffer[y * 0x10 + x]);
+                            if (std::isprint(c))
+                                line += c;
+                            else
+                                line += ".";
+                        }
+
+                        ImGui::TextUnformatted(line.c_str());
+                    }
+                clipper.End();
+            }
+            ImGui::EndChild();
+        }
+
+        void process() override {
+            this->m_buffer = this->getBufferOnInput(0);
+        }
+
+    private:
+        std::vector<u8> m_buffer;
+    };
+
+    class NodeDisplayString : public dp::Node {
+    public:
+        NodeDisplayString() : Node("hex.builtin.nodes.display.string.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+
+        void drawNode() override {
+            constexpr static auto LineLength = 50;
+            if (ImGui::BeginChild("##string_view", scaled(ImVec2(ImGui::CalcTextSize(" ").x * (LineLength + 4), 150)), true)) {
+                std::string_view string = this->m_value;
+
+                ImGuiListClipper clipper;
+                clipper.Begin((string.length() + (LineLength - 1)) / LineLength);
+
+                while (clipper.Step())
+                    for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        auto line = string.substr(i * LineLength, LineLength);
+                        ImGui::TextUnformatted("");
+                        ImGui::SameLine();
+                        ImGui::TextUnformatted(line.data(), line.data() + line.length());
+                    }
+
+                clipper.End();
+            }
+            ImGui::EndChild();
+        }
+
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            this->m_value = hex::encodeByteString(input);
+        }
+
+    private:
+        std::string m_value;
+    };
+
 
     class NodeBitwiseNOT : public dp::Node {
     public:
@@ -535,6 +624,41 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeArithmeticAverage : public dp::Node {
+    public:
+        NodeArithmeticAverage() : Node("hex.builtin.nodes.arithmetic.average.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            double output = std::reduce(input.begin(), input.end(), double(0)) / double(input.size());
+
+            this->setFloatOnOutput(1, output);
+        }
+    };
+
+    class NodeArithmeticMedian : public dp::Node {
+    public:
+        NodeArithmeticMedian() : Node("hex.builtin.nodes.arithmetic.median.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto input = this->getBufferOnInput(0);
+
+            u64 medianIndex = input.size() / 2;
+            std::nth_element(input.begin(), input.begin() + medianIndex, input.end());
+            i128 median = 0;
+
+            if (input.size() % 2 == 0) {
+                std::nth_element(input.begin(), input.begin() + medianIndex - 1, input.end());
+                median = (input[medianIndex] + input[medianIndex - 1]) / 2;
+            } else {
+                median = input[medianIndex];
+            }
+
+            this->setIntegerOnOutput(1, median);
+        }
+    };
+
     class NodeBufferCombine : public dp::Node {
     public:
         NodeBufferCombine() : Node("hex.builtin.nodes.buffer.combine.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
@@ -585,6 +709,27 @@ namespace hex::plugin::builtin {
                 std::copy(buffer.begin(), buffer.end(), output.begin() + buffer.size() * i);
 
             this->setBufferOnOutput(2, output);
+        }
+    };
+
+    class NodeBufferPatch : public dp::Node {
+    public:
+        NodeBufferPatch() : Node("hex.builtin.nodes.buffer.patch.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.patch.input.patch"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.common.address"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto buffer     = this->getBufferOnInput(0);
+            auto patch      = this->getBufferOnInput(1);
+            auto address    = this->getIntegerOnInput(2);
+
+            if (address < 0 || static_cast<u128>(address) >= buffer.size())
+                throwNodeError("Address out of range");
+
+            if (address + patch.size() > buffer.size())
+                buffer.resize(address + patch.size());
+
+            std::copy(patch.begin(), patch.end(), buffer.begin() + address);
+
+            this->setBufferOnOutput(3, buffer);
         }
     };
 
@@ -1131,6 +1276,8 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataProcessorNode::add<NodeDisplayInteger>("hex.builtin.nodes.display", "hex.builtin.nodes.display.int");
         ContentRegistry::DataProcessorNode::add<NodeDisplayFloat>("hex.builtin.nodes.display", "hex.builtin.nodes.display.float");
+        ContentRegistry::DataProcessorNode::add<NodeDisplayBuffer>("hex.builtin.nodes.display", "hex.builtin.nodes.display.buffer");
+        ContentRegistry::DataProcessorNode::add<NodeDisplayString>("hex.builtin.nodes.display", "hex.builtin.nodes.display.string");
 
         ContentRegistry::DataProcessorNode::add<NodeReadData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.read");
         ContentRegistry::DataProcessorNode::add<NodeWriteData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.write");
@@ -1147,10 +1294,13 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mul");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticDivide>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.div");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mod");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticAverage>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.average");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticMedian>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.median");
 
         ContentRegistry::DataProcessorNode::add<NodeBufferCombine>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.combine");
         ContentRegistry::DataProcessorNode::add<NodeBufferSlice>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.slice");
         ContentRegistry::DataProcessorNode::add<NodeBufferRepeat>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.repeat");
+        ContentRegistry::DataProcessorNode::add<NodeBufferPatch>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.patch");
 
         ContentRegistry::DataProcessorNode::add<NodeIf>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.if");
         ContentRegistry::DataProcessorNode::add<NodeEquals>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.equals");
