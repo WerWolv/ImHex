@@ -771,6 +771,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.general.show_tips", "Tipps beim start anzeigen" },
                     { "hex.builtin.setting.general.auto_load_patterns", "Automatisches Pattern laden" },
                     { "hex.builtin.setting.general.sync_pattern_source", "Pattern Source Code zwischen Providern synchronisieren" },
+                    // { "hex.builtin.setting.general.enable_unicode", "Load all unicode characters" },
                 { "hex.builtin.setting.interface", "Aussehen" },
                     { "hex.builtin.setting.interface.color", "Farbthema" },
                         { "hex.builtin.setting.interface.color.system", "System" },

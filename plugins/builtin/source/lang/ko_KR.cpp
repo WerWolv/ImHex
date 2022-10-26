@@ -774,6 +774,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.general.show_tips", "시작 시 팁 표시" },
                     { "hex.builtin.setting.general.auto_load_patterns", "지원하는 패턴 자동으로 로드" },
                     { "hex.builtin.setting.general.sync_pattern_source", "공급자 간 패턴 소스 코드 동기화" },
+                    // { "hex.builtin.setting.general.enable_unicode", "Load all unicode characters" },
                 { "hex.builtin.setting.interface", "인터페이스" },
                     { "hex.builtin.setting.interface.color", "색상 테마" },
                         { "hex.builtin.setting.interface.color.system", "시스템" },
