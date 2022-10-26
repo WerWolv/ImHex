@@ -127,8 +127,8 @@ namespace hex::plugin::builtin {
 
     void ViewStore::refresh() {
         // do not refresh if a refresh is already in progress
-        if(this->m_requestStatus == RequestStatus::Inprogress)return;
-        this->m_requestStatus = RequestStatus::Inprogress;
+        if(this->m_requestStatus == RequestStatus::InProgress)return;
+        this->m_requestStatus = RequestStatus::InProgress;
 
         this->m_patterns.clear();
         this->m_includes.clear();

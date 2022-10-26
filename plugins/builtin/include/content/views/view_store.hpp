@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
 
     enum class RequestStatus {
         NotAttempted,
-        Inprogress,
+        InProgress,
         Failed,
         Succeded,
     };
