@@ -443,6 +443,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.yara", "Yaraルール" },
                     { "hex.builtin.view.store.tab.encodings", "エンコード" },
                     { "hex.builtin.view.store.loading", "ストアコンテンツを読み込み中…" },
+                    // { "hex.builtin.view.store.netfailed", "Net request to load store content failed!" },
                     { "hex.builtin.view.store.download_error", "ファイルのダウンロードに失敗しました。ダウンロード先フォルダが存在しません。" },
 
                 { "hex.builtin.view.diff.name", "比較" },

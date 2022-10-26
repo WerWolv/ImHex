@@ -442,6 +442,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.yara", "Yara 规则" },
                     { "hex.builtin.view.store.tab.encodings", "编码" },
                     { "hex.builtin.view.store.loading", "正在加载在线内容..." },
+                    // { "hex.builtin.view.store.netfailed", "Net request to load store content failed!" },
                     { "hex.builtin.view.store.download_error", "下载文件失败！目标文件夹不存在。" },
 
                 { "hex.builtin.view.diff.name", "差异" },

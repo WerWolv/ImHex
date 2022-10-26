@@ -440,6 +440,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.yara", "Regras Yara" },
                     { "hex.builtin.view.store.tab.encodings", "Codificações" },
                     { "hex.builtin.view.store.loading", "Carregando conteúdo da loja..." },
+                    // { "hex.builtin.view.store.netfailed", "Net request to load store content failed!" },
                     { "hex.builtin.view.store.download_error", "Falha ao baixar o arquivo! A pasta de destino não existe." },
 
                 { "hex.builtin.view.diff.name", "Diferenciando" },
