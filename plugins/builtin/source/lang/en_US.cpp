@@ -441,6 +441,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.yara", "Yara Rules" },
                     { "hex.builtin.view.store.tab.encodings", "Encodings" },
                     { "hex.builtin.view.store.loading", "Loading store content..." },
+                    { "hex.builtin.view.store.netfailed", "Net request to load store content failed!" },
                     { "hex.builtin.view.store.download_error", "Failed to download file! Destination folder does not exist." },
 
                 { "hex.builtin.view.diff.name", "Diffing" },

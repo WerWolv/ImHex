@@ -205,7 +205,7 @@ namespace hex::plugin::builtin {
             }
 
             if (this->m_requestStatus == RequestStatus::Failed)
-                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "Request failed !");
+                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
             
             this->drawStore();            
 
