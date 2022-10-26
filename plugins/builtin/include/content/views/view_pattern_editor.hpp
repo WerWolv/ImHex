@@ -4,6 +4,7 @@
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
 #include <hex/providers/provider.hpp>
+#include <content/helpers/provider_extra_data.hpp>
 
 #include <cstring>
 #include <filesystem>
@@ -26,33 +27,6 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        struct PatternVariable {
-            bool inVariable;
-            bool outVariable;
-
-            pl::core::Token::ValueType type;
-            pl::core::Token::Literal value;
-        };
-
-        enum class EnvVarType
-        {
-            Integer,
-            Float,
-            String,
-            Bool
-        };
-
-        struct EnvVar {
-            u64 id;
-            std::string name;
-            pl::core::Token::Literal value;
-            EnvVarType type;
-
-            bool operator==(const EnvVar &other) const {
-                return this->id == other.id;
-            }
-        };
-
         enum class DangerousFunctionPerms : u8 {
             Ask,
             Allow,
@@ -60,6 +34,8 @@ namespace hex::plugin::builtin {
         };
 
     private:
+        using PlData = ProviderExtraData::Data::PatternLanguage;
+
         std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
 
         std::vector<std::fs::path> m_possiblePatternFiles;
@@ -68,9 +44,6 @@ namespace hex::plugin::builtin {
 
         bool m_lastEvaluationProcessed = true;
         bool m_lastEvaluationResult    = false;
-        std::optional<pl::core::err::PatternLanguageError> m_lastEvaluationError;
-        std::vector<std::pair<pl::core::LogConsole::Level, std::string>> m_lastEvaluationLog;
-        std::map<std::string, pl::core::Token::Literal> m_lastEvaluationOutVars;
 
         std::atomic<u32> m_runningEvaluators = 0;
         std::atomic<u32> m_runningParsers    = 0;
@@ -80,12 +53,6 @@ namespace hex::plugin::builtin {
         bool m_acceptPatternWindowOpen = false;
 
         TextEditor m_textEditor;
-        std::vector<std::pair<pl::core::LogConsole::Level, std::string>> m_console;
-
-        std::map<std::string, PatternVariable> m_patternVariables;
-
-        u64 m_envVarIdCounter;
-        std::list<EnvVar> m_envVarEntries;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
@@ -94,16 +61,16 @@ namespace hex::plugin::builtin {
         bool m_autoLoadPatterns = true;
 
     private:
-        void drawConsole(ImVec2 size);
-        void drawEnvVars(ImVec2 size);
-        void drawVariableSettings(ImVec2 size);
+        void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);
+        void drawEnvVars(ImVec2 size, std::list<PlData::EnvVar> &envVars);
+        void drawVariableSettings(ImVec2 size, std::map<std::string, PlData::PatternVariable> &patternVariables);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
-        void loadPatternFile(const std::fs::path &path);
+        void loadPatternFile(const std::fs::path &path, prv::Provider *provider);
 
-        void parsePattern(const std::string &code);
-        void evaluatePattern(const std::string &code);
+        void parsePattern(const std::string &code, prv::Provider *provider);
+        void evaluatePattern(const std::string &code, prv::Provider *provider);
 
         void registerEvents();
         void registerMenuItems();
