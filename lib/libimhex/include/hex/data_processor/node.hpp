@@ -104,12 +104,12 @@ namespace hex::dp {
         }
 
         std::vector<u8> getBufferOnInput(u32 index);
-        i64 getIntegerOnInput(u32 index);
-        float getFloatOnInput(u32 index);
+        i128 getIntegerOnInput(u32 index);
+        long double getFloatOnInput(u32 index);
 
         void setBufferOnOutput(u32 index, const std::vector<u8> &data);
-        void setIntegerOnOutput(u32 index, i64 integer);
-        void setFloatOnOutput(u32 index, float floatingPoint);
+        void setIntegerOnOutput(u32 index, i128 integer);
+        void setFloatOnOutput(u32 index, long double floatingPoint);
 
         void setOverlayData(u64 address, const std::vector<u8> &data);
     };

@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             constexpr static int StepSize = 1, FastStepSize = 10;
 
-            ImGui::PushItemWidth(100);
+            ImGui::PushItemWidth(100_scaled);
             ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &this->m_size, &StepSize, &FastStepSize);
             ImGui::PopItemWidth();
         }
@@ -73,13 +73,13 @@ namespace hex::plugin::builtin {
         }
 
         void drawNode() override {
-            ImGui::PushItemWidth(100);
+            ImGui::PushItemWidth(100_scaled);
             ImGui::InputTextIcon("##string", ICON_VS_SYMBOL_KEY, this->m_value);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->setBufferOnOutput(0, { this->m_value.begin(), this->m_value.end() });
+            this->setBufferOnOutput(0, hex::decodeByteString(this->m_value));
         }
 
         void store(nlohmann::json &j) override {
@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
         NodeInteger() : Node("hex.builtin.nodes.constants.int.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "") }) { }
 
         void drawNode() override {
-            ImGui::PushItemWidth(100);
+            ImGui::PushItemWidth(100_scaled);
             ImGui::InputHexadecimal("##integer_value", &this->m_value);
             ImGui::PopItemWidth();
         }
@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
         NodeFloat() : Node("hex.builtin.nodes.constants.float.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "") }) { }
 
         void drawNode() override {
-            ImGui::PushItemWidth(100);
+            ImGui::PushItemWidth(100_scaled);
             ImGui::InputScalar("##floatValue", ImGuiDataType_Float, &this->m_value, nullptr, nullptr, "%f", ImGuiInputTextFlags_CharsDecimal);
             ImGui::PopItemWidth();
         }
@@ -161,16 +161,16 @@ namespace hex::plugin::builtin {
                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.a") }) { }
 
         void drawNode() override {
-            ImGui::PushItemWidth(200);
+            ImGui::PushItemWidth(200_scaled);
             ImGui::ColorPicker4("##colorPicker", &this->m_color.Value.x, ImGuiColorEditFlags_AlphaBar);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->setBufferOnOutput(0, hex::toBytes<u64>(this->m_color.Value.x * 0xFF));
-            this->setBufferOnOutput(1, hex::toBytes<u64>(this->m_color.Value.y * 0xFF));
-            this->setBufferOnOutput(2, hex::toBytes<u64>(this->m_color.Value.z * 0xFF));
-            this->setBufferOnOutput(3, hex::toBytes<u64>(this->m_color.Value.w * 0xFF));
+            this->setBufferOnOutput(0, hex::toBytes<u8>(this->m_color.Value.x * 0xFF));
+            this->setBufferOnOutput(1, hex::toBytes<u8>(this->m_color.Value.y * 0xFF));
+            this->setBufferOnOutput(2, hex::toBytes<u8>(this->m_color.Value.z * 0xFF));
+            this->setBufferOnOutput(3, hex::toBytes<u8>(this->m_color.Value.w * 0xFF));
         }
 
         void store(nlohmann::json &j) override {
@@ -224,7 +224,7 @@ namespace hex::plugin::builtin {
         NodeDisplayInteger() : Node("hex.builtin.nodes.display.int.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            ImGui::PushItemWidth(150);
+            ImGui::PushItemWidth(150_scaled);
             if (this->m_value.has_value())
                 ImGui::TextFormatted("0x{0:X}", this->m_value.value());
             else
@@ -248,7 +248,7 @@ namespace hex::plugin::builtin {
         NodeDisplayFloat() : Node("hex.builtin.nodes.display.float.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            ImGui::PushItemWidth(150);
+            ImGui::PushItemWidth(150_scaled);
             if (this->m_value.has_value())
                 ImGui::TextFormatted("{0}", this->m_value.value());
             else
@@ -559,14 +559,14 @@ namespace hex::plugin::builtin {
             auto from  = this->getIntegerOnInput(1);
             auto to    = this->getIntegerOnInput(2);
 
-            if (from < 0 || static_cast<u64>(from) >= input.size())
+            if (from < 0 || static_cast<u128>(from) >= input.size())
                 throwNodeError("'from' input out of range");
-            if (to < 0 || static_cast<u64>(from) >= input.size())
+            if (to < 0 || static_cast<u128>(to) >= input.size())
                 throwNodeError("'to' input out of range");
             if (to <= from)
                 throwNodeError("'to' input needs to be greater than 'from' input");
 
-            this->setBufferOnOutput(3, std::vector(input.begin() + from, input.begin() + to));
+            this->setBufferOnOutput(3, std::vector(input.begin() + u64(from), input.begin() + u64(to)));
         }
     };
 
@@ -706,7 +706,7 @@ namespace hex::plugin::builtin {
                                          dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
 
         void drawNode() override {
-            ImGui::PushItemWidth(100);
+            ImGui::PushItemWidth(100_scaled);
             ImGui::Combo("hex.builtin.nodes.crypto.aes.mode"_lang, &this->m_mode, "ECB\0CBC\0CFB128\0CTR\0GCM\0CCM\0OFB\0");
             ImGui::Combo("hex.builtin.nodes.crypto.aes.key_length"_lang, &this->m_keyLength, "128 Bits\000192 Bits\000256 Bits\000");
             ImGui::PopItemWidth();
@@ -1089,7 +1089,7 @@ namespace hex::plugin::builtin {
         NodePatternLanguageOutVariable() : Node("hex.builtin.nodes.pattern_language.out_var.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
 
         void drawNode() override {
-            ImGui::PushItemWidth(100);
+            ImGui::PushItemWidth(100_scaled);
             ImGui::InputText("##name", this->m_name);
             ImGui::PopItemWidth();
         }

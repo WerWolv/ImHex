@@ -34,7 +34,7 @@ namespace hex::dp {
         return outputData.value();
     }
 
-    i64 Node::getIntegerOnInput(u32 index) {
+    i128 Node::getIntegerOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
         if (attribute == nullptr)
@@ -57,7 +57,7 @@ namespace hex::dp {
         return *reinterpret_cast<i64 *>(outputData->data());
     }
 
-    float Node::getFloatOnInput(u32 index) {
+    long double Node::getFloatOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
         if (attribute == nullptr)
@@ -74,11 +74,11 @@ namespace hex::dp {
         if (!outputData.has_value())
             throwNodeError("No data available at connected attribute");
 
-        if (outputData->size() < sizeof(float))
+        if (outputData->size() < sizeof(long double))
             throwNodeError("Not enough data provided for float");
 
-        float result = 0;
-        std::memcpy(&result, outputData->data(), sizeof(float));
+        long double result = 0;
+        std::memcpy(&result, outputData->data(), sizeof(long double));
         return result;
     }
 
@@ -94,7 +94,7 @@ namespace hex::dp {
         attribute.getOutputData() = data;
     }
 
-    void Node::setIntegerOnOutput(u32 index, i64 integer) {
+    void Node::setIntegerOnOutput(u32 index, i128 integer) {
         if (index >= this->getAttributes().size())
             throwNodeError("Attribute index out of bounds!");
 
@@ -103,13 +103,13 @@ namespace hex::dp {
         if (attribute.getIOType() != Attribute::IOType::Out)
             throwNodeError("Tried to set output data of an input attribute!");
 
-        std::vector<u8> buffer(sizeof(u64), 0);
-        std::memcpy(buffer.data(), &integer, sizeof(u64));
+        std::vector<u8> buffer(sizeof(integer), 0);
+        std::memcpy(buffer.data(), &integer, sizeof(integer));
 
         attribute.getOutputData() = buffer;
     }
 
-    void Node::setFloatOnOutput(u32 index, float floatingPoint) {
+    void Node::setFloatOnOutput(u32 index, long double floatingPoint) {
         if (index >= this->getAttributes().size())
             throwNodeError("Attribute index out of bounds!");
 
@@ -118,8 +118,8 @@ namespace hex::dp {
         if (attribute.getIOType() != Attribute::IOType::Out)
             throwNodeError("Tried to set output data of an input attribute!");
 
-        std::vector<u8> buffer(sizeof(float), 0);
-        std::memcpy(buffer.data(), &floatingPoint, sizeof(float));
+        std::vector<u8> buffer(sizeof(floatingPoint), 0);
+        std::memcpy(buffer.data(), &floatingPoint, sizeof(floatingPoint));
 
         attribute.getOutputData() = buffer;
     }
