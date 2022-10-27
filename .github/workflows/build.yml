@@ -129,7 +129,7 @@ jobs:
 
     - name: 💨 Publish Steam Nightly
       if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
-      uses: game-ci/steam-deploy@main
+      uses: WerWolv/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
@@ -257,7 +257,7 @@ jobs:
 
     - name: 💨 Publish Steam Nightly
       if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master' && !matrix.custom_glfw
-      uses: game-ci/steam-deploy@main
+      uses: WerWolv/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
@@ -406,7 +406,7 @@ jobs:
 
       - name: 💨 Publish Steam Nightly
         if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
-        uses: game-ci/steam-deploy@main
+        uses: WerWolv/steam-deploy@main
         with:
           username: ${{ secrets.STEAM_USERNAME }}
           password: ${{ secrets.STEAM_PASSWORD }}
