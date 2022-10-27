@@ -249,14 +249,14 @@ jobs:
         path: build/*.dmg
 
     - name: 🗝️ Generate Steam TOTP
-      if: ${{! matrix.custom_glfw }} && github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master' && ${{matrix.custom_glfw}} == false
       uses: CyberAndrii/steam-totp@v1
       id: steam-totp
       with:
         shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
     - name: 💨 Publish Steam Nightly
-      if: ${{! matrix.custom_glfw }} && github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master' && ${{matrix.custom_glfw}} == false
       uses: game-ci/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
