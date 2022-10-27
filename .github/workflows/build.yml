@@ -120,6 +120,26 @@ jobs:
         path: |
           build/install/*
 
+    - name: 🗝️ Generate Steam TOTP
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+      uses: CyberAndrii/steam-totp@v1
+      id: steam-totp
+      with:
+        shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
+    - name: 💨 Publish Steam Nightly
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+      uses: WerWolv/steam-deploy@main
+      with:
+        username: ${{ secrets.STEAM_USERNAME }}
+        password: ${{ secrets.STEAM_PASSWORD }}
+        totp: ${{ steps.steam-totp.outputs.code }}
+        appId: 2186040
+        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
+        rootPath: build
+        depot1Path: install
+        releaseBranch: nightly
+
   # MacOS build
   macos:
     runs-on: macos-11
@@ -214,17 +234,39 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}"  \
           ..
         make -j4 package
+        make -j4 install
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
       with:
         name: macOS DMG${{matrix.suffix}}
         path: build/*.dmg
+
+    - name: 🗝️ Generate Steam TOTP
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master' && !matrix.custom_glfw
+      uses: CyberAndrii/steam-totp@v1
+      id: steam-totp
+      with:
+        shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
+    - name: 💨 Publish Steam Nightly
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master' && !matrix.custom_glfw
+      uses: WerWolv/steam-deploy@main
+      with:
+        username: ${{ secrets.STEAM_USERNAME }}
+        password: ${{ secrets.STEAM_PASSWORD }}
+        totp: ${{ steps.steam-totp.outputs.code }}
+        appId: 2186040
+        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
+        rootPath: build
+        depot2Path: install
+        releaseBranch: nightly
 
   # Ubuntu build
   ubuntu:
@@ -327,6 +369,8 @@ jobs:
           export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
           cd ..
+          mkdir AppImage
+          find . -name "*.AppImage" -exec cp '{}' AppImage/ \;
 
       #- name: ⬆️ Upload Flatpak
       #  uses: actions/upload-artifact@v3
@@ -352,6 +396,26 @@ jobs:
         with:
           name: Linux AppImage zsync
           path: 'build-appimage/*.AppImage.zsync'
+
+      - name: 🗝️ Generate Steam TOTP
+        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+        uses: CyberAndrii/steam-totp@v1
+        id: steam-totp
+        with:
+          shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
+      - name: 💨 Publish Steam Nightly
+        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+        uses: WerWolv/steam-deploy@main
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          password: ${{ secrets.STEAM_PASSWORD }}
+          totp: ${{ steps.steam-totp.outputs.code }}
+          appId: 2186040
+          buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
+          rootPath: AppImage
+          depot3Path: .
+          releaseBranch: nightly
 
   # ArchLinux build
   archlinux-build:
