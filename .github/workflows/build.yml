@@ -247,12 +247,14 @@ jobs:
         path: build/*.dmg
 
     - name: 🗝️ Generate Steam TOTP
+      if: ${{! matrix.custom_glfw}}
       uses: CyberAndrii/steam-totp@v1
       id: steam-totp
       with:
         shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
     - name: 💨 Publish Steam Nightly
+      if: ${{! matrix.custom_glfw}}
       uses: game-ci/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
@@ -409,7 +411,7 @@ jobs:
           buildDescription: v${{ env.IMHEX_VERSION }}
           rootPath: AppImage
           depot3Path: .
-          releaseBranch: nightly          
+          releaseBranch: nightly
 
   # ArchLinux build
   archlinux-build:
