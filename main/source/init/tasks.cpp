@@ -25,23 +25,26 @@ namespace hex::init {
     using namespace std::literals::string_literals;
 
     static bool checkForUpdates() {
-        hex::Net net;
+        int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
+        if(showCheckForUpdates==1){
+            hex::Net net;
 
-        auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 2000).get();
-        if (releases.code != 200)
-            return false;
+            auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 2000).get();
+            if (releases.code != 200)
+                return false;
 
-        if (!releases.body.contains("tag_name") || !releases.body["tag_name"].is_string())
-            return false;
+            if (!releases.body.contains("tag_name") || !releases.body["tag_name"].is_string())
+                return false;
 
-        auto versionString = std::string(IMHEX_VERSION);
-        size_t versionLength = std::min(versionString.find_first_of('-'), versionString.length());
-        auto currVersion   = "v" + versionString.substr(0, versionLength);
-        auto latestVersion = releases.body["tag_name"].get<std::string_view>();
+            auto versionString = std::string(IMHEX_VERSION);
+            size_t versionLength = std::min(versionString.find_first_of('-'), versionString.length());
+            auto currVersion   = "v" + versionString.substr(0, versionLength);
+            auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
-        if (latestVersion != currVersion)
-            ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
+            if (latestVersion != currVersion)
+                ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
+        }
         return true;
     }
 
