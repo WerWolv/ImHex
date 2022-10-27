@@ -28,10 +28,6 @@ jobs:
       with:
         submodules: recursive
 
-    - name: 📜 Set version variable
-      run: |
-        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
-
     - name: 📜 Setup ccache
       uses:  hendrikmuhs/ccache-action@v1.2
       id:    cache-ccache
@@ -62,6 +58,10 @@ jobs:
           mbedtls:p
           freetype:p
           dlfcn:p
+
+    - name: 📜 Set version variable
+      run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
     # Windows cmake build
     - name: 🛠️ Build
