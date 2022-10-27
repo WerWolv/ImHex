@@ -22,6 +22,7 @@
 #include <string>
 #include <list>
 #include <unordered_set>
+#include <random>
 
 namespace hex::plugin::builtin {
 
@@ -549,8 +550,17 @@ namespace hex::plugin::builtin {
             }
         }
 
-        if (ImHexApi::System::getInitArguments().contains("tip-of-the-day")) {
-            s_tipOfTheDay = ImHexApi::System::getInitArguments()["tip-of-the-day"];
+        auto tipsData = romfs::get("tips.json");
+        if(tipsData.valid()){
+            auto tipsCategories = nlohmann::json::parse(tipsData.string());
+
+            auto now = std::chrono::system_clock::now();
+            auto days_since_epoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
+            std::mt19937 random(days_since_epoch.count());
+
+            auto chosenCategory = tipsCategories[random()%tipsCategories.size()]["tips"];
+            auto chosenTip = chosenCategory[random()%chosenCategory.size()];
+            s_tipOfTheDay = chosenTip.get<std::string>();
 
             bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
             if (showTipOfTheDay)

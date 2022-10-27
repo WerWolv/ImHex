@@ -1,0 +1,23 @@
+[
+    {
+        "name" : "ImHex",
+        "tips" : [
+            "Try pressing CTRL + Shift + P to open the command palette!",
+            "The data processor allows pre-processing of the binary input data before it's displayed without modifying the original data.",
+            "Take a closer look at the Splash screen :)",
+            "Check out the WerWolv/ImHex-Patterns repository for pre-made patterns and more!",
+            "ImHex can be easily extended with plugins through its API."
+        ]
+    },
+    {
+        "name" : "Reverse Engineering",
+        "tips" : [
+            "Reverse Engineering a foreign file format becomes a lot easier if you know some values that should be stored in there.",
+            "Ghidra, binwalk, Unicorn, x86dbg, DetectItEasy, Dependencies and CheatEngine are other fantastic and free reverse engineering tools!",
+            "ALWAYS read the documentation if there is one. It will save you a lot of time.",
+            "Tools are what you make of them, practice makes perfect.",
+            "Looking for patterns and repeating structures in binary data is always a good start.",
+            "The entropy graph is an easy way to quickly figure out where interesting data is stored and if the data is encrypted or compressed."
+        ]
+    }
+]
