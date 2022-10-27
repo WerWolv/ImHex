@@ -783,6 +783,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.general.show_tips", "Mostrar dicas na inicialização" },
                     { "hex.builtin.setting.general.auto_load_patterns", "Padrão compatível com carregamento automático" },
                     // { "hex.builtin.setting.general.sync_pattern_source", "Sync pattern source code between providers" },
+                    // { "hex.builtin.setting.general.enable_unicode", "Load all unicode characters" },
                 { "hex.builtin.setting.interface", "Interface" },
                     { "hex.builtin.setting.interface.color", "Color theme" },
                         { "hex.builtin.setting.interface.color.system", "Sistema" },

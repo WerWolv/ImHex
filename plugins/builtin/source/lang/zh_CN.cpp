@@ -785,6 +785,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.setting.general.show_tips", "在启动时显示每日提示" },
                     { "hex.builtin.setting.general.auto_load_patterns", "自动加载支持的模式" },
                     { "hex.builtin.setting.general.sync_pattern_source", "在提供器间同步模式源码" },
+                    // { "hex.builtin.setting.general.enable_unicode", "Load all unicode characters" },
                 { "hex.builtin.setting.interface", "界面" },
                     { "hex.builtin.setting.interface.color", "颜色主题" },
                         { "hex.builtin.setting.interface.color.system", "跟随系统" },

@@ -142,7 +142,10 @@ namespace hex::init {
 
         fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, fontSize, &cfg, fontAwesomeRange);
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, fontSize, &cfg, codiconsRange);
-        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, fontSize, &cfg, unifontRange);
+
+        bool enableUnicode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true);
+        if (enableUnicode)
+            fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, fontSize, &cfg, unifontRange);
 
         fonts->Build();
 
