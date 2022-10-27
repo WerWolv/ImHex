@@ -440,6 +440,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.yara", "Yara 規則" },
                     { "hex.builtin.view.store.tab.encodings", "編碼" },
                     { "hex.builtin.view.store.loading", "正在載入商店內容..." },
+                    // { "hex.builtin.view.store.netfailed", "Net request to load store content failed!" },
                     { "hex.builtin.view.store.download_error", "無法下載檔案！目的地資料夾不存在。" },
 
                 { "hex.builtin.view.diff.name", "Diffing" },

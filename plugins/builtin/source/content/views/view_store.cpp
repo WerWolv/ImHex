@@ -25,10 +25,10 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
-        this->refresh();
-
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
             if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
+                if (this->m_requestStatus == RequestStatus::NotAttempted)
+                    this->refresh();
                 TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
                 this->getWindowOpenState() = true;
             }
@@ -126,6 +126,11 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::refresh() {
+        // do not refresh if a refresh is already in progress
+        if (this->m_requestStatus == RequestStatus::InProgress)
+            return;
+        this->m_requestStatus = RequestStatus::InProgress;
+
         this->m_patterns.clear();
         this->m_includes.clear();
         this->m_magics.clear();
@@ -138,7 +143,8 @@ namespace hex::plugin::builtin {
 
     void ViewStore::parseResponse() {
         auto response = this->m_apiRequest.get();
-        if (response.code == 200) {
+        this->m_requestStatus = response.code == 200 ? RequestStatus::Succeded : RequestStatus::Failed;
+        if (this->m_requestStatus == RequestStatus::Succeded) {
             auto json = nlohmann::json::parse(response.body);
 
             auto parseStoreEntries = [](auto storeJson, const std::string &name, fs::ImHexPath pathType, std::vector<StoreEntry> &results) {
@@ -198,7 +204,10 @@ namespace hex::plugin::builtin {
                     this->parseResponse();
             }
 
-            this->drawStore();
+            if (this->m_requestStatus == RequestStatus::Failed)
+                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
+            
+            this->drawStore();            
 
             ImGui::EndPopup();
         } else {

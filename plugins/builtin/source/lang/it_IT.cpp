@@ -442,6 +442,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.encodings", "Encodings" },
                     { "hex.builtin.view.store.tab.yara", "Regole di Yara" },
                     { "hex.builtin.view.store.loading", "Caricamento del content store..." },
+                    // { "hex.builtin.view.store.netfailed", "Net request to load store content failed!" },
                     { "hex.builtin.view.store.download_error", "Impossibile scaricare file! La cartella di destinazione non esiste." },
 
                 { "hex.builtin.view.diff.name", "Diffing" },

@@ -440,6 +440,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.store.tab.yara", "Yara 규칙" },
                     { "hex.builtin.view.store.tab.encodings", "인코딩" },
                     { "hex.builtin.view.store.loading", "스토어 콘텐츠 불러오는 중..." },
+                    // { "hex.builtin.view.store.netfailed", "Net request to load store content failed!" },
                     { "hex.builtin.view.store.download_error", "파일 다운로드에 실패했습니다! 저장 폴더가 존재하지 않습니다." },
 
                 { "hex.builtin.view.diff.name", "파일 비교" },

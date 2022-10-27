@@ -13,6 +13,13 @@
 
 namespace hex::plugin::builtin {
 
+    enum class RequestStatus {
+        NotAttempted,
+        InProgress,
+        Failed,
+        Succeded,
+    };
+
     struct StoreEntry {
         std::string name;
         std::string description;
@@ -45,6 +52,7 @@ namespace hex::plugin::builtin {
         std::future<Response<std::string>> m_apiRequest;
         std::future<Response<void>> m_download;
         std::fs::path m_downloadPath;
+        RequestStatus m_requestStatus = RequestStatus::NotAttempted;
 
         std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara, m_encodings;
 
