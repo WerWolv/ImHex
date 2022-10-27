@@ -121,19 +121,21 @@ jobs:
           build/install/*
 
     - name: 🗝️ Generate Steam TOTP
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
       uses: CyberAndrii/steam-totp@v1
       id: steam-totp
       with:
         shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
     - name: 💨 Publish Steam Nightly
+      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
       uses: game-ci/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
         totp: ${{ steps.steam-totp.outputs.code }}
         appId: 2186040
-        buildDescription: v${{ env.IMHEX_VERSION }}
+        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA::6 }}
         rootPath: build
         depot1Path: install
         releaseBranch: nightly
@@ -247,21 +249,21 @@ jobs:
         path: build/*.dmg
 
     - name: 🗝️ Generate Steam TOTP
-      if: ${{! matrix.custom_glfw}}
+      if: ${{! matrix.custom_glfw }} && github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
       uses: CyberAndrii/steam-totp@v1
       id: steam-totp
       with:
         shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
     - name: 💨 Publish Steam Nightly
-      if: ${{! matrix.custom_glfw}}
+      if: ${{! matrix.custom_glfw }} && github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
       uses: game-ci/steam-deploy@main
       with:
         username: ${{ secrets.STEAM_USERNAME }}
         password: ${{ secrets.STEAM_PASSWORD }}
         totp: ${{ steps.steam-totp.outputs.code }}
         appId: 2186040
-        buildDescription: v${{ env.IMHEX_VERSION }}
+        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA::6 }}
         rootPath: build
         depot2Path: install
         releaseBranch: nightly
@@ -396,19 +398,21 @@ jobs:
           path: 'build-appimage/*.AppImage.zsync'
 
       - name: 🗝️ Generate Steam TOTP
+        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
         uses: CyberAndrii/steam-totp@v1
         id: steam-totp
         with:
           shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
       - name: 💨 Publish Steam Nightly
+        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
         uses: game-ci/steam-deploy@main
         with:
           username: ${{ secrets.STEAM_USERNAME }}
           password: ${{ secrets.STEAM_PASSWORD }}
           totp: ${{ steps.steam-totp.outputs.code }}
           appId: 2186040
-          buildDescription: v${{ env.IMHEX_VERSION }}
+          buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA::6 }}
           rootPath: AppImage
           depot3Path: .
           releaseBranch: nightly
