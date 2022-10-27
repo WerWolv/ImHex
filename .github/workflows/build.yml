@@ -135,7 +135,7 @@ jobs:
         password: ${{ secrets.STEAM_PASSWORD }}
         totp: ${{ steps.steam-totp.outputs.code }}
         appId: 2186040
-        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA::6 }}
+        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA }}
         rootPath: build
         depot1Path: install
         releaseBranch: nightly
@@ -263,7 +263,7 @@ jobs:
         password: ${{ secrets.STEAM_PASSWORD }}
         totp: ${{ steps.steam-totp.outputs.code }}
         appId: 2186040
-        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA::6 }}
+        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA }}
         rootPath: build
         depot2Path: install
         releaseBranch: nightly
@@ -412,7 +412,7 @@ jobs:
           password: ${{ secrets.STEAM_PASSWORD }}
           totp: ${{ steps.steam-totp.outputs.code }}
           appId: 2186040
-          buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA::6 }}
+          buildDescription: v${{ env.IMHEX_VERSION }} - ${{ GITHUB_SHA }}
           rootPath: AppImage
           depot3Path: .
           releaseBranch: nightly
