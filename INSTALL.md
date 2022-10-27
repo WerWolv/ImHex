@@ -2,7 +2,7 @@
 
 ## Official Releases
 
-The easiest way to install ImHex is to download the latest release from the [GitHub releases page](github.com/WerWolv/ImHex/releases/latest).
+The easiest way to install ImHex is to download the latest release from the [GitHub releases page](https://github.com/WerWolv/ImHex/releases/latest).
 
 There's also a NoGPU version available for users who don't have a GPU or want to run ImHex in a VM without GPU passthrough.
 
