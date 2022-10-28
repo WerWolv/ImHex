@@ -228,7 +228,7 @@ jobs:
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v3
       with:
-        name: macOS Portable{{matrix.suffix}}
+        name: macOS Portable${{matrix.suffix}}
         path: build/install/*
 
     - name: ⬆️ Upload DMG
@@ -531,7 +531,7 @@ jobs:
   steam_deploy:
     needs: [ win, macos, ubuntu ]
     runs-on: ubuntu-latest
-    name: Steam Deployment Nightly
+    name: 🚀 Steam Deployment Nightly
 
     steps:
       - name: 🧰 Checkout
@@ -553,7 +553,7 @@ jobs:
           workflow_conclusion: success
           skip_unpack: true
 
-      - name: 🗜️ Unzip files when needed
+      - name: 🗜️ Setup steam depots
         run: |
           mkdir windows
           unzip "Windows Portable.zip" -d windows
@@ -563,7 +563,7 @@ jobs:
 
           mkdir linux
           unzip "Linux AppImage.zip" -d linux
-          mv linux/imhex-$IMHEX_VERSION.AppImage linux/imhex.AppImage
+          mv linux/imhex-${{env.IMHEX_VERSION}}.AppImage linux/imhex.AppImage
 
       - name: 🗝️ Generate Steam TOTP
         if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
