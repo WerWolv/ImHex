@@ -413,6 +413,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.yara.header.rules", "Regola" },
                         { "hex.builtin.view.yara.reload", "Ricarica" },
                         { "hex.builtin.view.yara.match", "Abbina Regole" },
+                        //{ "hex.builtin.view.yara.reset", "Reset" },
                         { "hex.builtin.view.yara.matching", "Abbinamento..." },
                         { "hex.builtin.view.yara.error", "Errore compilazione Yara: " },
                     { "hex.builtin.view.yara.header.matches", "Abbinamenti" },

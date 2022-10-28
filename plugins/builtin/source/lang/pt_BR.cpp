@@ -409,6 +409,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.yara.header.rules", "Regras" },
                         { "hex.builtin.view.yara.reload", "Recarregar" },
                         { "hex.builtin.view.yara.match", "Combinar Regras" },
+                        //{ "hex.builtin.view.yara.reset", "Reset" },
                         { "hex.builtin.view.yara.matching", "Combinando..." },
                         { "hex.builtin.view.yara.error", "Erro do compilador Yara: " },
                     { "hex.builtin.view.yara.header.matches", "Combinações" },

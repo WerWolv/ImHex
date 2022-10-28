@@ -407,6 +407,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.yara.header.rules", "Regeln" },
                         { "hex.builtin.view.yara.reload", "Neu laden" },
                         { "hex.builtin.view.yara.match", "Regeln anwenden" },
+                        { "hex.builtin.view.yara.reset", "Zurücksetzen" },
                         { "hex.builtin.view.yara.matching", "Anwenden..." },
                         { "hex.builtin.view.yara.error", "Yara Kompilerfehler: " },
                     { "hex.builtin.view.yara.header.matches", "Funde" },

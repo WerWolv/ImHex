@@ -59,7 +59,13 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::SameLine();
                     if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
+
+                    ImGui::NewLine();
                     if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
+                    ImGui::SameLine();
+                    ImGui::BeginDisabled(this->m_matches.empty());
+                    if (ImGui::Button("hex.builtin.view.yara.reset"_lang)) this->clearResult();
+                    ImGui::EndDisabled();
                 }
                 ImGui::EndDisabled();
 
@@ -171,8 +177,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::applyRules() {
-        this->clearResult();
-
         this->m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
             if (!ImHexApi::Provider::isValid()) return;
 
@@ -334,8 +338,24 @@ namespace hex::plugin::builtin {
 
 
             TaskManager::doLater([this, resultContext] {
-                this->m_matches         = resultContext.newMatches;
+                for (const auto &match : this->m_matches) {
+                    ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
+                    ImHexApi::HexEditor::removeTooltip(match.tooltipId);
+                }
+
                 this->m_consoleMessages = resultContext.consoleMessages;
+
+                std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(this->m_matches));
+
+                auto uniques = std::set(this->m_matches.begin(), this->m_matches.end(), [](const auto &l, const auto &r) {
+                    return l.address < r.address &&
+                           l.size < r.size &&
+                           l.wholeDataMatch < r.wholeDataMatch &&
+                           l.identifier < r.identifier &&
+                           l.variable < r.variable;
+                });
+                this->m_matches.clear();
+                std::move(uniques.begin(), uniques.end(), std::back_inserter(this->m_matches));
 
                 constexpr static color_t YaraColor = 0x70B4771F;
                 for (auto &match : this->m_matches) {

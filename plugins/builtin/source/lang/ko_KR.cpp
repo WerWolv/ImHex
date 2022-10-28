@@ -409,6 +409,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.yara.header.rules", "규칙" },
                         { "hex.builtin.view.yara.reload", "재검사" },
                         { "hex.builtin.view.yara.match", "일치하는 규칙" },
+                        //{ "hex.builtin.view.yara.reset", "Reset" },
                         { "hex.builtin.view.yara.matching", "검색 중..." },
                         { "hex.builtin.view.yara.error", "Yara 컴파일러 에러: " },
                     { "hex.builtin.view.yara.header.matches", "규칙" },

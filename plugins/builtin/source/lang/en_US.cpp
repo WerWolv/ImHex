@@ -410,6 +410,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.yara.header.rules", "Rules" },
                         { "hex.builtin.view.yara.reload", "Reload" },
                         { "hex.builtin.view.yara.match", "Match Rules" },
+                        { "hex.builtin.view.yara.reset", "Reset" },
                         { "hex.builtin.view.yara.matching", "Matching..." },
                         { "hex.builtin.view.yara.error", "Yara Compiler error: " },
                     { "hex.builtin.view.yara.header.matches", "Matches" },
