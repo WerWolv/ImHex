@@ -650,29 +650,24 @@ namespace hex::plugin::builtin {
             callback(address, data, size);
         }
 
-        const auto &tooltips = ImHexApi::HexEditor::impl::getTooltips();
-        if (!tooltips.empty()) {
-            ImGui::BeginTooltip();
-
-            for (const auto &[id, tooltip] : tooltips) {
+        for (const auto &[id, tooltip] : ImHexApi::HexEditor::impl::getTooltips()) {
+            if (tooltip.getRegion().overlaps({ address, size })) {
+                ImGui::BeginTooltip();
                 if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    if (tooltip.getRegion().overlaps({ address, size })) {
-                        ImGui::ColorButton(tooltip.getValue().c_str(), ImColor(tooltip.getColor()));
-                        ImGui::SameLine(0, 10);
-                        ImGui::TextUnformatted(tooltip.getValue().c_str());
-                    }
+                    ImGui::ColorButton(tooltip.getValue().c_str(), ImColor(tooltip.getColor()));
+                    ImGui::SameLine(0, 10);
+                    ImGui::TextUnformatted(tooltip.getValue().c_str());
 
                     ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltip.getColor());
                     ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltip.getColor());
                     ImGui::EndTable();
                     ImGui::PopStyleColor(2);
                 }
+                ImGui::EndTooltip();
             }
-
-            ImGui::EndTooltip();
         }
 
         ImGui::PopStyleVar();
