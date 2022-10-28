@@ -115,7 +115,7 @@ jobs:
         curl https://downloads.fdossena.com/geth.php?r=mesa64-latest -L -o mesa.7z
         7z e mesa.7z
         mv opengl32.dll build/install
-        
+
     - name: ⬆️ Upload NoGPU Portable ZIP
       uses: actions/upload-artifact@v3
       with:
@@ -562,7 +562,7 @@ jobs:
           unzip "macOS Portable.zip" -d macos
 
           mkdir linux
-          unzip Linux AppImage.zip -d linux
+          unzip "Linux AppImage.zip" -d linux
           mv linux/imhex-$IMHEX_VERSION.AppImage linux/imhex.AppImage
 
       - name: 🗝️ Generate Steam TOTP
@@ -574,7 +574,7 @@ jobs:
 
       - name: 💨 Publish Steam Nightly
         if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
-        uses: WerWolv/steam-deploy@main
+        uses: game-ci/steam-deploy@main
         with:
           username: ${{ secrets.STEAM_USERNAME }}
           password: ${{ secrets.STEAM_PASSWORD }}
