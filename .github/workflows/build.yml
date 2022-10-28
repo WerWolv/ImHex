@@ -549,31 +549,23 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: Windows Portable
-          path: .
+          path: ./steam/windows
 
       - name: ⬇️ Download macOS Artifact
         uses: actions/download-artifact@v3
         with:
           name: macOS Portable
-          path: .
+          path: ./steam/macos
 
       - name: ⬇️ Download Linux Artifact
         uses: actions/download-artifact@v3
         with:
           name: Linux AppImage
-          path: .
+          path: ./steam/linux
 
       - name: 🗜️ Setup steam depots
         run: |
-          mkdir windows
-          unzip "Windows Portable.zip" -d windows
-          
-          mkdir macos
-          unzip "macOS Portable.zip" -d macos
-
-          mkdir linux
-          unzip "Linux AppImage.zip" -d linux
-          mv linux/imhex-${{env.IMHEX_VERSION}}.AppImage linux/imhex.AppImage
+          mv steam/linux/imhex-${{env.IMHEX_VERSION}}.AppImage steam/linux/imhex.AppImage
 
       - name: 🗝️ Generate Steam TOTP
         uses: CyberAndrii/steam-totp@v1
@@ -589,7 +581,7 @@ jobs:
           totp: ${{ steps.steam-totp.outputs.code }}
           appId: 2186040
           buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
-          rootPath: .
+          rootPath: ./steam
           depot1Path: windows
           depot2Path: macos
           depot3Path: linux
