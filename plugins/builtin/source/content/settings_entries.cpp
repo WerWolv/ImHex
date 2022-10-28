@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
         /* General */
 
         ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2, [](auto name, nlohmann::json &setting) {
-            static bool enabled = static_cast<int>(setting);
+            static bool enabled = static_cast<int>(setting) == 1;
 
             if (ImGui::Checkbox(name.data(), &enabled)) {
                 setting = static_cast<int>(enabled);
