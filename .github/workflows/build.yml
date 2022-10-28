@@ -533,6 +533,7 @@ jobs:
     runs-on: ubuntu-latest
     name: 🚀 Steam Deployment Nightly
 
+    if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
     steps:
       - name: 🧰 Checkout
         uses: actions/checkout@v3
@@ -547,9 +548,8 @@ jobs:
       - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v2
         with:
-          github_token: ${{secrets.GITHUB_TOKEN}}
-          workflow: build.yml
-          branch: ${{ github.event.release.target_commitish }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit: ${{ github.event.pull_request.head.sha }}
           workflow_conclusion: success
           skip_unpack: true
 
@@ -566,14 +566,12 @@ jobs:
           mv linux/imhex-${{env.IMHEX_VERSION}}.AppImage linux/imhex.AppImage
 
       - name: 🗝️ Generate Steam TOTP
-        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
         uses: CyberAndrii/steam-totp@v1
         id: steam-totp
         with:
           shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
 
       - name: 💨 Publish Steam Nightly
-        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
         uses: game-ci/steam-deploy@main
         with:
           username: ${{ secrets.STEAM_USERNAME }}
