@@ -26,7 +26,7 @@ namespace hex::init {
 
     static bool checkForUpdates() {
         int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
-        if(showCheckForUpdates==1){
+        if (showCheckForUpdates == 1){
             hex::Net net;
 
             auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 2000).get();

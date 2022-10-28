@@ -517,14 +517,17 @@ namespace hex::plugin::builtin {
                 loadDefaultLayout();
         });
 
-        EventManager::subscribe<EventWindowInitialized>([]{
+        EventManager::subscribe<EventWindowInitialized>([] {
             int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
-            if(showCheckForUpdates==2){
+            if (showCheckForUpdates == 2) {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 0); 
-                View::showYesNoQuestionPopup("hex.builtin.welcome.check_for_updates_text"_lang, [] {
-                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 1);
-                    ImGui::CloseCurrentPopup(); },
-                    [] {ImGui::CloseCurrentPopup();});
+                View::showYesNoQuestionPopup("hex.builtin.welcome.check_for_updates_text"_lang,
+                    [] { // yes
+                        ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 1);
+                        ImGui::CloseCurrentPopup();
+                    }, [] { // no
+                        ImGui::CloseCurrentPopup();
+                    });
             }
         });
 
