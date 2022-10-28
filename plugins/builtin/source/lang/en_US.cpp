@@ -45,7 +45,6 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.builtin.welcome.header.various", "Various" },
                 { "hex.builtin.welcome.tip_of_the_day", "Tip of the Day" },
-                { "hex.builtin.welcome.check_for_updates", "Check for updates" },
                 { "hex.builtin.welcome.check_for_updates_text", "Do you want to automatically check for updates on startup ?\n"
                     "Possible updates will be shown in the 'Update' tab of the welcome screen" },
 
