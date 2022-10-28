@@ -33,6 +33,7 @@ namespace hex {
         [[nodiscard]] bool isFinished() const;
         [[nodiscard]] bool hadException() const;
         [[nodiscard]] bool wasInterrupted() const;
+        [[nodiscard]] bool shouldInterrupt() const;
         void clearException();
         [[nodiscard]] std::string getExceptionMessage() const;
 
@@ -79,6 +80,7 @@ namespace hex {
         [[nodiscard]] bool isRunning() const;
         [[nodiscard]] bool hadException() const;
         [[nodiscard]] bool wasInterrupted() const;
+        [[nodiscard]] bool shouldInterrupt() const;
 
         void interrupt();
     private:

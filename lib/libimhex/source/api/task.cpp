@@ -78,6 +78,10 @@ namespace hex {
         return this->m_hadException;
     }
 
+    bool Task::shouldInterrupt() const {
+        return this->m_shouldInterrupt;
+    }
+
     bool Task::wasInterrupted() const {
         return this->m_interrupted;
     }
@@ -134,6 +138,14 @@ namespace hex {
 
         auto task = this->m_task.lock();
         return !task->hadException();
+    }
+
+    bool TaskHolder::shouldInterrupt() const {
+        if (this->m_task.expired())
+            return false;
+
+        auto task = this->m_task.lock();
+        return !task->shouldInterrupt();
     }
 
     bool TaskHolder::wasInterrupted() const {

@@ -287,11 +287,13 @@ namespace hex::plugin::builtin {
 
 
             struct ResultContext {
+                Task *task = nullptr;
                 std::vector<YaraMatch> newMatches;
                 std::vector<std::string> consoleMessages;
             };
 
             ResultContext resultContext;
+            resultContext.task = &task;
 
             yr_rules_scan_mem_blocks(
                     rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
@@ -325,7 +327,7 @@ namespace hex::plugin::builtin {
                                 break;
                         }
 
-                        return CALLBACK_CONTINUE;
+                        return results.task->shouldInterrupt() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
                     },
                     &resultContext,
                     0);
