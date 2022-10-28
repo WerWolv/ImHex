@@ -545,13 +545,23 @@ jobs:
           project_version=`cat ImHex/VERSION`
           echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
 
-      - name: ⬇️ Download artifacts from latest workflow
-        uses: dawidd6/action-download-artifact@v2
+      - name: ⬇️ Download Windows Artifact
+        uses: actions/download-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          commit: ${{ github.event.pull_request.head.sha }}
-          workflow_conclusion: success
-          skip_unpack: true
+          name: Windows Portable
+          path: .
+
+      - name: ⬇️ Download macOS Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: macOS Portable
+          path: .
+
+      - name: ⬇️ Download Linux Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: Linux AppImage
+          path: .
 
       - name: 🗜️ Setup steam depots
         run: |
