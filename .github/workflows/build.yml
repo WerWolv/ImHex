@@ -116,28 +116,12 @@ jobs:
         7z e mesa.7z
         mv opengl32.dll build/install
         
-
     - name: ⬆️ Upload NoGPU Portable ZIP
       uses: actions/upload-artifact@v3
       with:
         name: Windows Portable NoGPU
         path: |
           build/install/*
-
-    - name: 💨 Publish Steam Nightly
-      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
-      uses: WerWolv/steam-deploy@main
-      with:
-        username: ${{ secrets.STEAM_USERNAME }}
-        password: ${{ secrets.STEAM_PASSWORD }}
-        configVdf: ${{ secrets.STEAM_CONFIG_VDF}}
-        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
-        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
-        appId: 2186040
-        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
-        rootPath: build
-        depot1Path: install
-        releaseBranch: nightly
 
   # MacOS build
   macos:
@@ -241,26 +225,17 @@ jobs:
         make -j4 package
         make -j4 install
 
+    - name: ⬆️ Upload Portable ZIP
+      uses: actions/upload-artifact@v3
+      with:
+        name: macOS Portable{{matrix.suffix}}
+        path: build/install/*
+
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
       with:
         name: macOS DMG${{matrix.suffix}}
         path: build/*.dmg
-
-    - name: 💨 Publish Steam Nightly
-      if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master' && !matrix.custom_glfw
-      uses: WerWolv/steam-deploy@main
-      with:
-        username: ${{ secrets.STEAM_USERNAME }}
-        password: ${{ secrets.STEAM_PASSWORD }}
-        configVdf: ${{ secrets.STEAM_CONFIG_VDF}}
-        ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
-        ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
-        appId: 2186040
-        buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
-        rootPath: build
-        depot2Path: install
-        releaseBranch: nightly
 
   # Ubuntu build
   ubuntu:
@@ -362,9 +337,6 @@ jobs:
           cd build-appimage
           export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-          cd ..
-          mkdir AppImage
-          find . -name "*.AppImage" -exec cp '{}' AppImage/imhex.AppImage \;
 
       #- name: ⬆️ Upload Flatpak
       #  uses: actions/upload-artifact@v3
@@ -390,21 +362,6 @@ jobs:
         with:
           name: Linux AppImage zsync
           path: 'build-appimage/*.AppImage.zsync'
-
-      - name: 💨 Publish Steam Nightly
-        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
-        uses: WerWolv/steam-deploy@main
-        with:
-          username: ${{ secrets.STEAM_USERNAME }}
-          password: ${{ secrets.STEAM_PASSWORD }}
-          configVdf: ${{ secrets.STEAM_CONFIG_VDF}}
-          ssfnFileName: ${{ secrets.STEAM_SSFN_FILE_NAME }}
-          ssfnFileContents: ${{ secrets.STEAM_SSFN_FILE_CONTENTS }}
-          appId: 2186040
-          buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
-          rootPath: AppImage
-          depot3Path: .
-          releaseBranch: nightly
 
   # ArchLinux build
   archlinux-build:
@@ -568,3 +525,64 @@ jobs:
           name: Fedora ${{ matrix.release }} RPM
           path: |
             imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
+       
+       
+
+  steam_deploy:
+    needs: [ win, macos, ubuntu ]
+    runs-on: ubuntu-latest
+    name: Steam Deployment Nightly
+
+    steps:
+      - name: 🧰 Checkout
+        uses: actions/checkout@v3
+        with:
+          path: ImHex
+
+      - name: 📜 Set version variable
+        run: |
+          project_version=`cat ImHex/VERSION`
+          echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
+
+      - name: ⬇️ Download artifacts from latest workflow
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: build.yml
+          branch: ${{ github.event.release.target_commitish }}
+          workflow_conclusion: success
+          skip_unpack: true
+
+      - name: 🗜️ Unzip files when needed
+        run: |
+          mkdir windows
+          unzip "Windows Portable.zip" -d windows
+          
+          mkdir macos
+          unzip "macOS Portable.zip" -d macos
+
+          mkdir linux
+          unzip Linux AppImage.zip -d linux
+          mv linux/imhex-$IMHEX_VERSION.AppImage linux/imhex.AppImage
+
+      - name: 🗝️ Generate Steam TOTP
+        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+        uses: CyberAndrii/steam-totp@v1
+        id: steam-totp
+        with:
+          shared_secret: ${{ secrets.STEAM_SHARED_SECRET }}
+
+      - name: 💨 Publish Steam Nightly
+        if: github.event_name == 'push' && github.repository == 'WerWolv/ImHex' && github.ref == 'refs/heads/master'
+        uses: WerWolv/steam-deploy@main
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          password: ${{ secrets.STEAM_PASSWORD }}
+          totp: ${{ steps.steam-totp.outputs.code }}
+          appId: 2186040
+          buildDescription: v${{ env.IMHEX_VERSION }} - ${{ github.sha }}
+          rootPath: .
+          depot1Path: windows
+          depot2Path: macos
+          depot3Path: linux
+          releaseBranch: nightly
