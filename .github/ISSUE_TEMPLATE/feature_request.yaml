@@ -20,3 +20,6 @@ body:
     label: Request Type
     options:
       - label: I can provide a PoC for this feature or am willing to work on it myself and submit a PR
+- type: textarea
+  attributes:
+    label: Additional context?
