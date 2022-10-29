@@ -39,6 +39,13 @@ body:
     label: ImHex Build Type
     options:
     - label: Nightly or built from sources
+- type: input
+  attributes:
+    label: Installation type
+    description: |
+      How did you install ImHex ? MSI/Portable/DMG/AppImage/Fedora package/etc..
+  validations:
+    required: true
 - type: textarea
   attributes:
     label: Additional context?
