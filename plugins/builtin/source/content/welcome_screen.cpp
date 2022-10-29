@@ -518,6 +518,7 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventWindowInitialized>([] {
+            // documentation of the value above the setting definition
             int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
             if (showCheckForUpdates == 2) {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 0); 

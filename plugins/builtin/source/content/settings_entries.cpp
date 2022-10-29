@@ -35,6 +35,11 @@ namespace hex::plugin::builtin {
 
         /* General */
 
+        /* Values of this setting :
+        0 - do not check for updates on startup
+        1 - check for updates on startup
+        2 - default value - ask the user if he wants to check for updates. This value should only be encountered on the first startup.
+        */
         ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2, [](auto name, nlohmann::json &setting) {
             static bool enabled = static_cast<int>(setting) == 1;
 
