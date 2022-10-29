@@ -42,7 +42,7 @@ body:
 - type: textarea
   attributes:
     label: Additional context?
-    value: |
+    placeholder: |
       - Additional information about your environment.
       - If possible and useful, please upload the binary you've been editing when the bug occurred.
   validations:
