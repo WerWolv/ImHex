@@ -44,6 +44,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.builtin.welcome.header.various", "Various" }, //?
                 { "hex.builtin.welcome.tip_of_the_day", "今日の豆知識" },
+                // { "hex.builtin.welcome.check_for_updates_text", "Do you want to automatically check for updates on startup ?\n"
+                //     "Possible updates will be shown in the 'Update' tab of the welcome screen" },
 
                 { "hex.builtin.welcome.safety_backup.title", "セッションの回復" },
                 { "hex.builtin.welcome.safety_backup.desc", "ImHexがクラッシュしました。\n前のデータを復元しますか？"},
@@ -786,6 +788,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "最近開いたファイル" },
                 { "hex.builtin.setting.general", "基本" },
+                    // { "hex.builtin.setting.general.check_for_updates", "Check for updates on startup" },
                     { "hex.builtin.setting.general.show_tips", "起動時に豆知識を表示" },
                     { "hex.builtin.setting.general.auto_load_patterns", "対応するパターンを自動で読み込む" },
                     { "hex.builtin.setting.general.sync_pattern_source", "プロバイダ間のパターンソースコードを同期" },

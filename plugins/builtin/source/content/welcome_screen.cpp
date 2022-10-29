@@ -517,6 +517,21 @@ namespace hex::plugin::builtin {
                 loadDefaultLayout();
         });
 
+        EventManager::subscribe<EventWindowInitialized>([] {
+            // documentation of the value above the setting definition
+            int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
+            if (showCheckForUpdates == 2) {
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 0); 
+                View::showYesNoQuestionPopup("hex.builtin.welcome.check_for_updates_text"_lang,
+                    [] { // yes
+                        ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 1);
+                        ImGui::CloseCurrentPopup();
+                    }, [] { // no
+                        ImGui::CloseCurrentPopup();
+                    });
+            }
+        });
+
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
             if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProvidersUpdating && !s_recentProviders.empty())) {
                 // Copy to avoid changing list while iteration

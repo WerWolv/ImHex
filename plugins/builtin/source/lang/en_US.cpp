@@ -45,6 +45,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.builtin.welcome.header.various", "Various" },
                 { "hex.builtin.welcome.tip_of_the_day", "Tip of the Day" },
+                { "hex.builtin.welcome.check_for_updates_text", "Do you want to automatically check for updates on startup ?\n"
+                    "Possible updates will be shown in the 'Update' tab of the welcome screen" },
 
                 { "hex.builtin.welcome.safety_backup.title", "Restore lost data" },
                 { "hex.builtin.welcome.safety_backup.desc", "Oh no, ImHex crashed last time.\nDo you want to restore your past work?"},
@@ -784,6 +786,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "Recent Files" },
                 { "hex.builtin.setting.general", "General" },
+                    { "hex.builtin.setting.general.check_for_updates", "Check for updates on startup" },
                     { "hex.builtin.setting.general.show_tips", "Show tips on startup" },
                     { "hex.builtin.setting.general.auto_load_patterns", "Auto-load supported pattern" },
                     { "hex.builtin.setting.general.sync_pattern_source", "Sync pattern source code between providers" },

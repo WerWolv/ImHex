@@ -44,6 +44,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.builtin.welcome.header.various", "Various" },
                 { "hex.builtin.welcome.tip_of_the_day", "오늘의 팁" },
+                // { "hex.builtin.welcome.check_for_updates_text", "Do you want to automatically check for updates on startup ?\n"
+                //     "Possible updates will be shown in the 'Update' tab of the welcome screen" },
 
                 { "hex.builtin.welcome.safety_backup.title", "손상된 데이터 복구" },
                 { "hex.builtin.welcome.safety_backup.desc", "이전에 ImHex가 비 정상적으로 종료된 것 같습니다.\n이전의 작업을 복구할까요?"},
@@ -783,6 +785,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "최근 파일" },
                 { "hex.builtin.setting.general", "일반" },
+                    // { "hex.builtin.setting.general.check_for_updates", "Check for updates on startup" },
                     { "hex.builtin.setting.general.show_tips", "시작 시 팁 표시" },
                     { "hex.builtin.setting.general.auto_load_patterns", "지원하는 패턴 자동으로 로드" },
                     { "hex.builtin.setting.general.sync_pattern_source", "공급자 간 패턴 소스 코드 동기화" },

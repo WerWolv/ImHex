@@ -44,6 +44,8 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.builtin.welcome.header.various", "杂项" },
                 { "hex.builtin.welcome.tip_of_the_day", "每日提示" },
+                // { "hex.builtin.welcome.check_for_updates_text", "Do you want to automatically check for updates on startup ?\n"
+                //     "Possible updates will be shown in the 'Update' tab of the welcome screen" },
 
                 { "hex.builtin.welcome.safety_backup.title", "恢复崩溃数据" },
                 { "hex.builtin.welcome.safety_backup.desc", "糟糕，ImHex 上次崩溃了！\n您想从异常转储中恢复之前的数据吗？"},
@@ -784,6 +786,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.setting.imhex", "ImHex" },
                     { "hex.builtin.setting.imhex.recent_files", "最近文件" },
                 { "hex.builtin.setting.general", "通用" },
+                    // { "hex.builtin.setting.general.check_for_updates", "Check for updates on startup" },
                     { "hex.builtin.setting.general.show_tips", "在启动时显示每日提示" },
                     { "hex.builtin.setting.general.auto_load_patterns", "自动加载支持的模式" },
                     { "hex.builtin.setting.general.sync_pattern_source", "在提供器间同步模式源码" },
