@@ -1,6 +1,7 @@
 name: Bug Report
 description: Something doesn't work correctly in ImHex.
 title: "[Bug] "
+labels: bug
 body:
 - type: dropdown
   id: os
