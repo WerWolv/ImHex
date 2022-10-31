@@ -44,8 +44,10 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                ImGui::SetKeyboardFocusHere();
-                ImGui::SetNextFrameWantCaptureKeyboard(true);
+                if(this->m_requestFocus){
+                    ImGui::SetKeyboardFocusHere();
+                    this->m_requestFocus = false;
+                }
                 if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                     if (auto result = this->m_evaluator.evaluate(this->m_input); result.has_value()) {
                         const auto inputResult = result.value();
@@ -92,6 +94,7 @@ namespace hex::plugin::builtin {
 
         Mode m_mode = Mode::Absolute;
 
+        bool m_requestFocus = true;
         std::string m_input;
         MathEvaluator<i128> m_evaluator;
     };
