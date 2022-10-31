@@ -784,6 +784,11 @@ namespace hex::plugin::builtin {
 
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         if (ImGui::BeginPopup("##hex_editor_popup", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoTitleBar)) {
+            
+            // Force close the popup when user is editing an input
+            if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))){
+                ImGui::CloseCurrentPopup();
+            }
 
             if (this->m_currPopup != nullptr)
                 this->m_currPopup->draw(this);
