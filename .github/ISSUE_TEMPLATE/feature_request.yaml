@@ -1,6 +1,7 @@
 name: Feature Request
 description: Something you'd like to see added to ImHex in the future
 title: "[Feature] "
+labels: feature request
 body:
 - type: textarea
   attributes:
