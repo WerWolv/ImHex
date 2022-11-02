@@ -288,9 +288,11 @@ namespace hex::plugin::builtin {
         }
 
         std::optional<Region> findSequence(const std::vector<u8> &sequence, bool backwards) {
-            hex::prv::BufferedReader reader(ImHexApi::Provider::get());
+            auto provider = ImHexApi::Provider::get();
 
-            reader.seek(this->m_searchPosition.value_or(0x00));
+            hex::prv::BufferedReader reader(provider);
+
+            reader.seek(this->m_searchPosition.value_or(provider->getBaseAddress()));
 
             constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
                 return std::search(haystackBegin, haystackEnd, std::boyer_moore_horspool_searcher(needleBegin, needleEnd));

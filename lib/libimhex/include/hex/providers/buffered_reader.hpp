@@ -14,7 +14,7 @@ namespace hex::prv {
     public:
         explicit BufferedReader(Provider *provider, size_t bufferSize = 16_MiB)
         : m_provider(provider), m_bufferAddress(provider->getBaseAddress()), m_maxBufferSize(bufferSize),
-          m_startAddress(0x00), m_endAddress(provider->getActualSize() - 1),
+          m_startAddress(provider->getBaseAddress()), m_endAddress(provider->getBaseAddress() + provider->getActualSize() - 1),
           m_buffer(bufferSize) {
 
         }
