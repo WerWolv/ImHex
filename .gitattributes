@@ -1,3 +1,1 @@
 lib/external/** linguist-vendored
-lib/libimhex-rs/imgui-rs/** linguist-vendored
-lib/libimhex-rs/imgui-sys/** linguist-vendored

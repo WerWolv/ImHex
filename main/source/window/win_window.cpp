@@ -343,6 +343,8 @@ namespace hex {
     void Window::drawTitleBar() {
         if (!ImHexApi::System::isBorderlessWindowModeEnabled()) return;
 
+        auto startX = ImGui::GetCursorPosX();
+
         auto buttonSize = ImVec2(g_titleBarHeight * 1.5F, g_titleBarHeight - 1);
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
@@ -382,7 +384,7 @@ namespace hex {
         ImGui::PopStyleColor(5);
         ImGui::PopStyleVar();
 
-        ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(this->m_windowTitle.c_str()).x) / 2);
+        ImGui::SetCursorPosX(std::max(startX, (ImGui::GetWindowWidth() - ImGui::CalcTextSize(this->m_windowTitle.c_str()).x) / 2));
         ImGui::TextUnformatted(this->m_windowTitle.c_str());
     }
 

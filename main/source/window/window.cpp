@@ -121,7 +121,7 @@ namespace hex {
             if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
                 if (!windowTitle.empty() && provider != nullptr) {
-                    title += " - " + windowTitle;
+                    title += " - " + hex::limitStringLength(windowTitle, 32);
 
                     if (provider->isDirty())
                         title += " (*)";
