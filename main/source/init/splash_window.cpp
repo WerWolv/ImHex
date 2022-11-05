@@ -186,6 +186,7 @@ namespace hex::init {
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
+        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
 
         this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
         if (this->m_window == nullptr) {
