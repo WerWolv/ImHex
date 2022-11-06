@@ -55,6 +55,7 @@ add_library(${PROJECT_NAME} SHARED
 
         source/content/helpers/math_evaluator.cpp
         source/content/helpers/pattern_drawer.cpp
+        source/content/helpers/hex_editor.cpp
 
         source/lang/de_DE.cpp
         source/lang/en_US.cpp
