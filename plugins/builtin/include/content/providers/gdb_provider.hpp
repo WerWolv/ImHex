@@ -8,7 +8,7 @@
 #include <string_view>
 #include <thread>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     class GDBProvider : public hex::prv::Provider {
     public:

@@ -13,7 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     using namespace std::chrono_literals;
 

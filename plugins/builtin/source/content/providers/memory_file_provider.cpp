@@ -8,7 +8,7 @@
 #include <hex/api/event.hpp>
 #include <hex/helpers/file.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     bool MemoryFileProvider::open() {
         this->m_data.resize(1);

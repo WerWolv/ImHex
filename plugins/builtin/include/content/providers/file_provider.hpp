@@ -15,7 +15,7 @@
     #include <sys/fcntl.h>
 #endif
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     class FileProvider : public hex::prv::Provider {
     public:

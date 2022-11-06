@@ -11,7 +11,7 @@
     #include <windows.h>
 #endif
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     class DiskProvider : public hex::prv::Provider {
     public:

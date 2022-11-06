@@ -4,7 +4,7 @@
 
 #include <IntervalTree.h>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     class IntelHexProvider : public hex::prv::Provider {
     public:

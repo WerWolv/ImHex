@@ -53,6 +53,7 @@ namespace hex::plugin::builtin {
                 std::vector<std::pair<pl::core::LogConsole::Level, std::string>> lastEvaluationLog;
                 std::map<std::string, pl::core::Token::Literal> lastEvaluationOutVars;
                 std::map<std::string, PatternVariable> patternVariables;
+                std::map<u64, pl::api::Section> sections;
 
                 std::list<EnvVar> envVarEntries;
             } patternLanguage;

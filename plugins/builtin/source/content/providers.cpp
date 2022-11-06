@@ -16,13 +16,13 @@ namespace hex::plugin::builtin {
 
     void registerProviders() {
 
-        ContentRegistry::Provider::add<prv::FileProvider>(false);
-        ContentRegistry::Provider::add<prv::NullProvider>(false);
-        ContentRegistry::Provider::add<prv::DiskProvider>();
-        ContentRegistry::Provider::add<prv::GDBProvider>();
-        ContentRegistry::Provider::add<prv::IntelHexProvider>();
-        ContentRegistry::Provider::add<prv::MotorolaSRECProvider>();
-        ContentRegistry::Provider::add<prv::MemoryFileProvider>(false);
+        ContentRegistry::Provider::add<FileProvider>(false);
+        ContentRegistry::Provider::add<NullProvider>(false);
+        ContentRegistry::Provider::add<DiskProvider>();
+        ContentRegistry::Provider::add<GDBProvider>();
+        ContentRegistry::Provider::add<IntelHexProvider>();
+        ContentRegistry::Provider::add<MotorolaSRECProvider>();
+        ContentRegistry::Provider::add<MemoryFileProvider>(false);
 
         ProjectFile::registerHandler({
              .basePath = "providers",

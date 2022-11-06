@@ -2,7 +2,7 @@
 
 #include <hex/providers/provider.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     class NullProvider : public hex::prv::Provider {
     public:

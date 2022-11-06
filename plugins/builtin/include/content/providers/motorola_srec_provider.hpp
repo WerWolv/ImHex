@@ -2,7 +2,7 @@
 
 #include <content/providers/intel_hex_provider.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     class MotorolaSRECProvider : public IntelHexProvider {
     public:

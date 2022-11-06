@@ -24,7 +24,7 @@
     #define lseek lseek64
 #endif
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     DiskProvider::DiskProvider() : Provider() {
 

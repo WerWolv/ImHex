@@ -6,7 +6,7 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     namespace motorola_srec {
 

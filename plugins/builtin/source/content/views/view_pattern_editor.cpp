@@ -129,6 +129,10 @@ namespace hex::plugin::builtin {
                         this->drawVariableSettings(settingsSize, extraData.patternVariables);
                         ImGui::EndTabItem();
                     }
+                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.sections"_lang)) {
+                        this->drawSectionSelector(settingsSize, extraData.sections);
+                        ImGui::EndTabItem();
+                    }
 
                     ImGui::EndTabBar();
                 }
@@ -431,6 +435,58 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
+    void ViewPatternEditor::drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections) {
+        if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
+
+            ImGui::TableHeadersRow();
+
+            for (auto &[id, section] : sections) {
+                ImGui::PushID(id);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::TextUnformatted(section.name.c_str());
+                ImGui::TableNextColumn();
+                ImGui::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
+                ImGui::TableNextColumn();
+                if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    this->m_sectionProvider = std::make_unique<MemoryFileProvider>();
+                    this->m_sectionProvider->resize(section.data.size());
+                    this->m_sectionProvider->writeRaw(0, section.data.data(), section.data.size());
+
+                    this->m_hexEditor.setBackgroundHighlightCallback([this, id](u64 address, const u8 *, size_t) -> std::optional<color_t> {
+                        if (this->m_runningEvaluators != 0)
+                            return std::nullopt;
+                        if (!ImHexApi::Provider::isValid())
+                            return std::nullopt;
+
+                        std::optional<ImColor> color;
+                        for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address, id)) {
+                            if (pattern->isHidden())
+                                continue;
+
+                            if (color.has_value())
+                                color = ImAlphaBlendColors(*color, pattern->getColor());
+                            else
+                                color = pattern->getColor();
+                        }
+
+                        return color;
+                    });
+                }
+
+                ImGui::PopID();
+            }
+
+            ImGui::EndTable();
+        }
+    }
+
     void ViewPatternEditor::drawAlwaysVisible() {
         auto provider = ImHexApi::Provider::get();
 
@@ -470,6 +526,18 @@ namespace hex::plugin::builtin {
 
             ImGui::EndPopup();
         }
+
+        auto open = this->m_sectionProvider != nullptr && this->m_sectionProvider->isReadable();
+        if (open) {
+            ImGui::SetNextWindowSize(scaled(ImVec2(500, 650)), ImGuiCond_Appearing);
+            if (ImGui::Begin("hex.builtin.view.pattern_editor.section_popup"_lang, &open)) {
+                this->m_hexEditor.draw(this->m_sectionProvider.get());
+            }
+            ImGui::End();
+        }
+
+        if (!open)
+            this->m_sectionProvider = nullptr;
     }
 
 
@@ -517,12 +585,12 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
 
-                    if (const auto &comment = pattern->getComment(); comment != nullptr) {
+                    if (const auto &comment = pattern->getComment(); !comment.empty()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextFormatted("{} ", "hex.builtin.common.comment"_lang);
                         ImGui::TableNextColumn();
-                        ImGui::TextWrapped(" \"%s\"", comment->c_str());
+                        ImGui::TextWrapped(" \"%s\"", comment.c_str());
                     }
 
                     ImGui::EndTable();
@@ -626,6 +694,8 @@ namespace hex::plugin::builtin {
             ON_SCOPE_EXIT {
                 patternLanguage.lastEvaluationLog     = runtime->getConsoleLog();
                 patternLanguage.lastEvaluationOutVars = runtime->getOutVariables();
+                patternLanguage.sections              = runtime->getSections();
+
                 this->m_runningEvaluators--;
 
                 this->m_lastEvaluationProcessed = false;

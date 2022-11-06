@@ -10,7 +10,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     bool FileProvider::isAvailable() const {
         return this->m_mappedFile != nullptr;

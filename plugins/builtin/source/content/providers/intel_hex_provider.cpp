@@ -10,7 +10,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     namespace intel_hex {
 

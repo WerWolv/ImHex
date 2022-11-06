@@ -118,10 +118,12 @@ namespace hex {
         }
 
         void drawCommentTooltip(const pl::ptrn::Pattern &pattern) {
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) && pattern.getComment() != nullptr) {
-                ImGui::BeginTooltip();
-                ImGui::TextUnformatted(pattern.getComment()->c_str());
-                ImGui::EndTooltip();
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
+                if (auto comment = pattern.getComment(); !comment.empty()) {
+                    ImGui::BeginTooltip();
+                    ImGui::TextUnformatted(pattern.getComment().c_str());
+                    ImGui::EndTooltip();
+                }
             }
         }
 

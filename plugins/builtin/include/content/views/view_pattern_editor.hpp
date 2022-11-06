@@ -4,7 +4,10 @@
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
 #include <hex/providers/provider.hpp>
+
 #include <content/helpers/provider_extra_data.hpp>
+#include <content/helpers/hex_editor.hpp>
+#include <content/providers/memory_file_provider.hpp>
 
 #include <cstring>
 #include <filesystem>
@@ -60,10 +63,14 @@ namespace hex::plugin::builtin {
         bool m_syncPatternSourceCode = false;
         bool m_autoLoadPatterns = true;
 
+        std::unique_ptr<MemoryFileProvider> m_sectionProvider = nullptr;
+        HexEditor m_hexEditor;
+
     private:
         void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);
         void drawEnvVars(ImVec2 size, std::list<PlData::EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PlData::PatternVariable> &patternVariables);
+        void drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 

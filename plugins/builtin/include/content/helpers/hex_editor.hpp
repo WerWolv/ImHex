@@ -21,22 +21,27 @@ namespace hex {
 
     class HexEditor {
     public:
+        HexEditor();
         ~HexEditor();
-        HexEditor(std::optional<u64> **selectionStart, std::optional<u64> **selectionEnd, float **scrollPosition);
-        void draw();
+        void draw(prv::Provider *provider, float height = ImGui::GetContentRegionAvail().y);
 
     private:
         enum class CellType { None, Hex, ASCII };
 
-        void drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType);
+        void drawCell(prv::Provider *provider, u64 address, u8 *data, size_t size, bool hovered, CellType cellType);
         void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize) const;
-        void drawEditor(const ImVec2 &size);
-        void drawFooter(const ImVec2 &size);
+        void drawEditor(prv::Provider *provider, const ImVec2 &size);
+        void drawFooter(prv::Provider *provider, const ImVec2 &size);
+        void drawTooltip(u64 address, const u8 *data, size_t size);
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
         std::optional<color_t> applySelectionColor(u64 byteAddress, std::optional<color_t> color);
 
     public:
+        void setSelectionUnchecked(std::optional<u64> start, std::optional<u64> end) {
+            this->m_selectionStart = start;
+            this->m_selectionEnd = end;
+        }
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
         void setSelection(u128 start, u128 end) {
             if (!ImHexApi::Provider::isValid())
@@ -46,10 +51,10 @@ namespace hex {
 
             const size_t maxAddress = provider->getActualSize() + provider->getBaseAddress() - 1;
 
-            this->m_selectionChanged = **this->m_selectionStart != start || **this->m_selectionEnd != end;
+            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
 
-            **this->m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
-            **this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
+            this->m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
+            this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
 
             if (this->m_selectionChanged) {
                 EventManager::post<EventRegionSelected>(this->getSelection());
@@ -61,15 +66,15 @@ namespace hex {
             if (!isSelectionValid())
                 return Region::Invalid();
 
-            const auto start = std::min((*this->m_selectionStart)->value(), (*this->m_selectionEnd)->value());
-            const auto end   = std::max((*this->m_selectionStart)->value(), (*this->m_selectionEnd)->value());
+            const auto start = std::min(this->m_selectionStart.value(), this->m_selectionEnd.value());
+            const auto end   = std::max(this->m_selectionStart.value(), this->m_selectionEnd.value());
             const size_t size = end - start + 1;
 
             return { start, size };
         }
 
         [[nodiscard]] bool isSelectionValid() const {
-            return (*this->m_selectionStart)->has_value() && (*this->m_selectionEnd)->has_value();
+            return this->m_selectionStart.has_value() && this->m_selectionEnd.has_value();
         }
 
         void jumpToSelection(bool center = true) {
@@ -135,10 +140,30 @@ namespace hex {
             this->m_shouldUpdateScrollPosition = true;
         }
 
+        void setForegroundHighlightCallback(const std::function<std::optional<color_t>(u64, const u8 *, size_t)> &callback) {
+            this->m_foregroundColorCallback = callback;
+        }
+
+        void setBackgroundHighlightCallback(const std::function<std::optional<color_t>(u64, const u8 *, size_t)> &callback) {
+            this->m_backgroundColorCallback = callback;
+        }
+
+        void setTooltipCallback(const std::function<void(u64, const u8 *, size_t)> &callback) {
+            this->m_tooltipCallback = callback;
+        }
+
+        [[nodiscard]] float getScrollPosition() const {
+            return this->m_scrollPosition;
+        }
+
+        void setScrollPosition(float scrollPosition) {
+            this->m_scrollPosition = scrollPosition;
+        }
+
     private:
-        std::optional<u64> **m_selectionStart;
-        std::optional<u64> **m_selectionEnd;
-        float **m_scrollPosition;
+        std::optional<u64> m_selectionStart;
+        std::optional<u64> m_selectionEnd;
+        float m_scrollPosition = 0;
 
         u16 m_bytesPerRow = 16;
         ContentRegistry::HexEditor::DataVisualizer *m_currDataVisualizer;
@@ -169,6 +194,11 @@ namespace hex {
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
 
         std::optional<EncodingFile> m_currCustomEncoding;
+
+        static std::optional<color_t> defaultColorCallback(u64, const u8 *, size_t) { return std::nullopt; }
+        static void defaultTooltipCallback(u64, const u8 *, size_t) {  }
+        std::function<std::optional<color_t>(u64, const u8 *, size_t)> m_foregroundColorCallback = defaultColorCallback, m_backgroundColorCallback = defaultColorCallback;
+        std::function<void(u64, const u8 *, size_t)> m_tooltipCallback = defaultTooltipCallback;
     };
 
 }

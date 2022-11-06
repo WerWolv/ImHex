@@ -4,6 +4,7 @@
 #include <hex/ui/view.hpp>
 
 #include <content/helpers/pattern_drawer.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <vector>
 #include <tuple>
@@ -18,7 +19,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::map<prv::Provider *, std::vector<pl::ptrn::Pattern*>> m_sortedPatterns;
+        std::map<hex::prv::Provider *, std::vector<pl::ptrn::Pattern*>> m_sortedPatterns;
         hex::PatternDrawer m_patternDrawer;
     };
 

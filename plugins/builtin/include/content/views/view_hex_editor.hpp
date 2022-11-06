@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
     class ViewHexEditor : public View {
     public:
         ViewHexEditor();
-        ~ViewHexEditor();
+        ~ViewHexEditor() override;
 
         void drawContent() override;
 
@@ -44,23 +44,23 @@ namespace hex::plugin::builtin {
         }
 
         bool isSelectionValid() {
-            return this->m_hexEditor->isSelectionValid();
+            return this->m_hexEditor.isSelectionValid();
         }
 
         Region getSelection() {
-            return this->m_hexEditor->getSelection();
+            return this->m_hexEditor.getSelection();
         }
 
         void setSelection(const Region &region) {
-            this->m_hexEditor->setSelection(region);
+            this->m_hexEditor.setSelection(region);
         }
 
         void setSelection(u128 start, u128 end) {
-            this->m_hexEditor->setSelection(start, end);
+            this->m_hexEditor.setSelection(start, end);
         }
 
         void jumpToSelection() {
-            this->m_hexEditor->jumpToSelection();
+            this->m_hexEditor.jumpToSelection();
         }
 
     private:
@@ -70,13 +70,10 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
 
-        std::unique_ptr<HexEditor> m_hexEditor;
+        HexEditor m_hexEditor;
 
         bool m_shouldOpenPopup = false;
         std::unique_ptr<Popup> m_currPopup;
-
-        std::optional<u64> *m_selectionStart, *m_selectionEnd;
-        float *m_scrollPosition;
     };
 
 }

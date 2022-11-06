@@ -3,7 +3,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/api/localization.hpp>
 
-namespace hex::plugin::builtin::prv {
+namespace hex::plugin::builtin {
 
     class MemoryFileProvider : public hex::prv::Provider {
     public:
