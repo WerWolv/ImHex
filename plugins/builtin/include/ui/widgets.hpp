@@ -3,6 +3,9 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+namespace pl::ptrn { class Pattern; }
+namespace hex::prv { class Provider; }
+
 namespace hex::plugin::builtin::ui {
 
 

@@ -106,7 +106,7 @@ namespace hex {
     EVENT_DEF(EventDataChanged);
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
-    EVENT_DEF(EventRegionSelected, Region);
+    EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
     EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);
@@ -137,7 +137,5 @@ namespace hex {
     EVENT_DEF(RequestShowFatalErrorPopup, std::string);
     EVENT_DEF(RequestShowYesNoQuestionPopup, std::string, std::function<void()>, std::function<void()>);
     EVENT_DEF(RequestShowFileChooserPopup, std::vector<std::fs::path>, std::vector<nfdfilteritem_t>, std::function<void(std::fs::path)>);
-
-    EVENT_DEF(QuerySelection, std::optional<Region> &);
 
 }

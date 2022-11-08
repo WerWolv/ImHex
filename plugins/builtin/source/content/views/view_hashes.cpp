@@ -7,7 +7,7 @@
 namespace hex::plugin::builtin {
 
     ViewHashes::ViewHashes() : View("hex.builtin.view.hashes.name") {
-        EventManager::subscribe<EventRegionSelected>(this, [this](const Region &) {
+        EventManager::subscribe<EventRegionSelected>(this, [this](const auto &) {
             for (auto &function : this->m_hashFunctions)
                 function.reset();
         });

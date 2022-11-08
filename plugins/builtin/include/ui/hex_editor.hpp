@@ -17,21 +17,22 @@
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
-namespace hex {
+namespace hex::plugin::builtin::ui {
 
     class HexEditor {
     public:
-        HexEditor();
+        explicit HexEditor(prv::Provider *provider = nullptr);
         ~HexEditor();
-        void draw(prv::Provider *provider, float height = ImGui::GetContentRegionAvail().y);
+        void draw(float height = ImGui::GetContentRegionAvail().y);
 
+        void setProvider(prv::Provider *provider) { this->m_provider = provider; }
     private:
         enum class CellType { None, Hex, ASCII };
 
-        void drawCell(prv::Provider *provider, u64 address, u8 *data, size_t size, bool hovered, CellType cellType);
+        void drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType);
         void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize) const;
-        void drawEditor(prv::Provider *provider, const ImVec2 &size);
-        void drawFooter(prv::Provider *provider, const ImVec2 &size);
+        void drawEditor(const ImVec2 &size);
+        void drawFooter(const ImVec2 &size);
         void drawTooltip(u64 address, const u8 *data, size_t size);
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
@@ -47,9 +48,7 @@ namespace hex {
             if (!ImHexApi::Provider::isValid())
                 return;
 
-            auto provider = ImHexApi::Provider::get();
-
-            const size_t maxAddress = provider->getActualSize() + provider->getBaseAddress() - 1;
+            const size_t maxAddress = this->m_provider->getActualSize() + this->m_provider->getBaseAddress() - 1;
 
             this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
 
@@ -57,7 +56,8 @@ namespace hex {
             this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
 
             if (this->m_selectionChanged) {
-                EventManager::post<EventRegionSelected>(this->getSelection());
+                auto selection = this->getSelection();
+                EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, this->m_provider });
                 this->m_shouldModifyValue = true;
             }
         }
@@ -161,6 +161,8 @@ namespace hex {
         }
 
     private:
+        prv::Provider *m_provider;
+
         std::optional<u64> m_selectionStart;
         std::optional<u64> m_selectionEnd;
         float m_scrollPosition = 0;

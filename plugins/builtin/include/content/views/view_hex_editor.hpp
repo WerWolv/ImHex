@@ -7,7 +7,7 @@
 #include <hex/helpers/encoding_file.hpp>
 
 #include <content/helpers/provider_extra_data.hpp>
-#include <content/helpers/hex_editor.hpp>
+#include <ui/hex_editor.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
 
-        HexEditor m_hexEditor;
+        ui::HexEditor m_hexEditor;
 
         bool m_shouldOpenPopup = false;
         std::unique_ptr<Popup> m_currPopup;

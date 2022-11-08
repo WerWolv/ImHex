@@ -3,7 +3,7 @@
 #include <hex.hpp>
 #include <hex/ui/view.hpp>
 
-#include <content/helpers/pattern_drawer.hpp>
+#include <ui/pattern_drawer.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <vector>
@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
 
     private:
         std::map<hex::prv::Provider *, std::vector<pl::ptrn::Pattern*>> m_sortedPatterns;
-        hex::PatternDrawer m_patternDrawer;
+        ui::PatternDrawer m_patternDrawer;
     };
 
 }

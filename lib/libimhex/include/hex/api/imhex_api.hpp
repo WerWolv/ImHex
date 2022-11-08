@@ -64,6 +64,14 @@ namespace hex {
                 color_t m_color = 0x00;
             };
 
+            struct ProviderRegion : public Region {
+                prv::Provider *provider;
+
+                [[nodiscard]] prv::Provider *getProvider() const { return this->provider; }
+
+                [[nodiscard]] Region getRegion() const { return { this->address, this->size }; }
+            };
+
             namespace impl {
 
                 using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t, bool)>;
@@ -75,6 +83,7 @@ namespace hex {
                 std::map<u32, Tooltip> &getTooltips();
                 std::map<u32, TooltipFunction> &getTooltipFunctions();
 
+                void setCurrentSelection(ProviderRegion region);
             }
 
             u32 addBackgroundHighlight(const Region &region, color_t color);
@@ -96,9 +105,10 @@ namespace hex {
             void removeForegroundHighlightingProvider(u32 id);
 
             bool isSelectionValid();
-            std::optional<Region> getSelection();
-            void setSelection(const Region &region);
-            void setSelection(u64 address, size_t size);
+            std::optional<ProviderRegion> getSelection();
+            void setSelection(const Region &region, prv::Provider *provider = nullptr);
+            void setSelection(const ProviderRegion &region);
+            void setSelection(u64 address, size_t size, prv::Provider *provider = nullptr);
 
         }
 

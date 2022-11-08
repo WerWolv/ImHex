@@ -75,6 +75,11 @@ namespace hex {
                 return s_tooltipFunctions;
             }
 
+            static std::optional<ProviderRegion> s_currentSelection;
+            void setCurrentSelection(std::optional<ProviderRegion> region) {
+                s_currentSelection = region;
+            }
+
         }
 
         u32 addBackgroundHighlight(const Region &region, color_t color) {
@@ -181,19 +186,20 @@ namespace hex {
             return getSelection().has_value();
         }
 
-        std::optional<Region> getSelection() {
-            std::optional<Region> selection;
-            EventManager::post<QuerySelection>(selection);
-
-            return selection;
+        std::optional<ProviderRegion> getSelection() {
+            return impl::s_currentSelection;
         }
 
-        void setSelection(const Region &region) {
+        void setSelection(const Region &region, prv::Provider *provider) {
+            setSelection(ProviderRegion { region, provider == nullptr ? Provider::get() : provider });
+        }
+
+        void setSelection(const ProviderRegion &region) {
             EventManager::post<RequestSelectionChange>(region);
         }
 
-        void setSelection(u64 address, size_t size) {
-            setSelection({ address, size });
+        void setSelection(u64 address, size_t size, prv::Provider *provider) {
+            setSelection({ { address, size }, provider == nullptr ? Provider::get() : provider });
         }
 
     }

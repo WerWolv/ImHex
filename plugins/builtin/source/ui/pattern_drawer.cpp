@@ -1,4 +1,4 @@
-#include <content/helpers/pattern_drawer.hpp>
+#include <ui/pattern_drawer.hpp>
 
 #include <pl/patterns/pattern_array_dynamic.hpp>
 #include <pl/patterns/pattern_array_static.hpp>
@@ -21,11 +21,12 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/api/localization.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-namespace hex {
+namespace hex::plugin::builtin::ui {
 
     namespace {
 
@@ -414,7 +415,7 @@ namespace hex {
 
                 auto &displayEnd = this->getDisplayEnd(pattern);
                 if (chunkCount > displayEnd) {
-                    ImGui::Selectable("... (Double-click to see more items)", false, ImGuiSelectableFlags_SpanAllColumns);
+                    ImGui::Selectable(hex::format("... ({})", "hex.builtin.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         displayEnd += DisplayEndStep;
                     break;
@@ -469,5 +470,89 @@ namespace hex {
 
         auto [value, success] = this->m_displayEnd.emplace(&pattern, DisplayEndDefault);
         return value->second;
+    }
+
+    static bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) {
+        if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
+            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                return left->getDisplayName() > right->getDisplayName();
+            else
+                return left->getDisplayName() < right->getDisplayName();
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
+            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                return left->getOffset() > right->getOffset();
+            else
+                return left->getOffset() < right->getOffset();
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
+            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                return left->getSize() > right->getSize();
+            else
+                return left->getSize() < right->getSize();
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
+            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                return left->getValue() > right->getValue();
+            else
+                return left->getValue() < right->getValue();
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
+            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                return left->getTypeName() > right->getTypeName();
+            else
+                return left->getTypeName() < right->getTypeName();
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
+            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                return left->getColor() > right->getColor();
+            else
+                return left->getColor() < right->getColor();
+        }
+
+        return false;
+    }
+
+    static bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) {
+        if (ImGui::BeginTable("##Patterntable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.var_name"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("name"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.color"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.offset"_lang,   ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("offset"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.size"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.type"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.value"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
+
+            auto sortSpecs = ImGui::TableGetSortSpecs();
+
+            if (!patterns.empty() && (sortSpecs->SpecsDirty || sortedPatterns.empty())) {
+                sortedPatterns.clear();
+                std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
+                    return pattern.get();
+                });
+
+                std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs](pl::ptrn::Pattern *left, pl::ptrn::Pattern *right) -> bool {
+                    return sortPatterns(sortSpecs, left, right);
+                });
+
+                for (auto &pattern : sortedPatterns)
+                    pattern->sort([&sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
+                        return sortPatterns(sortSpecs, left, right);
+                    });
+
+                sortSpecs->SpecsDirty = false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height) {
+        if (beginPatternTable(patterns, this->m_sortedPatterns, height)) {
+            ImGui::TableHeadersRow();
+
+            for (auto &pattern : this->m_sortedPatterns) {
+                this->draw(*pattern);
+            }
+
+            ImGui::EndTable();
+        }
     }
 }

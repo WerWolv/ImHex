@@ -18,22 +18,26 @@ namespace hex::plugin::builtin {
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
 
     ViewDataInspector::ViewDataInspector() : View("hex.builtin.view.data_inspector.name") {
-        EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
+        EventManager::subscribe<EventRegionSelected>(this, [this](const auto &region) {
             if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
                 this->m_validBytes = 0;
             } else {
-                auto provider = ImHexApi::Provider::get();
-
-                this->m_validBytes   = u64(provider->getActualSize() - region.address);
+                this->m_validBytes   = u64(region.getProvider()->getActualSize() - region.address);
                 this->m_startAddress = region.address;
+                this->m_selectedProvider = region.getProvider();
             }
 
             this->m_shouldInvalidate = true;
+        });
+
+        EventManager::subscribe<EventProviderClosed>(this, [this](const auto*) {
+            this->m_selectedProvider = nullptr;
         });
     }
 
     ViewDataInspector::~ViewDataInspector() {
         EventManager::unsubscribe<EventRegionSelected>(this);
+        EventManager::unsubscribe<EventProviderClosed>(this);
     }
 
     void ViewDataInspector::drawContent() {
@@ -47,9 +51,10 @@ namespace hex::plugin::builtin {
 
             this->m_updateTask = TaskManager::createBackgroundTask("Update Inspector",
                [this, validBytes = this->m_validBytes, startAddress = this->m_startAddress, endian = this->m_endian, invert = this->m_invert, numberDisplayStyle = this->m_numberDisplayStyle](auto &) {
-                auto provider = ImHexApi::Provider::get();
-
                 this->m_workData.clear();
+
+                if (this->m_selectedProvider == nullptr)
+                    return;
 
                 // Decode bytes using registered inspectors
                 for (auto &entry : ContentRegistry::DataInspector::getEntries()) {
@@ -57,7 +62,7 @@ namespace hex::plugin::builtin {
                         continue;
 
                     std::vector<u8> buffer(validBytes > entry.maxSize ? entry.maxSize : validBytes);
-                    provider->read(startAddress, buffer.data(), buffer.size());
+                    this->m_selectedProvider->read(startAddress, buffer.data(), buffer.size());
 
                     if (invert) {
                         for (auto &byte : buffer)
@@ -81,14 +86,14 @@ namespace hex::plugin::builtin {
                 pl::PatternLanguage runtime;
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
 
-                runtime.setDataSource([invert, provider](u64 offset, u8 *buffer, size_t size) {
-                    provider->read(offset, buffer, size);
+                runtime.setDataSource([this, invert](u64 offset, u8 *buffer, size_t size) {
+                    this->m_selectedProvider->read(offset, buffer, size);
 
                     if (invert) {
                         for (size_t i = 0; i < size; i++)
                             buffer[i] ^= 0xFF;
                     }
-                }, provider->getBaseAddress(), provider->getActualSize());
+                }, this->m_selectedProvider->getBaseAddress(), this->m_selectedProvider->getActualSize());
 
                 runtime.setDangerousFunctionCallHandler([]{ return false; });
                 runtime.setDefaultEndian(endian);
@@ -139,9 +144,7 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = ImHexApi::Provider::get();
-
-            if (ImHexApi::Provider::isValid() && provider->isReadable() && this->m_validBytes > 0) {
+            if (this->m_selectedProvider != nullptr && this->m_selectedProvider->isReadable() && this->m_validBytes > 0) {
                 if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (this->m_cachedData.size() + 1)))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang);
@@ -177,7 +180,7 @@ namespace hex::plugin::builtin {
                             if (ImGui::InputText("##InspectorLineEditing", this->m_editingValue, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                                 auto bytes = (*editingFunction)(this->m_editingValue, this->m_endian);
 
-                                provider->write(this->m_startAddress, bytes.data(), bytes.size());
+                                this->m_selectedProvider->write(this->m_startAddress, bytes.data(), bytes.size());
                                 this->m_editingValue.clear();
                                 editing                  = false;
                                 this->m_shouldInvalidate = true;

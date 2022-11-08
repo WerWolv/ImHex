@@ -6,7 +6,8 @@
 #include <hex/providers/provider.hpp>
 
 #include <content/helpers/provider_extra_data.hpp>
-#include <content/helpers/hex_editor.hpp>
+#include <ui/hex_editor.hpp>
+#include <ui/pattern_drawer.hpp>
 #include <content/providers/memory_file_provider.hpp>
 
 #include <cstring>
@@ -14,6 +15,7 @@
 #include <string_view>
 #include <thread>
 #include <vector>
+#include <functional>
 
 #include <TextEditor.h>
 
@@ -63,9 +65,7 @@ namespace hex::plugin::builtin {
         bool m_syncPatternSourceCode = false;
         bool m_autoLoadPatterns = true;
 
-        std::unique_ptr<MemoryFileProvider> m_sectionProvider = nullptr;
-        HexEditor m_hexEditor;
-
+        std::map<prv::Provider*, std::move_only_function<void()>> m_sectionWindowDrawer;
     private:
         void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);
         void drawEnvVars(ImVec2 size, std::list<PlData::EnvVar> &envVars);

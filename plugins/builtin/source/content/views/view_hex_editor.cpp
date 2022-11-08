@@ -584,7 +584,10 @@ namespace hex::plugin::builtin {
     void ViewHexEditor::drawContent() {
 
         if (ImGui::Begin(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            this->m_hexEditor.draw(ImHexApi::Provider::get());
+            this->m_hexEditor.setProvider(ImHexApi::Provider::get());
+
+            this->m_hexEditor.draw();
+
             this->drawPopup();
         }
         ImGui::End();
@@ -686,11 +689,13 @@ namespace hex::plugin::builtin {
 
         // Remove selection
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
-            auto &data = ProviderExtraData::getCurrent().editor;
+            auto provider = ImHexApi::Provider::get();
+            auto &data = ProviderExtraData::get(provider).editor;
 
             data.selectionStart.reset();
             data.selectionEnd.reset();
-            EventManager::post<EventRegionSelected>(this->getSelection());
+
+            EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), provider });
         });
 
         // Move cursor around
@@ -873,11 +878,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<QuerySelection>(this, [this](auto &region) {
-            if (isSelectionValid())
-                region = getSelection();
-        });
-
         EventManager::subscribe<EventProviderChanged>(this, [this](auto *oldProvider, auto *newProvider) {
             if (oldProvider != nullptr) {
                 auto &oldData = ProviderExtraData::get(oldProvider).editor;
@@ -897,8 +897,9 @@ namespace hex::plugin::builtin {
             }
 
             this->m_hexEditor.forceUpdateScrollPosition();
-            if (isSelectionValid())
-                EventManager::post<EventRegionSelected>(getSelection());
+            if (isSelectionValid()) {
+                EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), newProvider });
+            }
         });
     }
 

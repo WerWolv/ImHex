@@ -12,9 +12,9 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool isReadable()  const override { return true; }
-        [[nodiscard]] bool isWritable()  const override { return true; }
-        [[nodiscard]] bool isResizable() const override { return true; }
-        [[nodiscard]] bool isSavable()   const override { return true; }
+        [[nodiscard]] bool isWritable()  const override { return !this->m_readOnly; }
+        [[nodiscard]] bool isResizable() const override { return !this->m_readOnly; }
+        [[nodiscard]] bool isSavable()   const override { return !this->m_readOnly; }
 
         [[nodiscard]] bool open() override;
         void close() override { }
@@ -42,8 +42,11 @@ namespace hex::plugin::builtin {
         void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
 
+        void setReadOnly(bool readOnly) { this->m_readOnly = readOnly; }
+
     private:
         std::vector<u8> m_data;
+        bool m_readOnly = false;
     };
 
 }

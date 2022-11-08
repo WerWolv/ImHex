@@ -443,7 +443,7 @@ namespace hex::plugin::builtin {
                 auto provider = ImHexApi::Provider::get();
                 return Region { provider->getBaseAddress(), provider->getActualSize() };
             } else {
-                return ImHexApi::HexEditor::getSelection().value();
+                return ImHexApi::HexEditor::getSelection()->getRegion();
             }
         }();
 

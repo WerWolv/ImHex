@@ -4,14 +4,18 @@
 #include <pl/pattern_visitor.hpp>
 #include <hex/providers/provider.hpp>
 
-namespace hex {
+namespace hex::plugin::builtin::ui {
 
     class PatternDrawer : public pl::PatternVisitor {
     public:
         PatternDrawer() = default;
 
+        void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height = 0.0F);
+
+    private:
         void draw(pl::ptrn::Pattern& pattern);
 
+    public:
         void visit(pl::ptrn::PatternArrayDynamic& pattern) override;
         void visit(pl::ptrn::PatternArrayStatic& pattern) override;
         void visit(pl::ptrn::PatternBitfieldField& pattern) override;
@@ -39,5 +43,6 @@ namespace hex {
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
+        std::vector<pl::ptrn::Pattern*> m_sortedPatterns;
     };
 }

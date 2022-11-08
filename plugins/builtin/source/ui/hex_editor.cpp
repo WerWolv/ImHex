@@ -1,4 +1,4 @@
-#include <content/helpers/hex_editor.hpp>
+#include <ui/hex_editor.hpp>
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
@@ -7,7 +7,7 @@
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/helpers/utils.hpp>
 
-namespace hex {
+namespace hex::plugin::builtin::ui {
 
     /* Data Visualizer */
 
@@ -70,7 +70,7 @@ namespace hex {
 
     /* Hex Editor */
 
-    HexEditor::HexEditor() {
+    HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
         this->m_currDataVisualizer = ContentRegistry::HexEditor::impl::getVisualizers()["hex.builtin.visualizer.hexadecimal.8bit"];
 
         this->m_grayZeroHighlighter = ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool hasColor) -> std::optional<color_t> {
@@ -237,7 +237,7 @@ namespace hex {
         ImGui::PopStyleVar();
     }
 
-    void HexEditor::drawCell(prv::Provider *provider, u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
+    void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
         static DataVisualizerAscii asciiVisualizer;
 
         if (this->m_shouldUpdateEditingValue) {
@@ -253,7 +253,7 @@ namespace hex {
             else
                 asciiVisualizer.draw(address, data, size, this->m_upperCaseHex);
 
-            if (hovered && provider->isWritable()) {
+            if (hovered && this->m_provider->isWritable()) {
                 // Enter editing mode when double-clicking a cell
                 if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
                     this->m_editingAddress = address;
@@ -278,13 +278,13 @@ namespace hex {
 
             if (shouldExitEditingMode || this->m_shouldModifyValue) {
 
-                provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
+                this->m_provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
 
                 if (!this->m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                     auto nextEditingAddress = *this->m_editingAddress + this->m_currDataVisualizer->getBytesPerCell();
                     this->setSelection(nextEditingAddress, nextEditingAddress);
 
-                    if (nextEditingAddress >= provider->getSize())
+                    if (nextEditingAddress >= this->m_provider->getSize())
                         this->m_editingAddress = std::nullopt;
                     else
                         this->m_editingAddress = nextEditingAddress;
@@ -334,7 +334,7 @@ namespace hex {
             drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1.0F);
     }
 
-    void HexEditor::drawEditor(prv::Provider *provider, const ImVec2 &size) {
+    void HexEditor::drawEditor(const ImVec2 &size) {
         const float SeparatorColumWidth   = 6_scaled;
         const auto CharacterSize          = ImGui::CalcTextSize("0");
 
@@ -377,13 +377,13 @@ namespace hex {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            if (provider != nullptr && provider->isReadable()) {
+            if (this->m_provider != nullptr && this->m_provider->isReadable()) {
 
                 std::pair<Region, bool> validRegion = { Region::Invalid(), false };
-                const auto isCurrRegionValid = [&validRegion, &provider](u64 address){
+                const auto isCurrRegionValid = [this, &validRegion](u64 address){
                     auto &[currRegion, currRegionValid] = validRegion;
                     if (!Region{ address, 1 }.isWithin(currRegion)) {
-                        validRegion = provider->getRegionValidity(address);
+                        validRegion = this->m_provider->getRegionValidity(address);
                     }
 
                     return currRegionValid;
@@ -391,7 +391,7 @@ namespace hex {
 
                 ImGuiListClipper clipper;
 
-                clipper.Begin(std::ceil(provider->getSize() / (long double)(this->m_bytesPerRow)), CharacterSize.y);
+                clipper.Begin(std::ceil(this->m_provider->getSize() / (long double)(this->m_bytesPerRow)), CharacterSize.y);
                 while (clipper.Step()) {
                     this->m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
 
@@ -401,18 +401,18 @@ namespace hex {
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted(this->m_upperCaseHex ? "{:08X}: " : "{:08x}: ", y * this->m_bytesPerRow + provider->getBaseAddress() + provider->getCurrentPageAddress());
+                        ImGui::TextFormatted(this->m_upperCaseHex ? "{:08X}: " : "{:08x}: ", y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress());
                         ImGui::TableNextColumn();
 
-                        const u8 validBytes = std::min<u64>(this->m_bytesPerRow, provider->getSize() - y * this->m_bytesPerRow);
+                        const u8 validBytes = std::min<u64>(this->m_bytesPerRow, this->m_provider->getSize() - y * this->m_bytesPerRow);
 
                         std::vector<u8> bytes(this->m_bytesPerRow, 0x00);
-                        provider->read(y * this->m_bytesPerRow + provider->getBaseAddress() + provider->getCurrentPageAddress(), bytes.data(), validBytes);
+                        this->m_provider->read(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), bytes.data(), validBytes);
 
                         std::vector<std::tuple<std::optional<color_t>, std::optional<color_t>>> cellColors;
                         {
                             for (u64 x = 0; x <  std::ceil(float(validBytes) / bytesPerCell); x++) {
-                                const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + provider->getBaseAddress() + provider->getCurrentPageAddress();
+                                const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
                                 const auto cellBytes = std::min<u64>(validBytes, bytesPerCell);
 
@@ -438,7 +438,7 @@ namespace hex {
                         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(3, 0));
 
                         for (u64 x = 0; x < columnCount; x++) {
-                            const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + provider->getBaseAddress() + provider->getCurrentPageAddress();
+                            const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
                             ImGui::TableNextColumn();
                             if (isColumnSeparatorColumn(x, columnCount))
@@ -486,7 +486,7 @@ namespace hex {
                                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                 ImGui::PushItemWidth((CharacterSize * maxCharsPerCell).x);
                                 if (isCurrRegionValid(byteAddress))
-                                    this->drawCell(provider, byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
+                                    this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
                                 else
                                     ImGui::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
                                 ImGui::PopItemWidth();
@@ -513,7 +513,7 @@ namespace hex {
                                 for (u64 x = 0; x < this->m_bytesPerRow; x++) {
                                     ImGui::TableNextColumn();
 
-                                    const u64 byteAddress = y * this->m_bytesPerRow + x + provider->getBaseAddress() + provider->getCurrentPageAddress();
+                                    const u64 byteAddress = y * this->m_bytesPerRow + x + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
                                     const auto cellStartPos = getCellPosition();
                                     const auto cellSize = CharacterSize + ImVec2(this->m_characterCellPadding, 0);
@@ -543,7 +543,7 @@ namespace hex {
                                         if (!isCurrRegionValid(byteAddress))
                                             ImGui::TextFormatted("?");
                                         else
-                                            this->drawCell(provider, byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
+                                            this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
                                         ImGui::PopItemWidth();
                                         ImGui::PopStyleVar();
                                     }
@@ -562,9 +562,9 @@ namespace hex {
                             std::vector<std::pair<u64, CustomEncodingData>> encodingData;
                             u32 offset = 0;
                             do {
-                                const u64 address = y * this->m_bytesPerRow + offset + provider->getBaseAddress() + provider->getCurrentPageAddress();
+                                const u64 address = y * this->m_bytesPerRow + offset + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
-                                auto result = queryCustomEncodingData(provider, *this->m_currCustomEncoding, address);
+                                auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, address);
                                 offset += std::max<size_t>(1, result.advance);
 
                                 encodingData.emplace_back(address, result);
@@ -621,13 +621,13 @@ namespace hex {
                                 auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
                                 if (y == (u64(clipper.DisplayStart) + 3)) {
-                                    if (i128(this->m_selectionEnd.value() - provider->getBaseAddress() - provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
+                                    if (i128(this->m_selectionEnd.value() - this->m_provider->getBaseAddress() - this->m_provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * 5);
 
                                     }
                                 } else if (y == (u64(clipper.DisplayEnd) - 1)) {
-                                    if (i128(this->m_selectionEnd.value() - provider->getBaseAddress() - provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow)) {
+                                    if (i128(this->m_selectionEnd.value() - this->m_provider->getBaseAddress() - this->m_provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * (this->m_visibleRowCount));
                                     }
@@ -638,7 +638,7 @@ namespace hex {
                             if (this->m_shouldJumpWhenOffScreen) {
                                 this->m_shouldJumpWhenOffScreen = false;
 
-                                const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
+                                const auto pageAddress = this->m_provider->getCurrentPageAddress() + this->m_provider->getBaseAddress();
                                 auto newSelection = getSelection();
                                 newSelection.address -= pageAddress;
 
@@ -657,9 +657,9 @@ namespace hex {
                     this->m_shouldJumpToSelection = false;
 
                     auto newSelection = getSelection();
-                    provider->setCurrentPage(provider->getPageOfAddress(newSelection.address).value_or(0));
+                    this->m_provider->setCurrentPage(this->m_provider->getPageOfAddress(newSelection.address).value_or(0));
 
-                    const auto pageAddress = provider->getCurrentPageAddress() + provider->getBaseAddress();
+                    const auto pageAddress = this->m_provider->getCurrentPageAddress() + this->m_provider->getBaseAddress();
                     auto scrollPos = (static_cast<long double>(newSelection.getStartAddress() - pageAddress) / this->m_bytesPerRow) * CharacterSize.y;
                     bool scrollUpwards = scrollPos < ImGui::GetScrollY();
                     auto scrollFraction = scrollUpwards ? 0.0F : (1.0F - ((1.0F / this->m_visibleRowCount) * 2));
@@ -693,12 +693,12 @@ namespace hex {
         this->m_enteredEditingMode = false;
     }
 
-    void HexEditor::drawFooter(prv::Provider *provider, const ImVec2 &size) {
-        if (provider != nullptr && provider->isReadable()) {
-            const auto pageCount = provider->getPageCount();
+    void HexEditor::drawFooter(const ImVec2 &size) {
+        if (this->m_provider != nullptr && this->m_provider->isReadable()) {
+            const auto pageCount = this->m_provider->getPageCount();
             constexpr static u32 MinPage = 1;
 
-            const auto windowEndPos = ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImGui::GetStyle().WindowPadding;
+            const auto windowEndPos = ImGui::GetWindowPos() + size - ImGui::GetStyle().WindowPadding;
             ImGui::GetWindowDrawList()->AddLine(windowEndPos - ImVec2(0, size.y - 1_scaled), windowEndPos - size + ImVec2(0, 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator), 2.0_scaled);
 
             if (ImGui::BeginChild("##footer", size, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
@@ -708,7 +708,7 @@ namespace hex {
                     // Page slider
                     ImGui::TableNextColumn();
                     {
-                        u32 page = provider->getCurrentPage() + 1;
+                        u32 page = this->m_provider->getCurrentPage() + 1;
 
                         ImGui::TextFormatted("{}: ", "hex.builtin.view.hex_editor.page"_lang);
                         ImGui::SameLine();
@@ -716,7 +716,7 @@ namespace hex {
                         ImGui::BeginDisabled(pageCount <= 1);
                         {
                             if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount, hex::format("%d / {}", pageCount).c_str()))
-                                provider->setCurrentPage(page - 1);
+                                this->m_provider->setCurrentPage(page - 1);
                         }
                         ImGui::EndDisabled();
                     }
@@ -724,7 +724,7 @@ namespace hex {
                     // Page Address
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.view.hex_editor.region"_lang, provider->getCurrentPageAddress(), provider->getSize());
+                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.view.hex_editor.region"_lang, this->m_provider->getCurrentPageAddress(), this->m_provider->getSize());
                     }
 
                     ImGui::TableNextRow();
@@ -752,9 +752,9 @@ namespace hex {
                     ImGui::TableNextColumn();
                     {
                         ImGui::TextFormatted("{0}: 0x{1:08X} (0x{2:X} | {3})", "hex.builtin.view.hex_editor.data_size"_lang,
-                                             provider->getActualSize(),
-                                             provider->getActualSize(),
-                                             hex::toByteString(provider->getActualSize())
+                                             this->m_provider->getActualSize(),
+                                             this->m_provider->getActualSize(),
+                                             hex::toByteString(this->m_provider->getActualSize())
                         );
                     }
 
@@ -788,14 +788,14 @@ namespace hex {
         }
     }
 
-    void HexEditor::draw(prv::Provider *provider, float height) {
+    void HexEditor::draw(float height) {
         const auto width = ImGui::GetContentRegionAvail().x;
 
         const auto FooterSize = ImVec2(width, ImGui::GetTextLineHeightWithSpacing() * 2.3F);
         const auto TableSize  = ImVec2(width, height - FooterSize.y);
 
-        this->drawEditor(provider, TableSize);
-        this->drawFooter(provider, FooterSize);
+        this->drawEditor(TableSize);
+        this->drawFooter(FooterSize);
 
         this->m_selectionChanged = false;
     }

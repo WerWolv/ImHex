@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
                 this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
                 auto settingsSize = ImGui::GetContentRegionAvail();
-                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5;
+                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
 
                 if (ImGui::BeginTabBar("##settings")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
@@ -438,8 +438,8 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections) {
         if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.5F);
-            ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("hex.builtin.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
             ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
 
             ImGui::TableHeadersRow();
@@ -455,11 +455,13 @@ namespace hex::plugin::builtin {
                 ImGui::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
                 ImGui::TableNextColumn();
                 if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    this->m_sectionProvider = std::make_unique<MemoryFileProvider>();
-                    this->m_sectionProvider->resize(section.data.size());
-                    this->m_sectionProvider->writeRaw(0, section.data.data(), section.data.size());
+                    auto dataProvider = std::make_unique<MemoryFileProvider>();
+                    dataProvider->resize(section.data.size());
+                    dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
+                    dataProvider->setReadOnly(true);
 
-                    this->m_hexEditor.setBackgroundHighlightCallback([this, id](u64 address, const u8 *, size_t) -> std::optional<color_t> {
+                    auto hexEditor = ui::HexEditor();
+                    hexEditor.setBackgroundHighlightCallback([this, id](u64 address, const u8 *, size_t) -> std::optional<color_t> {
                         if (this->m_runningEvaluators != 0)
                             return std::nullopt;
                         if (!ImHexApi::Provider::isValid())
@@ -478,6 +480,15 @@ namespace hex::plugin::builtin {
 
                         return color;
                     });
+
+                    auto patternProvider = ImHexApi::Provider::get();
+
+                    this->m_sectionWindowDrawer[patternProvider] = [id, patternProvider, dataProvider = std::move(dataProvider), hexEditor, patternDrawer = ui::PatternDrawer()] mutable {
+                        hexEditor.setProvider(dataProvider.get());
+                        hexEditor.draw(480_scaled);
+
+                        patternDrawer.draw(ProviderExtraData::get(patternProvider).patternLanguage.runtime->getAllPatterns(id), 150_scaled);
+                    };
                 }
 
                 ImGui::PopID();
@@ -527,17 +538,17 @@ namespace hex::plugin::builtin {
             ImGui::EndPopup();
         }
 
-        auto open = this->m_sectionProvider != nullptr && this->m_sectionProvider->isReadable();
+        auto open = this->m_sectionWindowDrawer.contains(provider);
         if (open) {
             ImGui::SetNextWindowSize(scaled(ImVec2(500, 650)), ImGuiCond_Appearing);
-            if (ImGui::Begin("hex.builtin.view.pattern_editor.section_popup"_lang, &open)) {
-                this->m_hexEditor.draw(this->m_sectionProvider.get());
+            if (ImGui::Begin("hex.builtin.view.pattern_editor.section_popup"_lang, &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                this->m_sectionWindowDrawer[provider]();
             }
             ImGui::End();
         }
 
         if (!open)
-            this->m_sectionProvider = nullptr;
+            this->m_sectionWindowDrawer.erase(provider);
     }
 
 
