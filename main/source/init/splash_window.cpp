@@ -200,8 +200,12 @@ namespace hex::init {
             glfwGetWindowContentScale(this->m_window, &xScale, &yScale);
 
             auto meanScale = std::midpoint(xScale, yScale);
-            if (meanScale <= 0.0)
-                meanScale = 1.0;
+            if (meanScale <= 0.0F)
+                meanScale = 1.0F;
+
+            #if defined(OS_MACOS)
+                meanScale /= 2.0F;
+            #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
             ImHexApi::System::impl::setNativeScale(meanScale);

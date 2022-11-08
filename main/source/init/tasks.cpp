@@ -83,8 +83,15 @@ namespace hex::init {
     }
 
     bool loadFonts() {
+        const auto scale = ImHexApi::System::getNativeScale();
+        float fontSize = ImHexApi::System::getFontSize();
+
+        const auto &fontFile = ImHexApi::System::getCustomFontPath();
+
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
+        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+        cfg.SizePixels = fontSize * scale;
 
         ImVector<ImWchar> ranges;
         {
@@ -111,33 +118,24 @@ namespace hex::init {
             0x0100, 0xFFF0, 0
         };
 
-        const auto &fontFile = ImHexApi::System::getCustomFontPath();
-        float fontSize = ImHexApi::System::getFontSize();
         if (fontFile.empty()) {
             // Load default font if no custom one has been specified
 
             fonts->Clear();
-
-            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = fontSize;
             fonts->AddFontDefault(&cfg);
         } else {
             // Load custom font
-
-            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-            cfg.SizePixels = fontSize;
-
-            fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), std::floor(fontSize), &cfg, ranges.Data);    // Needs conversion to char for Windows
+            fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), std::floor(fontSize * scale), &cfg, ranges.Data);    // Needs conversion to char for Windows
         }
 
         cfg.MergeMode = true;
 
-        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, fontSize, &cfg, fontAwesomeRange);
-        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, fontSize, &cfg, codiconsRange);
+        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, fontSize * scale, &cfg, fontAwesomeRange);
+        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, fontSize * scale, &cfg, codiconsRange);
 
         bool enableUnicode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true);
         if (enableUnicode)
-            fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, fontSize, &cfg, unifontRange);
+            fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, fontSize * scale, &cfg, unifontRange);
 
         fonts->Build();
 
