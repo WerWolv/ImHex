@@ -123,6 +123,10 @@ namespace hex::plugin::builtin {
             ProviderExtraData::erase(provider);
         });
 
+        EventManager::subscribe<EventRegionSelected>([](const ImHexApi::HexEditor::ProviderRegion &region) {
+           ImHexApi::HexEditor::impl::setCurrentSelection(region);
+        });
+
         fs::setFileBrowserErrorCallback([]{
             #if defined(NFD_PORTAL)
                 View::showErrorPopup("hex.builtin.popup.error.file_dialog.portal"_lang);

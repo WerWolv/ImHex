@@ -83,7 +83,7 @@ namespace hex {
                 std::map<u32, Tooltip> &getTooltips();
                 std::map<u32, TooltipFunction> &getTooltipFunctions();
 
-                void setCurrentSelection(ProviderRegion region);
+                void setCurrentSelection(std::optional<ProviderRegion> region);
             }
 
             u32 addBackgroundHighlight(const Region &region, color_t color);
