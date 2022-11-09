@@ -683,7 +683,7 @@ namespace hex::plugin::builtin::ui {
 
 
             } else {
-                ImGui::TextFormattedCentered("hex.builtin.view.hex_editor.no_bytes"_lang);
+                ImGui::TextFormattedCentered("hex.builtin.hex_editor.no_bytes"_lang);
             }
 
             ImGui::EndTable();
@@ -710,7 +710,7 @@ namespace hex::plugin::builtin::ui {
                     {
                         u32 page = this->m_provider->getCurrentPage() + 1;
 
-                        ImGui::TextFormatted("{}: ", "hex.builtin.view.hex_editor.page"_lang);
+                        ImGui::TextFormatted("{}: ", "hex.builtin.hex_editor.page"_lang);
                         ImGui::SameLine();
 
                         ImGui::BeginDisabled(pageCount <= 1);
@@ -724,7 +724,7 @@ namespace hex::plugin::builtin::ui {
                     // Page Address
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.view.hex_editor.region"_lang, this->m_provider->getCurrentPageAddress(), this->m_provider->getSize());
+                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.hex_editor.region"_lang, this->m_provider->getCurrentPageAddress(), this->m_provider->getSize());
                     }
 
                     ImGui::TableNextRow();
@@ -743,15 +743,15 @@ namespace hex::plugin::builtin::ui {
                             );
                         }
                         else
-                            value = std::string("hex.builtin.view.hex_editor.selection.none"_lang);
+                            value = std::string("hex.builtin.hex_editor.selection.none"_lang);
 
-                        ImGui::TextFormatted("{0}: {1}", "hex.builtin.view.hex_editor.selection"_lang, value);
+                        ImGui::TextFormatted("{0}: {1}", "hex.builtin.hex_editor.selection"_lang, value);
                     }
 
                     // Loaded data size
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{0}: 0x{1:08X} (0x{2:X} | {3})", "hex.builtin.view.hex_editor.data_size"_lang,
+                        ImGui::TextFormatted("{0}: 0x{1:08X} (0x{2:X} | {3})", "hex.builtin.hex_editor.data_size"_lang,
                                              this->m_provider->getActualSize(),
                                              this->m_provider->getActualSize(),
                                              hex::toByteString(this->m_provider->getActualSize())

@@ -52,6 +52,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "Sì, Ripristina" },
                 { "hex.builtin.welcome.safety_backup.delete", "No, Elimina" },
 
+                //{ "hex.builtin.common.name", "Name" },
                 { "hex.builtin.common.endian", "Endian" },
                 { "hex.builtin.common.little_endian", "Little Endian" },
                 { "hex.builtin.common.big_endian", "Big Endian" },
@@ -137,6 +138,21 @@ namespace hex::plugin::builtin {
                 //    "In the meantime files can still be opened by dragging them onto the ImHex window!"
                 //},
                 //{ "hex.builtin.popup.error.file_dialog.common", "An error occurred while opening the file browser!" },
+
+                //{ "hex.builtin.hex_editor.page", "Page" },
+                //{ "hex.builtin.hex_editor.selection", "Selection" },
+                //{ "hex.builtin.hex_editor.selection.none", "None" },
+                //{ "hex.builtin.hex_editor.region", "Region" },
+                //{ "hex.builtin.hex_editor.data_size", "Data Size" },
+                //{ "hex.builtin.hex_editor.no_bytes", "No bytes available" },
+
+                { "hex.builtin.view.pattern_data.var_name", "Nome" },
+                { "hex.builtin.view.pattern_data.color", "Colore" },
+                { "hex.builtin.view.pattern_data.offset", "Offset" },
+                { "hex.builtin.view.pattern_data.size", "Dimensione" },
+                { "hex.builtin.view.pattern_data.type", "Tipo" },
+                { "hex.builtin.view.pattern_data.value", "Valore" },
+                //{ "hex.builtin.pattern_drawer.double_click", "Double-click to see more items" },
 
                 { "hex.builtin.menu.file", "File" },
                     //{ "hex.builtin.menu.file.create_file", "New File..." },
@@ -296,13 +312,6 @@ namespace hex::plugin::builtin {
 
                 { "hex.builtin.view.hex_editor.name", "Hex editor" },
 
-                    //{ "hex.builtin.view.hex_editor.page", "Page" },
-                    //{ "hex.builtin.view.hex_editor.selection", "Selection" },
-                        //{ "hex.builtin.view.hex_editor.selection.none", "None" },
-                    //{ "hex.builtin.view.hex_editor.region", "Region" },
-                    //{ "hex.builtin.view.hex_editor.data_size", "Data Size" },
-                    //{ "hex.builtin.view.hex_editor.no_bytes", "No bytes available" },
-
                     { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "Carica una codifica personalizzata..." },
                     { "hex.builtin.view.hex_editor.menu.file.search", "Cerca" },
                         { "hex.builtin.view.hex_editor.search.string", "Stringa" },
@@ -394,17 +403,13 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.console", "Console" },
                 { "hex.builtin.view.pattern_editor.env_vars", "Variabili d'ambiente" },
                 { "hex.builtin.view.pattern_editor.settings", "Impostazioni" },
+                //{ "hex.builtin.view.pattern_editor.sections", "Sections" },
+                //    { "hex.builtin.view.pattern_editor.section_popup", "Section" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.name", "Vuoi consentire funzioni pericolose?" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.desc", "Questo pattern ha cercato di chiamare una funzione pericolosa.\nSei sicuro di volerti fidare?" },
                 { "hex.builtin.view.pattern_editor.no_in_out_vars", "Definisci alcune variabili globali con 'in' o 'out' per farle apparire qui." },
 
                 { "hex.builtin.view.pattern_data.name", "Dati dei Pattern" },
-                    { "hex.builtin.view.pattern_data.var_name", "Nome" },
-                    { "hex.builtin.view.pattern_data.color", "Colore" },
-                    { "hex.builtin.view.pattern_data.offset", "Offset" },
-                    { "hex.builtin.view.pattern_data.size", "Dimensione" },
-                    { "hex.builtin.view.pattern_data.type", "Tipo" },
-                    { "hex.builtin.view.pattern_data.value", "Valore" },
 
                 { "hex.builtin.view.settings.name", "Impostazioni" },
                     //{ "hex.builtin.view.settings.restart_question", "A change you made requires a restart of ImHex to take effect. Would you like to restart it now?" },

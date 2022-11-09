@@ -53,6 +53,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "Yes, Restore" },
                 { "hex.builtin.welcome.safety_backup.delete", "No, Delete" },
 
+                { "hex.builtin.common.name", "Name" },
                 { "hex.builtin.common.endian", "Endian" },
                 { "hex.builtin.common.little_endian", "Little Endian" },
                 { "hex.builtin.common.big_endian", "Big Endian" },
@@ -138,6 +139,21 @@ namespace hex::plugin::builtin {
                   "In the meantime files can still be opened by dragging them onto the ImHex window!"
                 },
                 { "hex.builtin.popup.error.file_dialog.common", "An error occurred while opening the file browser!" },
+
+                { "hex.builtin.hex_editor.page", "Page" },
+                { "hex.builtin.hex_editor.selection", "Selection" },
+                { "hex.builtin.hex_editor.selection.none", "None" },
+                { "hex.builtin.hex_editor.region", "Region" },
+                { "hex.builtin.hex_editor.data_size", "Data Size" },
+                { "hex.builtin.hex_editor.no_bytes", "No bytes available" },
+
+                { "hex.builtin.pattern_drawer.var_name", "Name" },
+                { "hex.builtin.pattern_drawer.color", "Color" },
+                { "hex.builtin.pattern_drawer.offset", "Offset" },
+                { "hex.builtin.pattern_drawer.size", "Size" },
+                { "hex.builtin.pattern_drawer.type", "Type" },
+                { "hex.builtin.pattern_drawer.value", "Value" },
+                { "hex.builtin.pattern_drawer.double_click", "Double-click to see more items" },
 
                 { "hex.builtin.menu.file", "File" },
                     { "hex.builtin.menu.file.create_file", "New File..." },
@@ -296,12 +312,6 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.help.calc_cheat_sheet", "Calculator Cheat Sheet" },
 
                 { "hex.builtin.view.hex_editor.name", "Hex editor" },
-                    { "hex.builtin.view.hex_editor.page", "Page" },
-                    { "hex.builtin.view.hex_editor.selection", "Selection" },
-                        { "hex.builtin.view.hex_editor.selection.none", "None" },
-                    { "hex.builtin.view.hex_editor.region", "Region" },
-                    { "hex.builtin.view.hex_editor.data_size", "Data Size" },
-                    { "hex.builtin.view.hex_editor.no_bytes", "No bytes available" },
 
                     { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "Load custom encoding..." },
                     { "hex.builtin.view.hex_editor.menu.file.search", "Search" },
@@ -391,17 +401,13 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.console", "Console" },
                 { "hex.builtin.view.pattern_editor.env_vars", "Environment Variables" },
                 { "hex.builtin.view.pattern_editor.settings", "Settings" },
+                { "hex.builtin.view.pattern_editor.sections", "Sections" },
+                    { "hex.builtin.view.pattern_editor.section_popup", "Section" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.name", "Allow dangerous function?" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.desc", "This pattern tried to call a dangerous function.\nAre you sure you want to trust this pattern?" },
                 { "hex.builtin.view.pattern_editor.no_in_out_vars", "Define some global variables with the 'in' or 'out' specifier for them to appear here." },
 
                 { "hex.builtin.view.pattern_data.name", "Pattern Data" },
-                    { "hex.builtin.view.pattern_data.var_name", "Name" },
-                    { "hex.builtin.view.pattern_data.color", "Color" },
-                    { "hex.builtin.view.pattern_data.offset", "Offset" },
-                    { "hex.builtin.view.pattern_data.size", "Size" },
-                    { "hex.builtin.view.pattern_data.type", "Type" },
-                    { "hex.builtin.view.pattern_data.value", "Value" },
 
                 { "hex.builtin.view.settings.name", "Settings" },
                     { "hex.builtin.view.settings.restart_question", "A change you made requires a restart of ImHex to take effect. Would you like to restart it now?" },

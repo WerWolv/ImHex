@@ -52,6 +52,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "네, 복구" },
                 { "hex.builtin.welcome.safety_backup.delete", "아니요, 삭제" },
 
+                //{ "hex.builtin.common.name", "Name" },
                 { "hex.builtin.common.endian", "엔디안" },
                 { "hex.builtin.common.little_endian", "리틀 엔디안" },
                 { "hex.builtin.common.big_endian", "빅 엔디안" },
@@ -137,6 +138,21 @@ namespace hex::plugin::builtin {
                 //    "In the meantime files can still be opened by dragging them onto the ImHex window!"
                 //},
                 //{ "hex.builtin.popup.error.file_dialog.common", "An error occurred while opening the file browser!" },
+
+                { "hex.builtin.hex_editor.page", "페이지" },
+                { "hex.builtin.hex_editor.selection", "선택 영역" },
+                { "hex.builtin.hex_editor.selection.none", "없음" },
+                { "hex.builtin.hex_editor.region", "지역" },
+                { "hex.builtin.hex_editor.data_size", "데이터 크기" },
+                { "hex.builtin.hex_editor.no_bytes", "바이트가 존재하지 않습니다" },
+
+                { "hex.builtin.pattern_drawer.var_name", "이름" },
+                { "hex.builtin.pattern_drawer.color", "색상" },
+                { "hex.builtin.pattern_drawer.offset", "오프셋" },
+                { "hex.builtin.pattern_drawer.size", "크기" },
+                { "hex.builtin.pattern_drawer.type", "타입" },
+                { "hex.builtin.pattern_drawer.value", "값" },
+                //{ "hex.builtin.pattern_drawer.double_click", "Double-click to see more items" },
 
                 { "hex.builtin.menu.file", "파일" },
                     { "hex.builtin.menu.file.create_file", "새 파일..." },
@@ -295,12 +311,6 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.help.calc_cheat_sheet", "치트시트 계산기" },
 
                 { "hex.builtin.view.hex_editor.name", "헥스 편집기" },
-                    { "hex.builtin.view.hex_editor.page", "페이지" },
-                    { "hex.builtin.view.hex_editor.selection", "선택 영역" },
-                        { "hex.builtin.view.hex_editor.selection.none", "없음" },
-                    { "hex.builtin.view.hex_editor.region", "지역" },
-                    { "hex.builtin.view.hex_editor.data_size", "데이터 크기" },
-                    { "hex.builtin.view.hex_editor.no_bytes", "바이트가 존재하지 않습니다" },
 
                     { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "커스텀 인코딩 불러오기..." },
                     { "hex.builtin.view.hex_editor.menu.file.search", "검색" },
@@ -390,17 +400,13 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.console", "콘솔" },
                 { "hex.builtin.view.pattern_editor.env_vars", "환경 변수" },
                 { "hex.builtin.view.pattern_editor.settings", "설정" },
+                //{ "hex.builtin.view.pattern_editor.sections", "Sections" },
+                //    { "hex.builtin.view.pattern_editor.section_popup", "Section" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.name", "위험한 함수를 허용하시겠습니까?" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.desc", "이 패턴은 위험한 함수를 실행하려 합니다.\n정말로 이 패턴을 신뢰하시겠습니?" },
                 { "hex.builtin.view.pattern_editor.no_in_out_vars", "'in' 또는 'out' 지정자를 이용해 여기에 나타날 전역 변수를 선언합니다." },
 
                 { "hex.builtin.view.pattern_data.name", "패턴 데이터" },
-                    { "hex.builtin.view.pattern_data.var_name", "이름" },
-                    { "hex.builtin.view.pattern_data.color", "색상" },
-                    { "hex.builtin.view.pattern_data.offset", "오프셋" },
-                    { "hex.builtin.view.pattern_data.size", "크기" },
-                    { "hex.builtin.view.pattern_data.type", "타입" },
-                    { "hex.builtin.view.pattern_data.value", "값" },
 
                 { "hex.builtin.view.settings.name", "설정" },
                     { "hex.builtin.view.settings.restart_question", "변경 사항을 적용할려면 ImHex를 재시작 해야 합니다. 지금 바로 재시작하시겠습니까?" },

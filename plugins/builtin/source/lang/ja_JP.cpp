@@ -52,6 +52,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "復元する" },
                 { "hex.builtin.welcome.safety_backup.delete", "破棄する" },
 
+                //{ "hex.builtin.common.name", "Name" },
                 { "hex.builtin.common.endian", "エンディアン" },
                 { "hex.builtin.common.little_endian", "リトルエンディアン" },
                 { "hex.builtin.common.big_endian", "ビッグエンディアン" },
@@ -137,6 +138,21 @@ namespace hex::plugin::builtin {
                 //    "In the meantime files can still be opened by dragging them onto the ImHex window!"
                 //},
                 //{ "hex.builtin.popup.error.file_dialog.common", "An error occurred while opening the file browser!" },
+
+                { "hex.builtin.hex_editor.page", "ページ" },
+                { "hex.builtin.hex_editor.selection", "選択中" },
+                { "hex.builtin.hex_editor.selection.none", "なし" },
+                { "hex.builtin.hex_editor.region", "ページの領域" },
+                { "hex.builtin.hex_editor.data_size", "ファイルサイズ" },
+                //{ "hex.builtin.hex_editor.no_bytes", "No bytes available" },
+
+                { "hex.builtin.pattern_drawer.var_name", "名前" },
+                { "hex.builtin.pattern_drawer.color", "色" },
+                { "hex.builtin.pattern_drawer.offset", "オフセット" },
+                { "hex.builtin.pattern_drawer.size", "サイズ" },
+                { "hex.builtin.pattern_drawer.type", "型" },
+                { "hex.builtin.pattern_drawer.value", "値" },
+                //{ "hex.builtin.pattern_drawer.double_click", "Double-click to see more items" },
 
                 { "hex.builtin.menu.file", "ファイル" },
                     //{ "hex.builtin.menu.file.create_file", "New File..." },
@@ -296,12 +312,6 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.help.calc_cheat_sheet", "計算機チートシート" },
 
                 { "hex.builtin.view.hex_editor.name", "Hexエディタ" },
-                    { "hex.builtin.view.hex_editor.page", "ページ" },
-                    { "hex.builtin.view.hex_editor.selection", "選択中" },
-                        { "hex.builtin.view.hex_editor.selection.none", "なし" },
-                    { "hex.builtin.view.hex_editor.region", "ページの領域" },
-                    { "hex.builtin.view.hex_editor.data_size", "ファイルサイズ" },
-                    //{ "hex.builtin.view.hex_editor.no_bytes", "No bytes available" },
 
                     { "hex.builtin.view.hex_editor.menu.file.search", "検索" },
                         { "hex.builtin.view.hex_editor.search.string", "文字列" },
@@ -393,17 +403,13 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.console", "コンソール" },
                 { "hex.builtin.view.pattern_editor.env_vars", "環境変数" },
                 { "hex.builtin.view.pattern_editor.settings", "設定" },
+                //{ "hex.builtin.view.pattern_editor.sections", "Sections" },
+                //    { "hex.builtin.view.pattern_editor.section_popup", "Section" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.name", "危険な関数の使用を許可しますか？" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.desc", "このパターンは危険な関数を呼び出そうとしました。\n本当にこのパターンを信頼しても宜しいですか？" },
                 { "hex.builtin.view.pattern_editor.no_in_out_vars", "グローバル変数に 'in' または 'out' を指定して、ここに表示されるように定義してください。" },
 
                 { "hex.builtin.view.pattern_data.name", "パターンデータ" },
-                    { "hex.builtin.view.pattern_data.var_name", "名前" },
-                    { "hex.builtin.view.pattern_data.color", "色" },
-                    { "hex.builtin.view.pattern_data.offset", "オフセット" },
-                    { "hex.builtin.view.pattern_data.size", "サイズ" },
-                    { "hex.builtin.view.pattern_data.type", "型" },
-                    { "hex.builtin.view.pattern_data.value", "値" },
 
                 { "hex.builtin.view.settings.name", "設定" },
                     { "hex.builtin.view.settings.restart_question", "変更を反映させるには、ImHexの再起動が必要です。今すぐ再起動しますか？" },

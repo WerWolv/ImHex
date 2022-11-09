@@ -52,6 +52,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "恢复" },
                 { "hex.builtin.welcome.safety_backup.delete", "删除" },
 
+                //{ "hex.builtin.common.name", "Name" },
                 { "hex.builtin.common.endian", "端序" },
                 { "hex.builtin.common.little_endian", "小端序" },
                 { "hex.builtin.common.big_endian", "大端序" },
@@ -137,6 +138,21 @@ namespace hex::plugin::builtin {
                     "与此同时，仍然可以通过将文件拖到 ImHex 窗口来打开它们！"
                 },
                 { "hex.builtin.popup.error.file_dialog.common", "尝试打开文件浏览器时发生了错误！" },
+
+                { "hex.builtin.hex_editor.page", "分页" },
+                { "hex.builtin.hex_editor.selection", "选区" },
+                { "hex.builtin.hex_editor.selection.none", "未选中" },
+                { "hex.builtin.hex_editor.region", "范围" },
+                { "hex.builtin.hex_editor.data_size", "总大小" },
+                { "hex.builtin.hex_editor.no_bytes", "没有可显示的字节" },
+
+                { "hex.builtin.pattern_drawer.var_name", "名称" },
+                { "hex.builtin.pattern_drawer.color", "颜色" },
+                { "hex.builtin.pattern_drawer.offset", "偏移" },
+                { "hex.builtin.pattern_drawer.size", "大小" },
+                { "hex.builtin.pattern_drawer.type", "类型" },
+                { "hex.builtin.pattern_drawer.value", "值" },
+                //{ "hex.builtin.pattern_drawer.double_click", "Double-click to see more items" },
 
                 { "hex.builtin.menu.file", "文件" },
                     { "hex.builtin.menu.file.create_file", "新建文件..." },
@@ -296,12 +312,6 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.help.calc_cheat_sheet", "计算器帮助" },
 
                 { "hex.builtin.view.hex_editor.name", "Hex 编辑器" },
-                    { "hex.builtin.view.hex_editor.page", "分页" },
-                    { "hex.builtin.view.hex_editor.selection", "选区" },
-                        { "hex.builtin.view.hex_editor.selection.none", "未选中" },
-                    { "hex.builtin.view.hex_editor.region", "范围" },
-                    { "hex.builtin.view.hex_editor.data_size", "总大小" },
-                    { "hex.builtin.view.hex_editor.no_bytes", "没有可显示的字节" },
 
                     { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "加载自定义编码..." },
                     { "hex.builtin.view.hex_editor.menu.file.search", "搜索" },
@@ -393,17 +403,13 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.console", "控制台" },
                 { "hex.builtin.view.pattern_editor.env_vars", "环境变量" },
                 { "hex.builtin.view.pattern_editor.settings", "设置" },
+                //{ "hex.builtin.view.pattern_editor.sections", "Sections" },
+                //    { "hex.builtin.view.pattern_editor.section_popup", "Section" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.name", "允许危险的函数？" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.desc", "此模式试图调用一个危险的函数。\n您确定要信任此模式吗？" },
                 { "hex.builtin.view.pattern_editor.no_in_out_vars", "使用 'in' 或 'out' 修饰符定义一些全局变量，以使它们出现在这里。" },
 
                 { "hex.builtin.view.pattern_data.name", "模式数据" },
-                    { "hex.builtin.view.pattern_data.var_name", "名称" },
-                    { "hex.builtin.view.pattern_data.color", "颜色" },
-                    { "hex.builtin.view.pattern_data.offset", "偏移" },
-                    { "hex.builtin.view.pattern_data.size", "大小" },
-                    { "hex.builtin.view.pattern_data.type", "类型" },
-                    { "hex.builtin.view.pattern_data.value", "值" },
 
                 { "hex.builtin.view.settings.name", "设置" },
                     { "hex.builtin.view.settings.restart_question", "一项更改需要重启 ImHex 以生效，您想要现在重启吗？" },

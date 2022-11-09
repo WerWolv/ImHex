@@ -52,6 +52,7 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.welcome.safety_backup.restore", "好，請復原" },
                 { "hex.builtin.welcome.safety_backup.delete", "不用，請刪除" },
 
+                //{ "hex.builtin.common.name", "Name" },
                 { "hex.builtin.common.endian", "端序" },
                 { "hex.builtin.common.little_endian", "小端序" },
                 { "hex.builtin.common.big_endian", "大端序" },
@@ -137,6 +138,21 @@ namespace hex::plugin::builtin {
                     "您仍可以將檔案拖曳至 ImHex 視窗來開啟！"
                 },
                 { "hex.builtin.popup.error.file_dialog.common", "開啟檔案瀏覽器時發生錯誤！" },
+
+                { "hex.builtin.hex_editor.page", "頁面" },
+                { "hex.builtin.hex_editor.selection", "選取" },
+                { "hex.builtin.hex_editor.selection.none", "無" },
+                { "hex.builtin.hex_editor.region", "區域" },
+                { "hex.builtin.hex_editor.data_size", "資料大小" },
+                { "hex.builtin.hex_editor.no_bytes", "無可用位元組" },
+
+                { "hex.builtin.pattern_drawer.var_name", "名稱" },
+                { "hex.builtin.pattern_drawer.color", "顏色" },
+                { "hex.builtin.pattern_drawer.offset", "位移" },
+                { "hex.builtin.pattern_drawer.size", "大小" },
+                { "hex.builtin.pattern_drawer.type", "類型" },
+                { "hex.builtin.pattern_drawer.value", "數值" },
+                //{ "hex.builtin.pattern_drawer.double_click", "Double-click to see more items" },
 
                 { "hex.builtin.menu.file", "檔案" },
                     { "hex.builtin.menu.file.create_file", "新檔案..." },
@@ -295,12 +311,6 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.help.calc_cheat_sheet", "計算機小抄" },
 
                 { "hex.builtin.view.hex_editor.name", "十六進位編輯器" },
-                    { "hex.builtin.view.hex_editor.page", "頁面" },
-                    { "hex.builtin.view.hex_editor.selection", "選取" },
-                        { "hex.builtin.view.hex_editor.selection.none", "無" },
-                    { "hex.builtin.view.hex_editor.region", "區域" },
-                    { "hex.builtin.view.hex_editor.data_size", "資料大小" },
-                    { "hex.builtin.view.hex_editor.no_bytes", "無可用位元組" },
 
                     { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "載入自訂編碼..." },
                     { "hex.builtin.view.hex_editor.menu.file.search", "搜尋" },
@@ -390,17 +400,13 @@ namespace hex::plugin::builtin {
                 { "hex.builtin.view.pattern_editor.console", "終端機" },
                 { "hex.builtin.view.pattern_editor.env_vars", "環境變數" },
                 { "hex.builtin.view.pattern_editor.settings", "設定" },
+                //{ "hex.builtin.view.pattern_editor.sections", "Sections" },
+                //    { "hex.builtin.view.pattern_editor.section_popup", "Section" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.name", "允許具危險性的函數？" },
                 { "hex.builtin.view.pattern_editor.dangerous_function.desc", "此模式嘗試呼叫具危險性的函數。\n您確定要信任此模式嗎？" },
                 { "hex.builtin.view.pattern_editor.no_in_out_vars", "Define some global variables with the 'in' or 'out' specifier for them to appear here." },
 
                 { "hex.builtin.view.pattern_data.name", "模式資料" },
-                    { "hex.builtin.view.pattern_data.var_name", "名稱" },
-                    { "hex.builtin.view.pattern_data.color", "顏色" },
-                    { "hex.builtin.view.pattern_data.offset", "位移" },
-                    { "hex.builtin.view.pattern_data.size", "大小" },
-                    { "hex.builtin.view.pattern_data.type", "類型" },
-                    { "hex.builtin.view.pattern_data.value", "數值" },
 
                 { "hex.builtin.view.settings.name", "設定" },
                     { "hex.builtin.view.settings.restart_question", "需要重啟 ImHex 方能使您所做的更動生效。您要現在重新啟動嗎？" },
