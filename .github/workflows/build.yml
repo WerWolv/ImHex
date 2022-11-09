@@ -217,19 +217,11 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}"  \
           ..
         make -j4 package
-        make -j4 install
-
-    - name: ⬆️ Upload Portable ZIP
-      uses: actions/upload-artifact@v3
-      with:
-        name: macOS Portable${{matrix.suffix}}
-        path: build/install/*
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
