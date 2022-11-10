@@ -520,6 +520,9 @@ namespace hex::plugin::builtin::ui {
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
 
+            if (patterns.empty())
+                sortedPatterns.clear();
+
             if (!patterns.empty() && (sortSpecs->SpecsDirty || sortedPatterns.empty())) {
                 sortedPatterns.clear();
                 std::transform(patterns.begin(), patterns.end(), std::back_inserter(sortedPatterns), [](const std::shared_ptr<pl::ptrn::Pattern> &pattern) {
