@@ -636,9 +636,6 @@ namespace hex {
         });
 
         glfwSetDropCallback(this->m_window, [](GLFWwindow *, int count, const char **paths) {
-            if (count != 1)
-                return;
-
             for (int i = 0; i < count; i++) {
                 auto path = std::fs::path(reinterpret_cast<const char8_t *>(paths[i]));
 
