@@ -355,6 +355,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "Einsetzen..." },
                     { "hex.builtin.view.hex_editor.menu.edit.remove", "Entfernen..." },
                     { "hex.builtin.view.hex_editor.menu.edit.jump_to", "Springen" },
+                    { "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider", "Auswahlansicht öffnen..." },
 
                 { "hex.builtin.view.information.name", "Dateninformationen" },
                     { "hex.builtin.view.information.control", "Einstellungen" },
@@ -857,6 +858,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.motorola_srec.name", "Motorola SREC {0}" },
                 { "hex.builtin.provider.mem_file", "RAM Datei" },
                     { "hex.builtin.provider.mem_file.unsaved", "Ungespeicherte Datei" },
+                { "hex.builtin.provider.view", "Ansicht" },
 
                 { "hex.builtin.layouts.default", "Standard" },
 

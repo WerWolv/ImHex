@@ -5,6 +5,7 @@
 #include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/crypto.hpp>
 
+#include <content/providers/view_provider.hpp>
 #include <content/helpers/math_evaluator.hpp>
 
 #include <imgui_internal.h>
@@ -1033,6 +1034,15 @@ namespace hex::plugin::builtin {
                     }
                 }
 
+            }
+
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.open_in_new_provider"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
+                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                    viewProvider->setProvider(selection->getStartAddress(), selection->getSize(), selection->getProvider());
+                    if (viewProvider->open())
+                        EventManager::post<EventProviderOpened>(viewProvider);
+                }
             }
         });
     }

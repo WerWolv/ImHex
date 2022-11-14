@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.welcome.learn.plugins.link", "https://github.com/WerWolv/ImHex/wiki/Plugins-Development-Guide" },
                 { "hex.builtin.welcome.header.various", "Various" },
                 { "hex.builtin.welcome.tip_of_the_day", "오늘의 팁" },
-                // { "hex.builtin.welcome.check_for_updates_text", "Do you want to automatically check for updates on startup ?\n"
+                // { "hex.builtin.welcome.check_for_updates_text", "Do you want to automatically check for updates on startup?\n"
                 //     "Possible updates will be shown in the 'Update' tab of the welcome screen" },
 
                 { "hex.builtin.welcome.safety_backup.title", "손상된 데이터 복구" },
@@ -357,6 +357,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.view.hex_editor.menu.edit.insert", "삽입..." },
                     { "hex.builtin.view.hex_editor.menu.edit.remove", "삭제..." },
                     //{ "hex.builtin.view.hex_editor.menu.edit.jump_to", "Jump to" },
+                    //{ "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider", "Open selection view..." },
 
                 { "hex.builtin.view.information.name", "데이터 정보" },
                     { "hex.builtin.view.information.control", "컨트롤" },
@@ -861,6 +862,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.provider.motorola_srec.name", "Motorola SREC {0}" },
                 //{ "hex.builtin.provider.mem_file", "Memory File" },
                 //    { "hex.builtin.provider.mem_file.unsaved", "Unsaved File" },
+                //{ "hex.builtin.provider.view", "View" },
 
                 { "hex.builtin.layouts.default", "기본 값" },
 
