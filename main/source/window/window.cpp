@@ -464,7 +464,7 @@ namespace hex {
                 continue;
 
             if (view->isAvailable()) {
-                float fontScaling = std::max(1.0F, ImHexApi::System::getFontSize() / ImHexApi::System::DefaultFontSize);
+                float fontScaling = std::max(1.0F, ImHexApi::System::getFontSize() / ImHexApi::System::DefaultFontSize) * ImHexApi::System::getGlobalScale();
                 ImGui::SetNextWindowSizeConstraints(view->getMinSize() * fontScaling, view->getMaxSize() * fontScaling);
                 view->drawContent();
             }
@@ -690,7 +690,7 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
-        io.FontGlobalScale = 1.0F / ImHexApi::System::getNativeScale();
+        io.FontGlobalScale = 1.0F;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
