@@ -197,8 +197,8 @@ namespace hex::plugin::builtin::ui {
 
         std::optional<EncodingFile> m_currCustomEncoding;
 
-        static std::optional<color_t> defaultColorCallback(u64, const u8 *, size_t) { return std::nullopt; }
-        static void defaultTooltipCallback(u64, const u8 *, size_t) {  }
+        static inline std::optional<color_t> defaultColorCallback(u64, const u8 *, size_t) { return std::nullopt; }
+        static inline void defaultTooltipCallback(u64, const u8 *, size_t) {  }
         std::function<std::optional<color_t>(u64, const u8 *, size_t)> m_foregroundColorCallback = defaultColorCallback, m_backgroundColorCallback = defaultColorCallback;
         std::function<void(u64, const u8 *, size_t)> m_tooltipCallback = defaultTooltipCallback;
     };
