@@ -1095,7 +1095,8 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                         }
                     }
                 } else {
-                    line.insert(line.begin(), Glyph('\t', TextEditor::PaletteIndex::Background));
+                    for (int j = start.mColumn % mTabSize; j < mTabSize; j++)
+                        line.insert(line.begin(), Glyph(' ', PaletteIndex::Background));
                     modified = true;
                 }
             }
@@ -1156,6 +1157,13 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
         line.erase(line.begin() + cindex, line.begin() + line.size());
         SetCursorPosition(Coordinates(coord.mLine + 1, GetCharacterColumn(coord.mLine + 1, (int)whitespaceSize)));
         u.mAdded = (char)aChar;
+    } else if (aChar == '\t') {
+        auto &line  = mLines[coord.mLine];
+        auto cindex = GetCharacterIndex(coord);
+        auto spacesToInsert = mTabSize - (cindex % mTabSize);
+        for (int j = 0; j < spacesToInsert; j++)
+            line.insert(line.begin() + cindex, Glyph(' ', PaletteIndex::Background));
+        SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + spacesToInsert)));
     } else {
         char buf[7];
         int e = ImTextCharToUtf8(buf, 7, aChar);
