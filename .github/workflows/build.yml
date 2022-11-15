@@ -281,8 +281,6 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="/usr"             \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-            -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
-            -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
             ..
@@ -317,8 +315,6 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="/usr"             \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-            -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
-            -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
             -DIMHEX_PLUGINS_IN_SHARE=ON               \
@@ -407,8 +403,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="/usr"             \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
           -DUSE_SYSTEM_CURL=ON                      \
           -DUSE_SYSTEM_FMT=ON                       \
           -DUSE_SYSTEM_YARA=ON                      \
