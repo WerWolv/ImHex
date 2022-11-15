@@ -284,6 +284,7 @@ jobs:
             -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
             ..
           make -j 4 install DESTDIR=DebDir
 
@@ -319,6 +320,7 @@ jobs:
             -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
             -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
             -DIMHEX_PLUGINS_IN_SHARE=ON               \
             -DIMHEX_USE_BUNDLED_CA=ON                 \
             ..
@@ -413,6 +415,7 @@ jobs:
           -DUSE_SYSTEM_NLOHMANN_JSON=ON             \
           -DUSE_SYSTEM_CAPSTONE=OFF                 \
           -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
           ..
           make -j 4 install DESTDIR=installDir
 
