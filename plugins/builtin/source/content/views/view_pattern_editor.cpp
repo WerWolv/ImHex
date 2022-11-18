@@ -524,8 +524,10 @@ namespace hex::plugin::builtin {
             ImGui::End();
         }
 
-        if (!open)
+        if (!open && this->m_sectionWindowDrawer.contains(provider)) {
+            ImHexApi::HexEditor::setSelection(Region::Invalid());
             this->m_sectionWindowDrawer.erase(provider);
+        }
 
         auto &extraData = ProviderExtraData::get(provider).patternLanguage;
         if (!this->m_lastEvaluationProcessed) {

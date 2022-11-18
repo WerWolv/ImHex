@@ -21,6 +21,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventRegionSelected>(this, [this](const auto &region) {
             if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
                 this->m_validBytes = 0;
+                this->m_selectedProvider = nullptr;
             } else {
                 this->m_validBytes   = u64(region.getProvider()->getActualSize() - region.address);
                 this->m_startAddress = region.address;

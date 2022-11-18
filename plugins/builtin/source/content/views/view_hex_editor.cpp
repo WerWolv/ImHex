@@ -864,6 +864,7 @@ namespace hex::plugin::builtin {
 
                 providerData.selectionStart.reset();
                 providerData.selectionEnd.reset();
+                EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion({ Region::Invalid(), nullptr }));
 
                 return;
             }
