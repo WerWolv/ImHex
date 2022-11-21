@@ -83,11 +83,11 @@ namespace hex::plugin::builtin {
                     });
             }
 
-            if (ImGui::MenuItem("Save Project", "ALT + S", false, providerValid && provider->isWritable() && ProjectFile::hasPath())) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "ALT + S", false, providerValid && provider->isWritable() && ProjectFile::hasPath())) {
                 saveProject();
             }
 
-            if (ImGui::MenuItem("Save Project As...", "ALT + SHIFT + S", false, providerValid && provider->isWritable())) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.save_project_as"_lang, "ALT + SHIFT + S", false, providerValid && provider->isWritable())) {
                 saveProjectAs();
             }
         });
