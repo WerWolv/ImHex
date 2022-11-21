@@ -8,6 +8,7 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
+#include "content/global_actions.h"
 
 namespace hex::plugin::builtin {
 
@@ -82,17 +83,12 @@ namespace hex::plugin::builtin {
                     });
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "", false, providerValid && provider->isWritable())) {
-                fs::openFileBrowser(fs::DialogMode::Save, { {"Project File", "hexproj"} },
-                    [](std::fs::path path) {
-                        if (path.extension() != ".hexproj") {
-                            path.replace_extension(".hexproj");
-                        }
+            if (ImGui::MenuItem("Save Project", "ALT + S", false, providerValid && provider->isWritable() && ProjectFile::hasPath())) {
+                saveProject();
+            }
 
-                        if (!ProjectFile::store(path)) {
-                            View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);
-                        }
-                    });
+            if (ImGui::MenuItem("Save Project As...", "ALT + SHIFT + S", false, providerValid && provider->isWritable())) {
+                saveProjectAs();
             }
         });
 
