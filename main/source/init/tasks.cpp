@@ -234,6 +234,12 @@ namespace hex::init {
         u32 loadErrors     = 0;
         for (const auto &plugin : plugins) {
             if (!plugin.isBuiltinPlugin()) continue;
+
+            #if defined(DEBUG)
+            bool isLocal = plugin.getPath().parent_path().parent_path().compare(hex::fs::getExecutablePath().value().parent_path()) == 0;
+            if (!isLocal) continue;
+            #endif
+
             builtinPlugins++;
             if (builtinPlugins > 1) continue;
 
