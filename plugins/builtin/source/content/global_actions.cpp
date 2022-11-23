@@ -5,6 +5,15 @@
 
 namespace hex::plugin::builtin {
 
+    void openProject() {
+        fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
+                            [](const auto &path) {
+                                if (!ProjectFile::load(path)) {
+                                    View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
+                                }
+                            });
+    }
+
     void saveProject() {
         if (!ProjectFile::store()) {
             View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);

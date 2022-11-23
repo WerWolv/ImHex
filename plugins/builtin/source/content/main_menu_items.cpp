@@ -74,13 +74,7 @@ namespace hex::plugin::builtin {
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
             if (ImGui::MenuItem("hex.builtin.menu.file.open_project"_lang, "", false, !taskRunning)) {
-                fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"}
-                },
-                    [](const auto &path) {
-                        if (!ProjectFile::load(path)) {
-                            View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
-                        }
-                    });
+                openProject();
             }
 
             if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "ALT + S", false, providerValid && provider->isWritable() && ProjectFile::hasPath())) {
