@@ -165,7 +165,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.menu.file.quit", "ImHexを終了" },
                     { "hex.builtin.menu.file.open_project", "プロジェクトを開く…" },
                     { "hex.builtin.menu.file.save_project", "プロジェクトを保存" },
-                    { "hex.builtin.menu.file.save_project_as", "プロジェクトを別名で保存…" },
+                    //{ "hex.builtin.menu.file.save_project_as", "Save Project As..." },
                     { "hex.builtin.view.hex_editor.menu.file.load_encoding_file", "カスタムエンコードを読み込む…" },
                     { "hex.builtin.menu.file.import", "インポート…" },
                         { "hex.builtin.menu.file.import.base64", "Base64ファイル" },

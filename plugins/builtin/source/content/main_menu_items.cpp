@@ -8,7 +8,7 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
-#include "content/global_actions.h"
+#include "content/global_actions.hpp"
 
 namespace hex::plugin::builtin {
 

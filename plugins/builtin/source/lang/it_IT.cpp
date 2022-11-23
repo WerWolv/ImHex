@@ -165,7 +165,7 @@ namespace hex::plugin::builtin {
                     { "hex.builtin.menu.file.quit", "Uscita ImHex" },
                     { "hex.builtin.menu.file.open_project", "Apri un Progetto..." },
                     { "hex.builtin.menu.file.save_project", "Salva Progetto" },
-                    { "hex.builtin.menu.file.save_project_as", "Salva Progetto Come..." },
+                    //{ "hex.builtin.menu.file.save_project_as", "Save Project As..." },
                     { "hex.builtin.menu.file.import", "Importa..." },
                         { "hex.builtin.menu.file.import.base64", "Base64 File" },
                             //{ "hex.builtin.menu.file.import.base64.popup.import_error", "File is not in a valid Base64 format!" },

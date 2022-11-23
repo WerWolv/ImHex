@@ -2,7 +2,7 @@
 #include <hex/api/event.hpp>
 
 #include <hex/providers/provider.hpp>
-#include "content/global_actions.h"
+#include "content/global_actions.hpp"
 
 namespace hex::plugin::builtin {
 
