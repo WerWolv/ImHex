@@ -113,9 +113,15 @@ namespace hex {
             tar.write(MetadataPath, metadataContent);
         }
 
+        ProjectFile::s_currProjectPath = filePath.value();
+
         ImHexApi::Provider::resetDirty();
 
         return result;
+    }
+
+    bool ProjectFile::hasPath() {
+        return !ProjectFile::s_currProjectPath.empty();
     }
 
 }

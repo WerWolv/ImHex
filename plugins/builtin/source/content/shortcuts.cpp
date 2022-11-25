@@ -2,6 +2,7 @@
 #include <hex/api/event.hpp>
 
 #include <hex/providers/provider.hpp>
+#include "content/global_actions.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -31,6 +32,16 @@ namespace hex::plugin::builtin {
                 if (!provider->open())
                     ImHexApi::Provider::remove(provider, true);
             }
+        });
+
+        // Save project
+        ShortcutManager::addGlobalShortcut(ALT + Keys::S, [] {
+            saveProject();
+        });
+
+        // Save project as...
+        ShortcutManager::addGlobalShortcut(ALT + SHIFT + Keys::S, [] {
+            saveProjectAs();
         });
     }
 

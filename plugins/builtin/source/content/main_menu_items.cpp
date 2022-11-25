@@ -8,6 +8,7 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
+#include "content/global_actions.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -73,26 +74,15 @@ namespace hex::plugin::builtin {
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
             if (ImGui::MenuItem("hex.builtin.menu.file.open_project"_lang, "", false, !taskRunning)) {
-                fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"}
-                },
-                    [](const auto &path) {
-                        if (!ProjectFile::load(path)) {
-                            View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
-                        }
-                    });
+                openProject();
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "", false, providerValid && provider->isWritable())) {
-                fs::openFileBrowser(fs::DialogMode::Save, { {"Project File", "hexproj"} },
-                    [](std::fs::path path) {
-                        if (path.extension() != ".hexproj") {
-                            path.replace_extension(".hexproj");
-                        }
+            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "ALT + S", false, providerValid && provider->isWritable() && ProjectFile::hasPath())) {
+                saveProject();
+            }
 
-                        if (!ProjectFile::store(path)) {
-                            View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);
-                        }
-                    });
+            if (ImGui::MenuItem("hex.builtin.menu.file.save_project_as"_lang, "ALT + SHIFT + S", false, providerValid && provider->isWritable())) {
+                saveProjectAs();
             }
         });
 
