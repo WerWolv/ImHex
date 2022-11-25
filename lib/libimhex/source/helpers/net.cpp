@@ -124,6 +124,9 @@ namespace hex {
             char *url = nullptr;
             curl_easy_getinfo(this->m_ctx, CURLINFO_EFFECTIVE_URL, &url);
             log::error("Net request '{0}' failed with error {1}: '{2}'", url, u32(result), curl_easy_strerror(result));
+            if(!Net::s_proxyUrl.empty()){
+                log::info("A custom proxy '{}' is in use. Is it working correctly?", Net::s_proxyUrl);
+            }
         }
 
         long responseCode = 0;
