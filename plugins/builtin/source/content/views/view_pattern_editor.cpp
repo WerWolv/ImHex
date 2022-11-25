@@ -186,29 +186,6 @@ namespace hex::plugin::builtin {
                             this->evaluatePattern(code, provider);
                     });
                 }
-
-                if (!this->m_lastEvaluationProcessed) {
-                    extraData.console = extraData.lastEvaluationLog;
-
-                    if (!this->m_lastEvaluationResult) {
-                        if (extraData.lastEvaluationError) {
-                            TextEditor::ErrorMarkers errorMarkers = {
-                                    { extraData.lastEvaluationError->line, extraData.lastEvaluationError->message }
-                            };
-                            this->m_textEditor.SetErrorMarkers(errorMarkers);
-                        }
-                    } else {
-                        for (auto &[name, variable] : extraData.patternVariables) {
-                            if (variable.outVariable && extraData.lastEvaluationOutVars.contains(name))
-                                variable.value = extraData.lastEvaluationOutVars.at(name);
-                        }
-
-                        EventManager::post<EventHighlightingChanged>();
-                    }
-
-                    this->m_lastEvaluationProcessed = true;
-                    extraData.executionDone = true;
-                }
             }
 
             if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
@@ -540,15 +517,41 @@ namespace hex::plugin::builtin {
 
         auto open = this->m_sectionWindowDrawer.contains(provider);
         if (open) {
-            ImGui::SetNextWindowSize(scaled(ImVec2(500, 650)), ImGuiCond_Appearing);
+            ImGui::SetNextWindowSize(scaled(ImVec2(600, 700)), ImGuiCond_Appearing);
             if (ImGui::Begin("hex.builtin.view.pattern_editor.section_popup"_lang, &open, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                 this->m_sectionWindowDrawer[provider]();
             }
             ImGui::End();
         }
 
-        if (!open)
+        if (!open && this->m_sectionWindowDrawer.contains(provider)) {
+            ImHexApi::HexEditor::setSelection(Region::Invalid());
             this->m_sectionWindowDrawer.erase(provider);
+        }
+
+        auto &extraData = ProviderExtraData::get(provider).patternLanguage;
+        if (!this->m_lastEvaluationProcessed) {
+            extraData.console = extraData.lastEvaluationLog;
+
+            if (!this->m_lastEvaluationResult) {
+                if (extraData.lastEvaluationError) {
+                    TextEditor::ErrorMarkers errorMarkers = {
+                            { extraData.lastEvaluationError->line, extraData.lastEvaluationError->message }
+                    };
+                    this->m_textEditor.SetErrorMarkers(errorMarkers);
+                }
+            } else {
+                for (auto &[name, variable] : extraData.patternVariables) {
+                    if (variable.outVariable && extraData.lastEvaluationOutVars.contains(name))
+                        variable.value = extraData.lastEvaluationOutVars.at(name);
+                }
+
+                EventManager::post<EventHighlightingChanged>();
+            }
+
+            this->m_lastEvaluationProcessed = true;
+            extraData.executionDone = true;
+        }
     }
 
 

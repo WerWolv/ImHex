@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
                     bufferSize = provider->getActualSize() - offset;
 
                 provider->read(offset + this->getBaseAddress(), buffer.data(), bufferSize);
-                file.write(buffer);
+                file.write(buffer.data(), bufferSize);
             }
         }
     }
