@@ -230,10 +230,28 @@ namespace hex::init {
             return false;
         }
 
+        const auto shouldLoadPlugin = [executablePath = hex::fs::getExecutablePath()](const Plugin &plugin) {
+            #if !defined(DEBUG)
+                return true;
+            #endif
+
+            if (!executablePath.has_value())
+                return true;
+
+            // In debug builds, ignore all plugins that are not part of the executable directory
+            return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
+        };
+
         u32 builtinPlugins = 0;
         u32 loadErrors     = 0;
         for (const auto &plugin : plugins) {
             if (!plugin.isBuiltinPlugin()) continue;
+
+            if (!shouldLoadPlugin(plugin)) {
+                log::debug("Skipping built-in plugin {}", plugin.getPath().string());
+                continue;
+            }
+
             builtinPlugins++;
             if (builtinPlugins > 1) continue;
 
@@ -245,6 +263,11 @@ namespace hex::init {
 
         for (const auto &plugin : plugins) {
             if (plugin.isBuiltinPlugin()) continue;
+
+            if (!shouldLoadPlugin(plugin)) {
+                log::debug("Skipping plugin {}", plugin.getPath().string());
+                continue;
+            }
 
             if (!plugin.initializePlugin()) {
                 log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
