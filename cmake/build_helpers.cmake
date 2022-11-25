@@ -390,9 +390,9 @@ function(downloadImHexPatternsFiles dest)
             GIT_TAG master
         )
 
-        message(STATUS "Downloading ImHex patterns from branch ${PATTERNS_BRANCH}..")
+        message(STATUS "Downloading ImHex-Patterns repo branch ${PATTERNS_BRANCH}...")
         FetchContent_Populate(imhex_patterns)
-        message(STATUS "Downloaded ImHex patterns !")
+        message(STATUS "Finished downloading ImHex-Patterns")
 
     else ()
         # Maybe patterns are cloned to a subdirectory
