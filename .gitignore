@@ -2,13 +2,8 @@
 .idea/
 
 cmake-build-*/
-
-build-linux/
 build*/
 
 *.mgc
 imgui.ini
 .DS_Store
-plugins/.rustc_info.json
-
-**/target
