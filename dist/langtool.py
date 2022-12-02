@@ -9,7 +9,7 @@ def handle_missing_key(command, lang_data, key, value):
     if command == "check":
         print(f"Error: Translation {lang_data['code']} is missing translation for key '{key}'")
         exit(2)
-    elif command == "translate":
+    elif command == "translate" or command == "create":
         print(f"Key \033[1m'{key}': '{value}'\033[0m is missing in translation '{lang_data['code']}'")
         new_value = input("Enter translation: ")
         lang_data["translations"][key] = new_value
@@ -19,11 +19,11 @@ def handle_missing_key(command, lang_data, key, value):
 
 def main():
     if len(sys.argv) < 3:
-        print(f"Usage: {Path(sys.argv[0]).name} <check|translate|update> <lang folder path> <language>")
+        print(f"Usage: {Path(sys.argv[0]).name} <check|translate|update|create> <lang folder path> <language>")
         return 1
 
     command = sys.argv[1]
-    if command not in ["check", "translate", "update"]:
+    if command not in ["check", "translate", "update", "create"]:
         print(f"Unknown command: {command}")
         return 1
 
@@ -51,6 +51,23 @@ def main():
 
     with default_lang_file_path.open("r", encoding="utf-8") as default_lang_file:
         default_lang_data = json.load(default_lang_file)
+
+        if command == "create" and lang != "":
+            lang_file_path = lang_folder_path / Path(lang + ".json")
+            if lang_file_path.exists():
+                print(f"Error: Language file {lang_file_path} already exists")
+                return 1
+
+            print(f"Creating new language file '{lang_file_path.name}'")
+
+            with lang_file_path.open("w", encoding="utf-8") as new_lang_file:
+                new_lang_data = {
+                    "code": lang,
+                    "language": input("Enter language: "),
+                    "country": input("Enter country: "),
+                    "translations": {}
+                }
+                json.dump(new_lang_data, new_lang_file, indent=4, ensure_ascii=False)
 
         for additional_lang_file_path in lang_folder_path.glob("*.json"):
             if not lang == "" and not additional_lang_file_path.stem == lang:
