@@ -1,5 +1,9 @@
 #include <hex/plugin.hpp>
 
+#include <hex/api/content_registry.hpp>
+#include <romfs/romfs.hpp>
+#include <nlohmann/json.hpp>
+
 namespace hex::plugin::builtin {
 
     void registerEventHandlers();
@@ -27,28 +31,14 @@ namespace hex::plugin::builtin {
 
     void handleBorderlessWindowMode();
 
-    void registerLanguageEnUS();
-    void registerLanguageDeDE();
-    void registerLanguageItIT();
-    void registerLanguageJaJP();
-    void registerLanguageZhCN();
-    void registerLanguagePtBR();
-    void registerLanguageZhTW();
-    void registerLanguageKoKR();
 }
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     using namespace hex::plugin::builtin;
 
-    registerLanguageEnUS();
-    registerLanguageDeDE();
-    registerLanguageItIT();
-    registerLanguageJaJP();
-    registerLanguageZhCN();
-    registerLanguagePtBR();
-    registerLanguageZhTW();
-    registerLanguageKoKR();
+    for (auto &path : romfs::list("lang"))
+        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
     registerEventHandlers();
     registerDataVisualizers();

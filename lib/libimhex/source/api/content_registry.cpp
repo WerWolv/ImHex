@@ -393,16 +393,42 @@ namespace hex {
 
     namespace ContentRegistry::Language {
 
-        void registerLanguage(const std::string &name, const std::string &languageCode) {
-            log::debug("Registered new language: {} ({})", name, languageCode);
+        void addLocalization(const nlohmann::json &data) {
+            if (!data.contains("code") || !data.contains("country") || !data.contains("language") || !data.contains("translations")) {
+                log::error("Localization data is missing required fields!");
+                return;
+            }
 
-            getLanguages().insert({ languageCode, name });
-        }
+            const auto &code            = data["code"];
+            const auto &country         = data["country"];
+            const auto &language        = data["language"];
+            const auto &translations    = data["translations"];
 
-        void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition) {
-            log::debug("Registered new localization for language {} with {} entries", languageCode, definition.getEntries().size());
+            if (!code.is_string() || !country.is_string() || !language.is_string() || !translations.is_object()) {
+                log::error("Localization data has invalid fields!");
+                return;
+            }
 
-            getLanguageDefinitions()[languageCode].push_back(definition);
+            if (data.contains("fallback")) {
+                const auto &fallback = data["fallback"];
+
+                if (fallback.is_boolean() && fallback.get<bool>())
+                    LangEntry::setFallbackLanguage(code.get<std::string>());
+            }
+
+            getLanguages().insert({ code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()) });
+
+            std::map<std::string, std::string> translationDefinitions;
+            for (auto &[key, value] : translations.items()) {
+                if (!value.is_string()) {
+                    log::error("Localization data has invalid fields!");
+                    continue;
+                }
+
+                translationDefinitions[key] = value.get<std::string>();
+            }
+
+            getLanguageDefinitions()[code.get<std::string>()].emplace_back(std::move(translationDefinitions));
         }
 
         std::map<std::string, std::string> &getLanguages() {

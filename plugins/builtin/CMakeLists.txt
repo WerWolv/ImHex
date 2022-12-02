@@ -58,15 +58,6 @@ add_library(${PROJECT_NAME} SHARED
 
         source/ui/hex_editor.cpp
         source/ui/pattern_drawer.cpp
-
-        source/lang/de_DE.cpp
-        source/lang/en_US.cpp
-        source/lang/it_IT.cpp
-        source/lang/ja_JP.cpp
-        source/lang/ko_KR.cpp
-        source/lang/pt_BR.cpp
-        source/lang/zh_CN.cpp
-        source/lang/zh_TW.cpp
 )
 
 # Add additional include directories here #

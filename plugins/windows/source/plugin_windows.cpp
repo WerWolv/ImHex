@@ -2,6 +2,7 @@
 
 #include <hex/api/content_registry.hpp>
 
+#include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
 
 #include "views/view_tty_console.hpp"
@@ -9,13 +10,6 @@
 using namespace hex;
 
 namespace hex::plugin::windows {
-
-    void registerLanguageEnUS();
-    void registerLanguageDeDE();
-    void registerLanguageZhCN();
-    void registerLanguagePtBR();
-    void registerLanguageZhTW();
-    void registerLanguageKoKR();
 
     void addFooterItems();
     void addTitleBarButtons();
@@ -63,13 +57,9 @@ static void checkBorderlessWindowOverride() {
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     using namespace hex::plugin::windows;
 
-    registerLanguageEnUS();
-    registerLanguageDeDE();
-    registerLanguageZhCN();
-    registerLanguagePtBR();
-    registerLanguageZhTW();
-    registerLanguageKoKR();
-    
+    for (auto &path : romfs::list("lang"))
+        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+
     hex::ContentRegistry::Views::add<ViewTTYConsole>();
 
     addFooterItems();

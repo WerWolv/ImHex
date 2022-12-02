@@ -9,7 +9,7 @@ namespace hex {
 
     class LanguageDefinition {
     public:
-        LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries);
+        explicit LanguageDefinition(std::map<std::string, std::string> &&entries);
 
         [[nodiscard]] const std::map<std::string, std::string> &getEntries() const;
 

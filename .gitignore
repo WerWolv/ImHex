@@ -3,6 +3,7 @@
 
 cmake-build-*/
 build*/
+venv/
 
 *.mgc
 imgui.ini

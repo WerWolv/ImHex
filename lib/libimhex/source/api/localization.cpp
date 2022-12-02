@@ -7,9 +7,14 @@ namespace hex {
     std::string LangEntry::s_fallbackLanguage;
     std::map<std::string, std::string> LangEntry::s_currStrings;
 
-    LanguageDefinition::LanguageDefinition(std::initializer_list<std::pair<std::string, std::string>> entries) {
-        for (const auto &pair : entries)
-            this->m_entries.insert(pair);
+    LanguageDefinition::LanguageDefinition(std::map<std::string, std::string> &&entries) {
+        for (const auto &[key, value] : entries) {
+            if (value == "***** MISSING TRANSLATION *****")
+                continue;
+
+            this->m_entries.insert({ key, value });
+        }
+
     }
 
     const std::map<std::string, std::string> &LanguageDefinition::getEntries() const {

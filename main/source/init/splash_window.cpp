@@ -51,16 +51,17 @@ namespace hex::init {
                         this->m_currTaskName = name;
                     }
 
+                    ON_SCOPE_EXIT {
+                        tasksCompleted++;
+                        this->m_progress = float(tasksCompleted) / this->m_tasks.size();
+                    };
+
                     auto startTime = std::chrono::high_resolution_clock::now();
                     if (!task())
                         status = false;
                     auto endTime = std::chrono::high_resolution_clock::now();
 
                     log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
-
-                    tasksCompleted++;
-
-                    this->m_progress = float(tasksCompleted) / this->m_tasks.size();
                 };
 
                 try {

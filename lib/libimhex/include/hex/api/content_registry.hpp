@@ -254,8 +254,7 @@ namespace hex {
 
         /* Language Registry. Allows together with the LangEntry class and the _lang user defined literal to add new languages */
         namespace Language {
-            void registerLanguage(const std::string &name, const std::string &languageCode);
-            void addLocalizations(const std::string &languageCode, const LanguageDefinition &definition);
+            void addLocalization(const nlohmann::json &data);
 
             std::map<std::string, std::string> &getLanguages();
             std::map<std::string, std::vector<LanguageDefinition>> &getLanguageDefinitions();
