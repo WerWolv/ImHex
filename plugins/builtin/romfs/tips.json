@@ -6,7 +6,8 @@
             "The data processor allows pre-processing of the binary input data before it's displayed without modifying the original data.",
             "Take a closer look at the Splash screen :)",
             "Check out the WerWolv/ImHex-Patterns repository for pre-made patterns and more!",
-            "ImHex can be easily extended with plugins through its API."
+            "ImHex can be easily extended with plugins through its API.",
+            "If you don't need to display non-ASCII unicode symbols, you can disable them in the settings. This will make ImHex start faster!"
         ]
     },
     {
