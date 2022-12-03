@@ -3,6 +3,7 @@ import sys
 import json
 
 DEFAULT_LANG = "en_US"
+INVALID_TRANSLATION = "***** MISSING TRANSLATION *****"
 
 
 def handle_missing_key(command, lang_data, key, value):
@@ -14,7 +15,7 @@ def handle_missing_key(command, lang_data, key, value):
         new_value = input("Enter translation: ")
         lang_data["translations"][key] = new_value
     elif command == "update":
-        lang_data["translations"][key] = "***** MISSING TRANSLATION *****"
+        lang_data["translations"][key] = INVALID_TRANSLATION
 
 
 def main():
@@ -82,7 +83,7 @@ def main():
                 additional_lang_data = json.load(additional_lang_file)
 
                 for key, value in default_lang_data["translations"].items():
-                    if key not in additional_lang_data["translations"]:
+                    if key not in additional_lang_data["translations"] or additional_lang_data["translations"][key] == INVALID_TRANSLATION:
                         handle_missing_key(command, additional_lang_data, key, value)
 
                 keys_to_remove = []
