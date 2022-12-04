@@ -38,8 +38,10 @@ namespace hex {
 
         constexpr static u32 DefaultTimeout = 2'000;
 
-        std::future<Response<std::string>> getString(const std::string &url, u32 timeout = DefaultTimeout);
-        std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = DefaultTimeout);
+        std::future<Response<std::string>> getString(const std::string &url, u32 timeout = DefaultTimeout, const std::map<std::string, std::string> &extraHeaders = {}, const std::string &body = {});
+        std::future<Response<nlohmann::json>> getJson(const std::string &url, u32 timeout = DefaultTimeout, const std::map<std::string, std::string> &extraHeaders = {}, const std::string &body = {});
+
+        std::future<Response<nlohmann::json>> postJson(const std::string &url, u32 timeout = DefaultTimeout, const std::map<std::string, std::string> &extraHeaders = {}, const std::string &body = {});
 
         std::future<Response<std::string>> uploadFile(const std::string &url, const std::fs::path &filePath, u32 timeout = DefaultTimeout);
         std::future<Response<void>> downloadFile(const std::string &url, const std::fs::path &filePath, u32 timeout = DefaultTimeout);

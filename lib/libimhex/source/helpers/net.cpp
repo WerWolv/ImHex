@@ -143,7 +143,7 @@ namespace hex {
             return i32(responseCode);
     }
 
-    std::future<Response<std::string>> Net::getString(const std::string &url, u32 timeout) {
+    std::future<Response<std::string>> Net::getString(const std::string &url, u32 timeout, const std::map<std::string, std::string> &extraHeaders, const std::string &body) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this] {
@@ -152,7 +152,7 @@ namespace hex {
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
             curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "GET");
-            setCommonSettings(response, url, timeout);
+            setCommonSettings(response, url, timeout, extraHeaders, body);
 
             auto responseCode = execute();
 
@@ -160,7 +160,7 @@ namespace hex {
         });
     }
 
-    std::future<Response<nlohmann::json>> Net::getJson(const std::string &url, u32 timeout) {
+    std::future<Response<nlohmann::json>> Net::getJson(const std::string &url, u32 timeout, const std::map<std::string, std::string> &extraHeaders, const std::string &body) {
         this->m_transmissionActive.lock();
 
         return std::async(std::launch::async, [=, this] {
@@ -169,7 +169,26 @@ namespace hex {
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
             curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "GET");
-            setCommonSettings(response, url, timeout);
+            setCommonSettings(response, url, timeout, extraHeaders, body);
+
+            auto responseCode = execute();
+            if (!responseCode.has_value())
+                return Response<nlohmann::json> { 0, { } };
+            else
+                return Response<nlohmann::json> { responseCode.value_or(0), nlohmann::json::parse(response, nullptr, false, true) };
+        });
+    }
+
+    std::future<Response<nlohmann::json>> Net::postJson(const std::string &url, u32 timeout, const std::map<std::string, std::string> &extraHeaders, const std::string &body) {
+        this->m_transmissionActive.lock();
+
+        return std::async(std::launch::async, [=, this] {
+            std::string response;
+
+            ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
+
+            curl_easy_setopt(this->m_ctx, CURLOPT_CUSTOMREQUEST, "POST");
+            setCommonSettings(response, url, timeout, extraHeaders, body);
 
             auto responseCode = execute();
             if (!responseCode.has_value())
