@@ -10,13 +10,12 @@
 #include <atomic>
 
 #include <nlohmann/json_fwd.hpp>
+#include <curl/curl.h>
 #include <curl/system.h>
 #include <mbedtls/ssl.h>
 
 #include <hex/helpers/fs.hpp>
 
-using CURL = void;
-struct curl_slist;
 
 namespace hex {
 
@@ -54,12 +53,14 @@ namespace hex {
         void cancel() { this->m_shouldCancel = true; }
 
         static void setProxy(const std::string &url);
+        static void setCACert(const std::string &content);
 
     private:
         void setCommonSettings(std::string &response, const std::string &url, u32 timeout = 2000, const std::map<std::string, std::string> &extraHeaders = {}, const std::string &body = {});
         std::optional<i32> execute();
 
         friend int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow);
+        friend CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData);
 
     private:
         CURL *m_ctx;
@@ -71,6 +72,7 @@ namespace hex {
         bool m_shouldCancel = false;
 
         static std::string s_proxyUrl;
+        static std::string s_caCert;
     };
 
 }

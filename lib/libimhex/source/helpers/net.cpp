@@ -9,10 +9,7 @@
 #include <filesystem>
 #include <cstdio>
 
-#include <curl/curl.h>
 #include <nlohmann/json.hpp>
-
-#include <romfs/romfs.hpp>
 
 namespace hex {
 
@@ -45,7 +42,7 @@ namespace hex {
     }
 
     [[maybe_unused]]
-    static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData) {
+    CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData) {
         hex::unused(ctx, userData);
 
         auto *cfg = static_cast<mbedtls_ssl_config *>(sslctx);
@@ -53,8 +50,7 @@ namespace hex {
         auto crt = static_cast<mbedtls_x509_crt*>(userData);
         mbedtls_x509_crt_init(crt);
 
-        auto cacert = romfs::get("cacert.pem").string();
-        mbedtls_x509_crt_parse(crt, reinterpret_cast<const u8 *>(cacert.data()), cacert.size());
+        mbedtls_x509_crt_parse(crt, reinterpret_cast<const u8 *>(Net::s_caCert.data()), Net::s_caCert.size());
 
         mbedtls_ssl_conf_ca_chain(cfg, crt, nullptr);
 
@@ -296,9 +292,13 @@ namespace hex {
     }
 
     std::string Net::s_proxyUrl;
-
     void Net::setProxy(const std::string &url) {
         Net::s_proxyUrl = url;
+    }
+
+    std::string Net::s_caCert;
+    void Net::setCACert(const std::string &content) {
+        Net::s_caCert = content;
     }
 
 }

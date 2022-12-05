@@ -10,11 +10,6 @@ set_target_properties(imgui PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/microtar ${CMAKE_CURRENT_BINARY_DIR}/external/microtar EXCLUDE_FROM_ALL)
 set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-set(LIBROMFS_RESOURCE_LOCATION ${IMHEX_BASE_FOLDER}/resources/romfs)
-set(LIBROMFS_PROJECT_NAME imhex)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/external/libromfs EXCLUDE_FROM_ALL)
-set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/intervaltree ${CMAKE_CURRENT_BINARY_DIR}/external/intervaltree EXCLUDE_FROM_ALL)
 set_target_properties(intervaltree PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -175,4 +170,3 @@ if (APPLE)
 endif ()
 
 target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} ${Python_LIBRARIES} libpl intervaltree)
-target_link_libraries(libimhex PRIVATE libromfs-imhex)

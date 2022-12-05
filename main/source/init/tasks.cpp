@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui_freetype.h>
+#include <romfs/romfs.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
@@ -46,6 +47,14 @@ namespace hex::init {
                 ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
         }
+        return true;
+    }
+
+    bool setupEnvironment() {
+        hex::log::debug("Using romfs: '{}'", romfs::name());
+
+        Net::setCACert(std::string(romfs::get("cacert.pem").string()));
+
         return true;
     }
 
@@ -327,6 +336,7 @@ namespace hex::init {
 
     std::vector<Task> getInitTasks() {
         return {
+            { "Setting up environment",  setupEnvironment,    false },
             { "Creating directories",    createDirectories,   false },
             { "Loading settings",        loadSettings,        false },
             { "Loading plugins",         loadPlugins,         false },

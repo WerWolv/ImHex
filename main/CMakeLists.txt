@@ -17,6 +17,11 @@ add_executable(main ${APPLICATION_TYPE}
 target_include_directories(main PUBLIC include)
 setupCompilerWarnings(main)
 
+set(LIBROMFS_RESOURCE_LOCATION ${IMHEX_BASE_FOLDER}/resources/romfs)
+set(LIBROMFS_PROJECT_NAME imhex)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/main/libromfs EXCLUDE_FROM_ALL)
+set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 set_target_properties(main PROPERTIES
         OUTPUT_NAME "imhex"
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/..
