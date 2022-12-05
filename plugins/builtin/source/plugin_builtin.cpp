@@ -1,6 +1,8 @@
 #include <hex/plugin.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/logger.hpp>
+
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
 
@@ -37,6 +39,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     using namespace hex::plugin::builtin;
 
+    hex::log::debug("Using romfs: '{}'", romfs::name());
     for (auto &path : romfs::list("lang"))
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 

@@ -89,6 +89,7 @@ namespace hex::init {
     }
 
     bool WindowSplash::loop() {
+        hex::log::debug("Using romfs: '{}'", romfs::name());
         auto splash                  = romfs::get("splash.png");
         ImGui::Texture splashTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
 

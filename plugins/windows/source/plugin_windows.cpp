@@ -1,6 +1,7 @@
 #include <hex/plugin.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
@@ -57,6 +58,7 @@ static void checkBorderlessWindowOverride() {
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     using namespace hex::plugin::windows;
 
+    hex::log::debug("Using romfs: '{}'", romfs::name());
     for (auto &path : romfs::list("lang"))
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
