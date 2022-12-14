@@ -91,7 +91,7 @@ namespace hex::init {
         return result;
     }
 
-    bool loadFonts() {
+    static bool loadFontsImpl(bool loadUnicode) {
         float fontSize = ImHexApi::System::getFontSize();
 
         const auto &fontFile = ImHexApi::System::getCustomFontPath();
@@ -115,15 +115,11 @@ namespace hex::init {
         }
 
         ImWchar fontAwesomeRange[] = {
-            ICON_MIN_FA, ICON_MAX_FA, 0
+                ICON_MIN_FA, ICON_MAX_FA, 0
         };
 
         ImWchar codiconsRange[] = {
-            ICON_MIN_VS, ICON_MAX_VS, 0
-        };
-
-        ImWchar unifontRange[] = {
-            0x0100, 0xFFF0, 0
+                ICON_MIN_VS, ICON_MAX_VS, 0
         };
 
         if (fontFile.empty()) {
@@ -133,7 +129,7 @@ namespace hex::init {
             fonts->AddFontDefault(&cfg);
         } else {
             // Load custom font
-            fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);    // Needs conversion to char for Windows
+            fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
         }
 
         cfg.MergeMode = true;
@@ -141,16 +137,29 @@ namespace hex::init {
         fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange);
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange);
 
-        bool enableUnicode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true);
-        if (enableUnicode)
-            fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, unifontRange);
+        if (loadUnicode)
+            fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, ranges.Data);
 
-        fonts->Build();
+        if (!fonts->Build()) {
+            if (loadUnicode) {
+                log::error("Failed to build font atlas! Disabling Unicode support.");
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", false);
+                IM_DELETE(fonts);
+                return loadFontsImpl(false);
+            } else {
+                log::error("Failed to build font atlas! Check your Graphics driver!");
+                return false;
+            }
+        }
 
         View::setFontAtlas(fonts);
         View::setFontConfig(cfg);
 
         return true;
+    }
+
+    bool loadFonts() {
+        return loadFontsImpl(ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true));
     }
 
     bool deleteSharedData() {
