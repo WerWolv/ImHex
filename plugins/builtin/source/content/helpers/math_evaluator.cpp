@@ -24,30 +24,30 @@ namespace hex {
 
     template<typename T>
     std::pair<typename MathEvaluator<T>::Operator, size_t> MathEvaluator<T>::toOperator(const std::string &input) {
-        if (input.starts_with("##")) return { Operator::Combine, 2 };
-        if (input.starts_with("==")) return { Operator::Equals, 2 };
-        if (input.starts_with("!=")) return { Operator::NotEquals, 2 };
-        if (input.starts_with(">=")) return { Operator::GreaterThanOrEquals, 2 };
-        if (input.starts_with("<=")) return { Operator::LessThanOrEquals, 2 };
-        if (input.starts_with(">>")) return { Operator::ShiftRight, 2 };
-        if (input.starts_with("<<")) return { Operator::ShiftLeft, 2 };
-        if (input.starts_with("||")) return { Operator::Or, 2 };
-        if (input.starts_with("^^")) return { Operator::Xor, 2 };
-        if (input.starts_with("&&")) return { Operator::And, 2 };
-        if (input.starts_with("**")) return { Operator::Exponentiation, 2 };
-        if (input.starts_with(">")) return { Operator::GreaterThan, 1 };
-        if (input.starts_with("<")) return { Operator::LessThan, 1 };
-        if (input.starts_with("!")) return { Operator::Not, 1 };
-        if (input.starts_with("|")) return { Operator::BitwiseOr, 1 };
-        if (input.starts_with("^")) return { Operator::BitwiseXor, 1 };
-        if (input.starts_with("&")) return { Operator::BitwiseAnd, 1 };
-        if (input.starts_with("~")) return { Operator::BitwiseNot, 1 };
-        if (input.starts_with("+")) return { Operator::Addition, 1 };
-        if (input.starts_with("-")) return { Operator::Subtraction, 1 };
-        if (input.starts_with("*")) return { Operator::Multiplication, 1 };
-        if (input.starts_with("/")) return { Operator::Division, 1 };
-        if (input.starts_with("%")) return { Operator::Modulus, 1 };
-        if (input.starts_with("=")) return { Operator::Assign, 1 };
+        if (input.starts_with("##")) return { Operator::Combine,                2 };
+        if (input.starts_with("==")) return { Operator::Equals,                 2 };
+        if (input.starts_with("!=")) return { Operator::NotEquals,              2 };
+        if (input.starts_with(">=")) return { Operator::GreaterThanOrEquals,    2 };
+        if (input.starts_with("<=")) return { Operator::LessThanOrEquals,       2 };
+        if (input.starts_with(">>")) return { Operator::ShiftRight,             2 };
+        if (input.starts_with("<<")) return { Operator::ShiftLeft,              2 };
+        if (input.starts_with("||")) return { Operator::Or,                     2 };
+        if (input.starts_with("^^")) return { Operator::Xor,                    2 };
+        if (input.starts_with("&&")) return { Operator::And,                    2 };
+        if (input.starts_with("**")) return { Operator::Exponentiation,         2 };
+        if (input.starts_with(">"))  return { Operator::GreaterThan,            1 };
+        if (input.starts_with("<"))  return { Operator::LessThan,               1 };
+        if (input.starts_with("!"))  return { Operator::Not,                    1 };
+        if (input.starts_with("|"))  return { Operator::BitwiseOr,              1 };
+        if (input.starts_with("^"))  return { Operator::BitwiseXor,             1 };
+        if (input.starts_with("&"))  return { Operator::BitwiseAnd,             1 };
+        if (input.starts_with("~"))  return { Operator::BitwiseNot,             1 };
+        if (input.starts_with("+"))  return { Operator::Addition,               1 };
+        if (input.starts_with("-"))  return { Operator::Subtraction,            1 };
+        if (input.starts_with("*"))  return { Operator::Multiplication,         1 };
+        if (input.starts_with("/"))  return { Operator::Division,               1 };
+        if (input.starts_with("%"))  return { Operator::Modulus,                1 };
+        if (input.starts_with("="))  return { Operator::Assign,                 1 };
 
         return { Operator::Invalid, 0 };
     }
@@ -455,8 +455,7 @@ namespace hex {
             this->setFunction(
                 "floor", [](auto args) { return std::floor(args[0]); }, 1, 1);
             this->setFunction(
-                "sign", [](auto args) { return (args[0] > 0) ? 1 : (args[0] == 0) ? 0
-                                                                                  : -1; }, 1, 1);
+                "sign", [](auto args) { return (args[0] > 0) ? 1 : (args[0] == 0) ? 0 : -1; }, 1, 1);
             this->setFunction(
                 "abs", [](auto args) { return std::abs(args[0]); }, 1, 1);
             this->setFunction(
