@@ -245,9 +245,15 @@ namespace hex {
             runtime.reset();
 
             if (provider != nullptr) {
-                runtime.setDataSource([provider](u64 offset, u8 *buffer, size_t size) {
-                    provider->read(offset, buffer, size);
-                }, provider->getBaseAddress(), provider->getActualSize());
+                runtime.setDataSource(provider->getBaseAddress(), provider->getActualSize(),
+                                      [provider](u64 offset, u8 *buffer, size_t size) {
+                                          provider->read(offset, buffer, size);
+                                      },
+                                      [provider](u64 offset, const u8 *buffer, size_t size) {
+                                          if (provider->isWritable())
+                                              provider->write(offset, buffer, size);
+                                      }
+                );
             }
 
             runtime.setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));

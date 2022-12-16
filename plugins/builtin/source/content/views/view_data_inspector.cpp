@@ -87,14 +87,15 @@ namespace hex::plugin::builtin {
                 pl::PatternLanguage runtime;
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
 
-                runtime.setDataSource([this, invert](u64 offset, u8 *buffer, size_t size) {
+                runtime.setDataSource(this->m_selectedProvider->getBaseAddress(), this->m_selectedProvider->getActualSize(),
+                [this, invert](u64 offset, u8 *buffer, size_t size) {
                     this->m_selectedProvider->read(offset, buffer, size);
 
                     if (invert) {
                         for (size_t i = 0; i < size; i++)
                             buffer[i] ^= 0xFF;
                     }
-                }, this->m_selectedProvider->getBaseAddress(), this->m_selectedProvider->getActualSize());
+                });
 
                 runtime.setDangerousFunctionCallHandler([]{ return false; });
                 runtime.setDefaultEndian(endian);

@@ -22,6 +22,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/api/localization.hpp>
+#include <content/helpers/math_evaluator.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -155,7 +156,6 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
             ImGui::TableNextColumn();
-            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
     }
@@ -229,10 +229,32 @@ namespace hex::plugin::builtin::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternBoolean& pattern) {
         createDefaultEntry(pattern);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+        bool value = hex::get_or(pattern.getValue(), true) != 0;
+        if (ImGui::Checkbox(pattern.getFormattedValue().c_str(), &value))
+            pattern.setValue(value);
+
+        ImGui::PopItemWidth();
+        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternCharacter& pattern) {
         createDefaultEntry(pattern);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        auto value = hex::encodeByteString(pattern.getBytes());
+        if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+            if (!value.empty()) {
+                auto result = hex::decodeByteString(value);
+                pattern.setValue(char(result[0]));
+            }
+        }
+        ImGui::PopItemWidth();
+        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternEnum& pattern) {
@@ -247,11 +269,40 @@ namespace hex::plugin::builtin::ui {
         drawOffsetColumn(pattern);
         drawSizeColumn(pattern);
         drawTypenameColumn(pattern, "enum");
-        ImGui::TextFormatted("{}", pattern.getFormattedValue());
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+        if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
+            auto currValue = pl::core::Token::literalToUnsigned(pattern.getValue());
+            for (auto &value : pattern.getEnumValues()) {
+                bool isSelected = pl::core::Token::literalToUnsigned(value.min) <= currValue && pl::core::Token::literalToUnsigned(value.max) >= currValue;
+                if (ImGui::Selectable(value.name.c_str(), isSelected)) {
+                    pattern.setValue(value.min);
+                }
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopItemWidth();
+        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternFloat& pattern) {
         createDefaultEntry(pattern);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+        auto value = pl::core::Token::literalToFloatingPoint(pattern.getValue());
+        if (ImGui::InputDouble("##Value", &value, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+            pattern.setValue(value);
+        }
+
+        ImGui::PopItemWidth();
+        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternPadding& pattern) {
@@ -287,12 +338,28 @@ namespace hex::plugin::builtin::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternSigned& pattern) {
         createDefaultEntry(pattern);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+        auto value = pattern.getFormattedValue();
+        if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+            MathEvaluator<i128> mathEvaluator;
+
+            if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                pattern.setValue(result.value());
+        }
+
+        ImGui::PopItemWidth();
+        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternString& pattern) {
-        if (pattern.getSize() > 0)
+        if (pattern.getSize() > 0) {
             createDefaultEntry(pattern);
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
+    }
 
     void PatternDrawer::visit(pl::ptrn::PatternStruct& pattern) {
         bool open = true;
@@ -356,15 +423,30 @@ namespace hex::plugin::builtin::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternUnsigned& pattern) {
         createDefaultEntry(pattern);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        auto value = pattern.getFormattedValue();
+        if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+            MathEvaluator<u128> mathEvaluator;
+
+            if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                pattern.setValue(result.value());
+        }
+        ImGui::PopItemWidth();
+        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternWideCharacter& pattern) {
         createDefaultEntry(pattern);
+        ImGui::TextFormatted("{}", pattern.getFormattedValue());
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternWideString& pattern) {
-        if (pattern.getSize() > 0)
+        if (pattern.getSize() > 0) {
             createDefaultEntry(pattern);
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
+        }
     }
 
     void PatternDrawer::draw(pl::ptrn::Pattern& pattern) {
@@ -552,7 +634,9 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableHeadersRow();
 
             for (auto &pattern : this->m_sortedPatterns) {
+                ImGui::PushID(pattern);
                 this->draw(*pattern);
+                ImGui::PopID();
             }
 
             ImGui::EndTable();
