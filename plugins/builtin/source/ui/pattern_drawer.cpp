@@ -276,8 +276,11 @@ namespace hex::plugin::builtin::ui {
         if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
             auto currValue = pl::core::Token::literalToUnsigned(pattern.getValue());
             for (auto &value : pattern.getEnumValues()) {
-                bool isSelected = pl::core::Token::literalToUnsigned(value.min) <= currValue && pl::core::Token::literalToUnsigned(value.max) >= currValue;
-                if (ImGui::Selectable(value.name.c_str(), isSelected)) {
+                auto min = pl::core::Token::literalToUnsigned(value.min);
+                auto max = pl::core::Token::literalToUnsigned(value.max);
+
+                bool isSelected = min <= currValue && max >= currValue;
+                if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
                     pattern.setValue(value.min);
                 }
                 if (isSelected)
@@ -296,9 +299,12 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-        auto value = pl::core::Token::literalToFloatingPoint(pattern.getValue());
-        if (ImGui::InputDouble("##Value", &value, 0.0, 0.0, "%.6f", ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            pattern.setValue(value);
+        auto value = pattern.getFormattedValue();
+        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+            MathEvaluator<long double> mathEvaluator;
+
+            if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                pattern.setValue(double(result.value()));
         }
 
         ImGui::PopItemWidth();
@@ -343,7 +349,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
         auto value = pattern.getFormattedValue();
-        if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
             MathEvaluator<i128> mathEvaluator;
 
             if (auto result = mathEvaluator.evaluate(value); result.has_value())
@@ -378,7 +384,20 @@ namespace hex::plugin::builtin::ui {
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "struct");
-            ImGui::TextFormatted("{}", pattern.getFormattedValue());
+
+            if (pattern.getWriteFormatterFunction().empty())
+                ImGui::TextFormatted("{}", pattern.getFormattedValue());
+            else {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                auto value = pattern.getFormattedValue();
+                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    pattern.setValue(value);
+                }
+                ImGui::PopItemWidth();
+                ImGui::PopStyleVar();
+            }
+
         }
 
         if (open) {
@@ -408,7 +427,19 @@ namespace hex::plugin::builtin::ui {
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "union");
-            ImGui::TextFormatted("{}", pattern.getFormattedValue());
+
+            if (pattern.getWriteFormatterFunction().empty())
+                ImGui::TextFormatted("{}", pattern.getFormattedValue());
+            else {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                auto value = pattern.getFormattedValue();
+                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    pattern.setValue(value);
+                }
+                ImGui::PopItemWidth();
+                ImGui::PopStyleVar();
+            }
         }
 
         if (open) {
@@ -427,7 +458,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
         auto value = pattern.getFormattedValue();
-        if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
             MathEvaluator<u128> mathEvaluator;
 
             if (auto result = mathEvaluator.evaluate(value); result.has_value())
