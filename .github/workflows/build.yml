@@ -269,7 +269,7 @@ jobs:
           sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
-          sudo pip3 install appimage-builder
+          sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
 
       # Ubuntu cmake build
       - name: 🛠️ Build
