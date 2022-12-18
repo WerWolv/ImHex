@@ -161,7 +161,7 @@ namespace hex::plugin::builtin {
         if (result.ec != std::errc() || result.ptr != string.data() + string.size())
             return { false, { }, 0 };
 
-        if (value < std::numeric_limits<Type>::min() || value > std::numeric_limits<Type>::max())
+        if (value < std::numeric_limits<Type>::lowest() || value > std::numeric_limits<Type>::max())
             return { false, { }, 0 };
 
         return { true, value, sizeof(Type) };
