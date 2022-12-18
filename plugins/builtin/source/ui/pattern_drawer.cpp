@@ -137,6 +137,7 @@ namespace hex::plugin::builtin::ui {
 
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
             ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
+            this->m_editingPattern = nullptr;
         }
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -732,7 +733,7 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height) {
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
             this->m_editingPattern = nullptr;
 
         if (beginPatternTable(patterns, this->m_sortedPatterns, height)) {
