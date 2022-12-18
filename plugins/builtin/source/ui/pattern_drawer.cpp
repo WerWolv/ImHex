@@ -129,37 +129,39 @@ namespace hex::plugin::builtin::ui {
             }
         }
 
-        void makeSelectable(const pl::ptrn::Pattern &pattern) {
-            ImGui::PushID(static_cast<int>(pattern.getOffset()));
-            ImGui::PushID(pattern.getVariableName().c_str());
-
-            if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-                ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-            }
-
-            ImGui::SameLine(0, 0);
-
-            ImGui::PopID();
-            ImGui::PopID();
-        }
-
-        void createDefaultEntry(pl::ptrn::Pattern &pattern) {
-            ImGui::TableNextRow();
-            createLeafNode(pattern);
-            ImGui::TableNextColumn();
-            makeSelectable(pattern);
-            drawCommentTooltip(pattern);
-            ImGui::SameLine();
-            drawNameColumn(pattern);
-            drawColorColumn(pattern);
-            drawOffsetColumn(pattern);
-            drawSizeColumn(pattern);
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
-            ImGui::TableNextColumn();
-        }
-
     }
 
+    void PatternDrawer::makeSelectable(const pl::ptrn::Pattern &pattern) {
+        ImGui::PushID(static_cast<int>(pattern.getOffset()));
+        ImGui::PushID(pattern.getVariableName().c_str());
+
+        if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+            ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
+        }
+
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+            this->m_editingPattern = &pattern;
+
+        ImGui::SameLine(0, 0);
+
+        ImGui::PopID();
+        ImGui::PopID();
+    }
+
+    void PatternDrawer::createDefaultEntry(pl::ptrn::Pattern &pattern) {
+        ImGui::TableNextRow();
+        createLeafNode(pattern);
+        ImGui::TableNextColumn();
+        makeSelectable(pattern);
+        drawCommentTooltip(pattern);
+        ImGui::SameLine();
+        drawNameColumn(pattern);
+        drawColorColumn(pattern);
+        drawOffsetColumn(pattern);
+        drawSizeColumn(pattern);
+        ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
+        ImGui::TableNextColumn();
+    }
 
 
     void PatternDrawer::visit(pl::ptrn::PatternArrayDynamic& pattern) {
@@ -218,8 +220,10 @@ namespace hex::plugin::builtin::ui {
         }
 
         if (open) {
-            pattern.forEachMember([&] (auto &field) {
-                this->draw(field);
+            pattern.forEachEntry(0, pattern.getEntryCount(), [&] (u64, auto *field) {
+                ImGui::PushID(field);
+                this->draw(*field);
+                ImGui::PopID();
             });
 
             if (!pattern.isInlined())
@@ -230,31 +234,44 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternBoolean& pattern) {
         createDefaultEntry(pattern);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        if (this->m_editingPattern == &pattern) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-        bool value = hex::get_or(pattern.getValue(), true) != 0;
-        if (ImGui::Checkbox(pattern.getFormattedValue().c_str(), &value))
-            pattern.setValue(value);
+            bool value = hex::get_or(pattern.getValue(), true) != 0;
+            if (ImGui::Checkbox(pattern.getFormattedValue().c_str(), &value)) {
+                pattern.setValue(value);
+                this->m_editingPattern = nullptr;
+            }
 
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
+        } else {
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
+        }
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternCharacter& pattern) {
         createDefaultEntry(pattern);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-        auto value = hex::encodeByteString(pattern.getBytes());
-        if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            if (!value.empty()) {
-                auto result = hex::decodeByteString(value);
-                pattern.setValue(char(result[0]));
+        if (this->m_editingPattern == &pattern) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            auto value = hex::encodeByteString(pattern.getBytes());
+            if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                if (!value.empty()) {
+                    auto result = hex::decodeByteString(value);
+                    if (!result.empty())
+                        pattern.setValue(char(result[0]));
+
+                    this->m_editingPattern = nullptr;
+                }
             }
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
+        } else {
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternEnum& pattern) {
@@ -270,45 +287,56 @@ namespace hex::plugin::builtin::ui {
         drawSizeColumn(pattern);
         drawTypenameColumn(pattern, "enum");
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        if (this->m_editingPattern == &pattern) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-        if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
-            auto currValue = pl::core::Token::literalToUnsigned(pattern.getValue());
-            for (auto &value : pattern.getEnumValues()) {
-                auto min = pl::core::Token::literalToUnsigned(value.min);
-                auto max = pl::core::Token::literalToUnsigned(value.max);
+            if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
+                auto currValue = pl::core::Token::literalToUnsigned(pattern.getValue());
+                for (auto &value : pattern.getEnumValues()) {
+                    auto min = pl::core::Token::literalToUnsigned(value.min);
+                    auto max = pl::core::Token::literalToUnsigned(value.max);
 
-                bool isSelected = min <= currValue && max >= currValue;
-                if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
-                    pattern.setValue(value.min);
+                    bool isSelected = min <= currValue && max >= currValue;
+                    if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
+                        pattern.setValue(value.min);
+                        this->m_editingPattern = nullptr;
+                    }
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
                 }
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
-        }
 
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
+        } else {
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
+        }
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternFloat& pattern) {
         createDefaultEntry(pattern);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        if (this->m_editingPattern == &pattern) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-        auto value = pattern.getFormattedValue();
-        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            MathEvaluator<long double> mathEvaluator;
+            auto value = pattern.toString();
+            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                MathEvaluator<long double> mathEvaluator;
 
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(double(result.value()));
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(double(result.value()));
+
+                this->m_editingPattern = nullptr;
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
+        } else {
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
-
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternPadding& pattern) {
@@ -345,25 +373,46 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternSigned& pattern) {
         createDefaultEntry(pattern);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        if (this->m_editingPattern == &pattern) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-        auto value = pattern.getFormattedValue();
-        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            MathEvaluator<i128> mathEvaluator;
+            auto value = pattern.getFormattedValue();
+            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                MathEvaluator<i128> mathEvaluator;
 
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(result.value());
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(result.value());
+
+                this->m_editingPattern = nullptr;
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
+        } else {
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
-
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternString& pattern) {
         if (pattern.getSize() > 0) {
             createDefaultEntry(pattern);
-            ImGui::TextFormatted("{}", pattern.getFormattedValue());
+
+            if (this->m_editingPattern == &pattern) {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+                auto value = pattern.toString();
+                if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    pattern.setValue(value);
+                    this->m_editingPattern = nullptr;
+                }
+
+                ImGui::PopItemWidth();
+                ImGui::PopStyleVar();
+            } else {
+                ImGui::TextFormatted("{}", pattern.getFormattedValue());
+            }
         }
     }
 
@@ -385,24 +434,31 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "struct");
 
-            if (pattern.getWriteFormatterFunction().empty())
-                ImGui::TextFormatted("{}", pattern.getFormattedValue());
-            else {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                auto value = pattern.getFormattedValue();
-                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
+            if (this->m_editingPattern == &pattern) {
+                if (pattern.getWriteFormatterFunction().empty())
+                    ImGui::TextFormatted("{}", pattern.getFormattedValue());
+                else {
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                    auto value = pattern.toString();
+                    if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                        pattern.setValue(value);
+                        this->m_editingPattern = nullptr;
+                    }
+                    ImGui::PopItemWidth();
+                    ImGui::PopStyleVar();
                 }
-                ImGui::PopItemWidth();
-                ImGui::PopStyleVar();
+            } else {
+                ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
 
         }
 
         if (open) {
             pattern.forEachEntry(0, pattern.getMembers().size(), [&](u64, auto *member){
+                ImGui::PushID(member);
                 this->draw(*member);
+                ImGui::PopID();
             });
 
             if (!pattern.isInlined())
@@ -428,23 +484,30 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "union");
 
-            if (pattern.getWriteFormatterFunction().empty())
-                ImGui::TextFormatted("{}", pattern.getFormattedValue());
-            else {
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                auto value = pattern.getFormattedValue();
-                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                    pattern.setValue(value);
+            if (this->m_editingPattern == &pattern) {
+                if (pattern.getWriteFormatterFunction().empty())
+                    ImGui::TextFormatted("{}", pattern.getFormattedValue());
+                else {
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                    auto value = pattern.toString();
+                    if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                        pattern.setValue(value);
+                        this->m_editingPattern = nullptr;
+                    }
+                    ImGui::PopItemWidth();
+                    ImGui::PopStyleVar();
                 }
-                ImGui::PopItemWidth();
-                ImGui::PopStyleVar();
+            } else {
+                ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
         }
 
         if (open) {
             pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, auto *member) {
+                ImGui::PushID(member);
                 this->draw(*member);
+                ImGui::PopID();
             });
 
             if (!pattern.isInlined())
@@ -455,17 +518,23 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternUnsigned& pattern) {
         createDefaultEntry(pattern);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-        auto value = pattern.getFormattedValue();
-        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            MathEvaluator<u128> mathEvaluator;
+        if (this->m_editingPattern == &pattern) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            auto value = pattern.toString();
+            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                MathEvaluator<u128> mathEvaluator;
 
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(result.value());
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(result.value());
+
+                this->m_editingPattern = nullptr;
+            }
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
+        } else {
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternWideCharacter& pattern) {
@@ -562,7 +631,9 @@ namespace hex::plugin::builtin::ui {
 
                     if (chunkOpen) {
                         iteratable.forEachEntry(i, endIndex, [&](u64, auto *entry){
+                            ImGui::PushID(entry);
                             this->draw(*entry);
+                            ImGui::PopID();
                         });
 
                         ImGui::TreePop();
@@ -661,6 +732,9 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height) {
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+            this->m_editingPattern = nullptr;
+
         if (beginPatternTable(patterns, this->m_sortedPatterns, height)) {
             ImGui::TableHeadersRow();
 

@@ -40,9 +40,13 @@ namespace hex::plugin::builtin::ui {
 
         void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
+        void makeSelectable(const pl::ptrn::Pattern &pattern);
+        void createDefaultEntry(pl::ptrn::Pattern &pattern);
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
         std::vector<pl::ptrn::Pattern*> m_sortedPatterns;
+
+        const pl::ptrn::Pattern *m_editingPattern = nullptr;
     };
 }
