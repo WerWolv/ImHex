@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
             return "hex.builtin.provider.file";
         }
 
-        std::pair<Region, bool> getRegionValidity(u64 address) const override;
+        [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
     protected:
         std::fs::path m_path;
