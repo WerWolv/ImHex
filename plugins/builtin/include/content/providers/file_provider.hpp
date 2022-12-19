@@ -9,6 +9,10 @@
 #if defined(OS_WINDOWS)
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
+#elif defined(OS_MACOS)
+    #include <sys/mman.h>
+    #include <unistd.h>
+    #include <sys/fcntl.h>
 #else
     #include <sys/mman.h>
     #include <unistd.h>
