@@ -16,7 +16,7 @@
 #else
     #include <sys/mman.h>
     #include <unistd.h>
-    #include <sys/fcntl.h>
+    #include <fcntl.h>
 #endif
 
 namespace hex::plugin::builtin {
