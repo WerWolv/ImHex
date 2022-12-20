@@ -591,13 +591,13 @@ namespace hex::plugin::builtin::ui {
         if (open) {
             u64 chunkCount = 0;
             for (u64 i = 0; i < iteratable.getEntryCount(); i += ChunkSize) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
                 chunkCount++;
 
                 auto &displayEnd = this->getDisplayEnd(pattern);
                 if (chunkCount > displayEnd) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
                     ImGui::Selectable(hex::format("... ({})", "hex.builtin.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                         displayEnd += DisplayEndStep;
@@ -605,30 +605,37 @@ namespace hex::plugin::builtin::ui {
                 } else {
                     auto endIndex = std::min<u64>(iteratable.getEntryCount(), i + ChunkSize);
 
-                    auto startOffset = iteratable.getEntry(i)->getOffset();
-                    auto endOffset = iteratable.getEntry(endIndex - 1)->getOffset();
-                    auto endSize = iteratable.getEntry(endIndex - 1)->getSize();
+                    bool chunkOpen = true;
+                    if (iteratable.getEntryCount() > ChunkSize) {
+                        auto startOffset = iteratable.getEntry(i)->getOffset();
+                        auto endOffset = iteratable.getEntry(endIndex - 1)->getOffset();
+                        auto endSize = iteratable.getEntry(endIndex - 1)->getSize();
 
-                    size_t chunkSize = (endOffset - startOffset) + endSize;
+                        size_t chunkSize = (endOffset - startOffset) + endSize;
 
-                    auto chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{ return ImGui::TreeNodeEx(hex::format("[{} ... {}]", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth); });
-                    ImGui::TableNextColumn();
-                    drawColorColumn(pattern);
-                    ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", startOffset, startOffset + chunkSize - (pattern.getSize() == 0 ? 0 : 1));
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("0x{0:04X}", chunkSize);
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
-                    ImGui::SameLine(0, 0);
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
 
-                    ImGui::TextUnformatted("[");
-                    ImGui::SameLine(0, 0);
-                    ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", endIndex - i);
-                    ImGui::SameLine(0, 0);
-                    ImGui::TextUnformatted("]");
+                        chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{ return ImGui::TreeNodeEx(hex::format("[{} ... {}]", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth); });
+                        ImGui::TableNextColumn();
+                        drawColorColumn(pattern);
+                        ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", startOffset, startOffset + chunkSize - (pattern.getSize() == 0 ? 0 : 1));
+                        ImGui::TableNextColumn();
+                        ImGui::TextFormatted("0x{0:04X}", chunkSize);
+                        ImGui::TableNextColumn();
+                        ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+                        ImGui::SameLine(0, 0);
 
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("[ ... ]");
+                        ImGui::TextUnformatted("[");
+                        ImGui::SameLine(0, 0);
+                        ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", endIndex - i);
+                        ImGui::SameLine(0, 0);
+                        ImGui::TextUnformatted("]");
+
+                        ImGui::TableNextColumn();
+                        ImGui::TextFormatted("[ ... ]");
+                    }
+
 
                     if (chunkOpen) {
                         iteratable.forEachEntry(i, endIndex, [&](u64, auto *entry){
@@ -637,7 +644,8 @@ namespace hex::plugin::builtin::ui {
                             ImGui::PopID();
                         });
 
-                        ImGui::TreePop();
+                        if (iteratable.getEntryCount() > ChunkSize)
+                            ImGui::TreePop();
                     }
                 }
             }

@@ -392,7 +392,7 @@ function(downloadImHexPatternsFiles dest)
         )
 
         message(STATUS "Downloading ImHex-Patterns repo branch ${PATTERNS_BRANCH}...")
-        FetchContent_Populate(imhex_patterns)
+        FetchContent_MakeAvailable(imhex_patterns)
         message(STATUS "Finished downloading ImHex-Patterns")
 
     else ()
