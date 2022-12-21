@@ -221,10 +221,13 @@ namespace hex::plugin::builtin::ui {
         }
 
         if (open) {
+            int id = 1;
             pattern.forEachEntry(0, pattern.getEntryCount(), [&] (u64, auto *field) {
-                ImGui::PushID(field);
+                ImGui::PushID(id);
                 this->draw(*field);
                 ImGui::PopID();
+
+                id += 1;
             });
 
             if (!pattern.isInlined())
@@ -456,10 +459,12 @@ namespace hex::plugin::builtin::ui {
         }
 
         if (open) {
+            int id = 1;
             pattern.forEachEntry(0, pattern.getMembers().size(), [&](u64, auto *member){
-                ImGui::PushID(member);
+                ImGui::PushID(id);
                 this->draw(*member);
                 ImGui::PopID();
+                id += 1;
             });
 
             if (!pattern.isInlined())
@@ -505,10 +510,13 @@ namespace hex::plugin::builtin::ui {
         }
 
         if (open) {
+            int id = 1;
             pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, auto *member) {
-                ImGui::PushID(member);
+                ImGui::PushID(id);
                 this->draw(*member);
                 ImGui::PopID();
+
+                id += 1;
             });
 
             if (!pattern.isInlined())
@@ -638,10 +646,13 @@ namespace hex::plugin::builtin::ui {
 
 
                     if (chunkOpen) {
+                        int id = 1;
                         iteratable.forEachEntry(i, endIndex, [&](u64, auto *entry){
-                            ImGui::PushID(entry);
+                            ImGui::PushID(id);
                             this->draw(*entry);
                             ImGui::PopID();
+
+                            id += 1;
                         });
 
                         if (iteratable.getEntryCount() > ChunkSize)
@@ -747,10 +758,13 @@ namespace hex::plugin::builtin::ui {
         if (beginPatternTable(patterns, this->m_sortedPatterns, height)) {
             ImGui::TableHeadersRow();
 
+            int id = 1;
             for (auto &pattern : this->m_sortedPatterns) {
-                ImGui::PushID(pattern);
+                ImGui::PushID(id);
                 this->draw(*pattern);
                 ImGui::PopID();
+
+                id += 1;
             }
 
             ImGui::EndTable();
