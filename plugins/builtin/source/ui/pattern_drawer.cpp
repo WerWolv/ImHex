@@ -25,6 +25,7 @@
 #include <content/helpers/math_evaluator.hpp>
 
 #include <imgui.h>
+#include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex::plugin::builtin::ui {
@@ -126,6 +127,32 @@ namespace hex::plugin::builtin::ui {
                     ImGui::TextUnformatted(pattern.getComment().c_str());
                     ImGui::EndTooltip();
                 }
+            }
+        }
+
+        void drawVisualizer(const std::string &visualizer, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable) {
+            if (visualizer == "line_plot") {
+                if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+
+                    ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+
+                    ImPlot::PlotLineG("##line", [](void *data, int idx) -> ImPlotPoint {
+                        auto &iteratable = *static_cast<pl::ptrn::Iteratable *>(data);
+                        return { static_cast<double>(idx), pl::core::Token::literalToFloatingPoint(iteratable.getEntry(idx)->getValue()) };
+                    }, &iteratable, iteratable.getEntryCount());
+
+                    ImPlot::EndPlot();
+                }
+            } else if (visualizer == "image") {
+                std::vector<u8> data;
+                data.resize(pattern.getSize());
+
+                pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
+                static ImGui::Texture texture;
+                texture = ImGui::Texture(data.data(), data.size());
+
+                if (texture.isValid())
+                    ImGui::Image(texture, texture.getSize());
             }
         }
 
@@ -460,7 +487,7 @@ namespace hex::plugin::builtin::ui {
 
         if (open) {
             int id = 1;
-            pattern.forEachEntry(0, pattern.getMembers().size(), [&](u64, auto *member){
+            pattern.forEachEntry(0, pattern.getEntryCount(), [&](u64, auto *member){
                 ImGui::PushID(id);
                 this->draw(*member);
                 ImGui::PopID();
@@ -577,6 +604,16 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
+            if (const auto &visualizer = pattern.getAttributeValue("hex::visualize"); visualizer.has_value()) {
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
+                    ImGui::BeginTooltip();
+
+                    drawVisualizer(visualizer.value(), pattern, iteratable);
+
+                    ImGui::EndTooltip();
+                }
+            }
+
             if (pattern.isSealed())
                 drawColorColumn(pattern);
             else
