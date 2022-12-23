@@ -64,7 +64,8 @@ namespace hex::plugin::builtin {
         float entropy = 0;
 
         for (auto count : valueCounts) {
-            if (count == 0) continue;
+            if (count == 0) [[unlikely]]
+                continue;
 
             float probability = static_cast<float>(count) / blockSize;
 
@@ -78,7 +79,7 @@ namespace hex::plugin::builtin {
         this->m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
-            task.setMaxValue(provider->getActualSize());
+            task.setMaxValue(provider->getSize());
 
             this->m_analyzedRegion = { provider->getBaseAddress(), provider->getBaseAddress() + provider->getSize() };
 
@@ -92,14 +93,17 @@ namespace hex::plugin::builtin {
             this->m_dataValid = true;
 
             {
-                this->m_blockSize = std::max<u32>(std::ceil(provider->getActualSize() / 2048.0F), 256);
+                this->m_blockSize = std::max<u32>(std::ceil(provider->getSize() / 2048.0F), 256);
 
                 std::array<ImU64, 256> blockValueCounts = { 0 };
 
                 this->m_blockEntropy.clear();
+                this->m_blockEntropy.resize(provider->getSize() / this->m_blockSize);
                 this->m_valueCounts.fill(0);
+                this->m_blockEntropyProcessedCount = 0;
 
                 auto reader = prv::BufferedReader(provider);
+                reader.setEndAddress(provider->getBaseAddress() + provider->getSize());
 
                 u64 count = 0;
                 for (u8 byte : reader) {
@@ -108,7 +112,8 @@ namespace hex::plugin::builtin {
 
                     count++;
                     if ((count % this->m_blockSize) == 0) [[unlikely]] {
-                        this->m_blockEntropy.push_back(calculateEntropy(blockValueCounts, this->m_blockSize));
+                        this->m_blockEntropy[this->m_blockEntropyProcessedCount] = calculateEntropy(blockValueCounts, this->m_blockSize);
+                        this->m_blockEntropyProcessedCount += 1;
                         blockValueCounts = { 0 };
                         task.update(count);
                     }
@@ -230,7 +235,7 @@ namespace hex::plugin::builtin {
                                 ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                                 ImPlot::SetupAxesLimits(0, this->m_blockEntropy.size(), -0.1F, 1.1F, ImGuiCond_Always);
 
-                                ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropy.size());
+                                ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropyProcessedCount);
 
                                 if (ImPlot::DragLineX(1, &this->m_entropyHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                     u64 address = u64(std::max<double>(this->m_entropyHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
