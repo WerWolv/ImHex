@@ -246,7 +246,7 @@ namespace hex::plugin::builtin {
                             continue;
                     }
 
-                    if (ImGui::Selectable(hex::format("{}##ConsoleLine", message).c_str()))
+                    if (ImGui::Selectable(hex::format("{}##ConsoleLine", hex::encodeByteString({ message.begin(), message.end() })).c_str()))
                         ImGui::SetClipboardText(message.c_str());
 
                     ImGui::PopStyleColor();
