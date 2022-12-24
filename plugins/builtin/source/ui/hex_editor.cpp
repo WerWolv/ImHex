@@ -617,7 +617,7 @@ namespace hex::plugin::builtin::ui {
                         // Scroll to the cursor if it's either at the top or bottom edge of the screen
                         if (this->m_shouldScrollToSelection && isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
-                            if ((ImGui::IsMouseDown(ImGuiMouseButton_Left) && *this->m_selectionStart != *this->m_selectionEnd)) {
+                            if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left) && *this->m_selectionStart != *this->m_selectionEnd)) {
                                 auto fractionPerLine = 1.0 / (this->m_visibleRowCount + 1);
 
                                 if (y == (u64(clipper.DisplayStart) + 3)) {
