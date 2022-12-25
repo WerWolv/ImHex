@@ -681,6 +681,7 @@
         "hex.builtin.view.information.analyzing": "Analyzing...",
         "hex.builtin.view.information.block_size": "Block size",
         "hex.builtin.view.information.block_size.desc": "{0} blocks of {1} bytes",
+        "hex.builtin.view.information.byte_types": "Byte types",
         "hex.builtin.view.information.control": "Control",
         "hex.builtin.view.information.description": "Description:",
         "hex.builtin.view.information.distribution": "Byte distribution",

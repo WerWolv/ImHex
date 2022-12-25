@@ -24,6 +24,7 @@ namespace hex::plugin::builtin {
         float m_averageEntropy      = 0;
         float m_highestBlockEntropy = 0;
         std::vector<float> m_blockEntropy;
+        std::array<std::vector<float>, 12> m_blockTypeDistributions;
         u64 m_blockEntropyProcessedCount = 0;
 
         double m_entropyHandlePosition;

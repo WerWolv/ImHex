@@ -75,6 +75,48 @@ namespace hex::plugin::builtin {
         return (-entropy) / 8;    // log2(256) = 8
     }
 
+    static std::array<float, 12> calculateTypeDistribution(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
+        std::array<ImU64, 12> counts = {};
+
+        for (u16 value = 0x00; value < u16(valueCounts.size()); value++) {
+            const auto &count = valueCounts[value];
+
+            if (count == 0) [[unlikely]]
+                continue;
+
+            if (std::iscntrl(value))
+                counts[0] += count;
+            if (std::isprint(value))
+                counts[1] += count;
+            if (std::isspace(value))
+                counts[2] += count;
+            if (std::isblank(value))
+                counts[3] += count;
+            if (std::isgraph(value))
+                counts[4] += count;
+            if (std::ispunct(value))
+                counts[5] += count;
+            if (std::isalnum(value))
+                counts[6] += count;
+            if (std::isalpha(value))
+                counts[7] += count;
+            if (std::isupper(value))
+                counts[8] += count;
+            if (std::islower(value))
+                counts[9] += count;
+            if (std::isdigit(value))
+                counts[10] += count;
+            if (std::isxdigit(value))
+                counts[11] += count;
+        }
+
+        std::array<float, 12> distribution = {};
+        for (u32 i = 0; i < distribution.size(); i++)
+            distribution[i] = static_cast<float>(counts[i]) / blockSize;
+
+        return distribution;
+    }
+
     void ViewInformation::analyze() {
         this->m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
             auto provider = ImHexApi::Provider::get();
@@ -97,6 +139,7 @@ namespace hex::plugin::builtin {
 
                 std::array<ImU64, 256> blockValueCounts = { 0 };
 
+                this->m_blockTypeDistributions.fill({});
                 this->m_blockEntropy.clear();
                 this->m_blockEntropy.resize(provider->getSize() / this->m_blockSize);
                 this->m_valueCounts.fill(0);
@@ -113,6 +156,13 @@ namespace hex::plugin::builtin {
                     count++;
                     if ((count % this->m_blockSize) == 0) [[unlikely]] {
                         this->m_blockEntropy[this->m_blockEntropyProcessedCount] = calculateEntropy(blockValueCounts, this->m_blockSize);
+
+                        {
+                            auto typeDist = calculateTypeDistribution(blockValueCounts, this->m_blockSize);
+                            for (u8 i = 0; i < typeDist.size(); i++)
+                                this->m_blockTypeDistributions[i].push_back(typeDist[i]);
+                        }
+
                         this->m_blockEntropyProcessedCount += 1;
                         blockValueCounts = { 0 };
                         task.update(count);
@@ -152,7 +202,7 @@ namespace hex::plugin::builtin {
                         // Analyzed region
                         ImGui::Header("hex.builtin.view.information.region"_lang, true);
 
-                        if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+                        if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
                             ImGui::TableSetupColumn("type");
                             ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
@@ -227,11 +277,32 @@ namespace hex::plugin::builtin {
                                 ImPlot::EndPlot();
                             }
 
+                            ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
+                            if (ImPlot::BeginPlot("##byte_types", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_AntiAliased)) {
+                                ImPlot::SetupAxes("hex.builtin.common.type"_lang, "hex.builtin.common.count"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+                                ImPlot::SetupAxesLimits(0, this->m_blockTypeDistributions[0].size(), -0.1F, 1.1F, ImGuiCond_Always);
+                                ImPlot::SetupLegend(ImPlotLocation_South, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
+
+                                constexpr static std::array Names = { "iscntrl", "isprint", "isspace", "isblank", "isgraph", "ispunct", "isalnum", "isalpha", "isupper", "islower", "isdigit", "isxdigit" };
+
+                                for (u32 i = 0; i < 12; i++) {
+                                    ImPlot::PlotLine(Names[i], this->m_blockTypeDistributions[i].data(), this->m_blockTypeDistributions[i].size());
+                                }
+
+                                if (ImPlot::DragLineX(1, &this->m_entropyHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                                    u64 address = u64(std::max<double>(this->m_entropyHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
+                                    address     = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
+                                    ImHexApi::HexEditor::setSelection(address, 1);
+                                }
+
+                                ImPlot::EndPlot();
+                            }
+
                             ImGui::NewLine();
 
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
 
-                            if (ImPlot::BeginPlot("##entropy", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+                            if (ImPlot::BeginPlot("##entropy", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased)) {
                                 ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                                 ImPlot::SetupAxesLimits(0, this->m_blockEntropy.size(), -0.1F, 1.1F, ImGuiCond_Always);
 
