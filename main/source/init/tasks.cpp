@@ -111,6 +111,14 @@ namespace hex::init {
             glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesKorean());
             glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesThai());
             glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
+
+            {
+                constexpr static ImWchar controlCodeRange[]   = { 0x0000, 0x001F, 0 };
+                constexpr static ImWchar extendedAsciiRange[] = { 0x007F, 0x00FF, 0 };
+                glyphRangesBuilder.AddRanges(controlCodeRange);
+                glyphRangesBuilder.AddRanges(extendedAsciiRange);
+            }
+
             glyphRangesBuilder.BuildRanges(&ranges);
         }
 
