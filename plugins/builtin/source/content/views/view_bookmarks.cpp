@@ -242,7 +242,7 @@ namespace hex::plugin::builtin {
                                 size_t byteCount           = std::min<size_t>(0x10 - offset, region.size);
                                 ImHexApi::Provider::get()->read(region.address, bytes.data() + offset, byteCount);
 
-                                for (size_t byte = 0; byte < 0x10; byte++) {
+                                for (size_t byte = 0; byte < (offset % 0x10) + byteCount; byte++) {
                                     if (byte < offset)
                                         ImGui::TextUnformatted("  ");
                                     else
