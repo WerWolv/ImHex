@@ -225,7 +225,8 @@ namespace hex::plugin::builtin {
 
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    const auto &[level, message] = console[i];
+                    auto [level, message] = console[i];
+                    std::replace_if(message.begin(), message.end(), [](char c) { return !std::isprint(c); }, ' ');
 
                     switch (level) {
                         using enum pl::core::LogConsole::Level;

@@ -322,7 +322,9 @@ namespace hex {
             provider->close();
             EventManager::post<EventProviderClosed>(provider);
 
-            delete provider;
+            TaskManager::runWhenTasksFinished([provider] {
+                delete provider;
+            });
         }
 
         prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface) {

@@ -17,8 +17,8 @@ namespace hex::magic {
 
     bool compile();
     std::string getDescription(const std::vector<u8> &data);
-    std::string getDescription(prv::Provider *provider, size_t size = 5_MiB);
+    std::string getDescription(prv::Provider *provider, size_t size = 100_KiB);
     std::string getMIMEType(const std::vector<u8> &data);
-    std::string getMIMEType(prv::Provider *provider, size_t size = 5_MiB);
+    std::string getMIMEType(prv::Provider *provider, size_t size = 100_KiB);
 
 }

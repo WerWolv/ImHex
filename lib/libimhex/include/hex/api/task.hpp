@@ -102,16 +102,20 @@ namespace hex {
         static void collectGarbage();
 
         static size_t getRunningTaskCount();
+        static size_t getRunningBackgroundTaskCount();
         static std::list<std::shared_ptr<Task>> &getRunningTasks();
 
         static void doLater(const std::function<void()> &function);
         static void runDeferredCalls();
+
+        static void runWhenTasksFinished(const std::function<void()> &function);
     private:
         static std::mutex s_deferredCallsMutex;
 
         static std::list<std::shared_ptr<Task>> s_tasks;
         static std::list<std::shared_ptr<Task>> s_taskQueue;
         static std::list<std::function<void()>> s_deferredCalls;
+        static std::list<std::function<void()>> s_tasksFinishedCallbacks;
 
         static std::mutex s_queueMutex;
         static std::condition_variable s_jobCondVar;

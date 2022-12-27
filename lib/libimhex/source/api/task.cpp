@@ -12,6 +12,7 @@ namespace hex {
 
     std::list<std::shared_ptr<Task>> TaskManager::s_tasks, TaskManager::s_taskQueue;
     std::list<std::function<void()>> TaskManager::s_deferredCalls;
+    std::list<std::function<void()>> TaskManager::s_tasksFinishedCallbacks;
 
     std::mutex TaskManager::s_queueMutex;
     std::condition_variable TaskManager::s_jobCondVar;
@@ -238,8 +239,16 @@ namespace hex {
     }
 
     void TaskManager::collectGarbage() {
-        std::unique_lock lock(s_queueMutex);
+        std::unique_lock lock1(s_queueMutex);
+        std::unique_lock lock2(s_deferredCallsMutex);
+
         std::erase_if(s_tasks, [](const auto &task) { return task->isFinished() && !task->hadException(); });
+
+        if (s_tasks.empty()) {
+            for (auto &call : s_tasksFinishedCallbacks)
+                call();
+            s_tasksFinishedCallbacks.clear();
+        }
     }
 
     std::list<std::shared_ptr<Task>> &TaskManager::getRunningTasks() {
@@ -251,6 +260,14 @@ namespace hex {
 
         return std::count_if(s_tasks.begin(), s_tasks.end(), [](const auto &task){
             return !task->isBackgroundTask();
+        });
+    }
+
+    size_t TaskManager::getRunningBackgroundTaskCount() {
+        std::unique_lock lock(s_queueMutex);
+
+        return std::count_if(s_tasks.begin(), s_tasks.end(), [](const auto &task){
+            return task->isBackgroundTask();
         });
     }
 
@@ -268,6 +285,12 @@ namespace hex {
             call();
 
         s_deferredCalls.clear();
+    }
+
+    void TaskManager::runWhenTasksFinished(const std::function<void()> &function) {
+        std::scoped_lock lock(s_deferredCallsMutex);
+
+        s_tasksFinishedCallbacks.push_back(function);
     }
 
 }
