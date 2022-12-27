@@ -3,6 +3,8 @@
 #include <hex/ui/view.hpp>
 #include <hex/api/task.hpp>
 
+#include "content/helpers/diagrams.hpp"
+
 #include <array>
 #include <atomic>
 #include <cstdio>
@@ -25,9 +27,9 @@ namespace hex::plugin::builtin {
         float m_highestBlockEntropy = 0;
         std::vector<float> m_blockEntropy;
         std::array<std::vector<float>, 12> m_blockTypeDistributions;
-        u64 m_blockEntropyProcessedCount = 0;
+        u64 m_processedBlockCount   = 0;
 
-        double m_entropyHandlePosition;
+        double m_diagramHandlePosition = 0.0;
 
         std::array<ImU64, 256> m_valueCounts = { 0 };
         TaskHolder m_analyzerTask;
@@ -36,6 +38,9 @@ namespace hex::plugin::builtin {
 
         std::string m_dataDescription;
         std::string m_dataMimeType;
+
+        DiagramDigram m_digram;
+        DiagramLayeredDistribution m_layeredDistribution;
 
         void analyze();
     };

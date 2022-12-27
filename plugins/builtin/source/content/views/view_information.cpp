@@ -35,7 +35,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             if (this->m_blockSize != 0)
-                this->m_entropyHandlePosition = region.getStartAddress() / double(this->m_blockSize);
+                this->m_diagramHandlePosition = region.getStartAddress() / double(this->m_blockSize);
         });
 
         EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
@@ -139,11 +139,19 @@ namespace hex::plugin::builtin {
 
                 std::array<ImU64, 256> blockValueCounts = { 0 };
 
+                const auto blockCount = provider->getSize() / this->m_blockSize;
+
                 this->m_blockTypeDistributions.fill({});
                 this->m_blockEntropy.clear();
-                this->m_blockEntropy.resize(provider->getSize() / this->m_blockSize);
+                this->m_blockEntropy.resize(blockCount);
+                for (auto &blockDistribution : this->m_blockTypeDistributions)
+                    blockDistribution.resize(blockCount);
+
                 this->m_valueCounts.fill(0);
-                this->m_blockEntropyProcessedCount = 0;
+                this->m_processedBlockCount = 0;
+
+                this->m_digram.process(provider, this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getSize());
+                this->m_layeredDistribution.process(provider, this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getSize());
 
                 auto reader = prv::BufferedReader(provider);
                 reader.setEndAddress(provider->getBaseAddress() + provider->getSize());
@@ -155,15 +163,15 @@ namespace hex::plugin::builtin {
 
                     count++;
                     if ((count % this->m_blockSize) == 0) [[unlikely]] {
-                        this->m_blockEntropy[this->m_blockEntropyProcessedCount] = calculateEntropy(blockValueCounts, this->m_blockSize);
+                        this->m_blockEntropy[this->m_processedBlockCount] = calculateEntropy(blockValueCounts, this->m_blockSize);
 
                         {
                             auto typeDist = calculateTypeDistribution(blockValueCounts, this->m_blockSize);
                             for (u8 i = 0; i < typeDist.size(); i++)
-                                this->m_blockTypeDistributions[i].push_back(typeDist[i]);
+                                this->m_blockTypeDistributions[i][this->m_processedBlockCount] = typeDist[i];
                         }
 
-                        this->m_blockEntropyProcessedCount += 1;
+                        this->m_processedBlockCount += 1;
                         blockValueCounts = { 0 };
                         task.update(count);
                     }
@@ -286,11 +294,11 @@ namespace hex::plugin::builtin {
                                 constexpr static std::array Names = { "iscntrl", "isprint", "isspace", "isblank", "isgraph", "ispunct", "isalnum", "isalpha", "isupper", "islower", "isdigit", "isxdigit" };
 
                                 for (u32 i = 0; i < 12; i++) {
-                                    ImPlot::PlotLine(Names[i], this->m_blockTypeDistributions[i].data(), this->m_blockTypeDistributions[i].size());
+                                    ImPlot::PlotLine(Names[i], this->m_blockTypeDistributions[i].data(), this->m_processedBlockCount);
                                 }
 
-                                if (ImPlot::DragLineX(1, &this->m_entropyHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                                    u64 address = u64(std::max<double>(this->m_entropyHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
+                                if (ImPlot::DragLineX(1, &this->m_diagramHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                                    u64 address = u64(std::max<double>(this->m_diagramHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
                                     address     = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
                                     ImHexApi::HexEditor::setSelection(address, 1);
                                 }
@@ -306,21 +314,25 @@ namespace hex::plugin::builtin {
                                 ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                                 ImPlot::SetupAxesLimits(0, this->m_blockEntropy.size(), -0.1F, 1.1F, ImGuiCond_Always);
 
-                                ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_blockEntropyProcessedCount);
+                                ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_processedBlockCount);
 
-                                if (ImPlot::DragLineX(1, &this->m_entropyHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                                    u64 address = u64(std::max<double>(this->m_entropyHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
+                                if (ImPlot::DragLineX(1, &this->m_diagramHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                                    u64 address = u64(std::max<double>(this->m_diagramHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
                                     address     = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
                                     ImHexApi::HexEditor::setSelection(address, 1);
                                 }
 
                                 ImPlot::EndPlot();
                             }
-
                             ImPlot::PopStyleColor();
                             ImGui::PopStyleColor();
 
                             ImGui::NewLine();
+
+                            this->m_diagramHandlePosition = std::clamp<double>(
+                                    this->m_diagramHandlePosition,
+                                    this->m_analyzedRegion.getStartAddress() / double(this->m_blockSize),
+                                    this->m_analyzedRegion.getEndAddress() / double(this->m_blockSize));
                         }
 
                         // Entropy information
@@ -352,7 +364,22 @@ namespace hex::plugin::builtin {
                             ImGui::NewLine();
                             ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
                         }
-                    }
+
+                        ImGui::BeginGroup();
+                        {
+                            ImGui::Header("hex.builtin.view.information.digram"_lang);
+                            this->m_digram.draw(ImVec2(300, 300));
+                        }
+                        ImGui::EndGroup();
+
+                        ImGui::SameLine();
+
+                        ImGui::BeginGroup();
+                        {
+                            ImGui::Header("hex.builtin.view.information.layered_distribution"_lang);
+                            this->m_layeredDistribution.draw(ImVec2(300, 300));
+                        }
+                        ImGui::EndGroup();                    }
                 }
             }
             ImGui::EndChild();

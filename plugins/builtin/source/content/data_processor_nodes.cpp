@@ -8,6 +8,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <content/helpers/provider_extra_data.hpp>
+#include <content/helpers/diagrams.hpp>
 
 #include <cctype>
 #include <random>
@@ -951,91 +952,21 @@ namespace hex::plugin::builtin {
         NodeVisualizerDigram() : Node("hex.builtin.nodes.visualizer.digram.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            drawDigram(scaled({ 200, 200 }));
+            this->m_digram.draw(scaled({ 200, 200 }));
 
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                drawDigram(scaled({ 600, 600 }));
+                this->m_digram.draw(scaled({ 600, 600 }));
                 ImGui::EndTooltip();
             }
         }
 
-        void drawDigram(const ImVec2 &viewSize) {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##visualizer", viewSize, true)) {
-                auto drawList = ImGui::GetWindowDrawList();
-
-                float xStep = (viewSize.x * 0.95F) / 0xFF;
-                float yStep = (viewSize.y * 0.95F) / 0xFF;
-
-                for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                    const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, this->m_buffer[i + 1] * yStep };
-
-                    auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size());
-                    color.w    = this->m_opacityBuffer[i];
-
-                    auto pos = ImGui::GetWindowPos() + ImVec2(viewSize.x * 0.025F, viewSize.y * 0.025F) + ImVec2(x, y);
-                    drawList->AddRectFilled(pos, pos + ImVec2(xStep, yStep), ImColor(color));
-                }
-            }
-            ImGui::EndChild();
-            ImGui::PopStyleColor();
-        }
-
         void process() override {
-            constexpr static auto SampleSize  = 0x9000;
-            const static size_t SequenceCount = std::ceil(std::sqrt(SampleSize));
-
-            this->m_buffer.clear();
-
-            auto buffer = this->getBufferOnInput(0);
-            if (buffer.size() < SampleSize)
-                this->m_buffer = buffer;
-            else {
-                std::random_device randomDevice;
-                std::mt19937_64 random(randomDevice());
-
-                std::map<u64, std::vector<u8>> orderedData;
-                for (u32 i = 0; i < SequenceCount; i++) {
-                    ssize_t offset = random() % buffer.size();
-
-                    std::vector<u8> sequence;
-                    sequence.reserve(SampleSize);
-                    std::copy(buffer.begin() + offset, buffer.begin() + offset + std::min<size_t>(SequenceCount, buffer.size() - offset), std::back_inserter(sequence));
-
-                    orderedData.insert({ offset, sequence });
-                }
-
-                this->m_buffer.reserve(SampleSize);
-
-                u64 lastEnd = 0x00;
-                for (const auto &[offset, sequence] : orderedData) {
-                    if (offset < lastEnd)
-                        this->m_buffer.resize(this->m_buffer.size() - (lastEnd - offset));
-
-                    std::copy(sequence.begin(), sequence.end(), std::back_inserter(this->m_buffer));
-                    lastEnd = offset + sequence.size();
-                }
-            }
-
-            this->m_opacityBuffer.resize(this->m_buffer.size());
-
-            std::map<u64, size_t> heatMap;
-            for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                auto count = ++heatMap[this->m_buffer[i] << 8 | heatMap[i + 1]];
-
-                this->m_highestCount = std::max(this->m_highestCount, count);
-            }
-
-            for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                this->m_opacityBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
-            }
+            this->m_digram.process(this->getBufferOnInput(0));
         }
 
     private:
-        std::vector<u8> m_buffer;
-        std::vector<float> m_opacityBuffer;
-        size_t m_highestCount = 0;
+        DiagramDigram m_digram;
     };
 
     class NodeVisualizerLayeredDistribution : public dp::Node {
@@ -1043,90 +974,20 @@ namespace hex::plugin::builtin {
         NodeVisualizerLayeredDistribution() : Node("hex.builtin.nodes.visualizer.layered_dist.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            drawLayeredDistribution(scaled({ 200, 200 }));
+            this->m_layeredDistribution.draw(scaled({ 200, 200 }));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                drawLayeredDistribution(scaled({ 600, 600 }));
+                this->m_layeredDistribution.draw(scaled({ 600, 600 }));
                 ImGui::EndTooltip();
             }
         }
 
-        void drawLayeredDistribution(const ImVec2 &viewSize) {
-            ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
-            if (ImGui::BeginChild("##visualizer", viewSize, true)) {
-                auto drawList = ImGui::GetWindowDrawList();
-
-                float xStep = (viewSize.x * 0.95F) / 0xFF;
-                float yStep = (viewSize.y * 0.95F) / 0xFF;
-
-                for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size()); i++) {
-                    const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, yStep * ((float(i) / this->m_buffer.size()) * 0xFF) };
-
-                    auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size());
-                    color.w    = this->m_opacityBuffer[i];
-
-                    auto pos = ImGui::GetWindowPos() + ImVec2(viewSize.x * 0.025F, viewSize.y * 0.025F) + ImVec2(x, y);
-                    drawList->AddRectFilled(pos, pos + ImVec2(xStep, yStep), ImColor(color));
-                }
-            }
-            ImGui::EndChild();
-            ImGui::PopStyleColor();
-        }
-
         void process() override {
-            constexpr static auto SampleSize  = 0x9000;
-            const static size_t SequenceCount = std::ceil(std::sqrt(SampleSize));
-
-            this->m_buffer.clear();
-
-            auto buffer = this->getBufferOnInput(0);
-            if (buffer.size() < SampleSize)
-                this->m_buffer = buffer;
-            else {
-                std::random_device randomDevice;
-                std::mt19937_64 random(randomDevice());
-
-                std::map<u64, std::vector<u8>> orderedData;
-                for (u32 i = 0; i < SequenceCount; i++) {
-                    ssize_t offset = random() % buffer.size();
-
-                    std::vector<u8> sequence;
-                    sequence.reserve(SampleSize);
-                    std::copy(buffer.begin() + offset, buffer.begin() + offset + std::min<size_t>(SequenceCount, buffer.size() - offset), std::back_inserter(sequence));
-
-                    orderedData.insert({ offset, sequence });
-                }
-
-                this->m_buffer.reserve(SampleSize);
-
-                u64 lastEnd = 0x00;
-                for (const auto &[offset, sequence] : orderedData) {
-                    if (offset < lastEnd)
-                        this->m_buffer.resize(this->m_buffer.size() - (lastEnd - offset));
-
-                    std::copy(sequence.begin(), sequence.end(), std::back_inserter(this->m_buffer));
-                    lastEnd = offset + sequence.size();
-                }
-            }
-
-            this->m_opacityBuffer.resize(this->m_buffer.size());
-
-            std::map<u64, size_t> heatMap;
-            for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                auto count = ++heatMap[this->m_buffer[i] << 8 | heatMap[i + 1]];
-
-                this->m_highestCount = std::max(this->m_highestCount, count);
-            }
-
-            for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                this->m_opacityBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
-            }
+            this->m_layeredDistribution.process(this->getBufferOnInput(0));
         }
 
     private:
-        std::vector<u8> m_buffer;
-        std::vector<float> m_opacityBuffer;
-        size_t m_highestCount = 0;
+        DiagramLayeredDistribution m_layeredDistribution;
     };
 
     class NodeVisualizerImage : public dp::Node {
