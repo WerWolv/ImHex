@@ -226,7 +226,7 @@ namespace hex::plugin::builtin {
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                     auto [level, message] = console[i];
-                    std::replace_if(message.begin(), message.end(), [](char c) { return !std::isprint(c); }, ' ');
+                    std::replace_if(message.begin(), message.end(), [](char c) { return c == 0x00; }, ' ');
 
                     switch (level) {
                         using enum pl::core::LogConsole::Level;
@@ -247,7 +247,7 @@ namespace hex::plugin::builtin {
                             continue;
                     }
 
-                    if (ImGui::Selectable(hex::format("{}##ConsoleLine", hex::encodeByteString({ message.begin(), message.end() })).c_str()))
+                    if (ImGui::Selectable(hex::format("{}##ConsoleLine", message).c_str()))
                         ImGui::SetClipboardText(message.c_str());
 
                     ImGui::PopStyleColor();
