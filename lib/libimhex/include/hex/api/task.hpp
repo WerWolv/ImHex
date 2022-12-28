@@ -110,7 +110,7 @@ namespace hex {
 
         static void runWhenTasksFinished(const std::function<void()> &function);
     private:
-        static std::mutex s_deferredCallsMutex;
+        static std::mutex s_deferredCallsMutex, s_tasksFinishedMutex;
 
         static std::list<std::shared_ptr<Task>> s_tasks;
         static std::list<std::shared_ptr<Task>> s_taskQueue;

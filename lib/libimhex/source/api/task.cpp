@@ -8,7 +8,7 @@
 
 namespace hex {
 
-    std::mutex TaskManager::s_deferredCallsMutex;
+    std::mutex TaskManager::s_deferredCallsMutex, TaskManager::s_tasksFinishedMutex;
 
     std::list<std::shared_ptr<Task>> TaskManager::s_tasks, TaskManager::s_taskQueue;
     std::list<std::function<void()>> TaskManager::s_deferredCalls;
@@ -288,7 +288,7 @@ namespace hex {
     }
 
     void TaskManager::runWhenTasksFinished(const std::function<void()> &function) {
-        std::scoped_lock lock(s_deferredCallsMutex);
+        std::scoped_lock lock(s_tasksFinishedMutex);
 
         s_tasksFinishedCallbacks.push_back(function);
     }
