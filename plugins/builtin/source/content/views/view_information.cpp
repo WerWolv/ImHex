@@ -23,9 +23,10 @@ namespace hex::plugin::builtin {
     ViewInformation::ViewInformation() : View("hex.builtin.view.information.name") {
         EventManager::subscribe<EventDataChanged>(this, [this]() {
             this->m_dataValid = false;
-            this->m_highestBlockEntropy = 0;
+            this->m_plainTextCharacterPercentage = -1.0;
+            this->m_averageEntropy = -1.0;
+            this->m_highestBlockEntropy = -1.0;
             this->m_blockEntropy.clear();
-            this->m_averageEntropy = 0;
             this->m_blockSize = 0;
             this->m_valueCounts.fill(0x00);
             this->m_dataMimeType.clear();
@@ -60,19 +61,19 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventProviderDeleted>(this);
     }
 
-    static float calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
-        float entropy = 0;
+    static double calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
+        double entropy = 0;
 
         for (auto count : valueCounts) {
             if (count == 0) [[unlikely]]
                 continue;
 
-            float probability = static_cast<float>(count) / blockSize;
+            double probability = static_cast<double>(count) / blockSize;
 
             entropy += probability * std::log2(probability);
         }
 
-        return (-entropy) / 8;    // log2(256) = 8
+        return std::min(1.0, (-entropy) / 8);    // log2(256) = 8
     }
 
     static std::array<float, 12> calculateTypeDistribution(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
@@ -149,6 +150,9 @@ namespace hex::plugin::builtin {
 
                 this->m_valueCounts.fill(0);
                 this->m_processedBlockCount = 0;
+                this->m_averageEntropy = -1.0;
+                this->m_highestBlockEntropy = -1.0;
+                this->m_plainTextCharacterPercentage = -1.0;
 
                 this->m_digram.process(provider, this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getSize());
                 this->m_layeredDistribution.process(provider, this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getSize());
@@ -157,18 +161,21 @@ namespace hex::plugin::builtin {
                 reader.setEndAddress(provider->getBaseAddress() + provider->getSize());
 
                 u64 count = 0;
+
                 for (u8 byte : reader) {
                     this->m_valueCounts[byte]++;
                     blockValueCounts[byte]++;
 
                     count++;
-                    if ((count % this->m_blockSize) == 0) [[unlikely]] {
+                    if (((count % this->m_blockSize) == 0) || count == provider->getSize()) [[unlikely]] {
                         this->m_blockEntropy[this->m_processedBlockCount] = calculateEntropy(blockValueCounts, this->m_blockSize);
 
                         {
                             auto typeDist = calculateTypeDistribution(blockValueCounts, this->m_blockSize);
                             for (u8 i = 0; i < typeDist.size(); i++)
-                                this->m_blockTypeDistributions[i][this->m_processedBlockCount] = typeDist[i];
+                                this->m_blockTypeDistributions[i][this->m_processedBlockCount] = typeDist[i] * 100;
+
+
                         }
 
                         this->m_processedBlockCount += 1;
@@ -182,6 +189,9 @@ namespace hex::plugin::builtin {
                     this->m_highestBlockEntropy = *std::max_element(this->m_blockEntropy.begin(), this->m_blockEntropy.end());
                 else
                     this->m_highestBlockEntropy = 0;
+
+                this->m_plainTextCharacterPercentage  = std::reduce(this->m_blockTypeDistributions[2].begin(), this->m_blockTypeDistributions[2].end()) / this->m_blockTypeDistributions[2].size();
+                this->m_plainTextCharacterPercentage += std::reduce(this->m_blockTypeDistributions[4].begin(), this->m_blockTypeDistributions[4].end()) / this->m_blockTypeDistributions[4].size();
             }
         });
     }
@@ -287,8 +297,8 @@ namespace hex::plugin::builtin {
 
                             ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
                             if (ImPlot::BeginPlot("##byte_types", ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_AntiAliased)) {
-                                ImPlot::SetupAxes("hex.builtin.common.type"_lang, "hex.builtin.common.count"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
-                                ImPlot::SetupAxesLimits(0, this->m_blockTypeDistributions[0].size(), -0.1F, 1.1F, ImGuiCond_Always);
+                                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.common.percentage"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+                                ImPlot::SetupAxesLimits(0, this->m_blockTypeDistributions[0].size(), -0.1F, 100.1F, ImGuiCond_Always);
                                 ImPlot::SetupLegend(ImPlotLocation_South, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
 
                                 constexpr static std::array Names = { "iscntrl", "isprint", "isspace", "isblank", "isgraph", "ispunct", "isalnum", "isalpha", "isupper", "islower", "isdigit", "isxdigit" };
@@ -336,7 +346,7 @@ namespace hex::plugin::builtin {
                         }
 
                         // Entropy information
-                        if (ImGui::BeginTable("entropy", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+                        if (ImGui::BeginTable("entropy_info", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
                             ImGui::TableSetupColumn("type");
                             ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
@@ -350,24 +360,49 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{:.8f}", this->m_averageEntropy);
+                            if (this->m_averageEntropy < 0) ImGui::TextUnformatted("???");
+                            else ImGui::TextFormatted("{:.8f}", this->m_averageEntropy);
 
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{:.8f}", this->m_highestBlockEntropy);
+                            if (this->m_highestBlockEntropy < 0) ImGui::TextUnformatted("???");
+                            else ImGui::TextFormatted("{:.8f}", this->m_highestBlockEntropy);
+
+                            ImGui::TableNextColumn();
+                            ImGui::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
+                            ImGui::TableNextColumn();
+                            if (this->m_plainTextCharacterPercentage < 0) ImGui::TextUnformatted("???");
+                            else ImGui::TextFormatted("{:.8f}", this->m_plainTextCharacterPercentage);
 
                             ImGui::EndTable();
                         }
 
-                        if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
-                            ImGui::NewLine();
-                            ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
+                        ImGui::NewLine();
+
+                        // General information
+                        if (ImGui::BeginTable("info", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+                            ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+                            ImGui::TableNextRow();
+
+                            if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
+                            }
+
+                            if (this->m_plainTextCharacterPercentage > 99) {
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.plain_text"_lang);
+                            }
+
+                            ImGui::EndTable();
                         }
+
+                        ImGui::NewLine();
 
                         ImGui::BeginGroup();
                         {
-                            ImGui::Header("hex.builtin.view.information.digram"_lang);
+                            ImGui::TextUnformatted("hex.builtin.view.information.digram"_lang);
                             this->m_digram.draw(ImVec2(300, 300));
                         }
                         ImGui::EndGroup();
@@ -376,10 +411,11 @@ namespace hex::plugin::builtin {
 
                         ImGui::BeginGroup();
                         {
-                            ImGui::Header("hex.builtin.view.information.layered_distribution"_lang);
+                            ImGui::TextUnformatted("hex.builtin.view.information.layered_distribution"_lang);
                             this->m_layeredDistribution.draw(ImVec2(300, 300));
                         }
-                        ImGui::EndGroup();                    }
+                        ImGui::EndGroup();
+                    }
                 }
             }
             ImGui::EndChild();
