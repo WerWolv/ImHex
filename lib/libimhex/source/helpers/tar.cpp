@@ -9,14 +9,25 @@ namespace hex {
     Tar::Tar(const std::fs::path &path, Mode mode) {
         int error = MTAR_ESUCCESS;
 
-        if (mode == Tar::Mode::Read)
-            error = mtar_open(&this->m_ctx, path.string().c_str(), "r");
-        else if (mode == Tar::Mode::Write)
-            error = mtar_open(&this->m_ctx, path.string().c_str(), "a");
-        else if (mode == Tar::Mode::Create)
-            error = mtar_open(&this->m_ctx, path.string().c_str(), "w");
-        else
-            error = MTAR_EFAILURE;
+        #if defined (OS_WINDOWS)
+            if (mode == Tar::Mode::Read)
+                error = mtar_wopen(&this->m_ctx, path.c_str(), L"r");
+            else if (mode == Tar::Mode::Write)
+                error = mtar_wopen(&this->m_ctx, path.c_str(), L"a");
+            else if (mode == Tar::Mode::Create)
+                error = mtar_wopen(&this->m_ctx, path.c_str(), L"w");
+            else
+                error = MTAR_EFAILURE;
+        #else
+            if (mode == Tar::Mode::Read)
+                error = mtar_open(&this->m_ctx, path.c_str(), "r");
+            else if (mode == Tar::Mode::Write)
+                error = mtar_open(&this->m_ctx, path.c_str(), "a");
+            else if (mode == Tar::Mode::Create)
+                error = mtar_open(&this->m_ctx, path.c_str(), "w");
+            else
+                error = MTAR_EFAILURE;
+        #endif
 
         this->m_valid = (error == MTAR_ESUCCESS);
     }
