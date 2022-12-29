@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
         double m_plainTextCharacterPercentage = -1.0;
         std::vector<double> m_blockEntropy;
         std::array<std::vector<float>, 12> m_blockTypeDistributions;
-        u64 m_processedBlockCount   = 0;
+        std::atomic<u64> m_processedBlockCount   = 0;
 
         double m_diagramHandlePosition = 0.0;
 

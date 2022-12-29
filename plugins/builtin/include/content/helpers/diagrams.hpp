@@ -105,8 +105,8 @@ namespace hex {
                     for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
                         const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, this->m_buffer[i + 1] * yStep };
 
-                        auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size());
-                        color.w    = this->m_opacityBuffer[i];
+                        auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size()) + ImVec4(this->m_glowBuffer[i], this->m_glowBuffer[i], this->m_glowBuffer[i], 0.0F);
+                        color.w    = this->m_opacity;
 
                         auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F) + ImVec2(x, y);
                         drawList->AddRectFilled(pos, pos + ImVec2(xStep, yStep), ImColor(color));
@@ -132,7 +132,7 @@ namespace hex {
 
     private:
         void processImpl() {
-            this->m_opacityBuffer.resize(this->m_buffer.size());
+            this->m_glowBuffer.resize(this->m_buffer.size());
 
             std::map<u64, size_t> heatMap;
             for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
@@ -142,15 +142,18 @@ namespace hex {
             }
 
             for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                this->m_opacityBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
+                this->m_glowBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
             }
+
+            this->m_opacity = (log10(float(this->m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
         }
 
     private:
         size_t m_sampleSize;
 
         std::vector<u8> m_buffer;
-        std::vector<float> m_opacityBuffer;
+        std::vector<float> m_glowBuffer;
+        float m_opacity = 0.0F;
         size_t m_highestCount = 0;
         std::atomic<bool> m_processing = false;
     };
@@ -172,8 +175,8 @@ namespace hex {
                     for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size()); i++) {
                         const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, yStep * ((float(i) / this->m_buffer.size()) * 0xFF) };
 
-                        auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size());
-                        color.w    = this->m_opacityBuffer[i];
+                        auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size()) + ImVec4(this->m_glowBuffer[i], this->m_glowBuffer[i], this->m_glowBuffer[i], 0.0F);
+                        color.w    = this->m_opacity;
 
                         auto pos = ImGui::GetWindowPos() + ImVec2(size.x * 0.025F, size.y * 0.025F) + ImVec2(x, y);
                         drawList->AddRectFilled(pos, pos + ImVec2(xStep, yStep), ImColor(color));
@@ -199,7 +202,7 @@ namespace hex {
 
     private:
         void processImpl() {
-            this->m_opacityBuffer.resize(this->m_buffer.size());
+            this->m_glowBuffer.resize(this->m_buffer.size());
 
             std::map<u64, size_t> heatMap;
             for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
@@ -209,14 +212,17 @@ namespace hex {
             }
 
             for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                this->m_opacityBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
+                this->m_glowBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
             }
+
+            this->m_opacity = (log10(float(this->m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
         }
     private:
         size_t m_sampleSize;
 
         std::vector<u8> m_buffer;
-        std::vector<float> m_opacityBuffer;
+        std::vector<float> m_glowBuffer;
+        float m_opacity = 0.0F;
         size_t m_highestCount = 0;
         std::atomic<bool> m_processing = false;
     };
