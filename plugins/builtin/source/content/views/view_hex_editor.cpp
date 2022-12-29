@@ -630,6 +630,11 @@ namespace hex::plugin::builtin {
         if (clipboard.empty())
             return;
 
+        // Remove common hex prefixes and commas
+        hex::replaceStrings(clipboard, "0x", "");
+        hex::replaceStrings(clipboard, "0X", "");
+        hex::replaceStrings(clipboard, ",", "");
+
         // Check for non-hex characters
         bool isValidHexString = std::find_if(clipboard.begin(), clipboard.end(), [](char c) {
             return !std::isxdigit(c) && !std::isspace(c);
