@@ -106,7 +106,7 @@ namespace hex {
         this->setupNativeWindow();
 
         // Initialize default theme
-        EventManager::post<RequestChangeTheme>(1);
+        EventManager::post<RequestChangeTheme>("Dark");
 
         EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
             glfwSetWindowShouldClose(this->m_window, GLFW_TRUE);
@@ -687,6 +687,8 @@ namespace hex {
 
         style.Alpha          = 1.0F;
         style.WindowRounding = 0.0F;
+
+        ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;

@@ -828,21 +828,6 @@ namespace hex::plugin::builtin {
                 this->m_textEditor.SetTextLines(lines);
             }
         });
-
-        EventManager::subscribe<RequestChangeTheme>(this, [this](u32 theme) {
-            switch (theme) {
-                default:
-                case 1: /* Dark theme */
-                    this->m_textEditor.SetPalette(TextEditor::GetDarkPalette());
-                    break;
-                case 2: /* Light theme */
-                    this->m_textEditor.SetPalette(TextEditor::GetLightPalette());
-                    break;
-                case 3: /* Classic theme */
-                    this->m_textEditor.SetPalette(TextEditor::GetRetroBluePalette());
-                    break;
-            }
-        });
     }
 
     static void createNestedMenu(const std::vector<std::string> &menus, const std::function<void()> &function) {

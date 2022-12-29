@@ -3,6 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/api/plugin_manager.hpp>
+#include <hex/api/theme_manager.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
@@ -419,12 +420,14 @@ namespace hex::plugin::builtin {
             {
                 auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
 
-                if (theme.is_number()) {
-                    static int lastTheme = 0;
+                if (theme.is_string()) {
+                    if (theme != api::ThemeManager::NativeTheme) {
+                        static std::string lastTheme;
 
-                    if (const int thisTheme = theme.get<int>(); thisTheme != lastTheme) {
-                        EventManager::post<RequestChangeTheme>(thisTheme);
-                        lastTheme = thisTheme;
+                        if (const auto thisTheme = theme.get<std::string>(); thisTheme != lastTheme) {
+                            EventManager::post<RequestChangeTheme>(thisTheme);
+                            lastTheme = thisTheme;
+                        }
                     }
                 }
             }
@@ -448,51 +451,16 @@ namespace hex::plugin::builtin {
             }
         });
 
-        (void)EventManager::subscribe<RequestChangeTheme>([](u32 theme) {
+        (void)EventManager::subscribe<RequestChangeTheme>([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
                 auto textureData = romfs::get(path);
 
                 return ImGui::Texture(reinterpret_cast<const ImU8*>(textureData.data()), textureData.size());
             };
 
-            switch (theme) {
-                default:
-                case 1: /* Dark theme */
-                    {
-                        ImGui::StyleColorsDark();
-                        ImGui::StyleCustomColorsDark();
-                        ImPlot::StyleColorsDark();
-                        s_bannerTexture = changeTexture("banner_dark.png");
-                        s_backdropTexture = changeTexture("backdrop_dark.png");
-
-                        break;
-                    }
-                case 2: /* Light theme */
-                    {
-                        ImGui::StyleColorsLight();
-                        ImGui::StyleCustomColorsLight();
-                        ImPlot::StyleColorsLight();
-                        s_bannerTexture = changeTexture("banner_light.png");
-                        s_backdropTexture = changeTexture("backdrop_light.png");
-
-                        break;
-                    }
-                case 3: /* Classic theme */
-                    {
-                        ImGui::StyleColorsClassic();
-                        ImGui::StyleCustomColorsClassic();
-                        ImPlot::StyleColorsClassic();
-                        s_bannerTexture = changeTexture("banner_dark.png");
-                        s_backdropTexture = changeTexture("backdrop_dark.png");
-
-                        break;
-                    }
-            }
-
-            ImGui::GetStyle().Colors[ImGuiCol_DockingEmptyBg]   = ImGui::GetStyle().Colors[ImGuiCol_WindowBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBg]          = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBgActive]    = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
-            ImGui::GetStyle().Colors[ImGuiCol_TitleBgCollapsed] = ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg];
+            api::ThemeManager::changeTheme(theme);
+            s_bannerTexture = changeTexture(hex::format("banner{}.png", api::ThemeManager::getThemeImagePostfix()));
+            s_backdropTexture = changeTexture(hex::format("backdrop{}.png", api::ThemeManager::getThemeImagePostfix()));
 
             if (!s_bannerTexture.isValid()) {
                 log::error("Failed to load banner texture!");

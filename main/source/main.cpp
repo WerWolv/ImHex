@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/api/theme_manager.hpp>
 
 #include "window.hpp"
 

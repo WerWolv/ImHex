@@ -30,9 +30,9 @@ namespace hex {
             if (!themeFollowSystem) return;
 
             if (!isMacosSystemDarkModeEnabled())
-                EventManager::post<RequestChangeTheme>(2);
+                EventManager::post<RequestChangeTheme>("Light");
             else
-                EventManager::post<RequestChangeTheme>(1);
+                EventManager::post<RequestChangeTheme>("Dark");
         });
 
         if (themeFollowSystem)

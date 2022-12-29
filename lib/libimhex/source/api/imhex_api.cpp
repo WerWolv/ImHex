@@ -480,18 +480,7 @@ namespace hex {
         }
 
 
-        static Theme s_theme;
         static bool s_systemThemeDetection;
-
-        void setTheme(Theme theme) {
-            s_theme = theme;
-
-            EventManager::post<EventSettingsChanged>();
-        }
-
-        Theme getTheme() {
-            return s_theme;
-        }
 
 
         void enableSystemThemeDetection(bool enabled) {

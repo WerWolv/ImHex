@@ -188,8 +188,8 @@ public:
 	void SetLanguageDefinition(const LanguageDefinition& aLanguageDef);
 	const LanguageDefinition& GetLanguageDefinition() const { return mLanguageDefinition; }
 
-	const Palette& GetPalette() const { return mPaletteBase; }
-	void SetPalette(const Palette& aValue);
+	static const Palette& GetPalette() { return sPaletteBase; }
+	static void SetPalette(const Palette& aValue);
 
 	void SetErrorMarkers(const ErrorMarkers& aMarkers) { mErrorMarkers = aMarkers; }
 	void SetBreakpoints(const Breakpoints& aMarkers) { mBreakpoints = aMarkers; }
@@ -372,7 +372,7 @@ private:
 	bool mIgnoreImGuiChild;
 	bool mShowWhitespaces;
 
-	Palette mPaletteBase;
+	static Palette sPaletteBase;
 	Palette mPalette;
 	LanguageDefinition mLanguageDefinition;
 	RegexList mRegexList;

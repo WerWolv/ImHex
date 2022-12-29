@@ -128,7 +128,7 @@ namespace hex {
     EVENT_DEF(RequestCloseImHex, bool);
     EVENT_DEF(RequestRestartImHex);
     EVENT_DEF(RequestOpenFile, std::fs::path);
-    EVENT_DEF(RequestChangeTheme, u32);
+    EVENT_DEF(RequestChangeTheme, std::string);
     EVENT_DEF(RequestOpenPopup, std::string);
     EVENT_DEF(RequestCreateProvider, std::string, bool, hex::prv::Provider **);
 

@@ -101,6 +101,7 @@ namespace hex::fs {
         Recent,
         Scripts,
         Inspectors,
+        Themes,
 
         END
     };

@@ -15,23 +15,6 @@
 namespace hex::plugin::builtin {
 
     ViewDataProcessor::ViewDataProcessor() : View("hex.builtin.view.data_processor.name") {
-        EventManager::subscribe<RequestChangeTheme>(this, [](u32 theme) {
-            switch (theme) {
-                default:
-                case 1: /* Dark theme */
-                    ImNodes::StyleColorsDark();
-                    break;
-                case 2: /* Light theme */
-                    ImNodes::StyleColorsLight();
-                    break;
-                case 3: /* Classic theme */
-                    ImNodes::StyleColorsClassic();
-                    break;
-            }
-
-            ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
-        });
-
         ProjectFile::registerPerProviderHandler({
             .basePath = "data_processor.json",
             .required = false,

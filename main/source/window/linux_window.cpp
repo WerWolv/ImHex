@@ -43,7 +43,7 @@ namespace hex {
             auto exitCode = WEXITSTATUS(pclose(pipe));
             if (exitCode != 0) return;
 
-            EventManager::post<RequestChangeTheme>(hex::containsIgnoreCase(result, "light") ? 2 : 1);
+            EventManager::post<RequestChangeTheme>(hex::containsIgnoreCase(result, "light") ? "Light" : "Dark");
         });
 
         if (themeFollowSystem)

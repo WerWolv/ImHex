@@ -253,6 +253,9 @@ namespace hex::fs {
             case ImHexPath::Inspectors:
                 result = appendPath(getDefaultPaths(ImHexPath::Scripts), "inspectors");
                 break;
+            case ImHexPath::Themes:
+                result = appendPath(getDataPaths(), "themes");
+                break;
         }
 
         if (!listNonExisting) {

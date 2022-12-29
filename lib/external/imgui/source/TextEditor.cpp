@@ -21,9 +21,10 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
     return first1 == last1 && first2 == last2;
 }
 
+TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
+
 TextEditor::TextEditor()
     : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {
-    SetPalette(GetDarkPalette());
     SetLanguageDefinition(LanguageDefinition::HLSL());
     mLines.push_back(Line());
 }
@@ -42,7 +43,7 @@ void TextEditor::SetLanguageDefinition(const LanguageDefinition &aLanguageDef) {
 }
 
 void TextEditor::SetPalette(const Palette &aValue) {
-    mPaletteBase = aValue;
+    sPaletteBase = aValue;
 }
 
 std::string TextEditor::GetText(const Coordinates &aStart, const Coordinates &aEnd) const {
@@ -740,7 +741,7 @@ void TextEditor::Render() {
 
     /* Update palette with the current alpha from style */
     for (int i = 0; i < (int)PaletteIndex::Max; ++i) {
-        auto color = ImGui::ColorConvertU32ToFloat4(mPaletteBase[i]);
+        auto color = ImGui::ColorConvertU32ToFloat4(sPaletteBase[i]);
         color.w *= ImGui::GetStyle().Alpha;
         mPalette[i] = ImGui::ColorConvertFloat4ToU32(color);
     }

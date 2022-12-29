@@ -2,6 +2,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
+#include <hex/api/theme_manager.hpp>
 
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/utils.hpp>
@@ -97,27 +98,34 @@ namespace hex::plugin::builtin {
 
         /* Interface */
 
-        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", 0, [](auto name, nlohmann::json &setting) {
-            static int selection = static_cast<int>(setting);
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", "Dark", [](auto name, nlohmann::json &setting) {
+            static auto selection = static_cast<std::string>(setting);
 
-            const char *themes[] = {
-                "hex.builtin.setting.interface.color.system"_lang,
-                "hex.builtin.setting.interface.color.dark"_lang,
-                "hex.builtin.setting.interface.color.light"_lang,
-                "hex.builtin.setting.interface.color.classic"_lang
-            };
+            const auto themeNames = hex::api::ThemeManager::getThemeNames();
+            bool changed = false;
 
-            if (ImGui::Combo(name.data(), &selection, themes, IM_ARRAYSIZE(themes))) {
-                setting = selection;
+            if (ImGui::BeginCombo(name.data(), selection.c_str())) {
+                if (ImGui::Selectable(api::ThemeManager::NativeTheme, selection == api::ThemeManager::NativeTheme)) {
+                    selection = api::ThemeManager::NativeTheme;
+                    setting = selection;
+                    ImHexApi::System::enableSystemThemeDetection(true);
+                    changed = true;
+                }
 
-                ImHexApi::System::enableSystemThemeDetection(selection == 0);
-                if (selection != 0)
-                    ImHexApi::System::setTheme(static_cast<ImHexApi::System::Theme>(selection));
+                for (const auto &themeName : themeNames) {
+                    if (ImGui::Selectable(themeName.c_str(), selection == themeName)) {
+                        selection = themeName;
+                        setting = selection;
+                        ImHexApi::System::enableSystemThemeDetection(false);
+                        api::ThemeManager::changeTheme(selection);
+                        changed = true;
+                    }
+                }
 
-                return true;
+                ImGui::EndCombo();
             }
 
-            return false;
+            return changed;
         });
 
         ContentRegistry::Settings::add(
@@ -569,10 +577,14 @@ namespace hex::plugin::builtin {
     }
 
     static void loadThemeSettings() {
-        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", static_cast<i64>(ImHexApi::System::Theme::Dark));
+        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", api::ThemeManager::NativeTheme);
 
-        ImHexApi::System::enableSystemThemeDetection(theme == 0);
-        ImHexApi::System::setTheme(static_cast<ImHexApi::System::Theme>(theme));
+        if (theme == api::ThemeManager::NativeTheme)
+            ImHexApi::System::enableSystemThemeDetection(true);
+        else {
+            ImHexApi::System::enableSystemThemeDetection(false);
+            api::ThemeManager::changeTheme(theme);
+        }
     }
 
     static void loadFoldersSettings() {

@@ -1,6 +1,7 @@
 #include <hex/plugin.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/theme_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
@@ -20,7 +21,7 @@ namespace hex::plugin::windows {
 static void detectSystemTheme() {
     // Setup system theme change detector
     EventManager::subscribe<EventOSThemeChanged>([] {
-        bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
+        bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == api::ThemeManager::NativeTheme;
         if (!themeFollowSystem)
             return;
 
@@ -31,7 +32,7 @@ static void detectSystemTheme() {
 
             auto error = RegQueryValueEx(hkey, "AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
             if (error == ERROR_SUCCESS) {
-                EventManager::post<RequestChangeTheme>(value == 0 ? 1 : 2);
+                EventManager::post<RequestChangeTheme>(value == 0 ? "Dark" : "Light");
             } else {
                 ImHexApi::System::impl::setBorderlessWindowMode(false);
             }
@@ -41,7 +42,7 @@ static void detectSystemTheme() {
     });
 
     EventManager::subscribe<EventWindowInitialized>([=] {
-        bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == 0;
+        bool themeFollowSystem = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color") == api::ThemeManager::NativeTheme;
 
         if (themeFollowSystem)
             EventManager::post<EventOSThemeChanged>();

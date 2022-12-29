@@ -191,12 +191,6 @@ namespace hex {
                 char **envp;
             };
 
-            enum class Theme {
-                Dark    = 1,
-                Light   = 2,
-                Classic = 3
-            };
-
             const ProgramArguments &getProgramArguments();
             std::optional<std::u8string> getProgramArgument(int index);
 
@@ -217,9 +211,6 @@ namespace hex {
             constexpr static float DefaultFontSize = 13.0;
             const std::filesystem::path &getCustomFontPath();
             float getFontSize();
-
-            void setTheme(Theme theme);
-            Theme getTheme();
 
             void enableSystemThemeDetection(bool enabled);
             bool usesSystemThemeDetection();
