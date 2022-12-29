@@ -907,11 +907,11 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(selectedFile.empty() || baseOutputPath.empty() || splitSize == 0);
             {
                 if (splitterTask.isRunning())
-                    ImGui::TextSpinner("hex.builtin.tools.file_tools.splitter.splitting"_lang);
+                    ImGui::TextSpinner("hex.builtin.tools.file_tools.splitter.picker.splitting"_lang);
                 else {
-                    if (ImGui::Button("hex.builtin.tools.file_tools.splitter.split"_lang)) {
+                    if (ImGui::Button("hex.builtin.tools.file_tools.splitter.picker.split"_lang)) {
 
-                        splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.splitting", 0, [](auto &task) {
+                        splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.picker.splitting", 0, [](auto &task) {
                             ON_SCOPE_EXIT {
                                 selectedFile.clear();
                                 baseOutputPath.clear();
@@ -919,12 +919,12 @@ namespace hex::plugin::builtin {
                             fs::File file(selectedFile, fs::File::Mode::Read);
 
                             if (!file.isValid()) {
-                                View::showErrorPopup("hex.builtin.tools.file_tools.splitter.error.open"_lang);
+                                View::showErrorPopup("hex.builtin.tools.file_tools.splitter.picker.error.open"_lang);
                                 return;
                             }
 
                             if (file.getSize() < splitSize) {
-                                View::showErrorPopup("hex.builtin.tools.file_tools.splitter.error.size"_lang);
+                                View::showErrorPopup("hex.builtin.tools.file_tools.splitter.picker.error.size"_lang);
                                 return;
                             }
 
@@ -940,7 +940,7 @@ namespace hex::plugin::builtin {
                                 fs::File partFile(path, fs::File::Mode::Create);
 
                                 if (!partFile.isValid()) {
-                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.error.create"_lang, index));
+                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
                                     return;
                                 }
 
@@ -953,7 +953,7 @@ namespace hex::plugin::builtin {
                                 index++;
                             }
 
-                            View::showInfoPopup("hex.builtin.tools.file_tools.splitter.success"_lang);
+                            View::showInfoPopup("hex.builtin.tools.file_tools.splitter.picker.success"_lang);
                         });
                     }
                 }
