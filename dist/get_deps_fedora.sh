@@ -10,5 +10,4 @@ dnf install -y      \
   mesa-libGL-devel  \
   glfw-devel        \
   lld               \
-  mbedtls-devel     \
-  python3-devel
+  mbedtls-devel

@@ -130,7 +130,6 @@ namespace hex::plugin::builtin {
         link("GNU libmagic", "", "https://www.darwinsys.com/file/");
         link("GLFW3", "", "https://github.com/glfw/glfw/");
         link("LLVM", "", "https://github.com/llvm/llvm-project/");
-        link("Python 3", "", "https://github.com/python/cpython/");
 
         ImGui::PopStyleColor();
 
@@ -143,15 +142,23 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("Type");
             ImGui::TableSetupColumn("Paths");
 
-            constexpr static std::array<std::pair<const char *, fs::ImHexPath>, 8> PathTypes = {
-                {{ "Resources", fs::ImHexPath::Resources },
-                 { "Config", fs::ImHexPath::Config },
-                 { "Magic", fs::ImHexPath::Magic },
-                 { "Patterns", fs::ImHexPath::Patterns },
-                 { "Patterns Includes", fs::ImHexPath::PatternsInclude },
-                 { "Plugins", fs::ImHexPath::Plugins },
-                 { "Python Scripts", fs::ImHexPath::Python },
-                 { "Yara Patterns", fs::ImHexPath::Yara }}
+            constexpr static std::array<std::pair<const char *, fs::ImHexPath>, u32(fs::ImHexPath::END)> PathTypes = {
+                {
+                    { "Patterns", fs::ImHexPath::Patterns },
+                    { "Patterns Includes", fs::ImHexPath::PatternsInclude },
+                    { "Magic", fs::ImHexPath::Magic },
+                    { "Plugins", fs::ImHexPath::Plugins },
+                    { "Yara Patterns", fs::ImHexPath::Yara },
+                    { "Config", fs::ImHexPath::Config },
+                    { "Resources", fs::ImHexPath::Resources },
+                    { "Constants lists", fs::ImHexPath::Constants },
+                    { "Custom encodings", fs::ImHexPath::Encodings },
+                    { "Logs", fs::ImHexPath::Logs },
+                    { "Recent files", fs::ImHexPath::Recent },
+                    { "Scripts", fs::ImHexPath::Scripts },
+                    { "Themes", fs::ImHexPath::Themes },
+                    { "Data inspector scripts", fs::ImHexPath::Inspectors },
+                }
             };
 
             ImGui::TableHeadersRow();

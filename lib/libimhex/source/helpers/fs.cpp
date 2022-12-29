@@ -238,9 +238,6 @@ namespace hex::fs {
             case ImHexPath::PatternsInclude:
                 result = appendPath(getDataPaths(), "includes");
                 break;
-            case ImHexPath::Python:
-                result = appendPath(getDataPaths(), "python");
-                break;
             case ImHexPath::Yara:
                 result = appendPath(getDataPaths(), "yara");
                 break;

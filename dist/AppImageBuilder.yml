@@ -107,7 +107,6 @@ AppDir:
     - /lib/x86_64-linux-gnu/libpcre2-8.so.0
     - /lib/x86_64-linux-gnu/libpixman-1.so.0
     - /lib/x86_64-linux-gnu/libpng16.so.16
-    - /lib/x86_64-linux-gnu/libpython3.10.so.1.0
     - /lib/x86_64-linux-gnu/libsasl2.so.2
     - /lib/x86_64-linux-gnu/libsensors.so.5
     - /lib/x86_64-linux-gnu/libstdc++.so.6

@@ -90,7 +90,6 @@ namespace hex::fs {
         Patterns = 0,
         PatternsInclude,
         Magic,
-        Python,
         Plugins,
         Yara,
         Config,

@@ -52,31 +52,6 @@ macro(addVersionDefines)
 
 endmacro()
 
-macro(configurePython)
-    set(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
-    set(CMAKE_FIND_PACKAGE_SORT_DIRECTION DEC)
-
-    # Enforce that we use non system Python 3 on macOS.
-    set(Python_FIND_FRAMEWORK NEVER)
-
-    find_package(Python COMPONENTS Development REQUIRED)
-    if(Python_VERSION LESS 3)
-        message(STATUS ${PYTHON_VERSION_MAJOR_MINOR})
-        message(FATAL_ERROR "No valid version of Python 3 was found.")
-    endif()
-
-    string(REPLACE "." ";" PYTHON_VERSION_MAJOR_MINOR ${Python_VERSION})
-
-    list(LENGTH PYTHON_VERSION_MAJOR_MINOR PYTHON_VERSION_COMPONENT_COUNT)
-
-    if (PYTHON_VERSION_COMPONENT_COUNT EQUAL 3)
-        list(REMOVE_AT PYTHON_VERSION_MAJOR_MINOR 2)
-    endif ()
-    list(JOIN PYTHON_VERSION_MAJOR_MINOR "." PYTHON_VERSION_MAJOR_MINOR)
-
-    add_compile_definitions(PYTHON_VERSION_MAJOR_MINOR="${PYTHON_VERSION_MAJOR_MINOR}")
-endmacro()
-
 # Detect current OS / System
 macro(detectOS)
     if (WIN32)
@@ -223,7 +198,6 @@ macro(createPackage)
 
         # Grab all dynamically linked dependencies.
         INSTALL(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
-        INSTALL(CODE "get_filename_component(PY_PARENT \"${Python_LIBRARIES}\" DIRECTORY)")
         INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
         install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES

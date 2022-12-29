@@ -7,7 +7,6 @@ pkgdesc="${_realname}: a Hex Editor for Reverse Engineers, Programmers and peopl
 arch=('any')
 url="https://github.com/WerWolv/ImHex"
 license=('GPLv2')
-depends=("${MINGW_PACKAGE_PREFIX}-python")
 makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
              "${MINGW_PACKAGE_PREFIX}-lld"
              "${MINGW_PACKAGE_PREFIX}-cmake"
@@ -17,7 +16,6 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-gcc"
              "${MINGW_PACKAGE_PREFIX}-file"
              "${MINGW_PACKAGE_PREFIX}-mbedtls"
              "${MINGW_PACKAGE_PREFIX}-polly"
-             "${MINGW_PACKAGE_PREFIX}-python"
              "${MINGW_PACKAGE_PREFIX}-freetype")
 
 source=()

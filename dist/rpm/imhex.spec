@@ -19,7 +19,6 @@ BuildRequires:  json-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  llvm-devel
 BuildRequires:  mbedtls-devel
-BuildRequires:  python3-devel
 %if 0%{?fedora} >= 37
 BuildRequires:  yara-devel
 %endif

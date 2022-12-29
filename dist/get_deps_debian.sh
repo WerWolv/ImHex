@@ -19,7 +19,6 @@ apt install -y \
   libglm-dev            \
   libmagic-dev          \
   libmbedtls-dev        \
-  python3-dev           \
   libfreetype-dev       \
   libdbus-1-dev         \
   xdg-desktop-portal

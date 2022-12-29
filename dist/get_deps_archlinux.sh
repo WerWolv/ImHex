@@ -7,7 +7,6 @@ pacman -S $@ --needed \
   glfw      \
   file      \
   mbedtls   \
-  python3   \
   freetype2 \
   dbus      \
   xdg-desktop-portal \

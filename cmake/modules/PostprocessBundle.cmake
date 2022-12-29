@@ -46,7 +46,7 @@ endfunction()
 
 include(BundleUtilities)
 set(BU_CHMOD_BUNDLE_ITEMS ON)
-fixup_bundle("${BUNDLE_PATH}" "${extra_libs}" "${extra_dirs}" IGNORE_ITEM "Python")
+fixup_bundle("${BUNDLE_PATH}" "${extra_libs}" "${extra_dirs}")
 
 if (CODE_SIGN_CERTIFICATE_ID)
 	# Hack around Apple Silicon signing bugs by copying the real app, signing it and moving it back.
