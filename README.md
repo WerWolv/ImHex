@@ -1,4 +1,9 @@
-<a href="https://imhex.werwolv.net"><h1 align="center" ><img height="100px" src="resources/projects/logo_text.svg"></h1></a>
+<a href="https://imhex.werwolv.net">
+  <h1 align="center">
+    <img height="100px" src="./resources/projects/logo_text_light.svg#gh-dark-mode-only">
+    <img height="100px" src="./resources/projects/logo_text_dark.svg#gh-light-mode-only">
+  </h1>
+</a>
 
 <p align="center">A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.</p>
 
