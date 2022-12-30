@@ -110,7 +110,6 @@ macro(configurePackingResources)
     if (WIN32)
         set(APPLICATION_TYPE)
         set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/resource.rc")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,--allow-multiple-definition")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-subsystem,windows")
 
         if (CREATE_PACKAGE)

@@ -98,12 +98,6 @@ else()
     set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
-
-if (WIN32)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--export-all-symbols")
-endif()
-
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 set(LIBIMHEX_SOURCES
@@ -160,6 +154,7 @@ add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 setupCompilerWarnings(libimhex)
+target_link_options(libimhex PRIVATE -Wl,--export-all-symbols)
 
 target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIRS} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
