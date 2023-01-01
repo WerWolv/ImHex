@@ -23,14 +23,33 @@ namespace hex {
         u64 address;
         size_t size;
 
-        [[nodiscard]] bool isWithin(const Region &other) const;
-        [[nodiscard]] bool overlaps(const Region &other) const;
+        [[nodiscard]] constexpr bool isWithin(const Region &other) const {
+            if (*this == Invalid() || other == Invalid())
+                return false;
 
-        [[nodiscard]] u64 getStartAddress() const;
-        [[nodiscard]] u64 getEndAddress() const;
-        [[nodiscard]] size_t getSize() const;
+            if (this->getStartAddress() >= other.getStartAddress() && this->getEndAddress() <= other.getEndAddress())
+                return true;
 
-        bool operator==(const Region &other) const;
+            return false;
+        }
+
+        [[nodiscard]] constexpr bool overlaps(const Region &other) const {
+            if (*this == Invalid() || other == Invalid())
+                return false;
+
+            if (this->getEndAddress() >= other.getStartAddress() && this->getStartAddress() <= other.getEndAddress())
+                return true;
+
+            return false;
+        }
+
+        [[nodiscard]] constexpr u64 getStartAddress() const { return this->address; }
+        [[nodiscard]] constexpr u64 getEndAddress() const { return this->address + this->size - 1;}
+        [[nodiscard]] constexpr size_t getSize() const { return this->size; }
+
+        [[nodiscard]] constexpr bool operator==(const Region &other) const {
+            return this->address == other.address && this->size == other.size;
+        }
 
         constexpr static Region Invalid() {
             return { 0, 0 };

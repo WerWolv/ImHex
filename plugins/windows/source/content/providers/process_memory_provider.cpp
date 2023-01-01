@@ -5,6 +5,7 @@
 
 #include <imgui.h>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 namespace hex::plugin::windows {
 
@@ -35,7 +36,23 @@ namespace hex::plugin::windows {
             if (GetModuleFileNameExA(this->m_processHandle, module, moduleName, MAX_PATH) == FALSE)
                 continue;
 
-            this->m_modules.push_back({ { (u64)moduleInfo.lpBaseOfDll, (u64)moduleInfo.lpBaseOfDll + moduleInfo.SizeOfImage }, std::fs::path(moduleName).filename().string() });
+            this->m_memoryRegions.insert({ { (u64)moduleInfo.lpBaseOfDll, (u64)moduleInfo.lpBaseOfDll + moduleInfo.SizeOfImage }, std::fs::path(moduleName).filename().string() });
+        }
+
+        MEMORY_BASIC_INFORMATION memoryInfo;
+        for (u64 address = 0; address < 0xFFFF'FFFF'FFFF; address += memoryInfo.RegionSize) {
+            if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+                break;
+
+            std::string name;
+            if (memoryInfo.State & MEM_IMAGE)   continue;
+            if (memoryInfo.State & MEM_FREE)    continue;
+            if (memoryInfo.State & MEM_COMMIT)  name += "Commit ";
+            if (memoryInfo.State & MEM_RESERVE) name += "Reserve ";
+            if (memoryInfo.State & MEM_PRIVATE) name += "Private ";
+            if (memoryInfo.State & MEM_MAPPED)  name += "Mapped ";
+
+            this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
         }
 
         return true;
@@ -54,9 +71,18 @@ namespace hex::plugin::windows {
     }
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
-        for (const auto &module : this->m_modules) {
-            if (module.region.overlaps({ address, 1 }))
-                return { module.region, true };
+        for (const auto &memoryRegion : this->m_memoryRegions) {
+            if (memoryRegion.region.overlaps({ address, 1 }))
+                return { memoryRegion.region, true };
+        }
+
+        Region lastRegion = Region::Invalid();
+        for (const auto &memoryRegion : this->m_memoryRegions) {
+
+            if (address < memoryRegion.region.getStartAddress())
+                return { Region { lastRegion.getEndAddress() + 1, memoryRegion.region.getStartAddress() - lastRegion.getEndAddress() }, false };
+
+            lastRegion = memoryRegion.region;
         }
 
         return { Region::Invalid(), false };
@@ -127,16 +153,16 @@ namespace hex::plugin::windows {
             ImGui::TableSetupColumn("Name");
             ImGui::TableHeadersRow();
 
-            for (auto &module : this->m_modules) {
-                ImGui::PushID(module.region.getStartAddress());
+            for (auto &memoryRegion : this->m_memoryRegions) {
+                ImGui::PushID(memoryRegion.region.getStartAddress());
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%016llX - 0x%016llX", module.region.getStartAddress(), module.region.getEndAddress());
+                ImGui::Text("0x%016llX - 0x%016llX", memoryRegion.region.getStartAddress(), memoryRegion.region.getEndAddress());
 
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(module.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
-                    ImHexApi::HexEditor::setSelection(module.region);
+                if (ImGui::Selectable(memoryRegion.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
+                    ImHexApi::HexEditor::setSelection(memoryRegion.region);
 
                 ImGui::PopID();
             }

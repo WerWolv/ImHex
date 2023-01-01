@@ -64,15 +64,19 @@ namespace hex::plugin::windows {
             std::string name;
         };
 
-        struct Module {
+        struct MemoryRegion {
             Region region;
             std::string name;
+
+            constexpr bool operator<(const MemoryRegion &other) const {
+                return this->region.getStartAddress() < other.region.getStartAddress();
+            }
         };
 
         std::vector<Process> m_processes;
         std::optional<Process> m_selectedProcess;
 
-        std::vector<Module> m_modules;
+        std::set<MemoryRegion> m_memoryRegions;
 
         HANDLE m_processHandle = nullptr;
 

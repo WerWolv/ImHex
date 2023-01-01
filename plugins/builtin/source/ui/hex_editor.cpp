@@ -379,11 +379,10 @@ namespace hex::plugin::builtin::ui {
 
             if (this->m_provider != nullptr && this->m_provider->isReadable()) {
 
-                std::pair<Region, bool> validRegion = { Region::Invalid(), false };
-                const auto isCurrRegionValid = [this, &validRegion](u64 address){
-                    auto &[currRegion, currRegionValid] = validRegion;
+                const auto isCurrRegionValid = [this](u64 address){
+                    auto &[currRegion, currRegionValid] = this->m_currValidRegion;
                     if (!Region{ address, 1 }.isWithin(currRegion)) {
-                        validRegion = this->m_provider->getRegionValidity(address);
+                        this->m_currValidRegion = this->m_provider->getRegionValidity(address);
                     }
 
                     return currRegionValid;
@@ -541,7 +540,7 @@ namespace hex::plugin::builtin::ui {
                                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                         ImGui::PushItemWidth(CharacterSize.x);
                                         if (!isCurrRegionValid(byteAddress))
-                                            ImGui::TextFormatted("?");
+                                            ImGui::TextDisabled("?");
                                         else
                                             this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
                                         ImGui::PopItemWidth();

@@ -126,7 +126,6 @@ set(LIBIMHEX_SOURCES
     source/helpers/encoding_file.cpp
     source/helpers/logger.cpp
     source/helpers/tar.cpp
-    source/helpers/types.cpp
 
     source/providers/provider.cpp
 
