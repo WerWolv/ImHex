@@ -1,6 +1,7 @@
 #include <hex/helpers/tar.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/fs.hpp>
 
 namespace hex {
 
@@ -9,25 +10,21 @@ namespace hex {
     Tar::Tar(const std::fs::path &path, Mode mode) {
         int error = MTAR_ESUCCESS;
 
-        #if defined (OS_WINDOWS)
-            if (mode == Tar::Mode::Read)
-                error = mtar_wopen(&this->m_ctx, path.c_str(), L"r");
-            else if (mode == Tar::Mode::Write)
-                error = mtar_wopen(&this->m_ctx, path.c_str(), L"a");
-            else if (mode == Tar::Mode::Create)
-                error = mtar_wopen(&this->m_ctx, path.c_str(), L"w");
-            else
-                error = MTAR_EFAILURE;
-        #else
-            if (mode == Tar::Mode::Read)
-                error = mtar_open(&this->m_ctx, path.c_str(), "r");
-            else if (mode == Tar::Mode::Write)
-                error = mtar_open(&this->m_ctx, path.c_str(), "a");
-            else if (mode == Tar::Mode::Create)
-                error = mtar_open(&this->m_ctx, path.c_str(), "w");
-            else
-                error = MTAR_EFAILURE;
-        #endif
+        // Explicitly create file so a short path gets generated
+        if (mode == Mode::Create) {
+            fs::File file(path, fs::File::Mode::Create);
+            file.flush();
+        }
+
+        auto shortPath = hex::fs::toShortPath(path);
+        if (mode == Tar::Mode::Read)
+            error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "r");
+        else if (mode == Tar::Mode::Write)
+            error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "a");
+        else if (mode == Tar::Mode::Create)
+            error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "w");
+        else
+            error = MTAR_EFAILURE;
 
         this->m_valid = (error == MTAR_ESUCCESS);
     }

@@ -71,7 +71,6 @@ struct mtar_t {
 const char *mtar_strerror(int err);
 
 int mtar_open(mtar_t *tar, const char *filename, const char *mode);
-int mtar_wopen(mtar_t *tar, const wchar_t *filename, const wchar_t *mode);
 int mtar_close(mtar_t *tar);
 
 int mtar_seek(mtar_t *tar, unsigned pos);
