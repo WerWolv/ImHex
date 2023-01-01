@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
     bool ViewProviderSettings::isAvailable() const {
         auto provider = hex::ImHexApi::Provider::get();
 
-        return provider != nullptr && provider->hasInterface();
+        return provider != nullptr && provider->hasInterface() && provider->isAvailable();
     }
 
 }

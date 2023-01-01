@@ -4,6 +4,7 @@
 #include <psapi.h>
 
 #include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 
@@ -47,10 +48,10 @@ namespace hex::plugin::windows {
             std::string name;
             if (memoryInfo.State & MEM_IMAGE)   continue;
             if (memoryInfo.State & MEM_FREE)    continue;
-            if (memoryInfo.State & MEM_COMMIT)  name += "Commit ";
-            if (memoryInfo.State & MEM_RESERVE) name += "Reserve ";
-            if (memoryInfo.State & MEM_PRIVATE) name += "Private ";
-            if (memoryInfo.State & MEM_MAPPED)  name += "Mapped ";
+            if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.commit"_lang);
+            if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.reserve"_lang);
+            if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.private"_lang);
+            if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.mapped"_lang);
 
             this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
         }
@@ -122,9 +123,11 @@ namespace hex::plugin::windows {
         if (this->m_enumerationFailed) {
             ImGui::TextUnformatted("hex.windows.provider.process_memory.enumeration_failed"_lang);
         } else {
-            if (ImGui::BeginTable("##process_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 500))) {
-                ImGui::TableSetupColumn("ID");
-                ImGui::TableSetupColumn("Name");
+            if (ImGui::BeginTable("##process_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 500_scaled))) {
+                ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_id"_lang);
+                ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_name"_lang);
+                ImGui::TableSetupScrollFreeze(0, 1);
+
                 ImGui::TableHeadersRow();
 
                 for (auto &process : this->m_processes) {
@@ -148,9 +151,12 @@ namespace hex::plugin::windows {
     }
 
     void ProcessMemoryProvider::drawInterface() {
-        if (ImGui::BeginTable("##module_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
-            ImGui::TableSetupColumn("Base");
-            ImGui::TableSetupColumn("Name");
+        ImGui::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
+        if (ImGui::BeginTable("##module_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 400_scaled))) {
+            ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.name"_lang);
+            ImGui::TableSetupScrollFreeze(0, 1);
+
             ImGui::TableHeadersRow();
 
             for (auto &memoryRegion : this->m_memoryRegions) {

@@ -5,8 +5,13 @@
     "translations": {
         "hex.windows.provider.process_memory": "Process Memory Provider",
         "hex.windows.provider.process_memory.enumeration_failed": "Failed to enumerate processes",
+        "hex.windows.provider.process_memory.memory_regions": "Memory Regions",
         "hex.windows.provider.process_memory.process_name": "Process Name",
         "hex.windows.provider.process_memory.process_id": "Process ID",
+        "hex.windows.provider.process_memory.region.commit": "Commit",
+        "hex.windows.provider.process_memory.region.reserve": "Reserved",
+        "hex.windows.provider.process_memory.region.private": "Private",
+        "hex.windows.provider.process_memory.region.mapped": "Mapped",
         "hex.builtin.setting.general.context_menu_entry": "Windows context menu entry",
         "hex.windows.title_bar_button.debug_build": "Debug build",
         "hex.windows.title_bar_button.feedback": "Leave Feedback",
