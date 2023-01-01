@@ -715,7 +715,7 @@ namespace hex::plugin::builtin::ui {
 
                         ImGui::BeginDisabled(pageCount <= 1);
                         {
-                            if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount, hex::format("%d / {}", pageCount).c_str()))
+                            if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount, hex::format("0x%llX / 0x{:02X}", pageCount).c_str()))
                                 this->m_provider->setCurrentPage(page - 1);
                         }
                         ImGui::EndDisabled();

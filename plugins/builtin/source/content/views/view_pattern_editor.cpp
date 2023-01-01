@@ -140,7 +140,7 @@ namespace hex::plugin::builtin {
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
                 auto &runtime = ProviderExtraData::getCurrent().patternLanguage.runtime;
-                if (runtime->isRunning()) {
+                if (runtime != nullptr && runtime->isRunning()) {
                     if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
                         runtime->abort();
                 } else {

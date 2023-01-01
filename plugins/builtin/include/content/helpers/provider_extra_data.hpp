@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
 
                 std::string sourceCode;
                 std::mutex runtimeMutex;
-                std::unique_ptr<pl::PatternLanguage> runtime;
+                std::unique_ptr<pl::PatternLanguage> runtime = std::make_unique<pl::PatternLanguage>();
                 std::vector<std::pair<pl::core::LogConsole::Level, std::string>> console;
                 bool executionDone = true;
 

@@ -13,6 +13,9 @@ if (WIN32)
 
             source/content/ui_items.cpp
             source/content/settings_entries.cpp
+            source/content/providers.cpp
+
+            source/content/providers/process_memory_provider.cpp
     )
 
     # Add additional include directories here #

@@ -133,7 +133,7 @@ namespace hex::prv {
 
 
     u32 Provider::getPageCount() const {
-        return std::max(1.0, std::ceil(this->getActualSize() / double(PageSize)));
+        return (this->getActualSize() / PageSize) + (this->getActualSize() % PageSize != 0 ? 1 : 0);
     }
 
     u32 Provider::getCurrentPage() const {

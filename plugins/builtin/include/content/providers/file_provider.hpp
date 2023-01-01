@@ -23,8 +23,8 @@ namespace hex::plugin::builtin {
 
     class FileProvider : public hex::prv::Provider {
     public:
-        FileProvider() = default;;
-        ~FileProvider() override = default;;
+        FileProvider() = default;
+        ~FileProvider() override = default;
 
         [[nodiscard]] bool isAvailable() const override;
         [[nodiscard]] bool isReadable() const override;
