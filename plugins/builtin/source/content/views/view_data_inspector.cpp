@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataInspector::drawContent() {
-        if (this->m_dataValid) {
+        if (this->m_dataValid && !this->m_updateTask.isRunning()) {
             this->m_dataValid = false;
             this->m_cachedData = std::move(this->m_workData);
         }

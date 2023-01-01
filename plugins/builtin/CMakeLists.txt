@@ -69,7 +69,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE libimhex)
 
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_SHARED_LIBRARY_SUFFIX ".hexplug")
 

@@ -80,7 +80,9 @@ namespace hex {
 
             if (iter != s_tokenStore.end()) {
                 s_events.remove(*iter->second);
+                s_tokenStore.erase(iter);
             }
+
         }
 
         template<typename E>

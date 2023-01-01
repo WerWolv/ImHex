@@ -140,7 +140,7 @@ namespace hex::plugin::builtin {
 
                 std::array<ImU64, 256> blockValueCounts = { 0 };
 
-                const auto blockCount = provider->getSize() / this->m_blockSize;
+                const auto blockCount = (provider->getSize() / this->m_blockSize) + 1;
 
                 this->m_blockTypeDistributions.fill({});
                 this->m_blockEntropy.clear();

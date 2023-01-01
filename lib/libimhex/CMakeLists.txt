@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(libimhex)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../external/imgui ${CMAKE_CURRENT_BINARY_DIR}/external/imgui)

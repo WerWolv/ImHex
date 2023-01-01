@@ -22,12 +22,13 @@ namespace hex::plugin::builtin {
                     if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == tools.end())
                         this->m_dragStartIterator = iter;
 
+                    if (!ImGui::IsMouseDown(0))
+                        this->m_dragStartIterator = tools.end();
+
                     if (!ImGui::IsItemHovered() && this->m_dragStartIterator == iter) {
                         detached = true;
                     }
 
-                    if (!ImGui::IsMouseDown(0))
-                        this->m_dragStartIterator = tools.end();
                 }
             }
         }

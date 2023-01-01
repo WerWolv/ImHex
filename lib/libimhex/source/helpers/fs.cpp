@@ -189,7 +189,7 @@ namespace hex::fs {
         #endif
     }
 
-    constexpr std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder) {
+    std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder) {
         for (auto &path : paths)
             path = path / folder;
 
