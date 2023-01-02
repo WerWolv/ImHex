@@ -165,4 +165,4 @@ elseif (APPLE)
     target_link_libraries(libimhex PUBLIC ${FOUNDATION})
 endif ()
 
-target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${FMT_LIBRARIES} libpl intervaltree)
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} libpl ${FMT_LIBRARIES} intervaltree)
