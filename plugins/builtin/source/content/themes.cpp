@@ -13,6 +13,15 @@
 
 namespace hex::plugin::builtin {
 
+    namespace {
+
+        [[maybe_unused]] void printThemeData(const auto &colorMap, const auto &colors) {
+            for (const auto &[name, id] : colorMap)
+                fmt::print("\"{}\": \"#{:08X}\",\n", name, hex::changeEndianess(colors[id], std::endian::big));
+        }
+
+    }
+
     void registerThemeHandlers() {
         api::ThemeManager::addThemeHandler("imgui", [](const std::string &key, const std::string &value) {
             const static std::map<std::string, ImGuiCol> ColorMap = {

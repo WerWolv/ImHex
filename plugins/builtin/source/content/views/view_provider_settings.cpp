@@ -41,15 +41,15 @@ namespace hex::plugin::builtin {
                     }
                     else {
                         View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
-                        ImHexApi::Provider::remove(provider);
+                        TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                     }
                 }
 
                 ImGui::SameLine();
 
                 if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
-                    ImHexApi::Provider::remove(provider);
                     ImGui::CloseCurrentPopup();
+                    TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                 }
             }
 

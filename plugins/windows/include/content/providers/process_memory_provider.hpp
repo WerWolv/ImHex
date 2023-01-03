@@ -5,6 +5,9 @@
 
 #include <windows.h>
 
+#include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
+
 #include <array>
 #include <mutex>
 #include <string_view>
@@ -62,6 +65,7 @@ namespace hex::plugin::windows {
         struct Process {
             u32 id;
             std::string name;
+            ImGui::Texture icon;
         };
 
         struct MemoryRegion {
@@ -74,7 +78,7 @@ namespace hex::plugin::windows {
         };
 
         std::vector<Process> m_processes;
-        std::optional<Process> m_selectedProcess;
+        Process *m_selectedProcess = nullptr;
 
         std::set<MemoryRegion> m_memoryRegions;
 

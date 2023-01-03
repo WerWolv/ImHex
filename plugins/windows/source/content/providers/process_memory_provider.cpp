@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <psapi.h>
+#include <shellapi.h>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -105,6 +106,8 @@ namespace hex::plugin::windows {
 
             processIds.resize(numProcesses / sizeof(DWORD));
 
+            auto dc = GetDC(nullptr);
+            ON_SCOPE_EXIT { ReleaseDC(nullptr, dc); };
             for (auto processId : processIds) {
                 HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
                 if (processHandle == nullptr)
@@ -116,14 +119,54 @@ namespace hex::plugin::windows {
                 if (GetModuleBaseNameA(processHandle, nullptr, processName, MAX_PATH) == 0)
                     continue;
 
-                this->m_processes.push_back({ processId, processName });
+                ImGui::Texture texture;
+                {
+                    HMODULE moduleHandle = nullptr;
+                    DWORD numModules = 0;
+                    if (EnumProcessModules(processHandle, &moduleHandle, sizeof(HMODULE), &numModules) != FALSE) {
+                        char modulePath[MAX_PATH];
+                        if (GetModuleFileNameExA(processHandle, moduleHandle, modulePath, MAX_PATH) != FALSE) {
+                            SHFILEINFOA fileInfo;
+                            if (SHGetFileInfoA(modulePath, 0, &fileInfo, sizeof(SHFILEINFOA), SHGFI_ICON | SHGFI_SMALLICON) > 0) {
+                                ON_SCOPE_EXIT { DestroyIcon(fileInfo.hIcon); };
+
+                                ICONINFO iconInfo;
+                                if (GetIconInfo(fileInfo.hIcon, &iconInfo) != FALSE) {
+                                    ON_SCOPE_EXIT { DeleteObject(iconInfo.hbmColor); DeleteObject(iconInfo.hbmMask); };
+
+                                    BITMAP bitmap;
+                                    if (GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bitmap) > 0) {
+                                        BITMAPINFO bitmapInfo = { };
+                                        bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+                                        bitmapInfo.bmiHeader.biWidth = bitmap.bmWidth;
+                                        bitmapInfo.bmiHeader.biHeight = -bitmap.bmHeight;
+                                        bitmapInfo.bmiHeader.biPlanes = 1;
+                                        bitmapInfo.bmiHeader.biBitCount = 32;
+                                        bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+                                        std::vector<u32> pixels(bitmap.bmWidth * bitmap.bmHeight * 4);
+                                        if (GetDIBits(dc, iconInfo.hbmColor, 0, bitmap.bmHeight, pixels.data(), &bitmapInfo, DIB_RGB_COLORS) > 0) {
+                                            for (auto &pixel : pixels)
+                                                pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
+
+                                            texture = ImGui::Texture((u8*)pixels.data(), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                this->m_processes.push_back({ processId, processName, std::move(texture) });
             }
         }
 
         if (this->m_enumerationFailed) {
             ImGui::TextUnformatted("hex.windows.provider.process_memory.enumeration_failed"_lang);
         } else {
-            if (ImGui::BeginTable("##process_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 500_scaled))) {
+            if (ImGui::BeginTable("##process_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 500_scaled))) {
+                ImGui::TableSetupColumn("##icon");
                 ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_id"_lang);
                 ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_name"_lang);
                 ImGui::TableSetupScrollFreeze(0, 1);
@@ -135,11 +178,14 @@ namespace hex::plugin::windows {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
+                    ImGui::Image(process.icon, process.icon.getSize());
+
+                    ImGui::TableNextColumn();
                     ImGui::Text("%d", process.id);
 
                     ImGui::TableNextColumn();
-                    if (ImGui::Selectable(process.name.c_str(), this->m_selectedProcess.has_value() && process.id == this->m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns))
-                        this->m_selectedProcess = process;
+                    if (ImGui::Selectable(process.name.c_str(), this->m_selectedProcess != nullptr && process.id == this->m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, process.icon.getSize().y)))
+                        this->m_selectedProcess = &process;
 
                     ImGui::PopID();
                 }
