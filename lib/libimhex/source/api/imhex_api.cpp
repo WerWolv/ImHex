@@ -312,13 +312,13 @@ namespace hex {
 
             EventManager::post<EventProviderDeleted>(provider);
 
-            s_providers.erase(it);
 
             if (s_providers.empty())
                 EventManager::post<EventProviderChanged>(provider, nullptr);
             else if (it - s_providers.begin() == s_currentProvider)
                 setCurrentProvider(0);
 
+            s_providers.erase(it);
             provider->close();
             EventManager::post<EventProviderClosed>(provider);
 

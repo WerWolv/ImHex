@@ -2041,7 +2041,9 @@ void TextEditor::ColorizeInternal() {
                         }
                     }
                 }
-                line[currentIndex].mPreprocessor = withinPreproc;
+                if (currentIndex < line.size())
+                    line[currentIndex].mPreprocessor = withinPreproc;
+                
                 currentIndex += UTF8CharLength(c);
                 if (currentIndex >= (int)line.size()) {
                     currentIndex = 0;
