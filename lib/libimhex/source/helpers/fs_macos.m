@@ -4,7 +4,7 @@
     #include <stdlib.h>
     #include <Foundation/Foundation.h>
 
-    char* getMacExecutableDirectoryPath() {
+    char* getMacExecutableDirectoryPath(void) {
         @autoreleasepool {
             const char *pathString = [[[[[NSBundle mainBundle] executableURL] URLByDeletingLastPathComponent] path] UTF8String];
 
@@ -15,7 +15,7 @@
         }
     }
 
-    char* getMacApplicationSupportDirectoryPath() {
+    char* getMacApplicationSupportDirectoryPath(void) {
         @autoreleasepool {
             NSError* error = nil;
             NSURL* dirUrl = [[NSFileManager defaultManager] URLForDirectory:NSApplicationSupportDirectory
