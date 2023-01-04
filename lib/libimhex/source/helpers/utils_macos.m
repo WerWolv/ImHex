@@ -15,7 +15,7 @@
         CFRelease(urlRef);
     }
 
-    bool isMacosSystemDarkModeEnabled() {
+    bool isMacosSystemDarkModeEnabled(void) {
         NSString * appleInterfaceStyle = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
 
         if (appleInterfaceStyle && [appleInterfaceStyle length] > 0) {
