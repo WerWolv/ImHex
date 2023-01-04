@@ -415,11 +415,22 @@ namespace hex::plugin::builtin {
                             using enum SearchSettings::Value::Type;
                             using enum Occurrence::DecodeType;
 
-                            case U8 ... U64:    return Unsigned;
-                            case I8 ... I64:    return Signed;
-                            case F32:           return Float;
-                            case F64:           return Double;
-                            default:            return Binary;
+                            case U8:
+                            case U16:
+                            case U32:
+                            case U64:
+                                return Unsigned;
+                            case I8:
+                            case I16:
+                            case I32:
+                            case I64:
+                                return Signed;
+                            case F32:
+                                return Float;
+                            case F64:
+                                return Double;
+                            default:
+                                return Binary;
                         }
                     }();
 

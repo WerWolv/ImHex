@@ -6,4 +6,4 @@ add_library(tests_common STATIC
         source/main.cpp
 )
 target_include_directories(tests_common PUBLIC include)
-target_link_libraries(tests_common PUBLIC libimhex)
+target_link_libraries(tests_common PUBLIC libimhex ${FMT_LIBRARIES})

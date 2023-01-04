@@ -91,11 +91,11 @@ namespace hex::plugin::builtin {
                     case 0xFF:
                         ImGui::TextDisabled("##");
                         break;
-                    case ' ' ... '~':
-                        ImGui::Text(".%c", c);
-                        break;
                     default:
-                        ImGui::Text(getFormatString(upperCase), c);
+                        if (c >= ' ' && c <= '~')
+                            ImGui::Text(".%c", c);
+                        else
+                            ImGui::Text(getFormatString(upperCase), c);
                         break;
                 }
             }

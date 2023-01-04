@@ -6,7 +6,12 @@
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
 
+// <yara/types.h>'s RE type has a zero-sized array, which is not allowed in ISO C++.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 #include <yara.h>
+#pragma GCC diagnostic pop
+
 #include <filesystem>
 #include <thread>
 

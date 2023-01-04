@@ -57,8 +57,10 @@ namespace hex::magic {
             magic_t ctx = magic_open(MAGIC_NONE);
             ON_SCOPE_EXIT { magic_close(ctx); };
 
-            if (magic_load(ctx, magicFiles->c_str()) == 0)
-                return magic_buffer(ctx, data.data(), data.size()) ?: "";
+            if (magic_load(ctx, magicFiles->c_str()) == 0) {
+                if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
+                    return result;
+            }
         }
 
         return "";
@@ -78,8 +80,10 @@ namespace hex::magic {
             magic_t ctx = magic_open(MAGIC_MIME_TYPE);
             ON_SCOPE_EXIT { magic_close(ctx); };
 
-            if (magic_load(ctx, magicFiles->c_str()) == 0)
-                return magic_buffer(ctx, data.data(), data.size()) ?: "";
+            if (magic_load(ctx, magicFiles->c_str()) == 0) {
+                if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
+                    return result;
+            }
         }
 
         return "";

@@ -196,10 +196,11 @@ namespace hex {
                 return "Space";
             case 127:
                 return "DEL";
-            case 128 ... 255:
-                return " ";
             default:
-                return std::string() + static_cast<char>(c);
+                if (c >= 128)
+                    return " ";
+                else
+                    return std::string() + static_cast<char>(c);
         }
     }
 

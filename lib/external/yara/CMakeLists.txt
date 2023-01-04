@@ -95,22 +95,23 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/time/time.c
 )
 
-# Add mbedtls crypto wrappers
-add_compile_definitions("HAVE_MBEDTLS")
-
-add_compile_definitions("USE_NO_PROC")
-
-add_compile_definitions("HASH_MODULE")
-add_compile_definitions("DOTNET_MODULE")
-add_compile_definitions("MAGIC_MODULE")
-add_compile_definitions("MACHO_MODULE")
-add_compile_definitions("DEX_MODULE")
-
 find_package(mbedTLS 2.26.0 REQUIRED)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-shift-count-overflow")
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
 set_property(TARGET libyara PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Add mbedtls crypto wrappers
+target_compile_definitions(libyara PRIVATE HAVE_MBEDTLS)
+
+target_compile_definitions(libyara PRIVATE USE_NO_PROC)
+
+target_compile_definitions(libyara PRIVATE HASH_MODULE)
+target_compile_definitions(libyara PRIVATE DOTNET_MODULE)
+target_compile_definitions(libyara PRIVATE MAGIC_MODULE)
+target_compile_definitions(libyara PRIVATE MACHO_MODULE)
+target_compile_definitions(libyara PRIVATE DEX_MODULE)
+
+target_compile_options(libyara PRIVATE "-Wno-shift-count-overflow")
 
 target_include_directories(
         libyara

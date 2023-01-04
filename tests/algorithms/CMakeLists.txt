@@ -37,7 +37,7 @@ add_executable(${PROJECT_NAME}
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #
 
 target_include_directories(${PROJECT_NAME} PRIVATE include)
-target_link_libraries(${PROJECT_NAME} libimhex tests_common)
+target_link_libraries(${PROJECT_NAME} PRIVATE libimhex tests_common ${FMT_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
