@@ -36,7 +36,7 @@ namespace hex::plugin::windows {
         void save() override {}
         void saveAs(const std::fs::path &) override {}
 
-        [[nodiscard]] std::string getName() const override { return "hex.windows.provider.process_memory"_lang; }
+        [[nodiscard]] std::string getName() const override { return hex::format("hex.windows.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override {
             return {
                     { "hex.windows.provider.process_memory.process_name"_lang, this->m_selectedProcess->name },
@@ -60,6 +60,9 @@ namespace hex::plugin::windows {
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64) const override;
+
+    private:
+        void reloadProcessModules();
 
     private:
         struct Process {

@@ -8,6 +8,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/ui/view.hpp>
 
 namespace hex::plugin::windows {
 
@@ -16,46 +17,7 @@ namespace hex::plugin::windows {
         if (this->m_processHandle == nullptr)
             return false;
 
-        DWORD numModules = 0;
-        std::vector<HMODULE> modules;
-
-        do {
-            modules.resize(modules.size() + 1024);
-            if (EnumProcessModules(this->m_processHandle, modules.data(), modules.size() * sizeof(HMODULE), &numModules) == FALSE) {
-                modules.clear();
-                break;
-            }
-        } while (numModules == modules.size() * sizeof(HMODULE));
-
-        modules.resize(numModules / sizeof(HMODULE));
-
-        for (auto &module : modules) {
-            MODULEINFO moduleInfo;
-            if (GetModuleInformation(this->m_processHandle, module, &moduleInfo, sizeof(MODULEINFO)) == FALSE)
-                continue;
-
-            char moduleName[MAX_PATH];
-            if (GetModuleFileNameExA(this->m_processHandle, module, moduleName, MAX_PATH) == FALSE)
-                continue;
-
-            this->m_memoryRegions.insert({ { (u64)moduleInfo.lpBaseOfDll, (u64)moduleInfo.lpBaseOfDll + moduleInfo.SizeOfImage }, std::fs::path(moduleName).filename().string() });
-        }
-
-        MEMORY_BASIC_INFORMATION memoryInfo;
-        for (u64 address = 0; address < 0xFFFF'FFFF'FFFF; address += memoryInfo.RegionSize) {
-            if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
-                break;
-
-            std::string name;
-            if (memoryInfo.State & MEM_IMAGE)   continue;
-            if (memoryInfo.State & MEM_FREE)    continue;
-            if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.commit"_lang);
-            if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.reserve"_lang);
-            if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.private"_lang);
-            if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.mapped"_lang);
-
-            this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
-        }
+        this->reloadProcessModules();
 
         return true;
     }
@@ -198,8 +160,9 @@ namespace hex::plugin::windows {
 
     void ProcessMemoryProvider::drawInterface() {
         ImGui::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
-        if (ImGui::BeginTable("##module_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 400_scaled))) {
+        if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 400_scaled))) {
             ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
             ImGui::TableSetupColumn("hex.builtin.common.name"_lang);
             ImGui::TableSetupScrollFreeze(0, 1);
 
@@ -213,6 +176,10 @@ namespace hex::plugin::windows {
                 ImGui::Text("0x%016llX - 0x%016llX", memoryRegion.region.getStartAddress(), memoryRegion.region.getEndAddress());
 
                 ImGui::TableNextColumn();
+                ImGui::TextUnformatted(hex::toByteString(memoryRegion.region.getSize()).c_str());
+
+
+                ImGui::TableNextColumn();
                 if (ImGui::Selectable(memoryRegion.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
                     ImHexApi::HexEditor::setSelection(memoryRegion.region);
 
@@ -220,6 +187,77 @@ namespace hex::plugin::windows {
             }
 
             ImGui::EndTable();
+        }
+
+        ImGui::Header("hex.windows.provider.process_memory.utils"_lang);
+
+        if (ImGui::Button("hex.windows.provider.process_memory.utils.inject_dll"_lang)) {
+            hex::fs::openFileBrowser(fs::DialogMode::Open, { { "DLL File", "dll" } }, [this](const std::fs::path &path) {
+                const auto &dllPath = path.native();
+                const auto dllPathLength = (dllPath.length() + 1) * sizeof(std::fs::path::value_type);
+
+                if (auto pathAddress = VirtualAllocEx(this->m_processHandle, nullptr, dllPathLength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); pathAddress != nullptr) {
+                    if (WriteProcessMemory(this->m_processHandle, pathAddress, dllPath.c_str(), dllPathLength, nullptr) != FALSE) {
+                        auto loadLibraryW = reinterpret_cast<LPTHREAD_START_ROUTINE>(reinterpret_cast<void*>(GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW")));
+                        if (loadLibraryW != nullptr) {
+                            if (auto threadHandle = CreateRemoteThread(this->m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
+                                WaitForSingleObject(threadHandle, INFINITE);
+                                hex::View::showInfoPopup(hex::format("hex.windows.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                this->reloadProcessModules();
+                                CloseHandle(threadHandle);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                hex::View::showErrorPopup(hex::format("hex.windows.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+            });
+        }
+    }
+
+    void ProcessMemoryProvider::reloadProcessModules() {
+        this->m_memoryRegions.clear();
+
+        DWORD numModules = 0;
+        std::vector<HMODULE> modules;
+
+        do {
+            modules.resize(modules.size() + 1024);
+            if (EnumProcessModules(this->m_processHandle, modules.data(), modules.size() * sizeof(HMODULE), &numModules) == FALSE) {
+                modules.clear();
+                break;
+            }
+        } while (numModules == modules.size() * sizeof(HMODULE));
+
+        modules.resize(numModules / sizeof(HMODULE));
+
+        for (auto &module : modules) {
+            MODULEINFO moduleInfo;
+            if (GetModuleInformation(this->m_processHandle, module, &moduleInfo, sizeof(MODULEINFO)) == FALSE)
+                continue;
+
+            char moduleName[MAX_PATH];
+            if (GetModuleFileNameExA(this->m_processHandle, module, moduleName, MAX_PATH) == FALSE)
+                continue;
+
+            this->m_memoryRegions.insert({ { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, std::fs::path(moduleName).filename().string() });
+        }
+
+        MEMORY_BASIC_INFORMATION memoryInfo;
+        for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
+            if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+                break;
+
+            std::string name;
+            if (memoryInfo.State & MEM_IMAGE)   continue;
+            if (memoryInfo.State & MEM_FREE)    continue;
+            if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.commit"_lang);
+            if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.reserve"_lang);
+            if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.private"_lang);
+            if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.mapped"_lang);
+
+            this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
         }
     }
 
