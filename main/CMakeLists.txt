@@ -30,10 +30,11 @@ set_target_properties(main PROPERTIES
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
+target_link_libraries(main PRIVATE libromfs-imhex libimhex ${FMT_LIBRARIES})
 if (WIN32)
-    target_link_libraries(main PRIVATE usp10 libromfs-imhex wsock32 ws2_32 Dwmapi.lib libimhex ${FMT_LIBRARIES})
+    target_link_libraries(main PRIVATE usp10 wsock32 ws2_32 Dwmapi.lib)
 else ()
-    target_link_libraries(main PRIVATE libromfs-imhex pthread libimhex)
+    target_link_libraries(main PRIVATE pthread)
 endif ()
 
 if (APPLE)
