@@ -65,7 +65,7 @@ add_library(${PROJECT_NAME} SHARED
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 # Add additional libraries here #
-target_link_libraries(${PROJECT_NAME} PRIVATE libimhex)
+target_link_libraries(${PROJECT_NAME} PRIVATE libimhex ${FMT_LIBRARIES})
 
 # ---- No need to change anything from here downwards unless you know what you're doing ---- #
 

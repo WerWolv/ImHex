@@ -21,7 +21,7 @@ if (WIN32)
     # Add additional include directories here #
     target_include_directories(${PROJECT_NAME} PRIVATE include)
     # Add additional libraries here #
-    target_link_libraries(${PROJECT_NAME} PRIVATE libimhex)
+    target_link_libraries(${PROJECT_NAME} PRIVATE libimhex ${FMT_LIBRARIES})
 
 
     # ---- No need to change anything from here downwards unless you know what you're doing ---- #

@@ -38,6 +38,7 @@ detectArch()
 addVersionDefines()
 configurePackingResources()
 setUninstallTarget()
+addBundledLibraries()
 
 # Add ImHex sources
 add_subdirectory(lib/libimhex)
