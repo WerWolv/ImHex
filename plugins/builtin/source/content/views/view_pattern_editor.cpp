@@ -928,7 +928,8 @@ namespace hex::plugin::builtin {
                     ImGui::EndMenu();
                 }
 
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, !types.empty())) {
+                bool hasPlaceableTypes = std::any_of(types.begin(), types.end(), [](const auto &type) { return !type.second->isTemplateType(); });
+                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
                     for (const auto &[typeName, type] : types) {
                         if (type->isTemplateType())
                             continue;
