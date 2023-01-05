@@ -48,7 +48,7 @@ namespace ImGui {
             return this->m_textureId != nullptr;
         }
 
-        [[nodiscard]] constexpr operator ImTextureID() {
+        [[nodiscard]] constexpr operator ImTextureID() const noexcept {
             return this->m_textureId;
         }
 

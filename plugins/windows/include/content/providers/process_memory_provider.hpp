@@ -7,6 +7,7 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/ui/widgets.hpp>
 
 #include <array>
 #include <mutex>
@@ -81,9 +82,15 @@ namespace hex::plugin::windows {
         };
 
         std::vector<Process> m_processes;
-        Process *m_selectedProcess = nullptr;
+        const Process *m_selectedProcess = nullptr;
 
         std::set<MemoryRegion> m_memoryRegions;
+        ui::SearchableWidget<Process> m_processSearchWidget = ui::SearchableWidget<Process>([](const std::string &search, const Process &process) {
+            return process.name.contains(search);
+        });
+        ui::SearchableWidget<MemoryRegion> m_regionSearchWidget = ui::SearchableWidget<MemoryRegion>([](const std::string &search, const MemoryRegion &memoryRegion) {
+            return memoryRegion.name.contains(search);
+        });
 
         HANDLE m_processHandle = nullptr;
 

@@ -127,7 +127,10 @@ namespace hex::plugin::windows {
         if (this->m_enumerationFailed) {
             ImGui::TextUnformatted("hex.windows.provider.process_memory.enumeration_failed"_lang);
         } else {
-            if (ImGui::BeginTable("##process_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 500_scaled))) {
+            ImGui::PushItemWidth(350_scaled);
+            const auto &filtered = this->m_processSearchWidget.draw(this->m_processes);
+            ImGui::PopItemWidth();
+            if (ImGui::BeginTable("##process_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(350_scaled, 500_scaled))) {
                 ImGui::TableSetupColumn("##icon");
                 ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_id"_lang);
                 ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_name"_lang);
@@ -135,19 +138,19 @@ namespace hex::plugin::windows {
 
                 ImGui::TableHeadersRow();
 
-                for (auto &process : this->m_processes) {
-                    ImGui::PushID(process.id);
+                for (auto &process : filtered) {
+                    ImGui::PushID(process);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::Image(process.icon, process.icon.getSize());
+                    ImGui::Image(process->icon, process->icon.getSize());
 
                     ImGui::TableNextColumn();
-                    ImGui::Text("%d", process.id);
+                    ImGui::Text("%d", process->id);
 
                     ImGui::TableNextColumn();
-                    if (ImGui::Selectable(process.name.c_str(), this->m_selectedProcess != nullptr && process.id == this->m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, process.icon.getSize().y)))
-                        this->m_selectedProcess = &process;
+                    if (ImGui::Selectable(process->name.c_str(), this->m_selectedProcess != nullptr && process->id == this->m_selectedProcess->id, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, process->icon.getSize().y)))
+                        this->m_selectedProcess = process;
 
                     ImGui::PopID();
                 }
@@ -160,7 +163,12 @@ namespace hex::plugin::windows {
 
     void ProcessMemoryProvider::drawInterface() {
         ImGui::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
-        if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(0, 400_scaled))) {
+
+        auto availableX = ImGui::GetContentRegionAvail().x;
+        ImGui::PushItemWidth(availableX);
+        const auto &filtered = this->m_regionSearchWidget.draw(this->m_memoryRegions);
+        ImGui::PopItemWidth();
+        if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, 400_scaled))) {
             ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
             ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
             ImGui::TableSetupColumn("hex.builtin.common.name"_lang);
@@ -168,20 +176,20 @@ namespace hex::plugin::windows {
 
             ImGui::TableHeadersRow();
 
-            for (auto &memoryRegion : this->m_memoryRegions) {
-                ImGui::PushID(memoryRegion.region.getStartAddress());
+            for (auto &memoryRegion : filtered) {
+                ImGui::PushID(memoryRegion->region.getStartAddress());
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%016llX - 0x%016llX", memoryRegion.region.getStartAddress(), memoryRegion.region.getEndAddress());
+                ImGui::Text("0x%016llX - 0x%016llX", memoryRegion->region.getStartAddress(), memoryRegion->region.getEndAddress());
 
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted(hex::toByteString(memoryRegion.region.getSize()).c_str());
+                ImGui::TextUnformatted(hex::toByteString(memoryRegion->region.getSize()).c_str());
 
 
                 ImGui::TableNextColumn();
-                if (ImGui::Selectable(memoryRegion.name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
-                    ImHexApi::HexEditor::setSelection(memoryRegion.region);
+                if (ImGui::Selectable(memoryRegion->name.c_str(), false, ImGuiSelectableFlags_SpanAllColumns))
+                    ImHexApi::HexEditor::setSelection(memoryRegion->region);
 
                 ImGui::PopID();
             }
