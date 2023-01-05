@@ -44,8 +44,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
-        [[nodiscard]] ImVec2 getMinSize() const override { return { 500, 400 }; }
-        [[nodiscard]] ImVec2 getMaxSize() const override { return { 500, 400 }; }
+        [[nodiscard]] ImVec2 getMinSize() const override { return { 600, 400 }; }
+        [[nodiscard]] ImVec2 getMaxSize() const override { return { 800, 600 }; }
 
     private:
         Net m_net;
