@@ -115,4 +115,11 @@ namespace hex::api {
         return themeNames;
     }
 
+    void ThemeManager::reset() {
+        ThemeManager::s_themes.clear();
+        ThemeManager::s_styleHandlers.clear();
+        ThemeManager::s_themeHandlers.clear();
+        ThemeManager::s_imagePostfix.clear();
+    }
+
 }

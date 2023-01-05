@@ -24,6 +24,8 @@ namespace hex::api {
         static const std::string &getThemeImagePostfix();
 
         static std::optional<ImColor> parseColorString(const std::string &colorString);
+
+        static void reset();
     private:
         ThemeManager() = default;
 

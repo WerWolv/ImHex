@@ -6,6 +6,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/theme_manager.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/fs.hpp>
@@ -226,6 +227,8 @@ namespace hex::init {
         ContentRegistry::DataFormatter::getEntries().clear();
         ContentRegistry::FileHandler::getEntries().clear();
         ContentRegistry::Hashes::impl::getHashes().clear();
+
+        api::ThemeManager::reset();
 
         {
             auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
