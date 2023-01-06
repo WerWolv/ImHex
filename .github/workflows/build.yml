@@ -47,7 +47,8 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
-          fedpkg
+          fedpkg       \
+          which
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
