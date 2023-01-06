@@ -16,7 +16,7 @@ jobs:
       matrix:
         include:
           - docker_image: fedora:latest
-            release: f37
+            release: 37
 
     name: 🐧 Fedora ${{ matrix.release }}
     runs-on: ubuntu-latest
