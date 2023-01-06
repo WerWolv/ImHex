@@ -57,7 +57,7 @@ jobs:
           submodules: recursive
 
       - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.5
         with:
           key: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build
