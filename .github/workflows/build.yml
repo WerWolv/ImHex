@@ -57,7 +57,7 @@ jobs:
           --define "_specdir $GITHUB_WORKSPACE" \
           --define "_builddir $GITHUB_WORKSPACE" \
           --define "_srcrpmdir $GITHUB_WORKSPACE" \
-          --define "_rpmdir $GITHUB_WORKSPACE \
+          --define "_rpmdir $GITHUB_WORKSPACE" \
           --define "_rpmfilename %%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
           --define "dist %{?distprefix}.fc${{ matrix.release }}" \
           --define "fedora ${{ matrix.release }}" \
