@@ -28,11 +28,11 @@ jobs:
     steps:
       - name: ⬇️ Update all packages
         run: |
-          dnf upgrade --disablerepo="*" --enablerepo="fedora,fedora-updates" -y
+          dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
 
       - name: ⬇️ Install setup dependencies
         run: |
-          dnf install --disablerepo="*" --enablerepo="fedora,fedora-updates" -y \
+          dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           ccache              \
           fedpkg
           
