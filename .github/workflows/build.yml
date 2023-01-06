@@ -52,7 +52,6 @@ jobs:
       - name: list tar contents
         run: |
           tar -tvf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz
-          exit 1
       
       - name: Add version and release to spec file
         run: sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
