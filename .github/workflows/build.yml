@@ -53,8 +53,9 @@ jobs:
         run: sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
       
       - name: Build SRPM
-        run: rpmbuild --define _sourcedir /home/jonathan/fedora-scm/imhex --define _specdir /home/jonathan/fedora-scm/imhex \
-          --define _builddir $GITHUB_WORKSPACE/ImHex \
+        run: rpmbuild --define _sourcedir $GITHUB_WORKSPACE \
+          --define _specdir $GITHUB_WORKSPACE \
+          --define _builddir $GITHUB_WORKSPACE \
           --define _srcrpmdir $GITHUB_WORKSPACE \
           --define _rpmdir $GITHUB_WORKSPACE \
           --define _rpmfilename %%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm \
