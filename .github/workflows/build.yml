@@ -463,6 +463,7 @@ jobs:
     
     container:
       image: "${{ matrix.docker_image }}"
+      options: --privileged
 
     steps:
       - name: ⬇️ Update all packages
