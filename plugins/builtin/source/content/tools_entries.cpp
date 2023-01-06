@@ -1116,7 +1116,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawIEEE756Helper() {
+        void drawIEEE754Helper() {
             static u128 value = 0x00;
             static int exponentBitCount = 8, mantissaBitCount = 23;
 
@@ -1151,9 +1151,9 @@ namespace hex::plugin::builtin {
             const auto mantissaBits = ExtractBits(mantissaBitPosition, mantissaBitCount);
 
             if (ImGui::BeginTable("##outer", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_ScrollX, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
-                ImGui::TableSetupColumn("hex.builtin.tools.ieee756.sign"_lang);
-                ImGui::TableSetupColumn("hex.builtin.tools.ieee756.exponent"_lang);
-                ImGui::TableSetupColumn("hex.builtin.tools.ieee756.mantissa"_lang);
+                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.sign"_lang);
+                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.exponent"_lang);
+                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.mantissa"_lang);
 
                 ImGui::TableHeadersRow();
                 ImGui::TableNextRow();
@@ -1176,16 +1176,16 @@ namespace hex::plugin::builtin {
             }
 
             {
-                ImGui::SliderInt("hex.builtin.tools.ieee756.exponent_size"_lang, &exponentBitCount, 1, 128 - mantissaBitCount);
-                ImGui::SliderInt("hex.builtin.tools.ieee756.mantissa_size"_lang, &mantissaBitCount, 1, 128 - exponentBitCount);
+                ImGui::SliderInt("hex.builtin.tools.ieee754.exponent_size"_lang, &exponentBitCount, 1, 128 - mantissaBitCount);
+                ImGui::SliderInt("hex.builtin.tools.ieee754.mantissa_size"_lang, &mantissaBitCount, 1, 128 - exponentBitCount);
 
                 ImGui::Separator();
 
-                if (ImGui::Button("hex.builtin.tools.ieee756.half_precision"_lang))   { exponentBitCount = 5;  mantissaBitCount = 10; }
+                if (ImGui::Button("hex.builtin.tools.ieee754.half_precision"_lang))   { exponentBitCount = 5;  mantissaBitCount = 10; }
                 ImGui::SameLine();
-                if (ImGui::Button("hex.builtin.tools.ieee756.singe_precision"_lang)) { exponentBitCount = 8;  mantissaBitCount = 23; }
+                if (ImGui::Button("hex.builtin.tools.ieee754.singe_precision"_lang)) { exponentBitCount = 8;  mantissaBitCount = 23; }
                 ImGui::SameLine();
-                if (ImGui::Button("hex.builtin.tools.ieee756.double_precision"_lang)) { exponentBitCount = 11; mantissaBitCount = 52; }
+                if (ImGui::Button("hex.builtin.tools.ieee754.double_precision"_lang)) { exponentBitCount = 11; mantissaBitCount = 52; }
 
                 ImGui::Separator();
                 ImGui::NewLine();
@@ -1230,18 +1230,18 @@ namespace hex::plugin::builtin {
 
 
                 if (ImGui::BeginTable("##result", 5, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
-                    ImGui::TableSetupColumn("hex.builtin.tools.ieee756.type"_lang, ImGuiTableColumnFlags_IndentEnable);
+                    ImGui::TableSetupColumn("hex.builtin.tools.ieee754.type"_lang, ImGuiTableColumnFlags_IndentEnable);
                     ImGui::TableSetupColumn("##padding", ImGuiTableColumnFlags_WidthFixed, 30_scaled);
-                    ImGui::TableSetupColumn("hex.builtin.tools.ieee756.formula"_lang);
+                    ImGui::TableSetupColumn("hex.builtin.tools.ieee754.formula"_lang);
                     ImGui::TableSetupColumn("##equals");
-                    ImGui::TableSetupColumn("hex.builtin.tools.ieee756.result.title"_lang);
+                    ImGui::TableSetupColumn("hex.builtin.tools.ieee754.result.title"_lang);
 
                     ImGui::TableHeadersRow();
 
                     ImGui::TableNextRow();
 
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee756.sign"_lang);
+                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.sign"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("(-1)^{0}", signBits);
@@ -1251,7 +1251,7 @@ namespace hex::plugin::builtin {
                     ImGui::TextFormatted("{0}", signValue);
 
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee756.exponent"_lang);
+                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.exponent"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("2^({0} - {1})", exponentBits, exponentBias);
@@ -1261,7 +1261,7 @@ namespace hex::plugin::builtin {
                     ImGui::TextFormatted("{0:.8G}", exponentValue);
 
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee756.mantissa"_lang);
+                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.mantissa"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("1.0 + 0x{0:02X}", mantissaBits);
@@ -1276,7 +1276,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextRow();
 
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee756.result.float"_lang);
+                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.result.float"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("{0} * {1:.8G} * {2:.8G}", signValue, exponentValue, mantissaValue);
@@ -1303,7 +1303,7 @@ namespace hex::plugin::builtin {
                     }
 
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee756.result.hex"_lang);
+                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.result.hex"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
@@ -1329,7 +1329,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.file_uploader", drawFileUploader);
         ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain", drawWikiExplainer);
         ContentRegistry::Tools::add("hex.builtin.tools.file_tools", drawFileTools);
-        ContentRegistry::Tools::add("hex.builtin.tools.ieee756", drawIEEE756Helper);
+        ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Helper);
     }
 
 }
