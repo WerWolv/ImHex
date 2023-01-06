@@ -54,7 +54,7 @@ jobs:
         run: |
           mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
           sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/imhex.spec
-          fedpkg -v --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild 2>&1 | tee output.log
+          fedpkg -v --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild 2>&1
           mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
