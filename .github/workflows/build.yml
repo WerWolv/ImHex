@@ -451,12 +451,8 @@ jobs:
     strategy:
       matrix:
         include:
-          - docker_image: fedora:rawhide
+          - docker_image: fedora:latest
             release: rawhide
-          - docker_image: fedora:37
-            release: 37
-          - docker_image: fedora:36
-            release: 36
 
     name: 🐧 Fedora ${{ matrix.release }}
     runs-on: ubuntu-latest
