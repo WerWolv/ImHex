@@ -498,9 +498,9 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          sed -i 's/%{_version}/${{env.IMHEX_VERSION}}/g' $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/dist/rpm/imhex.spec
           cp $GITHUB_WORKSPACE/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
-          fedpkg --path %GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild
           mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
