@@ -16,9 +16,10 @@ jobs:
       matrix:
         include:
           - docker_image: fedora:latest
-            release: f37
+            mock_release: f37
+            release_num: 37
 
-    name: 🐧 Fedora ${{ matrix.release }}
+    name: 🐧 Fedora ${{ matrix.release_num }}
     runs-on: ubuntu-latest
     
     container:
@@ -41,6 +42,13 @@ jobs:
         with:
           path: ImHex
           submodules: recursive
+
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: fedora-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: fedora-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build
+          max-size: 1G
 
       - name: 📜 Set version variable
         run: |
@@ -77,16 +85,26 @@ jobs:
 #         run: |
 #           mock -N -v --isolation=simple -r fedora-rawhide-x86_64 --resultdir $GITHUB_WORKSPACE/results \
 #           --rebuild imhex-${{env.IMHEX_VERSION}}-*.fc*.src.rpm
+
+      - name: Enable ccache for mock
+        run: |
+          cat <<EOT > $GITHUB_WORKSPACE/mock.cfg
+          include('fedora-${{ matrix.release_num }}-x86_64.cfg')
+          config_opts['plugin_conf']['ccache_enable'] = True
+          config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
+          config_opts['plugin_conf']['ccache_opts']['compress'] = None
+          config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
+          EOT
       
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild extra_args -- -v
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
 #          mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
-          name: Fedora ${{ matrix.release }} RPM
+          name: Fedora ${{ matrix.release_num }} RPM
           path: |
-            imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
+            imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release_num}}.rpm
