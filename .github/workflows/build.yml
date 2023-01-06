@@ -46,7 +46,7 @@ jobs:
         id: dnf_cache_restore
         with:
           path: /var/cache/dnf
-          key: ${{ matrix.mock_release }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ matrix.mock_release }}-dnf
 
       - name: ⬇️ Update all packages
         run: |
@@ -63,7 +63,7 @@ jobs:
         id: dnf_cache_save
         with:
           path: /var/cache/dnf
-          key: ${{ matrix.mock_release }}-${{ hashFiles('**/lockfiles') }}
+          key: ${{ matrix.mock_release }}-dnf
 
       - name: 🧰 Checkout
         uses: actions/checkout@v3
@@ -99,13 +99,27 @@ jobs:
           config_opts['plugin_conf']['ccache_opts']['compress'] = None
           config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
           EOT
-      
+
+      - name: Restore Mock Cache
+        uses: actions/cache/restore@v3
+        id: mock_cache_restore
+        with:
+          path: /var/cache/mock
+          key: ${{ matrix.mock_release }}-mock
+
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
 #          mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
-          
+
+      - name: Save mock cache
+        uses: actions/cache/save@v3
+        id: mock_cache_save
+        with:
+          path: /var/cache/mock
+          key: ${{ matrix.mock_release }}-mock
+
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
