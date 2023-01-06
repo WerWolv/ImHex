@@ -15,19 +15,19 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Fedora Rawhide
+          - name: Fedora
             mock_release: rawhide
             release_num: rawhide
             mock_config: fedora-rawhide
-          - name: Fedora 37
+          - name: Fedora
             mock_release: f37
             release_num: 37
             mock_config: fedora-37
-          - name: Fedora 36
+          - name: Fedora
             mock_release: f36
             release_num: 36
             mock_config: fedora-36
-          - name: RHEL/Alma 9
+          - name: RHEL/Alma
             mock_release: epel9
             release_num: 9
             mock_config: "alma+epel-9"
