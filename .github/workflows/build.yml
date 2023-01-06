@@ -53,14 +53,16 @@ jobs:
         run: sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
       
       - name: Build SRPM
-        run: rpmbuild --define _sourcedir . \
-          --define _specdir . \
-          --define _builddir . \
-          --define _srcrpmdir . \
-          --define _rpmdir . \
-          --define _rpmfilename %%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm \
-          --define dist %{?distprefix}.fc${{ matrix.release }} --define fedora ${{ matrix.release }} \
-          --eval %undefine rhel --define fc${{ matrix.release }} 1 \
+        run: rpmbuild --define "_sourcedir $GITHUB_WORKSPACE" \
+          --define "_specdir $GITHUB_WORKSPACE" \
+          --define "_builddir $GITHUB_WORKSPACE" \
+          --define "_srcrpmdir $GITHUB_WORKSPACE" \
+          --define "_rpmdir $GITHUB_WORKSPACE \
+          --define "_rpmfilename %%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
+          --define "dist %{?distprefix}.fc${{ matrix.release }}" \
+          --define "fedora ${{ matrix.release }}" \
+          --eval %undefine rhel \
+          --define "fc${{ matrix.release }} 1" \
           --nodeps -bs $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
       
       - name: Build RPM
