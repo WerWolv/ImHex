@@ -15,10 +15,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Fedora
-            mock_release: rawhide
-            release_num: rawhide
-            mock_config: fedora-rawhide
+#  rawhide builds are failing right now
+#           - name: Fedora
+#             mock_release: rawhide
+#             release_num: rawhide
+#             mock_config: fedora-rawhide
           - name: Fedora
             mock_release: f37
             release_num: 37
@@ -40,6 +41,13 @@ jobs:
       options: --privileged
 
     steps:
+      - name: Restore DNF Cache
+        uses: actions/cache/restore@v3
+        id: dnf_cache_restore
+        with:
+          path: /var/cache/dnf
+          key: ${{ matrix.mock_release }}-${{ hashFiles('**/lockfiles') }}
+
       - name: ⬇️ Update all packages
         run: |
           dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
@@ -49,7 +57,14 @@ jobs:
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg       \
           ccache
-          
+
+      - name: Save DNF cache
+        uses: actions/cache/save@v3
+        id: dnf_cache_save
+        with:
+          path: /var/cache/dnf
+          key: ${{ matrix.mock_release }}-${{ hashFiles('**/lockfiles') }}
+
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
