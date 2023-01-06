@@ -32,7 +32,7 @@ jobs:
             release_num: 9
             mock_config: "alma+epel-9"
 
-    name: 🐧 %{{ matrix.name }} ${{ matrix.release_num }}
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
     runs-on: ubuntu-latest
     
     container:
