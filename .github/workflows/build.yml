@@ -483,14 +483,14 @@ jobs:
           echo "IMHEX_VERSION=`cat ImHex/VERSION`" >> $GITHUB_ENV
       
       - name: 🗜️ Create tarball from sources with dependencies
-        run: tar --exclude-vcs -czvf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz $GITHUB_WORKSPACE/ImHex
+        run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz $GITHUB_WORKSPACE/ImHex
       
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
           mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
           sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/imhex.spec
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild
+          fedpkg -v --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild
           mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
