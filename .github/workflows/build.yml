@@ -68,7 +68,7 @@ jobs:
       
       - name: Build RPM
         run: |
-          mock -N -v --unpriv --isolation=simple -r fedora-rawhide-x86_64 --resultdir $GITHUB_WORKSPACE/results \
+          mock -N -v --isolation=simple -r fedora-rawhide-x86_64 --resultdir $GITHUB_WORKSPACE/results \
           --rebuild imhex-${{env.IMHEX_VERSION}}-*.fc*.src.rpm
       
 #       # Fedora cmake build (in imhex.spec)
