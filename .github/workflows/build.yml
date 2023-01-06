@@ -16,13 +16,14 @@ jobs:
       matrix:
         include:
           - docker_image: fedora:latest
-            release: rawhide
+            release: f37
 
     name: 🐧 Fedora ${{ matrix.release }}
     runs-on: ubuntu-latest
     
     container:
       image: "${{ matrix.docker_image }}"
+      options: --privileged
 
     steps:
       - name: ⬇️ Update all packages
