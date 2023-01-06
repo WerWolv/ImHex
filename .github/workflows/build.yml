@@ -28,12 +28,12 @@ jobs:
     steps:
       - name: ⬇️ Update all packages
         run: |
-          dnf upgrade -y
+          dnf upgrade --disablerepo="*" --enablerepo="fedora,fedora-updates" -y
 
       - name: ⬇️ Install setup dependencies
         run: |
-          dnf install -y     \
-          ccache             \
+          dnf install --disablerepo="*" --enablerepo="fedora,fedora-updates" -y \
+          ccache              \
           fedpkg
           
       - name: 🧰 Checkout
