@@ -45,7 +45,9 @@ jobs:
         with:
           path: |
             /var/cache/dnf
-          key: ${{ matrix.mock_release }}-dnf-${{ hashFiles('**/lockfiles') }}
+          key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
+          restore-keys: |
+            ${{ matrix.mock_release }}-dnf-
     
       - name: ⬇️ Update all packages and install dependencies
         run: |
@@ -64,6 +66,7 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2.5
         with:
           key: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build
           max-size: 1G
 
       - name: 📜 Set version variable
@@ -94,7 +97,9 @@ jobs:
         with:
           path: |
             /var/cache/mock
-          key: ${{ matrix.mock_release }}-mock-${{ hashFiles('**/lockfiles') }}
+          key: ${{ matrix.mock_release }}-mock--${{ github.run_id }}
+          restore-keys: |
+            ${{ matrix.mock_release }}-mock-
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
