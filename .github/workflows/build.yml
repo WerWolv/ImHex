@@ -451,11 +451,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - docker_image: fedora:latest
-            release: Latest
           - docker_image: fedora:rawhide
-            release: Rawhide
-
+            release: rawhide
+          - docker_image: fedora:37
+            release: 37
+          - docker_image: fedora:36
+            release: 36
 
     name: 🐧 Fedora ${{ matrix.release }}
     runs-on: ubuntu-latest
@@ -472,24 +473,16 @@ jobs:
         run: |
           dnf install -y     \
           ccache             \
-          desktop-file-utils \
-          fmt-devel          \
-          git                \
-          json-devel         \
-          libcurl-devel      \
-          llvm-devel         \
-          mbedtls-devel      \
-          rpm-build          \
-          yara-devel
+          fedpkg
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           submodules: recursive
 
-      - name: ⬇️ Install ImHex dependencies
-        run: |
-          dist/get_deps_fedora.sh
+#       - name: ⬇️ Install ImHex dependencies
+#         run: |
+#           dist/get_deps_fedora.sh
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -505,7 +498,10 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+#          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          sed -i 's/%{_version}/${{env.IMHEX_VERSION}}/g' $GITHUB_WORKSPACE/dist/rpm/imhex.spec
+          cp $GITHUB_WORKSPACE/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
+          fedpkg --path %GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild
           mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
