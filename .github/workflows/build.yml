@@ -15,11 +15,10 @@ jobs:
     strategy:
       matrix:
         include:
-#  rawhide builds are failing right now
-#           - name: Fedora
-#             mock_release: rawhide
-#             release_num: rawhide
-#             mock_config: fedora-rawhide
+          - name: Fedora
+            mock_release: rawhide
+            release_num: rawhide
+            mock_config: fedora-rawhide
           - name: Fedora
             mock_release: f37
             release_num: 37
@@ -110,8 +109,11 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
-#          mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} \
+          mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- \
+          # args passed to mock \
+          -v --define "_fortify_level 2"
+          # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
 
       - name: Save mock cache
         uses: actions/cache/save@v3
@@ -123,6 +125,6 @@ jobs:
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
-          name: Fedora ${{ matrix.release_num }} RPM
+          name: ${{ matrix.name }} ${{ matrix.release_num }} RPM
           path: |
-            imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release_num}}.rpm
+            $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}.x86_64.rpm
