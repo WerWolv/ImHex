@@ -48,7 +48,7 @@ jobs:
         run: |
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg       \
-          which
+          ccache
           
       - name: 🧰 Checkout
         uses: actions/checkout@v3
