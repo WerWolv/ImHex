@@ -10,20 +10,33 @@ env:
   BUILD_TYPE: Release
 
 jobs:
-  # Fedora build     
-  fedora-build:
+  # RPM distro builds
+  rpm-build:
     strategy:
       matrix:
         include:
-          - docker_image: fedora:latest
+          - name: Fedora Rawhide
+            mock_release: rawhide
+            release_num: rawhide
+            mock_config: fedora-rawhide
+          - name: Fedora 37
             mock_release: f37
             release_num: 37
+            mock_config: fedora-37
+          - name: Fedora 36
+            mock_release: f36
+            release_num: 36
+            mock_config: fedora-36
+          - name: RHEL/Alma 9
+            mock_release: epel9
+            release_num: 9
+            mock_config: "alma+epel-9"
 
-    name: 🐧 Fedora ${{ matrix.release_num }}
+    name: 🐧 %{{ matrix.name }} ${{ matrix.release_num }}
     runs-on: ubuntu-latest
     
     container:
-      image: "${{ matrix.docker_image }}"
+      image: "fedora:latest"
       options: --privileged
 
     steps:
@@ -34,7 +47,6 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
-          ccache              \
           fedpkg
           
       - name: 🧰 Checkout
@@ -46,8 +58,8 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: fedora-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: fedora-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build
+          key: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build
           max-size: 1G
 
       - name: 📜 Set version variable
@@ -66,7 +78,7 @@ jobs:
       - name: Enable ccache for mock
         run: |
           cat <<EOT > $GITHUB_WORKSPACE/mock.cfg
-          include('fedora-${{ matrix.release_num }}-x86_64.cfg')
+          include('${{ matrix.mock_config }}-x86_64.cfg')
           config_opts['plugin_conf']['ccache_enable'] = True
           config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
           config_opts['plugin_conf']['ccache_opts']['compress'] = None
