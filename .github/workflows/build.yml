@@ -61,7 +61,7 @@ jobs:
           --define "_rpmfilename %%{ARCH}/%%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
           --define "dist %{?distprefix}.fc${{ matrix.release }}" \
           --define "fedora ${{ matrix.release }}" \
-          --eval %undefine rhel \
+          --eval "%undefine rhel" \
           --define "fc${{ matrix.release }} 1" \
           --nodeps -bs $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
       
