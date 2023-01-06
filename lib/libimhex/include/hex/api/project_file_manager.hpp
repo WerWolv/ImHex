@@ -35,6 +35,7 @@ namespace hex {
 
         static bool hasPath();
         static void clearPath();
+        static std::fs::path getPath();
 
         static void registerHandler(const Handler &handler) {
             getHandlers().push_back(handler);

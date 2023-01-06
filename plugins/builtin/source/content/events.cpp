@@ -44,17 +44,14 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
             hex::unused(oldProvider);
+            hex::unused(newProvider);
 
-            if (newProvider != nullptr && newProvider->isAvailable()) {
-                EventManager::post<RequestChangeWindowTitle>(newProvider->getName());
-            } else {
-                EventManager::post<RequestChangeWindowTitle>("");
-            }
+            EventManager::post<RequestChangeWindowTitle>();
         });
 
         EventManager::subscribe<EventProviderOpened>([](hex::prv::Provider *provider) {
             if (provider != nullptr && ImHexApi::Provider::get() == provider)
-                EventManager::post<RequestChangeWindowTitle>(provider->getName());
+                EventManager::post<RequestChangeWindowTitle>();
         });
 
         EventManager::subscribe<RequestOpenFile>(openFile);

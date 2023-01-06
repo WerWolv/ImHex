@@ -503,8 +503,10 @@ namespace hex::plugin::builtin {
         // clear project context if we go back to the welcome screen
         EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
             hex::unused(oldProvider);
-            if (newProvider == nullptr)
+            if (newProvider == nullptr){
                 ProjectFile::clearPath();
+                EventManager::post<RequestChangeWindowTitle>();
+            }
         });
 
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {

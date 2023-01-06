@@ -73,7 +73,7 @@ namespace hex {
         }
 
         ProjectFile::s_currProjectPath = filePath;
-
+        EventManager::post<RequestChangeWindowTitle>();
         return true;
     }
 
@@ -126,6 +126,10 @@ namespace hex {
 
     void ProjectFile::clearPath() {
         ProjectFile::s_currProjectPath.clear();
+    }
+    
+    std::fs::path ProjectFile::getPath() {
+        return ProjectFile::s_currProjectPath;
     }
 
 }

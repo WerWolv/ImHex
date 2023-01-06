@@ -115,13 +115,19 @@ namespace hex {
                 EventManager::post<EventWindowClosing>(this->m_window);
         });
 
-        EventManager::subscribe<RequestChangeWindowTitle>(this, [this](const std::string &windowTitle) {
+        EventManager::subscribe<RequestChangeWindowTitle>(this, [this]() {
             std::string title = "ImHex";
 
-            if (ImHexApi::Provider::isValid()) {
+            if(ProjectFile::hasPath()){
+                title += " - Project " + hex::limitStringLength(ProjectFile::getPath().stem().string(), 32);
+
+                if (ImHexApi::Provider::isDirty())
+                    title += " (*)";
+
+            }else if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
-                if (!windowTitle.empty() && provider != nullptr) {
-                    title += " - " + hex::limitStringLength(windowTitle, 32);
+                if (provider != nullptr) {
+                    title += " - " + hex::limitStringLength(provider->getName(), 32);
 
                     if (provider->isDirty())
                         title += " (*)";
