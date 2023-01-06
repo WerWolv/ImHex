@@ -55,31 +55,34 @@ jobs:
       
       - name: Add version and release to spec file
         run: sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+        
+      - name: Copy spec file to build root
+        run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
       
-      - name: Build SRPM
-        run: |
-          rpmbuild --define "_sourcedir $GITHUB_WORKSPACE" \
-          --define "_specdir $GITHUB_WORKSPACE" \
-          --define "_builddir $GITHUB_WORKSPACE" \
-          --define "_srcrpmdir $GITHUB_WORKSPACE" \
-          --define "_rpmdir $GITHUB_WORKSPACE" \
-          --define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
-          --define "dist %{?distprefix}.fc${{ matrix.release }}" \
-          --define "fedora ${{ matrix.release }}" \
-          --eval "%undefine rhel" \
-          --define "fc${{ matrix.release }} 1" \
-          --nodeps -bs $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
-      
-      - name: Build RPM
-        run: |
-          mock -N -v --isolation=simple -r fedora-rawhide-x86_64 --resultdir $GITHUB_WORKSPACE/results \
-          --rebuild imhex-${{env.IMHEX_VERSION}}-*.fc*.src.rpm
-      
-#       # Fedora cmake build (in imhex.spec)
-#       - name: 📦 Build RPM
+#       - name: Build SRPM
 #         run: |
-#           fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild
-#           mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
+#           rpmbuild --define "_sourcedir $GITHUB_WORKSPACE" \
+#           --define "_specdir $GITHUB_WORKSPACE" \
+#           --define "_builddir $GITHUB_WORKSPACE" \
+#           --define "_srcrpmdir $GITHUB_WORKSPACE" \
+#           --define "_rpmdir $GITHUB_WORKSPACE" \
+#           --define "_rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm" \
+#           --define "dist %{?distprefix}.fc${{ matrix.release }}" \
+#           --define "fedora ${{ matrix.release }}" \
+#           --eval "%undefine rhel" \
+#           --define "fc${{ matrix.release }} 1" \
+#           --nodeps -bs $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+      
+#       - name: Build RPM
+#         run: |
+#           mock -N -v --isolation=simple -r fedora-rawhide-x86_64 --resultdir $GITHUB_WORKSPACE/results \
+#           --rebuild imhex-${{env.IMHEX_VERSION}}-*.fc*.src.rpm
+      
+      # Fedora cmake build (in imhex.spec)
+      - name: 📦 Build RPM
+        run: |
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.release }} mockbuild extra_args -- -v
+#          mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
           
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
