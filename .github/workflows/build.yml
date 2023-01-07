@@ -27,7 +27,7 @@ jobs:
             mock_release: f36
             release_num: 36
             mock_config: fedora-36
-          - name: RHEL/AlmaLinux
+          - name: RHEL, AlmaLinux
             mock_release: epel9
             release_num: 9
             mock_config: "alma+epel-9"
