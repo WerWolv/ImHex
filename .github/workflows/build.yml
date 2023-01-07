@@ -54,8 +54,7 @@ jobs:
           dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg       \
-          ccache       \
-          tree
+          ccache
 
       - name: 🧰 Checkout
         uses: actions/checkout@v3
@@ -106,7 +105,6 @@ jobs:
       - name: 📦 Build RPM
         run: |
           fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
-          tree $GITHUB_WORKSPACE
           # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
 
       - name: ⬆️ Upload RPM
