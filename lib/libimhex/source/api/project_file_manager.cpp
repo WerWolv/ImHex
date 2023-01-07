@@ -73,7 +73,7 @@ namespace hex {
         }
 
         ProjectFile::s_currProjectPath = filePath;
-        EventManager::post<RequestChangeWindowTitle>();
+        EventManager::post<RequestUpdateWindowTitle>();
         return true;
     }
 

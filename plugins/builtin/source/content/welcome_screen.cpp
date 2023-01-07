@@ -505,7 +505,7 @@ namespace hex::plugin::builtin {
             hex::unused(oldProvider);
             if (newProvider == nullptr){
                 ProjectFile::clearPath();
-                EventManager::post<RequestChangeWindowTitle>();
+                EventManager::post<RequestUpdateWindowTitle>();
             }
         });
 

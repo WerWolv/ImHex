@@ -115,7 +115,7 @@ namespace hex {
                 EventManager::post<EventWindowClosing>(this->m_window);
         });
 
-        EventManager::subscribe<RequestChangeWindowTitle>(this, [this]() {
+        EventManager::subscribe<RequestUpdateWindowTitle>(this, [this]() {
             std::string title = "ImHex";
 
             if(ProjectFile::hasPath()){
@@ -183,7 +183,7 @@ namespace hex {
     Window::~Window() {
         EventManager::unsubscribe<EventProviderDeleted>(this);
         EventManager::unsubscribe<RequestCloseImHex>(this);
-        EventManager::unsubscribe<RequestChangeWindowTitle>(this);
+        EventManager::unsubscribe<RequestUpdateWindowTitle>(this);
         EventManager::unsubscribe<EventAbnormalTermination>(this);
         EventManager::unsubscribe<RequestOpenPopup>(this);
 

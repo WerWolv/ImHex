@@ -46,12 +46,12 @@ namespace hex::plugin::builtin {
             hex::unused(oldProvider);
             hex::unused(newProvider);
 
-            EventManager::post<RequestChangeWindowTitle>();
+            EventManager::post<RequestUpdateWindowTitle>();
         });
 
         EventManager::subscribe<EventProviderOpened>([](hex::prv::Provider *provider) {
             if (provider != nullptr && ImHexApi::Provider::get() == provider)
-                EventManager::post<RequestChangeWindowTitle>();
+                EventManager::post<RequestUpdateWindowTitle>();
         });
 
         EventManager::subscribe<RequestOpenFile>(openFile);
