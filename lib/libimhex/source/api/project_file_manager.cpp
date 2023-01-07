@@ -36,7 +36,8 @@ namespace hex {
                 return false;
         }
 
-        for (const auto &provider : ImHexApi::Provider::getProviders()) {
+        auto providers = auto(ImHexApi::Provider::getProviders());
+        for (const auto &provider : providers) {
             ImHexApi::Provider::remove(provider);
         }
 
