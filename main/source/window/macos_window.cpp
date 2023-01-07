@@ -17,6 +17,12 @@
 namespace hex {
 
     void Window::initNative() {
+        // Add plugin library folders to dll search path
+        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
+            if (std::fs::exists(path))
+                putenv(hex::format("LD_LIBRARY_PATH={}", path.c_str()).c_str());
+        }
+
         if (!isatty(STDOUT_FILENO)) {
             log::redirectToFile();
         }

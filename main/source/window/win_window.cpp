@@ -18,6 +18,7 @@
     #include <GLFW/glfw3native.h>
     #undef GLFW_EXPOSE_NATIVE_WIN32
 
+    #include <winbase.h>
     #include <winuser.h>
     #include <dwmapi.h>
     #include <windowsx.h>
@@ -187,6 +188,13 @@ namespace hex {
 
 
     void Window::initNative() {
+
+        // Add plugin library folders to dll search path
+        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
+            if (std::fs::exists(path))
+                AddDllDirectory(path.c_str());
+        }
+
         // Attach to parent console if one exists
         if (AttachConsole(ATTACH_PARENT_PROCESS)) {
 

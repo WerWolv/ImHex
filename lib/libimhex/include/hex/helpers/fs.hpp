@@ -101,6 +101,7 @@ namespace hex::fs {
         Scripts,
         Inspectors,
         Themes,
+        Libraries,
 
         END
     };
