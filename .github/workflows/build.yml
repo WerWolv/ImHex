@@ -106,7 +106,7 @@ jobs:
       - name: 📦 Build RPM
         run: |
           fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
-          tree ImHex
+          tree results_imhex
           # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
 
       - name: ⬆️ Upload RPM
