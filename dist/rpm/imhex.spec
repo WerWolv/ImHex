@@ -90,6 +90,11 @@ CXXFLAGS+=" -std=gnu++2b"
 
 
 %check
+%if 0%{?rhel}
+. /opt/rh/gcc-toolset-12/enable
+%set_build_flags
+CXXFLAGS+=" -std=gnu++2b"
+%endif
 # build binaries required for tests
 %cmake_build --target unit_tests
 %ctest --exclude-regex '(Helpers/StoreAPI|Helpers/TipsAPI|Helpers/ContentAPI)'
