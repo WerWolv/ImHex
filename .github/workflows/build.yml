@@ -80,6 +80,7 @@ jobs:
         run: sed -i -e 's/%{_version}/${{env.IMHEX_VERSION}}/g' -e 's/%{_build_type}/${{env.BUILD_TYPE}}/g' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
       - name: Fix ccache on EL9
+        if: ${{ matrix.mock_release }} == 'epel9'
         run: sed -i '/\. \/opt\/rh\/gcc-toolset-12\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
       - name: Copy spec file to build root
