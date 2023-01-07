@@ -118,13 +118,13 @@ namespace hex {
         EventManager::subscribe<RequestUpdateWindowTitle>(this, [this]() {
             std::string title = "ImHex";
 
-            if(ProjectFile::hasPath()){
+            if (ProjectFile::hasPath()) {
                 title += " - Project " + hex::limitStringLength(ProjectFile::getPath().stem().string(), 32);
 
                 if (ImHexApi::Provider::isDirty())
                     title += " (*)";
 
-            }else if (ImHexApi::Provider::isValid()) {
+            } else if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
                 if (provider != nullptr) {
                     title += " - " + hex::limitStringLength(provider->getName(), 32);
