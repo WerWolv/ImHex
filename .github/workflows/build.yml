@@ -112,4 +112,4 @@ jobs:
         with:
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM
           path: |
-            $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}.x86_64.rpm
+            $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}.*.x86_64.rpm
