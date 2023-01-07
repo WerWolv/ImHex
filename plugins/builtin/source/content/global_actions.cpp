@@ -1,6 +1,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/helpers/logger.hpp>
 
 
 namespace hex::plugin::builtin {
@@ -15,8 +16,12 @@ namespace hex::plugin::builtin {
     }
 
     void saveProject() {
-        if (!ProjectFile::store()) {
-            View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);
+        if (ImHexApi::Provider::isValid() && ProjectFile::hasPath()) {
+            if (!ProjectFile::store()) {
+                View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);
+            } else {
+                log::debug("Project saved");
+            }
         }
     }
 
