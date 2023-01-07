@@ -124,4 +124,8 @@ namespace hex {
         return !ProjectFile::s_currProjectPath.empty();
     }
 
+    void ProjectFile::clearPath() {
+        ProjectFile::s_currProjectPath.clear();
+    }
+
 }
