@@ -20,7 +20,7 @@ namespace hex {
         // Add plugin library folders to dll search path
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
             if (std::fs::exists(path))
-                putenv(hex::format("LD_LIBRARY_PATH={}", path.c_str()).c_str());
+                setenv("LD_LIBRARY_PATH", hex::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
 
         if (!isatty(STDOUT_FILENO)) {
