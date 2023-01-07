@@ -126,7 +126,7 @@ namespace hex {
     EVENT_DEF(RequestSelectionChange, Region);
     EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t);
     EVENT_DEF(RequestSetPatternLanguageCode, std::string);
-    EVENT_DEF(RequestChangeWindowTitle, std::string);
+    EVENT_DEF(RequestUpdateWindowTitle);
     EVENT_DEF(RequestCloseImHex, bool);
     EVENT_DEF(RequestRestartImHex);
     EVENT_DEF(RequestOpenFile, std::fs::path);
