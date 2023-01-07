@@ -15,10 +15,10 @@ jobs:
     strategy:
       matrix:
         include:
-#           - name: Fedora
-#             mock_release: rawhide
-#             release_num: rawhide
-#             mock_config: fedora-rawhide
+          - name: Fedora
+            mock_release: rawhide
+            release_num: rawhide
+            mock_config: fedora-rawhide
           - name: Fedora
             mock_release: f37
             release_num: 37
@@ -92,7 +92,7 @@ jobs:
           include('${{ matrix.mock_config }}-x86_64.cfg')
           config_opts['plugin_conf']['ccache_enable'] = True
           config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
-          config_opts['plugin_conf']['ccache_opts']['compress'] = None
+          config_opts['plugin_conf']['ccache_opts']['compress'] = True
           config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
           EOT
 
