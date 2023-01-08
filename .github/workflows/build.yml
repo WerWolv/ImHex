@@ -15,10 +15,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: Fedora
-            mock_release: rawhide
-            release_num: rawhide
-            mock_config: fedora-rawhide
+#           - name: Fedora
+#             mock_release: rawhide
+#             release_num: rawhide
+#             mock_config: fedora-rawhide
           - name: Fedora
             mock_release: f37
             release_num: 37
@@ -40,14 +40,15 @@ jobs:
       options: --privileged
 
     steps:
-      - name: Setup DNF Cache
+      - name: Setup DNF & Mock Cache
         uses: actions/cache@v3
         with:
           path: |
             /var/cache/dnf
-          key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
+            /var/cache/mock
+          key: ${{ matrix.mock_release }}-cache-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-dnf-
+            ${{ matrix.mock_release }}-cache-
     
       - name: ⬇️ Update all packages and install dependencies
         run: |
@@ -96,14 +97,14 @@ jobs:
           config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
           EOT
 
-      - name: Setup Mock Cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            /var/cache/mock
-          key: ${{ matrix.mock_release }}-mock--${{ github.run_id }}
-          restore-keys: |
-            ${{ matrix.mock_release }}-mock-
+#       - name: Setup Mock Cache
+#         uses: actions/cache@v3
+#         with:
+#           path: |
+#             /var/cache/mock
+#           key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
+#           restore-keys: |
+#             ${{ matrix.mock_release }}-mock-
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
