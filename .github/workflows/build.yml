@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     
     container:
-      image: "almalinux:9"
+      image: "fedora:latest"
       options: --privileged
 
     steps:
