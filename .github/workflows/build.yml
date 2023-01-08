@@ -41,8 +41,7 @@ jobs:
 
     steps:
       - name: Install git-core
-        #run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
-        run: dnf install git-core epel-release -y
+        run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
     
       - name: 🧰 Checkout
         uses: actions/checkout@v3
@@ -60,8 +59,8 @@ jobs:
     
       - name: ⬇️ Update all packages and install dependencies
         run: |
-          dnf upgrade -y
-          dnf install -y \
+          dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
+          dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg         \
           ccache
 
