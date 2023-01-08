@@ -40,15 +40,20 @@ jobs:
       options: --privileged
 
     steps:
-      - name: Setup DNF & Mock Cache
+      - name: 🧰 Checkout
+        uses: actions/checkout@v3
+        with:
+          path: ImHex
+          submodules: recursive
+      
+      - name: Setup DNF Cache
         uses: actions/cache@v3
         with:
           path: |
             /var/cache/dnf
-            /var/cache/mock
-          key: ${{ matrix.mock_release }}-cache-${{ github.run_id }}
+          key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-cache-
+            ${{ matrix.mock_release }}-dnf-
     
       - name: ⬇️ Update all packages and install dependencies
         run: |
@@ -56,12 +61,6 @@ jobs:
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg       \
           ccache       \
-
-      - name: 🧰 Checkout
-        uses: actions/checkout@v3
-        with:
-          path: ImHex
-          submodules: recursive
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.5
@@ -97,14 +96,14 @@ jobs:
           config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
           EOT
 
-#       - name: Setup Mock Cache
-#         uses: actions/cache@v3
-#         with:
-#           path: |
-#             /var/cache/mock
-#           key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
-#           restore-keys: |
-#             ${{ matrix.mock_release }}-mock-
+      - name: Setup Mock Cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            /var/cache/mock
+          key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
+          restore-keys: |
+            ${{ matrix.mock_release }}-mock-
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
