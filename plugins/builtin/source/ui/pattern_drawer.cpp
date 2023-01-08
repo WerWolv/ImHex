@@ -74,25 +74,6 @@ namespace hex::plugin::builtin::ui {
             return highlightWhenSelected(pattern.getOffset(), pattern.getSize(), callback);
         }
 
-        void createLeafNode(const pl::ptrn::Pattern& pattern) {
-            ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
-                                                                ImGuiTreeNodeFlags_NoTreePushOnOpen |
-                                                                ImGuiTreeNodeFlags_SpanFullWidth |
-                                                                ImGuiTreeNodeFlags_AllowItemOverlap);
-        }
-
-        bool createTreeNode(const pl::ptrn::Pattern& pattern) {
-            if (pattern.isSealed()) {
-                ImGui::Indent();
-                highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(pattern.getDisplayName().c_str()); });
-                ImGui::Unindent();
-                return false;
-            }
-            else {
-                return highlightWhenSelected(pattern, [&]{ return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);});
-            }
-        }
-
         void drawTypenameColumn(const pl::ptrn::Pattern& pattern, const std::string& pattern_name) {
             ImGui::TextFormattedColored(ImColor(0xFFD69C56), pattern_name);
             ImGui::SameLine();
@@ -158,6 +139,36 @@ namespace hex::plugin::builtin::ui {
 
     }
 
+    void PatternDrawer::createLeafNode(const pl::ptrn::Pattern& pattern) {
+        ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
+                                                            ImGuiTreeNodeFlags_NoTreePushOnOpen |
+                                                            ImGuiTreeNodeFlags_SpanFullWidth |
+                                                            ImGuiTreeNodeFlags_AllowItemOverlap);
+    }
+
+    bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern) {
+        if (pattern.isSealed()) {
+            ImGui::Indent();
+            highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(pattern.getDisplayName().c_str()); });
+            ImGui::Unindent();
+            return false;
+        }
+        else {
+            return highlightWhenSelected(pattern, [&]{
+                switch (this->m_treeStyle) {
+                    using enum TreeStyle;
+                    default:
+                    case Default:
+                        return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                    case AutoExpanded:
+                        return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+                    case Flattened:
+                        return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
+                }
+            });
+        }
+    }
+
     void PatternDrawer::makeSelectable(const pl::ptrn::Pattern &pattern) {
         ImGui::PushID(static_cast<int>(pattern.getOffset()));
         ImGui::PushID(pattern.getVariableName().c_str());
@@ -189,6 +200,11 @@ namespace hex::plugin::builtin::ui {
         drawSizeColumn(pattern);
         ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
         ImGui::TableNextColumn();
+    }
+
+    void PatternDrawer::closeTreeNode(bool inlined) {
+        if (!inlined && this->m_treeStyle != TreeStyle::Flattened)
+            ImGui::TreePop();
     }
 
 
@@ -232,7 +248,7 @@ namespace hex::plugin::builtin::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternBitfield& pattern) {
         bool open = true;
-        if (!pattern.isInlined()) {
+        if (!pattern.isInlined() && this->m_treeStyle != TreeStyle::Flattened) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
@@ -257,8 +273,7 @@ namespace hex::plugin::builtin::ui {
                 id += 1;
             });
 
-            if (!pattern.isInlined())
-                ImGui::TreePop();
+            closeTreeNode(pattern.isInlined());
         }
     }
 
@@ -378,7 +393,7 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternPointer& pattern) {
         bool open = true;
 
-        if (!pattern.isInlined()) {
+        if (!pattern.isInlined() && this->m_treeStyle != TreeStyle::Flattened) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
@@ -396,8 +411,7 @@ namespace hex::plugin::builtin::ui {
         if (open) {
             pattern.getPointedAtPattern()->accept(*this);
 
-            if (!pattern.isInlined())
-                ImGui::TreePop();
+            closeTreeNode(pattern.isInlined());
         }
     }
 
@@ -450,7 +464,7 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternStruct& pattern) {
         bool open = true;
 
-        if (!pattern.isInlined()) {
+        if (!pattern.isInlined() && this->m_treeStyle != TreeStyle::Flattened) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
@@ -494,15 +508,14 @@ namespace hex::plugin::builtin::ui {
                 id += 1;
             });
 
-            if (!pattern.isInlined())
-                ImGui::TreePop();
+            closeTreeNode(pattern.isInlined());
         }
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternUnion& pattern) {
         bool open = true;
 
-        if (!pattern.isInlined()) {
+        if (!pattern.isInlined() && this->m_treeStyle != TreeStyle::Flattened) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
@@ -546,8 +559,7 @@ namespace hex::plugin::builtin::ui {
                 id += 1;
             });
 
-            if (!pattern.isInlined())
-                ImGui::TreePop();
+            closeTreeNode(pattern.isInlined());
         }
     }
 
@@ -597,7 +609,7 @@ namespace hex::plugin::builtin::ui {
             return;
 
         bool open = true;
-        if (!isInlined) {
+        if (!isInlined && this->m_treeStyle != TreeStyle::Flattened) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
@@ -661,7 +673,10 @@ namespace hex::plugin::builtin::ui {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{ return ImGui::TreeNodeEx(hex::format("[{} ... {}]", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth); });
+                        chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
+                            return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", this->m_treeStyle == TreeStyle::Flattened ? pattern.getDisplayName().c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                        });
+
                         ImGui::TableNextColumn();
                         drawColorColumn(pattern);
                         ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", startOffset, startOffset + chunkSize - (pattern.getSize() == 0 ? 0 : 1));
@@ -698,8 +713,7 @@ namespace hex::plugin::builtin::ui {
                 }
             }
 
-            if (!isInlined)
-                ImGui::TreePop();
+            closeTreeNode(isInlined);
         }
     }
 
