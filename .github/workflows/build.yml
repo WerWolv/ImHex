@@ -52,8 +52,7 @@ jobs:
       - name: Setup DNF Cache
         uses: actions/cache@v3
         with:
-          path: |
-            /var/cache/dnf
+          path: /var/cache/dnf
           key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
           restore-keys: |
             ${{ matrix.mock_release }}-dnf-
@@ -102,8 +101,7 @@ jobs:
       - name: Setup Mock Cache
         uses: actions/cache@v3
         with:
-          path: |
-            /var/cache/mock
+          path: /var/cache/mock
           key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
           restore-keys: |
             ${{ matrix.mock_release }}-mock-
