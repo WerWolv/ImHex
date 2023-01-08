@@ -41,7 +41,7 @@ jobs:
 
     steps:
       - name: Install git-core
-        run: dnf install --disablerepo="*" --enablerepo="fedora,updates" git-core -y
+        run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
     
       - name: 🧰 Checkout
         uses: actions/checkout@v3
