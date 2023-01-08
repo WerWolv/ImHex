@@ -489,9 +489,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /var/cache/dnf
-          key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
+          key: ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-dnf-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-dnf-
+            ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-dnf-
     
       - name: ⬇️ Update all packages and install dependencies
         run: |
@@ -538,9 +538,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /var/cache/mock
-          key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
+          key: ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-mock-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-mock-
+            ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-mock-
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
