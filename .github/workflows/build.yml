@@ -58,14 +58,17 @@ jobs:
           mbedtls:p
           freetype:p
           dlfcn:p
+
     - name: 📜 Set version variable
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
     # Windows cmake build
     - name: 🛠️ Build
       run: |
         mkdir -p build
         cd build
+
         cmake -G "MinGW Makefiles"                \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
@@ -79,6 +82,7 @@ jobs:
         mingw32-make -j4 install
         cpack
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
+
     #- name: 🗝️ Sign Windows Installer
     #  if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     #  shell: powershell
@@ -96,6 +100,7 @@ jobs:
         name: Windows Installer
         path: |
           build/*.msi
+
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v3
       with:
@@ -110,12 +115,14 @@ jobs:
         curl https://werwolv.net/downloads/mesa/MesaForWindows-x64-latest.7z -L -o mesa.7z
         7z e mesa.7z
         mv opengl32.dll build/install
+
     - name: ⬆️ Upload NoGPU Portable ZIP
       uses: actions/upload-artifact@v3
       with:
         name: Windows Portable NoGPU
         path: |
           build/install/*
+
   # MacOS build
   macos:
     runs-on: macos-11
@@ -159,10 +166,13 @@ jobs:
       run: |
         brew bundle --no-lock --file dist/Brewfile
         rm -rf /usr/local/Cellar/capstone
+
     - name: ⬇️ Install classic glfw
       if: ${{! matrix.custom_glfw}}
       run: |
         brew install glfw
+
+
     - name: 🧰 Checkout glfw
       if: ${{matrix.custom_glfw}}
       uses: actions/checkout@v3
@@ -175,8 +185,10 @@ jobs:
       run: |
         cd glfw
         git apply ../dist/macOS/0001-glfw-SW.patch
+
         mkdir build
         cd build
+
         cmake                                     \
           -DBUILD_SHARED_LIBS=ON                  \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
@@ -185,6 +197,7 @@ jobs:
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
         ..
         make -j 4 install
+
     # MacOS cmake build
     - name: 🛠️ Build
       run: |
@@ -209,6 +222,7 @@ jobs:
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}"  \
           ..
         make -j4 package
+
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
       with:
@@ -248,6 +262,7 @@ jobs:
           sudo rm -rf /opt/ghc
           sudo rm -rf "/usr/local/share/boost"
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
           sudo apt update
           sudo bash dist/get_deps_debian.sh
           
@@ -255,6 +270,7 @@ jobs:
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
           sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
+
       # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
@@ -269,9 +285,11 @@ jobs:
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
             ..
           make -j 4 install DESTDIR=DebDir
+
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
       #- name: 📦 Bundle Flatpak
       #  run: |
       #    sudo apt install flatpak flatpak-builder
@@ -286,6 +304,7 @@ jobs:
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zgzip --build build/DebDir
           mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-22.04.deb
+
       # AppImage cmake build
       - name: 🛠️ Reconfigure build for AppImage
         run: |
@@ -302,11 +321,13 @@ jobs:
             -DIMHEX_USE_BUNDLED_CA=ON                 \
             ..
           make -j 4 install DESTDIR=AppDir
+
       - name: 📦 Bundle AppImage
         run: |
           cd build-appimage
           export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
+
       #- name: ⬆️ Upload Flatpak
       #  uses: actions/upload-artifact@v3
       #  with:
@@ -344,6 +365,7 @@ jobs:
       - name: ⬇️ Update all packages
         run: |
           pacman -Syyu --noconfirm
+
       - name: ⬇️ Install setup dependencies
         run: |
           pacman -Syu git ccache --noconfirm
@@ -356,6 +378,7 @@ jobs:
       - name: ⬇️ Install ImHex dependencies
         run: |
           dist/get_deps_archlinux.sh --noconfirm
+
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -389,6 +412,7 @@ jobs:
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
           ..
           make -j 4 install DESTDIR=installDir
+
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
@@ -397,6 +421,7 @@ jobs:
         run: |
           cp dist/Arch/PKGBUILD build
           sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' build/PKGBUILD
+
     # makepkg doesn't want to run as root, so I had to chmod 777 all over
       - name: 📦 Package ArchLinux .pkg.tar.zst
         run: |
@@ -409,6 +434,7 @@ jobs:
           chmod -R 777 .
           
           sudo -u nobody makepkg
+
           # Replace the old file
           rm imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
