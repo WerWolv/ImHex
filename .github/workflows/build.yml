@@ -31,6 +31,14 @@ jobs:
             mock_release: epel9
             release_num: 9
             mock_config: "alma+epel-9"
+          - name: openSUSE
+            mock_release: tumbleweed
+            release_num: tumbleweed
+            mock_config: opensuse-tumbleweed
+          - name: openSUSE Leap
+            mock_release: opensuse-leap-15.4
+            release_num: 15.4
+            mock_config: opensuse-leap-15.4
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
     runs-on: ubuntu-latest
@@ -109,7 +117,7 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
+          fedpkg --path $GITHUB_WORKSPACE mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
           # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
 
       - name: ⬆️ Upload RPM
