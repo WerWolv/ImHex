@@ -226,6 +226,9 @@ namespace hex::fs {
             case ImHexPath::Plugins:
                 result = appendPath(getPluginPaths(), "plugins");
                 break;
+            case ImHexPath::Libraries:
+                result = appendPath(getPluginPaths(), "lib");
+                break;
             case ImHexPath::Resources:
                 result = appendPath(getDataPaths(), "resources");
                 break;

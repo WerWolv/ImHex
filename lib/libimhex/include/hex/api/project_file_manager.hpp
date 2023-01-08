@@ -34,6 +34,8 @@ namespace hex {
         static bool store(std::optional<std::fs::path> filePath = std::nullopt);
 
         static bool hasPath();
+        static void clearPath();
+        static std::fs::path getPath();
 
         static void registerHandler(const Handler &handler) {
             getHandlers().push_back(handler);

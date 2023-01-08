@@ -1,5 +1,6 @@
-#include "content/views/view_pattern_data.hpp"
+#include <content/views/view_pattern_data.hpp>
 
+#include <hex/api/content_registry.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <pl/patterns/pattern.hpp>
@@ -18,6 +19,13 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventProviderClosed>([this](auto *provider) {
             this->m_sortedPatterns[provider].clear();
+        });
+
+        EventManager::subscribe<EventSettingsChanged>([this]() {
+            auto patternStyle = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style");
+
+            if (patternStyle.is_number())
+                this->m_patternDrawer.setTreeStyle(static_cast<ui::PatternDrawer::TreeStyle>(patternStyle.get<int>()));
         });
     }
 

@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
                 openProject();
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "ALT + S", false, providerValid && provider->isWritable() && ProjectFile::hasPath())) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "ALT + S", false, providerValid && ProjectFile::hasPath())) {
                 saveProject();
             }
 

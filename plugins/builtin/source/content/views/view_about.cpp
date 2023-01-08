@@ -148,6 +148,7 @@ namespace hex::plugin::builtin {
                     { "Patterns Includes", fs::ImHexPath::PatternsInclude },
                     { "Magic", fs::ImHexPath::Magic },
                     { "Plugins", fs::ImHexPath::Plugins },
+                    { "Libraries", fs::ImHexPath::Libraries },
                     { "Yara Patterns", fs::ImHexPath::Yara },
                     { "Config", fs::ImHexPath::Config },
                     { "Resources", fs::ImHexPath::Resources },

@@ -36,7 +36,8 @@ namespace hex {
                 return false;
         }
 
-        for (const auto &provider : ImHexApi::Provider::getProviders()) {
+        auto providers = auto(ImHexApi::Provider::getProviders());
+        for (const auto &provider : providers) {
             ImHexApi::Provider::remove(provider);
         }
 
@@ -73,7 +74,7 @@ namespace hex {
         }
 
         ProjectFile::s_currProjectPath = filePath;
-
+        EventManager::post<RequestUpdateWindowTitle>();
         return true;
     }
 
@@ -122,6 +123,14 @@ namespace hex {
 
     bool ProjectFile::hasPath() {
         return !ProjectFile::s_currProjectPath.empty();
+    }
+
+    void ProjectFile::clearPath() {
+        ProjectFile::s_currProjectPath.clear();
+    }
+    
+    std::fs::path ProjectFile::getPath() {
+        return ProjectFile::s_currProjectPath;
     }
 
 }

@@ -500,6 +500,15 @@ namespace hex::plugin::builtin {
             }
         });
 
+        // clear project context if we go back to the welcome screen
+        EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
+            hex::unused(oldProvider);
+            if (newProvider == nullptr) {
+                ProjectFile::clearPath();
+                EventManager::post<RequestUpdateWindowTitle>();
+            }
+        });
+
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
             if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProvidersUpdating && !s_recentProviders.empty())) {
                 // Copy to avoid changing list while iteration

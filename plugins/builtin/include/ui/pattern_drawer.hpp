@@ -12,6 +12,14 @@ namespace hex::plugin::builtin::ui {
 
         void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height = 0.0F);
 
+        enum class TreeStyle {
+            Default         = 0,
+            AutoExpanded    = 1,
+            Flattened       = 2
+        };
+
+        void setTreeStyle(TreeStyle style) { this->m_treeStyle = style; }
+
     private:
         void draw(pl::ptrn::Pattern& pattern);
 
@@ -41,12 +49,18 @@ namespace hex::plugin::builtin::ui {
         void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
+
+        void createLeafNode(const pl::ptrn::Pattern& pattern);
+        bool createTreeNode(const pl::ptrn::Pattern& pattern);
         void createDefaultEntry(pl::ptrn::Pattern &pattern);
+        void closeTreeNode(bool inlined);
+
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
         std::vector<pl::ptrn::Pattern*> m_sortedPatterns;
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
+        TreeStyle m_treeStyle = TreeStyle::Default;
     };
 }

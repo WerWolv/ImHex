@@ -14,6 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <ui/pattern_drawer.hpp>
+
 namespace {
 
     std::vector<std::fs::path> userFolders;
@@ -230,6 +232,23 @@ namespace hex::plugin::builtin {
 
             return false;
         }, true);
+
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0, [](auto name, nlohmann::json &setting) {
+            static int selection = static_cast<int>(setting);
+
+            const char *style[] = {
+                    "hex.builtin.setting.interface.pattern_tree_style.tree"_lang,
+                    "hex.builtin.setting.interface.pattern_tree_style.auto_expanded"_lang,
+                    "hex.builtin.setting.interface.pattern_tree_style.flattened"_lang,
+            };
+
+            if (ImGui::Combo(name.data(), &selection, style, IM_ARRAYSIZE(style))) {
+                setting = selection;
+                return true;
+            }
+
+            return false;
+        });
 
         ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080, [](auto name, nlohmann::json &setting) {
             static auto color = static_cast<color_t>(setting);
