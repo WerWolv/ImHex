@@ -31,14 +31,6 @@ jobs:
             mock_release: epel9
             release_num: 9
             mock_config: "alma+epel-9"
-          - name: openSUSE
-            mock_release: tumbleweed
-            release_num: tumbleweed
-            mock_config: opensuse-tumbleweed
-          - name: openSUSE Leap
-            mock_release: opensuse-leap-15.4
-            release_num: 15.4
-            mock_config: opensuse-leap-15.4
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
     runs-on: ubuntu-latest
