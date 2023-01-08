@@ -40,11 +40,6 @@ jobs:
       options: --privileged
 
     steps:
-      - name: 🧰 Checkout
-        uses: actions/checkout@v3
-        with:
-          path: ImHex
-          submodules: recursive
       
       - name: Setup DNF Cache
         uses: actions/cache@v3
@@ -61,6 +56,12 @@ jobs:
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg       \
           ccache       \
+          
+      - name: 🧰 Checkout
+        uses: actions/checkout@v3
+        with:
+          path: ImHex
+          submodules: recursive
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.5
