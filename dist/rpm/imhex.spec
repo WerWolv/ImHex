@@ -72,7 +72,7 @@ rm -rf lib/external/{curl,fmt,llvm,nlohmann_json,yara}
 CXXFLAGS+=" -std=gnu++2b"
 %endif
 %cmake \
- -D CMAKE_BUILD_TYPE=%{_build_type}      \
+ -D CMAKE_BUILD_TYPE=Release             \
  -D IMHEX_STRIP_RELEASE=OFF              \
  -D IMHEX_OFFLINE_BUILD=ON               \
  -D USE_SYSTEM_NLOHMANN_JSON=ON          \
