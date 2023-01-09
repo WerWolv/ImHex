@@ -519,7 +519,7 @@ jobs:
           sed -i \
           -e 's/%{_version}/${{env.IMHEX_VERSION}}/g'                  \
           -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'      \
-          -e '/IMHEX_OFFLINE_BUILD=OFF/a IMHEX_PATTERNS_PULL_MASTER=ON' \
+          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON' \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
       - name: Fix ccache on EL9
