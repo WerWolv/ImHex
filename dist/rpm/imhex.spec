@@ -24,7 +24,6 @@ BuildRequires:  json-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  llvm-devel
 BuildRequires:  mbedtls-devel
-BuildRequires:  python3-devel
 BuildRequires:  yara-devel
 BuildRequires:  nativefiledialog-extended-devel
 %if 0%{?rhel}
