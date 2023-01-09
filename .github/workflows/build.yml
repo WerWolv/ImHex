@@ -520,7 +520,6 @@ jobs:
           -e 's/%{_version}/${{env.IMHEX_VERSION}}/g'                      \
           -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'          \
           -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON' \
-          # enable git-core for cloning updated patterns                   \
           -e '/BuildRequires:  cmake/a BuildRequires:  git-core'           \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
