@@ -551,7 +551,7 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} --enable-network mockbuild -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
           # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
 
       - name: ⬆️ Upload RPM
