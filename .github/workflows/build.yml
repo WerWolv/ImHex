@@ -517,10 +517,10 @@ jobs:
       - name: "Modify spec file: set version, use latest pattern language, enable online build"
         run: |
           sed -i \
-          -e 's/%{_version}/${{env.IMHEX_VERSION}}/g'                        \
-          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'            \
-          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \' \
-          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'             \
+          -e 's/%{_version}/${{env.IMHEX_VERSION}}/g'                         \
+          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'             \
+          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\' \
+          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'              \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
       - name: Fix ccache on EL9
