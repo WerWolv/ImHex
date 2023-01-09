@@ -521,6 +521,7 @@ jobs:
           -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'             \
           -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\' \
           -e '/BuildRequires:  cmake/a BuildRequires:  git-core'              \
+          -e '/%files/a %{_datadir}/%{name}/'
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
       - name: Fix ccache on EL9
