@@ -773,6 +773,9 @@ namespace hex::plugin::builtin {
                 runtime->addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
                     hex::unused(runtime);
 
+                    if (!magic::isValidMIMEType(value))
+                        return false;
+
                     if (value == mimeType) {
                         foundCorrectType = true;
                         return true;
@@ -801,8 +804,6 @@ namespace hex::plugin::builtin {
                         runtime->reset();
                     }
                 }
-
-                runtime->addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) { return !value.empty(); });
 
                 if (!this->m_possiblePatternFiles.empty()) {
                     this->m_selectedPatternFile = 0;

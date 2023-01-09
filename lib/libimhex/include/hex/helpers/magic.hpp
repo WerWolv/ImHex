@@ -21,4 +21,6 @@ namespace hex::magic {
     std::string getMIMEType(const std::vector<u8> &data);
     std::string getMIMEType(prv::Provider *provider, size_t size = 100_KiB);
 
+    bool isValidMIMEType(const std::string &mimeType);
+
 }

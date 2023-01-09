@@ -96,4 +96,18 @@ namespace hex::magic {
         return getMIMEType(buffer);
     }
 
+    bool isValidMIMEType(const std::string &mimeType) {
+        // MIME types always contain a slash
+        if (!mimeType.contains("/"))
+            return false;
+
+        // The MIME type "application/octet-stream" is a fallback type for arbitrary binary data.
+        // Specifying this in a pattern would make it get suggested for every single unknown binary that's being loaded.
+        // We don't want that, so we ignore it here
+        if (mimeType == "application/octet-stream")
+            return false;
+
+        return true;
+    }
+
 }
