@@ -155,7 +155,6 @@ jobs:
         key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build
         max-size: 50M
-
         
     - name: 📜 Restore CMakeCache
       uses: actions/cache@v3
@@ -173,7 +172,6 @@ jobs:
       if: ${{! matrix.custom_glfw}}
       run: |
         brew install glfw
-
 
     - name: 🧰 Checkout glfw
       if: ${{matrix.custom_glfw}}
