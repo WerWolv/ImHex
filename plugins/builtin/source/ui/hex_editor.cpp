@@ -284,7 +284,7 @@ namespace hex::plugin::builtin::ui {
                     auto nextEditingAddress = *this->m_editingAddress + this->m_currDataVisualizer->getBytesPerCell();
                     this->setSelection(nextEditingAddress, nextEditingAddress);
 
-                    if (nextEditingAddress >= this->m_provider->getSize())
+                    if (nextEditingAddress >= this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress() + this->m_provider->getSize())
                         this->m_editingAddress = std::nullopt;
                     else
                         this->m_editingAddress = nextEditingAddress;
