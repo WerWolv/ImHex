@@ -153,7 +153,7 @@ jobs:
         run: |
           $tagname = $env:GITHUB_REF.Replace("refs/tags/", "")
           $version = $tagname.Replace("v", "")
-          $url = "https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-win64.msi"
+          $url = "https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-Windows.msi"
           .\wingetcreate.exe update WerWolv.ImHex -u $url --version $version
           if ($version -notmatch "-") {
             .\wingetcreate.exe submit .\manifests\w\WerWolv\ImHex\${version}\ --token $env:WINGET_GITHUB_TOKEN

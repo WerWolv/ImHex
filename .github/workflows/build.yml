@@ -81,6 +81,8 @@ jobs:
           ..
         mingw32-make -j4 install
         cpack
+        mv build/*.msi imhex-${{env.IMHEX_VERSION}}-Windows.msi
+
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
     #- name: 🗝️ Sign Windows Installer
@@ -99,7 +101,7 @@ jobs:
       with:
         name: Windows Installer
         path: |
-          build/*.msi
+          build/imhex-*.msi
 
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v3
