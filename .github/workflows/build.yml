@@ -476,7 +476,7 @@ jobs:
       options: --privileged
 
     steps:
-      - name: Install git-core
+      - name: ⬇️ Install git-core
         run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
     
       - name: 🧰 Checkout
@@ -485,7 +485,7 @@ jobs:
           path: ImHex
           submodules: recursive
       
-      - name: Setup DNF Cache
+      - name: 📜 Setup DNF Cache
         uses: actions/cache@v3
         with:
           path: /var/cache/dnf
@@ -514,7 +514,7 @@ jobs:
       - name: 🗜️ Create tarball from sources with dependencies
         run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
       
-      - name: "Modify spec file: set version, use latest pattern language, enable online build"
+      - name: "✒️ Modify spec file: set version, use latest pattern language, enable online build"
         run: |
           sed -i \
           -e 's/Version:        [0-9]*\.[0-9]*\.[0-9]*$/Version:        ${{env.IMHEX_VERSION}}/g' \
@@ -524,14 +524,14 @@ jobs:
           -e '/%files/a %{_datadir}/%{name}/'                                                     \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
-      - name: Fix ccache on EL9
+      - name: 📜 Fix ccache on EL9
         if: matrix.mock_release == 'epel9'
         run: sed -i '/\. \/opt\/rh\/gcc-toolset-12\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
         
-      - name: Copy spec file to build root
+      - name: 🟩 Copy spec file to build root
         run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
 
-      - name: Enable ccache for mock
+      - name: 📜 Enable ccache for mock
         run: |
           cat <<EOT > $GITHUB_WORKSPACE/mock.cfg
           include('${{ matrix.mock_config }}-x86_64.cfg')
@@ -541,7 +541,7 @@ jobs:
           config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
           EOT
 
-      - name: Setup Mock Cache
+      - name: 📜 Setup Mock Cache
         uses: actions/cache@v3
         with:
           path: /var/cache/mock
@@ -555,7 +555,7 @@ jobs:
           fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
           # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
           
-      - name: Move and rename finished RPM
+      - name: 🟩 Move and rename finished RPM
         run: |
           mv $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}-0.*.x86_64.rpm \
           $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
