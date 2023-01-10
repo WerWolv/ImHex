@@ -565,4 +565,4 @@ jobs:
         with:
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM
           path: |
-            imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}.x86_64.rpm
+            imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
