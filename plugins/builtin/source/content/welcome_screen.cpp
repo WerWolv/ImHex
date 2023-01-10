@@ -174,6 +174,11 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.builtin.welcome.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
                 ProjectFile::load(s_safetyBackupPath);
+                ProjectFile::clearPath();
+
+                for (const auto &provider : ImHexApi::Provider::getProviders())
+                    provider->markDirty();
+
                 fs::remove(s_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();
