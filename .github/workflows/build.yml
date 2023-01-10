@@ -255,7 +255,6 @@ jobs:
           path: |
             build/CMakeCache.txt
             build-appimage/CMakeCache.txt
-            .flatpak-builder
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
       - name: ⬇️ Install dependencies
@@ -292,15 +291,6 @@ jobs:
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
-      #- name: 📦 Bundle Flatpak
-      #  run: |
-      #    sudo apt install flatpak flatpak-builder
-      #    flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-      #    flatpak --user install -y flathub org.freedesktop.Platform//20.08
-      #    flatpak --user install -y flathub org.freedesktop.Sdk//20.08
-      #    flatpak-builder --jobs=4 --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
-      #    flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
-
       - name: 📦 Bundle DEB
         run: |
           cp -r build/DEBIAN build/DebDir
@@ -329,13 +319,6 @@ jobs:
           cd build-appimage
           export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-
-      #- name: ⬆️ Upload Flatpak
-      #  uses: actions/upload-artifact@v3
-      #  with:
-      #    name: Linux Flatpak
-      #    path: |
-      #      imhex.flatpak
 
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v3
