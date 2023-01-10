@@ -463,7 +463,7 @@ jobs:
             mock_release: f36
             release_num: 36
             mock_config: fedora-36
-          - name: RHEL, AlmaLinux
+          - name: RHEL-AlmaLinux
             mock_release: epel9
             release_num: 9
             mock_config: "alma+epel-9"
@@ -554,10 +554,15 @@ jobs:
         run: |
           fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
           # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
+          
+      - name: Move and rename finished RPM
+        run: |
+          mv $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}-0.*.x86_64.rpm \
+          $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}.x86_64.rpm
 
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM
           path: |
-            results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}-0.*.x86_64.rpm
+            imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}.x86_64.rpm
