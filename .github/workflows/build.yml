@@ -558,7 +558,7 @@ jobs:
       - name: Move and rename finished RPM
         run: |
           mv $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}-0.*.x86_64.rpm \
-          $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}.x86_64.rpm
+          $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
 
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
