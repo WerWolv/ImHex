@@ -1,10 +1,14 @@
 Name:           imhex
-Version:        %{_version}
+Version:        1.26.2
 Release:        0%{?dist}
 Summary:        A hex editor for reverse engineers and programmers
 
-License:        GPL-2.0-only
+License:        GPL-2.0-only AND Zlib AND MIT AND Apache-2.0
+# imhex is gplv2.  capstone is custom.  nativefiledialog is Zlib.  intervaltree is MIT
+# see license dir for full breakdown
 URL:            https://imhex.werwolv.net/
+# We need the archive with deps bundled
+Source0:        https://github.com/WerWolv/%{name}/releases/download/v%{version}/Full.Sources.tar.gz#/%{name}-%{version}.tar.gz
 
 BuildRequires:  cmake
 BuildRequires:  desktop-file-utils
@@ -13,15 +17,35 @@ BuildRequires:  file-devel
 BuildRequires:  freetype-devel
 BuildRequires:  fmt-devel
 BuildRequires:  gcc-c++
-BuildRequires:  mesa-libGL-devel
+BuildRequires:  libappstream-glib
+BuildRequires:  libglvnd-devel
 BuildRequires:  glfw-devel
 BuildRequires:  json-devel
 BuildRequires:  libcurl-devel
 BuildRequires:  llvm-devel
 BuildRequires:  mbedtls-devel
-%if 0%{?fedora} >= 37
 BuildRequires:  yara-devel
+BuildRequires:  nativefiledialog-extended-devel
+%if 0%{?rhel}
+BuildRequires:  gcc-toolset-12
 %endif
+
+Provides:       bundled(gnulib)
+Provides:       bundled(capstone) = 5.0-rc2
+Provides:       bundled(imgui)
+Provides:       bundled(libromfs)
+Provides:       bundled(microtar)
+Provides:       bundled(libpl)
+# ImHex modified upstream intervaltree so we have to package it
+# https://github.com/ekg/intervaltree
+Provides:       bundled(intervaltree) = 0.1
+Provides:       bundled(xdgpp)
+
+# ftbfs on these arches.  armv7hl might compile when capstone 5.x
+# is released upstream and we can build against it
+# [7:02 PM] WerWolv: We're not supporting 32 bit anyways soooo
+# [11:38 AM] WerWolv: Officially supported are x86_64 and aarch64
+ExclusiveArch:  x86_64 %{arm64} ppc64le
 
 
 %description
@@ -37,26 +61,26 @@ same time ImHex is completely free and open source under the GPLv2 language.
 
 
 %prep
-# don't use the setup macro since we're pulling from git
-cp -r %{_src_path}/* %{_builddir}/
-
+%autosetup -n ImHex
+# remove bundled libs we aren't using
+rm -rf lib/external/{curl,fmt,llvm,nlohmann_json,yara}
 
 %build
-%cmake \
- -DCMAKE_BUILD_TYPE=%{_build_type} \
- -D USE_SYSTEM_NLOHMANN_JSON=ON \
- -D USE_SYSTEM_FMT=ON \
- -D USE_SYSTEM_CURL=ON \
- -D USE_SYSTEM_LLVM=ON \
- -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
- -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
- -D IMHEX_PATTERNS_PULL_MASTER=ON          \
-%if 0%{?fedora} >= 37
- -D USE_SYSTEM_YARA=ON \
-# if fedora <= 36 get updated to yara 4.2.x then they should \
-# be able to build against system libs \
-# https://bugzilla.redhat.com/show_bug.cgi?id=2112508 \
+%if 0%{?rhel}
+. /opt/rh/gcc-toolset-12/enable
+%set_build_flags
+CXXFLAGS+=" -std=gnu++2b"
 %endif
+%cmake \
+ -D CMAKE_BUILD_TYPE=Release             \
+ -D IMHEX_STRIP_RELEASE=OFF              \
+ -D IMHEX_OFFLINE_BUILD=ON               \
+ -D USE_SYSTEM_NLOHMANN_JSON=ON          \
+ -D USE_SYSTEM_FMT=ON                    \
+ -D USE_SYSTEM_CURL=ON                   \
+ -D USE_SYSTEM_LLVM=ON                   \
+ -D USE_SYSTEM_YARA=ON                   \
+ -D USE_SYSTEM_NFD=ON                    \
 # when capstone >= 5.x is released we should be able to build against \
 # system libs of it \
 # -D USE_SYSTEM_CAPSTONE=ON
@@ -64,23 +88,46 @@ cp -r %{_src_path}/* %{_builddir}/
 %cmake_build
 
 
+%check
+%if 0%{?rhel}
+. /opt/rh/gcc-toolset-12/enable
+%set_build_flags
+CXXFLAGS+=" -std=gnu++2b"
+%endif
+# build binaries required for tests
+%cmake_build --target unit_tests
+%ctest --exclude-regex '(Helpers/StoreAPI|Helpers/TipsAPI|Helpers/ContentAPI)'
+# Helpers/*API exclude tests that require network access
+
+
 %install
 %cmake_install
-desktop-file-validate %{buildroot}%{_datadir}/applications/imhex.desktop
+desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}.desktop
+
+# this is a symlink for the old appdata name that we don't need
+rm -f %{buildroot}%{_metainfodir}/net.werwolv.%{name}.appdata.xml
+
+# AppData
+appstream-util validate-relax --nonet %{buildroot}%{_metainfodir}/net.werwolv.%{name}.metainfo.xml
+
+# install licenses
+cp -a lib/external/nativefiledialog/LICENSE                       %{buildroot}%{_datadir}/licenses/%{name}/nativefiledialog-LICENSE
+cp -a lib/external/capstone/LICENSE.TXT                           %{buildroot}%{_datadir}/licenses/%{name}/capstone-LICENSE
+cp -a lib/external/capstone/suite/regress/LICENSE                 %{buildroot}%{_datadir}/licenses/%{name}/capstone-regress-LICENSE
+cp -a lib/external/microtar/LICENSE                               %{buildroot}%{_datadir}/licenses/%{name}/microtar-LICENSE
+cp -a lib/external/pattern_language/external/intervaltree/LICENSE %{buildroot}%{_datadir}/licenses/%{name}/pattern-language-intervaltree-LICENSE
+cp -a lib/external/xdgpp/LICENSE                                  %{buildroot}%{_datadir}/licenses/%{name}/xdgpp-LICENSE
 
 
 %files
-%dir %{_datadir}/licenses/imhex
-%license %{_datadir}/licenses/imhex/LICENSE
+%license %{_datadir}/licenses/%{name}/
 %doc README.md
 %{_bindir}/imhex
-%dir %{_datadir}/imhex
-%{_datadir}/imhex/*
-%{_datadir}/pixmaps/imhex.png
-%{_datadir}/applications/imhex.desktop
-%{_prefix}/lib64/libimhex.so.%{_version}
-%{_prefix}/lib64/imhex/plugins/*
-%{_metainfodir}/net.werwolv.imhex.metainfo.xml
-%{_metainfodir}/net.werwolv.imhex.appdata.xml
+%{_datadir}/pixmaps/%{name}.png
+%{_datadir}/applications/%{name}.desktop
+%{_libdir}/libimhex.so*
+%{_libdir}/%{name}/
+%{_metainfodir}/net.werwolv.%{name}.metainfo.xml
+
 
 %changelog

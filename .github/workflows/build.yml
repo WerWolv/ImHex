@@ -446,71 +446,123 @@ jobs:
           path: |
             build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
 
-  # Fedora build     
-  fedora-build:
+  # RPM distro builds
+  rpm-build:
     strategy:
       matrix:
         include:
-          - docker_image: fedora:latest
-            release: Latest
-          - docker_image: fedora:rawhide
-            release: Rawhide
+#           - name: Fedora
+#             mock_release: rawhide
+#             release_num: rawhide
+#             mock_config: fedora-rawhide
+          - name: Fedora
+            mock_release: f37
+            release_num: 37
+            mock_config: fedora-37
+          - name: Fedora
+            mock_release: f36
+            release_num: 36
+            mock_config: fedora-36
+          - name: RHEL-AlmaLinux
+            mock_release: epel9
+            release_num: 9
+            mock_config: "alma+epel-9"
 
-
-    name: 🐧 Fedora ${{ matrix.release }}
+    name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
     runs-on: ubuntu-latest
     
     container:
-      image: "${{ matrix.docker_image }}"
+      image: "fedora:latest"
+      options: --privileged
 
     steps:
-      - name: ⬇️ Update all packages
-        run: |
-          dnf upgrade -y
-
-      - name: ⬇️ Install setup dependencies
-        run: |
-          dnf install -y     \
-          ccache             \
-          desktop-file-utils \
-          fmt-devel          \
-          git                \
-          json-devel         \
-          libcurl-devel      \
-          llvm-devel         \
-          mbedtls-devel      \
-          rpm-build          \
-          yara-devel
-          
+      - name: ⬇️ Install git-core
+        run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
+    
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
+          path: ImHex
           submodules: recursive
-
-      - name: ⬇️ Install ImHex dependencies
+      
+      - name: 📜 Setup DNF Cache
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/dnf
+          key: ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-dnf-${{ github.run_id }}
+          restore-keys: |
+            ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-dnf-
+    
+      - name: ⬇️ Update all packages and install dependencies
         run: |
-          dist/get_deps_fedora.sh
+          dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
+          dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
+          fedpkg         \
+          ccache
 
       - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.5
         with:
-          key: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: fedora-${{ matrix.release }}-${{ secrets.CACHE_VERSION }}-build
-          max-size: 50M
-   
+          key: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build
+          max-size: 1G
+
       - name: 📜 Set version variable
         run: |
-          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+          echo "IMHEX_VERSION=`cat ImHex/VERSION`" >> $GITHUB_ENV
       
+      - name: 🗜️ Create tarball from sources with dependencies
+        run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
+      
+      - name: "✒️ Modify spec file: set version, use latest pattern language, enable online build"
+        run: |
+          sed -i \
+          -e 's/Version:        [0-9]*\.[0-9]*\.[0-9]*$/Version:        ${{env.IMHEX_VERSION}}/g' \
+          -e 's/IMHEX_OFFLINE_BUILD=ON/IMHEX_OFFLINE_BUILD=OFF/g'                                 \
+          -e '/IMHEX_OFFLINE_BUILD=OFF/a -D IMHEX_PATTERNS_PULL_MASTER=ON \\'                     \
+          -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                                  \
+          -e '/%files/a %{_datadir}/%{name}/'                                                     \
+          $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+        
+      - name: 📜 Fix ccache on EL9
+        if: matrix.mock_release == 'epel9'
+        run: sed -i '/\. \/opt\/rh\/gcc-toolset-12\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
+        
+      - name: 🟩 Copy spec file to build root
+        run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
+
+      - name: 📜 Enable ccache for mock
+        run: |
+          cat <<EOT > $GITHUB_WORKSPACE/mock.cfg
+          include('${{ matrix.mock_config }}-x86_64.cfg')
+          config_opts['plugin_conf']['ccache_enable'] = True
+          config_opts['plugin_conf']['ccache_opts']['max_cache_size'] = '1G'
+          config_opts['plugin_conf']['ccache_opts']['compress'] = True
+          config_opts['plugin_conf']['ccache_opts']['dir'] = "$GITHUB_WORKSPACE/.ccache"
+          EOT
+
+      - name: 📜 Setup Mock Cache
+        uses: actions/cache@v3
+        with:
+          path: /var/cache/mock
+          key: ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-mock-${{ github.run_id }}
+          restore-keys: |
+            ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-mock-
+
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          rpmbuild -ba --define "_version ${{env.IMHEX_VERSION}}" --define "_src_path $GITHUB_WORKSPACE" --define "_build_type $BUILD_TYPE" $GITHUB_WORKSPACE/dist/rpm/imhex.spec
-          mv ~/rpmbuild/RPMS/x86_64/*.rpm imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
+          # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
           
+      - name: 🟩 Move and rename finished RPM
+        run: |
+          mv $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}-0.*.x86_64.rpm \
+          $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
+
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
-          name: Fedora ${{ matrix.release }} RPM
+          name: ${{ matrix.name }} ${{ matrix.release_num }} RPM
           path: |
-            imhex-${{env.IMHEX_VERSION}}-Fedora-${{matrix.release}}.rpm
+            imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
