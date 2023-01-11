@@ -24,7 +24,7 @@ ImHex is also available on various package managers. The officially supported on
 
 ### Windows
 
-- **Cocolatey**
+- **Chocolatey**
   - [imhex](https://community.chocolatey.org/packages/imhex) (Thanks to @Jarcho)
     - `choco install imhex`
 - **winget**
