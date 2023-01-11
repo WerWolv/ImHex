@@ -236,28 +236,17 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
           max-size: 50M
           
-      - name: 📜 Restore other caches
+      - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
-            build-appimage/CMakeCache.txt
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
       - name: ⬇️ Install dependencies
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
           sudo apt update
           sudo bash dist/get_deps_debian.sh
-          
-          sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
-          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
-          sudo chmod +x /usr/local/bin/appimagetool
-          sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
 
       # Ubuntu cmake build
       - name: 🛠️ Build
@@ -284,8 +273,53 @@ jobs:
           dpkg-deb -Zgzip --build build/DebDir
           mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-22.04-x86_64.deb
 
+      - name: ⬆️ Upload DEB
+        uses: actions/upload-artifact@v3
+        with:
+          name: Ubuntu 22.04 DEB x86_64
+          path: '*.deb'
+
+  # AppImage build
+  appimage:
+    runs-on: ubuntu-22.04
+    name: ⬇️ AppImage
+    steps:
+
+      - name: 🧰 Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: appimage-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: appimage-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
+          
+      - name: 📜 Restore CMakeCache
+        uses: actions/cache@v3
+        with:
+          path: |
+            build-appimage/CMakeCache.txt
+          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          
+      - name: ⬇️ Install dependencies
+        run: |
+          sudo apt update
+          sudo bash dist/get_deps_debian.sh
+          
+          sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
+          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+          sudo chmod +x /usr/local/bin/appimagetool
+          sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
       # AppImage cmake build
-      - name: 🛠️ Reconfigure build for AppImage
+      - name: 🛠️ Build
         run: |
           mkdir -p build-appimage
           cd build-appimage
@@ -306,12 +340,6 @@ jobs:
           cd build-appimage
           export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-
-      - name: ⬆️ Upload DEB
-        uses: actions/upload-artifact@v3
-        with:
-          name: Ubuntu 22.04 DEB x86_64
-          path: '*.deb'
 
       - name: ⬆️ Upload AppImage
         uses: actions/upload-artifact@v3
