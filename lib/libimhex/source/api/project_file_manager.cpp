@@ -17,6 +17,13 @@ namespace hex {
     std::fs::path ProjectFile::s_currProjectPath;
 
     bool ProjectFile::load(const std::fs::path &filePath) {
+        auto originalPath = ProjectFile::s_currProjectPath;
+
+        ProjectFile::s_currProjectPath = filePath;
+        auto resetPath = SCOPE_GUARD {
+            ProjectFile::s_currProjectPath = originalPath;
+        };
+
         if (!fs::exists(filePath) || !fs::isRegularFile(filePath))
             return false;
         if (filePath.extension() != ".hexproj")
@@ -73,14 +80,22 @@ namespace hex {
             }
         }
 
-        ProjectFile::s_currProjectPath = filePath;
+        resetPath.release();
         EventManager::post<RequestUpdateWindowTitle>();
+
         return true;
     }
 
     bool ProjectFile::store(std::optional<std::fs::path> filePath) {
+        auto originalPath = ProjectFile::s_currProjectPath;
+
         if (!filePath.has_value())
             filePath = ProjectFile::s_currProjectPath;
+
+        ProjectFile::s_currProjectPath = filePath.value();
+        auto resetPath = SCOPE_GUARD {
+            ProjectFile::s_currProjectPath = originalPath;
+        };
 
         Tar tar(*filePath, Tar::Mode::Create);
         if (!tar.isValid())
@@ -114,9 +129,8 @@ namespace hex {
             tar.write(MetadataPath, metadataContent);
         }
 
-        ProjectFile::s_currProjectPath = filePath.value();
-
         ImHexApi::Provider::resetDirty();
+        resetPath.release();
 
         return result;
     }

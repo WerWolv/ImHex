@@ -4,6 +4,8 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
+#include <hex/api/project_file_manager.hpp>
+
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -285,12 +287,20 @@ namespace hex::plugin::builtin {
     void FileProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        auto path = settings["path"].get<std::string>();
-        this->setPath(std::u8string(path.begin(), path.end()));
+        auto pathString = settings["path"].get<std::string>();
+        std::fs::path path = std::u8string(pathString.begin(), pathString.end());
+
+        if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
+            this->setPath(std::filesystem::weakly_canonical(projectPath.parent_path() / path));
+        else
+            this->setPath(path);
     }
 
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = hex::toUTF8String(this->m_path);
+        if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
+            settings["path"] = hex::toUTF8String(std::fs::relative(this->m_path, projectPath.parent_path()));
+        else
+            settings["path"] = hex::toUTF8String(this->m_path);
 
         return Provider::storeSettings(settings);
     }

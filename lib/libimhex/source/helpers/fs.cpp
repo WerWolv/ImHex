@@ -1,10 +1,11 @@
 #include <hex/helpers/fs.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/project_file_manager.hpp>
+
 #include <hex/helpers/fs_macos.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/intrinsics.hpp>
-#include <hex/helpers/net.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <xdg.hpp>
@@ -165,6 +166,10 @@ namespace hex::fs {
 
         auto additionalDirs = ImHexApi::System::getAdditionalFolderPaths();
         std::copy(additionalDirs.begin(), additionalDirs.end(), std::back_inserter(paths));
+
+        if (ProjectFile::hasPath()) {
+            paths.push_back(ProjectFile::getPath().parent_path());
+        }
 
         return paths;
     }
