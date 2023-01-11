@@ -27,7 +27,7 @@ ImHex is also available on various package managers. The officially supported on
 - **Chocolatey**
   - [imhex](https://community.chocolatey.org/packages/imhex) (Thanks to @Jarcho)
     - `choco install imhex`
-- **winget**
+- **Winget**
   - [WerWolv.ImHex](https://github.com/microsoft/winget-pkgs/tree/master/manifests/w/WerWolv/ImHex)
     - `winget install WerWolv.ImHex`
 
