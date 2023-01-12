@@ -81,6 +81,8 @@ jobs:
           ..
         mingw32-make -j4 install
         cpack
+        mv imhex-*.msi ../imhex-${{env.IMHEX_VERSION}}-Windows-x86_64.msi
+
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
     #- name: 🗝️ Sign Windows Installer
@@ -97,14 +99,14 @@ jobs:
     - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v3
       with:
-        name: Windows Installer
+        name: Windows Installer x86_64
         path: |
-          build/*.msi
+          imhex-*.msi
 
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v3
       with:
-        name: Windows Portable
+        name: Windows Portable x86_64
         path: |
           build/install/*
       
@@ -119,7 +121,7 @@ jobs:
     - name: ⬆️ Upload NoGPU Portable ZIP
       uses: actions/upload-artifact@v3
       with:
-        name: Windows Portable NoGPU
+        name: Windows Portable NoGPU x86_64
         path: |
           build/install/*
 
@@ -219,14 +221,14 @@ jobs:
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
           -DIMHEX_PATTERNS_PULL_MASTER=ON         \
           -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
-          -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}"  \
+          -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"  \
           ..
         make -j4 package
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
       with:
-        name: macOS DMG${{matrix.suffix}}
+        name: macOS DMG${{matrix.suffix}} x86_64
         path: build/*.dmg
 
   # Ubuntu build
@@ -303,7 +305,7 @@ jobs:
         run: |
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zgzip --build build/DebDir
-          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-22.04.deb
+          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-22.04-x86_64.deb
 
       # AppImage cmake build
       - name: 🛠️ Reconfigure build for AppImage
@@ -338,19 +340,19 @@ jobs:
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v3
         with:
-          name: Ubuntu 22.04 DEB
+          name: Ubuntu 22.04 DEB x86_64
           path: '*.deb'
 
       - name: ⬆️ Upload AppImage
         uses: actions/upload-artifact@v3
         with:
-          name: Linux AppImage
+          name: Linux AppImage x86_64
           path: 'build-appimage/*.AppImage'
         
       - name: ⬆️ Upload AppImage zsync
         uses: actions/upload-artifact@v3
         with:
-          name: Linux AppImage zsync
+          name: Linux AppImage zsync x86_64
           path: 'build-appimage/*.AppImage.zsync'
 
   # ArchLinux build
@@ -429,22 +431,22 @@ jobs:
           
           # the name is a small trick to make makepkg recognize it as the source
           # else, it would try to download the file from the release
-          tar -cvf imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst -C installDir .
+          tar -cvf imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst -C installDir .
           
           chmod -R 777 .
           
           sudo -u nobody makepkg
 
           # Replace the old file
-          rm imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
-          mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
+          rm imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
+          mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
       
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
         uses: actions/upload-artifact@v3
         with:
-          name: ArchLinux .pkg.tar.zst
+          name: ArchLinux .pkg.tar.zst x86_64
           path: |
-            build/imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst
+            build/imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
 
   # RPM distro builds
   rpm-build:
@@ -563,6 +565,6 @@ jobs:
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.name }} ${{ matrix.release_num }} RPM
+          name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64
           path: |
             imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm

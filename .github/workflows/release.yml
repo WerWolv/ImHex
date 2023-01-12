@@ -60,8 +60,8 @@ jobs:
 
       - name: 🟩 Rename artifacts when needed
         run: |
-          mv "Windows Portable.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable.zip
-          mv "Windows Portable NoGPU.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable-NoGPU.zip
+          mv "Windows Portable x86_64.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable-x86_64.zip
+          mv "Windows Portable NoGPU x86_64.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable-NoGPU-x86_64.zip
 
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
@@ -72,7 +72,7 @@ jobs:
         run: |
           cp ImHex/dist/Arch/PKGBUILD .
           
-          hash=`md5sum imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst | cut -d ' ' -f 1`
+          hash=`md5sum imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst-x86_64 | cut -d ' ' -f 1`
 
           sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' PKGBUILD
           sed -i "s/(SKIP)/($hash)/g" PKGBUILD
@@ -153,7 +153,7 @@ jobs:
         run: |
           $tagname = $env:GITHUB_REF.Replace("refs/tags/", "")
           $version = $tagname.Replace("v", "")
-          $url = "https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-win64.msi"
+          $url = "https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-Windows-x86_64.msi"
           .\wingetcreate.exe update WerWolv.ImHex -u $url --version $version
           if ($version -notmatch "-") {
             .\wingetcreate.exe submit .\manifests\w\WerWolv\ImHex\${version}\ --token $env:WINGET_GITHUB_TOKEN
