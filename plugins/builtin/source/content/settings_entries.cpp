@@ -400,7 +400,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    return fs::openFileBrowser(fs::DialogMode::Open, { {"TTF Font", "ttf"} },
+                    return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
                         [&](const std::fs::path &path) {
                             fontPath = hex::toUTF8String(path);
                             setting  = fontPath;
