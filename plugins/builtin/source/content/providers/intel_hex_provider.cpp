@@ -222,9 +222,24 @@ namespace hex::plugin::builtin {
     }
 
     bool IntelHexProvider::handleFilePicker() {
-        auto picked = fs::openFileBrowser(fs::DialogMode::Open, { { "Intel Hex File", "*" } }, [this](const std::fs::path &path) {
-            this->m_sourceFilePath = path;
-        });
+        auto picked = fs::openFileBrowser(fs::DialogMode::Open, {
+                { "Intel Hex File", "hex" },
+                { "Intel Hex File", "h86" },
+                { "Intel Hex File", "hxl" },
+                { "Intel Hex File", "hxh" },
+                { "Intel Hex File", "obl" },
+                { "Intel Hex File", "obh" },
+                { "Intel Hex File", "mcs" },
+                { "Intel Hex File", "ihex" },
+                { "Intel Hex File", "ihe" },
+                { "Intel Hex File", "ihx" },
+                { "Intel Hex File", "a43" },
+                { "Intel Hex File", "a90" }
+            }, [this](const std::fs::path &path) {
+                this->m_sourceFilePath = path;
+            }
+        );
+
         if (!picked)
             return false;
         if (!fs::isRegularFile(this->m_sourceFilePath))

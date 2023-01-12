@@ -198,9 +198,25 @@ namespace hex::plugin::builtin {
     }
 
     bool MotorolaSRECProvider::handleFilePicker() {
-        auto picked = fs::openFileBrowser(fs::DialogMode::Open, { { "Motorola SREC File", "*" } }, [this](const std::fs::path &path) {
-            this->m_sourceFilePath = path;
-        });
+        auto picked = fs::openFileBrowser(fs::DialogMode::Open, {
+                { "Motorola SREC File", "s19" },
+                { "Motorola SREC File", "s28" },
+                { "Motorola SREC File", "s37" },
+                { "Motorola SREC File", "s" },
+                { "Motorola SREC File", "s1" },
+                { "Motorola SREC File", "s2" },
+                { "Motorola SREC File", "s3" },
+                { "Motorola SREC File", "sx" },
+                { "Motorola SREC File", "srec" },
+                { "Motorola SREC File", "exo" },
+                { "Motorola SREC File", "mot" },
+                { "Motorola SREC File", "mxt" }
+            },
+            [this](const std::fs::path &path) {
+                this->m_sourceFilePath = path;
+            }
+        );
+
         if (!picked)
             return false;
         if (!fs::isRegularFile(this->m_sourceFilePath))
