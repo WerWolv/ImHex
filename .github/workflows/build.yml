@@ -85,17 +85,6 @@ jobs:
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
-    #- name: 🗝️ Sign Windows Installer
-    #  if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    #  shell: powershell
-    #  env:
-    #    WIN_SIGN_CERT: ${{ secrets.WIN_SIGN_CERT }}
-    #    WIN_SIGN_PW: ${{ secrets.WIN_SIGN_PW }}
-    #  run: |
-    #    $buffer = [System.Convert]::FromBase64String($env:WIN_SIGN_CERT)
-    #    $certificate = [System.Security.Cryptography.X509Certificates.X509Certificate2]::New($buffer, $env:WIN_SIGN_PW)
-    #    Get-ChildItem -Path ./build -Filter *.msi -Recurse | Set-AuthenticodeSignature -HashAlgorithm SHA256 -Certificate $certificate -TimestampServer http://timestamp.digicert.com
-
     - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v3
       with:
@@ -155,7 +144,6 @@ jobs:
         key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build
         max-size: 50M
-
         
     - name: 📜 Restore CMakeCache
       uses: actions/cache@v3
@@ -173,7 +161,6 @@ jobs:
       if: ${{! matrix.custom_glfw}}
       run: |
         brew install glfw
-
 
     - name: 🧰 Checkout glfw
       if: ${{matrix.custom_glfw}}
@@ -249,29 +236,17 @@ jobs:
           restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
           max-size: 50M
           
-      - name: 📜 Restore other caches
+      - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
-            build-appimage/CMakeCache.txt
-            .flatpak-builder
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
       - name: ⬇️ Install dependencies
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
           sudo apt update
           sudo bash dist/get_deps_debian.sh
-          
-          sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
-          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
-          sudo chmod +x /usr/local/bin/appimagetool
-          sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
 
       # Ubuntu cmake build
       - name: 🛠️ Build
@@ -292,23 +267,59 @@ jobs:
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
-      #- name: 📦 Bundle Flatpak
-      #  run: |
-      #    sudo apt install flatpak flatpak-builder
-      #    flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-      #    flatpak --user install -y flathub org.freedesktop.Platform//20.08
-      #    flatpak --user install -y flathub org.freedesktop.Sdk//20.08
-      #    flatpak-builder --jobs=4 --repo=imhex _flatpak dist/net.werwolv.ImHex.yaml --ccache --keep-build-dirs
-      #    flatpak build-bundle imhex imhex.flatpak net.werwolv.ImHex stable
-
       - name: 📦 Bundle DEB
         run: |
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zgzip --build build/DebDir
           mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-22.04-x86_64.deb
 
+      - name: ⬆️ Upload DEB
+        uses: actions/upload-artifact@v3
+        with:
+          name: Ubuntu 22.04 DEB x86_64
+          path: '*.deb'
+
+  # AppImage build
+  appimage:
+    runs-on: ubuntu-22.04
+    name: ⬇️ AppImage
+    steps:
+
+      - name: 🧰 Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: 📜 Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: appimage-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: appimage-${{ secrets.CACHE_VERSION }}-build
+          max-size: 50M
+          
+      - name: 📜 Restore CMakeCache
+        uses: actions/cache@v3
+        with:
+          path: |
+            build-appimage/CMakeCache.txt
+          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          
+      - name: ⬇️ Install dependencies
+        run: |
+          sudo apt update
+          sudo bash dist/get_deps_debian.sh
+          
+          sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
+          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+          sudo chmod +x /usr/local/bin/appimagetool
+          sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
+
+      - name: 📜 Set version variable
+        run: |
+          echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
+
       # AppImage cmake build
-      - name: 🛠️ Reconfigure build for AppImage
+      - name: 🛠️ Build
         run: |
           mkdir -p build-appimage
           cd build-appimage
@@ -329,19 +340,6 @@ jobs:
           cd build-appimage
           export VERSION=${{env.IMHEX_VERSION}}
           appimage-builder --recipe ../dist/AppImageBuilder.yml
-
-      #- name: ⬆️ Upload Flatpak
-      #  uses: actions/upload-artifact@v3
-      #  with:
-      #    name: Linux Flatpak
-      #    path: |
-      #      imhex.flatpak
-
-      - name: ⬆️ Upload DEB
-        uses: actions/upload-artifact@v3
-        with:
-          name: Ubuntu 22.04 DEB x86_64
-          path: '*.deb'
 
       - name: ⬆️ Upload AppImage
         uses: actions/upload-artifact@v3
@@ -453,10 +451,6 @@ jobs:
     strategy:
       matrix:
         include:
-#           - name: Fedora
-#             mock_release: rawhide
-#             release_num: rawhide
-#             mock_config: fedora-rawhide
           - name: Fedora
             mock_release: f37
             release_num: 37
