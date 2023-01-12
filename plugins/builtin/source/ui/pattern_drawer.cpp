@@ -111,7 +111,9 @@ namespace hex::plugin::builtin::ui {
             }
         }
 
-        void drawVisualizer(const std::string &visualizer, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable) {
+        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable) {
+            auto visualizer = pl::core::Token::literalToString(arguments.front(), true);
+
             if (visualizer == "line_plot") {
                 if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
 
@@ -134,6 +136,21 @@ namespace hex::plugin::builtin::ui {
 
                 if (texture.isValid())
                     ImGui::Image(texture, texture.getSize());
+            } else if (visualizer == "bitmap") {
+                if (arguments.size() == 3) {
+                    auto width = pl::core::Token::literalToUnsigned(arguments[1]);
+                    auto height = pl::core::Token::literalToUnsigned(arguments[2]);
+
+                    std::vector<u8> data;
+                    data.resize(width * height * 4);
+
+                    pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
+                    static ImGui::Texture texture;
+                    texture = ImGui::Texture(data.data(), data.size(), width, height);
+
+                    if (texture.isValid())
+                        ImGui::Image(texture, texture.getSize());
+                }
             }
         }
 
@@ -616,11 +633,11 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
-            if (const auto &visualizer = pattern.getAttributeValue("hex::visualize"); visualizer.has_value()) {
+            if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
                     ImGui::BeginTooltip();
 
-                    drawVisualizer(visualizer.value(), pattern, iteratable);
+                    drawVisualizer(arguments, pattern, iteratable);
 
                     ImGui::EndTooltip();
                 }
