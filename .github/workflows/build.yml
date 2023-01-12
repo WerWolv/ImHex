@@ -293,8 +293,8 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: appimage-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: appimage-${{ secrets.CACHE_VERSION }}-build
+          key: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build
           max-size: 50M
           
       - name: 📜 Restore CMakeCache
@@ -302,7 +302,7 @@ jobs:
         with:
           path: |
             build-appimage/CMakeCache.txt
-          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
           
       - name: ⬇️ Install dependencies
         run: |
