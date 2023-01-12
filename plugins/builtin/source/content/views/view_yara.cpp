@@ -191,6 +191,7 @@ namespace hex::plugin::builtin {
                 yr_compiler_destroy(compiler);
             };
 
+            auto currFilePath = hex::toUTF8String(fs::toShortPath(this->m_rules[this->m_selectedRule].second));
             yr_compiler_set_include_callback(
                 compiler,
                 [](const char *includeName, const char *, const char *, void *userData) -> const char * {
@@ -212,7 +213,7 @@ namespace hex::plugin::builtin {
 
                     delete[] ptr;
                 },
-                hex::toUTF8String(fs::toShortPath(this->m_rules[this->m_selectedRule].second)).data()
+                currFilePath.data()
             );
 
             fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);
