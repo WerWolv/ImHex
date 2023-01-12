@@ -125,10 +125,12 @@ For format patterns, libraries, magic and constant files, check out the [ImHex-P
 
 To use ImHex, the following minimal system requirements need to be met:
 
-- **OS**: Windows 7 or higher, macOS 10.15 (Catalina) or higher, "Modern" Linux (Ubuntu 22.04, Fedora Stable/Rawhide, and Arch Linux have official packages, other distributions can use the AppImage)
+- **OS**: Windows 7 or higher, macOS 10.15 (Catalina) or higher, "Modern" Linux (Ubuntu 22.04, Fedora 36/37, RHEL/AlmaLinux 9, and Arch Linux have official packages, other and older distributions can use the AppImage)
 - **CPU**: x86_64 (64 Bit)
-- **GPU**: OpenGL 3.0 or higher (preferable a dedicated GPU and not Intel HD Graphics)
-- **RAM**: 512MB, more may be required for more complicated analysis
+- **GPU**: OpenGL 3.0 or higher 
+  - Intel HD drivers are really buggy and often cause graphic artifacts
+  - In case you don't have a GPU available, there are software rendered releases available for Windows and macOS
+- **RAM**: 256MB, more may be required for more complicated analysis
 - **Storage**: 100MB
 
 ## Installing
