@@ -8,6 +8,7 @@ option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)
 option(IMHEX_IGNORE_BAD_CLONE "Disable the bad clone prevention checks" OFF)
 option(IMHEX_PATTERNS_PULL_MASTER "Download latest files from master branch of the ImHex-Patterns repo" OFF)
 option(IMHEX_IGNORE_BAD_COMPILER "Allow compiling with an unsupported compiler" OFF)
+option(IMHEX_USE_GTK_FILE_PICKER "Use GTK file picker instead of xdg-desktop-portals" OFF)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
