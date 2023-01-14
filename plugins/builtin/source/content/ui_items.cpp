@@ -230,11 +230,15 @@ namespace hex::plugin::builtin {
                 auto &tasks = TaskManager::getRunningTasks();
                 auto frontTask = tasks.front();
 
+                auto progress = float(frontTask->getValue()) / frontTask->getMaxValue();
+
+                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, progress * 100);
+
                 auto widgetStart = ImGui::GetCursorPos();
 
                 ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
                 ImGui::SameLine();
-                ImGui::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : (float(frontTask->getValue()) / frontTask->getMaxValue()), (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
+                ImGui::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
                 ImGui::SameLine();
 
                 auto widgetEnd = ImGui::GetCursorPos();
@@ -273,6 +277,8 @@ namespace hex::plugin::builtin {
                 if (ImGui::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                     frontTask->interrupt();
                 ImGui::PopStyleVar();
+            } else {
+                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Reset, ImHexApi::System::TaskProgressType::Normal, 0);
             }
         });
     }

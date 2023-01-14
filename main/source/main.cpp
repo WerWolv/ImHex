@@ -2,7 +2,6 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/api/theme_manager.hpp>
 
 #include "window.hpp"
 
@@ -14,10 +13,6 @@
 int main(int argc, char **argv, char **envp) {
     using namespace hex;
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
-
-#if defined(OS_WINDOWS)
-    ImHexApi::System::impl::setBorderlessWindowMode(true);
-#endif
 
     bool shouldRestart = false;
 

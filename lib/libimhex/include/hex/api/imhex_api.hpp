@@ -191,6 +191,20 @@ namespace hex {
                 char **envp;
             };
 
+            enum class TaskProgressState {
+                Reset,
+                Progress,
+                Flash
+            };
+
+            enum class TaskProgressType {
+                Normal,
+                Warning,
+                Error
+            };
+
+            void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress);
+
             const ProgramArguments &getProgramArguments();
             std::optional<std::u8string> getProgramArgument(int index);
 

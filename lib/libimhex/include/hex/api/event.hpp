@@ -121,6 +121,7 @@ namespace hex {
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);
     EVENT_DEF(EventWindowInitialized);
+    EVENT_DEF(EventSetTaskBarIconState, u32, u32, u32);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);

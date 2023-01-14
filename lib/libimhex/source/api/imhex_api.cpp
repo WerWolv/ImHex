@@ -409,6 +409,10 @@ namespace hex {
         }
 
 
+        void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress) {
+            EventManager::post<EventSetTaskBarIconState>(u32(state), u32(type), progress);
+        }
+
         const ProgramArguments &getProgramArguments() {
             return impl::s_programArguments;
         }

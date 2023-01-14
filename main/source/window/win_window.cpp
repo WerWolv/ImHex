@@ -11,8 +11,6 @@
     #include <imgui_internal.h>
     #include <fonts/codicons_font.h>
 
-    #include <nlohmann/json.hpp>
-
     #include <GLFW/glfw3.h>
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <GLFW/glfw3native.h>
@@ -22,6 +20,8 @@
     #include <winuser.h>
     #include <dwmapi.h>
     #include <windowsx.h>
+    #include <shobjidl.h>
+    #include <wrl/client.h>
 
     #include <csignal>
 
@@ -32,6 +32,7 @@ namespace hex {
     static LONG_PTR g_oldWndProc;
     static float g_titleBarHeight;
     static ImGuiMouseCursor g_mouseCursorIcon;
+    static Microsoft::WRL::ComPtr<ITaskbarList4> g_taskbarList;
 
     static LRESULT commonWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
@@ -188,6 +189,7 @@ namespace hex {
 
 
     void Window::initNative() {
+        ImHexApi::System::impl::setBorderlessWindowMode(true);
 
         // Add plugin library folders to dll search path
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
@@ -299,6 +301,41 @@ namespace hex {
                 return EXCEPTION_CONTINUE_SEARCH;
             });
         }
+
+        if (SUCCEEDED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
+            CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskbarList4, &g_taskbarList);
+        }
+
+
+        EventManager::subscribe<EventSetTaskBarIconState>([hwnd](u32 state, u32 type, u32 progress){
+            using enum ImHexApi::System::TaskProgressState;
+            switch (ImHexApi::System::TaskProgressState(state)) {
+                case Reset:
+                    g_taskbarList->SetProgressState(hwnd, TBPF_NOPROGRESS);
+                    g_taskbarList->SetProgressValue(hwnd, 0, 0);
+                    break;
+                case Flash:
+                    FlashWindow(hwnd, true);
+                    break;
+                case Progress:
+                    g_taskbarList->SetProgressState(hwnd, TBPF_INDETERMINATE);
+                    g_taskbarList->SetProgressValue(hwnd, progress, 100);
+                    break;
+            }
+
+            using enum ImHexApi::System::TaskProgressType;
+            switch (ImHexApi::System::TaskProgressType(type)) {
+                case Normal:
+                    g_taskbarList->SetProgressState(hwnd, TBPF_NORMAL);
+                    break;
+                case Warning:
+                    g_taskbarList->SetProgressState(hwnd, TBPF_PAUSED);
+                    break;
+                case Error:
+                    g_taskbarList->SetProgressState(hwnd, TBPF_ERROR);
+                    break;
+            }
+        });
     }
 
     void Window::beginNativeWindowFrame() {
