@@ -64,16 +64,6 @@ namespace hex::init {
 
         using enum fs::ImHexPath;
 
-        // Check if ImHex is installed in portable mode
-        {
-            if (const auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
-                const auto flagFile = executablePath->parent_path() / "PORTABLE";
-
-                if (fs::exists(flagFile) && fs::isRegularFile(flagFile))
-                    ImHexApi::System::impl::setPortableVersion(true);
-            }
-        }
-
         // Create all folders
         for (u32 path = 0; path < u32(fs::ImHexPath::END); path++) {
             for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(path), true)) {

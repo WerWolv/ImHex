@@ -16,6 +16,16 @@ int main(int argc, char **argv, char **envp) {
 
     bool shouldRestart = false;
 
+    // Check if ImHex is installed in portable mode
+    {
+        if (const auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
+            const auto flagFile = executablePath->parent_path() / "PORTABLE";
+
+            if (fs::exists(flagFile) && fs::isRegularFile(flagFile))
+                ImHexApi::System::impl::setPortableVersion(true);
+        }
+    }
+
     do {
         EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
         shouldRestart = false;
