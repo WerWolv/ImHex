@@ -23,8 +23,8 @@ Simply use the drag-n-drop dmg package to install ImHex on your system. It's pos
 To run the AppImage, make sure it's executable. Then simply run it.
 
 ```bash
-chmod +x ImHex-*.AppImage
-./ImHex-*.AppImage
+chmod +x imhex-*.AppImage
+./imhex-*.AppImage
 ```
 
 #### Flatpak
@@ -38,21 +38,21 @@ flatpak install flathub net.werwolv.ImHex
 To install the DEB package, simply run the following command:
 
 ```bash
-sudo apt install ./ImHex-*.deb
+sudo apt install ./imhex-*.deb
 ```
 
 #### Arch Linux
 To install the Arch Linux package, simply run the following command:
 
 ```bash
-sudo pacman -U ImHex-*.pkg.tar.zst
+sudo pacman -U imhex-*.pkg.tar.zst
 ```
 
-#### Fedora RPM Package
+#### Fedora / RHEL / AlmaLinux RPM Package
 To install the RPM package, simply run the following command:
 
 ```bash
-sudo dnf install ./ImHex-*.rpm
+sudo dnf install ./imhex-*.rpm
 ```
 
 ## Nightly Builds
