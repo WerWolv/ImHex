@@ -9,11 +9,11 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <fmt/printf.h>
+
+#include <llvm/Demangle/Demangle.h>
 
 #include <chrono>
 #include <csignal>
-#include <iostream>
 #include <set>
 #include <thread>
 #include <cassert>
@@ -82,7 +82,7 @@ namespace hex {
         std::signal(signalNumber, nullptr);
 
         #if defined(DEBUG)
-            assert(false);
+            assert(!"Debug build, triggering breakpoint");
         #else
             std::raise(signalNumber);
         #endif
@@ -170,7 +170,18 @@ namespace hex {
         HANDLE_SIGNAL(SIGABRT)
         HANDLE_SIGNAL(SIGFPE)
         #undef HANDLE_SIGNAL
-        std::set_terminate([]{ signalHandler(SIGABRT, "Unhandled C++ exception"); });
+        std::set_terminate([]{
+            try {
+                std::rethrow_exception(std::current_exception());
+            } catch (std::exception &ex) {
+                log::fatal(
+                        "Program terminated with uncaught exception: {}()::what() -> {}",
+                        llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr),
+                        ex.what()
+                );
+            }
+            EventManager::post<EventAbnormalTermination>(0);
+        });
 
         auto logoData      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
