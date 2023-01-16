@@ -4,11 +4,14 @@
 #include <implot.h>
 
 #include <hex/ui/view.hpp>
+#include <hex/api/keybinding.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
 #include "content/global_actions.hpp"
+
+using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
 
@@ -21,7 +24,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1050, [&] {
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.create_file"_lang, "CTRL + N", false, !taskRunning)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.create_file"_lang, (CTRLCMD_NAME + " + N"s).c_str(), false, !taskRunning)) {
                 auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
                 if (newProvider != nullptr && !newProvider->open())
                     hex::ImHexApi::Provider::remove(newProvider);
@@ -29,7 +32,7 @@ namespace hex::plugin::builtin {
                     EventManager::post<EventProviderOpened>(newProvider);
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, "CTRL + O", false, !taskRunning)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.open_file"_lang, (CTRLCMD_NAME + " + O"s).c_str(), false, !taskRunning)) {
                 EventManager::post<RequestOpenWindow>("Open File");
             }
 
@@ -44,7 +47,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndMenu();
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.reload_file"_lang, "CTRL + R", false, !taskRunning && ImHexApi::Provider::isValid())) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.reload_file"_lang, (CTRLCMD_NAME + " + R"s).c_str(), false, !taskRunning && ImHexApi::Provider::isValid())) {
                 auto provider = ImHexApi::Provider::get();
 
                 provider->close();
@@ -58,7 +61,7 @@ namespace hex::plugin::builtin {
             bool providerValid = ImHexApi::Provider::isValid();
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.close"_lang, "CTRL + W", false, providerValid && !taskRunning)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.close"_lang, (CTRLCMD_NAME + " + W"s).c_str(), false, providerValid && !taskRunning)) {
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
             }
 
@@ -77,11 +80,11 @@ namespace hex::plugin::builtin {
                 openProject();
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, "ALT + S", false, providerValid && ProjectFile::hasPath())) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.save_project"_lang, (ALT_NAME + " + S"s).c_str(), false, providerValid && ProjectFile::hasPath())) {
                 saveProject();
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.save_project_as"_lang, "ALT + SHIFT + S", false, providerValid && provider->isWritable())) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.save_project_as"_lang, (ALT_NAME + " + "s + SHIFT_NAME + " + S"s).c_str(), false, providerValid && provider->isWritable())) {
                 saveProjectAs();
             }
         });
@@ -242,9 +245,9 @@ namespace hex::plugin::builtin {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
 
-            if (ImGui::MenuItem("hex.builtin.menu.edit.undo"_lang, "CTRL + Z", false, providerValid && provider->canUndo()))
+            if (ImGui::MenuItem("hex.builtin.menu.edit.undo"_lang, (CTRLCMD_NAME + " + Z"s).c_str(), false, providerValid && provider->canUndo()))
                 provider->undo();
-            if (ImGui::MenuItem("hex.builtin.menu.edit.redo"_lang, "CTRL + Y", false, providerValid && provider->canRedo()))
+            if (ImGui::MenuItem("hex.builtin.menu.edit.redo"_lang, (CTRLCMD_NAME + " + Y"s).c_str(), false, providerValid && provider->canRedo()))
                 provider->redo();
         });
 
