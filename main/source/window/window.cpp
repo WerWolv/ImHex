@@ -81,7 +81,10 @@ namespace hex {
         std::signal(signalNumber, SIG_DFL);
 
         for (const auto &stackFrame : stacktrace::getStackTrace()) {
-            log::fatal("   ({}:{}) | {}", stackFrame.file, stackFrame.line, stackFrame.function);
+            if (stackFrame.line == 0)
+                log::fatal("  {}", stackFrame.function);
+            else
+                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
         }
     
 
