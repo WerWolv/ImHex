@@ -1,13 +1,9 @@
 #include <hex/helpers/stacktrace.hpp>
 #include <hex/helpers/fs.hpp>
 
-#if defined(HEX_HAS_BACKTRACE)
+#if defined(HEX_HAS_BACKTRACE) && __has_include(BACKTRACE_HEADER)
 
-    #if __has_include(<backtrace/backtrace.h>)
-        #include <backtrace/backtrace.h>
-    #else
-        #include <backtrace.h>
-    #endif
+    #include BACKTRACE_HEADER
     #include <llvm/Demangle/Demangle.h>
     #include <hex/helpers/logger.hpp>
     #include <hex/helpers/utils.hpp>
