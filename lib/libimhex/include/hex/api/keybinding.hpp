@@ -184,6 +184,24 @@ namespace hex {
     constexpr static auto SHIFT = Key(static_cast<Keys>(0x4000'0000));
     constexpr static auto SUPER = Key(static_cast<Keys>(0x8000'0000));
 
+#if defined(OS_MACOS)
+    constexpr static auto CTRLCMD = SUPER;
+
+    constexpr static auto CTRL_NAME    = "CTRL";
+    constexpr static auto ALT_NAME     = "OPT";
+    constexpr static auto SHIFT_NAME   = "SHIFT";
+    constexpr static auto SUPER_NAME   = "CMD";
+    constexpr static auto CTRLCMD_NAME = SUPER_NAME;
+#else
+    constexpr static auto CTRLCMD = CTRL;
+
+    constexpr static auto CTRL_NAME    = "CTRL";
+    constexpr static auto ALT_NAME     = "ALT";
+    constexpr static auto SHIFT_NAME   = "SHIFT";
+    constexpr static auto SUPER_NAME   = "SUPER";
+    constexpr static auto CTRLCMD_NAME = CTRL_NAME;
+#endif
+
     class ShortcutManager {
     public:
         static void addGlobalShortcut(const Shortcut &shortcut, const std::function<void()> &callback);
