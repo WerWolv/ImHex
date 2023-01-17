@@ -9,8 +9,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-
-#include <llvm/Demangle/Demangle.h>
+#include <hex/helpers/stacktrace.hpp>
 
 #include <chrono>
 #include <csignal>
@@ -19,8 +18,7 @@
 #include <cassert>
 
 #include <romfs/romfs.hpp>
-
-#include <backtrace.h>
+#include <llvm/Demangle/Demangle.h>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -40,8 +38,6 @@
 #include <GLFW/glfw3.h>
 
 namespace hex {
-
-    static struct backtrace_state *g_backtraceState;
 
     using namespace std::literals::chrono_literals;
 
@@ -84,19 +80,10 @@ namespace hex {
 
         std::signal(signalNumber, SIG_DFL);
 
-        if (g_backtraceState != nullptr) {
-            log::fatal("== Stack Trace ==");
-            backtrace_full(g_backtraceState, 0, [](void *, uintptr_t, const char *filename, int lineno, const char *function) -> int {
-                if (filename == nullptr)
-                    filename = "??";
-                if (function == nullptr)
-                    function = "??";
-
-                log::fatal("  {} ({}:{})", function, filename, lineno);
-
-                return 0;
-            }, nullptr, nullptr);
+        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+            log::fatal("   ({}:{}) | {}", stackFrame.file, stackFrame.line, stackFrame.function);
         }
+    
 
         #if defined(DEBUG)
             assert(!"Debug build, triggering breakpoint");
@@ -106,10 +93,7 @@ namespace hex {
     }
 
     Window::Window() {
-        if (auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
-            static std::string path = executablePath->string();
-            g_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *msg, int) { log::error("{}", msg); }, nullptr);
-        }
+        stacktrace::initialize();
 
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {

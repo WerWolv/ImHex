@@ -29,6 +29,7 @@ set(LIBIMHEX_SOURCES
     source/helpers/patches.cpp
     source/helpers/encoding_file.cpp
     source/helpers/logger.cpp
+    source/helpers/stacktrace.cpp
     source/helpers/tar.cpp
 
     source/providers/provider.cpp
@@ -70,6 +71,4 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} libpl intervaltree)
-
-target_link_libraries(libimhex PUBLIC backtrace dl)
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${BACKTRACE_LIBRARIES} libpl intervaltree)
