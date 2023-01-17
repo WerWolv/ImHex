@@ -58,6 +58,7 @@ jobs:
           mbedtls:p
           freetype:p
           dlfcn:p
+          libbacktrace:p
 
     - name: 📜 Set version variable
       run: |

@@ -9,8 +9,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-
-#include <llvm/Demangle/Demangle.h>
+#include <hex/helpers/stacktrace.hpp>
 
 #include <chrono>
 #include <csignal>
@@ -19,6 +18,7 @@
 #include <cassert>
 
 #include <romfs/romfs.hpp>
+#include <llvm/Demangle/Demangle.h>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -78,8 +78,15 @@ namespace hex {
             log::fatal("Uncaught exception thrown!");
         }
 
-        // Let's not loop on this...
-        std::signal(signalNumber, nullptr);
+        std::signal(signalNumber, SIG_DFL);
+
+        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+            if (stackFrame.line == 0)
+                log::fatal("  {}", stackFrame.function);
+            else
+                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
+        }
+    
 
         #if defined(DEBUG)
             assert(!"Debug build, triggering breakpoint");
@@ -89,6 +96,8 @@ namespace hex {
     }
 
     Window::Window() {
+        stacktrace::initialize();
+
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
