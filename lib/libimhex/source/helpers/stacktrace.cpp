@@ -3,9 +3,14 @@
 
 #if defined(HEX_HAS_BACKTRACE)
 
-    #include <backtrace.h>
+    #if __has_include(<backtrace/backtrace.h>)
+        #include <backtrace/backtrace.h>
+    #else
+        #include <backtrace.h>
+    #endif
     #include <llvm/Demangle/Demangle.h>
     #include <hex/helpers/logger.hpp>
+    #include <hex/helpers/utils.hpp>
 
     namespace hex::stacktrace {
 
