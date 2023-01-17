@@ -1,7 +1,35 @@
 #include <hex/helpers/stacktrace.hpp>
 #include <hex/helpers/fs.hpp>
 
-#if defined(HEX_HAS_BACKTRACE) && __has_include(BACKTRACE_HEADER)
+#if defined(HEX_HAS_EXECINFO) && __has_include(BACKTRACE_HEADER)
+
+    #include BACKTRACE_HEADER
+    #include <llvm/Demangle/Demangle.h>
+    #include <hex/helpers/logger.hpp>
+    #include <hex/helpers/utils.hpp>
+
+    namespace hex::stacktrace {
+
+        void initialize() {
+
+        }
+
+        std::vector<StackFrame> getStackTrace() {
+            static std::vector<StackFrame> result;
+
+            std::array<void*, 128> addresses;
+            auto count = backtrace(addresses.data(), addresses.size());
+            auto functions = backtrace_symbols(addresses.data(), count);
+
+            for (i32 i = 0; i < count; i++)
+                result.push_back(StackFrame { "", functions[i], 0 });
+
+            return result;
+        }
+
+    }
+
+#elif defined(HEX_HAS_BACKTRACE) && __has_include(BACKTRACE_HEADER)
 
     #include BACKTRACE_HEADER
     #include <llvm/Demangle/Demangle.h>
@@ -43,7 +71,7 @@
 
     }
 
-#else 
+#else
 
     namespace hex::stacktrace {
 
