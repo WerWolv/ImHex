@@ -20,6 +20,8 @@
 
 #include <romfs/romfs.hpp>
 
+#include <backtrace.h>
+
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
@@ -38,6 +40,8 @@
 #include <GLFW/glfw3.h>
 
 namespace hex {
+
+    static struct backtrace_state *g_backtraceState;
 
     using namespace std::literals::chrono_literals;
 
@@ -78,8 +82,21 @@ namespace hex {
             log::fatal("Uncaught exception thrown!");
         }
 
-        // Let's not loop on this...
-        std::signal(signalNumber, nullptr);
+        std::signal(signalNumber, SIG_DFL);
+
+        if (g_backtraceState != nullptr) {
+            log::fatal("== Stack Trace ==");
+            backtrace_full(g_backtraceState, 0, [](void *, uintptr_t, const char *filename, int lineno, const char *function) -> int {
+                if (filename == nullptr)
+                    filename = "??";
+                if (function == nullptr)
+                    function = "??";
+
+                log::fatal("  {} ({}:{})", function, filename, lineno);
+
+                return 0;
+            }, nullptr, nullptr);
+        }
 
         #if defined(DEBUG)
             assert(!"Debug build, triggering breakpoint");
@@ -89,6 +106,11 @@ namespace hex {
     }
 
     Window::Window() {
+        if (auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
+            static std::string path = executablePath->string();
+            g_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *msg, int) { log::error("{}", msg); }, nullptr);
+        }
+
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {

@@ -71,3 +71,5 @@ endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
 target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} libpl intervaltree)
+
+target_link_libraries(libimhex PUBLIC backtrace dl)
