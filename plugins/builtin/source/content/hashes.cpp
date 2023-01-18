@@ -4,6 +4,8 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::plugin::builtin {
 
     class HashMD5 : public ContentRegistry::Hashes::Hash {
@@ -17,6 +19,9 @@ namespace hex::plugin::builtin {
                 return { array.begin(), array.end() };
             });
         }
+
+        [[nodiscard]] nlohmann::json store() const override { return { }; }
+        void load(const nlohmann::json &) override {}
     };
 
     class HashSHA1 : public ContentRegistry::Hashes::Hash {
@@ -30,6 +35,9 @@ namespace hex::plugin::builtin {
                 return { array.begin(), array.end() };
             });
         }
+
+        [[nodiscard]] nlohmann::json store() const override { return { }; }
+        void load(const nlohmann::json &) override {}
     };
 
     class HashSHA224 : public ContentRegistry::Hashes::Hash {
@@ -43,6 +51,9 @@ namespace hex::plugin::builtin {
                 return { array.begin(), array.end() };
             });
         }
+
+        [[nodiscard]] nlohmann::json store() const override { return { }; }
+        void load(const nlohmann::json &) override {}
     };
 
     class HashSHA256 : public ContentRegistry::Hashes::Hash {
@@ -56,6 +67,9 @@ namespace hex::plugin::builtin {
                 return { array.begin(), array.end() };
             });
         }
+
+        [[nodiscard]] nlohmann::json store() const override { return { }; }
+        void load(const nlohmann::json &) override {}
     };
 
     class HashSHA384 : public ContentRegistry::Hashes::Hash {
@@ -69,6 +83,9 @@ namespace hex::plugin::builtin {
                 return { array.begin(), array.end() };
             });
         }
+
+        [[nodiscard]] nlohmann::json store() const override { return { }; }
+        void load(const nlohmann::json &) override {}
     };
 
     class HashSHA512 : public ContentRegistry::Hashes::Hash {
@@ -82,6 +99,9 @@ namespace hex::plugin::builtin {
                 return { array.begin(), array.end() };
             });
         }
+
+        [[nodiscard]] nlohmann::json store() const override { return { }; }
+        void load(const nlohmann::json &) override {}
     };
 
     template<typename T>
@@ -111,6 +131,28 @@ namespace hex::plugin::builtin {
 
                 return bytes;
             });
+        }
+
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["polynomial"] = this->m_polynomial;
+            result["initialValue"] = this->m_initialValue;
+            result["xorOut"] = this->m_xorOut;
+            result["reflectIn"] = this->m_reflectIn;
+            result["reflectOut"] = this->m_reflectOut;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &json) override {
+            try {
+                this->m_polynomial      = json["polynomial"];
+                this->m_initialValue    = json["initialValue"];
+                this->m_xorOut          = json["xorOut"];
+                this->m_reflectIn       = json["reflectIn"];
+                this->m_reflectOut      = json["reflectOut"];
+            } catch (std::exception&) { }
         }
 
     private:

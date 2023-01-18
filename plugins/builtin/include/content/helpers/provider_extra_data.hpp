@@ -1,12 +1,14 @@
 #pragma once
 
-#include <map>
+#include <hex/api/content_registry.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <pl/pattern_language.hpp>
 #include <hex/data_processor/attribute.hpp>
 #include <hex/data_processor/node.hpp>
 #include <hex/data_processor/link.hpp>
+
+#include <map>
 
 namespace hex::plugin::builtin {
 
@@ -73,6 +75,10 @@ namespace hex::plugin::builtin {
                 std::optional<u64> selectionStart, selectionEnd;
                 float scrollPosition = 0.0F;
             } editor;
+
+            struct Hashes {
+                std::vector<ContentRegistry::Hashes::Hash::Function> hashFunctions;
+            } hashes;
         };
 
         static Data& getCurrent() {

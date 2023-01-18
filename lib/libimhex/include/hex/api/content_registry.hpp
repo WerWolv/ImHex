@@ -436,11 +436,12 @@ namespace hex {
                 public:
                     using Callback = std::function<std::vector<u8>(const Region&, prv::Provider *)>;
 
-                    Function(const Hash *type, std::string name, Callback callback)
+                    Function(Hash *type, std::string name, Callback callback)
                         : m_type(type), m_name(std::move(name)), m_callback(std::move(callback)) {
 
                     }
 
+                    [[nodiscard]] Hash *getType() { return this->m_type; }
                     [[nodiscard]] const Hash *getType() const { return this->m_type; }
                     [[nodiscard]] const std::string &getName() const { return this->m_name; }
 
@@ -457,7 +458,7 @@ namespace hex {
                     }
 
                 private:
-                    const Hash *m_type;
+                    Hash *m_type;
                     std::string m_name;
                     Callback m_callback;
 
@@ -467,12 +468,15 @@ namespace hex {
                 virtual void draw() { }
                 [[nodiscard]] virtual Function create(std::string name) = 0;
 
+                [[nodiscard]] virtual nlohmann::json store() const = 0;
+                virtual void load(const nlohmann::json &json) = 0;
+
                 [[nodiscard]] const std::string &getUnlocalizedName() const {
                     return this->m_unlocalizedName;
                 }
 
             protected:
-                [[nodiscard]] Function create(const std::string &name, const Function::Callback &callback) const {
+                [[nodiscard]] Function create(const std::string &name, const Function::Callback &callback) {
                     return { this, name, callback };
                 }
 
