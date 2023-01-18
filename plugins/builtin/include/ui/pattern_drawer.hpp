@@ -62,5 +62,6 @@ namespace hex::plugin::builtin::ui {
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
         TreeStyle m_treeStyle = TreeStyle::Default;
+        pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
     };
 }
