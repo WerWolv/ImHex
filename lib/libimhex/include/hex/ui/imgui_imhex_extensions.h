@@ -87,7 +87,7 @@ namespace ImGui {
     bool ToolBarButton(const char *symbol, ImVec4 color);
     bool IconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
 
-    bool InputIntegerPrefix(const char* label, const char *prefix, void *value, ImGuiDataType type, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+    bool InputIntegerPrefix(const char* label, const char *prefix, void *value, ImGuiDataType type, const char *format, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputHexadecimal(const char* label, u32 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputHexadecimal(const char* label, u64 *value, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
