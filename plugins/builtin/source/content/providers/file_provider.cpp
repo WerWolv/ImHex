@@ -297,10 +297,13 @@ namespace hex::plugin::builtin {
     }
 
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
+        std::string path;
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            settings["path"] = hex::toUTF8String(std::fs::relative(this->m_path, projectPath.parent_path()));
-        else
-            settings["path"] = hex::toUTF8String(this->m_path);
+            path = hex::toUTF8String(std::fs::proximate(this->m_path, projectPath.parent_path()));
+        if (path.empty())
+            path = hex::toUTF8String(this->m_path);
+
+        settings["path"] = path;
 
         return Provider::storeSettings(settings);
     }
