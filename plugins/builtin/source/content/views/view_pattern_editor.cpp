@@ -765,7 +765,8 @@ namespace hex::plugin::builtin {
                 }
 
                 std::scoped_lock lock(data.runtimeMutex);
-                auto &runtime = data.runtime;
+                auto runtime = std::make_unique<pl::PatternLanguage>();
+                ContentRegistry::PatternLanguage::configureRuntime(*runtime, provider);
 
                 auto mimeType = magic::getMIMEType(provider);
 
