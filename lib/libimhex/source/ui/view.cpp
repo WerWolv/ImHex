@@ -49,7 +49,7 @@ namespace hex {
     }
 
     ImVec2 View::getMinSize() const {
-        return scaled(ImVec2(10, 10));
+        return scaled(ImVec2(300, 400));
     }
 
     ImVec2 View::getMaxSize() const {
