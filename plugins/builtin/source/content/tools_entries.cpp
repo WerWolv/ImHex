@@ -1113,7 +1113,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawIEEE754Helper() {
+        void drawIEEE754Decoder() {
             static u128 value = 0x00;
             static int exponentBitCount = 8, mantissaBitCount = 23;
 
@@ -1146,6 +1146,9 @@ namespace hex::plugin::builtin {
             const auto signBits     = ExtractBits(signBitPosition, 1);
             const auto exponentBits = ExtractBits(exponentBitPosition, exponentBitCount);
             const auto mantissaBits = ExtractBits(mantissaBitPosition, mantissaBitCount);
+
+            ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.ieee754.description"_lang);
+            ImGui::NewLine();
 
             if (ImGui::BeginTable("##outer", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_ScrollX, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
                 ImGui::TableSetupColumn("hex.builtin.tools.ieee754.sign"_lang);
@@ -1326,7 +1329,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.file_uploader", drawFileUploader);
         ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain", drawWikiExplainer);
         ContentRegistry::Tools::add("hex.builtin.tools.file_tools", drawFileTools);
-        ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Helper);
+        ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Decoder);
     }
 
 }
