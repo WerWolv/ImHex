@@ -56,8 +56,8 @@ namespace hex::plugin::builtin {
             }
         });
 
-        /* File open, quit imhex */
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1150, [&] {
+        /* File close, quit imhex */
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 5000, [&] {
             bool providerValid = ImHexApi::Provider::isValid();
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
 
@@ -65,13 +65,13 @@ namespace hex::plugin::builtin {
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
             }
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.quit"_lang)) {
+            if (ImGui::MenuItem("hex.builtin.menu.file.quit"_lang, "Alt + F4")) {
                 ImHexApi::Common::closeImHex();
             }
         });
 
         /* Project open / save */
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1250, [&] {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1150, [&] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = ImHexApi::Provider::isValid();
             bool taskRunning = TaskManager::getRunningTaskCount() > 0;
