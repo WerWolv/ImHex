@@ -98,7 +98,6 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
 
             ImGui::Checkbox("hex.builtin.tools.ascii_table.octal"_lang, &asciiTableShowOctal);
-            ImGui::NewLine();
         }
 
         void drawRegexReplacer() {
@@ -118,7 +117,6 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
-            ImGui::NewLine();
         }
 
         void drawColorPicker() {
@@ -126,7 +124,6 @@ namespace hex::plugin::builtin {
 
             ImGui::SetNextItemWidth(300.0F);
             ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(), ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
-            ImGui::NewLine();
         }
 
         void drawMathEvaluator() {
