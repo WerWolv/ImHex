@@ -1033,16 +1033,13 @@ namespace hex::plugin::builtin {
                 this->openPopup<PopupRemove>(selection->getStartAddress(), selection->getSize());
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.jump_to"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
-                if (selection->getSize() <= sizeof(u64)) {
-                    u64 value = 0;
-                    provider->read(selection->getStartAddress(), &value, selection->getSize());
+            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.jump_to"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value() && selection->getSize() <= sizeof(u64))) {
+                u64 value = 0;
+                provider->read(selection->getStartAddress(), &value, selection->getSize());
 
-                    if (value < provider->getBaseAddress() + provider->getActualSize()) {
-                        ImHexApi::HexEditor::setSelection(value, 1);
-                    }
+                if (value < provider->getBaseAddress() + provider->getActualSize()) {
+                    ImHexApi::HexEditor::setSelection(value, 1);
                 }
-
             }
 
             if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.open_in_new_provider"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
