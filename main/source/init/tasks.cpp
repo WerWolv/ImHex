@@ -183,6 +183,7 @@ namespace hex::init {
 
         ContentRegistry::PatternLanguage::getFunctions().clear();
         ContentRegistry::PatternLanguage::getPragmas().clear();
+        ContentRegistry::PatternLanguage::impl::getVisualizers().clear();
 
         {
             auto &views = ContentRegistry::Views::getEntries();

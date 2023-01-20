@@ -117,6 +117,8 @@ namespace hex {
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
         namespace PatternLanguage {
 
+            using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, pl::ptrn::Iteratable&, bool, const std::vector<pl::core::Token::Literal> &)>;
+
             namespace impl {
 
                 struct FunctionDefinition {
@@ -129,6 +131,13 @@ namespace hex {
                     bool dangerous;
                 };
 
+                struct Visualizer {
+                    u32 parameterCount;
+                    VisualizerFunctionCallback callback;
+                };
+
+                std::map<std::string, Visualizer> &getVisualizers();
+
             }
 
             void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider);
@@ -137,6 +146,8 @@ namespace hex {
 
             void addFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
             void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
+
+            void addVisualizer(const std::string &name, const VisualizerFunctionCallback &func, u32 parameterCount);
 
             std::map<std::string, pl::api::PragmaHandler> &getPragmas();
             std::vector<impl::FunctionDefinition> &getFunctions();

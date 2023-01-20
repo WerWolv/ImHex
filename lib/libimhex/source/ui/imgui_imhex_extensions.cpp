@@ -69,7 +69,12 @@ namespace ImGui {
         this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
 
+    Texture::Texture(unsigned int texture, int width, int height) : m_textureId(reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture))), m_width(width), m_height(height) {
+
+    }
+
     Texture::Texture(Texture&& other) noexcept {
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&this->m_textureId));
         this->m_textureId = other.m_textureId;
         this->m_width = other.m_width;
         this->m_height = other.m_height;
@@ -78,6 +83,7 @@ namespace ImGui {
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&this->m_textureId));
         this->m_textureId = other.m_textureId;
         this->m_width = other.m_width;
         this->m_height = other.m_height;

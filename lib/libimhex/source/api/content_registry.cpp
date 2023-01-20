@@ -299,6 +299,18 @@ namespace hex {
             });
         }
 
+
+        std::map<std::string, impl::Visualizer> &impl::getVisualizers() {
+            static std::map<std::string, impl::Visualizer> visualizers;
+
+            return visualizers;
+        }
+
+        void addVisualizer(const std::string &name, const VisualizerFunctionCallback &function, u32 parameterCount) {
+            log::debug("Registered new pattern visualizer function: {}", name);
+            impl::getVisualizers()[name] = impl::Visualizer { parameterCount, function };
+        }
+
         std::map<std::string, pl::api::PragmaHandler> &getPragmas() {
             static std::map<std::string, pl::api::PragmaHandler> pragmas;
 

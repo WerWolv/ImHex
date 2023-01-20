@@ -49,6 +49,7 @@ namespace hex::plugin::builtin::ui {
         void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
+        void drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable);
 
         void createLeafNode(const pl::ptrn::Pattern& pattern);
         bool createTreeNode(const pl::ptrn::Pattern& pattern);

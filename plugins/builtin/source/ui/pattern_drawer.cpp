@@ -20,15 +20,15 @@
 #include <string>
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/content_registry.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/api/localization.hpp>
 #include <content/helpers/math_evaluator.hpp>
 
-#include <hex/helpers/disassembler.hpp>
-
 #include <imgui.h>
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+
 
 namespace hex::plugin::builtin::ui {
 
@@ -114,106 +114,47 @@ namespace hex::plugin::builtin::ui {
         }
 
         void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset) {
-            auto visualizer = pl::core::Token::literalToString(arguments.front(), true);
+            auto visualizerName = pl::core::Token::literalToString(arguments.front(), true);
 
-            if (visualizer == "line_plot") {
-                if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+            const auto &visualizers = ContentRegistry::PatternLanguage::impl::getVisualizers();
 
-                    ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
-
-                    ImPlot::PlotLineG("##line", [](void *data, int idx) -> ImPlotPoint {
-                        auto &iteratable = *static_cast<pl::ptrn::Iteratable *>(data);
-                        return { static_cast<double>(idx), pl::core::Token::literalToFloatingPoint(iteratable.getEntry(idx)->getValue()) };
-                    }, &iteratable, iteratable.getEntryCount());
-
-                    ImPlot::EndPlot();
-                }
-            } else if (visualizer == "image") {
-                static ImGui::Texture texture;
-                if (reset) {
-                    std::vector<u8> data;
-                    data.resize(pattern.getSize());
-                    pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
-                    texture = ImGui::Texture(data.data(), data.size());
-                }
-
-                if (texture.isValid())
-                    ImGui::Image(texture, texture.getSize());
-            } else if (visualizer == "bitmap" && arguments.size() == 3) {
-                static ImGui::Texture texture;
-                if (reset) {
-                    auto width = pl::core::Token::literalToUnsigned(arguments[1]);
-                    auto height = pl::core::Token::literalToUnsigned(arguments[2]);
-
-                    std::vector<u8> data;
-                    data.resize(width * height * 4);
-
-                    pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
-                    texture = ImGui::Texture(data.data(), data.size(), width, height);
-                }
-
-                if (texture.isValid())
-                    ImGui::Image(texture, texture.getSize());
-            } else if (visualizer == "disassembler" && arguments.size() == 4) {
-                struct Disassembly {
-                    u64 address;
-                    std::vector<u8> bytes;
-                    std::string instruction;
-                };
-
-                static std::vector<Disassembly> disassembly;
-                if (reset) {
-                    auto baseAddress = pl::core::Token::literalToUnsigned(arguments[1]);
-                    auto architecture = pl::core::Token::literalToUnsigned(arguments[2]);
-                    auto mode = pl::core::Token::literalToUnsigned(arguments[3]);
-
-                    disassembly.clear();
-
-                    csh capstone;
-                    if (cs_open(static_cast<cs_arch>(architecture), static_cast<cs_mode>(mode), &capstone) == CS_ERR_OK) {
-                        cs_option(capstone, CS_OPT_SKIPDATA, CS_OPT_ON);
-
-                        std::vector<u8> data;
-                        data.resize(pattern.getSize());
-                        pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
-                        cs_insn *instructions = nullptr;
-
-                        size_t instructionCount = cs_disasm(capstone, data.data(), data.size(), baseAddress, 0, &instructions);
-                        for (size_t i = 0; i < instructionCount; i++) {
-                            disassembly.push_back({ instructions[i].address, { instructions[i].bytes, instructions[i].bytes + instructions[i].size }, hex::format("{} {}", instructions[i].mnemonic, instructions[i].op_str) });
-                        }
-                        cs_free(instructions, instructionCount);
-                        cs_close(&capstone);
-                    }
-                }
-
-                if (ImGui::BeginTable("##disassembly", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, scaled(ImVec2(0, 300)))) {
-                    ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("hex.builtin.common.address"_lang);
-                    ImGui::TableSetupColumn("hex.builtin.common.bytes"_lang);
-                    ImGui::TableSetupColumn("hex.builtin.common.instruction"_lang);
-                    ImGui::TableHeadersRow();
-
-                    for (auto &entry : disassembly) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::TextFormatted("0x{0:08X}", entry.address);
-                        ImGui::TableNextColumn();
-                        std::string bytes;
-                        for (auto byte : entry.bytes)
-                            bytes += hex::format("{0:02X} ", byte);
-                        ImGui::TextUnformatted(bytes.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(entry.instruction.c_str());
-                    }
-
-                    ImGui::EndTable();
+            if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
+                const auto &[name, visualizer] = *entry;
+                if (visualizer.parameterCount != arguments.size() - 1) {
+                    ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
+                } else {
+                    visualizer.callback(pattern, iteratable, reset, arguments);
                 }
             } else {
-                ImGui::TextUnformatted("hex.builtin.pattern_drawer.unknown_visualizer"_lang);
+                ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.unknown"_lang);
             }
         }
 
+
+    }
+
+    void PatternDrawer::drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable) {
+        if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
+            static bool shouldReset = false;
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            if (ImGui::Button(pattern.getFormattedValue().c_str(), ImVec2(-1, ImGui::GetTextLineHeight()))) {
+                this->m_currVisualizedPattern = &pattern;
+                shouldReset = true;
+                ImGui::OpenPopup("Visualizer");
+            }
+            ImGui::PopStyleVar();
+
+            if (ImGui::BeginPopup("Visualizer")) {
+                if (this->m_currVisualizedPattern == &pattern) {
+                    drawVisualizer(arguments, pattern, iteratable, shouldReset);
+                    shouldReset = false;
+                }
+
+                ImGui::EndPopup();
+            }
+        } else {
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
+        }
     }
 
     void PatternDrawer::createLeafNode(const pl::ptrn::Pattern& pattern) {
@@ -571,7 +512,7 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
-                ImGui::TextFormatted("{}", pattern.getFormattedValue());
+                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             }
 
         }
@@ -622,7 +563,7 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
-                ImGui::TextFormatted("{}", pattern.getFormattedValue());
+                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             }
         }
 
@@ -711,27 +652,7 @@ namespace hex::plugin::builtin::ui {
 
             ImGui::TableNextColumn();
 
-            if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
-                static bool shouldReset = false;
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                if (ImGui::Button(pattern.getFormattedValue().c_str(), ImVec2(-1, ImGui::GetTextLineHeight()))) {
-                    this->m_currVisualizedPattern = &pattern;
-                    shouldReset = true;
-                    ImGui::OpenPopup("Visualizer");
-                }
-                ImGui::PopStyleVar();
-
-                if (ImGui::BeginPopup("Visualizer")) {
-                    if (this->m_currVisualizedPattern == &pattern) {
-                        drawVisualizer(arguments, pattern, iteratable, shouldReset);
-                        shouldReset = false;
-                    }
-
-                    ImGui::EndPopup();
-                }
-            } else {
-                ImGui::TextFormatted("{}", pattern.getFormattedValue());
-            }
+            drawVisualizerButton(pattern, iteratable);
         }
 
         if (open) {
