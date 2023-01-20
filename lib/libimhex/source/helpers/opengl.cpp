@@ -41,6 +41,22 @@ namespace hex::gl {
         glUseProgram(0);
     }
 
+    void Shader::setUniform(const std::string &name, const float &value) {
+        auto uniform = this->m_uniforms.find(name);
+        if (uniform == this->m_uniforms.end()) {
+            auto location = glGetUniformLocation(this->m_program, name.c_str());
+            if (location == -1) {
+                log::warn("Uniform '{}' not found in shader", name);
+                return;
+            }
+
+            this->m_uniforms[name] = location;
+            uniform = this->m_uniforms.find(name);
+        }
+
+        glUniform1f(uniform->second, value);
+    }
+
     void Shader::compile(GLuint shader, const std::string &source) {
         auto sourcePtr = source.c_str();
 
@@ -86,7 +102,14 @@ namespace hex::gl {
 
     template<typename T>
     void Buffer<T>::draw() const {
-        glDrawElements(GL_TRIANGLES, this->m_size, getType<T>(), nullptr);
+        switch (this->m_type) {
+            case GL_ARRAY_BUFFER:
+                glDrawArrays(GL_TRIANGLES, 0, this->m_size);
+                break;
+            case GL_ELEMENT_ARRAY_BUFFER:
+                glDrawElements(GL_TRIANGLES, this->m_size, getType<T>(), nullptr);
+                break;
+        }
     }
 
     template class Buffer<float>;

@@ -4,6 +4,8 @@
 
 #include <hex/helpers/concepts.hpp>
 
+#include <cmath>
+#include <map>
 #include <span>
 #include <string>
 
@@ -33,11 +35,14 @@ namespace hex::gl {
         void bind() const;
         void unbind() const;
 
+        void setUniform(const std::string &name, const float &value);
+
     private:
         void compile(GLuint shader, const std::string &source);
 
     private:
         GLuint m_program;
+        std::map<std::string, GLint> m_uniforms;
     };
 
     enum class BufferType {
@@ -72,9 +77,10 @@ namespace hex::gl {
         ~VertexArray();
 
         template<typename T>
-        void addBuffer(const Buffer<T> &buffer) const {
-            glVertexAttribPointer(0, buffer.getSize() / sizeof(T), getType<T>(), GL_FALSE, 3 * sizeof(T), nullptr);
-            glEnableVertexAttribArray(0);
+        void addBuffer(u32 index, const Buffer<T> &buffer) const {
+            glEnableVertexAttribArray(index);
+            buffer.bind();
+            glVertexAttribPointer(index, 3, getType<T>(), GL_FALSE, 3 * sizeof(T), nullptr);
         }
 
         void bind() const;
@@ -114,6 +120,58 @@ namespace hex::gl {
 
     private:
         GLuint m_frameBuffer, m_renderBuffer;
+    };
+
+    template<typename T, size_t Size>
+    class Vector {
+    public:
+        Vector() = default;
+        Vector(std::array<T, Size> data) : m_data(data) { }
+
+        T &operator[](size_t index) { return this->m_data[index]; }
+        const T &operator[](size_t index) const { return this->m_data[index]; }
+
+        T *data() { return this->m_data.data(); }
+        const T *data() const { return this->m_data.data(); }
+
+        size_t size() const { return this->m_data.size(); }
+
+        auto operator+(const Vector<T, Size>& other) {
+            auto copy = *this;
+            for (size_t i = 0; i < Size; i++)
+                copy[i] += other[i];
+            return copy;
+        }
+
+        auto operator-(const Vector<T, Size>& other) {
+            auto copy = *this;
+            for (size_t i = 0; i < Size; i++)
+                copy[i] -= other[i];
+            return copy;
+        }
+
+        auto dot(const Vector<T, Size>& other) {
+            T result = 0;
+            for (size_t i = 0; i < Size; i++)
+                result += this->m_data[i] * other[i];
+            return result;
+        }
+
+        auto cross(const Vector<T, Size>& other) {
+            static_assert(Size == 3, "Cross product is only defined for 3D vectors");
+            return Vector<T, Size>({ this->m_data[1] * other[2] - this->m_data[2] * other[1], this->m_data[2] * other[0] - this->m_data[0] * other[2], this->m_data[0] * other[1] - this->m_data[1] * other[0] });
+        }
+
+        auto normalize() {
+            auto copy = *this;
+            auto length = std::sqrt(copy.dot(copy));
+            for (size_t i = 0; i < Size; i++)
+                copy[i] /= length;
+            return copy;
+        }
+
+    private:
+        std::array<T, Size> m_data;
     };
 
 

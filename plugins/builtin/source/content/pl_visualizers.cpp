@@ -122,14 +122,29 @@ namespace hex::plugin::builtin {
         void draw3DVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &) {
             static ImGui::Texture texture;
 
-            if (shouldReset) {
+            if (!shouldReset) {
                 std::vector<float> vertices;
                 vertices.resize(pattern.getSize() / sizeof(float));
                 pattern.getEvaluator()->readData(pattern.getOffset(), vertices.data(), vertices.size() * sizeof(float), pattern.getSection());
 
-                std::vector<u32> indices;
-                indices.resize(vertices.size() / 3);
-                std::iota(indices.begin(), indices.end(), 0);
+                std::vector<float> normals;
+                normals.resize(vertices.size());
+                for (u32 i = 0; i < normals.size(); i += 9) {
+                    auto v1 = gl::Vector<float, 3>({ vertices[i + 0], vertices[i + 1], vertices[i + 2] });
+                    auto v2 = gl::Vector<float, 3>({ vertices[i + 3], vertices[i + 4], vertices[i + 5] });
+                    auto v3 = gl::Vector<float, 3>({ vertices[i + 6], vertices[i + 7], vertices[i + 8] });
+
+                    auto normal = ((v2 - v1).cross(v3 - v1)).normalize();
+                    normals[i + 0] = normal[0];
+                    normals[i + 1] = normal[1];
+                    normals[i + 2] = normal[2];
+                    normals[i + 3] = normal[0];
+                    normals[i + 4] = normal[1];
+                    normals[i + 5] = normal[2];
+                    normals[i + 6] = normal[0];
+                    normals[i + 7] = normal[1];
+                    normals[i + 8] = normal[2];
+                }
 
                 {
                     gl::FrameBuffer frameBuffer;
@@ -142,20 +157,46 @@ namespace hex::plugin::builtin {
                     constexpr static const char *VertexShaderSource = R"glsl(
                         #version 330 core
                         layout (location = 0) in vec3 in_Position;
+                        layout (location = 1) in vec3 in_Normal;
+
+                        uniform float time;
+                        out vec3 normal;
+
+                        mat4 rotationMatrix(vec3 axis, float angle) {
+                            axis = normalize(axis);
+                            float s = sin(angle);
+                            float c = cos(angle);
+                            float oc = 1.0 - c;
+
+                            return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
+                                        oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
+                                        oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
+                                        0.0,                                0.0,                                0.0,                                1.0);
+                        }
 
                         void main() {
-                            gl_Position = vec4(in_Position.x, in_Position.y, in_Position.z, 1.0);
+                            mat4 rotation = rotationMatrix(vec3(1.0, 0.0, 0.0), time / 2) * rotationMatrix(vec3(0.0, 1.0, 0.0), time / 3);
+                            normal = (vec4(in_Normal, 1.0) * rotation).xyz;
+                            gl_Position = vec4(in_Position * 0.5, 1.0) * rotation;
                         }
                     )glsl";
 
                     constexpr static const char *FragmentShaderSource = R"glsl(
                         #version 330 core
-                        out vec4 out_Color;
+                        in vec3 normal;
+                        out vec4 color;
 
                         void main() {
-                            out_Color = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+                            vec3 norm = normalize(normal);
+                            vec3 lightDir = normalize(vec3(0, 0, -1));
+                            float diff = max(dot(norm, lightDir), 0.0);
+                            vec3 diffuse = diff * vec3(1.0, 1.0, 1.0);
+
+                            color = vec4(1.0f, 0.5f, 0.2f, 1.0f) * vec4(diffuse, 1.0) + 0.1;
                         }
                     )glsl";
+
+                    glEnable(GL_DEPTH_TEST);
 
                     gl::Shader shader(VertexShaderSource, FragmentShaderSource);
 
@@ -163,20 +204,23 @@ namespace hex::plugin::builtin {
                     vertexArray.bind();
 
                     gl::Buffer<float> vertexBuffer(gl::BufferType::Vertex, vertices);
-                    gl::Buffer<u32> indexBuffer(gl::BufferType::Index, indices);
+                    gl::Buffer<float> normalBuffer(gl::BufferType::Vertex, normals);
 
-                    vertexArray.addBuffer(vertexBuffer);
+                    vertexArray.addBuffer(0, vertexBuffer);
+                    vertexArray.addBuffer(1, normalBuffer);
 
                     vertexBuffer.unbind();
                     vertexArray.unbind();
 
                     shader.bind();
+                    shader.setUniform("time", glfwGetTime());
+
                     vertexArray.bind();
 
                     glViewport(0, 0, renderTexture.getWidth(), renderTexture.getHeight());
                     glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
-                    glClear(GL_COLOR_BUFFER_BIT);
-                    indexBuffer.draw();
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    vertexBuffer.draw();
 
                     vertexArray.unbind();
                     shader.unbind();

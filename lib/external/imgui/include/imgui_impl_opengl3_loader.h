@@ -32,31 +32,7 @@
 #ifndef __gl3w_h_
 #define __gl3w_h_
 
-// Adapted from KHR/khrplatform.h to avoid including entire file.
-typedef          float         khronos_float_t;
-typedef signed   char          khronos_int8_t;
-typedef unsigned char          khronos_uint8_t;
-typedef signed   short int     khronos_int16_t;
-typedef unsigned short int     khronos_uint16_t;
-#ifdef _WIN64
-typedef signed   long long int khronos_intptr_t;
-typedef signed   long long int khronos_ssize_t;
-#else
-typedef signed   long  int     khronos_intptr_t;
-typedef signed   long  int     khronos_ssize_t;
-#endif
-
-#if defined(_MSC_VER) && !defined(__clang__)
-typedef signed   __int64       khronos_int64_t;
-typedef unsigned __int64       khronos_uint64_t;
-#elif (defined(__clang__) || defined(__GNUC__)) && (__cplusplus < 201100)
-#include <stdint.h>
-typedef          int64_t       khronos_int64_t;
-typedef          uint64_t      khronos_uint64_t;
-#else
-typedef signed   long long     khronos_int64_t;
-typedef unsigned long long     khronos_uint64_t;
-#endif
+#include <KHR/khrplatform.h>
 
 #ifndef __gl_glcorearb_h_
 #define __gl_glcorearb_h_ 1
