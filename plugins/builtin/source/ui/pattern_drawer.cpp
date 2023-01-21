@@ -245,13 +245,12 @@ namespace hex::plugin::builtin::ui {
         drawNameColumn(pattern);
         drawColorColumn(pattern);
 
-        auto byteAddr = pattern.getOffset() + pattern.getBitOffset() / 8;
-        auto firstBitIdx = pattern.getBitOffset() % 8;
+        auto firstBitIdx = pattern.getBitOffset();
         auto lastBitIdx = firstBitIdx + (pattern.getBitSize() - 1);
         if (firstBitIdx == lastBitIdx)
-            ImGui::TextFormatted("0x{0:08X} bit {1}", byteAddr, firstBitIdx);
+            ImGui::TextFormatted("bit {0}", firstBitIdx);
         else
-            ImGui::TextFormatted("0x{0:08X} bits {1} - {2}", byteAddr, firstBitIdx, lastBitIdx);
+            ImGui::TextFormatted("bits {0} - {1}", firstBitIdx, lastBitIdx);
         ImGui::TableNextColumn();
         if (pattern.getBitSize() == 1)
             ImGui::TextFormatted("{0} bit", pattern.getBitSize());
