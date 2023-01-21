@@ -27,101 +27,6 @@ namespace hex::gl {
 
     }
 
-    class Shader {
-    public:
-        Shader(const std::string &vertexSource, const std::string &fragmentSource);
-        ~Shader();
-
-        void bind() const;
-        void unbind() const;
-
-        void setUniform(const std::string &name, const float &value);
-
-    private:
-        void compile(GLuint shader, const std::string &source);
-
-    private:
-        GLuint m_program;
-        std::map<std::string, GLint> m_uniforms;
-    };
-
-    enum class BufferType {
-        Vertex = GL_ARRAY_BUFFER,
-        Index = GL_ELEMENT_ARRAY_BUFFER
-    };
-
-    template<typename T>
-    class Buffer {
-    public:
-        Buffer(BufferType type, std::span<T> data);
-        ~Buffer();
-
-        void bind() const;
-        void unbind() const;
-
-        void draw() const;
-
-        size_t getSize() const;
-    private:
-        GLuint m_buffer;
-        size_t m_size;
-        GLuint m_type;
-    };
-
-    extern template class Buffer<float>;
-    extern template class Buffer<u32>;
-
-    class VertexArray {
-    public:
-        VertexArray();
-        ~VertexArray();
-
-        template<typename T>
-        void addBuffer(u32 index, const Buffer<T> &buffer) const {
-            glEnableVertexAttribArray(index);
-            buffer.bind();
-            glVertexAttribPointer(index, 3, getType<T>(), GL_FALSE, 3 * sizeof(T), nullptr);
-        }
-
-        void bind() const;
-        void unbind() const;
-
-    private:
-        GLuint m_array;
-    };
-
-    class Texture {
-    public:
-        Texture(u32 width, u32 height);
-        ~Texture();
-
-        void bind() const;
-        void unbind() const;
-
-        GLuint getTexture() const;
-        u32 getWidth() const;
-        u32 getHeight() const;
-
-        void release();
-    private:
-        GLuint m_texture;
-        u32 m_width, m_height;
-    };
-
-    class FrameBuffer {
-    public:
-        FrameBuffer();
-        ~FrameBuffer();
-
-        void bind() const;
-        void unbind() const;
-
-        void attachTexture(const Texture &texture) const;
-
-    private:
-        GLuint m_frameBuffer, m_renderBuffer;
-    };
-
     template<typename T, size_t Size>
     class Vector {
     public:
@@ -134,7 +39,7 @@ namespace hex::gl {
         T *data() { return this->m_data.data(); }
         const T *data() const { return this->m_data.data(); }
 
-        size_t size() const { return this->m_data.size(); }
+        [[nodiscard]] size_t size() const { return this->m_data.size(); }
 
         auto operator+(const Vector<T, Size>& other) {
             auto copy = *this;
@@ -174,5 +79,130 @@ namespace hex::gl {
         std::array<T, Size> m_data;
     };
 
+
+    class Shader {
+    public:
+        Shader() = default;
+        Shader(std::string_view vertexSource, std::string_view fragmentSource);
+        ~Shader();
+
+        Shader(const Shader&) = delete;
+        Shader(Shader&& other) noexcept;
+
+        Shader& operator=(const Shader&) = delete;
+        Shader& operator=(Shader&& other) noexcept;
+
+        void bind() const;
+        void unbind() const;
+
+        void setUniform(std::string_view name, const float &value);
+        void setUniform(std::string_view name, const Vector<float, 3> &value);
+
+    private:
+        void compile(GLuint shader, std::string_view source);
+        GLint getUniformLocation(std::string_view name);
+
+    private:
+        GLuint m_program = 0;
+        std::map<std::string, GLint> m_uniforms;
+    };
+
+    enum class BufferType {
+        Vertex = GL_ARRAY_BUFFER,
+        Index = GL_ELEMENT_ARRAY_BUFFER
+    };
+
+    template<typename T>
+    class Buffer {
+    public:
+        Buffer() = default;
+        Buffer(BufferType type, std::span<T> data);
+        ~Buffer();
+        Buffer(const Buffer&) = delete;
+        Buffer(Buffer&& other) noexcept;
+
+        Buffer& operator=(const Buffer&) = delete;
+        Buffer& operator=(Buffer&& other) noexcept;
+
+        void bind() const;
+        void unbind() const;
+
+        void draw() const;
+
+        size_t getSize() const;
+    private:
+        GLuint m_buffer = 0;
+        size_t m_size = 0;
+        GLuint m_type = 0;
+    };
+
+    extern template class Buffer<float>;
+    extern template class Buffer<u32>;
+
+    class VertexArray {
+    public:
+        VertexArray();
+        ~VertexArray();
+        VertexArray(const VertexArray&) = delete;
+        VertexArray(VertexArray&& other) noexcept;
+
+        VertexArray& operator=(const VertexArray&) = delete;
+        VertexArray& operator=(VertexArray&& other) noexcept;
+
+        template<typename T>
+        void addBuffer(u32 index, const Buffer<T> &buffer) const {
+            glEnableVertexAttribArray(index);
+            buffer.bind();
+            glVertexAttribPointer(index, 3, getType<T>(), GL_FALSE, 3 * sizeof(T), nullptr);
+        }
+
+        void bind() const;
+        void unbind() const;
+
+    private:
+        GLuint m_array;
+    };
+
+    class Texture {
+    public:
+        Texture(u32 width, u32 height);
+        ~Texture();
+        Texture(const Texture&) = delete;
+        Texture(Texture&& other) noexcept;
+
+        Texture& operator=(const Texture&) = delete;
+        Texture& operator=(Texture&& other) noexcept;
+
+        void bind() const;
+        void unbind() const;
+
+        GLuint getTexture() const;
+        u32 getWidth() const;
+        u32 getHeight() const;
+
+        GLuint release();
+    private:
+        GLuint m_texture;
+        u32 m_width, m_height;
+    };
+
+    class FrameBuffer {
+    public:
+        FrameBuffer();
+        ~FrameBuffer();
+        FrameBuffer(const FrameBuffer&) = delete;
+        FrameBuffer(FrameBuffer&& other) noexcept;
+
+        FrameBuffer& operator=(const FrameBuffer&) = delete;
+        FrameBuffer& operator=(FrameBuffer&& other) noexcept;
+
+        void bind() const;
+        void unbind() const;
+
+        void attachTexture(const Texture &texture) const;
+
+    private:
+        GLuint m_frameBuffer, m_renderBuffer;
+    };
 
 }

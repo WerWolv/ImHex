@@ -12,6 +12,8 @@
 
 #include <pl/patterns/pattern.hpp>
 
+#include <romfs/romfs.hpp>
+
 #include <numeric>
 
 namespace hex::plugin::builtin {
@@ -121,13 +123,32 @@ namespace hex::plugin::builtin {
 
         void draw3DVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &) {
             static ImGui::Texture texture;
+            static float scaling = 0.5F;
+            static gl::Vector<float, 3> rotation = { { 1.0F, -1.0F, 0.0F } };
+            static std::vector<float> vertices, normals;
+            static gl::Shader shader;
+            static gl::VertexArray vertexArray;
+            static gl::Buffer<float> vertexBuffer, normalBuffer;
 
-            if (!shouldReset) {
-                std::vector<float> vertices;
+            {
+                auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
+                rotation[0] += -dragDelta.y * 0.0075F;
+                rotation[1] += -dragDelta.x * 0.0075F;
+                ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
+
+                auto scrollDelta = ImGui::GetIO().MouseWheel;
+                scaling += scrollDelta * 0.01F;
+
+                if (scaling < 0.01F)
+                    scaling = 0.01F;
+            }
+
+            if (shouldReset) {
+                vertices.clear();
                 vertices.resize(pattern.getSize() / sizeof(float));
                 pattern.getEvaluator()->readData(pattern.getOffset(), vertices.data(), vertices.size() * sizeof(float), pattern.getSection());
 
-                std::vector<float> normals;
+                normals.clear();
                 normals.resize(vertices.size());
                 for (u32 i = 0; i < normals.size(); i += 9) {
                     auto v1 = gl::Vector<float, 3>({ vertices[i + 0], vertices[i + 1], vertices[i + 2] });
@@ -146,89 +167,47 @@ namespace hex::plugin::builtin {
                     normals[i + 8] = normal[2];
                 }
 
-                {
-                    gl::FrameBuffer frameBuffer;
+                shader = gl::Shader(romfs::get("shaders/default/vertex.glsl").string(), romfs::get("shaders/default/fragment.glsl").string());
 
-                    gl::Texture renderTexture(512, 512);
-                    frameBuffer.attachTexture(renderTexture);
+                vertexArray = gl::VertexArray();
+                vertexArray.bind();
 
-                    frameBuffer.bind();
+                vertexBuffer = gl::Buffer<float> (gl::BufferType::Vertex, vertices);
+                normalBuffer = gl::Buffer<float>(gl::BufferType::Vertex, normals);
 
-                    constexpr static const char *VertexShaderSource = R"glsl(
-                        #version 330 core
-                        layout (location = 0) in vec3 in_Position;
-                        layout (location = 1) in vec3 in_Normal;
+                vertexArray.addBuffer(0, vertexBuffer);
+                vertexArray.addBuffer(1, normalBuffer);
 
-                        uniform float time;
-                        out vec3 normal;
+                vertexBuffer.unbind();
+                vertexArray.unbind();
+            }
 
-                        mat4 rotationMatrix(vec3 axis, float angle) {
-                            axis = normalize(axis);
-                            float s = sin(angle);
-                            float c = cos(angle);
-                            float oc = 1.0 - c;
+            {
+                gl::FrameBuffer frameBuffer;
 
-                            return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-                                        oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-                                        oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-                                        0.0,                                0.0,                                0.0,                                1.0);
-                        }
+                gl::Texture renderTexture(512, 512);
+                frameBuffer.attachTexture(renderTexture);
 
-                        void main() {
-                            mat4 rotation = rotationMatrix(vec3(1.0, 0.0, 0.0), time / 2) * rotationMatrix(vec3(0.0, 1.0, 0.0), time / 3);
-                            normal = (vec4(in_Normal, 1.0) * rotation).xyz;
-                            gl_Position = vec4(in_Position * 0.5, 1.0) * rotation;
-                        }
-                    )glsl";
+                frameBuffer.bind();
 
-                    constexpr static const char *FragmentShaderSource = R"glsl(
-                        #version 330 core
-                        in vec3 normal;
-                        out vec4 color;
+                glEnable(GL_DEPTH_TEST);
 
-                        void main() {
-                            vec3 norm = normalize(normal);
-                            vec3 lightDir = normalize(vec3(0, 0, -1));
-                            float diff = max(dot(norm, lightDir), 0.0);
-                            vec3 diffuse = diff * vec3(1.0, 1.0, 1.0);
+                shader.bind();
+                shader.setUniform("scale", scaling);
+                shader.setUniform("rotation", rotation);
 
-                            color = vec4(1.0f, 0.5f, 0.2f, 1.0f) * vec4(diffuse, 1.0) + 0.1;
-                        }
-                    )glsl";
+                vertexArray.bind();
 
-                    glEnable(GL_DEPTH_TEST);
+                glViewport(0, 0, renderTexture.getWidth(), renderTexture.getHeight());
+                glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                vertexBuffer.draw();
 
-                    gl::Shader shader(VertexShaderSource, FragmentShaderSource);
+                vertexArray.unbind();
+                shader.unbind();
+                frameBuffer.unbind();
 
-                    gl::VertexArray vertexArray;
-                    vertexArray.bind();
-
-                    gl::Buffer<float> vertexBuffer(gl::BufferType::Vertex, vertices);
-                    gl::Buffer<float> normalBuffer(gl::BufferType::Vertex, normals);
-
-                    vertexArray.addBuffer(0, vertexBuffer);
-                    vertexArray.addBuffer(1, normalBuffer);
-
-                    vertexBuffer.unbind();
-                    vertexArray.unbind();
-
-                    shader.bind();
-                    shader.setUniform("time", glfwGetTime());
-
-                    vertexArray.bind();
-
-                    glViewport(0, 0, renderTexture.getWidth(), renderTexture.getHeight());
-                    glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
-                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    vertexBuffer.draw();
-
-                    vertexArray.unbind();
-                    shader.unbind();
-                    frameBuffer.unbind();
-
-                    texture = ImGui::Texture(renderTexture.getTexture(), renderTexture.getWidth(), renderTexture.getHeight());
-                    renderTexture.release();
-                }
+                texture = ImGui::Texture(renderTexture.release(), renderTexture.getWidth(), renderTexture.getHeight());
             }
 
             ImGui::Image(texture, texture.getSize(), ImVec2(0, 1), ImVec2(1, 0));

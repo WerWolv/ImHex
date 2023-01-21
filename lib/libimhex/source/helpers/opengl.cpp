@@ -5,7 +5,7 @@
 
 namespace hex::gl {
 
-    Shader::Shader(const std::string &vertexSource, const std::string &fragmentSource) {
+    Shader::Shader(std::string_view vertexSource, std::string_view fragmentSource) {
         auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
         this->compile(vertexShader, vertexSource);
 
@@ -30,7 +30,19 @@ namespace hex::gl {
     }
 
     Shader::~Shader() {
-        glDeleteProgram(this->m_program);
+        if (this->m_program != 0)
+            glDeleteProgram(this->m_program);
+    }
+
+    Shader::Shader(Shader &&other) noexcept {
+        this->m_program = other.m_program;
+        other.m_program = 0;
+    }
+
+    Shader& Shader::operator=(Shader &&other) noexcept {
+        this->m_program = other.m_program;
+        other.m_program = 0;
+        return *this;
     }
 
     void Shader::bind() const {
@@ -41,24 +53,32 @@ namespace hex::gl {
         glUseProgram(0);
     }
 
-    void Shader::setUniform(const std::string &name, const float &value) {
-        auto uniform = this->m_uniforms.find(name);
-        if (uniform == this->m_uniforms.end()) {
-            auto location = glGetUniformLocation(this->m_program, name.c_str());
-            if (location == -1) {
-                log::warn("Uniform '{}' not found in shader", name);
-                return;
-            }
-
-            this->m_uniforms[name] = location;
-            uniform = this->m_uniforms.find(name);
-        }
-
-        glUniform1f(uniform->second, value);
+    void Shader::setUniform(std::string_view name, const float &value) {
+        glUniform1f(getUniformLocation(name), value);
     }
 
-    void Shader::compile(GLuint shader, const std::string &source) {
-        auto sourcePtr = source.c_str();
+    void Shader::setUniform(std::string_view name, const Vector<float, 3> &value) {
+        glUniform3f(getUniformLocation(name), value[0], value[1], value[2]);
+    }
+
+    GLint Shader::getUniformLocation(std::string_view name) {
+        auto uniform = this->m_uniforms.find(name.data());
+        if (uniform == this->m_uniforms.end()) {
+            auto location = glGetUniformLocation(this->m_program, name.data());
+            if (location == -1) {
+                log::warn("Uniform '{}' not found in shader", name);
+                return -1;
+            }
+
+            this->m_uniforms[name.data()] = location;
+            uniform = this->m_uniforms.find(name.data());
+        }
+
+        return uniform->second;
+    }
+
+    void Shader::compile(GLuint shader, std::string_view source) {
+        auto sourcePtr = source.data();
 
         glShaderSource(shader, 1, &sourcePtr, nullptr);
         glCompileShader(shader);
@@ -83,6 +103,23 @@ namespace hex::gl {
     template<typename T>
     Buffer<T>::~Buffer() {
         glDeleteBuffers(1, &this->m_buffer);
+    }
+
+    template<typename T>
+    Buffer<T>::Buffer(Buffer<T> &&other) noexcept {
+        this->m_buffer = other.m_buffer;
+        this->m_size = other.m_size;
+        this->m_type = other.m_type;
+        other.m_buffer = 0;
+    }
+
+    template<typename T>
+    Buffer<T>& Buffer<T>::operator=(Buffer<T> &&other) noexcept {
+        this->m_buffer = other.m_buffer;
+        this->m_size = other.m_size;
+        this->m_type = other.m_type;
+        other.m_buffer = 0;
+        return *this;
     }
 
     template<typename T>
@@ -124,6 +161,17 @@ namespace hex::gl {
         glDeleteVertexArrays(1, &this->m_array);
     }
 
+    VertexArray::VertexArray(VertexArray &&other) noexcept {
+        this->m_array = other.m_array;
+        other.m_array = 0;
+    }
+
+    VertexArray& VertexArray::operator=(VertexArray &&other) noexcept {
+        this->m_array = other.m_array;
+        other.m_array = 0;
+        return *this;
+    }
+
     void VertexArray::bind() const {
         glBindVertexArray(this->m_array);
     }
@@ -150,6 +198,17 @@ namespace hex::gl {
             glDeleteTextures(1, &this->m_texture);
     }
 
+    Texture::Texture(Texture &&other) noexcept {
+        this->m_texture = other.m_texture;
+        other.m_texture = 0;
+    }
+
+    Texture& Texture::operator=(Texture &&other) noexcept {
+        this->m_texture = other.m_texture;
+        other.m_texture = 0;
+        return *this;
+    }
+
     void Texture::bind() const {
         glBindTexture(GL_TEXTURE_2D, this->m_texture);
     }
@@ -170,8 +229,11 @@ namespace hex::gl {
         return this->m_height;
     }
 
-    void Texture::release() {
+    GLuint Texture::release() {
+        auto copy = this->m_texture;
         this->m_texture = 0;
+
+        return copy;
     }
 
 
@@ -191,6 +253,21 @@ namespace hex::gl {
     FrameBuffer::~FrameBuffer() {
         glDeleteFramebuffers(1, &this->m_frameBuffer);
         glDeleteRenderbuffers(1, &this->m_renderBuffer);
+    }
+
+    FrameBuffer::FrameBuffer(FrameBuffer &&other) noexcept {
+        this->m_frameBuffer = other.m_frameBuffer;
+        other.m_frameBuffer = 0;
+        this->m_renderBuffer = other.m_renderBuffer;
+        other.m_renderBuffer = 0;
+    }
+
+    FrameBuffer& FrameBuffer::operator=(FrameBuffer &&other) noexcept {
+        this->m_frameBuffer = other.m_frameBuffer;
+        other.m_frameBuffer = 0;
+        this->m_renderBuffer = other.m_renderBuffer;
+        other.m_renderBuffer = 0;
+        return *this;
     }
 
     void FrameBuffer::bind() const {
