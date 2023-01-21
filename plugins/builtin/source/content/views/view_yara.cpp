@@ -174,7 +174,8 @@ namespace hex::plugin::builtin {
 
             std::error_code error;
             for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
-                if (entry.is_regular_file() && entry.path().extension() == ".yar") {
+                const auto &extension = entry.path().extension();
+                if (entry.is_regular_file() && (extension == ".yar" || extension == ".yara")) {
                     this->m_rules.emplace_back(std::fs::relative(entry.path(), path), entry.path());
                 }
             }
