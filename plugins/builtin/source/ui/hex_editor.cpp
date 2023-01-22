@@ -206,7 +206,7 @@ namespace hex::plugin::builtin::ui {
         size_t size   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
 
         std::vector<u8> buffer(size);
-        provider->read(address + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), size);
+        provider->read(address, buffer.data(), size);
 
         const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
         const ImColor color = [&decoded = decoded, &advance = advance]{
