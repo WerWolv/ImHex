@@ -123,7 +123,12 @@ namespace hex::plugin::builtin::ui {
                 if (visualizer.parameterCount != arguments.size() - 1) {
                     ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
                 } else {
-                    visualizer.callback(pattern, iteratable, reset, arguments);
+                    try {
+                        visualizer.callback(pattern, iteratable, reset, arguments);
+                    } catch (std::exception &e) {
+                        ImGui::TextUnformatted(e.what());
+                    }
+
                 }
             } else {
                 ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.unknown"_lang);

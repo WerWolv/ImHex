@@ -121,14 +121,49 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void draw3DVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &) {
+        template<typename T>
+        static auto readValues(pl::ptrn::Pattern *pattern){
+            std::vector<T> result;
+
+            if (pattern->getSize() == 0)
+                return result;
+
+            if (auto iteratable = dynamic_cast<pl::ptrn::Iteratable*>(pattern); iteratable != nullptr) {
+                result.reserve(iteratable->getEntryCount());
+                iteratable->forEachEntry(0, iteratable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
+                    for (auto [offset, child] : entry->getChildren()) {
+                        child->setOffset(offset);
+
+                        T value;
+                        if (std::floating_point<T>)
+                            value = pl::core::Token::literalToFloatingPoint(child->getValue());
+                        else
+                            value = pl::core::Token::literalToUnsigned(child->getValue());
+
+                        result.push_back(value);
+                    }
+                });
+            } else {
+                result.reserve(pattern->getSize() / sizeof(float));
+                pattern->getEvaluator()->readData(pattern->getOffset(), result.data(), result.size() * sizeof(float), pattern->getSection());
+            }
+
+            return result;
+        };
+
+        void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+            auto verticesPattern = pl::core::Token::literalToPattern(arguments[1]);
+            auto indicesPattern = pl::core::Token::literalToPattern(arguments[2]);
+
             static ImGui::Texture texture;
             static float scaling = 0.5F;
             static gl::Vector<float, 3> rotation = { { 1.0F, -1.0F, 0.0F } };
             static std::vector<float> vertices, normals;
+            static std::vector<u32> indices;
             static gl::Shader shader;
             static gl::VertexArray vertexArray;
             static gl::Buffer<float> vertexBuffer, normalBuffer;
+            static gl::Buffer<u32> indexBuffer;
 
             {
                 auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
@@ -144,13 +179,12 @@ namespace hex::plugin::builtin {
             }
 
             if (shouldReset) {
-                vertices.clear();
-                vertices.resize(pattern.getSize() / sizeof(float));
-                pattern.getEvaluator()->readData(pattern.getOffset(), vertices.data(), vertices.size() * sizeof(float), pattern.getSection());
+                vertices = readValues<float>(verticesPattern);
+                indices = readValues<u32>(indicesPattern);
 
                 normals.clear();
                 normals.resize(vertices.size());
-                for (u32 i = 0; i < normals.size(); i += 9) {
+                for (u32 i = 0; i < normals.size() && normals.size() >= 9; i += 9) {
                     auto v1 = gl::Vector<float, 3>({ vertices[i + 0], vertices[i + 1], vertices[i + 2] });
                     auto v2 = gl::Vector<float, 3>({ vertices[i + 3], vertices[i + 4], vertices[i + 5] });
                     auto v3 = gl::Vector<float, 3>({ vertices[i + 6], vertices[i + 7], vertices[i + 8] });
@@ -174,9 +208,13 @@ namespace hex::plugin::builtin {
 
                 vertexBuffer = gl::Buffer<float> (gl::BufferType::Vertex, vertices);
                 normalBuffer = gl::Buffer<float>(gl::BufferType::Vertex, normals);
+                indexBuffer = gl::Buffer<u32>(gl::BufferType::Index, indices);
 
                 vertexArray.addBuffer(0, vertexBuffer);
                 vertexArray.addBuffer(1, normalBuffer);
+
+                if (!indices.empty())
+                    vertexArray.addBuffer(2, indexBuffer);
 
                 vertexBuffer.unbind();
                 vertexArray.unbind();
@@ -201,7 +239,11 @@ namespace hex::plugin::builtin {
                 glViewport(0, 0, renderTexture.getWidth(), renderTexture.getHeight());
                 glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                vertexBuffer.draw();
+
+                if (indices.empty())
+                    vertexBuffer.draw();
+                else
+                    indexBuffer.draw();
 
                 vertexArray.unbind();
                 shader.unbind();
@@ -220,7 +262,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguage::addVisualizer("image", drawImageVisualizer, 0);
         ContentRegistry::PatternLanguage::addVisualizer("bitmap", drawBitmapVisualizer, 3);
         ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, 4);
-        ContentRegistry::PatternLanguage::addVisualizer("3d", draw3DVisualizer, 0);
+        ContentRegistry::PatternLanguage::addVisualizer("3d", draw3DVisualizer, 2);
     }
 
 }
