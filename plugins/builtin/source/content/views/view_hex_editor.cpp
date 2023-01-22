@@ -613,8 +613,8 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::get();
 
         auto reader = prv::BufferedReader(provider);
-        reader.seek(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress());
-        reader.setEndAddress(selection.getEndAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress());
+        reader.seek(selection.getStartAddress());
+        reader.setEndAddress(selection.getEndAddress());
 
         std::string result;
         result.reserve(fmt::format(Format, 0x00).size() * selection.getSize());
