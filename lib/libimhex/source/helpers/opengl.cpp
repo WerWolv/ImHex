@@ -98,6 +98,7 @@ namespace hex::gl {
         glGenBuffers(1, &this->m_buffer);
         glBindBuffer(this->m_type, this->m_buffer);
         glBufferData(this->m_type, data.size_bytes(), data.data(), GL_STATIC_DRAW);
+        glBindBuffer(this->m_type, 0);
     }
 
     template<typename T>
@@ -110,7 +111,7 @@ namespace hex::gl {
         this->m_buffer = other.m_buffer;
         this->m_size = other.m_size;
         this->m_type = other.m_type;
-        other.m_buffer = 0;
+        other.m_buffer = -1;
     }
 
     template<typename T>
@@ -118,7 +119,7 @@ namespace hex::gl {
         this->m_buffer = other.m_buffer;
         this->m_size = other.m_size;
         this->m_type = other.m_type;
-        other.m_buffer = 0;
+        other.m_buffer = -1;
         return *this;
     }
 
@@ -163,12 +164,12 @@ namespace hex::gl {
 
     VertexArray::VertexArray(VertexArray &&other) noexcept {
         this->m_array = other.m_array;
-        other.m_array = 0;
+        other.m_array = -1;
     }
 
     VertexArray& VertexArray::operator=(VertexArray &&other) noexcept {
         this->m_array = other.m_array;
-        other.m_array = 0;
+        other.m_array = -1;
         return *this;
     }
 
@@ -200,12 +201,12 @@ namespace hex::gl {
 
     Texture::Texture(Texture &&other) noexcept {
         this->m_texture = other.m_texture;
-        other.m_texture = 0;
+        other.m_texture = -1;
     }
 
     Texture& Texture::operator=(Texture &&other) noexcept {
         this->m_texture = other.m_texture;
-        other.m_texture = 0;
+        other.m_texture = -1;
         return *this;
     }
 
@@ -231,7 +232,7 @@ namespace hex::gl {
 
     GLuint Texture::release() {
         auto copy = this->m_texture;
-        this->m_texture = 0;
+        this->m_texture = -1;
 
         return copy;
     }
@@ -257,16 +258,16 @@ namespace hex::gl {
 
     FrameBuffer::FrameBuffer(FrameBuffer &&other) noexcept {
         this->m_frameBuffer = other.m_frameBuffer;
-        other.m_frameBuffer = 0;
+        other.m_frameBuffer = -1;
         this->m_renderBuffer = other.m_renderBuffer;
-        other.m_renderBuffer = 0;
+        other.m_renderBuffer = -1;
     }
 
     FrameBuffer& FrameBuffer::operator=(FrameBuffer &&other) noexcept {
         this->m_frameBuffer = other.m_frameBuffer;
-        other.m_frameBuffer = 0;
+        other.m_frameBuffer = -1;
         this->m_renderBuffer = other.m_renderBuffer;
-        other.m_renderBuffer = 0;
+        other.m_renderBuffer = -1;
         return *this;
     }
 

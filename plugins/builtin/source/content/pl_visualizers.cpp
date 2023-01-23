@@ -9,8 +9,10 @@
 #include <implot.h>
 #include <imgui_impl_opengl3_loader.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/helpers/logger.hpp>
 
 #include <pl/patterns/pattern.hpp>
+#include <pl/patterns/pattern_padding.hpp>
 
 #include <romfs/romfs.hpp>
 
@@ -125,14 +127,17 @@ namespace hex::plugin::builtin {
         static auto readValues(pl::ptrn::Pattern *pattern){
             std::vector<T> result;
 
-            if (pattern->getSize() == 0)
+            if (dynamic_cast<pl::ptrn::PatternPadding*>(pattern) && pattern->getSize() == 0)
                 return result;
 
             if (auto iteratable = dynamic_cast<pl::ptrn::Iteratable*>(pattern); iteratable != nullptr) {
                 result.reserve(iteratable->getEntryCount());
                 iteratable->forEachEntry(0, iteratable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
                     for (auto [offset, child] : entry->getChildren()) {
+                        auto startOffset = child->getOffset();
+
                         child->setOffset(offset);
+                        ON_SCOPE_EXIT { child->setOffset(startOffset); };
 
                         T value;
                         if (std::floating_point<T>)
@@ -144,7 +149,7 @@ namespace hex::plugin::builtin {
                     }
                 });
             } else {
-                result.reserve(pattern->getSize() / sizeof(float));
+                result.resize(pattern->getSize() / sizeof(float));
                 pattern->getEvaluator()->readData(pattern->getOffset(), result.data(), result.size() * sizeof(float), pattern->getSection());
             }
 
@@ -158,6 +163,7 @@ namespace hex::plugin::builtin {
             static ImGui::Texture texture;
             static float scaling = 0.5F;
             static gl::Vector<float, 3> rotation = { { 1.0F, -1.0F, 0.0F } };
+            static gl::Vector<float, 3> translation;
             static std::vector<float> vertices, normals;
             static std::vector<u32> indices;
             static gl::Shader shader;
@@ -170,6 +176,11 @@ namespace hex::plugin::builtin {
                 rotation[0] += -dragDelta.y * 0.0075F;
                 rotation[1] += -dragDelta.x * 0.0075F;
                 ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
+
+                dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
+                translation[0] += -dragDelta.x * 0.1F;
+                translation[1] += -dragDelta.y * 0.1F;
+                ImGui::ResetMouseDragDelta(ImGuiMouseButton_Right);
 
                 auto scrollDelta = ImGui::GetIO().MouseWheel;
                 scaling += scrollDelta * 0.01F;
@@ -184,31 +195,36 @@ namespace hex::plugin::builtin {
 
                 normals.clear();
                 normals.resize(vertices.size());
-                for (u32 i = 0; i < normals.size() && normals.size() >= 9; i += 9) {
-                    auto v1 = gl::Vector<float, 3>({ vertices[i + 0], vertices[i + 1], vertices[i + 2] });
-                    auto v2 = gl::Vector<float, 3>({ vertices[i + 3], vertices[i + 4], vertices[i + 5] });
-                    auto v3 = gl::Vector<float, 3>({ vertices[i + 6], vertices[i + 7], vertices[i + 8] });
+                for (u32 i = 9; i < normals.size(); i += 9) {
+                    auto v1 = gl::Vector<float, 3>({ vertices[i - 9], vertices[i - 8], vertices[i - 7] });
+                    auto v2 = gl::Vector<float, 3>({ vertices[i - 6], vertices[i - 5], vertices[i - 4] });
+                    auto v3 = gl::Vector<float, 3>({ vertices[i - 3], vertices[i - 2], vertices[i - 1] });
 
                     auto normal = ((v2 - v1).cross(v3 - v1)).normalize();
-                    normals[i + 0] = normal[0];
-                    normals[i + 1] = normal[1];
-                    normals[i + 2] = normal[2];
-                    normals[i + 3] = normal[0];
-                    normals[i + 4] = normal[1];
-                    normals[i + 5] = normal[2];
-                    normals[i + 6] = normal[0];
-                    normals[i + 7] = normal[1];
-                    normals[i + 8] = normal[2];
+                    normals[i - 9] = normal[0];
+                    normals[i - 8] = normal[1];
+                    normals[i - 7] = normal[2];
+                    normals[i - 6] = normal[0];
+                    normals[i - 5] = normal[1];
+                    normals[i - 4] = normal[2];
+                    normals[i - 3] = normal[0];
+                    normals[i - 2] = normal[1];
+                    normals[i - 1] = normal[2];
                 }
 
                 shader = gl::Shader(romfs::get("shaders/default/vertex.glsl").string(), romfs::get("shaders/default/fragment.glsl").string());
 
                 vertexArray = gl::VertexArray();
+
+                vertexBuffer = {};
+                normalBuffer = {};
+                indexBuffer  = {};
+
                 vertexArray.bind();
 
-                vertexBuffer = gl::Buffer<float> (gl::BufferType::Vertex, vertices);
+                vertexBuffer = gl::Buffer<float>(gl::BufferType::Vertex, vertices);
                 normalBuffer = gl::Buffer<float>(gl::BufferType::Vertex, normals);
-                indexBuffer = gl::Buffer<u32>(gl::BufferType::Index, indices);
+                indexBuffer  = gl::Buffer<u32>(gl::BufferType::Index, indices);
 
                 vertexArray.addBuffer(0, vertexBuffer);
                 vertexArray.addBuffer(1, normalBuffer);
@@ -217,6 +233,8 @@ namespace hex::plugin::builtin {
                     vertexArray.addBuffer(2, indexBuffer);
 
                 vertexBuffer.unbind();
+                normalBuffer.unbind();
+                indexBuffer.unbind();
                 vertexArray.unbind();
             }
 
@@ -229,16 +247,21 @@ namespace hex::plugin::builtin {
                 frameBuffer.bind();
 
                 glEnable(GL_DEPTH_TEST);
+                glEnable(GL_DEPTH_CLAMP);
 
                 shader.bind();
                 shader.setUniform("scale", scaling);
                 shader.setUniform("rotation", rotation);
+                shader.setUniform("translation", translation);
 
                 vertexArray.bind();
 
                 glViewport(0, 0, renderTexture.getWidth(), renderTexture.getHeight());
                 glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glMatrixMode(GL_PROJECTION);
+                glLoadIdentity();
+                glFrustum(-1.0F, 1.0F, -1.0F, 1.0F, 0.0000001F, 10000000.0F);
 
                 if (indices.empty())
                     vertexBuffer.draw();

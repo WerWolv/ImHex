@@ -5,7 +5,7 @@ layout (location = 1) in vec3 in_Normal;
 /*uniform float time;*/
 uniform float scale;
 uniform vec3 rotation;
-
+uniform vec3 translation;
 
 out vec3 normal;
 
@@ -32,5 +32,5 @@ mat4 viewMatrix(vec3 rotation) {
 void main() {
     mat4 view = viewMatrix(rotation);
     normal = (vec4(in_Normal, 1.0) * view).xyz;
-    gl_Position = vec4(in_Position * scale, 1.0) * view;
+    gl_Position = vec4((in_Position + translation) * scale, 1.0) * view;
 }

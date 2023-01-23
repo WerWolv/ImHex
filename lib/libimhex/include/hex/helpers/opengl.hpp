@@ -154,6 +154,7 @@ namespace hex::gl {
             glEnableVertexAttribArray(index);
             buffer.bind();
             glVertexAttribPointer(index, 3, getType<T>(), GL_FALSE, 3 * sizeof(T), nullptr);
+            buffer.unbind();
         }
 
         void bind() const;
