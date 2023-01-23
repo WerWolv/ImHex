@@ -114,7 +114,7 @@ namespace hex::plugin::builtin::ui {
         }
 
         void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset) {
-            auto visualizerName = pl::core::Token::literalToString(arguments.front(), true);
+            auto visualizerName = arguments.front().toString(true);
 
             const auto &visualizers = ContentRegistry::PatternLanguage::impl::getVisualizers();
 
@@ -360,10 +360,10 @@ namespace hex::plugin::builtin::ui {
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
             if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
-                auto currValue = pl::core::Token::literalToUnsigned(pattern.getValue());
+                auto currValue = pattern.getValue().toUnsigned();
                 for (auto &value : pattern.getEnumValues()) {
-                    auto min = pl::core::Token::literalToUnsigned(value.min);
-                    auto max = pl::core::Token::literalToUnsigned(value.max);
+                    auto min = value.min.toUnsigned();
+                    auto max = value.max.toUnsigned();
 
                     bool isSelected = min <= currValue && max >= currValue;
                     if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {

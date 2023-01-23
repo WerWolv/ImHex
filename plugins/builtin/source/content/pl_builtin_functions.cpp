@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
         {
             /* demangle(mangled_string) */
             ContentRegistry::PatternLanguage::addFunction(nsHexDec, "demangle", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
-                const auto mangledString = Token::literalToString(params[0], false);
+                const auto mangledString = params[0].toString(false);
 
                 return llvm::demangle(mangledString);
             });
@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
         {
             /* get(url) */
             ContentRegistry::PatternLanguage::addDangerousFunction(nsHexHttp, "get", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
-                const auto url = Token::literalToString(params[0], false);
+                const auto url = params[0].toString(false);
 
                 hex::Net net;
                 return net.getString(url).get().body;

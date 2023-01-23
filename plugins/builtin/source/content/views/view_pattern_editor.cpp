@@ -378,7 +378,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         if (variable.outVariable) {
-                            ImGui::TextUnformatted(pl::core::Token::literalToString(variable.value, true).c_str());
+                            ImGui::TextUnformatted(variable.value.toString(true).c_str());
                         } else if (variable.inVariable) {
                             const std::string label { "##" + name };
 

@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
                 ImPlot::PlotLineG("##line", [](void *data, int idx) -> ImPlotPoint {
                     auto &iteratable = *static_cast<pl::ptrn::Iteratable *>(data);
-                    return { static_cast<double>(idx), pl::core::Token::literalToFloatingPoint(iteratable.getEntry(idx)->getValue()) };
+                    return { static_cast<double>(idx), iteratable.getEntry(idx)->getValue().toFloatingPoint() };
                 }, &iteratable, iteratable.getEntryCount());
 
                 ImPlot::EndPlot();
@@ -50,8 +50,8 @@ namespace hex::plugin::builtin {
         void drawBitmapVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
             static ImGui::Texture texture;
             if (shouldReset) {
-                auto width = pl::core::Token::literalToUnsigned(arguments[1]);
-                auto height = pl::core::Token::literalToUnsigned(arguments[2]);
+                auto width  = arguments[1].toUnsigned();
+                auto height = arguments[2].toUnsigned();
 
                 std::vector<u8> data;
                 data.resize(width * height * 4);
@@ -73,9 +73,9 @@ namespace hex::plugin::builtin {
 
             static std::vector<Disassembly> disassembly;
             if (shouldReset) {
-                auto baseAddress = pl::core::Token::literalToUnsigned(arguments[1]);
-                auto architecture = pl::core::Token::literalToUnsigned(arguments[2]);
-                auto mode = pl::core::Token::literalToUnsigned(arguments[3]);
+                auto baseAddress  = arguments[1].toUnsigned();
+                auto architecture = arguments[2].toUnsigned();
+                auto mode         = arguments[3].toUnsigned();
 
                 disassembly.clear();
 
@@ -136,9 +136,9 @@ namespace hex::plugin::builtin {
 
                         T value;
                         if (std::floating_point<T>)
-                            value = pl::core::Token::literalToFloatingPoint(child->getValue());
+                            value = child->getValue().toFloatingPoint();
                         else
-                            value = pl::core::Token::literalToUnsigned(child->getValue());
+                            value = child->getValue().toUnsigned();
 
                         result.push_back(value);
                     }
@@ -152,8 +152,8 @@ namespace hex::plugin::builtin {
         };
 
         void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
-            auto verticesPattern = pl::core::Token::literalToPattern(arguments[1]);
-            auto indicesPattern = pl::core::Token::literalToPattern(arguments[2]);
+            auto verticesPattern = arguments[1].toPattern();
+            auto indicesPattern  = arguments[2].toPattern();
 
             static ImGui::Texture texture;
             static float scaling = 0.5F;
