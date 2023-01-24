@@ -340,7 +340,12 @@ namespace hex::plugin::builtin {
                     index = dragPos;
                 }
 
-                ImPlot::PlotLine("##audio", waveData.data(), waveData.size());
+                ImPlot::PlotLineG("##audio", [](void *data, int idx) -> ImPlotPoint {
+                    const auto &waveData = *static_cast<std::vector<i16> *>(data);
+
+                    auto stride = std::max(1.0, (double(waveData.size()) / ImPlot::GetPlotSize().x)) / 2;
+                    return { double(idx * stride), double(waveData[u64(idx * stride)]) };
+                }, &waveData, waveData.size() / (std::max(1.0, (double(waveData.size()) / ImPlot::GetPlotSize().x)) / 2));
 
                 ImPlot::EndPlot();
             }
@@ -383,7 +388,9 @@ namespace hex::plugin::builtin {
             if (resetTask.isRunning())
                 ImGui::TextSpinner("Loading...");
             else
-                ImGui::TextFormatted("{:02d}:{:02d}", (index / sampleRate) / 60, (index / sampleRate) % 60);
+                ImGui::TextFormatted("{:02d}:{:02d} / {:02d}:{:02d}",
+                                     (index / sampleRate) / 60, (index / sampleRate) % 60,
+                                     (waveData.size() / sampleRate) / 60, (waveData.size() / sampleRate) % 60);
         }
 
     }
