@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
         void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override;
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override;
 
         [[nodiscard]] bool open() override;
         void close() override;
@@ -50,6 +50,7 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
+        std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
 
     protected:
         hex::Socket m_socket;

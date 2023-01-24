@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
         return hex::toUTF8String(this->m_path.filename());
     }
 
-    std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() const {
+    std::vector<std::pair<std::string, std::string>> FileProvider::getDataDescription() const {
         std::vector<std::pair<std::string, std::string>> result;
 
         result.emplace_back("hex.builtin.provider.file.path"_lang, hex::toUTF8String(this->m_path));
@@ -171,6 +171,25 @@ namespace hex::plugin::builtin {
         }
 
         return result;
+    }
+
+    std::variant<std::string, i128> FileProvider::queryInformation(const std::string &category, const std::string &argument) {
+        if (category == "file_path")
+            return hex::toUTF8String(this->m_path);
+        else if (category == "file_name")
+            return hex::toUTF8String(this->m_path.filename());
+        else if (category == "file_extension")
+            return hex::toUTF8String(this->m_path.extension());
+        else if (category == "creation_time")
+            return this->m_fileStats.st_ctime;
+        else if (category == "access_time")
+            return this->m_fileStats.st_atime;
+        else if (category == "modification_time")
+            return this->m_fileStats.st_mtime;
+        else if (category == "permissions")
+            return this->m_fileStats.st_mode & 0777;
+        else
+            return Provider::queryInformation(category, argument);
     }
 
     bool FileProvider::handleFilePicker() {

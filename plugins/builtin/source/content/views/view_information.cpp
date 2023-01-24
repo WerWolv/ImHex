@@ -226,7 +226,7 @@ namespace hex::plugin::builtin {
 
                             ImGui::TableNextRow();
 
-                            for (auto &[name, value] : provider->getDataInformation()) {
+                            for (auto &[name, value] : provider->getDataDescription()) {
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("{}", name);
                                 ImGui::TableNextColumn();

@@ -8,6 +8,8 @@
 #include <map>
 #include <optional>
 
+#include <hex/helpers/magic.hpp>
+
 namespace hex::prv {
 
     u32 Provider::s_idCounter = 0;
@@ -299,6 +301,18 @@ namespace hex::prv {
         this->m_id = id;
         if (id > s_idCounter)
             s_idCounter = id + 1;
+    }
+
+
+    [[nodiscard]] std::variant<std::string, i128> Provider::queryInformation(const std::string &category, const std::string &) {
+        if (category == "mime")
+            return magic::getMIMEType(this);
+        else if (category == "description")
+            return magic::getDescription(this);
+        else if (category == "provider_type")
+            return this->getTypeName();
+        else
+            return 0;
     }
 
 }

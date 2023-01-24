@@ -262,7 +262,7 @@ namespace hex::plugin::builtin {
         return hex::toUTF8String(this->m_path);
     }
 
-    std::vector<std::pair<std::string, std::string>> DiskProvider::getDataInformation() const {
+    std::vector<std::pair<std::string, std::string>> DiskProvider::getDataDescription() const {
         return {
             { "hex.builtin.provider.disk.selected_disk"_lang, hex::toUTF8String(this->m_path)       },
             { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(this->m_diskSize)    },
@@ -361,6 +361,15 @@ namespace hex::plugin::builtin {
             return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
+    }
+
+    std::variant<std::string, i128> DiskProvider::queryInformation(const std::string &category, const std::string &argument) {
+        if (category == "file_path")
+            return hex::toUTF8String(this->m_path);
+        else if (category == "sector_size")
+            return this->m_sectorSize;
+        else
+            return Provider::queryInformation(category, argument);
     }
 
 }

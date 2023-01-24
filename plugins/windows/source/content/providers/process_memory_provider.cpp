@@ -269,4 +269,31 @@ namespace hex::plugin::windows {
         }
     }
 
+
+    std::variant<std::string, i128> ProcessMemoryProvider::queryInformation(const std::string &category, const std::string &argument) {
+        auto findRegionByName = [this](const std::string &name) {
+            return std::find_if(this->m_memoryRegions.begin(), this->m_memoryRegions.end(),
+                [name](const auto &region) {
+                    return region.name == name;
+                });
+        };
+
+        if (category == "region_address") {
+            if (auto iter = findRegionByName(argument); iter != this->m_memoryRegions.end())
+                return iter->region.getStartAddress();
+            else
+                return 0;
+        } else if (category == "region_size") {
+            if (auto iter = findRegionByName(argument); iter != this->m_memoryRegions.end())
+                return iter->region.getSize();
+            else
+                return 0;
+        } else if (category == "process_id") {
+            return this->m_selectedProcess->id;
+        } else if (category == "process_name") {
+            return this->m_selectedProcess->name;
+        } else
+            return Provider::queryInformation(category, argument);
+    }
+
 }

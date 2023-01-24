@@ -64,7 +64,8 @@ namespace hex::prv {
         [[nodiscard]] virtual std::optional<u32> getPageOfAddress(u64 address) const;
 
         [[nodiscard]] virtual std::string getName() const                                                 = 0;
-        [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataInformation() const = 0;
+        [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataDescription() const = 0;
+        [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
 
         [[nodiscard]] virtual bool open() = 0;
         virtual void close() = 0;

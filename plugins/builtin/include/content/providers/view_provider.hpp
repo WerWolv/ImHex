@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] size_t getActualSize() const override { return this->m_size; }
 
         [[nodiscard]] std::string getName() const override { return hex::format("{} View", this->m_provider->getName()); }
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override { return this->m_provider->getDataInformation(); }
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override { return this->m_provider->getDataDescription(); }
 
         void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }

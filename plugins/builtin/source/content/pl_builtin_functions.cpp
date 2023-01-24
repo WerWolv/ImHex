@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
+#include <hex/providers/provider.hpp>
 #include <hex/helpers/net.hpp>
 
 #include <pl/core/token.hpp>
@@ -24,6 +25,29 @@ namespace hex::plugin::builtin {
                 auto selection = ImHexApi::HexEditor::getSelection();
 
                 return u128(u128(selection->getStartAddress()) << 64 | u128(selection->getSize()));
+            });
+        }
+
+        pl::api::Namespace nsHexPrv = { "builtin", "hex", "prv" };
+        {
+            /* get_information() */
+            ContentRegistry::PatternLanguage::addFunction(nsHexCore, "get_information", FunctionParameterCount::between(1, 2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                std::string category = params[0].toString(false);
+                std::string argument = params.size() == 2 ? params[1].toString(false) : "";
+
+                if (!ImHexApi::Provider::isValid())
+                    return u128(0);
+
+                auto provider = ImHexApi::Provider::get();
+                if (!provider->isAvailable())
+                    return u128(0);
+
+                return std::visit(
+                    [](auto &&value) -> Token::Literal {
+                        return value;
+                    },
+                    provider->queryInformation(category, argument)
+                );
             });
         }
 
