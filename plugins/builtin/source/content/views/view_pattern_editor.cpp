@@ -96,7 +96,7 @@ namespace hex::plugin::builtin {
     ViewPatternEditor::~ViewPatternEditor() {
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventProviderDeleted>(this);
+        EventManager::unsubscribe<EventProviderOpened>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
     }

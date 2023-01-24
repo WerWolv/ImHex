@@ -140,19 +140,17 @@ namespace hex::plugin::builtin::ui {
 
     void PatternDrawer::drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable) {
         if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
-            static bool shouldReset = false;
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             if (ImGui::Button(pattern.getFormattedValue().c_str(), ImVec2(-1, ImGui::GetTextLineHeight()))) {
                 this->m_currVisualizedPattern = &pattern;
-                shouldReset = true;
                 ImGui::OpenPopup("Visualizer");
             }
             ImGui::PopStyleVar();
 
             if (ImGui::BeginPopup("Visualizer")) {
                 if (this->m_currVisualizedPattern == &pattern) {
-                    drawVisualizer(arguments, pattern, iteratable, shouldReset);
-                    shouldReset = false;
+                    drawVisualizer(arguments, pattern, iteratable, !this->m_visualizedPatterns.contains(&pattern));
+                    this->m_visualizedPatterns.insert(&pattern);
                 }
 
                 ImGui::EndPopup();
@@ -834,5 +832,13 @@ namespace hex::plugin::builtin::ui {
 
             ImGui::EndTable();
         }
+    }
+
+    void PatternDrawer::reset() {
+        this->m_editingPattern = nullptr;
+        this->m_displayEnd.clear();
+        this->m_visualizedPatterns.clear();
+        this->m_currVisualizedPattern = nullptr;
+        this->m_sortedPatterns.clear();
     }
 }

@@ -19,7 +19,6 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::map<hex::prv::Provider *, std::vector<pl::ptrn::Pattern*>> m_sortedPatterns;
         ui::PatternDrawer m_patternDrawer;
     };
 

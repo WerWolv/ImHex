@@ -19,6 +19,7 @@ namespace hex::plugin::builtin::ui {
         };
 
         void setTreeStyle(TreeStyle style) { this->m_treeStyle = style; }
+        void reset();
 
     private:
         void draw(pl::ptrn::Pattern& pattern);
@@ -64,5 +65,7 @@ namespace hex::plugin::builtin::ui {
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
         TreeStyle m_treeStyle = TreeStyle::Default;
         pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
+
+        std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
     };
 }

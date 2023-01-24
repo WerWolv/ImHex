@@ -11,26 +11,21 @@ namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
 
-        EventManager::subscribe<EventHighlightingChanged>(this, [this]() {
-            if (!ImHexApi::Provider::isValid()) return;
-
-            this->m_sortedPatterns[ImHexApi::Provider::get()].clear();
-        });
-
-        EventManager::subscribe<EventProviderClosed>([this](auto *provider) {
-            this->m_sortedPatterns[provider].clear();
-        });
-
-        EventManager::subscribe<EventSettingsChanged>([this]() {
+        EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             auto patternStyle = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style");
 
             if (patternStyle.is_number())
                 this->m_patternDrawer.setTreeStyle(static_cast<ui::PatternDrawer::TreeStyle>(patternStyle.get<int>()));
         });
+
+        EventManager::subscribe<EventProviderChanged>(this, [this](auto, auto) {
+            this->m_patternDrawer.reset();
+        });
     }
 
     ViewPatternData::~ViewPatternData() {
-        EventManager::unsubscribe<EventHighlightingChanged>(this);
+        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventManager::unsubscribe<EventProviderChanged>(this);
     }
 
     void ViewPatternData::drawContent() {
@@ -47,6 +42,9 @@ namespace hex::plugin::builtin {
                         return empty;
                     }
                 }();
+
+                if (!patternLanguage.executionDone)
+                    this->m_patternDrawer.reset();
 
                 this->m_patternDrawer.draw(patterns);
             }
