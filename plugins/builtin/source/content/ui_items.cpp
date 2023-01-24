@@ -227,7 +227,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addFooterItem([] {
             auto taskCount = TaskManager::getRunningTaskCount();
             if (taskCount > 0) {
-                auto &tasks = TaskManager::getRunningTasks();
+                const auto &tasks = TaskManager::getRunningTasks();
                 auto frontTask = tasks.front();
 
                 auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / frontTask->getMaxValue();
