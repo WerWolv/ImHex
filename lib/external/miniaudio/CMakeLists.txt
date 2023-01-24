@@ -6,3 +6,7 @@ add_library(miniaudio STATIC
 )
 
 target_include_directories(miniaudio PUBLIC include)
+
+if (APPLE)
+    set_source_files_properties(source/miniaudio.c PROPERTIES LANGUAGE OBJC)
+endif ()
