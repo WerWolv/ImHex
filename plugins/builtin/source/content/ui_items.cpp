@@ -230,7 +230,7 @@ namespace hex::plugin::builtin {
                 auto &tasks = TaskManager::getRunningTasks();
                 auto frontTask = tasks.front();
 
-                auto progress = float(frontTask->getValue()) / frontTask->getMaxValue();
+                auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / frontTask->getMaxValue();
 
                 ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, progress * 100);
 
@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
                 ImGui::SameLine();
-                ImGui::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
+                ImGui::SmallProgressBar(progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
                 ImGui::SameLine();
 
                 auto widgetEnd = ImGui::GetCursorPos();
