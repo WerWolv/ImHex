@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Hashes::add<HashSHA384>();
         ContentRegistry::Hashes::add<HashSHA512>();
 
-        ContentRegistry::Hashes::add<HashCRC<u16>>("hex.builtin.hash.crc8",  crypt::crc8,  0x07,        0x0000,      0x0000);
+        ContentRegistry::Hashes::add<HashCRC<u8>>("hex.builtin.hash.crc8",  crypt::crc8,  0x07,        0x0000,      0x0000);
         ContentRegistry::Hashes::add<HashCRC<u16>>("hex.builtin.hash.crc16", crypt::crc16, 0x8005,      0x0000,      0x0000);
         ContentRegistry::Hashes::add<HashCRC<u32>>("hex.builtin.hash.crc32", crypt::crc32, 0x04C1'1DB7, 0xFFFF'FFFF, 0xFFFF'FFFF);
 
