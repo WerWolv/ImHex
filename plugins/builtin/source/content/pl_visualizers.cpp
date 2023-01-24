@@ -9,10 +9,12 @@
 #include <implot.h>
 #include <imgui_impl_opengl3_loader.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/helpers/logger.hpp>
+#include <fonts/codicons_font.h>
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/patterns/pattern_padding.hpp>
+
+#include <miniaudio.h>
 
 #include <romfs/romfs.hpp>
 
@@ -124,26 +126,31 @@ namespace hex::plugin::builtin {
         }
 
         template<typename T>
-        static auto readValues(pl::ptrn::Pattern *pattern){
+        static std::vector<T> patternToArray(pl::ptrn::Pattern *pattern){
             std::vector<T> result;
+            result.resize(pattern->getChildren().size());
 
             if (dynamic_cast<pl::ptrn::PatternPadding*>(pattern) && pattern->getSize() == 0)
                 return result;
 
             if (auto iteratable = dynamic_cast<pl::ptrn::Iteratable*>(pattern); iteratable != nullptr) {
-                result.reserve(iteratable->getEntryCount());
                 iteratable->forEachEntry(0, iteratable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
-                    for (auto [offset, child] : entry->getChildren()) {
+                    const auto children = entry->getChildren();
+                    for (const auto &[offset, child] : children) {
                         auto startOffset = child->getOffset();
 
                         child->setOffset(offset);
                         ON_SCOPE_EXIT { child->setOffset(startOffset); };
 
                         T value;
-                        if (std::floating_point<T>)
+                        if constexpr (std::floating_point<T>)
                             value = child->getValue().toFloatingPoint();
-                        else
+                        else if constexpr (std::signed_integral<T>)
+                            value = child->getValue().toSigned();
+                        else if constexpr (std::unsigned_integral<T>)
                             value = child->getValue().toUnsigned();
+                        else
+                            static_assert(hex::always_false<T>::value, "Invalid type");
 
                         result.push_back(value);
                     }
@@ -190,8 +197,8 @@ namespace hex::plugin::builtin {
             }
 
             if (shouldReset) {
-                vertices = readValues<float>(verticesPattern);
-                indices = readValues<u32>(indicesPattern);
+                vertices = patternToArray<float>(verticesPattern);
+                indices  = patternToArray<u32>(indicesPattern);
 
                 normals.clear();
                 normals.resize(vertices.size());
@@ -278,6 +285,107 @@ namespace hex::plugin::builtin {
             ImGui::Image(texture, texture.getSize(), ImVec2(0, 1), ImVec2(1, 0));
         }
 
+        void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+            auto wavePattern = arguments[1].toPattern();
+            auto channels = arguments[2].toUnsigned();
+            auto sampleRate = arguments[3].toUnsigned();
+
+            static std::vector<i16> waveData;
+            static ma_device audioDevice;
+            static ma_device_config deviceConfig;
+            static bool shouldStop = false;
+            static u64 index = 0;
+            static TaskHolder resetTask;
+
+            if (shouldReset) {
+                waveData.clear();
+
+                resetTask = TaskManager::createTask("Visualizing...", TaskManager::NoProgress, [=](Task &) {
+                    ma_device_stop(&audioDevice);
+                    waveData = patternToArray<i16>(wavePattern);
+                    index = 0;
+
+                    deviceConfig = ma_device_config_init(ma_device_type_playback);
+                    deviceConfig.playback.format   = ma_format_s16;
+                    deviceConfig.playback.channels = channels;
+                    deviceConfig.sampleRate        = sampleRate;
+                    deviceConfig.pUserData         = &waveData;
+                    deviceConfig.dataCallback      = [](ma_device *device, void *pOutput, const void *, ma_uint32 frameCount) {
+                        if (index >= waveData.size()) {
+                            index = 0;
+                            shouldStop = true;
+                            return;
+                        }
+
+                        ma_copy_pcm_frames(pOutput, waveData.data() + index, frameCount, device->playback.format, device->playback.channels);
+                        index += frameCount;
+                    };
+
+                    ma_device_init(nullptr, &deviceConfig, &audioDevice);
+                });
+            }
+
+            ImGui::BeginDisabled(resetTask.isRunning());
+
+            ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0, 0));
+            if (ImPlot::BeginPlot("##amplitude_plot", scaled(ImVec2(300, 80)), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
+                ImPlot::SetupAxes("##time", "##amplitude", ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus, ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus);
+                ImPlot::SetupAxesLimits(0, waveData.size(), std::numeric_limits<i16>::min(), std::numeric_limits<i16>::max(), ImGuiCond_Always);
+
+                double dragPos = index;
+                if (ImPlot::DragLineX(1, &dragPos, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    if (dragPos < 0) dragPos = 0;
+                    if (dragPos >= waveData.size()) dragPos = waveData.size() - 1;
+
+                    index = dragPos;
+                }
+
+                ImPlot::PlotLine("##audio", waveData.data(), waveData.size());
+
+                ImPlot::EndPlot();
+            }
+            ImPlot::PopStyleVar();
+
+            {
+                const u64 min = 0, max = waveData.size();
+                ImGui::PushItemWidth(300_scaled);
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::SliderScalar("##index", ImGuiDataType_U64, &index, &min, &max, "");
+                ImGui::PopStyleVar();
+                ImGui::PopItemWidth();
+            }
+
+            if (shouldStop) {
+                shouldStop = false;
+                ma_device_stop(&audioDevice);
+            }
+
+            bool playing = ma_device_is_started(&audioDevice);
+
+            if (ImGui::IconButton(playing ? ICON_VS_DEBUG_PAUSE : ICON_VS_PLAY, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                if (playing)
+                    ma_device_stop(&audioDevice);
+                else
+                    ma_device_start(&audioDevice);
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                index = 0;
+                ma_device_stop(&audioDevice);
+            }
+
+            ImGui::EndDisabled();
+
+            ImGui::SameLine();
+
+            if (resetTask.isRunning())
+                ImGui::TextSpinner("Loading...");
+            else
+                ImGui::TextFormatted("{:02d}:{:02d}", (index / sampleRate) / 60, (index / sampleRate) % 60);
+        }
+
     }
 
     void registerPatternLanguageVisualizers() {
@@ -286,6 +394,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguage::addVisualizer("bitmap", drawBitmapVisualizer, 3);
         ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, 4);
         ContentRegistry::PatternLanguage::addVisualizer("3d", draw3DVisualizer, 2);
+        ContentRegistry::PatternLanguage::addVisualizer("sound", drawSoundVisualizer, 3);
     }
 
 }
