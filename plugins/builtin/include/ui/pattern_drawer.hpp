@@ -50,7 +50,9 @@ namespace hex::plugin::builtin::ui {
         void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
+
         void drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable);
+        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset);
 
         void createLeafNode(const pl::ptrn::Pattern& pattern);
         bool createTreeNode(const pl::ptrn::Pattern& pattern);
@@ -67,5 +69,6 @@ namespace hex::plugin::builtin::ui {
         pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
 
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
+        std::string m_lastVisualizerError;
     };
 }

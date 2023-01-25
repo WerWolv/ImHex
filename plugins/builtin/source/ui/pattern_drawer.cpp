@@ -28,6 +28,7 @@
 #include <imgui.h>
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <fonts/codicons_font.h>
 
 
 namespace hex::plugin::builtin::ui {
@@ -113,39 +114,45 @@ namespace hex::plugin::builtin::ui {
             }
         }
 
-        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset) {
-            auto visualizerName = arguments.front().toString(true);
+    }
 
-            const auto &visualizers = ContentRegistry::PatternLanguage::impl::getVisualizers();
+    void PatternDrawer::drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset) {
+        auto visualizerName = arguments.front().toString(true);
 
-            if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
-                const auto &[name, visualizer] = *entry;
-                if (visualizer.parameterCount != arguments.size() - 1) {
-                    ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
-                } else {
-                    try {
-                        visualizer.callback(pattern, iteratable, reset, arguments);
-                    } catch (std::exception &e) {
-                        ImGui::TextUnformatted(e.what());
-                    }
+        const auto &visualizers = ContentRegistry::PatternLanguage::impl::getVisualizers();
 
-                }
+        if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
+            const auto &[name, visualizer] = *entry;
+            if (visualizer.parameterCount != arguments.size() - 1) {
+                ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
             } else {
-                ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.unknown"_lang);
+                try {
+                    visualizer.callback(pattern, iteratable, reset, arguments);
+                } catch (std::exception &e) {
+                    this->m_lastVisualizerError = e.what();
+                }
+
             }
+        } else {
+            ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.unknown"_lang);
         }
 
-
+        if (!this->m_lastVisualizerError.empty())
+            ImGui::TextUnformatted(this->m_lastVisualizerError.c_str());
     }
 
     void PatternDrawer::drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable) {
         if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            if (ImGui::Button(pattern.getFormattedValue().c_str(), ImVec2(-1, ImGui::GetTextLineHeight()))) {
+            if (ImGui::IconButton(ICON_VS_EYE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeight()))) {
                 this->m_currVisualizedPattern = &pattern;
+                this->m_lastVisualizerError.clear();
+
                 ImGui::OpenPopup("Visualizer");
             }
             ImGui::PopStyleVar();
+
+            ImGui::SameLine();
 
             if (ImGui::BeginPopup("Visualizer")) {
                 if (this->m_currVisualizedPattern == &pattern) {
@@ -155,10 +162,9 @@ namespace hex::plugin::builtin::ui {
 
                 ImGui::EndPopup();
             }
-        } else {
-            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
     }
+
 
     void PatternDrawer::createLeafNode(const pl::ptrn::Pattern& pattern) {
         ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
@@ -272,6 +278,8 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
+            ImGui::SameLine();
+            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -488,6 +496,8 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
+            ImGui::SameLine();
+            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -514,7 +524,7 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
-                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+                ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
 
         }
@@ -539,6 +549,8 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
+            ImGui::SameLine();
+            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -565,7 +577,7 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
-                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+                ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
         }
 
@@ -633,6 +645,8 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
+            ImGui::SameLine();
+            drawVisualizerButton(pattern, iteratable);
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -654,7 +668,7 @@ namespace hex::plugin::builtin::ui {
 
             ImGui::TableNextColumn();
 
-            drawVisualizerButton(pattern, iteratable);
+            ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
         if (open) {
@@ -840,5 +854,6 @@ namespace hex::plugin::builtin::ui {
         this->m_visualizedPatterns.clear();
         this->m_currVisualizedPattern = nullptr;
         this->m_sortedPatterns.clear();
+        this->m_lastVisualizerError.clear();
     }
 }
