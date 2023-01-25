@@ -132,7 +132,6 @@
         "hex.builtin.menu.file.close": "닫기",
         "hex.builtin.menu.file.create_file": "새 파일...",
         "hex.builtin.menu.file.export": "내보내기...",
-        "hex.builtin.menu.file.export.base64.popup.export_error": "파일이 올바른 Base64 형식이 아닙니다!",
         "hex.builtin.menu.file.export.ips": "IPS 패치",
         "hex.builtin.menu.file.export.ips32": "IPS32 패치",
         "hex.builtin.menu.file.export.popup.create": "데이터를 내보낼 수 없습니다. 파일을 만드는 데 실패했습니다!",

@@ -132,7 +132,6 @@
         "hex.builtin.menu.file.close": "Fechar",
         "hex.builtin.menu.file.create_file": "***** MISSING TRANSLATION *****",
         "hex.builtin.menu.file.export": "Exportar...",
-        "hex.builtin.menu.file.export.base64.popup.export_error": "Esse arquivo não é baseado em um formato Base64 valido!",
         "hex.builtin.menu.file.export.ips": "IPS Patch",
         "hex.builtin.menu.file.export.ips32": "IPS32 Patch",
         "hex.builtin.menu.file.export.popup.create": "Não é possível exportar os dados. Falha ao criar arquivo!",

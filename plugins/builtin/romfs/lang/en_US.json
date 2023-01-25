@@ -136,6 +136,8 @@
         "hex.builtin.menu.file.close": "Close",
         "hex.builtin.menu.file.create_file": "New File...",
         "hex.builtin.menu.file.export": "Export...",
+        "hex.builtin.menu.file.export.base64": "Base64",
+        "hex.builtin.menu.file.export.base64.popup.export_error": "Failed to create new base64 file!",
         "hex.builtin.menu.file.export.ips.popup.export_error": "Failed to create new IPS file!",
         "hex.builtin.menu.file.export.ips.popup.invalid_patch_header_error": "Invalid IPS patch header!",
         "hex.builtin.menu.file.export.ips.popup.address_out_of_range_error": "A patch tried to patch an address that is out of range!",

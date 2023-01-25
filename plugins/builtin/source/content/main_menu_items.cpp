@@ -210,6 +210,32 @@ namespace hex::plugin::builtin {
 
             /* Export */
             if (ImGui::BeginMenu("hex.builtin.menu.file.export"_lang, providerValid && provider->isWritable())) {
+                if (ImGui::MenuItem("hex.builtin.menu.file.export.base64"_lang)) {
+
+                    fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
+                        TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &) {
+                            fs::File outputFile(path, fs::File::Mode::Create);
+                            if (!outputFile.isValid()) {
+                                TaskManager::doLater([] {
+                                    View::showErrorPopup("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
+                                });
+                                return;
+                            }
+
+                            auto provider = ImHexApi::Provider::get();
+                            std::vector<u8> bytes(3000);
+                            for (u64 address = 0; address < provider->getActualSize(); address += 3000) {
+                                bytes.resize(std::min<u64>(3000, provider->getActualSize() - address));
+                                provider->read(provider->getBaseAddress() + address, bytes.data(), bytes.size());
+
+                                outputFile.write(crypt::encode64(bytes));
+                            }
+                        });
+                    });
+                }
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("hex.builtin.menu.file.export.ips"_lang, nullptr, false)) {
                     Patches patches = provider->getPatches();
 

@@ -132,7 +132,6 @@
         "hex.builtin.menu.file.close": "關閉",
         "hex.builtin.menu.file.create_file": "新檔案...",
         "hex.builtin.menu.file.export": "匯出...",
-        "hex.builtin.menu.file.export.base64.popup.export_error": "檔案並非有效的 Base64 格式！",
         "hex.builtin.menu.file.export.ips": "IPS 修補檔案",
         "hex.builtin.menu.file.export.ips32": "IPS32 修補檔案",
         "hex.builtin.menu.file.export.popup.create": "無法匯出資料。無法建立檔案！",
