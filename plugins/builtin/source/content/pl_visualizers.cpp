@@ -24,15 +24,98 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        void drawLinePlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &iteratable, bool, const std::vector<pl::core::Token::Literal> &) {
+        template<typename T>
+        std::vector<T> patternToArray(pl::ptrn::Pattern *pattern){
+            std::vector<T> result;
+            result.resize(pattern->getChildren().size());
+
+            if (dynamic_cast<pl::ptrn::PatternPadding*>(pattern) != nullptr && pattern->getSize() == 0)
+                return result;
+
+            if (auto iteratable = dynamic_cast<pl::ptrn::Iteratable*>(pattern); iteratable != nullptr) {
+                iteratable->forEachEntry(0, iteratable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
+                    const auto children = entry->getChildren();
+                    for (const auto &[offset, child] : children) {
+                        auto startOffset = child->getOffset();
+
+                        child->setOffset(offset);
+                        ON_SCOPE_EXIT { child->setOffset(startOffset); };
+
+                        T value;
+                        if constexpr (std::floating_point<T>)
+                            value = child->getValue().toFloatingPoint();
+                        else if constexpr (std::signed_integral<T>)
+                            value = child->getValue().toSigned();
+                        else if constexpr (std::unsigned_integral<T>)
+                            value = child->getValue().toUnsigned();
+                        else
+                            static_assert(hex::always_false<T>::value, "Invalid type");
+
+                        result.push_back(value);
+                    }
+                });
+            } else {
+                result.resize(pattern->getSize() / sizeof(float));
+                pattern->getEvaluator()->readData(pattern->getOffset(), result.data(), result.size() * sizeof(float), pattern->getSection());
+            }
+
+            return result;
+        }
+
+        template<typename T>
+        std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
+            size_t stride = std::max(1.0, double(data.size()) / count);
+
+            std::vector<T> result;
+            result.reserve(count);
+
+            for (size_t i = 0; i < data.size(); i += stride) {
+                result.push_back(data[i]);
+            }
+
+            return result;
+        }
+
+    }
+
+    namespace {
+
+        void drawLinePlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+            static std::vector<float> values;
+            auto dataPattern = arguments[0].toPattern();
+
             if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+
+                if (shouldReset) {
+                    values.clear();
+                    values = sampleData(patternToArray<float>(dataPattern), ImPlot::GetPlotSize().x * 4);
+                }
 
                 ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
 
-                ImPlot::PlotLineG("##line", [](void *data, int idx) -> ImPlotPoint {
-                    auto &iteratable = *static_cast<pl::ptrn::Iteratable *>(data);
-                    return { static_cast<double>(idx), iteratable.getEntry(idx)->getValue().toFloatingPoint() };
-                }, &iteratable, iteratable.getEntryCount());
+                ImPlot::PlotLine("##line", values.data(), values.size());
+
+                ImPlot::EndPlot();
+            }
+        }
+
+        void drawScatterPlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+            static std::vector<float> xValues, yValues;
+
+            auto xPattern = arguments[0].toPattern();
+            auto yPattern = arguments[1].toPattern();
+
+            if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+
+                if (shouldReset) {
+                    xValues.clear(); yValues.clear();
+                    xValues = sampleData(patternToArray<float>(xPattern), ImPlot::GetPlotSize().x * 4);
+                    yValues = sampleData(patternToArray<float>(yPattern), ImPlot::GetPlotSize().x * 4);
+                }
+
+                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+
+                ImPlot::PlotScatter("##scatter", xValues.data(), yValues.data(), xValues.size());
 
                 ImPlot::EndPlot();
             }
@@ -57,10 +140,7 @@ namespace hex::plugin::builtin {
                 auto width  = arguments[1].toUnsigned();
                 auto height = arguments[2].toUnsigned();
 
-                std::vector<u8> data;
-                data.resize(width * height * 4);
-
-                pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
+                auto data = patternToArray<u8>(&pattern);
                 texture = ImGui::Texture(data.data(), data.size(), width, height);
             }
 
@@ -87,9 +167,7 @@ namespace hex::plugin::builtin {
                 if (cs_open(static_cast<cs_arch>(architecture), static_cast<cs_mode>(mode), &capstone) == CS_ERR_OK) {
                     cs_option(capstone, CS_OPT_SKIPDATA, CS_OPT_ON);
 
-                    std::vector<u8> data;
-                    data.resize(pattern.getSize());
-                    pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
+                    auto data = patternToArray<u8>(&pattern);
                     cs_insn *instructions = nullptr;
 
                     size_t instructionCount = cs_disasm(capstone, data.data(), data.size(), baseAddress, 0, &instructions);
@@ -124,44 +202,6 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
         }
-
-        template<typename T>
-        static std::vector<T> patternToArray(pl::ptrn::Pattern *pattern){
-            std::vector<T> result;
-            result.resize(pattern->getChildren().size());
-
-            if (dynamic_cast<pl::ptrn::PatternPadding*>(pattern) && pattern->getSize() == 0)
-                return result;
-
-            if (auto iteratable = dynamic_cast<pl::ptrn::Iteratable*>(pattern); iteratable != nullptr) {
-                iteratable->forEachEntry(0, iteratable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
-                    const auto children = entry->getChildren();
-                    for (const auto &[offset, child] : children) {
-                        auto startOffset = child->getOffset();
-
-                        child->setOffset(offset);
-                        ON_SCOPE_EXIT { child->setOffset(startOffset); };
-
-                        T value;
-                        if constexpr (std::floating_point<T>)
-                            value = child->getValue().toFloatingPoint();
-                        else if constexpr (std::signed_integral<T>)
-                            value = child->getValue().toSigned();
-                        else if constexpr (std::unsigned_integral<T>)
-                            value = child->getValue().toUnsigned();
-                        else
-                            static_assert(hex::always_false<T>::value, "Invalid type");
-
-                        result.push_back(value);
-                    }
-                });
-            } else {
-                result.resize(pattern->getSize() / sizeof(float));
-                pattern->getEvaluator()->readData(pattern->getOffset(), result.data(), result.size() * sizeof(float), pattern->getSection());
-            }
-
-            return result;
-        };
 
         void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
             auto verticesPattern = arguments[1].toPattern();
@@ -290,7 +330,7 @@ namespace hex::plugin::builtin {
             auto channels = arguments[2].toUnsigned();
             auto sampleRate = arguments[3].toUnsigned();
 
-            static std::vector<i16> waveData;
+            static std::vector<i16> waveData, sampledData;
             static ma_device audioDevice;
             static ma_device_config deviceConfig;
             static bool shouldStop = false;
@@ -303,6 +343,7 @@ namespace hex::plugin::builtin {
                 resetTask = TaskManager::createTask("Visualizing...", TaskManager::NoProgress, [=](Task &) {
                     ma_device_stop(&audioDevice);
                     waveData = patternToArray<i16>(wavePattern);
+                    sampledData = sampleData(waveData, 300_scaled * 4);
                     index = 0;
 
                     deviceConfig = ma_device_config_init(ma_device_type_playback);
@@ -340,12 +381,7 @@ namespace hex::plugin::builtin {
                     index = dragPos;
                 }
 
-                ImPlot::PlotLineG("##audio", [](void *data, int idx) -> ImPlotPoint {
-                    const auto &waveData = *static_cast<std::vector<i16> *>(data);
-
-                    auto stride = std::max(1.0, (double(waveData.size()) / ImPlot::GetPlotSize().x)) / 2;
-                    return { double(idx * stride), double(waveData[u64(idx * stride)]) };
-                }, &waveData, waveData.size() / (std::max(1.0, (double(waveData.size()) / ImPlot::GetPlotSize().x)) / 2));
+                ImPlot::PlotLine("##audio", sampledData.data(), sampledData.size());
 
                 ImPlot::EndPlot();
             }
@@ -386,7 +422,7 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
 
             if (resetTask.isRunning())
-                ImGui::TextSpinner("Loading...");
+                ImGui::TextSpinner("");
             else
                 ImGui::TextFormatted("{:02d}:{:02d} / {:02d}:{:02d}",
                                      (index / sampleRate) / 60, (index / sampleRate) % 60,
@@ -396,7 +432,8 @@ namespace hex::plugin::builtin {
     }
 
     void registerPatternLanguageVisualizers() {
-        ContentRegistry::PatternLanguage::addVisualizer("line_plot", drawLinePlotVisualizer, 0);
+        ContentRegistry::PatternLanguage::addVisualizer("line_plot", drawLinePlotVisualizer, 1);
+        ContentRegistry::PatternLanguage::addVisualizer("scatter_plot", drawScatterPlotVisualizer, 2);
         ContentRegistry::PatternLanguage::addVisualizer("image", drawImageVisualizer, 0);
         ContentRegistry::PatternLanguage::addVisualizer("bitmap", drawBitmapVisualizer, 3);
         ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, 4);
