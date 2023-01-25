@@ -17,6 +17,26 @@ namespace hex::plugin::builtin {
 
     static bool g_demoWindowOpen = false;
 
+    void handleIPSError(IPSError error) {
+        switch (error) {
+            case IPSError::InvalidPatchHeader:
+                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.invalid_patch_header_error"_lang);
+                break;
+            case IPSError::AddressOutOfRange:
+                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.address_out_of_range_error"_lang);
+                break;
+            case IPSError::PatchTooLarge:
+                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.patch_too_large_error"_lang);
+                break;
+            case IPSError::InvalidPatchFormat:
+                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.invalid_patch_format_error"_lang);
+                break;
+            case IPSError::MissingEOF:
+                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.missing_eof_error"_lang);
+                break;
+        }
+    }
+
     static void createFileMenu() {
 
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.file", 1000);
@@ -137,13 +157,17 @@ namespace hex::plugin::builtin {
                         TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                             auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
                             auto patch     = hex::loadIPSPatch(patchData);
+                            if (!patch.has_value()) {
+                                handleIPSError(patch.error());
+                                return;
+                            }
 
-                            task.setMaxValue(patch.size());
+                            task.setMaxValue(patch->size());
 
                             auto provider = ImHexApi::Provider::get();
 
                             u64 progress = 0;
-                            for (auto &[address, value] : patch) {
+                            for (auto &[address, value] : *patch) {
                                 provider->addPatch(address, &value, 1);
                                 progress++;
                                 task.update(progress);
@@ -158,14 +182,18 @@ namespace hex::plugin::builtin {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                             auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
-                            auto patch     = hex::loadIPS32Patch(patchData);
+                            auto patch = hex::loadIPS32Patch(patchData);
+                            if (!patch.has_value()) {
+                                handleIPSError(patch.error());
+                                return;
+                            }
 
-                            task.setMaxValue(patch.size());
+                            task.setMaxValue(patch->size());
 
                             auto provider = ImHexApi::Provider::get();
 
                             u64 progress = 0;
-                            for (auto &[address, value] : patch) {
+                            for (auto &[address, value] : *patch) {
                                 provider->addPatch(address, &value, 1);
                                 progress++;
                                 task.update(progress);
@@ -184,6 +212,8 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginMenu("hex.builtin.menu.file.export"_lang, providerValid && provider->isWritable())) {
                 if (ImGui::MenuItem("hex.builtin.menu.file.export.ips"_lang, nullptr, false)) {
                     Patches patches = provider->getPatches();
+
+                    // Make sure there's no patch at address 0x00454F46 because that would cause the patch to contain the sequence "EOF" which signals the end of the patch
                     if (!patches.contains(0x00454F45) && patches.contains(0x00454F46)) {
                         u8 value = 0;
                         provider->read(0x00454F45, &value, sizeof(u8));
@@ -197,11 +227,15 @@ namespace hex::plugin::builtin {
                             fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
                                 auto file = fs::File(path, fs::File::Mode::Create);
                                 if (!file.isValid()) {
-                                    View::showErrorPopup("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
+                                    View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
                                     return;
                                 }
 
-                                file.write(data);
+                                if (data.has_value())
+                                    file.write(data.value());
+                                else {
+                                    handleIPSError(data.error());
+                                }
                             });
                         });
                     });
@@ -209,7 +243,9 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::MenuItem("hex.builtin.menu.file.export.ips32"_lang, nullptr, false)) {
                     Patches patches = provider->getPatches();
-                    if (!patches.contains(0x00454F45) && patches.contains(0x45454F46)) {
+
+                    // Make sure there's no patch at address 0x45454F46 because that would cause the patch to contain the sequence "*EOF" which signals the end of the patch
+                    if (!patches.contains(0x45454F45) && patches.contains(0x45454F46)) {
                         u8 value = 0;
                         provider->read(0x45454F45, &value, sizeof(u8));
                         patches[0x45454F45] = value;
@@ -222,11 +258,14 @@ namespace hex::plugin::builtin {
                             fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
                                 auto file = fs::File(path, fs::File::Mode::Create);
                                 if (!file.isValid()) {
-                                    View::showErrorPopup("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
+                                    View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
                                     return;
                                 }
 
-                                file.write(data);
+                                if (data.has_value())
+                                    file.write(data.value());
+                                else
+                                    handleIPSError(data.error());
                             });
                         });
                     });
