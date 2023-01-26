@@ -715,7 +715,6 @@
         "hex.builtin.view.information.region": "Analyzed region",
         "hex.builtin.view.information.plain_text": "This data is most likely plain text.",
         "hex.builtin.view.information.plain_text_percentage": "Plain text percentage",
-
         "hex.builtin.view.patches.name": "Patches",
         "hex.builtin.view.patches.offset": "Offset",
         "hex.builtin.view.patches.orig": "Original value",
