@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
     ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
         yr_initialize();
 
-        ContentRegistry::FileHandler::add({ ".yar" }, [](const auto &path) {
+        ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
                     View::showInfoPopup("hex.builtin.view.yara.rule_added"_lang);
@@ -64,9 +64,10 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::showFileChooserPopup(paths, { { "Yara File", "yara" }, { "Yara File", "yar" } }, [this](const auto &path) {
-                    this->m_rules.push_back({ path.filename(), path });
-                });
+                View::showFileChooserPopup(paths, { { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
+                    [this](const auto &path) {
+                        this->m_rules.push_back({ path.filename(), path });
+                    });
             }
 
             ImGui::SameLine();

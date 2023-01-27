@@ -867,10 +867,10 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::showFileChooserPopup(paths, { {"Pattern File", "hexpat"} },
-                [this, provider](const std::fs::path &path) {
-                    this->loadPatternFile(path, provider);
-                });
+                View::showFileChooserPopup(paths, { { "Pattern File", "hexpat" } }, false,
+                    [this, provider](const std::fs::path &path) {
+                        this->loadPatternFile(path, provider);
+                    });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {

@@ -16,10 +16,11 @@ namespace hex::plugin::builtin {
 
     static std::string s_popupMessage;
     static std::function<void()> s_yesCallback, s_noCallback;
-    static u32 s_selectableFileIndex;
+    static std::set<u32> s_selectableFileIndices;
     static std::vector<std::fs::path> s_selectableFiles;
     static std::function<void(std::fs::path)> s_selectableFileOpenCallback;
     static std::vector<nfdfilteritem_t> s_selectableFilesValidExtensions;
+    static bool s_selectableFileMultiple;
 
     static void drawGlobalPopups() {
 
@@ -128,8 +129,22 @@ namespace hex::plugin::builtin {
                 u32 index = 0;
                 for (auto &path : s_selectableFiles) {
                     ImGui::PushID(index);
-                    if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), index == s_selectableFileIndex))
-                        s_selectableFileIndex = index;
+
+                    bool selected = s_selectableFileIndices.contains(index);
+                    if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), selected)) {
+                        if (!s_selectableFileMultiple) {
+                            s_selectableFileIndices.clear();
+                            s_selectableFileIndices.insert(index);
+                        } else {
+                            if (selected) {
+                                s_selectableFileIndices.erase(index);
+                            } else {
+                                s_selectableFileIndices.insert(index);
+                            }
+                        }
+
+                    }
+
                     ImGui::PopID();
 
                     index++;
@@ -139,7 +154,8 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::Button("hex.builtin.common.open"_lang)) {
-                s_selectableFileOpenCallback(s_selectableFiles[s_selectableFileIndex]);
+                for (auto &index : s_selectableFileIndices)
+                    s_selectableFileOpenCallback(s_selectableFiles[index]);
                 ImGui::CloseCurrentPopup();
             }
 
@@ -149,7 +165,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, s_selectableFilesValidExtensions, [](const auto &path) {
                     s_selectableFileOpenCallback(path);
                     ImGui::CloseCurrentPopup();
-                });
+                }, {}, s_selectableFileMultiple);
             }
 
             ImGui::EndPopup();
@@ -195,11 +211,12 @@ namespace hex::plugin::builtin {
             TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.question"_lang); });
         });
 
-        EventManager::subscribe<RequestShowFileChooserPopup>([](const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback) {
-            s_selectableFileIndex            = 0;
+        EventManager::subscribe<RequestShowFileChooserPopup>([](const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, bool multiple) {
+            s_selectableFileIndices          = { };
             s_selectableFiles                = paths;
             s_selectableFilesValidExtensions = validExtensions;
             s_selectableFileOpenCallback     = callback;
+            s_selectableFileMultiple         = multiple;
 
             TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
         });

@@ -139,6 +139,6 @@ namespace hex {
     EVENT_DEF(RequestShowErrorPopup, std::string);
     EVENT_DEF(RequestShowFatalErrorPopup, std::string);
     EVENT_DEF(RequestShowYesNoQuestionPopup, std::string, std::function<void()>, std::function<void()>);
-    EVENT_DEF(RequestShowFileChooserPopup, std::vector<std::fs::path>, std::vector<nfdfilteritem_t>, std::function<void(std::fs::path)>);
+    EVENT_DEF(RequestShowFileChooserPopup, std::vector<std::fs::path>, std::vector<nfdfilteritem_t>, std::function<void(std::fs::path)>, bool);
 
 }

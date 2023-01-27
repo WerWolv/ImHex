@@ -34,13 +34,13 @@ namespace hex {
 
     }
 
-    void View::showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback) {
+    void View::showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback) {
         if (paths.empty()) {
             fs::openFileBrowser(fs::DialogMode::Open, validExtensions, [callback](const auto &path) {
                 callback(path);
-            });
+            }, {}, multiple);
         } else {
-            EventManager::post<RequestShowFileChooserPopup>(paths, validExtensions, callback);
+            EventManager::post<RequestShowFileChooserPopup>(paths, validExtensions, callback, multiple);
         }
     }
 

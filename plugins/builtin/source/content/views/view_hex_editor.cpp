@@ -944,7 +944,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} },
+                View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} }, false,
                     [this](const auto &path) {
                         this->m_hexEditor.setCustomEncoding(EncodingFile(EncodingFile::Type::Thingy, path));
                     });

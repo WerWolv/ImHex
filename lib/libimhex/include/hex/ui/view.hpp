@@ -39,7 +39,7 @@ namespace hex {
         static void showFatalPopup(const std::string &message);
         static void showYesNoQuestionPopup(const std::string &message, const std::function<void()> &yesCallback, const std::function<void()> &noCallback);
 
-        static void showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback);
+        static void showFileChooserPopup(const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback);
 
         [[nodiscard]] virtual bool hasViewMenuItemEntry() const;
         [[nodiscard]] virtual ImVec2 getMinSize() const;
