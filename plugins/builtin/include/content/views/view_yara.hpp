@@ -35,7 +35,6 @@ namespace hex::plugin::builtin {
 
         std::vector<std::string> m_consoleMessages;
 
-        void reloadRules();
         void applyRules();
         void clearResult();
     };

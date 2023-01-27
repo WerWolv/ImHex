@@ -20,8 +20,6 @@ namespace hex::plugin::builtin {
     ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
         yr_initialize();
 
-        this->reloadRules();
-
         ContentRegistry::FileHandler::add({ ".yar" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
@@ -44,40 +42,51 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.yara.header.rules"_lang);
             ImGui::Separator();
 
-            if (this->m_rules.empty()) {
-                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.no_rules"_lang);
-
-                if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
-            } else {
-                ImGui::BeginDisabled(this->m_matcherTask.isRunning());
-                {
-                    if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, hex::toUTF8String(this->m_rules[this->m_selectedRule].first).c_str())) {
-                        for (u32 i = 0; i < this->m_rules.size(); i++) {
-                            const bool selected = (this->m_selectedRule == i);
-                            if (ImGui::Selectable(hex::toUTF8String(this->m_rules[i].first).c_str(), selected))
-                                this->m_selectedRule = i;
-
-                            if (selected)
-                                ImGui::SetItemDefaultFocus();
-                        }
-                        ImGui::EndCombo();
+            if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
+                for (u32 i = 0; i < this->m_rules.size(); i++) {
+                    const bool selected = (this->m_selectedRule == i);
+                    if (ImGui::Selectable(hex::toUTF8String(this->m_rules[i].first).c_str(), selected)) {
+                        this->m_selectedRule = i;
                     }
-                    ImGui::SameLine();
-                    if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
-
-                    ImGui::NewLine();
-                    if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
-                    ImGui::SameLine();
-                    ImGui::BeginDisabled(this->m_matches.empty());
-                    if (ImGui::Button("hex.builtin.view.yara.reset"_lang)) this->clearResult();
-                    ImGui::EndDisabled();
                 }
-                ImGui::EndDisabled();
+                ImGui::EndListBox();
+            }
 
-                if (this->m_matcherTask.isRunning()) {
-                    ImGui::SameLine();
-                    ImGui::TextSpinner("hex.builtin.view.yara.matching"_lang);
+            if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                std::vector<std::fs::path> paths;
+                for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
+                    std::error_code error;
+                    for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
+                        if (!entry.is_regular_file()) continue;
+                        if (entry.path().extension() != ".yara" && entry.path().extension() != ".yar") continue;
+
+                        paths.push_back(entry);
+                    }
                 }
+
+                View::showFileChooserPopup(paths, { { "Yara File", "yara" }, { "Yara File", "yar" } }, [this](const auto &path) {
+                    this->m_rules.push_back({ path.filename(), path });
+                });
+            }
+
+            ImGui::SameLine();
+            if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                if (this->m_selectedRule < this->m_rules.size()) {
+                    this->m_rules.erase(this->m_rules.begin() + this->m_selectedRule);
+                    this->m_selectedRule = std::min(this->m_selectedRule, (u32)this->m_rules.size() - 1);
+                }
+            }
+
+            ImGui::NewLine();
+            if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
+            ImGui::SameLine();
+            ImGui::BeginDisabled(this->m_matches.empty());
+            if (ImGui::Button("hex.builtin.view.yara.reset"_lang)) this->clearResult();
+            ImGui::EndDisabled();
+
+            if (this->m_matcherTask.isRunning()) {
+                ImGui::SameLine();
+                ImGui::TextSpinner("hex.builtin.view.yara.matching"_lang);
             }
 
             ImGui::NewLine();
@@ -165,137 +174,9 @@ namespace hex::plugin::builtin {
         this->m_consoleMessages.clear();
     }
 
-    void ViewYara::reloadRules() {
-        this->m_rules.clear();
-
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
-            if (!fs::exists(path))
-                continue;
-
-            std::error_code error;
-            for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
-                const auto &extension = entry.path().extension();
-                if (entry.is_regular_file() && (extension == ".yar" || extension == ".yara")) {
-                    this->m_rules.emplace_back(std::fs::relative(entry.path(), path), entry.path());
-                }
-            }
-        }
-    }
-
     void ViewYara::applyRules() {
         this->m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
             if (!ImHexApi::Provider::isValid()) return;
-
-            YR_COMPILER *compiler = nullptr;
-            yr_compiler_create(&compiler);
-            ON_SCOPE_EXIT {
-                yr_compiler_destroy(compiler);
-            };
-
-            auto currFilePath = hex::toUTF8String(fs::toShortPath(this->m_rules[this->m_selectedRule].second));
-            yr_compiler_set_include_callback(
-                compiler,
-                [](const char *includeName, const char *, const char *, void *userData) -> const char * {
-                    auto currFilePath = static_cast<const char *>(userData);
-
-                    fs::File file(std::fs::path(currFilePath).parent_path() / includeName, fs::File::Mode::Read);
-                    if (!file.isValid())
-                        return nullptr;
-
-                    auto size    = file.getSize();
-                    char *buffer = new char[size + 1];
-                    file.readBuffer(reinterpret_cast<u8 *>(buffer), size);
-                    buffer[size] = 0x00;
-
-                    return buffer;
-                },
-                [](const char *ptr, void *userData) {
-                    hex::unused(userData);
-
-                    delete[] ptr;
-                },
-                currFilePath.data()
-            );
-
-            fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);
-            if (!file.isValid()) return;
-
-            if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
-                std::string errorMessage(0xFFFF, '\x00');
-                yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
-                hex::trim(errorMessage);
-
-                TaskManager::doLater([this, errorMessage] {
-                    this->clearResult();
-
-                    this->m_consoleMessages.push_back("Error: " + errorMessage);
-                });
-
-                return;
-            }
-
-            YR_RULES *rules;
-            yr_compiler_get_rules(compiler, &rules);
-            ON_SCOPE_EXIT { yr_rules_destroy(rules); };
-
-            YR_MEMORY_BLOCK_ITERATOR iterator;
-
-            struct ScanContext {
-                Task *task = nullptr;
-                std::vector<u8> buffer;
-                YR_MEMORY_BLOCK currBlock = {};
-            };
-
-            ScanContext context;
-            context.task                 = &task;
-            context.currBlock.base       = 0;
-            context.currBlock.fetch_data = [](auto *block) -> const u8 * {
-                auto &context = *static_cast<ScanContext *>(block->context);
-                auto provider = ImHexApi::Provider::get();
-
-                context.buffer.resize(context.currBlock.size);
-
-                if (context.buffer.empty())
-                    return nullptr;
-
-                block->size = context.currBlock.size;
-                provider->read(context.currBlock.base + provider->getBaseAddress(), context.buffer.data(), context.buffer.size());
-
-                return context.buffer.data();
-            };
-            iterator.file_size = [](auto *iterator) -> u64 {
-                hex::unused(iterator);
-
-                return ImHexApi::Provider::get()->getActualSize();
-            };
-
-            iterator.context = &context;
-            iterator.first   = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK   *{
-                auto &context = *static_cast<ScanContext *>(iterator->context);
-
-                context.currBlock.base = 0;
-                context.currBlock.size = 0;
-                context.buffer.clear();
-                iterator->last_error = ERROR_SUCCESS;
-
-                return iterator->next(iterator);
-            };
-            iterator.next = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK * {
-                auto &context = *static_cast<ScanContext *>(iterator->context);
-
-                u64 address = context.currBlock.base + context.currBlock.size;
-
-                iterator->last_error      = ERROR_SUCCESS;
-                context.currBlock.base    = address;
-                context.currBlock.size    = ImHexApi::Provider::get()->getActualSize() - address;
-                context.currBlock.context = &context;
-                context.task->update(address);
-
-                if (context.currBlock.size == 0) return nullptr;
-
-                return &context.currBlock;
-            };
-
 
             struct ResultContext {
                 Task *task = nullptr;
@@ -306,44 +187,154 @@ namespace hex::plugin::builtin {
             ResultContext resultContext;
             resultContext.task = &task;
 
-            yr_rules_scan_mem_blocks(
-                    rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
-                        auto &results = *static_cast<ResultContext *>(userData);
+            for (const auto &[fileName, filePath] : this->m_rules) {
+                YR_COMPILER *compiler = nullptr;
+                yr_compiler_create(&compiler);
+                ON_SCOPE_EXIT {
+                    yr_compiler_destroy(compiler);
+                };
 
-                        switch (message) {
-                            case CALLBACK_MSG_RULE_MATCHING:
-                            {
-                                auto rule = static_cast<YR_RULE *>(data);
+                auto currFilePath = hex::toUTF8String(fs::toShortPath(filePath));
 
-                                YR_STRING *string;
-                                YR_MATCH *match;
+                yr_compiler_set_include_callback(
+                    compiler,
+                    [](const char *includeName, const char *, const char *, void *userData) -> const char * {
+                        fs::File file(std::fs::path(static_cast<const char *>(userData)).parent_path() / includeName, fs::File::Mode::Read);
+                        if (!file.isValid())
+                            return nullptr;
 
-                                if (rule->strings != nullptr) {
-                                    yr_rule_strings_foreach(rule, string) {
-                                        yr_string_matches_foreach(context, string, match) {
-                                                results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });
-                                            }
-                                    }
-                                } else {
-                                    results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0, 0 });
-                                }
-                            }
-                                break;
-                            case CALLBACK_MSG_CONSOLE_LOG:
-                            {
-                                results.consoleMessages.emplace_back(static_cast<const char *>(data));
-                            }
-                                break;
-                            default:
-                                break;
-                        }
+                        auto size    = file.getSize();
+                        char *buffer = new char[size + 1];
+                        file.readBuffer(reinterpret_cast<u8 *>(buffer), size);
+                        buffer[size] = 0x00;
 
-                        return results.task->shouldInterrupt() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
+                        return buffer;
                     },
-                    &resultContext,
-                    0);
+                    [](const char *ptr, void *userData) {
+                        hex::unused(userData);
 
+                        delete[] ptr;
+                    },
+                    currFilePath.data()
+                );
 
+                fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);
+                if (!file.isValid()) return;
+
+                if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
+                    std::string errorMessage(0xFFFF, '\x00');
+                    yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
+                    hex::trim(errorMessage);
+
+                    TaskManager::doLater([this, errorMessage] {
+                        this->clearResult();
+
+                        this->m_consoleMessages.push_back("Error: " + errorMessage);
+                    });
+
+                    return;
+                }
+
+                YR_RULES *rules;
+                yr_compiler_get_rules(compiler, &rules);
+                ON_SCOPE_EXIT { yr_rules_destroy(rules); };
+
+                YR_MEMORY_BLOCK_ITERATOR iterator;
+
+                struct ScanContext {
+                    Task *task = nullptr;
+                    std::vector<u8> buffer;
+                    YR_MEMORY_BLOCK currBlock = {};
+                };
+
+                ScanContext context;
+                context.task                 = &task;
+                context.currBlock.base       = 0;
+                context.currBlock.fetch_data = [](auto *block) -> const u8 * {
+                    auto &context = *static_cast<ScanContext *>(block->context);
+                    auto provider = ImHexApi::Provider::get();
+
+                    context.buffer.resize(context.currBlock.size);
+
+                    if (context.buffer.empty())
+                        return nullptr;
+
+                    block->size = context.currBlock.size;
+                    provider->read(context.currBlock.base + provider->getBaseAddress(), context.buffer.data(), context.buffer.size());
+
+                    return context.buffer.data();
+                };
+                iterator.file_size = [](auto *iterator) -> u64 {
+                    hex::unused(iterator);
+
+                    return ImHexApi::Provider::get()->getActualSize();
+                };
+
+                iterator.context = &context;
+                iterator.first   = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK   *{
+                    auto &context = *static_cast<ScanContext *>(iterator->context);
+
+                    context.currBlock.base = 0;
+                    context.currBlock.size = 0;
+                    context.buffer.clear();
+                    iterator->last_error = ERROR_SUCCESS;
+
+                    return iterator->next(iterator);
+                };
+                iterator.next = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK * {
+                    auto &context = *static_cast<ScanContext *>(iterator->context);
+
+                    u64 address = context.currBlock.base + context.currBlock.size;
+
+                    iterator->last_error      = ERROR_SUCCESS;
+                    context.currBlock.base    = address;
+                    context.currBlock.size    = ImHexApi::Provider::get()->getActualSize() - address;
+                    context.currBlock.context = &context;
+                    context.task->update(address);
+
+                    if (context.currBlock.size == 0) return nullptr;
+
+                    return &context.currBlock;
+                };
+
+                yr_rules_scan_mem_blocks(
+                        rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
+                            auto &results = *static_cast<ResultContext *>(userData);
+
+                            switch (message) {
+                                case CALLBACK_MSG_RULE_MATCHING:
+                                {
+                                    auto rule = static_cast<YR_RULE *>(data);
+
+                                    YR_STRING *string;
+                                    YR_MATCH *match;
+
+                                    if (rule->strings != nullptr) {
+                                        yr_rule_strings_foreach(rule, string) {
+                                            yr_string_matches_foreach(context, string, match) {
+                                                    results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });
+                                                }
+                                        }
+                                    } else {
+                                        results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0, 0 });
+                                    }
+                                }
+                                    break;
+                                case CALLBACK_MSG_CONSOLE_LOG:
+                                {
+                                    results.consoleMessages.emplace_back(static_cast<const char *>(data));
+                                }
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            return results.task->shouldInterrupt() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
+                        },
+                        &resultContext,
+                        0);
+
+            }
             TaskManager::doLater([this, resultContext] {
                 for (const auto &match : this->m_matches) {
                     ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
