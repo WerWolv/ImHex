@@ -116,6 +116,15 @@ namespace hex::plugin::builtin::ui {
 
     }
 
+    bool PatternDrawer::isEditingPattern(const pl::ptrn::Pattern& pattern) const {
+        return this->m_editingPattern == &pattern && this->m_editingPatternOffset == pattern.getOffset();
+    }
+
+    void PatternDrawer::resetEditing() {
+        this->m_editingPattern = nullptr;
+        this->m_editingPatternOffset = 0x00;
+    }
+
     void PatternDrawer::drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset) {
         auto visualizerName = arguments.front().toString(true);
 
@@ -202,11 +211,13 @@ namespace hex::plugin::builtin::ui {
 
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
             ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
-            this->m_editingPattern = nullptr;
+            this->resetEditing();
         }
 
-        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             this->m_editingPattern = &pattern;
+            this->m_editingPatternOffset = pattern.getOffset();
+        }
 
         ImGui::SameLine(0, 0);
 
@@ -308,14 +319,14 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternBoolean& pattern) {
         createDefaultEntry(pattern);
 
-        if (this->m_editingPattern == &pattern) {
+        if (this->isEditingPattern(pattern)) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
             bool value = hex::get_or(pattern.getValue(), true) != 0;
             if (ImGui::Checkbox(pattern.getFormattedValue().c_str(), &value)) {
                 pattern.setValue(value);
-                this->m_editingPattern = nullptr;
+                this->resetEditing();
             }
 
             ImGui::PopItemWidth();
@@ -328,7 +339,7 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternCharacter& pattern) {
         createDefaultEntry(pattern);
 
-        if (this->m_editingPattern == &pattern) {
+        if (this->isEditingPattern(pattern)) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             auto value = hex::encodeByteString(pattern.getBytes());
@@ -338,7 +349,7 @@ namespace hex::plugin::builtin::ui {
                     if (!result.empty())
                         pattern.setValue(char(result[0]));
 
-                    this->m_editingPattern = nullptr;
+                    this->resetEditing();
                 }
             }
             ImGui::PopItemWidth();
@@ -361,7 +372,7 @@ namespace hex::plugin::builtin::ui {
         drawSizeColumn(pattern);
         drawTypenameColumn(pattern, "enum");
 
-        if (this->m_editingPattern == &pattern) {
+        if (this->isEditingPattern(pattern)) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -374,7 +385,7 @@ namespace hex::plugin::builtin::ui {
                     bool isSelected = min <= currValue && max >= currValue;
                     if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
                         pattern.setValue(value.min);
-                        this->m_editingPattern = nullptr;
+                        this->resetEditing();
                     }
                     if (isSelected)
                         ImGui::SetItemDefaultFocus();
@@ -392,7 +403,7 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternFloat& pattern) {
         createDefaultEntry(pattern);
 
-        if (this->m_editingPattern == &pattern) {
+        if (this->isEditingPattern(pattern)) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -403,7 +414,7 @@ namespace hex::plugin::builtin::ui {
                 if (auto result = mathEvaluator.evaluate(value); result.has_value())
                     pattern.setValue(double(result.value()));
 
-                this->m_editingPattern = nullptr;
+                this->resetEditing();
             }
 
             ImGui::PopItemWidth();
@@ -446,7 +457,7 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternSigned& pattern) {
         createDefaultEntry(pattern);
 
-        if (this->m_editingPattern == &pattern) {
+        if (this->isEditingPattern(pattern)) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -457,7 +468,7 @@ namespace hex::plugin::builtin::ui {
                 if (auto result = mathEvaluator.evaluate(value); result.has_value())
                     pattern.setValue(result.value());
 
-                this->m_editingPattern = nullptr;
+                this->resetEditing();
             }
 
             ImGui::PopItemWidth();
@@ -471,14 +482,14 @@ namespace hex::plugin::builtin::ui {
         if (pattern.getSize() > 0) {
             createDefaultEntry(pattern);
 
-            if (this->m_editingPattern == &pattern) {
+            if (this->isEditingPattern(pattern)) {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
                 auto value = pattern.toString();
                 if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     pattern.setValue(value);
-                    this->m_editingPattern = nullptr;
+                    this->resetEditing();
                 }
 
                 ImGui::PopItemWidth();
@@ -509,7 +520,7 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "struct");
 
-            if (this->m_editingPattern == &pattern) {
+            if (this->isEditingPattern(pattern)) {
                 if (pattern.getWriteFormatterFunction().empty())
                     ImGui::TextFormatted("{}", pattern.getFormattedValue());
                 else {
@@ -518,7 +529,7 @@ namespace hex::plugin::builtin::ui {
                     auto value = pattern.toString();
                     if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                         pattern.setValue(value);
-                        this->m_editingPattern = nullptr;
+                        this->resetEditing();
                     }
                     ImGui::PopItemWidth();
                     ImGui::PopStyleVar();
@@ -562,7 +573,7 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "union");
 
-            if (this->m_editingPattern == &pattern) {
+            if (this->isEditingPattern(pattern)) {
                 if (pattern.getWriteFormatterFunction().empty())
                     ImGui::TextFormatted("{}", pattern.getFormattedValue());
                 else {
@@ -571,7 +582,7 @@ namespace hex::plugin::builtin::ui {
                     auto value = pattern.toString();
                     if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                         pattern.setValue(value);
-                        this->m_editingPattern = nullptr;
+                        this->resetEditing();
                     }
                     ImGui::PopItemWidth();
                     ImGui::PopStyleVar();
@@ -598,7 +609,7 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::visit(pl::ptrn::PatternUnsigned& pattern) {
         createDefaultEntry(pattern);
 
-        if (this->m_editingPattern == &pattern) {
+        if (this->isEditingPattern(pattern)) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             auto value = pattern.toString();
@@ -608,7 +619,7 @@ namespace hex::plugin::builtin::ui {
                 if (auto result = mathEvaluator.evaluate(value); result.has_value())
                     pattern.setValue(result.value());
 
-                this->m_editingPattern = nullptr;
+                this->resetEditing();
             }
             ImGui::PopItemWidth();
             ImGui::PopStyleVar();
@@ -829,8 +840,9 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height) {
-        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
-            this->m_editingPattern = nullptr;
+        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered()) {
+            this->resetEditing();
+        }
 
         if (beginPatternTable(patterns, this->m_sortedPatterns, height)) {
             ImGui::TableHeadersRow();
@@ -849,7 +861,7 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::reset() {
-        this->m_editingPattern = nullptr;
+        this->resetEditing();
         this->m_displayEnd.clear();
         this->m_visualizedPatterns.clear();
         this->m_currVisualizedPattern = nullptr;

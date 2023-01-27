@@ -59,12 +59,16 @@ namespace hex::plugin::builtin::ui {
         void createDefaultEntry(pl::ptrn::Pattern &pattern);
         void closeTreeNode(bool inlined);
 
+        bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
+        void resetEditing();
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
         std::vector<pl::ptrn::Pattern*> m_sortedPatterns;
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
+        u64 m_editingPatternOffset = 0;
+
         TreeStyle m_treeStyle = TreeStyle::Default;
         pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
 
