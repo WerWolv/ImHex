@@ -121,12 +121,14 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawImageVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &) {
+        void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
             static ImGui::Texture texture;
             if (shouldReset) {
+                auto pattern  = arguments[1].toPattern();
+
                 std::vector<u8> data;
-                data.resize(pattern.getSize());
-                pattern.getEvaluator()->readData(pattern.getOffset(), data.data(), data.size(), pattern.getSection());
+                data.resize(pattern->getSize());
+                pattern->getEvaluator()->readData(pattern->getOffset(), data.data(), data.size(), pattern->getSection());
                 texture = ImGui::Texture(data.data(), data.size());
             }
 
@@ -134,13 +136,14 @@ namespace hex::plugin::builtin {
                 ImGui::Image(texture, texture.getSize());
         }
 
-        void drawBitmapVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+        void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
             static ImGui::Texture texture;
             if (shouldReset) {
-                auto width  = arguments[1].toUnsigned();
-                auto height = arguments[2].toUnsigned();
+                auto pattern  = arguments[1].toPattern();
+                auto width  = arguments[2].toUnsigned();
+                auto height = arguments[3].toUnsigned();
 
-                auto data = patternToArray<u8>(&pattern);
+                auto data = patternToArray<u8>(pattern);
                 texture = ImGui::Texture(data.data(), data.size(), width, height);
             }
 
@@ -148,7 +151,7 @@ namespace hex::plugin::builtin {
                 ImGui::Image(texture, texture.getSize());
         }
 
-        void drawDisassemblyVisualizer(pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+        void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
             struct Disassembly {
                 u64 address;
                 std::vector<u8> bytes;
@@ -157,9 +160,10 @@ namespace hex::plugin::builtin {
 
             static std::vector<Disassembly> disassembly;
             if (shouldReset) {
-                auto baseAddress  = arguments[1].toUnsigned();
-                auto architecture = arguments[2].toUnsigned();
-                auto mode         = arguments[3].toUnsigned();
+                auto pattern  = arguments[1].toPattern();
+                auto baseAddress  = arguments[2].toUnsigned();
+                auto architecture = arguments[3].toUnsigned();
+                auto mode         = arguments[4].toUnsigned();
 
                 disassembly.clear();
 
@@ -167,7 +171,7 @@ namespace hex::plugin::builtin {
                 if (cs_open(static_cast<cs_arch>(architecture), static_cast<cs_mode>(mode), &capstone) == CS_ERR_OK) {
                     cs_option(capstone, CS_OPT_SKIPDATA, CS_OPT_ON);
 
-                    auto data = patternToArray<u8>(&pattern);
+                    auto data = patternToArray<u8>(pattern);
                     cs_insn *instructions = nullptr;
 
                     size_t instructionCount = cs_disasm(capstone, data.data(), data.size(), baseAddress, 0, &instructions);

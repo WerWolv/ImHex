@@ -447,7 +447,7 @@ namespace hex::plugin::builtin {
 
                         std::optional<ImColor> color;
                         for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address, id)) {
-                            if (pattern->isHidden())
+                            if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
                                 continue;
 
                             if (color.has_value())
@@ -973,7 +973,7 @@ namespace hex::plugin::builtin {
 
             std::optional<ImColor> color;
             for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address)) {
-                if (pattern->isHidden())
+                if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
                     continue;
 
                 if (color.has_value())
@@ -989,11 +989,11 @@ namespace hex::plugin::builtin {
             hex::unused(data, size);
 
             auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address);
-            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
+            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden; })) {
                 ImGui::BeginTooltip();
 
                 for (const auto &pattern : patterns) {
-                    if (pattern->isHidden())
+                    if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
                         continue;
 
                     auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;

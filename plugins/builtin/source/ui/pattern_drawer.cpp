@@ -630,7 +630,7 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::draw(pl::ptrn::Pattern& pattern) {
-        if (pattern.isHidden())
+        if (pattern.getVisibility() == pl::ptrn::Visibility::Hidden)
             return;
 
         pattern.accept(*this);
