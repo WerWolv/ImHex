@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
             ImGui::EndPopup();
         }
 
-        if (ImGui::BeginPopupModal("hex.builtin.popup.waiting_for_tasks.title"_lang, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+        if (ImGui::BeginPopupModal("hex.builtin.popup.waiting_for_tasks.title"_lang, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
             ImGui::TextUnformatted("hex.builtin.popup.waiting_for_tasks.desc"_lang);
             ImGui::Separator();
 

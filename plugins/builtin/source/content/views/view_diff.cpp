@@ -106,8 +106,8 @@ namespace hex::plugin::builtin {
 
             // Read one line of each provider
             lineInfo[i].bytes.resize(this->m_columnCount);
-            provider->read(row * this->m_columnCount, lineInfo[i].bytes.data(), lineInfo[i].bytes.size());
             lineInfo[i].validBytes = std::min<i64>(this->m_columnCount, provider->getSize() - row * this->m_columnCount);
+            provider->read(row * this->m_columnCount, lineInfo[i].bytes.data(), lineInfo[i].validBytes);
 
             // Calculate address width
             u8 addressDigits = 0;
