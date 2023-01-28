@@ -993,7 +993,7 @@ namespace hex::plugin::builtin {
 
                     u64 offset = selection->getStartAddress();
                     while (offset < selection->getEndAddress()) {
-                        provider->read(offset, buffer.data(), std::min(buffer.size(), selection->size - (offset - selection->getStartAddress())));
+                        provider->read(offset, buffer.data(), std::min<size_t>(buffer.size(), selection->size - (offset - selection->getStartAddress())));
                         auto [result, size] = customEncoding->getEncodingFor(buffer);
 
                         string += result;
