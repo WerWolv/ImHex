@@ -65,10 +65,12 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.popup.waiting_for_tasks.desc"_lang);
             ImGui::Separator();
 
-            ImGui::NewLine();
             ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("[-]").x) / 2);
             ImGui::TextSpinner("");
             ImGui::NewLine();
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 150_scaled) / 2);
+            if (ImGui::ButtonEx("hex.builtin.common.cancel"_lang, ImVec2(150, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
+                ImGui::CloseCurrentPopup();
 
             if (TaskManager::getRunningTaskCount() == 0 && TaskManager::getRunningBackgroundTaskCount() == 0) {
                 ImGui::CloseCurrentPopup();
