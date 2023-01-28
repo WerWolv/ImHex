@@ -423,7 +423,7 @@ namespace hex::plugin::builtin {
                 std::move(uniques.begin(), uniques.end(), std::back_inserter(matches));
 
                 constexpr static color_t YaraColor = 0x70B4771F;
-                for (auto &match : matches) {
+                for (auto &match : uniques) {
                     match.highlightId = ImHexApi::HexEditor::addBackgroundHighlight({ match.address, match.size }, YaraColor);
                     match.tooltipId = ImHexApi::HexEditor::addTooltip({ match. address, match.size }, hex::format("{0} [{1}]", match.identifier, match.variable), YaraColor);
                 }

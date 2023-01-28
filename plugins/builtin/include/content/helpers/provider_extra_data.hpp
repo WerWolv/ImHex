@@ -88,8 +88,8 @@ namespace hex::plugin::builtin {
                     size_t size;
                     bool wholeDataMatch;
 
-                    u32 highlightId;
-                    u32 tooltipId;
+                    mutable u32 highlightId;
+                    mutable u32 tooltipId;
                 };
 
                 std::vector<std::pair<std::fs::path, std::fs::path>> rules;
