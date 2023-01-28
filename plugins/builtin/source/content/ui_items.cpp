@@ -144,7 +144,7 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
 
-            if (ImGui::BeginListBox("##files", ImVec2(300_scaled, 0))) {
+            if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
 
                 u32 index = 0;
                 for (auto &path : s_selectableFiles) {
