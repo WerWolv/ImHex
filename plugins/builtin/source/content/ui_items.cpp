@@ -31,9 +31,12 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             View::confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
-                                 [] { ImHexApi::Common::closeImHex(true); },
-                                 [] { ImGui::CloseCurrentPopup(); }
-                                 );
+                [] {
+                        ImHexApi::Provider::resetDirty();
+                        ImHexApi::Common::closeImHex();
+                    },
+                [] { ImGui::CloseCurrentPopup(); }
+            );
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -54,6 +57,23 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginPopupModal("hex.builtin.popup.waiting_for_tasks.title"_lang, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::TextUnformatted("hex.builtin.popup.waiting_for_tasks.desc"_lang);
+            ImGui::Separator();
+
+            ImGui::NewLine();
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("[-]").x) / 2);
+            ImGui::TextSpinner("");
+            ImGui::NewLine();
+
+            if (TaskManager::getRunningTaskCount() == 0 && TaskManager::getRunningBackgroundTaskCount() == 0) {
+                ImGui::CloseCurrentPopup();
+                ImHexApi::Common::closeImHex();
+            }
 
             ImGui::EndPopup();
         }

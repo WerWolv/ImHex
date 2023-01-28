@@ -32,6 +32,13 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isDirty()) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.popup.exit_application.title"_lang); });
+            } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
+                glfwSetWindowShouldClose(window, GLFW_FALSE);
+                TaskManager::doLater([] {
+                    for (auto &task : TaskManager::getRunningTasks())
+                        task->interrupt();
+                    ImGui::OpenPopup("hex.builtin.popup.waiting_for_tasks.title"_lang);
+                });
             }
         });
 
