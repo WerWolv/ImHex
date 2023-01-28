@@ -770,7 +770,7 @@ namespace hex::plugin::builtin {
                 this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
 
                 currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider](const auto &region) {
-                    return !this->decodeValue(provider, region).contains(this->m_currFilter[provider]);
+                    return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
                 }), currOccurrences.end());
             }
             ImGui::PopItemWidth();
