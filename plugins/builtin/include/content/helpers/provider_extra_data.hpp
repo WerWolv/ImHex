@@ -79,6 +79,22 @@ namespace hex::plugin::builtin {
             struct Hashes {
                 std::vector<ContentRegistry::Hashes::Hash::Function> hashFunctions;
             } hashes;
+
+            struct Yara {
+                struct YaraMatch {
+                    std::string identifier;
+                    std::string variable;
+                    u64 address;
+                    size_t size;
+                    bool wholeDataMatch;
+
+                    u32 highlightId;
+                    u32 tooltipId;
+                };
+
+                std::vector<std::pair<std::fs::path, std::fs::path>> rules;
+                std::vector<YaraMatch> matches;
+            } yara;
         };
 
         static Data& getCurrent() {
