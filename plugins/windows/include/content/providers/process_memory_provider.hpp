@@ -8,6 +8,7 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/ui/widgets.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <array>
 #include <mutex>
@@ -87,10 +88,10 @@ namespace hex::plugin::windows {
 
         std::set<MemoryRegion> m_memoryRegions;
         ui::SearchableWidget<Process> m_processSearchWidget = ui::SearchableWidget<Process>([](const std::string &search, const Process &process) {
-            return process.name.contains(search);
+            return hex::containsIgnoreCase(process.name, search);
         });
         ui::SearchableWidget<MemoryRegion> m_regionSearchWidget = ui::SearchableWidget<MemoryRegion>([](const std::string &search, const MemoryRegion &memoryRegion) {
-            return memoryRegion.name.contains(search);
+            return hex::containsIgnoreCase(memoryRegion.name, search);
         });
 
         HANDLE m_processHandle = nullptr;
