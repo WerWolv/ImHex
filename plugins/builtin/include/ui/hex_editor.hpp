@@ -132,6 +132,10 @@ namespace hex::plugin::builtin::ui {
             this->m_characterCellPadding = characterCellPadding;
         }
 
+        [[nodiscard]] const std::optional<EncodingFile>& getCustomEncoding() const {
+            return this->m_currCustomEncoding;
+        }
+
         void setCustomEncoding(EncodingFile encoding) {
             this->m_currCustomEncoding = std::move(encoding);
         }

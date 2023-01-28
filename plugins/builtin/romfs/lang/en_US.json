@@ -655,6 +655,7 @@
         "hex.builtin.view.hex_editor.copy.cpp": "C++ Array",
         "hex.builtin.view.hex_editor.copy.crystal": "Crystal Array",
         "hex.builtin.view.hex_editor.copy.csharp": "C# Array",
+        "hex.builtin.view.hex_editor.copy.custom_encoding": "Custom Encoding",
         "hex.builtin.view.hex_editor.copy.go": "Go Array",
         "hex.builtin.view.hex_editor.copy.hex_view": "Hex View",
         "hex.builtin.view.hex_editor.copy.html": "HTML",

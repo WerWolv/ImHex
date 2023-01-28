@@ -5,6 +5,7 @@
 #include <map>
 #include <string_view>
 #include <vector>
+#include <span>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/file.hpp>
@@ -21,7 +22,7 @@ namespace hex {
         EncodingFile() = default;
         EncodingFile(Type type, const std::fs::path &path);
 
-        [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(const std::vector<u8> &buffer) const;
+        [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
         [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }
 
         [[nodiscard]] bool valid() const { return this->m_valid; }

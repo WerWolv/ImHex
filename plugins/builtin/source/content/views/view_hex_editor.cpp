@@ -985,6 +985,23 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.address"_lang))
                     ImGui::SetClipboardText(hex::format("0x{:08X}", selection->getStartAddress()).c_str());
 
+                auto &customEncoding = this->m_hexEditor.getCustomEncoding();
+                if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.custom_encoding"_lang, "", false, customEncoding.has_value())) {
+
+                    std::vector<u8> buffer(customEncoding->getLongestSequence(), 0x00);
+                    std::string string;
+
+                    u64 offset = selection->getStartAddress();
+                    while (offset < selection->getEndAddress()) {
+                        provider->read(offset, buffer.data(), std::min(buffer.size(), selection->size - (offset - selection->getStartAddress())));
+                        auto [result, size] = customEncoding->getEncodingFor(buffer);
+
+                        string += result;
+                        offset += size;
+                    };
+
+                    ImGui::SetClipboardText(string.c_str());
+                }
                 ImGui::Separator();
 
                 for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::getEntries()) {
