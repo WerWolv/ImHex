@@ -669,7 +669,7 @@ namespace hex::plugin::builtin {
 
         std::string buffer(selection.size, 0x00);
         buffer.reserve(selection.size);
-        provider->read(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), selection.size);
+        provider->read(selection.getStartAddress(), buffer.data(), selection.size);
 
         ImGui::SetClipboardText(buffer.c_str());
     }
@@ -980,7 +980,7 @@ namespace hex::plugin::builtin {
                 copyBytes(*selection);
 
             if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.edit.copy_as"_lang, selection.has_value() && providerValid)) {
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.hex"_lang, (CTRLCMD_NAME + " + "s + SHIFT_NAME + " + C"s).c_str()))
+                if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.ascii"_lang, (CTRLCMD_NAME + " + "s + SHIFT_NAME + " + C"s).c_str()))
                     copyString(*selection);
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.address"_lang))
                     ImGui::SetClipboardText(hex::format("0x{:08X}", selection->getStartAddress()).c_str());

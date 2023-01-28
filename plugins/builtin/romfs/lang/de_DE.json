@@ -653,7 +653,7 @@
         "hex.builtin.view.hex_editor.copy.crystal": "Crystal Array",
         "hex.builtin.view.hex_editor.copy.csharp": "C# Array",
         "hex.builtin.view.hex_editor.copy.go": "Go Array",
-        "hex.builtin.view.hex_editor.copy.hex": "Hex String",
+        "hex.builtin.view.hex_editor.copy.ascuu": "Hex String",
         "hex.builtin.view.hex_editor.copy.html": "HTML",
         "hex.builtin.view.hex_editor.copy.java": "Java Array",
         "hex.builtin.view.hex_editor.copy.js": "JavaScript Array",
