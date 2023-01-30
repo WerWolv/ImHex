@@ -894,9 +894,11 @@ namespace hex::plugin::builtin {
 
                 auto selection = this->m_hexEditor.getSelection();
 
-                oldData.selectionStart  = selection.getStartAddress();
-                oldData.selectionEnd    = selection.getEndAddress();
-                oldData.scrollPosition  = this->m_hexEditor.getScrollPosition();
+                if (selection != Region::Invalid()) {
+                    oldData.selectionStart  = selection.getStartAddress();
+                    oldData.selectionEnd    = selection.getEndAddress();
+                    oldData.scrollPosition  = this->m_hexEditor.getScrollPosition();
+                }
             }
 
             if (newProvider != nullptr) {
