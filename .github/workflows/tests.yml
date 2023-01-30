@@ -28,7 +28,7 @@ jobs:
         key: ${{ runner.os }}-tests-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-tests-${{ secrets.CACHE_VERSION }}-build
         max-size: 50M
-        
+
 
     - name: 📜 Restore CMakeCache
       uses: actions/cache@v3
@@ -36,7 +36,7 @@ jobs:
         path: |
           build/CMakeCache.txt
         key: ${{ runner.os }}-tests-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-        
+
     - name: ⬇️ Install dependencies
       run: |
         sudo apt update

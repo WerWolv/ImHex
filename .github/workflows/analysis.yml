@@ -38,7 +38,7 @@ jobs:
         path: |
           build/CMakeCache.txt
         key: ${{ runner.os }}-analysis-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-      
+
     - name: ⬇️ Install dependencies
       run: |
         sudo apt update

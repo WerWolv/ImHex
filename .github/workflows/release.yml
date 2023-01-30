@@ -34,7 +34,7 @@ jobs:
 
       - name: 🗜️ Create tarball from sources with dependencies
         run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
-        
+
       - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -43,7 +43,7 @@ jobs:
           branch: ${{ github.event.release.target_commitish }}
           workflow_conclusion: success
           skip_unpack: true
-             
+
       - name: 🗜️ Unzip files when needed
         run: |	
           for zipfile in ./*.zip
@@ -71,14 +71,14 @@ jobs:
       - name: ✒️ Prepare PKGBUILD
         run: |
           cp ImHex/dist/Arch/PKGBUILD .
-          
+
           hash=`md5sum imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst-x86_64 | cut -d ' ' -f 1`
 
           sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' PKGBUILD
           sed -i "s/(SKIP)/($hash)/g" PKGBUILD
 
       - name: ⬆️ Publish AUR package
-        
+
         # I couldn't make the condition in the env directly for some reason
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -113,7 +113,7 @@ jobs:
           tag: ImHex-v${{env.IMHEX_VERSION}}
           repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}
-          
+
       - name: ✉️ Update C++ Plugin Template
         uses: peter-evans/repository-dispatch@v2
         env:

@@ -22,7 +22,6 @@ namespace hex::plugin::builtin {
 
     class PopupGoto : public ViewHexEditor::Popup {
     public:
-
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.goto"_lang);
             if (ImGui::BeginTabBar("goto_tabs")) {
@@ -109,7 +108,6 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.select"_lang);
             if (ImGui::BeginTabBar("select_tabs")) {
-
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.region"_lang)) {
                     u64 inputA = this->m_region.getStartAddress();
                     u64 inputB = this->m_region.getEndAddress();
@@ -336,9 +334,7 @@ namespace hex::plugin::builtin {
 
     class PopupBaseAddress : public ViewHexEditor::Popup {
     public:
-        explicit PopupBaseAddress(u64 baseAddress) : m_baseAddress(baseAddress) {
-
-        }
+        explicit PopupBaseAddress(u64 baseAddress) : m_baseAddress(baseAddress) { }
 
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.set_base"_lang);
@@ -547,7 +543,6 @@ namespace hex::plugin::builtin {
 
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         if (ImGui::BeginPopup("##hex_editor_popup", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoTitleBar)) {
-
             // Force close the popup when user is editing an input
             if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))){
                 ImGui::CloseCurrentPopup();
@@ -568,7 +563,6 @@ namespace hex::plugin::builtin {
             ImGui::OpenPopup("hex.builtin.menu.edit"_lang);
 
         if (ImGui::BeginPopup("hex.builtin.menu.edit"_lang)) {
-
             bool needsSeparator = false;
             for (auto &[priority, menuItem] : ContentRegistry::Interface::getMenuItems()) {
                 if (menuItem.unlocalizedName != "hex.builtin.menu.edit")
@@ -586,7 +580,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::drawContent() {
-
         if (ImGui::Begin(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
             this->m_hexEditor.setProvider(ImHexApi::Provider::get());
 
@@ -675,7 +668,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::registerShortcuts() {
-
         // Save operations
         ShortcutManager::addShortcut(this, CTRLCMD + Keys::S, [] {
             save();
@@ -779,7 +771,6 @@ namespace hex::plugin::builtin {
             this->setSelection(selection.getStartAddress() + this->m_hexEditor.getBytesPerRow(), selection.getEndAddress());
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
-
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Left, [this] {
             auto selection = getSelection();
@@ -989,7 +980,6 @@ namespace hex::plugin::builtin {
 
                 auto &customEncoding = this->m_hexEditor.getCustomEncoding();
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.custom_encoding"_lang, "", false, customEncoding.has_value())) {
-
                     std::vector<u8> buffer(customEncoding->getLongestSequence(), 0x00);
                     std::string string;
 

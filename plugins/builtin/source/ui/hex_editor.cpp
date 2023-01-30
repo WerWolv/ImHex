@@ -155,9 +155,7 @@ namespace hex::plugin::builtin::ui {
                 if (padding.is_number())
                     this->m_characterCellPadding = static_cast<int>(padding);
             }
-
         });
-
     }
 
     HexEditor::~HexEditor() {
@@ -277,7 +275,6 @@ namespace hex::plugin::builtin::ui {
                 shouldExitEditingMode = asciiVisualizer.drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
 
             if (shouldExitEditingMode || this->m_shouldModifyValue) {
-
                 this->m_provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
 
                 if (!this->m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
@@ -378,7 +375,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
 
             if (this->m_provider != nullptr && this->m_provider->isReadable()) {
-
                 const auto isCurrRegionValid = [this](u64 address){
                     auto &[currRegion, currRegionValid] = this->m_currValidRegion;
                     if (!Region{ address, 1 }.isWithin(currRegion)) {
@@ -396,7 +392,6 @@ namespace hex::plugin::builtin::ui {
 
                     // Loop over rows
                     for (u64 y = u64(clipper.DisplayStart); y < u64(clipper.DisplayEnd); y++) {
-
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -610,7 +605,6 @@ namespace hex::plugin::builtin::ui {
                             }
                             ImGui::PopStyleVar();
                             ImGui::PopID();
-
                         }
 
                         // Scroll to the cursor if it's either at the top or bottom edge of the screen
@@ -623,7 +617,6 @@ namespace hex::plugin::builtin::ui {
                                     if (i128(this->m_selectionEnd.value() - this->m_provider->getBaseAddress() - this->m_provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * this->m_bytesPerRow)) {
                                         this->m_shouldScrollToSelection = false;
                                         ImGui::SetScrollHereY(fractionPerLine * 5);
-
                                     }
                                 } else if (y == (u64(clipper.DisplayEnd) - 1)) {
                                     if (i128(this->m_selectionEnd.value() - this->m_provider->getBaseAddress() - this->m_provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * this->m_bytesPerRow)) {
@@ -645,7 +638,6 @@ namespace hex::plugin::builtin::ui {
                                     this->jumpToSelection(false);
                                 if ((newSelection.getEndAddress()) > u64(clipper.DisplayEnd * this->m_bytesPerRow))
                                     this->jumpToSelection(false);
-
                             }
                         }
                     }
@@ -759,7 +751,6 @@ namespace hex::plugin::builtin::ui {
 
                     ImGui::EndTable();
                 }
-
             }
             ImGui::EndChild();
         }
