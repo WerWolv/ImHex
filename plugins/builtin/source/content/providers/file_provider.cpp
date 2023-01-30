@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
+        if (offset > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(buffer, reinterpret_cast<u8 *>(this->m_mappedFile) + offset, size);
