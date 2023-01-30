@@ -23,7 +23,6 @@ namespace hex::plugin::builtin {
     static bool s_selectableFileMultiple;
 
     static void drawGlobalPopups() {
-
         // "Are you sure you want to exit?" Popup
         if (ImGui::BeginPopupModal("hex.builtin.popup.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
@@ -145,9 +144,7 @@ namespace hex::plugin::builtin {
         bool opened = true;
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
-
             if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
-
                 u32 index = 0;
                 for (auto &path : s_selectableFiles) {
                     ImGui::PushID(index);
@@ -164,11 +161,9 @@ namespace hex::plugin::builtin {
                                 s_selectableFileIndices.insert(index);
                             }
                         }
-
                     }
 
                     ImGui::PopID();
-
                     index++;
                 }
 
@@ -245,7 +240,6 @@ namespace hex::plugin::builtin {
     }
 
     void addFooterItems() {
-
         if (hex::isProcessElevated()) {
             ContentRegistry::Interface::addFooterItem([] {
                 ImGui::TextUnformatted(ICON_VS_SHIELD);
@@ -436,7 +430,6 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndDisabled();
         });
-
     }
 
     void handleBorderlessWindowMode() {

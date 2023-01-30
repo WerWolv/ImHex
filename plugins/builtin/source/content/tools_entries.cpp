@@ -435,7 +435,6 @@ namespace hex::plugin::builtin {
                         mathHistory.push_back(result.value());
                         lastMathError.clear();
                     }
-
                 } catch (std::invalid_argument &e) {
                     lastMathError = e.what();
                 }
@@ -907,12 +906,12 @@ namespace hex::plugin::builtin {
                     ImGui::TextSpinner("hex.builtin.tools.file_tools.splitter.picker.splitting"_lang);
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.splitter.picker.split"_lang)) {
-
                         splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.picker.splitting", 0, [](auto &task) {
                             ON_SCOPE_EXIT {
                                 selectedFile.clear();
                                 baseOutputPath.clear();
                             };
+
                             fs::File file(selectedFile, fs::File::Mode::Read);
 
                             if (!file.isValid()) {
@@ -971,7 +970,6 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
 
                 if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
-
                     u32 index = 0;
                     for (auto &file : files) {
                         if (ImGui::Selectable(hex::toUTF8String(file).c_str(), index == selectedIndex))
@@ -1047,9 +1045,7 @@ namespace hex::plugin::builtin {
                     ImGui::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
-
                         combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {
-
                             fs::File output(outputPath, fs::File::Mode::Create);
 
                             if (!output.isValid()) {
@@ -1091,9 +1087,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawFileTools() {
-
             if (ImGui::BeginTabBar("file_tools_tabs")) {
-
                 if (ImGui::BeginTabItem("hex.builtin.tools.file_tools.shredder"_lang)) {
                     drawFileToolShredder();
                     ImGui::EndTabItem();
@@ -1366,13 +1360,9 @@ namespace hex::plugin::builtin {
                 ImGui::PopStyleColor();
 
                 ImGui::PopStyleVar();
-
             }
             ImGui::EndChild();
-
-
         }
-
     }
 
     void registerToolEntries() {

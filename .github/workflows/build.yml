@@ -99,7 +99,7 @@ jobs:
         name: Windows Portable x86_64
         path: |
           build/install/*
-      
+
     - name: ⬇️ Download Mesa3D for NoGPU version
       shell: bash
       run: |
@@ -126,7 +126,7 @@ jobs:
             custom_glfw: true
           - suffix: ""
             custom_glfw: false
-    
+
     name: 🍎 macOS 11.0${{matrix.suffix}}
 
     steps:
@@ -138,14 +138,14 @@ jobs:
     - name: 📜 Set version variable
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
-        
+
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
         key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build
         max-size: 50M
-        
+
     - name: 📜 Restore CMakeCache
       uses: actions/cache@v3
       with:
@@ -236,14 +236,14 @@ jobs:
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
           max-size: 50M
-          
+
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-          
+
       - name: ⬇️ Install dependencies
         run: |
           sudo apt update
@@ -297,19 +297,19 @@ jobs:
           key: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build
           max-size: 50M
-          
+
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build-appimage/CMakeCache.txt
           key: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-          
+
       - name: ⬇️ Install dependencies
         run: |
           sudo apt update
           sudo bash dist/get_deps_debian.sh
-          
+
           sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
@@ -347,7 +347,7 @@ jobs:
         with:
           name: Linux AppImage x86_64
           path: 'build-appimage/*.AppImage'
-        
+
       - name: ⬆️ Upload AppImage zsync
         uses: actions/upload-artifact@v3
         with:
@@ -358,7 +358,7 @@ jobs:
   archlinux-build:
     name: 🐧 ArchLinux
     runs-on: ubuntu-latest
-    
+
     container:
       image: archlinux:base-devel
 
@@ -370,7 +370,7 @@ jobs:
       - name: ⬇️ Install setup dependencies
         run: |
           pacman -Syu git ccache --noconfirm
-          
+
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
@@ -386,14 +386,14 @@ jobs:
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
           max-size: 50M
-        
+
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
-      
+
       # ArchLinux cmake build
       - name: 🛠️ Build
         run: |
@@ -417,7 +417,7 @@ jobs:
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
-      
+
       - name: ✒️ Prepare PKGBUILD
         run: |
           cp dist/Arch/PKGBUILD build
@@ -427,19 +427,19 @@ jobs:
       - name: 📦 Package ArchLinux .pkg.tar.zst
         run: |
           cd build
-          
+
           # the name is a small trick to make makepkg recognize it as the source
           # else, it would try to download the file from the release
           tar -cvf imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst -C installDir .
-          
+
           chmod -R 777 .
-          
+
           sudo -u nobody makepkg
 
           # Replace the old file
           rm imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
-      
+
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
         uses: actions/upload-artifact@v3
         with:
@@ -467,7 +467,7 @@ jobs:
 
     name: 🐧 ${{ matrix.name }} ${{ matrix.release_num }}
     runs-on: ubuntu-latest
-    
+
     container:
       image: "fedora:latest"
       options: --privileged
@@ -475,13 +475,13 @@ jobs:
     steps:
       - name: ⬇️ Install git-core
         run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
-    
+
       - name: 🧰 Checkout
         uses: actions/checkout@v3
         with:
           path: ImHex
           submodules: recursive
-      
+
       - name: 📜 Setup DNF Cache
         uses: actions/cache@v3
         with:
@@ -489,7 +489,7 @@ jobs:
           key: ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-dnf-${{ github.run_id }}
           restore-keys: |
             ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-dnf-
-    
+
       - name: ⬇️ Update all packages and install dependencies
         run: |
           dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
@@ -507,10 +507,10 @@ jobs:
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat ImHex/VERSION`" >> $GITHUB_ENV
-      
+
       - name: 🗜️ Create tarball from sources with dependencies
         run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
-      
+
       - name: "✒️ Modify spec file: set version, use latest pattern language, enable online build"
         run: |
           sed -i \
@@ -520,11 +520,11 @@ jobs:
           -e '/BuildRequires:  cmake/a BuildRequires:  git-core'                                  \
           -e '/%files/a %{_datadir}/%{name}/'                                                     \
           $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
-        
+
       - name: 📜 Fix ccache on EL9
         if: matrix.mock_release == 'epel9'
         run: sed -i '/\. \/opt\/rh\/gcc-toolset-12\/enable/a PATH=/usr/lib64/ccache:$PATH' $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec
-        
+
       - name: 🟩 Copy spec file to build root
         run: mv $GITHUB_WORKSPACE/ImHex/dist/rpm/imhex.spec $GITHUB_WORKSPACE/imhex.spec
 
@@ -551,7 +551,7 @@ jobs:
         run: |
           fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
           # set fortify_source back to 2 - level 3 in rawhide breaks through GH actions for some reason
-          
+
       - name: 🟩 Move and rename finished RPM
         run: |
           mv $GITHUB_WORKSPACE/results_imhex/${{env.IMHEX_VERSION}}/*/imhex-${{env.IMHEX_VERSION}}-0.*.x86_64.rpm \

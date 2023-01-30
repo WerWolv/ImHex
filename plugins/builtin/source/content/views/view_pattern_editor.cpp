@@ -491,7 +491,6 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
-
                 u32 index = 0;
                 for (auto &path : this->m_possiblePatternFiles) {
                     if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile))
@@ -572,7 +571,6 @@ namespace hex::plugin::builtin {
             if (ImGui::GetIO().KeyShift) {
                 ImGui::Indent();
                 if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip)) {
-
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
@@ -853,7 +851,6 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, nullptr, false, providerValid)) {
-
                 std::vector<std::fs::path> paths;
 
                 for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
