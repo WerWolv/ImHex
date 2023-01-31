@@ -98,14 +98,23 @@ namespace hex {
     Window::Window() {
         stacktrace::initialize();
 
+        constexpr static auto openEmergencyPopup = [](const std::string &title){
+            TaskManager::doLater([title] {
+                for (const auto &provider : ImHexApi::Provider::getProviders())
+                    ImHexApi::Provider::remove(provider, false);
+
+                ImGui::OpenPopup(title.c_str());
+            });
+        };
+
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
-                    TaskManager::doLater([] { ImGui::OpenPopup("No Plugins"); });
+                    openEmergencyPopup("No Plugins");
                 } else if (argument == "no-builtin-plugin") {
-                    TaskManager::doLater([] { ImGui::OpenPopup("No Builtin Plugin"); });
+                    openEmergencyPopup("No Builtin Plugin");
                 } else if (argument == "multiple-builtin-plugins") {
-                    TaskManager::doLater([] { ImGui::OpenPopup("Multiple Builtin Plugins"); });
+                    openEmergencyPopup("Multiple Builtin Plugins");
                 }
             }
         }
