@@ -74,9 +74,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawNode() override {
-            ImGui::PushItemWidth(100_scaled);
-            ImGui::InputTextIcon("##string", ICON_VS_SYMBOL_KEY, this->m_value);
-            ImGui::PopItemWidth();
+            ImGui::InputTextMultiline("##string", this->m_value, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput);
         }
 
         void process() override {
@@ -917,6 +915,8 @@ namespace hex::plugin::builtin {
 
         void process() override {
             auto input = this->getBufferOnInput(0);
+
+            input.erase(std::remove_if(input.begin(), input.end(), [](u8 c) { return std::isspace(c); }), input.end());
 
             if (input.size() % 2 != 0)
                 throwNodeError("Can't decode odd number of hex characters");
