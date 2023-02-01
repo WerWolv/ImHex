@@ -20,7 +20,11 @@ include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 # Setup project
 loadVersion(IMHEX_VERSION)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
-project(imhex VERSION ${IMHEX_VERSION})
+project(imhex
+        LANGUAGES C CXX VERSION ${IMHEX_VERSION}
+        DESCRIPTION "The ImHex Hex Editor"
+        HOMEPAGE_URL "https://imhex.werwolv.net"
+)
 
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
@@ -44,7 +48,7 @@ addBundledLibraries()
 # Add ImHex sources
 add_subdirectory(lib/libimhex)
 add_subdirectory(main)
-add_custom_target(imhex_all ALL DEPENDS main)
+add_custom_target(imhex ALL DEPENDS main libimhex ${PLUGINS})
 
 # Add unit tests
 enable_testing()

@@ -184,8 +184,6 @@ macro(createPackage)
                     install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
                 endif ()
             endif ()
-
-            add_dependencies(imhex_all ${plugin})
         endif ()
     endforeach()
 
@@ -256,7 +254,7 @@ macro(createPackage)
         set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
 
         # Fix rpath
-        add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
+        add_custom_command(TARGET imhex POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
 
         # FIXME: Remove this once we move/integrate the plugins directory.
         add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
@@ -269,7 +267,7 @@ macro(createPackage)
         install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
 
         # Update library references to make the bundle portable
-        postprocess_bundle(imhex_all main)
+        postprocess_bundle(imhex main)
 
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
