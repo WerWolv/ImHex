@@ -184,6 +184,8 @@ macro(createPackage)
                     install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
                 endif ()
             endif ()
+
+            add_dependencies(imhex ${plugin})
         endif ()
     endforeach()
 
