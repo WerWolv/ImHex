@@ -31,7 +31,7 @@ namespace hex::plugin::windows {
 #endif
 
         ContentRegistry::Interface::addTitleBarButton(ICON_VS_SMILEY, "hex.windows.title_bar_button.feedback", []{
-            hex::openWebpage("mailto://hey@werwolv.net");
+            hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/feedback");
         });
 
     }
