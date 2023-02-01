@@ -205,7 +205,7 @@ namespace hex::init {
                 meanScale = 1.0F;
 
             #if defined(OS_MACOS)
-                meanScale = std::max(meanScale, 1.0F);
+                meanScale = std::max(meanScale / 2.0F, 1.0F);
             #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
