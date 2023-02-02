@@ -455,7 +455,7 @@ jobs:
           - name: Fedora
             mock_release: rawhide
             release_num: rawhide
-            mock_config: rawhide
+            mock_config: fedora-rawhide
           - name: Fedora
             mock_release: f37
             release_num: 37
