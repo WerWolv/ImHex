@@ -276,8 +276,7 @@ namespace hex {
     }
 
     void openWebpage(std::string url) {
-
-        if (url.find("://") == std::string::npos)
+        if (!url.contains("://"))
             url = "https://" + url;
 
         #if defined(OS_WINDOWS)

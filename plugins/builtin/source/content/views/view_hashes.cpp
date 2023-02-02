@@ -219,7 +219,7 @@ namespace hex::plugin::builtin {
                 continue;
 
             for (const auto &newHash : hashes) {
-                if (newHash->getUnlocalizedName() == hash["type"]) {
+                if (newHash->getUnlocalizedName() == hash["type"].get<std::string>()) {
 
                     auto newFunction = newHash->create(hash["name"]);
                     newFunction.getType()->load(hash["settings"]);
