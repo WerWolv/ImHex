@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<!DOCTYPE martif PUBLIC "ISO 12200:1999A//DTD MARTIF core (DXFcdV04)//EN" "TBXcdv04.dtd">
+<martif type="TBX">
+<martifHeader>
+<fileDesc>
+<sourceDesc><p>Translate Toolkit</p></sourceDesc>
+</fileDesc>
+</martifHeader>
+<text><body></body></text>
+</martif>
