@@ -412,6 +412,9 @@ namespace hex {
     namespace ContentRegistry::Language {
 
         void addLocalization(const nlohmann::json &data) {
+            if (!data.is_object())
+                return;
+
             if (!data.contains("code") || !data.contains("country") || !data.contains("language") || !data.contains("translations")) {
                 log::error("Localization data is missing required fields!");
                 return;
