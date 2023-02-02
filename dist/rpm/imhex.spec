@@ -131,3 +131,5 @@ cp -a lib/external/xdgpp/LICENSE                                  %{buildroot}%{
 
 
 %changelog
+* Thu Jan 01 1970 ImHex GitHub CI - 0.0.0-0
+- Build Package
