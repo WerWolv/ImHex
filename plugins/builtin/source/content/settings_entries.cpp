@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
             static int selection = [&]() -> int {
                 u16 index = 0;
                 for (auto &[languageCode, languageName] : languages) {
-                    if (languageCode == setting)
+                    if (setting.get<std::string>() == languageCode)
                         return index;
                     index++;
                 }
