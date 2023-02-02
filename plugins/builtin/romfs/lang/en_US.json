@@ -154,6 +154,7 @@
         "hex.builtin.menu.file.import.base64.popup.open_error": "Failed to open file!",
         "hex.builtin.menu.file.import.ips": "IPS Patch",
         "hex.builtin.menu.file.import.ips32": "IPS32 Patch",
+        "hex.builtin.menu.file.import.modified_file": "Modified File",
         "hex.builtin.menu.file.open_file": "Open File...",
         "hex.builtin.menu.file.open_other": "Open Other...",
         "hex.builtin.menu.file.open_project": "Open Project...",

@@ -18,23 +18,25 @@ namespace hex::plugin::builtin {
     static bool g_demoWindowOpen = false;
 
     void handleIPSError(IPSError error) {
-        switch (error) {
-            case IPSError::InvalidPatchHeader:
-                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.invalid_patch_header_error"_lang);
-                break;
-            case IPSError::AddressOutOfRange:
-                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.address_out_of_range_error"_lang);
-                break;
-            case IPSError::PatchTooLarge:
-                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.patch_too_large_error"_lang);
-                break;
-            case IPSError::InvalidPatchFormat:
-                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.invalid_patch_format_error"_lang);
-                break;
-            case IPSError::MissingEOF:
-                View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.missing_eof_error"_lang);
-                break;
-        }
+        TaskManager::doLater([error]{
+            switch (error) {
+                case IPSError::InvalidPatchHeader:
+                    View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.invalid_patch_header_error"_lang);
+                    break;
+                case IPSError::AddressOutOfRange:
+                    View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.address_out_of_range_error"_lang);
+                    break;
+                case IPSError::PatchTooLarge:
+                    View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.patch_too_large_error"_lang);
+                    break;
+                case IPSError::InvalidPatchFormat:
+                    View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.invalid_patch_format_error"_lang);
+                    break;
+                case IPSError::MissingEOF:
+                    View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.missing_eof_error"_lang);
+                    break;
+            }
+        });
     }
 
     static void createFileMenu() {
@@ -194,6 +196,44 @@ namespace hex::plugin::builtin {
 
                             u64 progress = 0;
                             for (auto &[address, value] : *patch) {
+                                provider->addPatch(address, &value, 1);
+                                progress++;
+                                task.update(progress);
+                            }
+
+                            provider->createUndoPoint();
+                        });
+                    });
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("hex.builtin.menu.file.import.modified_file"_lang, nullptr, false)) {
+                    fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
+                        TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
+                            auto provider = ImHexApi::Provider::get();
+                            auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
+
+                            if (patchData.size() != provider->getActualSize()) {
+                                View::showErrorPopup("hex.builtin.menu.file.import.modified_file.popup.invalid_size"_lang);
+                                return;
+                            }
+
+                            const auto baseAddress = provider->getBaseAddress();
+
+                            std::map<u64, u8> patches;
+                            for (u64 i = 0; i < patchData.size(); i++) {
+                                u8 value = 0;
+                                provider->read(baseAddress + i, &value, 1);
+
+                                if (value != patchData[i])
+                                    patches[baseAddress + i] = patchData[i];
+                            }
+
+                            task.setMaxValue(patches.size());
+
+                            u64 progress = 0;
+                            for (auto &[address, value] : patches) {
                                 provider->addPatch(address, &value, 1);
                                 progress++;
                                 task.update(progress);
