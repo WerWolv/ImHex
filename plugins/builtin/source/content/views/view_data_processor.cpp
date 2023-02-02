@@ -492,7 +492,7 @@ namespace hex::plugin::builtin {
         for (auto &node : input["nodes"]) {
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
-                if (entry.name == node["type"])
+                if (entry.name == node["type"].get<std::string>())
                     newNode = entry.creatorFunction();
             }
 
