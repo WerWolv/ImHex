@@ -438,7 +438,7 @@ namespace hex::plugin::builtin {
     void registerPatternLanguageVisualizers() {
         ContentRegistry::PatternLanguage::addVisualizer("line_plot", drawLinePlotVisualizer, 1);
         ContentRegistry::PatternLanguage::addVisualizer("scatter_plot", drawScatterPlotVisualizer, 2);
-        ContentRegistry::PatternLanguage::addVisualizer("image", drawImageVisualizer, 0);
+        ContentRegistry::PatternLanguage::addVisualizer("image", drawImageVisualizer, 1);
         ContentRegistry::PatternLanguage::addVisualizer("bitmap", drawBitmapVisualizer, 3);
         ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, 4);
         ContentRegistry::PatternLanguage::addVisualizer("3d", draw3DVisualizer, 2);
