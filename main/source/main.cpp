@@ -55,6 +55,7 @@ int main(int argc, char **argv, char **envp) {
 
         // Main window
         {
+            Window window;
             if (argc == 1)
                 ;    // No arguments provided
             else if (argc >= 2) {
@@ -64,7 +65,7 @@ int main(int argc, char **argv, char **envp) {
                 }
             }
 
-            Window window;
+
             window.loop();
         }
 
