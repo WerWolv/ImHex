@@ -26,7 +26,6 @@
 #include <content/helpers/math_evaluator.hpp>
 
 #include <imgui.h>
-#include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
 
@@ -36,7 +35,6 @@ namespace hex::plugin::builtin::ui {
     namespace {
 
         constexpr auto DisplayEndDefault = 50U;
-        constexpr auto DisplayEndStep = 50U;
 
         using namespace ::std::literals::string_literals;
 
@@ -289,8 +287,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::SameLine();
-            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -299,6 +295,8 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "bitfield");
 
+            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+            ImGui::SameLine();
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
@@ -507,8 +505,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::SameLine();
-            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -535,6 +531,8 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
+                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+                ImGui::SameLine();
                 ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
 
@@ -560,8 +558,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::SameLine();
-            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -588,6 +584,8 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
+                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+                ImGui::SameLine();
                 ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
         }
@@ -656,8 +654,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::SameLine();
-            drawVisualizerButton(pattern, iteratable);
             ImGui::TableNextColumn();
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
@@ -679,6 +675,8 @@ namespace hex::plugin::builtin::ui {
 
             ImGui::TableNextColumn();
 
+            drawVisualizerButton(pattern, iteratable);
+            ImGui::SameLine();
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
