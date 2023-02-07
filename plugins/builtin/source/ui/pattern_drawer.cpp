@@ -134,7 +134,7 @@ namespace hex::plugin::builtin::ui {
                 ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
             } else {
                 try {
-                    visualizer.callback(pattern, iteratable, reset, arguments);
+                    visualizer.callback(pattern, iteratable, reset, { arguments.begin() + 1, arguments.end() });
                 } catch (std::exception &e) {
                     this->m_lastVisualizerError = e.what();
                 }

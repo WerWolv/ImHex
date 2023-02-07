@@ -26,38 +26,12 @@ namespace hex::plugin::builtin {
 
         template<typename T>
         std::vector<T> patternToArray(pl::ptrn::Pattern *pattern){
+            const auto bytes = pattern->getBytes();
+
             std::vector<T> result;
-            result.resize(pattern->getChildren().size());
-
-            if (dynamic_cast<pl::ptrn::PatternPadding*>(pattern) != nullptr && pattern->getSize() == 0)
-                return result;
-
-            if (auto iteratable = dynamic_cast<pl::ptrn::Iteratable*>(pattern); iteratable != nullptr) {
-                iteratable->forEachEntry(0, iteratable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
-                    const auto children = entry->getChildren();
-                    for (const auto &[offset, child] : children) {
-                        auto startOffset = child->getOffset();
-
-                        child->setOffset(offset);
-                        ON_SCOPE_EXIT { child->setOffset(startOffset); };
-
-                        T value;
-                        if constexpr (std::floating_point<T>)
-                            value = child->getValue().toFloatingPoint();
-                        else if constexpr (std::signed_integral<T>)
-                            value = child->getValue().toSigned();
-                        else if constexpr (std::unsigned_integral<T>)
-                            value = child->getValue().toUnsigned();
-                        else
-                            static_assert(hex::always_false<T>::value, "Invalid type");
-
-                        result.push_back(value);
-                    }
-                });
-            } else {
-                result.resize(pattern->getSize() / sizeof(float));
-                pattern->getEvaluator()->readData(pattern->getOffset(), result.data(), result.size() * sizeof(float), pattern->getSection());
-            }
+            result.resize(bytes.size() / sizeof(T));
+            for (size_t i = 0; i < result.size(); i++)
+                std::memcpy(&result[i], &bytes[i * sizeof(T)], sizeof(T));
 
             return result;
         }
@@ -80,7 +54,7 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        void drawLinePlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+        void drawLinePlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static std::vector<float> values;
             auto dataPattern = arguments[0].toPattern();
 
@@ -99,7 +73,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawScatterPlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+        void drawScatterPlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static std::vector<float> xValues, yValues;
 
             auto xPattern = arguments[0].toPattern();
@@ -121,14 +95,12 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+        void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static ImGui::Texture texture;
             if (shouldReset) {
-                auto pattern  = arguments[1].toPattern();
+                auto pattern  = arguments[0].toPattern();
 
-                std::vector<u8> data;
-                data.resize(pattern->getSize());
-                pattern->getEvaluator()->readData(pattern->getOffset(), data.data(), data.size(), pattern->getSection());
+                auto data = pattern->getBytes();
                 texture = ImGui::Texture(data.data(), data.size());
             }
 
@@ -136,14 +108,14 @@ namespace hex::plugin::builtin {
                 ImGui::Image(texture, texture.getSize());
         }
 
-        void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+        void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static ImGui::Texture texture;
             if (shouldReset) {
-                auto pattern  = arguments[1].toPattern();
-                auto width  = arguments[2].toUnsigned();
-                auto height = arguments[3].toUnsigned();
+                auto pattern  = arguments[0].toPattern();
+                auto width  = arguments[1].toUnsigned();
+                auto height = arguments[2].toUnsigned();
 
-                auto data = patternToArray<u8>(pattern);
+                auto data = pattern->getBytes();
                 texture = ImGui::Texture(data.data(), data.size(), width, height);
             }
 
@@ -151,7 +123,7 @@ namespace hex::plugin::builtin {
                 ImGui::Image(texture, texture.getSize());
         }
 
-        void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
+        void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             struct Disassembly {
                 u64 address;
                 std::vector<u8> bytes;
@@ -160,10 +132,10 @@ namespace hex::plugin::builtin {
 
             static std::vector<Disassembly> disassembly;
             if (shouldReset) {
-                auto pattern  = arguments[1].toPattern();
-                auto baseAddress  = arguments[2].toUnsigned();
-                auto architecture = arguments[3].toUnsigned();
-                auto mode         = arguments[4].toUnsigned();
+                auto pattern  = arguments[0].toPattern();
+                auto baseAddress  = arguments[1].toUnsigned();
+                auto architecture = arguments[2].toUnsigned();
+                auto mode         = arguments[3].toUnsigned();
 
                 disassembly.clear();
 
@@ -171,7 +143,7 @@ namespace hex::plugin::builtin {
                 if (cs_open(static_cast<cs_arch>(architecture), static_cast<cs_mode>(mode), &capstone) == CS_ERR_OK) {
                     cs_option(capstone, CS_OPT_SKIPDATA, CS_OPT_ON);
 
-                    auto data = patternToArray<u8>(pattern);
+                    auto data = pattern->getBytes();
                     cs_insn *instructions = nullptr;
 
                     size_t instructionCount = cs_disasm(capstone, data.data(), data.size(), baseAddress, 0, &instructions);
@@ -207,9 +179,9 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
-            auto verticesPattern = arguments[1].toPattern();
-            auto indicesPattern  = arguments[2].toPattern();
+        void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+            auto verticesPattern = arguments[0].toPattern();
+            auto indicesPattern  = arguments[1].toPattern();
 
             static ImGui::Texture texture;
             static float scaling = 0.5F;
@@ -329,10 +301,10 @@ namespace hex::plugin::builtin {
             ImGui::Image(texture, texture.getSize(), ImVec2(0, 1), ImVec2(1, 0));
         }
 
-        void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, const std::vector<pl::core::Token::Literal> &arguments) {
-            auto wavePattern = arguments[1].toPattern();
-            auto channels = arguments[2].toUnsigned();
-            auto sampleRate = arguments[3].toUnsigned();
+        void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+            auto wavePattern = arguments[0].toPattern();
+            auto channels = arguments[1].toUnsigned();
+            auto sampleRate = arguments[2].toUnsigned();
 
             static std::vector<i16> waveData, sampledData;
             static ma_device audioDevice;

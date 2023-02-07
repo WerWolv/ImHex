@@ -9,9 +9,10 @@
 
 #include <functional>
 #include <map>
-#include <unordered_map>
+#include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include <nlohmann/json_fwd.hpp>
@@ -117,7 +118,7 @@ namespace hex {
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
         namespace PatternLanguage {
 
-            using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, pl::ptrn::Iteratable&, bool, const std::vector<pl::core::Token::Literal> &)>;
+            using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, pl::ptrn::Iteratable&, bool, std::span<const pl::core::Token::Literal>)>;
 
             namespace impl {
 
