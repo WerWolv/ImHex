@@ -726,7 +726,8 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
-        io.FontGlobalScale = 1.0F;
+
+        io.FontGlobalScale = ImHexApi::System::getGlobalScale();
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");

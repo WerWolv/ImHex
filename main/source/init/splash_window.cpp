@@ -22,6 +22,10 @@
 #include <future>
 #include <numeric>
 
+#if defined (OS_MACOS)
+    #include <AppKit/NSScreen.h>
+#endif
+
 using namespace std::literals::chrono_literals;
 
 namespace hex::init {
@@ -205,7 +209,7 @@ namespace hex::init {
                 meanScale = 1.0F;
 
             #if defined(OS_MACOS)
-                meanScale = std::max(meanScale / 2.0F, 1.0F);
+                meanScale /= NSScreen.mainScreen.backingScaleFactor;
             #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
