@@ -4,6 +4,7 @@
     #include <ApplicationServices/ApplicationServices.h>
     #include <Foundation/NSUserDefaults.h>
     #include <Foundation/Foundation.h>
+    #include <AppKit/NSScreen.h>
 
     #include <string.h>
     #include <stdlib.h>
@@ -23,6 +24,10 @@
         } else {
             return false;
         }
+    }
+
+    float getBackingScaleFactorMacos(void) {
+        return [[NSScreen mainScreen] backingScaleFactor];
     }
 
 #endif
