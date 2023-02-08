@@ -2,6 +2,7 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/utils_macos.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -205,7 +206,7 @@ namespace hex::init {
                 meanScale = 1.0F;
 
             #if defined(OS_MACOS)
-                meanScale /= getBackingScaleFactorMacos();
+                meanScale /= getBackingScaleFactor();
             #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);

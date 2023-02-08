@@ -26,7 +26,7 @@
         }
     }
 
-    float getBackingScaleFactorMacos(void) {
+    float getBackingScaleFactor(void) {
         return [[NSScreen mainScreen] backingScaleFactor];
     }
 

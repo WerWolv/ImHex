@@ -6,7 +6,7 @@
 
         void openWebpageMacos(const char *url);
         bool isMacosSystemDarkModeEnabled();
-        float getBackingScaleFactorMacos();
+        float getBackingScaleFactor();
 
     }
 
