@@ -7,6 +7,8 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/providers/provider.hpp>
 
+#include <content/views/view_data_processor.hpp>
+
 #include <content/helpers/provider_extra_data.hpp>
 #include <content/helpers/diagrams.hpp>
 
@@ -18,7 +20,6 @@
 #include <imgui.h>
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <fonts/codicons_font.h>
 
 namespace hex::plugin::builtin {
 
@@ -50,14 +51,14 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, this->m_buffer);
         }
 
-        void store(nlohmann::json &j) override {
+        void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["size"] = this->m_size;
             j["data"] = this->m_buffer;
         }
 
-        void load(nlohmann::json &j) override {
+        void load(const nlohmann::json &j) override {
             this->m_size   = j["size"];
             this->m_buffer = j["data"].get<std::vector<u8>>();
         }
@@ -81,13 +82,13 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(0, hex::decodeByteString(this->m_value));
         }
 
-        void store(nlohmann::json &j) override {
+        void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["data"] = this->m_value;
         }
 
-        void load(nlohmann::json &j) override {
+        void load(const nlohmann::json &j) override {
             this->m_value = j["data"].get<std::string>();
         }
 
@@ -109,13 +110,13 @@ namespace hex::plugin::builtin {
             this->setIntegerOnOutput(0, this->m_value);
         }
 
-        void store(nlohmann::json &j) override {
+        void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["data"] = this->m_value;
         }
 
-        void load(nlohmann::json &j) override {
+        void load(const nlohmann::json &j) override {
             this->m_value = j["data"];
         }
 
@@ -137,13 +138,13 @@ namespace hex::plugin::builtin {
             this->setFloatOnOutput(0, this->m_value);
         }
 
-        void store(nlohmann::json &j) override {
+        void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["data"] = this->m_value;
         }
 
-        void load(nlohmann::json &j) override {
+        void load(const nlohmann::json &j) override {
             this->m_value = j["data"];
         }
 
@@ -166,13 +167,13 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            this->setBufferOnOutput(0, hex::toBytes<u8>(this->m_color.Value.x * 0xFF));
-            this->setBufferOnOutput(1, hex::toBytes<u8>(this->m_color.Value.y * 0xFF));
-            this->setBufferOnOutput(2, hex::toBytes<u8>(this->m_color.Value.z * 0xFF));
-            this->setBufferOnOutput(3, hex::toBytes<u8>(this->m_color.Value.w * 0xFF));
+            this->setBufferOnOutput(0, hex::toBytes<u8>(u8(this->m_color.Value.x * 0xFF)));
+            this->setBufferOnOutput(1, hex::toBytes<u8>(u8(this->m_color.Value.y * 0xFF)));
+            this->setBufferOnOutput(2, hex::toBytes<u8>(u8(this->m_color.Value.z * 0xFF)));
+            this->setBufferOnOutput(3, hex::toBytes<u8>(u8(this->m_color.Value.w * 0xFF)));
         }
 
-        void store(nlohmann::json &j) override {
+        void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["data"]      = nlohmann::json::object();
@@ -182,7 +183,7 @@ namespace hex::plugin::builtin {
             j["data"]["a"] = this->m_color.Value.w;
         }
 
-        void load(nlohmann::json &j) override {
+        void load(const nlohmann::json &j) override {
             this->m_color = ImVec4(j["data"]["r"], j["data"]["g"], j["data"]["b"], j["data"]["a"]);
         }
 
@@ -203,13 +204,13 @@ namespace hex::plugin::builtin {
         void process() override {
         }
 
-        void store(nlohmann::json &j) override {
+        void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["comment"] = this->m_comment;
         }
 
-        void load(nlohmann::json &j) override {
+        void load(const nlohmann::json &j) override {
             this->m_comment = j["comment"].get<std::string>();
         }
 
@@ -878,7 +879,7 @@ namespace hex::plugin::builtin {
             this->setBufferOnOutput(4, output);
         }
 
-        void store(nlohmann::json &j) override {
+        void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["data"]               = nlohmann::json::object();
@@ -886,7 +887,7 @@ namespace hex::plugin::builtin {
             j["data"]["key_length"] = this->m_keyLength;
         }
 
-        void load(nlohmann::json &j) override {
+        void load(const nlohmann::json &j) override {
             this->m_mode      = j["data"]["mode"];
             this->m_keyLength = j["data"]["key_length"];
         }
@@ -1122,8 +1123,299 @@ namespace hex::plugin::builtin {
             }
         }
 
+        void store(nlohmann::json &j) const override {
+            j = nlohmann::json::object();
+
+            j["name"] = this->m_name;
+        }
+
+        void load(const nlohmann::json &j) override {
+            this->m_name = j["name"].get<std::string>();
+        }
+
     private:
         std::string m_name;
+    };
+
+    class NodeCustomInput : public dp::Node {
+    public:
+        NodeCustomInput() : Node("hex.builtin.nodes.custom.input.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input") }) { }
+        ~NodeCustomInput() override = default;
+
+        void drawNode() override {
+            ImGui::PushItemWidth(100_scaled);
+            if (ImGui::Combo("##type", &this->m_type, "Integer\0Float\0Buffer\0")) {
+                this->setAttributes({
+                    { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
+                });
+            }
+
+            if (ImGui::InputText("##name", this->m_name)) {
+                this->setUnlocalizedTitle(this->m_name);
+            }
+
+            ImGui::PopItemWidth();
+        }
+
+        void setValue(auto value) { this->m_value = std::move(value); }
+
+        const std::string &getName() const { return this->m_name; }
+        dp::Attribute::Type getType() const {
+            switch (this->m_type) {
+                default:
+                case 0: return dp::Attribute::Type::Integer;
+                case 1: return dp::Attribute::Type::Float;
+                case 2: return dp::Attribute::Type::Buffer;
+            }
+        }
+
+        void process() override {
+            std::visit(overloaded {
+                [this](i128 value) { this->setIntegerOnOutput(0, value); },
+                [this](long double value) { this->setFloatOnOutput(0, value); },
+                [this](const std::vector<u8> &value) { this->setBufferOnOutput(0, value); }
+            }, this->m_value);
+        }
+
+        void store(nlohmann::json &j) const override {
+            j = nlohmann::json::object();
+
+            j["name"] = this->m_name;
+            j["type"] = this->m_type;
+        }
+
+        void load(const nlohmann::json &j) override {
+            this->m_name = j["name"].get<std::string>();
+            this->m_type = j["type"];
+        }
+
+    private:
+        std::string m_name = LangEntry(this->getUnlocalizedName());
+        int m_type = 0;
+
+        std::variant<i128, long double, std::vector<u8>> m_value;
+    };
+
+    class NodeCustomOutput : public dp::Node {
+    public:
+        NodeCustomOutput() : Node("hex.builtin.nodes.custom.output.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        ~NodeCustomOutput() override = default;
+
+        void drawNode() override {
+            ImGui::PushItemWidth(100_scaled);
+            if (ImGui::Combo("##type", &this->m_type, "Integer\0Float\0Buffer\0")) {
+                this->setAttributes({
+                    { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.output") }
+                });
+            }
+
+            if (ImGui::InputText("##name", this->m_name)) {
+                this->setUnlocalizedTitle(this->m_name);
+            }
+
+            ImGui::PopItemWidth();
+        }
+
+        const std::string &getName() const { return this->m_name; }
+        dp::Attribute::Type getType() const {
+            switch (this->m_type) {
+                case 0: return dp::Attribute::Type::Integer;
+                case 1: return dp::Attribute::Type::Float;
+                case 2: return dp::Attribute::Type::Buffer;
+                default: return dp::Attribute::Type::Integer;
+            }
+        }
+
+        void process() override {
+            switch (this->getType()) {
+                case dp::Attribute::Type::Integer: this->m_value = this->getIntegerOnInput(0); break;
+                case dp::Attribute::Type::Float:   this->m_value = this->getFloatOnInput(0); break;
+                case dp::Attribute::Type::Buffer:  this->m_value = this->getBufferOnInput(0); break;
+            }
+        }
+
+        const auto& getValue() const { return this->m_value; }
+
+        void store(nlohmann::json &j) const override {
+            j = nlohmann::json::object();
+
+            j["name"] = this->m_name;
+            j["type"] = this->m_type;
+        }
+
+        void load(const nlohmann::json &j) override {
+            this->m_name = j["name"].get<std::string>();
+            this->m_type = j["type"];
+        }
+
+    private:
+        std::string m_name = LangEntry(this->getUnlocalizedName());
+        int m_type = 0;
+
+        std::variant<i128, long double, std::vector<u8>> m_value;
+    };
+
+    class NodeCustom : public dp::Node {
+    public:
+        NodeCustom() : Node("hex.builtin.nodes.custom.custom.header", {}) { }
+        ~NodeCustom() override = default;
+
+        void drawNode() override {
+            if (this->m_requiresAttributeUpdate) {
+                this->m_requiresAttributeUpdate = false;
+                this->setAttributes(this->findAttributes());
+            }
+
+            ImGui::PushItemWidth(200_scaled);
+
+            bool editing = false;
+            if (this->m_editable) {
+                ImGui::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, this->m_name);
+                editing = ImGui::IsItemActive();
+
+                if (ImGui::Button("hex.builtin.nodes.custom.custom.edit"_lang, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing()))) {
+                    ProviderExtraData::getCurrent().dataProcessor.workspaceStack.push_back(&this->m_workspace);
+                    this->m_requiresAttributeUpdate = true;
+                }
+            } else {
+                this->setUnlocalizedTitle(this->m_name);
+
+                if (this->getAttributes().empty()) {
+                    ImGui::TextUnformatted("hex.builtin.nodes.custom.custom.edit_hint"_lang);
+                }
+            }
+
+            this->m_editable = ImGui::GetIO().KeyShift || editing;
+
+            ImGui::PopItemWidth();
+        }
+
+        void process() override {
+            auto indexFromId = [this](u32 id) -> std::optional<u32> {
+                const auto &attributes = this->getAttributes();
+                for (u32 i = 0; i < attributes.size(); i++)
+                    if (u32(attributes[i].getId()) == id)
+                        return i;
+                return std::nullopt;
+            };
+
+            // Forward inputs to input nodes values
+            for (auto &attribute : this->getAttributes()) {
+                auto index = indexFromId(attribute.getId());
+                if (!index.has_value())
+                    continue;
+
+                if (auto input = this->findInput(attribute.getUnlocalizedName()); input != nullptr) {
+                    switch (attribute.getType()) {
+                        case dp::Attribute::Type::Integer: {
+                            auto value = this->getIntegerOnInput(*index);
+                            input->setValue(value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Float: {
+                            auto value = this->getFloatOnInput(*index);
+                            input->setValue(value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Buffer: {
+                            auto value = this->getBufferOnInput(*index);
+                            input->setValue(value);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Process all nodes in our workspace
+            for (auto &endNode : this->m_workspace.endNodes) {
+                endNode->resetOutputData();
+
+                for (auto &node : this->m_workspace.nodes)
+                    node->resetProcessedInputs();
+
+                endNode->process();
+            }
+
+            // Forward output node values to outputs
+            for (auto &attribute : this->getAttributes()) {
+                auto index = indexFromId(attribute.getId());
+                if (!index.has_value())
+                    continue;
+
+                if (auto output = this->findOutput(attribute.getUnlocalizedName()); output != nullptr) {
+                    switch (attribute.getType()) {
+                        case dp::Attribute::Type::Integer: {
+                            auto value = std::get<i128>(output->getValue());
+                            this->setIntegerOnOutput(*index, value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Float: {
+                            auto value = std::get<long double>(output->getValue());
+                            this->setFloatOnOutput(*index, value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Buffer: {
+                            auto value = std::get<std::vector<u8>>(output->getValue());
+                            this->setBufferOnOutput(*index, value);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        void store(nlohmann::json &j) const override {
+            j = nlohmann::json::object();
+
+            j["nodes"] = ViewDataProcessor::saveNodes(this->m_workspace);
+        }
+
+        void load(const nlohmann::json &j) override {
+            ViewDataProcessor::loadNodes(this->m_workspace, j["nodes"]);
+
+            this->m_name = LangEntry(this->getUnlocalizedTitle()).get();
+            this->m_requiresAttributeUpdate = true;
+        }
+
+    private:
+        std::vector<dp::Attribute> findAttributes() {
+            std::vector<dp::Attribute> result;
+
+            for (auto &node : this->m_workspace.nodes) {
+                if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr)
+                    result.emplace_back(dp::Attribute::IOType::In, inputNode->getType(), inputNode->getName());
+                else if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr)
+                    result.emplace_back(dp::Attribute::IOType::Out, outputNode->getType(), outputNode->getName());
+            }
+
+            return result;
+        }
+
+        NodeCustomInput* findInput(const std::string &name) {
+            for (auto &node : this->m_workspace.nodes) {
+                if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr && inputNode->getName() == name)
+                    return inputNode;
+            }
+
+            return nullptr;
+        }
+
+        NodeCustomOutput* findOutput(const std::string &name) {
+            for (auto &node : this->m_workspace.nodes) {
+                if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr && outputNode->getName() == name)
+                    return outputNode;
+            }
+
+            return nullptr;
+        }
+
+    private:
+        std::string m_name = "hex.builtin.nodes.custom.custom.header"_lang;
+
+        bool m_editable = false;
+
+        bool m_requiresAttributeUpdate = false;
+        ProviderExtraData::Data::DataProcessor::Workspace m_workspace;
     };
 
     void registerDataProcessorNodes() {
@@ -1188,6 +1480,10 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeVisualizerByteDistribution>("hex.builtin.nodes.visualizer", "hex.builtin.nodes.visualizer.byte_distribution");
 
         ContentRegistry::DataProcessorNode::add<NodePatternLanguageOutVariable>("hex.builtin.nodes.pattern_language", "hex.builtin.nodes.pattern_language.out_var");
+
+        ContentRegistry::DataProcessorNode::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom");
+        ContentRegistry::DataProcessorNode::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
+        ContentRegistry::DataProcessorNode::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
     }
 
 }

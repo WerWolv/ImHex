@@ -3,11 +3,13 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/file.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #include <imnodes.h>
+#include <imnodes_internal.h>
 #include <nlohmann/json.hpp>
 
 #include <content/helpers/provider_extra_data.hpp>
@@ -20,52 +22,71 @@ namespace hex::plugin::builtin {
             .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 auto save = tar.readString(basePath);
+                auto &data = ProviderExtraData::get(provider).dataProcessor;
 
-                this->loadNodes(provider, save);
+                ViewDataProcessor::loadNodes(data.mainWorkspace, save);
+                this->m_updateNodePositions = true;
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                tar.write(basePath, this->saveNodes(provider));
+            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                auto &data = ProviderExtraData::get(provider).dataProcessor;
+
+                tar.write(basePath, ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
 
                 return true;
             }
+        });
+
+        EventManager::subscribe<EventProviderCreated>(this, [](const auto *provider) {
+            auto &data = ProviderExtraData::get(provider).dataProcessor;
+
+            data.mainWorkspace = { };
+            data.workspaceStack.push_back(&data.mainWorkspace);
         });
 
         EventManager::subscribe<EventProviderChanged>(this, [this](const auto &, const auto &) {
             auto &data = ProviderExtraData::getCurrent().dataProcessor;
-            for (auto &node : data.nodes) {
-                node->setCurrentOverlay(nullptr);
+
+            for (auto *workspace : data.workspaceStack) {
+                for (auto &node : workspace->nodes) {
+                    node->setCurrentOverlay(nullptr);
+                }
+
+                workspace->dataOverlays.clear();
             }
-            data.dataOverlays.clear();
-            this->m_justSwitchedProvider = true;
+
+            this->m_updateNodePositions = true;
         });
 
-        EventManager::subscribe<EventDataChanged>(this, [this] {
-            this->processNodes();
+        EventManager::subscribe<EventDataChanged>(this, [] {
+            auto &workspace = *ProviderExtraData::getCurrent().dataProcessor.workspaceStack.back();
+
+            ViewDataProcessor::processNodes(workspace);
         });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&, this] {
+        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&] {
             bool providerValid = ImHexApi::Provider::isValid();
-            auto provider = ImHexApi::Provider::get();
 
             auto &data = ProviderExtraData::getCurrent().dataProcessor;
 
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang, nullptr, false, providerValid)) {
-                fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
-                    [&, this](const std::fs::path &path) {
+                fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
+                    [&](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Read);
-                        if (file.isValid())
-                            this->loadNodes(provider, file.readString());
+                        if (file.isValid()) {
+                            ViewDataProcessor::loadNodes(data.mainWorkspace, file.readString());
+                            this->m_updateNodePositions = true;
+                        }
                     });
             }
 
-            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !data.nodes.empty() && providerValid)) {
-                fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode"} },
-                    [&, this](const std::fs::path &path) {
+            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !data.workspaceStack.empty() && !data.workspaceStack.back()->nodes.empty() && providerValid)) {
+                fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
+                    [&](const std::fs::path &path) {
                         fs::File file(path, fs::File::Mode::Create);
                         if (file.isValid())
-                            file.write(this->saveNodes(provider));
+                            file.write(ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
                     });
             }
         });
@@ -74,42 +95,44 @@ namespace hex::plugin::builtin {
             fs::File file(path, fs::File::Mode::Read);
             if (!file.isValid()) return false;
 
-            this->loadNodes(ImHexApi::Provider::get(), file.readString());
+            auto &data = ProviderExtraData::getCurrent().dataProcessor;
+
+            ViewDataProcessor::loadNodes(data.mainWorkspace, file.readString());
+            this->m_updateNodePositions = true;
 
             return true;
         });
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
+        EventManager::unsubscribe<EventProviderCreated>(this);
+        EventManager::unsubscribe<EventProviderChanged>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
         EventManager::unsubscribe<EventDataChanged>(this);
     }
 
 
-    void ViewDataProcessor::eraseLink(int id) {
-        auto &data = ProviderExtraData::getCurrent().dataProcessor;
+    void ViewDataProcessor::eraseLink(ProviderExtraData::Data::DataProcessor::Workspace &workspace, int id) {
+        auto link = std::find_if(workspace.links.begin(), workspace.links.end(), [&id](auto link) { return link.getId() == id; });
 
-        auto link = std::find_if(data.links.begin(), data.links.end(), [&id](auto link) { return link.getId() == id; });
-
-        if (link == data.links.end())
+        if (link == workspace.links.end())
             return;
 
-        for (auto &node : data.nodes) {
+        for (auto &node : workspace.nodes) {
             for (auto &attribute : node->getAttributes()) {
                 attribute.removeConnectedAttribute(id);
             }
         }
 
-        data.links.erase(link);
+        workspace.links.erase(link);
 
         ImHexApi::Provider::markDirty();
     }
 
-    void ViewDataProcessor::eraseNodes(const std::vector<int> &ids) {
-        auto &data = ProviderExtraData::getCurrent().dataProcessor;
+    void ViewDataProcessor::eraseNodes(ProviderExtraData::Data::DataProcessor::Workspace &workspace, const std::vector<int> &ids) {
         for (int id : ids) {
-            auto node = std::find_if(data.nodes.begin(), data.nodes.end(),
+            auto node = std::find_if(workspace.nodes.begin(), workspace.nodes.end(),
             [&id](const auto &node) {
                 return node->getId() == id;
             });
@@ -120,64 +143,81 @@ namespace hex::plugin::builtin {
                     linksToRemove.push_back(linkId);
 
                 for (auto linkId : linksToRemove)
-                    eraseLink(linkId);
+                    eraseLink(workspace, linkId);
             }
         }
 
         for (int id : ids) {
-            auto node = std::find_if(data.nodes.begin(), data.nodes.end(), [&id](const auto &node) { return node->getId() == id; });
+            auto node = std::find_if(workspace.nodes.begin(), workspace.nodes.end(), [&id](const auto &node) { return node->getId() == id; });
 
-            std::erase_if(data.endNodes, [&id](const auto &node) { return node->getId() == id; });
+            std::erase_if(workspace.endNodes, [&id](const auto &node) { return node->getId() == id; });
 
-            data.nodes.erase(node);
+            workspace.nodes.erase(node);
         }
 
         ImHexApi::Provider::markDirty();
     }
 
-    void ViewDataProcessor::processNodes() {
-        auto &data = ProviderExtraData::getCurrent().dataProcessor;
-
-        if (data.dataOverlays.size() != data.endNodes.size()) {
-            for (auto overlay : data.dataOverlays)
+    void ViewDataProcessor::processNodes(ProviderExtraData::Data::DataProcessor::Workspace &workspace) {
+        if (workspace.dataOverlays.size() != workspace.endNodes.size()) {
+            for (auto overlay : workspace.dataOverlays)
                 ImHexApi::Provider::get()->deleteOverlay(overlay);
-            data.dataOverlays.clear();
+            workspace.dataOverlays.clear();
 
-            for (u32 i = 0; i < data.endNodes.size(); i++)
-                data.dataOverlays.push_back(ImHexApi::Provider::get()->newOverlay());
+            for (u32 i = 0; i < workspace.endNodes.size(); i++)
+                workspace.dataOverlays.push_back(ImHexApi::Provider::get()->newOverlay());
         }
 
         u32 overlayIndex = 0;
-        for (auto endNode : data.endNodes) {
-            endNode->setCurrentOverlay(data.dataOverlays[overlayIndex]);
+        for (auto endNode : workspace.endNodes) {
+            endNode->setCurrentOverlay(workspace.dataOverlays[overlayIndex]);
             overlayIndex++;
         }
 
-        data.currNodeError.reset();
+        workspace.currNodeError.reset();
 
         try {
-            for (auto &endNode : data.endNodes) {
+            for (auto &endNode : workspace.endNodes) {
                 endNode->resetOutputData();
 
-                for (auto &node : data.nodes)
+                for (auto &node : workspace.nodes)
                     node->resetProcessedInputs();
 
                 endNode->process();
             }
         } catch (dp::Node::NodeError &e) {
-            data.currNodeError = e;
+            workspace.currNodeError = e;
 
-            for (auto overlay : data.dataOverlays)
+            for (auto overlay : workspace.dataOverlays)
                 ImHexApi::Provider::get()->deleteOverlay(overlay);
-            data.dataOverlays.clear();
+            workspace.dataOverlays.clear();
 
         } catch (std::runtime_error &e) {
-            printf("Node implementation bug! %s\n", e.what());
+            log::fatal("Node implementation bug! {}\n", e.what());
+        }
+    }
+
+    void ViewDataProcessor::reloadCustomNodes() {
+        this->m_customNodes.clear();
+
+        for (const auto &basePath : fs::getDefaultPaths(fs::ImHexPath::Nodes)) {
+            for (const auto &entry : std::fs::recursive_directory_iterator(basePath)) {
+                if (entry.path().extension() == ".hexnode") {
+                    try {
+                        nlohmann::json nodeJson = nlohmann::json::parse(fs::File(entry.path(), fs::File::Mode::Read).readString());
+
+                        this->m_customNodes.push_back(CustomNode { LangEntry(nodeJson["name"]), nodeJson });
+                    } catch (nlohmann::json::exception &e) {
+                        continue;
+                    }
+                }
+            }
         }
     }
 
     void ViewDataProcessor::drawContent() {
         auto &data = ProviderExtraData::getCurrent().dataProcessor;
+        auto &workspace = *data.workspaceStack.back();
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_processor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
@@ -191,8 +231,10 @@ namespace hex::plugin::builtin {
                     ImGui::OpenPopup("Node Menu");
                 else if (ImNodes::IsLinkHovered(&this->m_rightClickedId))
                     ImGui::OpenPopup("Link Menu");
-                else
+                else {
                     ImGui::OpenPopup("Context Menu");
+                    this->reloadCustomNodes();
+                }
             }
 
             if (ImGui::BeginPopup("Context Menu")) {
@@ -204,14 +246,14 @@ namespace hex::plugin::builtin {
                         ids.resize(ImNodes::NumSelectedNodes());
                         ImNodes::GetSelectedNodes(ids.data());
 
-                        this->eraseNodes(ids);
+                        this->eraseNodes(workspace, ids);
                         ImNodes::ClearNodeSelection();
 
                         ids.resize(ImNodes::NumSelectedLinks());
                         ImNodes::GetSelectedLinks(ids.data());
 
                         for (auto id : ids)
-                            this->eraseLink(id);
+                            this->eraseLink(workspace, id);
                         ImNodes::ClearLinkSelection();
                     }
                 }
@@ -233,6 +275,17 @@ namespace hex::plugin::builtin {
                     }
                 }
 
+                if (ImGui::BeginMenu("hex.builtin.nodes.custom"_lang)) {
+                    ImGui::Separator();
+
+                    for (auto &customNode : this->m_customNodes) {
+                        if (ImGui::MenuItem(customNode.name.c_str())) {
+                            node = loadNode(customNode.data);
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
                 if (node != nullptr) {
                     bool hasOutput = false;
                     bool hasInput  = false;
@@ -245,10 +298,10 @@ namespace hex::plugin::builtin {
                     }
 
                     if (hasInput && !hasOutput)
-                        data.endNodes.push_back(node.get());
+                        workspace.endNodes.push_back(node.get());
 
                     ImNodes::SetNodeScreenSpacePos(node->getId(), this->m_rightClickedCoords);
-                    data.nodes.push_back(std::move(node));
+                    workspace.nodes.push_back(std::move(node));
                     ImHexApi::Provider::markDirty();
                 }
 
@@ -256,44 +309,64 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::BeginPopup("Node Menu")) {
+                if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.save_node"_lang)) {
+                    auto it = std::find_if(workspace.nodes.begin(), workspace.nodes.end(),
+                        [this](const auto &node) {
+                            return node->getId() == this->m_rightClickedId;
+                        });
+
+                    if (it != workspace.nodes.end()) {
+                        auto &node = *it;
+                        fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } }, [&](const std::fs::path &path){
+                            fs::File outputFile(path, fs::File::Mode::Create);
+                            outputFile.write(ViewDataProcessor::saveNode(node.get()).dump(4));
+                        });
+                    }
+                }
+
+                ImGui::Separator();
+
                 if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.remove_node"_lang))
-                    this->eraseNodes({ this->m_rightClickedId });
+                    this->eraseNodes(workspace, { this->m_rightClickedId });
 
                 ImGui::EndPopup();
             }
 
             if (ImGui::BeginPopup("Link Menu")) {
                 if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.remove_link"_lang))
-                    this->eraseLink(this->m_rightClickedId);
+                    this->eraseLink(workspace, this->m_rightClickedId);
 
                 ImGui::EndPopup();
             }
 
             {
                 int nodeId;
-                if (ImNodes::IsNodeHovered(&nodeId) && data.currNodeError.has_value() && data.currNodeError->node->getId() == nodeId) {
+                if (ImNodes::IsNodeHovered(&nodeId) && workspace.currNodeError.has_value() && workspace.currNodeError->node->getId() == nodeId) {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted("hex.builtin.common.error"_lang);
                     ImGui::Separator();
-                    ImGui::TextUnformatted(data.currNodeError->message.c_str());
+                    ImGui::TextUnformatted(workspace.currNodeError->message.c_str());
                     ImGui::EndTooltip();
                 }
             }
 
-            if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3))) {
+            if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3F))) {
                 ImNodes::BeginNodeEditor();
 
-                for (auto &node : data.nodes) {
-                    const bool hasError = data.currNodeError.has_value() && data.currNodeError->node == node.get();
+                for (auto &node : workspace.nodes) {
+                    const bool hasError = workspace.currNodeError.has_value() && workspace.currNodeError->node == node.get();
 
                     if (hasError)
                         ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
 
                     int nodeId = node->getId();
-                    if (!this->m_justSwitchedProvider)
-                        node->setPosition(ImNodes::GetNodeGridSpacePos(nodeId));
-                    else
+                    if (this->m_updateNodePositions) {
+                        this->m_updateNodePositions = false;
                         ImNodes::SetNodeGridSpacePos(nodeId, node->getPosition());
+                    } else {
+                        if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Nodes, nodeId) >= 0)
+                            node->setPosition(ImNodes::GetNodeGridSpacePos(nodeId));
+                    }
 
                     ImNodes::BeginNode(nodeId);
 
@@ -301,7 +374,9 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted(LangEntry(node->getUnlocalizedTitle()));
                     ImNodes::EndNodeTitleBar();
 
+                    ImGui::PopStyleVar();
                     node->drawNode();
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(1.0F, 1.0F));
 
                     for (auto &attribute : node->getAttributes()) {
                         ImNodesPinShape pinShape;
@@ -338,28 +413,50 @@ namespace hex::plugin::builtin {
                         ImNodes::PopColorStyle();
                 }
 
-                for (const auto &link : data.links)
+                std::vector<int> linksToRemove;
+                for (const auto &link : workspace.links) {
+                    if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Pins, link.getFromId()) == -1 ||
+                        ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Pins, link.getToId()) == -1) {
+
+                        linksToRemove.push_back(link.getId());
+                    }
+                }
+                for (auto linkId : linksToRemove)
+                    this->eraseLink(workspace, linkId);
+
+                for (const auto &link : workspace.links) {
                     ImNodes::Link(link.getId(), link.getFromId(), link.getToId());
+                }
 
                 ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
 
-                if (data.nodes.empty())
+                if (workspace.nodes.empty())
                     ImGui::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
+
+                if (data.workspaceStack.size() > 1) {
+                    ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.2F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
+                    if (ImGui::IconButton(ICON_VS_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
+                        data.workspaceStack.pop_back();
+                        this->m_updateNodePositions = true;
+                    }
+                }
 
                 ImNodes::EndNodeEditor();
             }
             ImGui::EndChild();
 
             if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_continuousEvaluation)
-                this->processNodes();
+                this->processNodes(workspace);
 
             ImGui::SameLine();
+
             ImGui::Checkbox("Continuous evaluation", &this->m_continuousEvaluation);
+
 
             {
                 int linkId;
                 if (ImNodes::IsLinkDestroyed(&linkId)) {
-                    this->eraseLink(linkId);
+                    this->eraseLink(workspace, linkId);
                 }
             }
 
@@ -369,7 +466,7 @@ namespace hex::plugin::builtin {
 
                     do {
                         dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
-                        for (auto &node : data.nodes) {
+                        for (auto &node : workspace.nodes) {
                             for (auto &attribute : node->getAttributes()) {
                                 if (attribute.getId() == from)
                                     fromAttr = &attribute;
@@ -390,7 +487,7 @@ namespace hex::plugin::builtin {
                         if (!toAttr->getConnectedAttributes().empty())
                             break;
 
-                        auto newLink = data.links.emplace_back(from, to);
+                        auto newLink = workspace.links.emplace_back(from, to);
 
                         fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
                         toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
@@ -406,7 +503,7 @@ namespace hex::plugin::builtin {
                     ImNodes::GetSelectedLinks(selectedLinks.data());
 
                     for (const int id : selectedLinks) {
-                        eraseLink(id);
+                        eraseLink(workspace, id);
                     }
                 }
             }
@@ -418,48 +515,52 @@ namespace hex::plugin::builtin {
                     selectedNodes.resize(static_cast<size_t>(selectedNodeCount));
                     ImNodes::GetSelectedNodes(selectedNodes.data());
 
-                    this->eraseNodes(selectedNodes);
+                    this->eraseNodes(workspace, selectedNodes);
                 }
             }
-
-            this->m_justSwitchedProvider = false;
         }
         ImGui::End();
     }
 
-    std::string ViewDataProcessor::saveNodes(prv::Provider *provider) {
-        auto &data = ProviderExtraData::get(provider).dataProcessor;
+    nlohmann::json ViewDataProcessor::saveNode(const dp::Node *node) {
+        nlohmann::json output;
 
-        using json = nlohmann::json;
-        json output;
+        output["name"] = node->getUnlocalizedTitle();
+        output["type"] = node->getUnlocalizedName();
 
-        output["nodes"] = json::object();
-        for (auto &node : data.nodes) {
-            auto id              = node->getId();
-            auto &currNodeOutput = output["nodes"][std::to_string(id)];
-            auto pos             = node->getPosition();
+        nlohmann::json nodeData;
+        node->store(nodeData);
+        output["data"] = nodeData;
 
-            currNodeOutput["type"] = node->getUnlocalizedName();
-            currNodeOutput["pos"]  = {
-                {"x",  pos.x},
-                { "y", pos.y}
-            };
-            currNodeOutput["attrs"] = json::array();
-            currNodeOutput["id"]    = id;
-
-            json nodeData;
-            node->store(nodeData);
-            currNodeOutput["data"] = nodeData;
-
-            u32 attrIndex = 0;
-            for (auto &attr : node->getAttributes()) {
-                currNodeOutput["attrs"][attrIndex] = attr.getId();
-                attrIndex++;
-            }
+        output["attrs"] = nlohmann::json::array();
+        u32 attrIndex = 0;
+        for (auto &attr : node->getAttributes()) {
+            output["attrs"][attrIndex] = attr.getId();
+            attrIndex++;
         }
 
-        output["links"] = json::object();
-        for (auto &link : data.links) {
+        return output;
+    }
+
+    nlohmann::json ViewDataProcessor::saveNodes(const ViewDataProcessor::Workspace &workspace) {
+        nlohmann::json output;
+
+        output["nodes"] = nlohmann::json::object();
+        for (auto &node : workspace.nodes) {
+            auto id         = node->getId();
+            auto &currNodeOutput = output["nodes"][std::to_string(id)];
+            auto pos     = node->getPosition();
+
+            currNodeOutput = saveNode(node.get());
+            currNodeOutput["id"] = id;
+            currNodeOutput["pos"]  = {
+                    { "x", pos.x },
+                    { "y", pos.y }
+            };
+        }
+
+        output["links"] = nlohmann::json::object();
+        for (auto &link : workspace.links) {
             auto id          = link.getId();
             auto &currOutput = output["links"][std::to_string(id)];
 
@@ -468,28 +569,14 @@ namespace hex::plugin::builtin {
             currOutput["to"]   = link.getToId();
         }
 
-        return output.dump(4);
+        return output;
     }
 
-    void ViewDataProcessor::loadNodes(prv::Provider *provider, const std::string &jsonData) {
-        if (!ImHexApi::Provider::isValid()) return;
+    std::unique_ptr<dp::Node> ViewDataProcessor::loadNode(const nlohmann::json &node) {
+        try {
 
-        auto &data = ProviderExtraData::get(provider).dataProcessor;
+            auto &nodeEntries = ContentRegistry::DataProcessorNode::getEntries();
 
-        using json = nlohmann::json;
-
-        json input = json::parse(jsonData);
-
-        u32 maxNodeId = 0;
-        u32 maxAttrId = 0;
-        u32 maxLinkId = 0;
-
-        data.nodes.clear();
-        data.endNodes.clear();
-        data.links.clear();
-
-        auto &nodeEntries = ContentRegistry::DataProcessorNode::getEntries();
-        for (auto &node : input["nodes"]) {
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
                 if (entry.name == node["type"].get<std::string>())
@@ -497,12 +584,40 @@ namespace hex::plugin::builtin {
             }
 
             if (newNode == nullptr)
+                return nullptr;
+
+            if (node.contains("id"))
+                newNode->setId(node["id"]);
+
+            if (node.contains("name"))
+                newNode->setUnlocalizedTitle(node["name"]);
+
+            u32 attrIndex  = 0;
+            for (auto &attr : newNode->getAttributes()) {
+                attr.setId(node["attrs"][attrIndex]);
+                attrIndex++;
+            }
+
+            if (!node["data"].is_null())
+                newNode->load(node["data"]);
+
+            return newNode;
+        } catch (nlohmann::json::exception &e) {
+            return nullptr;
+        }
+    }
+
+    void ViewDataProcessor::loadNodes(ViewDataProcessor::Workspace &workspace, const nlohmann::json &jsonData) {
+        workspace.nodes.clear();
+        workspace.endNodes.clear();
+        workspace.links.clear();
+
+        for (auto &node : jsonData["nodes"]) {
+            auto newNode = loadNode(node);
+            if (newNode == nullptr)
                 continue;
 
-            u32 nodeId = node["id"];
-            maxNodeId  = std::max(nodeId, maxNodeId);
-
-            newNode->setId(nodeId);
+            newNode->setPosition(ImVec2(node["pos"]["x"], node["pos"]["y"]));
 
             bool hasOutput = false;
             bool hasInput  = false;
@@ -514,10 +629,7 @@ namespace hex::plugin::builtin {
                 if (attr.getIOType() == dp::Attribute::IOType::In)
                     hasInput = true;
 
-                u32 attrId = node["attrs"][attrIndex];
-                maxAttrId  = std::max(attrId, maxAttrId);
-
-                attr.setId(attrId);
+                attr.setId(node["attrs"][attrIndex]);
                 attrIndex++;
             }
 
@@ -525,23 +637,23 @@ namespace hex::plugin::builtin {
                 newNode->load(node["data"]);
 
             if (hasInput && !hasOutput)
-                data.endNodes.push_back(newNode.get());
+                workspace.endNodes.push_back(newNode.get());
 
-            data.nodes.push_back(std::move(newNode));
-            ImNodes::SetNodeGridSpacePos(nodeId, ImVec2(node["pos"]["x"], node["pos"]["y"]));
+            workspace.nodes.push_back(std::move(newNode));
         }
 
-        for (auto &link : input["links"]) {
+        int maxLinkId = 0;
+        for (auto &link : jsonData["links"]) {
             dp::Link newLink(link["from"], link["to"]);
 
-            u32 linkId = link["id"];
+            int linkId = link["id"];
             maxLinkId  = std::max(linkId, maxLinkId);
 
             newLink.setID(linkId);
-            data.links.push_back(newLink);
+            workspace.links.push_back(newLink);
 
             dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
-            for (auto &node : data.nodes) {
+            for (auto &node : workspace.nodes) {
                 for (auto &attribute : node->getAttributes()) {
                     if (attribute.getId() == newLink.getFromId())
                         fromAttr = &attribute;
@@ -566,11 +678,21 @@ namespace hex::plugin::builtin {
             toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
         }
 
+        int maxNodeId = 0;
+        int maxAttrId = 0;
+        for (auto &node : workspace.nodes) {
+            maxNodeId = std::max(maxNodeId, node->getId());
+
+            for (auto &attr : node->getAttributes()) {
+                maxAttrId = std::max(maxAttrId, attr.getId());
+            }
+        }
+
         dp::Node::setIdCounter(maxNodeId + 1);
         dp::Attribute::setIdCounter(maxAttrId + 1);
         dp::Link::setIdCounter(maxLinkId + 1);
 
-        this->processNodes();
+        ViewDataProcessor::processNodes(workspace);
     }
 
 }

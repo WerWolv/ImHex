@@ -102,6 +102,7 @@ namespace hex::fs {
         Inspectors,
         Themes,
         Libraries,
+        Nodes,
 
         END
     };

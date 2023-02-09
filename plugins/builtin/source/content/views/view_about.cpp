@@ -159,6 +159,7 @@ namespace hex::plugin::builtin {
                     { "Scripts", fs::ImHexPath::Scripts },
                     { "Themes", fs::ImHexPath::Themes },
                     { "Data inspector scripts", fs::ImHexPath::Inspectors },
+                    { "Custom data processor nodes", fs::ImHexPath::Nodes },
                 }
             };
 

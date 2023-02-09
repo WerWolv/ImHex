@@ -20,10 +20,12 @@ namespace hex::plugin::windows {
                 // Explicitly trigger a segfault by writing to an invalid memory location
                 // Used for debugging crashes
                 *reinterpret_cast<u8 *>(0x10) = 0x10;
+                std::unreachable();
             } else if (ImGui::GetIO().KeyShift) {
                 // Explicitly trigger an abort by throwing an uncaught exception
                 // Used for debugging exception errors
                 throw std::runtime_error("Debug Error");
+                std::unreachable();
             } else {
                 hex::openWebpage("https://imhex.werwolv.net/debug");
             }

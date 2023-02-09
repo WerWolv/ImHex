@@ -31,7 +31,10 @@ namespace hex::dp {
         void setUnlocalizedName(const std::string &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
 
         [[nodiscard]] const std::string &getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
+        void setUnlocalizedTitle(std::string title) { this->m_unlocalizedTitle = std::move(title); }
+
         [[nodiscard]] std::vector<Attribute> &getAttributes() { return this->m_attributes; }
+        [[nodiscard]] const std::vector<Attribute> &getAttributes() const { return this->m_attributes; }
 
         void setCurrentOverlay(prv::Overlay *overlay) {
             this->m_overlay = overlay;
@@ -40,8 +43,8 @@ namespace hex::dp {
         virtual void drawNode() { }
         virtual void process() = 0;
 
-        virtual void store(nlohmann::json &j) { hex::unused(j); }
-        virtual void load(nlohmann::json &j) { hex::unused(j); }
+        virtual void store(nlohmann::json &j) const { hex::unused(j); }
+        virtual void load(const nlohmann::json &j) { hex::unused(j); }
 
         struct NodeError {
             Node *node;
@@ -69,6 +72,14 @@ namespace hex::dp {
             if (id > Node::s_idCounter)
                 Node::s_idCounter = id;
         }
+
+        std::vector<u8> getBufferOnInput(u32 index);
+        i128 getIntegerOnInput(u32 index);
+        long double getFloatOnInput(u32 index);
+
+        void setBufferOnOutput(u32 index, const std::vector<u8> &data);
+        void setIntegerOnOutput(u32 index, i128 integer);
+        void setFloatOnOutput(u32 index, long double floatingPoint);
 
     private:
         int m_id;
@@ -103,15 +114,14 @@ namespace hex::dp {
             throw NodeError { this, message };
         }
 
-        std::vector<u8> getBufferOnInput(u32 index);
-        i128 getIntegerOnInput(u32 index);
-        long double getFloatOnInput(u32 index);
-
-        void setBufferOnOutput(u32 index, const std::vector<u8> &data);
-        void setIntegerOnOutput(u32 index, i128 integer);
-        void setFloatOnOutput(u32 index, long double floatingPoint);
-
         void setOverlayData(u64 address, const std::vector<u8> &data);
+
+        void setAttributes(std::vector<Attribute> attributes) {
+            this->m_attributes = std::move(attributes);
+
+            for (auto &attr : this->m_attributes)
+                attr.setParentNode(this);
+        }
     };
 
 }

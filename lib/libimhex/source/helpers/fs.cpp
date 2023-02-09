@@ -101,7 +101,7 @@ namespace hex::fs {
                 result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
                 break;
             default:
-                hex::unreachable();
+                std::unreachable();
         }
 
         if (result == NFD_OKAY){
@@ -270,6 +270,9 @@ namespace hex::fs {
                 break;
             case ImHexPath::Inspectors:
                 result = appendPath(getDefaultPaths(ImHexPath::Scripts), "inspectors");
+                break;
+            case ImHexPath::Nodes:
+                result = appendPath(getDefaultPaths(ImHexPath::Scripts), "nodes");
                 break;
             case ImHexPath::Themes:
                 result = appendPath(getDataPaths(), "themes");
