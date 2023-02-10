@@ -1372,6 +1372,10 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
             };
 
+            auto prevContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(this->m_workspace.context.get());
+            ON_SCOPE_EXIT { ImNodes::SetCurrentContext(prevContext); };
+
             // Forward inputs to input nodes values
             for (auto &attribute : this->getAttributes()) {
                 auto index = indexFromId(attribute.getId());

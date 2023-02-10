@@ -10,6 +10,9 @@
 
 #include <map>
 
+#include <imnodes.h>
+#include <imnodes_internal.h>
+
 namespace hex::plugin::builtin {
 
     class ProviderExtraData {
@@ -64,6 +67,15 @@ namespace hex::plugin::builtin {
 
             struct DataProcessor {
                 struct Workspace {
+                    std::unique_ptr<ImNodesContext, void(*)(ImNodesContext*)> context = { []{
+                        ImNodesContext *ctx = ImNodes::CreateContext();
+                        ctx->Style = ImNodes::GetStyle();
+                        ctx->Io = ImNodes::GetIO();
+                        ctx->AttributeFlagStack = GImNodes->AttributeFlagStack;
+
+                        return ctx;
+                    }(), ImNodes::DestroyContext };
+
                     std::list<std::unique_ptr<dp::Node>> nodes;
                     std::list<dp::Node*> endNodes;
                     std::list<dp::Link> links;

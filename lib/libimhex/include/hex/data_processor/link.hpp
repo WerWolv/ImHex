@@ -9,7 +9,7 @@ namespace hex::dp {
         Link(int from, int to);
 
         [[nodiscard]] int getId() const { return this->m_id; }
-        void setID(int id) { this->m_id = id; }
+        void setId(int id) { this->m_id = id; }
 
         [[nodiscard]] int getFromId() const { return this->m_from; }
         [[nodiscard]] int getToId() const { return this->m_to; }

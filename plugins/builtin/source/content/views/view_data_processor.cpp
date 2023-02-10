@@ -219,7 +219,9 @@ namespace hex::plugin::builtin {
         auto &data = ProviderExtraData::getCurrent().dataProcessor;
         auto &workspace = *data.workspaceStack.back();
 
+        bool popWorkspace = false;
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_processor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+            ImNodes::SetCurrentContext(workspace.context.get());
 
             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows)) {
                 ImNodes::ClearNodeSelection();
@@ -436,8 +438,7 @@ namespace hex::plugin::builtin {
                 if (data.workspaceStack.size() > 1) {
                     ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.2F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
                     if (ImGui::IconButton(ICON_VS_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
-                        data.workspaceStack.pop_back();
-                        this->m_updateNodePositions = true;
+                        popWorkspace = true;
                     }
                 }
 
@@ -520,6 +521,11 @@ namespace hex::plugin::builtin {
             }
         }
         ImGui::End();
+
+        if (popWorkspace) {
+            data.workspaceStack.pop_back();
+            this->m_updateNodePositions = true;
+        }
     }
 
     nlohmann::json ViewDataProcessor::saveNode(const dp::Node *node) {
@@ -619,6 +625,9 @@ namespace hex::plugin::builtin {
 
             newNode->setPosition(ImVec2(node["pos"]["x"], node["pos"]["y"]));
 
+            if (!node["data"].is_null())
+                newNode->load(node["data"]);
+
             bool hasOutput = false;
             bool hasInput  = false;
             u32 attrIndex  = 0;
@@ -633,9 +642,6 @@ namespace hex::plugin::builtin {
                 attrIndex++;
             }
 
-            if (!node["data"].is_null())
-                newNode->load(node["data"]);
-
             if (hasInput && !hasOutput)
                 workspace.endNodes.push_back(newNode.get());
 
@@ -649,7 +655,7 @@ namespace hex::plugin::builtin {
             int linkId = link["id"];
             maxLinkId  = std::max(linkId, maxLinkId);
 
-            newLink.setID(linkId);
+            newLink.setId(linkId);
             workspace.links.push_back(newLink);
 
             dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
