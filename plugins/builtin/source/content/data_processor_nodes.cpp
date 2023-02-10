@@ -372,6 +372,23 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeBitwiseADD : public dp::Node {
+    public:
+        NodeBitwiseADD() : Node("hex.builtin.nodes.bitwise.add.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto inputA = this->getBufferOnInput(0);
+            auto inputB = this->getBufferOnInput(1);
+
+            std::vector<u8> output(std::min(inputA.size(), inputB.size()), 0x00);
+
+            for (u32 i = 0; i < output.size(); i++)
+                output[i] = inputA[i] + inputB[i];
+
+            this->setBufferOnOutput(2, output);
+        }
+    };
+
     class NodeBitwiseAND : public dp::Node {
     public:
         NodeBitwiseAND() : Node("hex.builtin.nodes.bitwise.and.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
@@ -659,6 +676,39 @@ namespace hex::plugin::builtin {
         }
     };
 
+    class NodeArithmeticCeil : public dp::Node {
+    public:
+        NodeArithmeticCeil() : Node("hex.builtin.nodes.arithmetic.ceil.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto input = this->getFloatOnInput(0);
+
+            this->setIntegerOnOutput(1, std::ceil(input));
+        }
+    };
+
+    class NodeArithmeticFloor : public dp::Node {
+    public:
+        NodeArithmeticFloor() : Node("hex.builtin.nodes.arithmetic.floor.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto input = this->getFloatOnInput(0);
+
+            this->setIntegerOnOutput(1, std::floor(input));
+        }
+    };
+
+    class NodeArithmeticRound : public dp::Node {
+    public:
+        NodeArithmeticRound() : Node("hex.builtin.nodes.arithmetic.round.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Float, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto input = this->getFloatOnInput(0);
+
+            this->setIntegerOnOutput(1, std::round(input));
+        }
+    };
+
     class NodeBufferCombine : public dp::Node {
     public:
         NodeBufferCombine() : Node("hex.builtin.nodes.buffer.combine.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.a"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input.b"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
@@ -730,6 +780,17 @@ namespace hex::plugin::builtin {
             std::copy(patch.begin(), patch.end(), buffer.begin() + address);
 
             this->setBufferOnOutput(3, buffer);
+        }
+    };
+
+    class NodeBufferSize : public dp::Node {
+    public:
+        NodeBufferSize() : Node("hex.builtin.nodes.buffer.size.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.buffer.size.output") }) { }
+
+        void process() override {
+            auto buffer = this->getBufferOnInput(0);
+
+            this->setIntegerOnOutput(1, buffer.size());
         }
     };
 
@@ -1187,6 +1248,11 @@ namespace hex::plugin::builtin {
         void load(const nlohmann::json &j) override {
             this->m_name = j["name"].get<std::string>();
             this->m_type = j["type"];
+
+            this->setUnlocalizedTitle(this->m_name);
+            this->setAttributes({
+                { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
+            });
         }
 
     private:
@@ -1205,7 +1271,7 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(100_scaled);
             if (ImGui::Combo("##type", &this->m_type, "Integer\0Float\0Buffer\0")) {
                 this->setAttributes({
-                    { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.output") }
+                    { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
                 });
             }
 
@@ -1246,6 +1312,11 @@ namespace hex::plugin::builtin {
         void load(const nlohmann::json &j) override {
             this->m_name = j["name"].get<std::string>();
             this->m_type = j["type"];
+
+            this->setUnlocalizedTitle(this->m_name);
+            this->setAttributes({
+                { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
+            });
         }
 
     private:
@@ -1274,7 +1345,9 @@ namespace hex::plugin::builtin {
                 editing = ImGui::IsItemActive();
 
                 if (ImGui::Button("hex.builtin.nodes.custom.custom.edit"_lang, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing()))) {
-                    ProviderExtraData::getCurrent().dataProcessor.workspaceStack.push_back(&this->m_workspace);
+                    auto &data = ProviderExtraData::getCurrent().dataProcessor;
+                    data.workspaceStack.push_back(&this->m_workspace);
+
                     this->m_requiresAttributeUpdate = true;
                 }
             } else {
@@ -1449,11 +1522,15 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeArithmeticModulus>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mod");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticAverage>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.average");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticMedian>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.median");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticCeil>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.ceil");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticFloor>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.floor");
+        ContentRegistry::DataProcessorNode::add<NodeArithmeticRound>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.round");
 
         ContentRegistry::DataProcessorNode::add<NodeBufferCombine>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.combine");
         ContentRegistry::DataProcessorNode::add<NodeBufferSlice>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.slice");
         ContentRegistry::DataProcessorNode::add<NodeBufferRepeat>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.repeat");
         ContentRegistry::DataProcessorNode::add<NodeBufferPatch>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.patch");
+        ContentRegistry::DataProcessorNode::add<NodeBufferSize>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.size");
 
         ContentRegistry::DataProcessorNode::add<NodeIf>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.if");
         ContentRegistry::DataProcessorNode::add<NodeEquals>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.equals");
@@ -1463,6 +1540,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeBoolAND>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.and");
         ContentRegistry::DataProcessorNode::add<NodeBoolOR>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.or");
 
+        ContentRegistry::DataProcessorNode::add<NodeBitwiseADD>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.add");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseAND>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.and");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseOR>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.or");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseXOR>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.xor");
