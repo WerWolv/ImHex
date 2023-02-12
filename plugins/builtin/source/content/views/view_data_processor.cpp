@@ -383,7 +383,8 @@ namespace hex::plugin::builtin {
                     for (auto &attribute : node->getAttributes()) {
                         ImNodesPinShape pinShape;
 
-                        switch (attribute.getType()) {
+                        auto attributeType = attribute.getType();
+                        switch (attributeType) {
                             default:
                             case dp::Attribute::Type::Integer:
                                 pinShape = ImNodesPinShape_Circle;
@@ -398,7 +399,38 @@ namespace hex::plugin::builtin {
 
                         if (attribute.getIOType() == dp::Attribute::IOType::In) {
                             ImNodes::BeginInputAttribute(attribute.getId(), pinShape);
-                            ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
+
+                            if (attribute.getConnectedAttributes().empty() && attributeType != dp::Attribute::Type::Buffer) {
+                                auto &defaultValue = attribute.getDefaultData();
+
+                                ImGui::PushItemWidth(100_scaled);
+                                if (attributeType == dp::Attribute::Type::Integer) {
+                                    defaultValue.resize(sizeof(i128));
+
+                                    auto value = i64(*reinterpret_cast<i128*>(defaultValue.data()));
+                                    if (ImGui::InputScalar(LangEntry(attribute.getUnlocalizedName()), ImGuiDataType_S64, &value)) {
+                                        std::fill(defaultValue.begin(), defaultValue.end(), 0x00);
+
+                                        i128 writeValue = value;
+                                        std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));
+                                    }
+                                } else if (attributeType == dp::Attribute::Type::Float) {
+                                    defaultValue.resize(sizeof(long double));
+
+                                    auto value = double(*reinterpret_cast<long double*>(defaultValue.data()));
+                                    if (ImGui::InputScalar(LangEntry(attribute.getUnlocalizedName()), ImGuiDataType_Double, &value)) {
+                                        std::fill(defaultValue.begin(), defaultValue.end(), 0x00);
+
+                                        long double writeValue = value;
+                                        std::memcpy(defaultValue.data(), &writeValue, sizeof(writeValue));
+                                    }
+                                }
+                                ImGui::PopItemWidth();
+
+                            } else {
+                                ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
+                            }
+
                             ImNodes::EndInputAttribute();
                         } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
                             ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));

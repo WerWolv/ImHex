@@ -53,7 +53,7 @@ namespace hex::dp {
 
         void resetOutputData() {
             for (auto &attribute : this->m_attributes)
-                attribute.getOutputData().reset();
+                attribute.clearOutputData();
         }
 
         void resetProcessedInputs() {
@@ -73,9 +73,9 @@ namespace hex::dp {
                 Node::s_idCounter = id;
         }
 
-        std::vector<u8> getBufferOnInput(u32 index);
-        i128 getIntegerOnInput(u32 index);
-        long double getFloatOnInput(u32 index);
+        const std::vector<u8>& getBufferOnInput(u32 index);
+        const i128& getIntegerOnInput(u32 index);
+        const long double& getFloatOnInput(u32 index);
 
         void setBufferOnOutput(u32 index, const std::vector<u8> &data);
         void setIntegerOnOutput(u32 index, i128 integer);
@@ -91,11 +91,15 @@ namespace hex::dp {
 
         static int s_idCounter;
 
-        Attribute *getConnectedInputAttribute(u32 index) {
+        Attribute& getAttribute(u32 index) {
             if (index >= this->getAttributes().size())
                 throw std::runtime_error("Attribute index out of bounds!");
 
-            auto &connectedAttribute = this->getAttributes()[index].getConnectedAttributes();
+            return this->getAttributes()[index];
+        }
+
+        Attribute *getConnectedInputAttribute(u32 index) {
+            const auto &connectedAttribute = this->getAttribute(index).getConnectedAttributes();
 
             if (connectedAttribute.empty())
                 return nullptr;
