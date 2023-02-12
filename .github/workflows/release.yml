@@ -122,7 +122,7 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
           repository: WerWolv/ImHex-Cpp-Plugin-Template
-          event_type: update_submodule
+          event-type: update_submodule
 
       - name: ✉️ Update Rust Plugin Template
         uses: peter-evans/repository-dispatch@v2
@@ -132,7 +132,7 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
           repository: WerWolv/ImHex-Rust-Plugin-Template
-          event_type: update_submodule
+          event-type: update_submodule
 
   release-windows:
     name: Release Windows
