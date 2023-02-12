@@ -8,10 +8,6 @@ find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
-if (UNIX)
-    find_package(OpenGL REQUIRED)
-endif ()
-
 add_library(imgui OBJECT
         source/imgui.cpp
         source/imgui_demo.cpp
@@ -39,12 +35,8 @@ add_library(imgui OBJECT
 
 add_compile_definitions(IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS})
+target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
 
-target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS})
+target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
 
-if (WIN32)
-    target_link_libraries(imgui PUBLIC Freetype::Freetype glfw3 opengl32.lib)
-elseif (UNIX)
-    target_link_libraries(imgui PUBLIC Freetype::Freetype glfw OpenGL::GL)
-endif()
+target_link_libraries(imgui PUBLIC Freetype::Freetype ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})

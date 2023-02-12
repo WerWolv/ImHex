@@ -2,6 +2,7 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/utils_macos.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -89,7 +90,7 @@ namespace hex::init {
     }
 
     bool WindowSplash::loop() {
-        auto splash                  = romfs::get("splash.png");
+        auto splash = romfs::get("splash.png");
         ImGui::Texture splashTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
 
         if (!splashTexture.isValid()) {
@@ -205,7 +206,7 @@ namespace hex::init {
                 meanScale = 1.0F;
 
             #if defined(OS_MACOS)
-                meanScale /= 2.0F;
+                meanScale /= getBackingScaleFactor();
             #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);

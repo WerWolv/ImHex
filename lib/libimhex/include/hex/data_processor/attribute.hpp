@@ -38,9 +38,18 @@ namespace hex::dp {
         void removeConnectedAttribute(int linkId) { this->m_connectedAttributes.erase(linkId); }
         [[nodiscard]] std::map<int, Attribute *> &getConnectedAttributes() { return this->m_connectedAttributes; }
 
-        [[nodiscard]] Node *getParentNode() { return this->m_parentNode; }
+        [[nodiscard]] Node *getParentNode() const { return this->m_parentNode; }
 
-        [[nodiscard]] std::optional<std::vector<u8>> &getOutputData() { return this->m_outputData; }
+        [[nodiscard]] std::vector<u8>& getOutputData() {
+            if (!this->m_outputData.empty())
+                return this->m_outputData;
+            else
+                return this->m_defaultData;
+        }
+
+        void clearOutputData() { this->m_outputData.clear(); }
+
+        [[nodiscard]] std::vector<u8>& getDefaultData() { return this->m_defaultData; }
 
         static void setIdCounter(int id) {
             if (id > Attribute::s_idCounter)
@@ -55,7 +64,8 @@ namespace hex::dp {
         std::map<int, Attribute *> m_connectedAttributes;
         Node *m_parentNode = nullptr;
 
-        std::optional<std::vector<u8>> m_outputData;
+        std::vector<u8> m_outputData;
+        std::vector<u8> m_defaultData;
 
         friend class Node;
         void setParentNode(Node *node) { this->m_parentNode = node; }

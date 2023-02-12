@@ -51,10 +51,12 @@ namespace hex {
         bool result = true;
         for (const auto &handler : ProjectFile::getHandlers()) {
             try {
-                if (!handler.load(handler.basePath, tar))
+                if (!handler.load(handler.basePath, tar)) {
+                    log::warn("Project file handler for {} failed to load {}", filePath.string(), handler.basePath.string());
                     result = false;
+                }
             } catch (std::exception &e) {
-                log::info("{}", e.what());
+                log::warn("Project file handler for {} failed to load {}: {}", filePath.string(), handler.basePath.string(), e.what());
                 result = false;
             }
 
@@ -142,9 +144,13 @@ namespace hex {
     void ProjectFile::clearPath() {
         ProjectFile::s_currProjectPath.clear();
     }
-    
+
     std::fs::path ProjectFile::getPath() {
         return ProjectFile::s_currProjectPath;
+    }
+
+    void ProjectFile::setPath(const std::fs::path &path) {
+        ProjectFile::s_currProjectPath = path;
     }
 
 }

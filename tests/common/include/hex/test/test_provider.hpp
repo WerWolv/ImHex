@@ -28,7 +28,7 @@ namespace hex::test {
             return "";
         }
 
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override {
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override {
             return {};
         }
 

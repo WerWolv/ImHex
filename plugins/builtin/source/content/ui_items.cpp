@@ -16,13 +16,13 @@ namespace hex::plugin::builtin {
 
     static std::string s_popupMessage;
     static std::function<void()> s_yesCallback, s_noCallback;
-    static u32 s_selectableFileIndex;
+    static std::set<u32> s_selectableFileIndices;
     static std::vector<std::fs::path> s_selectableFiles;
     static std::function<void(std::fs::path)> s_selectableFileOpenCallback;
     static std::vector<nfdfilteritem_t> s_selectableFilesValidExtensions;
+    static bool s_selectableFileMultiple;
 
     static void drawGlobalPopups() {
-
         // "Are you sure you want to exit?" Popup
         if (ImGui::BeginPopupModal("hex.builtin.popup.exit_application.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
             ImGui::NewLine();
@@ -30,9 +30,12 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             View::confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
-                                 [] { ImHexApi::Common::closeImHex(true); },
-                                 [] { ImGui::CloseCurrentPopup(); }
-                                 );
+                [] {
+                        ImHexApi::Provider::resetDirty();
+                        ImHexApi::Common::closeImHex();
+                    },
+                [] { ImGui::CloseCurrentPopup(); }
+            );
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -53,6 +56,25 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
+
+            ImGui::EndPopup();
+        }
+
+        if (ImGui::BeginPopupModal("hex.builtin.popup.waiting_for_tasks.title"_lang, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+            ImGui::TextUnformatted("hex.builtin.popup.waiting_for_tasks.desc"_lang);
+            ImGui::Separator();
+
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("[-]").x) / 2);
+            ImGui::TextSpinner("");
+            ImGui::NewLine();
+            ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 150_scaled) / 2);
+            if (ImGui::ButtonEx("hex.builtin.common.cancel"_lang, ImVec2(150, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
+                ImGui::CloseCurrentPopup();
+
+            if (TaskManager::getRunningTaskCount() == 0 && TaskManager::getRunningBackgroundTaskCount() == 0) {
+                ImGui::CloseCurrentPopup();
+                ImHexApi::Common::closeImHex();
+            }
 
             ImGui::EndPopup();
         }
@@ -122,16 +144,26 @@ namespace hex::plugin::builtin {
         bool opened = true;
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
-
-            if (ImGui::BeginListBox("##files", ImVec2(300_scaled, 0))) {
-
+            if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
                 u32 index = 0;
                 for (auto &path : s_selectableFiles) {
                     ImGui::PushID(index);
-                    if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), index == s_selectableFileIndex))
-                        s_selectableFileIndex = index;
-                    ImGui::PopID();
 
+                    bool selected = s_selectableFileIndices.contains(index);
+                    if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), selected)) {
+                        if (!s_selectableFileMultiple) {
+                            s_selectableFileIndices.clear();
+                            s_selectableFileIndices.insert(index);
+                        } else {
+                            if (selected) {
+                                s_selectableFileIndices.erase(index);
+                            } else {
+                                s_selectableFileIndices.insert(index);
+                            }
+                        }
+                    }
+
+                    ImGui::PopID();
                     index++;
                 }
 
@@ -139,7 +171,8 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::Button("hex.builtin.common.open"_lang)) {
-                s_selectableFileOpenCallback(s_selectableFiles[s_selectableFileIndex]);
+                for (auto &index : s_selectableFileIndices)
+                    s_selectableFileOpenCallback(s_selectableFiles[index]);
                 ImGui::CloseCurrentPopup();
             }
 
@@ -149,7 +182,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, s_selectableFilesValidExtensions, [](const auto &path) {
                     s_selectableFileOpenCallback(path);
                     ImGui::CloseCurrentPopup();
-                });
+                }, {}, s_selectableFileMultiple);
             }
 
             ImGui::EndPopup();
@@ -195,18 +228,18 @@ namespace hex::plugin::builtin {
             TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.question"_lang); });
         });
 
-        EventManager::subscribe<RequestShowFileChooserPopup>([](const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback) {
-            s_selectableFileIndex            = 0;
+        EventManager::subscribe<RequestShowFileChooserPopup>([](const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, bool multiple) {
+            s_selectableFileIndices          = { };
             s_selectableFiles                = paths;
             s_selectableFilesValidExtensions = validExtensions;
             s_selectableFileOpenCallback     = callback;
+            s_selectableFileMultiple         = multiple;
 
             TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.common.choose_file"_lang); });
         });
     }
 
     void addFooterItems() {
-
         if (hex::isProcessElevated()) {
             ContentRegistry::Interface::addFooterItem([] {
                 ImGui::TextUnformatted(ICON_VS_SHIELD);
@@ -227,14 +260,18 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addFooterItem([] {
             auto taskCount = TaskManager::getRunningTaskCount();
             if (taskCount > 0) {
-                auto &tasks = TaskManager::getRunningTasks();
+                const auto &tasks = TaskManager::getRunningTasks();
                 auto frontTask = tasks.front();
+
+                auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / frontTask->getMaxValue();
+
+                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, progress * 100);
 
                 auto widgetStart = ImGui::GetCursorPos();
 
                 ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
                 ImGui::SameLine();
-                ImGui::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : (float(frontTask->getValue()) / frontTask->getMaxValue()), (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
+                ImGui::SmallProgressBar(progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
                 ImGui::SameLine();
 
                 auto widgetEnd = ImGui::GetCursorPos();
@@ -273,6 +310,8 @@ namespace hex::plugin::builtin {
                 if (ImGui::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                     frontTask->interrupt();
                 ImGui::PopStyleVar();
+            } else {
+                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Reset, ImHexApi::System::TaskProgressType::Normal, 0);
             }
         });
     }
@@ -391,7 +430,6 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndDisabled();
         });
-
     }
 
     void handleBorderlessWindowMode() {

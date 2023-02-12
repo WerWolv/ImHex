@@ -154,6 +154,9 @@ namespace hex::plugin::builtin {
                             endOfFile = true;
                             break;
                     }
+
+                    while (std::isspace(string[offset]) && offset < string.length())
+                        offset++;
                 }
             } catch (const std::runtime_error &e) {
                 return { };

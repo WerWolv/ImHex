@@ -52,7 +52,6 @@ namespace hex::api {
     void ThemeManager::changeTheme(std::string name) {
         if (!s_themes.contains(name)) {
             if (s_themes.empty()) {
-                hex::log::error("Theme '{}' does not exist and no other themes are available!", name);
                 return;
             } else {
                 const std::string &defaultTheme = s_themes.begin()->first;

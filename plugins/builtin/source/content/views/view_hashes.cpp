@@ -1,5 +1,7 @@
 #include "content/views/view_hashes.hpp"
+#include "content/helpers/provider_extra_data.hpp"
 
+#include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/crypto.hpp>
 
 #include <vector>
@@ -7,18 +9,19 @@
 namespace hex::plugin::builtin {
 
     ViewHashes::ViewHashes() : View("hex.builtin.view.hashes.name") {
-        EventManager::subscribe<EventRegionSelected>(this, [this](const auto &) {
-            for (auto &function : this->m_hashFunctions)
+        EventManager::subscribe<EventRegionSelected>(this, [](const auto &providerRegion) {
+            for (auto &function : ProviderExtraData::get(providerRegion.getProvider()).hashes.hashFunctions)
                 function.reset();
         });
 
-        ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
+        ImHexApi::HexEditor::addTooltipProvider([](u64 address, const u8 *data, size_t size) {
             hex::unused(data);
 
             auto selection = ImHexApi::HexEditor::getSelection();
 
             if (ImGui::GetIO().KeyShift) {
-                if (!this->m_hashFunctions.empty() && selection.has_value() && selection->overlaps(Region { address, size })) {
+                auto &hashFunctions = ProviderExtraData::get(selection->getProvider()).hashes.hashFunctions;
+                if (!hashFunctions.empty() && selection.has_value() && selection->overlaps(Region { address, size })) {
                     ImGui::BeginTooltip();
 
                     if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
@@ -31,7 +34,7 @@ namespace hex::plugin::builtin {
                         ImGui::Indent();
                         if (ImGui::BeginTable("##hashes_tooltip", 3, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                             auto provider  = ImHexApi::Provider::get();
-                            for (auto &function : this->m_hashFunctions) {
+                            for (auto &function : hashFunctions) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("{}", function.getName());
@@ -55,6 +58,29 @@ namespace hex::plugin::builtin {
                 }
             }
         });
+
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "hashes.json",
+            .required = false,
+            .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+                auto fileContent = tar.read(basePath);
+                if (fileContent.empty())
+                    return true;
+
+                auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
+                ProviderExtraData::get(provider).hashes.hashFunctions.clear();
+
+                return ViewHashes::importHashes(provider, data);
+            },
+            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+                nlohmann::json data;
+
+                bool result = ViewHashes::exportHashes(provider, data);
+                tar.write(basePath, data.dump(4));
+
+                return result;
+            }
+        });
     }
 
     ViewHashes::~ViewHashes() {
@@ -70,6 +96,8 @@ namespace hex::plugin::builtin {
         }
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.hashes.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+            auto &hashFunctions = ProviderExtraData::get(ImHexApi::Provider::get()).hashes.hashFunctions;
+
             if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? LangEntry(this->m_selectedHash->getUnlocalizedName()) : "")) {
 
                 for (const auto hash : hashes) {
@@ -106,7 +134,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(this->m_newHashName.empty() || this->m_selectedHash == nullptr);
             if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                 if (this->m_selectedHash != nullptr)
-                    this->m_hashFunctions.push_back(this->m_selectedHash->create(this->m_newHashName));
+                    hashFunctions.push_back(this->m_selectedHash->create(this->m_newHashName));
             }
             ImGui::EndDisabled();
 
@@ -121,8 +149,8 @@ namespace hex::plugin::builtin {
                 auto selection = ImHexApi::HexEditor::getSelection();
 
                 std::optional<u32> indexToRemove;
-                for (u32 i = 0; i < this->m_hashFunctions.size(); i++) {
-                    auto &function = this->m_hashFunctions[i];
+                for (u32 i = 0; i < hashFunctions.size(); i++) {
+                    auto &function = hashFunctions[i];
 
                     ImGui::PushID(i);
 
@@ -167,7 +195,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (indexToRemove.has_value()) {
-                    this->m_hashFunctions.erase(this->m_hashFunctions.begin() + indexToRemove.value());
+                    hashFunctions.erase(hashFunctions.begin() + indexToRemove.value());
                 }
 
                 ImGui::EndTable();
@@ -177,6 +205,47 @@ namespace hex::plugin::builtin {
             ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.hashes.hover_info"_lang));
         }
         ImGui::End();
+    }
+
+    bool ViewHashes::importHashes(prv::Provider *provider, const nlohmann::json &json) {
+        if (!json.contains("hashes"))
+            return false;
+
+        const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
+
+        auto &hashFunctions = ProviderExtraData::get(provider).hashes.hashFunctions;
+        for (const auto &hash : json["hashes"]) {
+            if (!hash.contains("name") || !hash.contains("type"))
+                continue;
+
+            for (const auto &newHash : hashes) {
+                if (newHash->getUnlocalizedName() == hash["type"].get<std::string>()) {
+
+                    auto newFunction = newHash->create(hash["name"]);
+                    newFunction.getType()->load(hash["settings"]);
+
+                    hashFunctions.push_back(std::move(newFunction));
+                    break;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    bool ViewHashes::exportHashes(prv::Provider *provider, nlohmann::json &json) {
+        json["hashes"] = nlohmann::json::array();
+        size_t index = 0;
+        for (const auto &hashFunction : ProviderExtraData::get(provider).hashes.hashFunctions) {
+            json["hashes"][index] = {
+                    { "name", hashFunction.getName() },
+                    { "type", hashFunction.getType()->getUnlocalizedName() },
+                    { "settings", hashFunction.getType()->store() }
+            };
+            index++;
+        }
+
+        return true;
     }
 
 }

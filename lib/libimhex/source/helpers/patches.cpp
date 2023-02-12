@@ -18,7 +18,7 @@ namespace hex {
         std::memcpy((&buffer.back() - sizeof(T)) + 1, &bytes, sizeof(T));
     }
 
-    std::vector<u8> generateIPSPatch(const Patches &patches) {
+    std::expected<std::vector<u8>, IPSError> generateIPSPatch(const Patches &patches) {
         std::vector<u8> result;
 
         pushStringBack(result, "PATCH");
@@ -42,8 +42,10 @@ namespace hex {
             } else {
                 bytes.push_back(values[i]);
 
-                if (bytes.size() > 0xFFFF || startAddress > 0xFF'FFFF)
-                    return {};
+                if (bytes.size() > 0xFFFF)
+                    return std::unexpected(IPSError::PatchTooLarge);
+                if (startAddress > 0xFFFF'FFFF)
+                    return std::unexpected(IPSError::AddressOutOfRange);
 
                 u32 address       = startAddress.value();
                 auto addressBytes = reinterpret_cast<u8 *>(&address);
@@ -66,7 +68,7 @@ namespace hex {
         return result;
     }
 
-    std::vector<u8> generateIPS32Patch(const Patches &patches) {
+    std::expected<std::vector<u8>, IPSError> generateIPS32Patch(const Patches &patches) {
         std::vector<u8> result;
 
         pushStringBack(result, "IPS32");
@@ -90,8 +92,10 @@ namespace hex {
             } else {
                 bytes.push_back(values[i]);
 
-                if (bytes.size() > 0xFFFF || startAddress > 0xFFFF'FFFF)
-                    return {};
+                if (bytes.size() > 0xFFFF)
+                    return std::unexpected(IPSError::PatchTooLarge);
+                if (startAddress > 0xFFFF'FFFF)
+                    return std::unexpected(IPSError::AddressOutOfRange);
 
                 u32 address       = startAddress.value();
                 auto addressBytes = reinterpret_cast<u8 *>(&address);
@@ -115,12 +119,12 @@ namespace hex {
         return result;
     }
 
-    Patches loadIPSPatch(const std::vector<u8> &ipsPatch) {
+    std::expected<Patches, IPSError> loadIPSPatch(const std::vector<u8> &ipsPatch) {
         if (ipsPatch.size() < (5 + 3))
-            return {};
+            return std::unexpected(IPSError::InvalidPatchHeader);
 
         if (std::memcmp(ipsPatch.data(), "PATCH", 5) != 0)
-            return {};
+            return std::unexpected(IPSError::InvalidPatchHeader);
 
         Patches result;
         bool foundEOF = false;
@@ -135,7 +139,7 @@ namespace hex {
             // Handle normal record
             if (size > 0x0000) {
                 if (ipsOffset + size > ipsPatch.size() - 3)
-                    return {};
+                    return std::unexpected(IPSError::InvalidPatchFormat);
 
                 for (u16 i = 0; i < size; i++)
                     result[offset + i] = ipsPatch[ipsOffset + i];
@@ -144,7 +148,7 @@ namespace hex {
             // Handle RLE record
             else {
                 if (ipsOffset + 3 > ipsPatch.size() - 3)
-                    return {};
+                    return std::unexpected(IPSError::InvalidPatchFormat);
 
                 u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
 
@@ -156,22 +160,22 @@ namespace hex {
                 ipsOffset += 1;
             }
 
-            if (std::memcmp(ipsPatch.data(), "EOF", 3) == 0)
+            if (std::memcmp(ipsPatch.data() + ipsOffset, "EOF", 3) == 0)
                 foundEOF = true;
         }
 
         if (foundEOF)
             return result;
         else
-            return {};
+            return std::unexpected(IPSError::MissingEOF);
     }
 
-    Patches loadIPS32Patch(const std::vector<u8> &ipsPatch) {
+    std::expected<Patches, IPSError> loadIPS32Patch(const std::vector<u8> &ipsPatch) {
         if (ipsPatch.size() < (5 + 4))
-            return {};
+            return std::unexpected(IPSError::InvalidPatchHeader);
 
         if (std::memcmp(ipsPatch.data(), "IPS32", 5) != 0)
-            return {};
+            return std::unexpected(IPSError::InvalidPatchHeader);
 
         Patches result;
         bool foundEEOF = false;
@@ -186,7 +190,7 @@ namespace hex {
             // Handle normal record
             if (size > 0x0000) {
                 if (ipsOffset + size > ipsPatch.size() - 3)
-                    return {};
+                    return std::unexpected(IPSError::InvalidPatchFormat);
 
                 for (u16 i = 0; i < size; i++)
                     result[offset + i] = ipsPatch[ipsOffset + i];
@@ -195,7 +199,7 @@ namespace hex {
             // Handle RLE record
             else {
                 if (ipsOffset + 3 > ipsPatch.size() - 3)
-                    return {};
+                    return std::unexpected(IPSError::InvalidPatchFormat);
 
                 u16 rleSize = ipsPatch[ipsOffset + 0] | (ipsPatch[ipsOffset + 1] << 8);
 
@@ -207,14 +211,14 @@ namespace hex {
                 ipsOffset += 1;
             }
 
-            if (std::memcmp(ipsPatch.data(), "EEOF", 4) == 0)
+            if (std::memcmp(ipsPatch.data() + ipsOffset, "EEOF", 4) == 0)
                 foundEEOF = true;
         }
 
         if (foundEEOF)
             return result;
         else
-            return {};
+            return std::unexpected(IPSError::MissingEOF);
     }
 
 }

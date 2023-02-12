@@ -19,6 +19,7 @@ namespace hex::plugin::builtin::ui {
         };
 
         void setTreeStyle(TreeStyle style) { this->m_treeStyle = style; }
+        void reset();
 
     private:
         void draw(pl::ptrn::Pattern& pattern);
@@ -50,17 +51,28 @@ namespace hex::plugin::builtin::ui {
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
 
+        void drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable);
+        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset);
+
         void createLeafNode(const pl::ptrn::Pattern& pattern);
         bool createTreeNode(const pl::ptrn::Pattern& pattern);
         void createDefaultEntry(pl::ptrn::Pattern &pattern);
         void closeTreeNode(bool inlined);
 
+        bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
+        void resetEditing();
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
         std::vector<pl::ptrn::Pattern*> m_sortedPatterns;
 
         const pl::ptrn::Pattern *m_editingPattern = nullptr;
+        u64 m_editingPatternOffset = 0;
+
         TreeStyle m_treeStyle = TreeStyle::Default;
+        pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
+
+        std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
+        std::string m_lastVisualizerError;
     };
 }

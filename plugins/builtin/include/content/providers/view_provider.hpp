@@ -10,11 +10,26 @@ namespace hex::plugin::builtin {
         explicit ViewProvider() = default;
         ~ViewProvider() override = default;
 
-        [[nodiscard]] bool isAvailable() const override { return this->m_provider != nullptr; }
-        [[nodiscard]] bool isReadable()  const override { return this->m_provider->isReadable(); }
-        [[nodiscard]] bool isWritable()  const override { return this->m_provider->isWritable(); }
+        [[nodiscard]] bool isAvailable() const override {
+            if (this->m_provider == nullptr)
+                return false;
+            else
+                return this->m_provider->isAvailable();
+        }
+        [[nodiscard]] bool isReadable() const override {
+            if (this->m_provider == nullptr)
+                return false;
+            else
+                return this->m_provider->isReadable();
+        }
+        [[nodiscard]] bool isWritable() const override {
+            if (this->m_provider == nullptr)
+                return false;
+            else
+                return this->m_provider->isWritable();
+        }
         [[nodiscard]] bool isResizable() const override { return true; }
-        [[nodiscard]] bool isSavable()   const override { return true; }
+        [[nodiscard]] bool isSavable() const override { return true; }
 
         void save() override {
             this->m_provider->save();
@@ -27,21 +42,49 @@ namespace hex::plugin::builtin {
             this->m_size = newSize;
         }
         void insert(u64 offset, size_t size) override {
+            if (this->m_provider == nullptr)
+                return;
+
             this->m_size += size;
             this->m_provider->insert(offset + this->m_startAddress, size);
         }
 
         void remove(u64 offset, size_t size) override {
+            if (this->m_provider == nullptr)
+                return;
+
             this->m_size -= size;
             this->m_provider->remove(offset + this->m_startAddress, size);
         }
 
-        void readRaw(u64 offset, void *buffer, size_t size) override { this->m_provider->read(offset + this->m_startAddress, buffer, size); }
-        void writeRaw(u64 offset, const void *buffer, size_t size) override { this->m_provider->write(offset + this->m_startAddress, buffer, size); }
+        void readRaw(u64 offset, void *buffer, size_t size) override {
+            if (this->m_provider == nullptr)
+                return;
+
+            this->m_provider->read(offset + this->m_startAddress, buffer, size);
+        }
+
+        void writeRaw(u64 offset, const void *buffer, size_t size) override {
+            if (this->m_provider == nullptr)
+                return;
+
+            this->m_provider->write(offset + this->m_startAddress, buffer, size);
+        }
+
         [[nodiscard]] size_t getActualSize() const override { return this->m_size; }
 
-        [[nodiscard]] std::string getName() const override { return hex::format("{} View", this->m_provider->getName()); }
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override { return this->m_provider->getDataInformation(); }
+        [[nodiscard]] std::string getName() const override {
+            if (this->m_provider == nullptr)
+                return "View";
+            else
+                return hex::format("{} View", this->m_provider->getName());
+        }
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override {
+            if (this->m_provider == nullptr)
+                return { };
+
+            return this->m_provider->getDataDescription();
+        }
 
         void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }

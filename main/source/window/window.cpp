@@ -9,16 +9,16 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <fmt/printf.h>
+#include <hex/helpers/stacktrace.hpp>
 
 #include <chrono>
 #include <csignal>
-#include <iostream>
 #include <set>
 #include <thread>
 #include <cassert>
 
 #include <romfs/romfs.hpp>
+#include <llvm/Demangle/Demangle.h>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -78,25 +78,43 @@ namespace hex {
             log::fatal("Uncaught exception thrown!");
         }
 
-        // Let's not loop on this...
-        std::signal(signalNumber, nullptr);
+        std::signal(signalNumber, SIG_DFL);
+
+        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+            if (stackFrame.line == 0)
+                log::fatal("  {}", stackFrame.function);
+            else
+                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
+        }
+    
 
         #if defined(DEBUG)
-            assert(false);
+            assert(!"Debug build, triggering breakpoint");
         #else
             std::raise(signalNumber);
         #endif
     }
 
     Window::Window() {
+        stacktrace::initialize();
+
+        constexpr static auto openEmergencyPopup = [](const std::string &title){
+            TaskManager::doLater([title] {
+                for (const auto &provider : ImHexApi::Provider::getProviders())
+                    ImHexApi::Provider::remove(provider, false);
+
+                ImGui::OpenPopup(title.c_str());
+            });
+        };
+
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
-                    TaskManager::doLater([] { ImGui::OpenPopup("No Plugins"); });
+                    openEmergencyPopup("No Plugins");
                 } else if (argument == "no-builtin-plugin") {
-                    TaskManager::doLater([] { ImGui::OpenPopup("No Builtin Plugin"); });
+                    openEmergencyPopup("No Builtin Plugin");
                 } else if (argument == "multiple-builtin-plugins") {
-                    TaskManager::doLater([] { ImGui::OpenPopup("Multiple Builtin Plugins"); });
+                    openEmergencyPopup("Multiple Builtin Plugins");
                 }
             }
         }
@@ -170,7 +188,18 @@ namespace hex {
         HANDLE_SIGNAL(SIGABRT)
         HANDLE_SIGNAL(SIGFPE)
         #undef HANDLE_SIGNAL
-        std::set_terminate([]{ signalHandler(SIGABRT, "Unhandled C++ exception"); });
+        std::set_terminate([]{
+            try {
+                std::rethrow_exception(std::current_exception());
+            } catch (std::exception &ex) {
+                log::fatal(
+                        "Program terminated with uncaught exception: {}()::what() -> {}",
+                        llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr),
+                        ex.what()
+                );
+            }
+            EventManager::post<EventAbnormalTermination>(0);
+        });
 
         auto logoData      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
@@ -201,6 +230,7 @@ namespace hex {
 
                 bool frameRateUnlocked = ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || TaskManager::getRunningTaskCount() > 0 || this->m_mouseButtonDown || this->m_hadEvent || !this->m_pressedKeys.empty();
                 const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
+                this->m_hadEvent = false;
 
                 if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
                     this->m_frameRateTemporarilyUnlocked = false;
@@ -228,8 +258,6 @@ namespace hex {
             }
 
             this->m_lastFrameTime = glfwGetTime();
-
-            this->m_hadEvent = false;
         }
     }
 
@@ -698,7 +726,8 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
-        io.FontGlobalScale = 1.0F;
+
+        io.FontGlobalScale = ImHexApi::System::getGlobalScale();
 
         if (glfwGetPrimaryMonitor() != nullptr) {
             auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
@@ -787,14 +816,10 @@ namespace hex {
     void Window::exitImGui() {
         delete static_cast<ImGui::ImHexCustomData *>(ImGui::GetIO().UserData);
 
-        ImNodes::PopAttributeFlag();
-        ImNodes::PopAttributeFlag();
-
         ImGui::SaveIniSettingsToDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
-        ImNodes::DestroyContext();
         ImPlot::DestroyContext();
         ImGui::DestroyContext();
     }

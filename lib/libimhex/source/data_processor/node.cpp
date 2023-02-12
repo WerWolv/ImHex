@@ -14,7 +14,7 @@ namespace hex::dp {
             attr.setParentNode(this);
     }
 
-    std::vector<u8> Node::getBufferOnInput(u32 index) {
+    const std::vector<u8>& Node::getBufferOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
         if (attribute == nullptr)
@@ -28,58 +28,62 @@ namespace hex::dp {
 
         auto &outputData = attribute->getOutputData();
 
-        if (!outputData.has_value())
+        if (outputData.empty())
             throwNodeError("No data available at connected attribute");
 
-        return outputData.value();
+        return outputData;
     }
 
-    i128 Node::getIntegerOnInput(u32 index) {
+    const i128& Node::getIntegerOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
-        if (attribute == nullptr)
-            throwNodeError(hex::format("Nothing connected to input '{0}'", LangEntry(this->m_attributes[index].getUnlocalizedName())));
+        auto &outputData = [&] -> std::vector<u8>& {
+            if (attribute != nullptr) {
+                if (attribute->getType() != Attribute::Type::Integer)
+                    throwNodeError("Tried to read integer from non-integer attribute");
 
-        if (attribute->getType() != Attribute::Type::Integer)
-            throwNodeError("Tried to read integer from non-integer attribute");
+                markInputProcessed(index);
+                attribute->getParentNode()->process();
 
-        markInputProcessed(index);
-        attribute->getParentNode()->process();
+                return attribute->getOutputData();
+            } else {
+                return this->getAttribute(index).getOutputData();
+            }
+        }();
 
-        auto &outputData = attribute->getOutputData();
-
-        if (!outputData.has_value())
+        if (outputData.empty())
             throwNodeError("No data available at connected attribute");
 
-        if (outputData->size() < sizeof(u64))
+        if (outputData.size() < sizeof(i128))
             throwNodeError("Not enough data provided for integer");
 
-        return *reinterpret_cast<i64 *>(outputData->data());
+        return *reinterpret_cast<i128 *>(outputData.data());
     }
 
-    long double Node::getFloatOnInput(u32 index) {
+    const long double& Node::getFloatOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
-        if (attribute == nullptr)
-            throwNodeError(hex::format("Nothing connected to input '{0}'", LangEntry(this->m_attributes[index].getUnlocalizedName())));
+        auto &outputData = [&] -> std::vector<u8>& {
+            if (attribute != nullptr) {
+                if (attribute->getType() != Attribute::Type::Float)
+                    throwNodeError("Tried to read integer from non-float attribute");
 
-        if (attribute->getType() != Attribute::Type::Float)
-            throwNodeError("Tried to read float from non-float attribute");
+                markInputProcessed(index);
+                attribute->getParentNode()->process();
 
-        markInputProcessed(index);
-        attribute->getParentNode()->process();
+                return attribute->getOutputData();
+            } else {
+                return this->getAttribute(index).getOutputData();
+            }
+        }();
 
-        auto &outputData = attribute->getOutputData();
-
-        if (!outputData.has_value())
+        if (outputData.empty())
             throwNodeError("No data available at connected attribute");
 
-        if (outputData->size() < sizeof(long double))
+        if (outputData.size() < sizeof(long double))
             throwNodeError("Not enough data provided for float");
 
-        long double result = 0;
-        std::memcpy(&result, outputData->data(), sizeof(long double));
-        return result;
+        return *reinterpret_cast<long double *>(outputData.data());
     }
 
     void Node::setBufferOnOutput(u32 index, const std::vector<u8> &data) {

@@ -34,7 +34,7 @@ jobs:
 
       - name: 🗜️ Create tarball from sources with dependencies
         run: tar --exclude-vcs -czvf Full.Sources.tar.gz ImHex
-        
+
       - name: ⬇️ Download artifacts from latest workflow
         uses: dawidd6/action-download-artifact@v2
         with:
@@ -43,7 +43,7 @@ jobs:
           branch: ${{ github.event.release.target_commitish }}
           workflow_conclusion: success
           skip_unpack: true
-             
+
       - name: 🗜️ Unzip files when needed
         run: |	
           for zipfile in ./*.zip
@@ -78,7 +78,7 @@ jobs:
           sed -i "s/(SKIP)/($hash)/g" PKGBUILD
 
       - name: ⬆️ Publish AUR package
-        
+
         # I couldn't make the condition in the env directly for some reason
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -113,28 +113,26 @@ jobs:
           tag: ImHex-v${{env.IMHEX_VERSION}}
           repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}
-          
+
       - name: ✉️ Update C++ Plugin Template
-        uses: mvasigh/dispatch-action@main
+        uses: peter-evans/repository-dispatch@v2
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         if: "${{ env.RELEASE_TOKEN != '' }}"
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
-          repo: ImHex-Cpp-Plugin-Template
-          owner: WerWolv
-          event_type: update_submodule
+          repository: WerWolv/ImHex-Cpp-Plugin-Template
+          event-type: update_submodule
 
       - name: ✉️ Update Rust Plugin Template
-        uses: mvasigh/dispatch-action@main
+        uses: peter-evans/repository-dispatch@v2
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         if: "${{ env.RELEASE_TOKEN != '' }}"
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
-          repo: ImHex-Rust-Plugin-Template
-          owner: WerWolv
-          event_type: update_submodule
+          repository: WerWolv/ImHex-Rust-Plugin-Template
+          event-type: update_submodule
 
   release-windows:
     name: Release Windows

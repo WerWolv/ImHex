@@ -17,25 +17,11 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        struct YaraMatch {
-            std::string identifier;
-            std::string variable;
-            u64 address;
-            size_t size;
-            bool wholeDataMatch;
-
-            u32 highlightId;
-            u32 tooltipId;
-        };
-
-        std::vector<std::pair<std::fs::path, std::fs::path>> m_rules;
-        std::vector<YaraMatch> m_matches;
         u32 m_selectedRule = 0;
         TaskHolder m_matcherTask;
 
         std::vector<std::string> m_consoleMessages;
 
-        void reloadRules();
         void applyRules();
         void clearResult();
     };

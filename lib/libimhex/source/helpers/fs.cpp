@@ -81,31 +81,44 @@ namespace hex::fs {
         s_fileBrowserErrorCallback = callback;
     }
 
-    bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath) {
+    bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
         NFD::Init();
 
-        nfdchar_t *outPath = nullptr;
+        NFD::UniquePathU8 outPath;
+        NFD::UniquePathSet outPaths;
         nfdresult_t result;
         switch (mode) {
             case DialogMode::Open:
-                result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
+                if (multiple)
+                    result = NFD::OpenDialogMultiple(outPaths, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                else
+                    result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                 break;
             case DialogMode::Save:
-                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.c_str());
+                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                 break;
             case DialogMode::Folder:
-                result = NFD::PickFolder(outPath, defaultPath.c_str());
+                result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
                 break;
             default:
-                hex::unreachable();
+                std::unreachable();
         }
 
         if (result == NFD_OKAY){
             if(outPath != nullptr) {
-                callback(reinterpret_cast<char8_t*>(outPath));
-                NFD::FreePath(outPath);
+                callback(reinterpret_cast<char8_t*>(outPath.get()));
             }
-        } else if (result==NFD_ERROR) {
+            if (outPaths != nullptr) {
+                nfdpathsetsize_t numPaths = 0;
+                if (NFD::PathSet::Count(outPaths, numPaths) == NFD_OKAY) {
+                    for (size_t i = 0; i < numPaths; i++) {
+                        NFD::UniquePathSetPath path;
+                        if (NFD::PathSet::GetPath(outPaths, i, path) == NFD_OKAY)
+                            callback(reinterpret_cast<char8_t*>(path.get()));
+                    }
+                }
+            }
+        } else if (result == NFD_ERROR) {
             if (s_fileBrowserErrorCallback != nullptr)
                     s_fileBrowserErrorCallback();
         }
@@ -257,6 +270,9 @@ namespace hex::fs {
                 break;
             case ImHexPath::Inspectors:
                 result = appendPath(getDefaultPaths(ImHexPath::Scripts), "inspectors");
+                break;
+            case ImHexPath::Nodes:
+                result = appendPath(getDefaultPaths(ImHexPath::Scripts), "nodes");
                 break;
             case ImHexPath::Themes:
                 result = appendPath(getDataPaths(), "themes");

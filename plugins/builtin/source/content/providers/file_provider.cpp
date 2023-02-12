@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
+        if (offset > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(buffer, reinterpret_cast<u8 *>(this->m_mappedFile) + offset, size);
@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
         return hex::toUTF8String(this->m_path.filename());
     }
 
-    std::vector<std::pair<std::string, std::string>> FileProvider::getDataInformation() const {
+    std::vector<std::pair<std::string, std::string>> FileProvider::getDataDescription() const {
         std::vector<std::pair<std::string, std::string>> result;
 
         result.emplace_back("hex.builtin.provider.file.path"_lang, hex::toUTF8String(this->m_path));
@@ -171,6 +171,25 @@ namespace hex::plugin::builtin {
         }
 
         return result;
+    }
+
+    std::variant<std::string, i128> FileProvider::queryInformation(const std::string &category, const std::string &argument) {
+        if (category == "file_path")
+            return hex::toUTF8String(this->m_path);
+        else if (category == "file_name")
+            return hex::toUTF8String(this->m_path.filename());
+        else if (category == "file_extension")
+            return hex::toUTF8String(this->m_path.extension());
+        else if (category == "creation_time")
+            return this->m_fileStats.st_ctime;
+        else if (category == "access_time")
+            return this->m_fileStats.st_atime;
+        else if (category == "modification_time")
+            return this->m_fileStats.st_mtime;
+        else if (category == "permissions")
+            return this->m_fileStats.st_mode & 0777;
+        else
+            return Provider::queryInformation(category, argument);
     }
 
     bool FileProvider::handleFilePicker() {
@@ -297,10 +316,13 @@ namespace hex::plugin::builtin {
     }
 
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
+        std::string path;
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            settings["path"] = hex::toUTF8String(std::fs::relative(this->m_path, projectPath.parent_path()));
-        else
-            settings["path"] = hex::toUTF8String(this->m_path);
+            path = hex::toUTF8String(std::fs::proximate(this->m_path, projectPath.parent_path()));
+        if (path.empty())
+            path = hex::toUTF8String(this->m_path);
+
+        settings["path"] = path;
 
         return Provider::storeSettings(settings);
     }

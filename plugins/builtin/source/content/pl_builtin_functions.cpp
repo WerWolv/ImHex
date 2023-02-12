@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
+#include <hex/providers/provider.hpp>
 #include <hex/helpers/net.hpp>
 
 #include <pl/core/token.hpp>
@@ -27,11 +28,34 @@ namespace hex::plugin::builtin {
             });
         }
 
+        pl::api::Namespace nsHexPrv = { "builtin", "hex", "prv" };
+        {
+            /* get_information() */
+            ContentRegistry::PatternLanguage::addFunction(nsHexCore, "get_information", FunctionParameterCount::between(1, 2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                std::string category = params[0].toString(false);
+                std::string argument = params.size() == 2 ? params[1].toString(false) : "";
+
+                if (!ImHexApi::Provider::isValid())
+                    return u128(0);
+
+                auto provider = ImHexApi::Provider::get();
+                if (!provider->isAvailable())
+                    return u128(0);
+
+                return std::visit(
+                    [](auto &&value) -> Token::Literal {
+                        return value;
+                    },
+                    provider->queryInformation(category, argument)
+                );
+            });
+        }
+
         pl::api::Namespace nsHexDec = { "builtin", "hex", "dec" };
         {
             /* demangle(mangled_string) */
             ContentRegistry::PatternLanguage::addFunction(nsHexDec, "demangle", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
-                const auto mangledString = Token::literalToString(params[0], false);
+                const auto mangledString = params[0].toString(false);
 
                 return llvm::demangle(mangledString);
             });
@@ -41,7 +65,7 @@ namespace hex::plugin::builtin {
         {
             /* get(url) */
             ContentRegistry::PatternLanguage::addDangerousFunction(nsHexHttp, "get", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
-                const auto url = Token::literalToString(params[0], false);
+                const auto url = params[0].toString(false);
 
                 hex::Net net;
                 return net.getString(url).get().body;

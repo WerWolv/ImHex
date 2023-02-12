@@ -115,7 +115,7 @@ namespace hex::plugin::builtin {
                                     const auto &patterns = runtime.getAllPatterns();
 
                                     for (const auto &pattern : patterns) {
-                                        if (pattern->isHidden())
+                                        if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
                                             continue;
 
                                         this->m_workData.push_back({

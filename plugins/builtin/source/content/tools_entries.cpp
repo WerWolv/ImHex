@@ -98,7 +98,6 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
 
             ImGui::Checkbox("hex.builtin.tools.ascii_table.octal"_lang, &asciiTableShowOctal);
-            ImGui::NewLine();
         }
 
         void drawRegexReplacer() {
@@ -118,7 +117,6 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
-            ImGui::NewLine();
         }
 
         void drawColorPicker() {
@@ -126,7 +124,6 @@ namespace hex::plugin::builtin {
 
             ImGui::SetNextItemWidth(300.0F);
             ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(), ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
-            ImGui::NewLine();
         }
 
         void drawMathEvaluator() {
@@ -438,7 +435,6 @@ namespace hex::plugin::builtin {
                         mathHistory.push_back(result.value());
                         lastMathError.clear();
                     }
-
                 } catch (std::invalid_argument &e) {
                     lastMathError = e.what();
                 }
@@ -910,12 +906,12 @@ namespace hex::plugin::builtin {
                     ImGui::TextSpinner("hex.builtin.tools.file_tools.splitter.picker.splitting"_lang);
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.splitter.picker.split"_lang)) {
-
                         splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.picker.splitting", 0, [](auto &task) {
                             ON_SCOPE_EXIT {
                                 selectedFile.clear();
                                 baseOutputPath.clear();
                             };
+
                             fs::File file(selectedFile, fs::File::Mode::Read);
 
                             if (!file.isValid()) {
@@ -974,7 +970,6 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
 
                 if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
-
                     u32 index = 0;
                     for (auto &file : files) {
                         if (ImGui::Selectable(hex::toUTF8String(file).c_str(), index == selectedIndex))
@@ -1050,9 +1045,7 @@ namespace hex::plugin::builtin {
                     ImGui::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
-
                         combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {
-
                             fs::File output(outputPath, fs::File::Mode::Create);
 
                             if (!output.isValid()) {
@@ -1094,9 +1087,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawFileTools() {
-
             if (ImGui::BeginTabBar("file_tools_tabs")) {
-
                 if (ImGui::BeginTabItem("hex.builtin.tools.file_tools.shredder"_lang)) {
                     drawFileToolShredder();
                     ImGui::EndTabItem();
@@ -1116,7 +1107,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawIEEE754Helper() {
+        void drawIEEE754Decoder() {
             static u128 value = 0x00;
             static int exponentBitCount = 8, mantissaBitCount = 23;
 
@@ -1149,6 +1140,9 @@ namespace hex::plugin::builtin {
             const auto signBits     = ExtractBits(signBitPosition, 1);
             const auto exponentBits = ExtractBits(exponentBitPosition, exponentBitCount);
             const auto mantissaBits = ExtractBits(mantissaBitPosition, mantissaBitCount);
+
+            ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.ieee754.description"_lang);
+            ImGui::NewLine();
 
             if (ImGui::BeginTable("##outer", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_ScrollX, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
                 ImGui::TableSetupColumn("hex.builtin.tools.ieee754.sign"_lang);
@@ -1316,6 +1310,59 @@ namespace hex::plugin::builtin {
             }
         }
 
+        void drawInvariantMultiplicationDecoder() {
+            static u64 divisor = 1;
+            static u64 multiplier = 1;
+            static u64 numBits = 32;
+
+            ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.invariant_multiplication.description"_lang);
+
+            ImGui::NewLine();
+
+            if (ImGui::BeginChild("##calculator", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5), true)) {
+                static const u64 min = 1, max = 64;
+                ImGui::SliderScalar("hex.builtin.tools.invariant_multiplication.num_bits"_lang, ImGuiDataType_U64, &numBits, &min, &max);
+                ImGui::NewLine();
+
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_TableRowBgAlt));
+                if (ImGui::BeginChild("##calculator", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() + 12_scaled), true)) {
+                    ImGui::PushItemWidth(100_scaled);
+
+                    ImGui::TextUnformatted("X /");
+                    ImGui::SameLine();
+                    if (ImGui::InputScalar("##divisor", ImGuiDataType_U64, &divisor)) {
+                        if (divisor == 0)
+                            divisor = 1;
+
+                        multiplier = ((1LLU << (numBits + 1)) / divisor) + 1;
+                    }
+
+                    ImGui::SameLine();
+
+                    ImGui::TextUnformatted(" <=> ");
+
+                    ImGui::SameLine();
+                    ImGui::TextUnformatted("( X *");
+                    ImGui::SameLine();
+                    if (ImGui::InputHexadecimal("##multiplier", &multiplier)) {
+                        if (multiplier == 0)
+                            multiplier = 1;
+                        divisor = ((1LLU << (numBits + 1)) / multiplier) + 1;
+                    }
+
+                    ImGui::SameLine();
+                    ImGui::TextFormatted(") >> {}", numBits + 1);
+
+                    ImGui::PopItemWidth();
+                }
+                ImGui::EndChild();
+                ImGui::PopStyleColor();
+
+                ImGui::PopStyleVar();
+            }
+            ImGui::EndChild();
+        }
     }
 
     void registerToolEntries() {
@@ -1329,7 +1376,8 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.file_uploader", drawFileUploader);
         ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain", drawWikiExplainer);
         ContentRegistry::Tools::add("hex.builtin.tools.file_tools", drawFileTools);
-        ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Helper);
+        ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Decoder);
+        ContentRegistry::Tools::add("hex.builtin.tools.invariant_multiplication", drawInvariantMultiplicationDecoder);
     }
 
 }

@@ -156,9 +156,21 @@ namespace hex::plugin::builtin {
     static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValue(const std::string &string) {
         static_assert(sizeof(StorageType) >= sizeof(Type));
 
-        StorageType value = 0x00;
-        auto result = std::from_chars(string.data(), string.data() + string.size(), value);
-        if (result.ec != std::errc() || result.ptr != string.data() + string.size())
+        StorageType value;
+
+        std::size_t processed = 0;
+        try {
+            if constexpr (std::floating_point<Type>)
+                value = std::stod(string, &processed);
+            else if constexpr (std::signed_integral<Type>)
+                value = std::stoll(string, &processed, 0);
+            else
+                value = std::stoull(string, &processed, 0);
+        } catch (std::exception &) {
+            return { false, { }, 0 };
+        }
+
+        if (processed != string.size())
             return { false, { }, 0 };
 
         if (value < std::numeric_limits<Type>::lowest() || value > std::numeric_limits<Type>::max())
@@ -709,7 +721,7 @@ namespace hex::plugin::builtin {
 
                         if (edited) {
                             auto [minValid, min, minSize] = parseNumericValueInput(settings.inputMin, settings.type);
-                            auto [maxValid, max, maxSize] = parseNumericValueInput(settings.inputMin, settings.type);
+                            auto [maxValid, max, maxSize] = parseNumericValueInput(settings.inputMax, settings.type);
 
                             this->m_settingsValid = minValid && maxValid && minSize == maxSize;
                         }
@@ -758,7 +770,7 @@ namespace hex::plugin::builtin {
                 this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
 
                 currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider](const auto &region) {
-                    return !this->decodeValue(provider, region).contains(this->m_currFilter[provider]);
+                    return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
                 }), currOccurrences.end());
             }
             ImGui::PopItemWidth();

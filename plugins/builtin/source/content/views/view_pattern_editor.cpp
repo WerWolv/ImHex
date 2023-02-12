@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
@@ -96,7 +96,7 @@ namespace hex::plugin::builtin {
     ViewPatternEditor::~ViewPatternEditor() {
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventProviderDeleted>(this);
+        EventManager::unsubscribe<EventProviderOpened>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
     }
@@ -378,7 +378,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         if (variable.outVariable) {
-                            ImGui::TextUnformatted(pl::core::Token::literalToString(variable.value, true).c_str());
+                            ImGui::TextUnformatted(variable.value.toString(true).c_str());
                         } else if (variable.inVariable) {
                             const std::string label { "##" + name };
 
@@ -447,7 +447,7 @@ namespace hex::plugin::builtin {
 
                         std::optional<ImColor> color;
                         for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address, id)) {
-                            if (pattern->isHidden())
+                            if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
                                 continue;
 
                             if (color.has_value())
@@ -491,7 +491,6 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
-
                 u32 index = 0;
                 for (auto &path : this->m_possiblePatternFiles) {
                     if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile))
@@ -572,7 +571,6 @@ namespace hex::plugin::builtin {
             if (ImGui::GetIO().KeyShift) {
                 ImGui::Indent();
                 if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_NoClip)) {
-
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
@@ -765,7 +763,8 @@ namespace hex::plugin::builtin {
                 }
 
                 std::scoped_lock lock(data.runtimeMutex);
-                auto &runtime = data.runtime;
+                auto runtime = std::make_unique<pl::PatternLanguage>();
+                ContentRegistry::PatternLanguage::configureRuntime(*runtime, provider);
 
                 auto mimeType = magic::getMIMEType(provider);
 
@@ -852,7 +851,6 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, nullptr, false, providerValid)) {
-
                 std::vector<std::fs::path> paths;
 
                 for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
@@ -866,10 +864,10 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                View::showFileChooserPopup(paths, { {"Pattern File", "hexpat"} },
-                [this, provider](const std::fs::path &path) {
-                    this->loadPatternFile(path, provider);
-                });
+                View::showFileChooserPopup(paths, { { "Pattern File", "hexpat" } }, false,
+                    [this, provider](const std::fs::path &path) {
+                        this->loadPatternFile(path, provider);
+                    });
             }
 
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {
@@ -972,7 +970,7 @@ namespace hex::plugin::builtin {
 
             std::optional<ImColor> color;
             for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address)) {
-                if (pattern->isHidden())
+                if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
                     continue;
 
                 if (color.has_value())
@@ -988,11 +986,11 @@ namespace hex::plugin::builtin {
             hex::unused(data, size);
 
             auto patterns = ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address);
-            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->isHidden(); })) {
+            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden; })) {
                 ImGui::BeginTooltip();
 
                 for (const auto &pattern : patterns) {
-                    if (pattern->isHidden())
+                    if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
                         continue;
 
                     auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;

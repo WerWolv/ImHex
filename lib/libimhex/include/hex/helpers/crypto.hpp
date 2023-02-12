@@ -16,7 +16,7 @@ namespace hex::crypt {
     void initialize();
     void exit();
 
-    u16 crc8(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut);
+    u8 crc8(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut);
     u16 crc16(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut);
     u32 crc32(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorout, bool reflectIn, bool reflectOut);
 

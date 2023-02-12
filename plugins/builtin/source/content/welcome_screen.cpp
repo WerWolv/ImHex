@@ -474,12 +474,22 @@ namespace hex::plugin::builtin {
 
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
             {
-                auto recentPath = fs::getDefaultPaths(fs::ImHexPath::Recent).front();
-                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
-                fs::File recentFile(recentPath / fileName, fs::File::Mode::Create);
+                for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+                    auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+                    fs::File recentFile(recentPath / fileName, fs::File::Mode::Create);
+                    if (!recentFile.isValid())
+                        continue;
 
-                if (auto settings = provider->storeSettings(); !settings.is_null())
-                    recentFile.write(settings.dump(4));
+                    {
+                        auto path = ProjectFile::getPath();
+                        ProjectFile::clearPath();
+
+                        if (auto settings = provider->storeSettings(); !settings.is_null())
+                            recentFile.write(settings.dump(4));
+
+                        ProjectFile::setPath(path);
+                    }
+                }
             }
 
             updateRecentProviders();

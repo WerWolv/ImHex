@@ -18,6 +18,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::CollapsingHeader(LangEntry(name))) {
                     function();
+                    ImGui::NewLine();
                 } else {
                     if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == tools.end())
                         this->m_dragStartIterator = iter;

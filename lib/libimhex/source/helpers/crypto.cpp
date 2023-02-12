@@ -157,7 +157,7 @@ namespace hex::crypt {
         return crc.checksum();
     }
 
-    u16 crc8(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorOut, bool reflectIn, bool reflectOut) {
+    u8 crc8(prv::Provider *&data, u64 offset, size_t size, u32 polynomial, u32 init, u32 xorOut, bool reflectIn, bool reflectOut) {
         return calcCrc<8>(data, offset, size, polynomial, init, xorOut, reflectIn, reflectOut);
     }
 

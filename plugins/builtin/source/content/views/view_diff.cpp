@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
     };
     struct LineInfo {
         std::vector<u8> bytes;
-        i64 validBytes = 0;
+        u64 validBytes = 0;
     };
 
     static DiffResult diffBytes(u8 index, const LineInfo &a, const LineInfo &b) {
@@ -105,9 +105,13 @@ namespace hex::plugin::builtin {
             auto &provider = ImHexApi::Provider::getProviders()[id];
 
             // Read one line of each provider
-            lineInfo[i].bytes.resize(this->m_columnCount);
-            provider->read(row * this->m_columnCount, lineInfo[i].bytes.data(), lineInfo[i].bytes.size());
-            lineInfo[i].validBytes = std::min<i64>(this->m_columnCount, provider->getSize() - row * this->m_columnCount);
+            if (row * this->m_columnCount >= provider->getSize())
+                lineInfo[i].validBytes = 0;
+            else
+                lineInfo[i].validBytes = std::min<u64>(this->m_columnCount, provider->getSize() - row * this->m_columnCount);
+
+            lineInfo[i].bytes.resize(lineInfo[i].validBytes);
+            provider->read(provider->getBaseAddress() + provider->getCurrentPageAddress() + row * this->m_columnCount, lineInfo[i].bytes.data(), lineInfo[i].validBytes);
 
             // Calculate address width
             u8 addressDigits = 0;
@@ -139,7 +143,7 @@ namespace hex::plugin::builtin {
             bool hasLastHighlight = false;
             ImVec2 lastHighlightEnd = { };
 
-            for (i64 col = 0; col < lineInfo[curr].validBytes; col++) {
+            for (u64 col = 0; col < lineInfo[curr].validBytes; col++) {
                 auto pos = ImGui::GetCursorScreenPos();
 
                 // Diff bytes

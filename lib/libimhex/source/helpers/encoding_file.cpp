@@ -17,7 +17,7 @@ namespace hex {
         this->m_valid = true;
     }
 
-    std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(const std::vector<u8> &buffer) const {
+    std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(std::span<u8> buffer) const {
         for (auto riter = this->m_mapping.crbegin(); riter != this->m_mapping.crend(); ++riter) {
             const auto &[size, mapping] = *riter;
 

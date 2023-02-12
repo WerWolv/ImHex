@@ -8,6 +8,7 @@ option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)
 option(IMHEX_IGNORE_BAD_CLONE "Disable the bad clone prevention checks" OFF)
 option(IMHEX_PATTERNS_PULL_MASTER "Download latest files from master branch of the ImHex-Patterns repo" OFF)
 option(IMHEX_IGNORE_BAD_COMPILER "Allow compiling with an unsupported compiler" OFF)
+option(IMHEX_USE_GTK_FILE_PICKER "Use GTK file picker instead of xdg-desktop-portals" OFF)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
@@ -19,7 +20,11 @@ include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 # Setup project
 loadVersion(IMHEX_VERSION)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
-project(imhex VERSION ${IMHEX_VERSION})
+project(imhex
+        LANGUAGES C CXX VERSION ${IMHEX_VERSION}
+        DESCRIPTION "The ImHex Hex Editor"
+        HOMEPAGE_URL "https://imhex.werwolv.net"
+)
 
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
@@ -43,7 +48,7 @@ addBundledLibraries()
 # Add ImHex sources
 add_subdirectory(lib/libimhex)
 add_subdirectory(main)
-add_custom_target(imhex_all ALL DEPENDS main)
+add_custom_target(imhex_all ALL DEPENDS main libimhex)
 
 # Add unit tests
 enable_testing()

@@ -8,6 +8,7 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/ui/widgets.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <array>
 #include <mutex>
@@ -38,7 +39,7 @@ namespace hex::plugin::windows {
         void saveAs(const std::fs::path &) override {}
 
         [[nodiscard]] std::string getName() const override { return hex::format("hex.windows.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataInformation() const override {
+        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override {
             return {
                     { "hex.windows.provider.process_memory.process_name"_lang, this->m_selectedProcess->name },
                     { "hex.windows.provider.process_memory.process_id"_lang, std::to_string(this->m_selectedProcess->id) }
@@ -61,6 +62,7 @@ namespace hex::plugin::windows {
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64) const override;
+        std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
 
     private:
         void reloadProcessModules();
@@ -86,10 +88,10 @@ namespace hex::plugin::windows {
 
         std::set<MemoryRegion> m_memoryRegions;
         ui::SearchableWidget<Process> m_processSearchWidget = ui::SearchableWidget<Process>([](const std::string &search, const Process &process) {
-            return process.name.contains(search);
+            return hex::containsIgnoreCase(process.name, search);
         });
         ui::SearchableWidget<MemoryRegion> m_regionSearchWidget = ui::SearchableWidget<MemoryRegion>([](const std::string &search, const MemoryRegion &memoryRegion) {
-            return memoryRegion.name.contains(search);
+            return hex::containsIgnoreCase(memoryRegion.name, search);
         });
 
         HANDLE m_processHandle = nullptr;

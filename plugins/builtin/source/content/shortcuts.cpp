@@ -8,23 +8,23 @@ namespace hex::plugin::builtin {
 
     void registerShortcuts() {
         // New file
-        ShortcutManager::addGlobalShortcut(CTRL + Keys::N, [] {
+        ShortcutManager::addGlobalShortcut(CTRLCMD + Keys::N, [] {
             EventManager::post<RequestOpenWindow>("Create File");
         });
 
         // Open file
-        ShortcutManager::addGlobalShortcut(CTRL + Keys::O, [] {
+        ShortcutManager::addGlobalShortcut(CTRLCMD + Keys::O, [] {
             EventManager::post<RequestOpenWindow>("Open File");
         });
 
         // Close file
-        ShortcutManager::addGlobalShortcut(CTRL + Keys::W, [] {
+        ShortcutManager::addGlobalShortcut(CTRLCMD + Keys::W, [] {
             if (ImHexApi::Provider::isValid())
                 ImHexApi::Provider::remove(ImHexApi::Provider::get());
         });
 
         // Reload file
-        ShortcutManager::addGlobalShortcut(CTRL + Keys::R, [] {
+        ShortcutManager::addGlobalShortcut(CTRLCMD + Keys::R, [] {
             if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
 

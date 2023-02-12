@@ -9,7 +9,7 @@ namespace hex {
 
     LanguageDefinition::LanguageDefinition(std::map<std::string, std::string> &&entries) {
         for (const auto &[key, value] : entries) {
-            if (value == "***** MISSING TRANSLATION *****")
+            if (value.empty())
                 continue;
 
             this->m_entries.insert({ key, value });

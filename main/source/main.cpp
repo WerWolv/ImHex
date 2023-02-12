@@ -2,7 +2,6 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/api/theme_manager.hpp>
 
 #include "window.hpp"
 
@@ -15,11 +14,17 @@ int main(int argc, char **argv, char **envp) {
     using namespace hex;
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
 
-#if defined(OS_WINDOWS)
-    ImHexApi::System::impl::setBorderlessWindowMode(true);
-#endif
-
     bool shouldRestart = false;
+
+    // Check if ImHex is installed in portable mode
+    {
+        if (const auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
+            const auto flagFile = executablePath->parent_path() / "PORTABLE";
+
+            if (fs::exists(flagFile) && fs::isRegularFile(flagFile))
+                ImHexApi::System::impl::setPortableVersion(true);
+        }
+    }
 
     do {
         EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
@@ -51,7 +56,6 @@ int main(int argc, char **argv, char **envp) {
         // Main window
         {
             Window window;
-
             if (argc == 1)
                 ;    // No arguments provided
             else if (argc >= 2) {
@@ -60,6 +64,7 @@ int main(int argc, char **argv, char **envp) {
                         EventManager::post<RequestOpenFile>(argument.value());
                 }
             }
+
 
             window.loop();
         }

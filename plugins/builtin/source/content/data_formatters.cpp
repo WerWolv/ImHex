@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
             return std::string(result.begin(), result.end());
         });
 
-        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.ascii", [](prv::Provider *provider, u64 offset, size_t size) {
+        ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.hex_view", [](prv::Provider *provider, u64 offset, size_t size) {
             constexpr static auto HeaderLine = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n";
             std::string result;
             result.reserve(std::string(HeaderLine).size() * size / 0x10);

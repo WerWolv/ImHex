@@ -3,7 +3,7 @@ import sys
 import json
 
 DEFAULT_LANG = "en_US"
-INVALID_TRANSLATION = "***** MISSING TRANSLATION *****"
+INVALID_TRANSLATION = ""
 
 
 def handle_missing_key(command, lang_data, key, value):

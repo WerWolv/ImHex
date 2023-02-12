@@ -234,7 +234,7 @@ namespace hex::plugin::builtin {
         return hex::format("hex.builtin.provider.gdb.name"_lang, address, port);
     }
 
-    std::vector<std::pair<std::string, std::string>> GDBProvider::getDataInformation() const {
+    std::vector<std::pair<std::string, std::string>> GDBProvider::getDataDescription() const {
         return {
             {"hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", this->m_ipAddress, this->m_port)},
         };
@@ -329,6 +329,15 @@ namespace hex::plugin::builtin {
             return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
+    }
+
+    std::variant<std::string, i128> GDBProvider::queryInformation(const std::string &category, const std::string &argument) {
+        if (category == "ip")
+            return this->m_ipAddress;
+        else if (category == "port")
+            return this->m_port;
+        else
+            return Provider::queryInformation(category, argument);
     }
 
 }

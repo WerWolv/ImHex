@@ -121,6 +121,7 @@ namespace hex {
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);
     EVENT_DEF(EventWindowInitialized);
+    EVENT_DEF(EventSetTaskBarIconState, u32, u32, u32);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);
@@ -138,6 +139,6 @@ namespace hex {
     EVENT_DEF(RequestShowErrorPopup, std::string);
     EVENT_DEF(RequestShowFatalErrorPopup, std::string);
     EVENT_DEF(RequestShowYesNoQuestionPopup, std::string, std::function<void()>, std::function<void()>);
-    EVENT_DEF(RequestShowFileChooserPopup, std::vector<std::fs::path>, std::vector<nfdfilteritem_t>, std::function<void(std::fs::path)>);
+    EVENT_DEF(RequestShowFileChooserPopup, std::vector<std::fs::path>, std::vector<nfdfilteritem_t>, std::function<void(std::fs::path)>, bool);
 
 }

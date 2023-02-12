@@ -9,9 +9,10 @@
 
 #include <functional>
 #include <map>
-#include <unordered_map>
+#include <span>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 #include <vector>
 
 #include <nlohmann/json_fwd.hpp>
@@ -117,6 +118,8 @@ namespace hex {
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
         namespace PatternLanguage {
 
+            using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, pl::ptrn::Iteratable&, bool, std::span<const pl::core::Token::Literal>)>;
+
             namespace impl {
 
                 struct FunctionDefinition {
@@ -129,6 +132,13 @@ namespace hex {
                     bool dangerous;
                 };
 
+                struct Visualizer {
+                    u32 parameterCount;
+                    VisualizerFunctionCallback callback;
+                };
+
+                std::map<std::string, Visualizer> &getVisualizers();
+
             }
 
             void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider);
@@ -137,6 +147,8 @@ namespace hex {
 
             void addFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
             void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
+
+            void addVisualizer(const std::string &name, const VisualizerFunctionCallback &func, u32 parameterCount);
 
             std::map<std::string, pl::api::PragmaHandler> &getPragmas();
             std::vector<impl::FunctionDefinition> &getFunctions();
@@ -436,11 +448,12 @@ namespace hex {
                 public:
                     using Callback = std::function<std::vector<u8>(const Region&, prv::Provider *)>;
 
-                    Function(const Hash *type, std::string name, Callback callback)
+                    Function(Hash *type, std::string name, Callback callback)
                         : m_type(type), m_name(std::move(name)), m_callback(std::move(callback)) {
 
                     }
 
+                    [[nodiscard]] Hash *getType() { return this->m_type; }
                     [[nodiscard]] const Hash *getType() const { return this->m_type; }
                     [[nodiscard]] const std::string &getName() const { return this->m_name; }
 
@@ -457,7 +470,7 @@ namespace hex {
                     }
 
                 private:
-                    const Hash *m_type;
+                    Hash *m_type;
                     std::string m_name;
                     Callback m_callback;
 
@@ -467,12 +480,15 @@ namespace hex {
                 virtual void draw() { }
                 [[nodiscard]] virtual Function create(std::string name) = 0;
 
+                [[nodiscard]] virtual nlohmann::json store() const = 0;
+                virtual void load(const nlohmann::json &json) = 0;
+
                 [[nodiscard]] const std::string &getUnlocalizedName() const {
                     return this->m_unlocalizedName;
                 }
 
             protected:
-                [[nodiscard]] Function create(const std::string &name, const Function::Callback &callback) const {
+                [[nodiscard]] Function create(const std::string &name, const Function::Callback &callback) {
                     return { this, name, callback };
                 }
 

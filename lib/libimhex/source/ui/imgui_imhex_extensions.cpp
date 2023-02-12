@@ -69,7 +69,12 @@ namespace ImGui {
         this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
 
+    Texture::Texture(unsigned int texture, int width, int height) : m_textureId(reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture))), m_width(width), m_height(height) {
+
+    }
+
     Texture::Texture(Texture&& other) noexcept {
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&this->m_textureId));
         this->m_textureId = other.m_textureId;
         this->m_width = other.m_width;
         this->m_height = other.m_height;
@@ -78,6 +83,7 @@ namespace ImGui {
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&this->m_textureId));
         this->m_textureId = other.m_textureId;
         this->m_width = other.m_width;
         this->m_height = other.m_height;
@@ -507,7 +513,7 @@ namespace ImGui {
         return pressed;
     }
 
-    bool InputIntegerPrefix(const char *label, const char *prefix, void *value, ImGuiDataType type, ImGuiInputTextFlags flags) {
+    bool InputIntegerPrefix(const char *label, const char *prefix, void *value, ImGuiDataType type, const char *format, ImGuiInputTextFlags flags) {
         auto window             = ImGui::GetCurrentWindow();
         const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
@@ -520,11 +526,11 @@ namespace ImGui {
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
 
         char buf[64];
-        DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, "%llX");
+        DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
 
         bool value_changed = false;
         if (InputTextEx(label, nullptr, buf, IM_ARRAYSIZE(buf), ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), flags))
-            value_changed = DataTypeApplyFromText(buf, ImGuiDataType_U64, value, "%llX");
+            value_changed = DataTypeApplyFromText(buf, type, value, format);
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
@@ -540,11 +546,11 @@ namespace ImGui {
     }
 
     bool InputHexadecimal(const char *label, u32 *value, ImGuiInputTextFlags flags) {
-        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U32, flags | ImGuiInputTextFlags_CharsHexadecimal);
+        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U32, "%lX", flags | ImGuiInputTextFlags_CharsHexadecimal);
     }
 
     bool InputHexadecimal(const char *label, u64 *value, ImGuiInputTextFlags flags) {
-        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U64, flags | ImGuiInputTextFlags_CharsHexadecimal);
+        return InputIntegerPrefix(label, "0x", value, ImGuiDataType_U64, "%llX", flags | ImGuiInputTextFlags_CharsHexadecimal);
     }
 
     void SmallProgressBar(float fraction, float yOffset) {

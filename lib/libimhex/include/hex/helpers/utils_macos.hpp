@@ -2,9 +2,12 @@
 
 #if defined(OS_MACOS)
 
-    #include <string>
+    extern "C" {
 
-    extern "C" void openWebpageMacos(const char *url);
-    extern "C" bool isMacosSystemDarkModeEnabled();
+        void openWebpageMacos(const char *url);
+        bool isMacosSystemDarkModeEnabled();
+        float getBackingScaleFactor();
+
+    }
 
 #endif

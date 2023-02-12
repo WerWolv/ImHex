@@ -1,10 +1,13 @@
 #include "content/views/view_yara.hpp"
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
+
+#include "content/helpers/provider_extra_data.hpp"
 
 // <yara/types.h>'s RE type has a zero-sized array, which is not allowed in ISO C++.
 #pragma GCC diagnostic push
@@ -20,9 +23,7 @@ namespace hex::plugin::builtin {
     ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
         yr_initialize();
 
-        this->reloadRules();
-
-        ContentRegistry::FileHandler::add({ ".yar" }, [](const auto &path) {
+        ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
                     View::showInfoPopup("hex.builtin.view.yara.rule_added"_lang);
@@ -31,6 +32,60 @@ namespace hex::plugin::builtin {
             }
 
             return false;
+        });
+
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "yara.json",
+            .required = false,
+            .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+                auto fileContent = tar.read(basePath);
+                if (fileContent.empty())
+                    return true;
+
+                auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
+
+                if (!data.contains("rules"))
+                    return false;
+
+                auto &rules = data["rules"];
+                if (!rules.is_array())
+                    return false;
+
+                auto &extraData = ProviderExtraData::get(provider).yara;
+                extraData.matches.clear();
+
+                for (auto &rule : rules) {
+                    if (!rule.contains("name") || !rule.contains("path"))
+                        return false;
+
+                    auto &name = rule["name"];
+                    auto &path = rule["path"];
+
+                    if (!name.is_string() || !path.is_string())
+                        return false;
+
+                    extraData.rules.emplace_back(std::fs::path(name.get<std::string>()), std::fs::path(path.get<std::string>()));
+                }
+
+                return true;
+            },
+            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+                nlohmann::json data;
+
+                data["rules"] = nlohmann::json::array();
+
+                auto &extraData = ProviderExtraData::get(provider).yara;
+                for (auto &[name, path] : extraData.rules) {
+                    data["rules"].push_back({
+                        { "name", hex::toUTF8String(name) },
+                        { "path", hex::toUTF8String(path) }
+                    });
+                }
+
+                tar.write(basePath, data.dump(4));
+
+                return true;
+            }
         });
     }
 
@@ -44,40 +99,53 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.yara.header.rules"_lang);
             ImGui::Separator();
 
-            if (this->m_rules.empty()) {
-                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.no_rules"_lang);
+            auto &extraData = ProviderExtraData::getCurrent().yara;
+            auto &rules = extraData.rules;
+            auto &matches = extraData.matches;
 
-                if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
-            } else {
-                ImGui::BeginDisabled(this->m_matcherTask.isRunning());
-                {
-                    if (ImGui::BeginCombo("hex.builtin.view.yara.header.rules"_lang, hex::toUTF8String(this->m_rules[this->m_selectedRule].first).c_str())) {
-                        for (u32 i = 0; i < this->m_rules.size(); i++) {
-                            const bool selected = (this->m_selectedRule == i);
-                            if (ImGui::Selectable(hex::toUTF8String(this->m_rules[i].first).c_str(), selected))
-                                this->m_selectedRule = i;
-
-                            if (selected)
-                                ImGui::SetItemDefaultFocus();
-                        }
-                        ImGui::EndCombo();
+            if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
+                for (u32 i = 0; i < rules.size(); i++) {
+                    const bool selected = (this->m_selectedRule == i);
+                    if (ImGui::Selectable(hex::toUTF8String(rules[i].first).c_str(), selected)) {
+                        this->m_selectedRule = i;
                     }
-                    ImGui::SameLine();
-                    if (ImGui::Button("hex.builtin.view.yara.reload"_lang)) this->reloadRules();
-
-                    ImGui::NewLine();
-                    if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
-                    ImGui::SameLine();
-                    ImGui::BeginDisabled(this->m_matches.empty());
-                    if (ImGui::Button("hex.builtin.view.yara.reset"_lang)) this->clearResult();
-                    ImGui::EndDisabled();
                 }
-                ImGui::EndDisabled();
+                ImGui::EndListBox();
+            }
 
-                if (this->m_matcherTask.isRunning()) {
-                    ImGui::SameLine();
-                    ImGui::TextSpinner("hex.builtin.view.yara.matching"_lang);
+            if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                std::vector<std::fs::path> paths;
+                for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
+                    std::error_code error;
+                    for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
+                        if (!entry.is_regular_file()) continue;
+                        if (entry.path().extension() != ".yara" && entry.path().extension() != ".yar") continue;
+
+                        paths.push_back(entry);
+                    }
                 }
+
+                View::showFileChooserPopup(paths, { { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
+                    [&](const auto &path) {
+                        rules.push_back({ path.filename(), path });
+                    });
+            }
+
+            ImGui::SameLine();
+            if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                if (this->m_selectedRule < rules.size()) {
+                    rules.erase(rules.begin() + this->m_selectedRule);
+                    this->m_selectedRule = std::min(this->m_selectedRule, (u32)rules.size() - 1);
+                }
+            }
+
+            ImGui::NewLine();
+            if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
+            ImGui::SameLine();
+
+            if (this->m_matcherTask.isRunning()) {
+                ImGui::SameLine();
+                ImGui::TextSpinner("hex.builtin.view.yara.matching"_lang);
             }
 
             ImGui::NewLine();
@@ -99,11 +167,11 @@ namespace hex::plugin::builtin {
 
                 if (!this->m_matcherTask.isRunning()) {
                     ImGuiListClipper clipper;
-                    clipper.Begin(this->m_matches.size());
+                    clipper.Begin(matches.size());
 
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = this->m_matches[i];
+                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = matches[i];
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::PushID(i);
@@ -156,215 +224,206 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::clearResult() {
-        for (const auto &match : this->m_matches) {
+        auto &matches = ProviderExtraData::getCurrent().yara.matches;
+
+        for (const auto &match : matches) {
             ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
             ImHexApi::HexEditor::removeTooltip(match.tooltipId);
         }
 
-        this->m_matches.clear();
+        matches.clear();
         this->m_consoleMessages.clear();
     }
 
-    void ViewYara::reloadRules() {
-        this->m_rules.clear();
-
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
-            if (!fs::exists(path))
-                continue;
-
-            std::error_code error;
-            for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
-                if (entry.is_regular_file() && entry.path().extension() == ".yar") {
-                    this->m_rules.emplace_back(std::fs::relative(entry.path(), path), entry.path());
-                }
-            }
-        }
-    }
-
     void ViewYara::applyRules() {
+        this->clearResult();
+
         this->m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
             if (!ImHexApi::Provider::isValid()) return;
 
-            YR_COMPILER *compiler = nullptr;
-            yr_compiler_create(&compiler);
-            ON_SCOPE_EXIT {
-                yr_compiler_destroy(compiler);
-            };
-
-            auto currFilePath = hex::toUTF8String(fs::toShortPath(this->m_rules[this->m_selectedRule].second));
-            yr_compiler_set_include_callback(
-                compiler,
-                [](const char *includeName, const char *, const char *, void *userData) -> const char * {
-                    auto currFilePath = static_cast<const char *>(userData);
-
-                    fs::File file(std::fs::path(currFilePath).parent_path() / includeName, fs::File::Mode::Read);
-                    if (!file.isValid())
-                        return nullptr;
-
-                    auto size    = file.getSize();
-                    char *buffer = new char[size + 1];
-                    file.readBuffer(reinterpret_cast<u8 *>(buffer), size);
-                    buffer[size] = 0x00;
-
-                    return buffer;
-                },
-                [](const char *ptr, void *userData) {
-                    hex::unused(userData);
-
-                    delete[] ptr;
-                },
-                currFilePath.data()
-            );
-
-            fs::File file(this->m_rules[this->m_selectedRule].second, fs::File::Mode::Read);
-            if (!file.isValid()) return;
-
-            if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
-                std::string errorMessage(0xFFFF, '\x00');
-                yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
-                hex::trim(errorMessage);
-
-                TaskManager::doLater([this, errorMessage] {
-                    this->clearResult();
-
-                    this->m_consoleMessages.push_back("Error: " + errorMessage);
-                });
-
-                return;
-            }
-
-            YR_RULES *rules;
-            yr_compiler_get_rules(compiler, &rules);
-            ON_SCOPE_EXIT { yr_rules_destroy(rules); };
-
-            YR_MEMORY_BLOCK_ITERATOR iterator;
-
-            struct ScanContext {
-                Task *task = nullptr;
-                std::vector<u8> buffer;
-                YR_MEMORY_BLOCK currBlock = {};
-            };
-
-            ScanContext context;
-            context.task                 = &task;
-            context.currBlock.base       = 0;
-            context.currBlock.fetch_data = [](auto *block) -> const u8 * {
-                auto &context = *static_cast<ScanContext *>(block->context);
-                auto provider = ImHexApi::Provider::get();
-
-                context.buffer.resize(context.currBlock.size);
-
-                if (context.buffer.empty())
-                    return nullptr;
-
-                block->size = context.currBlock.size;
-                provider->read(context.currBlock.base + provider->getBaseAddress(), context.buffer.data(), context.buffer.size());
-
-                return context.buffer.data();
-            };
-            iterator.file_size = [](auto *iterator) -> u64 {
-                hex::unused(iterator);
-
-                return ImHexApi::Provider::get()->getActualSize();
-            };
-
-            iterator.context = &context;
-            iterator.first   = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK   *{
-                auto &context = *static_cast<ScanContext *>(iterator->context);
-
-                context.currBlock.base = 0;
-                context.currBlock.size = 0;
-                context.buffer.clear();
-                iterator->last_error = ERROR_SUCCESS;
-
-                return iterator->next(iterator);
-            };
-            iterator.next = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK * {
-                auto &context = *static_cast<ScanContext *>(iterator->context);
-
-                u64 address = context.currBlock.base + context.currBlock.size;
-
-                iterator->last_error      = ERROR_SUCCESS;
-                context.currBlock.base    = address;
-                context.currBlock.size    = ImHexApi::Provider::get()->getActualSize() - address;
-                context.currBlock.context = &context;
-                context.task->update(address);
-
-                if (context.currBlock.size == 0) return nullptr;
-
-                return &context.currBlock;
-            };
-
+            auto &extraData = ProviderExtraData::getCurrent().yara;
+            auto &rules = extraData.rules;
+            auto &matches = extraData.matches;
 
             struct ResultContext {
                 Task *task = nullptr;
-                std::vector<YaraMatch> newMatches;
+                std::vector<ProviderExtraData::Data::Yara::YaraMatch> newMatches;
                 std::vector<std::string> consoleMessages;
             };
 
             ResultContext resultContext;
             resultContext.task = &task;
 
-            yr_rules_scan_mem_blocks(
-                    rules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
-                        auto &results = *static_cast<ResultContext *>(userData);
+            for (const auto &[fileName, filePath] : rules) {
+                YR_COMPILER *compiler = nullptr;
+                yr_compiler_create(&compiler);
+                ON_SCOPE_EXIT {
+                    yr_compiler_destroy(compiler);
+                };
 
-                        switch (message) {
-                            case CALLBACK_MSG_RULE_MATCHING:
-                            {
-                                auto rule = static_cast<YR_RULE *>(data);
+                auto currFilePath = hex::toUTF8String(fs::toShortPath(filePath));
 
-                                YR_STRING *string;
-                                YR_MATCH *match;
+                yr_compiler_set_include_callback(
+                    compiler,
+                    [](const char *includeName, const char *, const char *, void *userData) -> const char * {
+                        fs::File file(std::fs::path(static_cast<const char *>(userData)).parent_path() / includeName, fs::File::Mode::Read);
+                        if (!file.isValid())
+                            return nullptr;
 
-                                if (rule->strings != nullptr) {
-                                    yr_rule_strings_foreach(rule, string) {
-                                        yr_string_matches_foreach(context, string, match) {
-                                                results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });
-                                            }
-                                    }
-                                } else {
-                                    results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0, 0 });
-                                }
-                            }
-                                break;
-                            case CALLBACK_MSG_CONSOLE_LOG:
-                            {
-                                results.consoleMessages.emplace_back(static_cast<const char *>(data));
-                            }
-                                break;
-                            default:
-                                break;
-                        }
+                        auto size    = file.getSize();
+                        char *buffer = new char[size + 1];
+                        file.readBuffer(reinterpret_cast<u8 *>(buffer), size);
+                        buffer[size] = 0x00;
 
-                        return results.task->shouldInterrupt() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
+                        return buffer;
                     },
-                    &resultContext,
-                    0);
+                    [](const char *ptr, void *userData) {
+                        hex::unused(userData);
 
+                        delete[] ptr;
+                    },
+                    currFilePath.data()
+                );
 
-            TaskManager::doLater([this, resultContext] {
-                for (const auto &match : this->m_matches) {
+                fs::File file(rules[this->m_selectedRule].second, fs::File::Mode::Read);
+                if (!file.isValid()) return;
+
+                if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
+                    std::string errorMessage(0xFFFF, '\x00');
+                    yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
+                    hex::trim(errorMessage);
+
+                    TaskManager::doLater([this, errorMessage] {
+                        this->clearResult();
+
+                        this->m_consoleMessages.push_back("Error: " + errorMessage);
+                    });
+
+                    return;
+                }
+
+                YR_RULES *yaraRules;
+                yr_compiler_get_rules(compiler, &yaraRules);
+                ON_SCOPE_EXIT { yr_rules_destroy(yaraRules); };
+
+                YR_MEMORY_BLOCK_ITERATOR iterator;
+
+                struct ScanContext {
+                    Task *task = nullptr;
+                    std::vector<u8> buffer;
+                    YR_MEMORY_BLOCK currBlock = {};
+                };
+
+                ScanContext context;
+                context.task                 = &task;
+                context.currBlock.base       = 0;
+                context.currBlock.fetch_data = [](auto *block) -> const u8 * {
+                    auto &context = *static_cast<ScanContext *>(block->context);
+                    auto provider = ImHexApi::Provider::get();
+
+                    context.buffer.resize(context.currBlock.size);
+
+                    if (context.buffer.empty())
+                        return nullptr;
+
+                    block->size = context.currBlock.size;
+                    provider->read(context.currBlock.base + provider->getBaseAddress(), context.buffer.data(), context.buffer.size());
+
+                    return context.buffer.data();
+                };
+                iterator.file_size = [](auto *iterator) -> u64 {
+                    hex::unused(iterator);
+
+                    return ImHexApi::Provider::get()->getActualSize();
+                };
+
+                iterator.context = &context;
+                iterator.first   = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK   *{
+                    auto &context = *static_cast<ScanContext *>(iterator->context);
+
+                    context.currBlock.base = 0;
+                    context.currBlock.size = 0;
+                    context.buffer.clear();
+                    iterator->last_error = ERROR_SUCCESS;
+
+                    return iterator->next(iterator);
+                };
+                iterator.next = [](YR_MEMORY_BLOCK_ITERATOR *iterator) -> YR_MEMORY_BLOCK * {
+                    auto &context = *static_cast<ScanContext *>(iterator->context);
+
+                    u64 address = context.currBlock.base + context.currBlock.size;
+
+                    iterator->last_error      = ERROR_SUCCESS;
+                    context.currBlock.base    = address;
+                    context.currBlock.size    = ImHexApi::Provider::get()->getActualSize() - address;
+                    context.currBlock.context = &context;
+                    context.task->update(address);
+
+                    if (context.currBlock.size == 0) return nullptr;
+
+                    return &context.currBlock;
+                };
+
+                yr_rules_scan_mem_blocks(
+                        yaraRules, &iterator, 0, [](YR_SCAN_CONTEXT *context, int message, void *data, void *userData) -> int {
+                            auto &results = *static_cast<ResultContext *>(userData);
+
+                            switch (message) {
+                                case CALLBACK_MSG_RULE_MATCHING:
+                                {
+                                    auto rule = static_cast<YR_RULE *>(data);
+
+                                    YR_STRING *string;
+                                    YR_MATCH *match;
+
+                                    if (rule->strings != nullptr) {
+                                        yr_rule_strings_foreach(rule, string) {
+                                            yr_string_matches_foreach(context, string, match) {
+                                                    results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });
+                                                }
+                                        }
+                                    } else {
+                                        results.newMatches.push_back({ rule->identifier, "", 0, 0, true, 0, 0 });
+                                    }
+                                }
+                                    break;
+                                case CALLBACK_MSG_CONSOLE_LOG:
+                                {
+                                    results.consoleMessages.emplace_back(static_cast<const char *>(data));
+                                }
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            return results.task->shouldInterrupt() ? CALLBACK_ABORT : CALLBACK_CONTINUE;
+                        },
+                        &resultContext,
+                        0);
+
+            }
+            TaskManager::doLater([this, &matches, resultContext] {
+                for (const auto &match : matches) {
                     ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
                     ImHexApi::HexEditor::removeTooltip(match.tooltipId);
                 }
 
                 this->m_consoleMessages = resultContext.consoleMessages;
 
-                std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(this->m_matches));
+                std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(matches));
 
-                auto uniques = std::set(this->m_matches.begin(), this->m_matches.end(), [](const auto &l, const auto &r) {
+                auto uniques = std::set(matches.begin(), matches.end(), [](const auto &l, const auto &r) {
                     return l.address < r.address &&
                            l.size < r.size &&
                            l.wholeDataMatch < r.wholeDataMatch &&
                            l.identifier < r.identifier &&
                            l.variable < r.variable;
                 });
-                this->m_matches.clear();
-                std::move(uniques.begin(), uniques.end(), std::back_inserter(this->m_matches));
+                matches.clear();
+                std::move(uniques.begin(), uniques.end(), std::back_inserter(matches));
 
                 constexpr static color_t YaraColor = 0x70B4771F;
-                for (auto &match : this->m_matches) {
+                for (auto &match : uniques) {
                     match.highlightId = ImHexApi::HexEditor::addBackgroundHighlight({ match.address, match.size }, YaraColor);
                     match.tooltipId = ImHexApi::HexEditor::addTooltip({ match. address, match.size }, hex::format("{0} [{1}]", match.identifier, match.variable), YaraColor);
                 }

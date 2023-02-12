@@ -18,10 +18,12 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
+        static bool importHashes(prv::Provider *provider, const nlohmann::json &json);
+        static bool exportHashes(prv::Provider *provider, nlohmann::json &json);
+
+    private:
         ContentRegistry::Hashes::Hash *m_selectedHash = nullptr;
         std::string m_newHashName;
-
-        std::vector<ContentRegistry::Hashes::Hash::Function> m_hashFunctions;
     };
 
 }
