@@ -480,8 +480,15 @@ namespace hex::plugin::builtin {
                     if (!recentFile.isValid())
                         continue;
 
-                    if (auto settings = provider->storeSettings(); !settings.is_null())
-                        recentFile.write(settings.dump(4));
+                    {
+                        auto path = ProjectFile::getPath();
+                        ProjectFile::clearPath();
+
+                        if (auto settings = provider->storeSettings(); !settings.is_null())
+                            recentFile.write(settings.dump(4));
+
+                        ProjectFile::setPath(path);
+                    }
                 }
             }
 

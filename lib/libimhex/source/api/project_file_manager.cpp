@@ -144,9 +144,13 @@ namespace hex {
     void ProjectFile::clearPath() {
         ProjectFile::s_currProjectPath.clear();
     }
-    
+
     std::fs::path ProjectFile::getPath() {
         return ProjectFile::s_currProjectPath;
+    }
+
+    void ProjectFile::setPath(const std::fs::path &path) {
+        ProjectFile::s_currProjectPath = path;
     }
 
 }

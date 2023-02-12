@@ -816,9 +816,6 @@ namespace hex {
     void Window::exitImGui() {
         delete static_cast<ImGui::ImHexCustomData *>(ImGui::GetIO().UserData);
 
-        ImNodes::PopAttributeFlag();
-        ImNodes::PopAttributeFlag();
-
         ImGui::SaveIniSettingsToDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
 
         ImGui_ImplOpenGL3_Shutdown();
