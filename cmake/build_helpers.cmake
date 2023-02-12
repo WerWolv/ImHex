@@ -185,7 +185,7 @@ macro(createPackage)
                 endif ()
             endif ()
 
-            add_dependencies(imhex ${plugin})
+            add_dependencies(imhex_all ${plugin})
         endif ()
     endforeach()
 
@@ -269,7 +269,7 @@ macro(createPackage)
         install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
 
         # Update library references to make the bundle portable
-        postprocess_bundle(imhex main)
+        postprocess_bundle(imhex_all main)
 
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
