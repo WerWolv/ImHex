@@ -44,6 +44,20 @@ namespace hex::plugin::builtin {
         DiagramLayeredDistribution m_layeredDistribution;
 
         void analyze();
+
+        // --- custom attributes for the chunk based analysis --- ///
+
+        // user controlled input (referenced by Imgui)
+        int m_inputChunkSize    = 0;
+        int m_inputStartAddress = 0;
+        int m_inputEndAddress   = 0;
+        // default value (avoid showing the plot if no data has been processed yet) 
+        bool m_chunkAnalysisDone = false;
+
+        ChunkBasedEntropyAnalysis m_chunkBasedEntropy;
+        // task handler and action
+        TaskHolder m_chunkBasedAnalyzerTask;
+        void analyzeChunks();
     };
 
 }

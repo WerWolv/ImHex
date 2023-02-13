@@ -3,9 +3,15 @@
 #include <hex.hpp>
 
 #include <imgui.h>
+#include <implot.h>
+
+#include <hex/providers/provider.hpp>
+#include <hex/providers/buffered_reader.hpp>
+
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
+#include <hex/helpers/logger.hpp>
 #include <random>
 
 namespace hex {
@@ -158,7 +164,6 @@ namespace hex {
         std::atomic<bool> m_processing = false;
     };
 
-
     class DiagramLayeredDistribution {
     public:
         DiagramLayeredDistribution(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
@@ -227,4 +232,127 @@ namespace hex {
         std::atomic<bool> m_processing = false;
     };
 
+    class ChunkBasedEntropyAnalysis {
+    public:
+
+        void draw(ImVec2 size, ImPlotFlags flags) {
+
+            if (ImPlot::BeginPlot("##ChunkBasedAnalysis", size, flags)) {
+                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+
+                // set the axis limit to [first block : last block]
+                ImPlot::SetupAxesLimits(
+                    this->m_startAddress / this->m_chunkSize,
+                    this->m_endAddress / this->m_chunkSize,
+                    -0.1F, 1.1F, ImGuiCond_Always
+                );
+
+                // draw the plot
+                ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropy.data(), this->m_blockCount);
+                ImPlot::EndPlot();
+            }
+        }
+
+        void process(prv::Provider *provider, u64 chunkSize, u64 startAddress, u64 endAddress) {
+            this->m_processing = true;
+
+            // update attributes  
+            this->m_chunkSize    = chunkSize;
+            this->m_startAddress = startAddress;
+            this->m_endAddress   = endAddress;
+
+            // get a file reader
+            auto reader = prv::BufferedReader(provider);
+            std::vector<u8> bytes = reader.read(this->m_startAddress, this->m_endAddress - this->m_startAddress);
+
+            this->processImpl(bytes);
+
+            this->m_processing = false;
+        }
+
+        void process(std::vector<u8> buffer, u64 chunkSize) {
+            this->m_processing = true;
+
+            // update attributes (use buffer size as end address) 
+            this->m_chunkSize    = chunkSize;
+            this->m_startAddress = 0;
+            this->m_endAddress   = buffer.size();
+
+            this->processImpl(buffer);
+
+            this->m_processing = false;
+        }
+
+    private:
+        // private method used to compute the entropy of a block of size `blockSize`
+        // using the bytes occurrences from `valueCounts` array.
+        double calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
+            double entropy = 0;
+
+            for (auto count : valueCounts) {
+                if (count == 0) [[unlikely]]
+                    continue;
+
+                double probability = static_cast<double>(count) / blockSize;
+
+                entropy += probability * std::log2(probability);
+            }
+
+            return std::min(1.0, (-entropy) / 8);    // log2(256) = 8
+        }
+
+        // private methode used to factorize the process public method 
+        void processImpl(std::vector<u8> bytes) {
+            // array used to hold the occurrences of each byte
+            std::array<ImU64, 256> blockValueCounts;
+
+            u64 blockCount = ((this->m_endAddress - this->m_startAddress) / this->m_chunkSize) + 1;
+
+            // reset and resize the array
+            this->m_yBlockEntropy.clear();
+            this->m_yBlockEntropy.resize(blockCount);
+
+            u64 count = 0;
+            this->m_blockCount = 0;
+
+            // loop over each byte of the file (or a part of it)
+            for (u64 i = 0; i < bytes.size(); ++i) {
+                u8 byte = bytes[i];
+                // increment the occurrence of the current byte
+                blockValueCounts[byte]++;
+
+                count++;
+                // check if we processed one complete chunk, if so compute the entropy and start analysing the next chunk
+                if (((count % this->m_chunkSize) == 0) || count == bytes.size() * 8) [[unlikely]] {
+                    this->m_yBlockEntropy[this->m_blockCount] = calculateEntropy(blockValueCounts, this->m_chunkSize);
+
+                    this->m_blockCount += 1;
+                    blockValueCounts = { 0 };
+                }
+            }
+
+            // m_xBlockEntropy is used to specify the position of entropy values in the plot
+            // when the Y axis doesn't start at 0
+            this->m_xBlockEntropy.clear();
+            this->m_xBlockEntropy.resize(this->m_blockCount);
+            for (u64 i = 0; i < this->m_blockCount; ++i)
+                this->m_xBlockEntropy[i] = (this->m_startAddress / this->m_chunkSize) + i;
+        }
+
+    private:
+        // variables used to store the parameters to process 
+        u64 m_chunkSize;
+        u64 m_startAddress;
+        u64 m_endAddress;
+
+        // hold the number of block that have been processed
+        // during the chunk based entropy analysis
+        u64 m_blockCount;
+        // variable to hold the result of the chunk based
+        // entropy analysis
+        std::vector<double> m_xBlockEntropy;
+        std::vector<double> m_yBlockEntropy;
+
+        std::atomic<bool> m_processing = false;
+    };
 }

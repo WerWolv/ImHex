@@ -20,6 +20,8 @@
 
 #include <numeric>
 
+#include <content/helpers/diagrams.hpp>
+
 namespace hex::plugin::builtin {
 
     namespace {
@@ -405,6 +407,21 @@ namespace hex::plugin::builtin {
                                      (waveData.size() / sampleRate) / 60, (waveData.size() / sampleRate) % 60);
         }
 
+        void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+            // variable used to store the result to avoid having to recalculate the result at each frame 
+            static ChunkBasedEntropyAnalysis analyzer;  
+
+            // compute data    
+            if (shouldReset) {
+                auto pattern   = arguments[0].toPattern();
+                auto chunkSize = arguments[1].toUnsigned();
+                analyzer.process(pattern->getBytes(), chunkSize); 
+            }
+            
+            // show results
+            analyzer.draw(ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly); 
+        }
+
     }
 
     void registerPatternLanguageVisualizers() {
@@ -415,6 +432,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, 4);
         ContentRegistry::PatternLanguage::addVisualizer("3d", draw3DVisualizer, 2);
         ContentRegistry::PatternLanguage::addVisualizer("sound", drawSoundVisualizer, 3);
+        ContentRegistry::PatternLanguage::addVisualizer("chunk_entropy", drawChunkBasedEntropyVisualizer, 2);
     }
 
 }

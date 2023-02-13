@@ -174,8 +174,6 @@ namespace hex::plugin::builtin {
                             auto typeDist = calculateTypeDistribution(blockValueCounts, this->m_blockSize);
                             for (u8 i = 0; i < typeDist.size(); i++)
                                 this->m_blockTypeDistributions[i][this->m_processedBlockCount] = typeDist[i] * 100;
-
-
                         }
 
                         this->m_processedBlockCount += 1;
@@ -193,6 +191,27 @@ namespace hex::plugin::builtin {
                 this->m_plainTextCharacterPercentage  = std::reduce(this->m_blockTypeDistributions[2].begin(), this->m_blockTypeDistributions[2].end()) / this->m_blockTypeDistributions[2].size();
                 this->m_plainTextCharacterPercentage += std::reduce(this->m_blockTypeDistributions[4].begin(), this->m_blockTypeDistributions[4].end()) / this->m_blockTypeDistributions[4].size();
             }
+        });
+    }        
+
+    void ViewInformation::analyzeChunks() {
+        this->m_chunkBasedAnalyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing.entropy", 0, [this](auto &task) {
+            // get the file provider  
+            auto provider = ImHexApi::Provider::get();
+
+            if ((this->m_inputChunkSize == 0) 
+             || (this->m_inputStartAddress >= this->m_inputEndAddress)
+             || ((size_t) this->m_inputEndAddress > provider->getSize())) {
+                // invalid parameters, set default one
+                this->m_inputChunkSize    = 256;
+                this->m_inputStartAddress = 0;
+                this->m_inputEndAddress   = provider->getSize(); 
+            }
+
+            // avoid unused parameter warning
+            task.setMaxValue(1);
+            this->m_chunkBasedEntropy.process(provider, this->m_inputChunkSize, this->m_inputStartAddress, this->m_inputEndAddress);
+            this->m_chunkAnalysisDone = true;
         });
     }
 
@@ -325,7 +344,7 @@ namespace hex::plugin::builtin {
                                 ImPlot::SetupAxesLimits(0, this->m_blockEntropy.size(), -0.1F, 1.1F, ImGuiCond_Always);
 
                                 ImPlot::PlotLine("##entropy_line", this->m_blockEntropy.data(), this->m_processedBlockCount);
-
+                            
                                 if (ImPlot::DragLineX(1, &this->m_diagramHandlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                     u64 address = u64(std::max<double>(this->m_diagramHandlePosition, 0) * this->m_blockSize) + provider->getBaseAddress();
                                     address     = std::min(address, provider->getBaseAddress() + provider->getSize() - 1);
@@ -415,6 +434,39 @@ namespace hex::plugin::builtin {
                             this->m_layeredDistribution.draw(ImVec2(300, 300));
                         }
                         ImGui::EndGroup();
+
+                        ImGui::Header("Chunk Based Entropy Analysis", true);
+
+                        if (this->m_chunkBasedAnalyzerTask.isRunning()) {
+                            ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);
+                        } else {
+                            ImGui::NewLine();
+                        } 
+
+                        // show the result of the analysis 
+                        if (!this->m_chunkBasedAnalyzerTask.isRunning() && this->m_chunkAnalysisDone) {
+                            this->m_chunkBasedEntropy.draw(ImVec2(-1, 0), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased); 
+                        }
+ 
+                        ImGui::Text("Block Size: ");
+                        ImGui::InputInt("##BlockSize", &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
+
+                        ImGui::Text("Start Address: ");
+                        ImGui::InputInt("##StartAddress", &this->m_inputStartAddress, ImGuiInputTextFlags_CharsDecimal);
+
+                        ImGui::Text("Size: ");
+                        ImGui::InputInt("##Size", &this->m_inputEndAddress, ImGuiInputTextFlags_CharsDecimal);
+
+                        // start the analysis only if it's not already running
+                        ImGui::BeginDisabled(this->m_chunkBasedAnalyzerTask.isRunning());
+                        {
+                            if (ImGui::Button("start analysis", ImVec2(ImGui::GetContentRegionAvail().x / 2, 0)))
+                                this->analyzeChunks();
+                        }
+                        ImGui::EndDisabled();
+                        ImGui::NewLine();
+
+
                     }
                 }
             }
