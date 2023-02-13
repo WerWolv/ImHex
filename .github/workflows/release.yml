@@ -71,8 +71,8 @@ jobs:
       - name: ✒️ Prepare PKGBUILD
         run: |
           cp ImHex/dist/Arch/PKGBUILD .
-
-          hash=`md5sum imhex-${{env.IMHEX_VERSION}}-ArchLinux.pkg.tar.zst-x86_64 | cut -d ' ' -f 1`
+          
+          hash=`md5sum imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst | cut -d ' ' -f 1`
 
           sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' PKGBUILD
           sed -i "s/(SKIP)/($hash)/g" PKGBUILD
