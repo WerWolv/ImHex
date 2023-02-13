@@ -314,7 +314,7 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates &aFrom) cons
     while (cindex > 0 && isspace(line[cindex].mChar))
         --cindex;
 
-    auto cstart = (PaletteIndex)line[cindex].mColorIndex;
+    auto cstart = line[cindex].mChar;
     while (cindex > 0) {
         auto c = line[cindex].mChar;
         if ((c & 0xC0) != 0x80)    // not UTF code sequence 10xxxxxx
@@ -323,8 +323,15 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates &aFrom) cons
                 cindex++;
                 break;
             }
-            if (cstart != (PaletteIndex)line[size_t(cindex - 1)].mColorIndex)
+
+            if (isalnum(cstart)) {
+                if (!isalnum(c)) {
+                    cindex++;
+                    break;
+                }
+            } else {
                 break;
+            }
         }
         --cindex;
     }
@@ -632,10 +639,24 @@ void TextEditor::HandleKeyboardInputs() {
             MoveEnd(shift);
         else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
             Delete();
+        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
+            auto wordStart = GetCursorPosition();
+            MoveRight();
+            auto wordEnd = FindWordEnd(GetCursorPosition());
+            SetSelection(wordStart, wordEnd);
+            Backspace();
+        }
         else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace)))
             Backspace();
+        else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace))) {
+            auto wordEnd = GetCursorPosition();
+            MoveLeft();
+            auto wordStart = FindWordStart(GetCursorPosition());
+            SetSelection(wordStart, wordEnd);
+            Backspace();
+        }
         else if (!ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
-            mOverwrite ^= true;
+            mOverwrite = !mOverwrite;
         else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Insert)))
             Copy();
         else if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C)))
