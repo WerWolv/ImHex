@@ -334,9 +334,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        iter++;
-                        envVars.insert(iter, { envVarCounter++, "", i128(0), PlData::EnvVarType::Integer });
-                        iter--;
+                        envVars.insert(std::next(iter), { envVarCounter++, "", i128(0), PlData::EnvVarType::Integer });
                     }
 
                     ImGui::SameLine();
