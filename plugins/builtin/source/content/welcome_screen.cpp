@@ -548,7 +548,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             if (auto filePath = std::fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
@@ -558,7 +557,7 @@ namespace hex::plugin::builtin {
         }
 
         auto tipsData = romfs::get("tips.json");
-        if(tipsData.valid()){
+        if(s_safetyBackupPath.empty() && tipsData.valid()){
             auto tipsCategories = nlohmann::json::parse(tipsData.string());
 
             auto now = std::chrono::system_clock::now();
