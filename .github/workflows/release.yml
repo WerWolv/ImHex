@@ -9,9 +9,54 @@ on:
   workflow_dispatch:
 
 jobs:
-  release-common:
+  release-update-repos:
     runs-on: ubuntu-latest
-    name: Release Common
+    name: Release Update Repos
+
+    steps:
+      - name: 🎫 Create PatternLanguage release
+        uses: ncipollo/release-action@v1
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
+        with:
+          tag: ImHex-v${{env.IMHEX_VERSION}}
+          repo: PatternLanguage
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: 🎫 Create ImHex-Patterns release
+        uses: ncipollo/release-action@v1
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
+        with:
+          tag: ImHex-v${{env.IMHEX_VERSION}}
+          repo: ImHex-Patterns
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: ✉️ Update C++ Plugin Template
+        uses: peter-evans/repository-dispatch@v2
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          repository: WerWolv/ImHex-Cpp-Plugin-Template
+          event-type: update_submodule
+
+      - name: ✉️ Update Rust Plugin Template
+        uses: peter-evans/repository-dispatch@v2
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          repository: WerWolv/ImHex-Rust-Plugin-Template
+          event-type: update_submodule
+
+  release-upload-artifacts:
+    runs-on: ubuntu-latest
+    name: Release Upload Artifacts
 
     steps:
       - name: 🧰 Checkout
@@ -79,7 +124,6 @@ jobs:
 
       - name: ⬆️ Publish AUR package
 
-        # I couldn't make the condition in the env directly for some reason
         env:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         if: "${{ env.AUR_SSH_PRIVATE_KEY != '' }}"
@@ -94,55 +138,15 @@ jobs:
           commit_message: Bump to version ${{env.IMHEX_VERSION}}
           ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
 
-      - name: 🎫 Create PatternLanguage release
-        uses: ncipollo/release-action@v1
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        if: "${{ env.RELEASE_TOKEN != '' }}"
-        with:
-          tag: ImHex-v${{env.IMHEX_VERSION}}
-          repo: PatternLanguage
-          token: ${{ secrets.RELEASE_TOKEN }}
-
-      - name: 🎫 Create ImHex-Patterns release
-        uses: ncipollo/release-action@v1
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        if: "${{ env.RELEASE_TOKEN != '' }}"
-        with:
-          tag: ImHex-v${{env.IMHEX_VERSION}}
-          repo: ImHex-Patterns
-          token: ${{ secrets.RELEASE_TOKEN }}
-
-      - name: ✉️ Update C++ Plugin Template
-        uses: peter-evans/repository-dispatch@v2
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        if: "${{ env.RELEASE_TOKEN != '' }}"
-        with:
-          token: ${{ secrets.RELEASE_TOKEN }}
-          repository: WerWolv/ImHex-Cpp-Plugin-Template
-          event-type: update_submodule
-
-      - name: ✉️ Update Rust Plugin Template
-        uses: peter-evans/repository-dispatch@v2
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        if: "${{ env.RELEASE_TOKEN != '' }}"
-        with:
-          token: ${{ secrets.RELEASE_TOKEN }}
-          repository: WerWolv/ImHex-Rust-Plugin-Template
-          event-type: update_submodule
-
-  release-windows:
-    name: Release Windows
-    needs: release-common
-    runs-on: windows-2022
+  release-update-winget:
+    name: Release update winget package
+    needs: release-upload-artifacts
+    runs-on: windows-latest
     steps:
       - name: ⬇️ Download dependencies
         shell: pwsh
         run: |
-          iwr https://github.com/microsoft/winget-create/releases/download/v1.1.2.0/wingetcreate.exe -OutFile wingetcreate.exe
+          iwr https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
       - name: ⬆️ Update winget manifest
         shell: pwsh
         env:
