@@ -247,13 +247,13 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
                             switch (diff.type) {
                                 case DifferenceType::Modified:
-                                    ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "hex.builtin.view.diff.modified"_lang);
+                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "hex.builtin.view.diff.modified"_lang);
                                     break;
                                 case DifferenceType::Added:
-                                    ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen), "hex.builtin.view.diff.added"_lang);
+                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen), "hex.builtin.view.diff.added"_lang);
                                     break;
                                 case DifferenceType::Removed:
-                                    ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.diff.removed"_lang);
+                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.diff.removed"_lang);
                                     break;
                             }
 
