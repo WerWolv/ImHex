@@ -1,247 +1,269 @@
 #include "content/views/view_diff.hpp"
 
 #include <hex/api/imhex_api.hpp>
-#include <hex/providers/provider.hpp>
 
 #include <hex/helpers/fmt.hpp>
-
-#include <hex/api/content_registry.hpp>
-#include <nlohmann/json.hpp>
+#include <hex/helpers/logger.hpp>
 
 namespace hex::plugin::builtin {
 
+    namespace {
+
+        u32 getDiffColor(u32 color) {
+            return (color & 0x00FFFFFF) | 0x40000000;
+        }
+
+    }
+
     ViewDiff::ViewDiff() : View("hex.builtin.view.diff.name") {
 
-        EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            {
-                auto columnCount = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row");
-
-                if (columnCount.is_number())
-                    this->m_columnCount = static_cast<int>(columnCount);
-            }
-
-            {
-                auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
-
-                if (greyOutZeros.is_number())
-                    this->m_greyedOutZeros = static_cast<int>(greyOutZeros);
-            }
-
-            {
-                auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
-
-                if (upperCaseHex.is_number())
-                    this->m_upperCaseHex = static_cast<int>(upperCaseHex);
-            }
-        });
-
         EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
-            this->m_providerA = -1;
-            this->m_providerB = -1;
+            this->m_columns[0].provider = -1;
+            this->m_columns[1].provider = -1;
         });
+
+        auto compareFunction = [this](int otherIndex) {
+            return [this, otherIndex](u64 address, const u8 *data, size_t) -> std::optional<color_t> {
+                const auto &providers = ImHexApi::Provider::getProviders();
+                auto otherId = this->m_columns[otherIndex].provider;
+                if (otherId < 0 || size_t(otherId) >= providers.size())
+                    return std::nullopt;
+
+                auto &otherProvider = providers[otherId];
+
+                if (address > otherProvider->getActualSize()) {
+                    if (otherIndex == 1)
+                        return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
+                    else
+                        return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                }
+
+                u8 otherByte = 0x00;
+                otherProvider->read(address, &otherByte, 1);
+
+                if (otherByte != *data)
+                    return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow));
+
+                return std::nullopt;
+            };
+        };
+
+        this->m_columns[0].hexEditor.setBackgroundHighlightCallback(compareFunction(1));
+        this->m_columns[1].hexEditor.setBackgroundHighlightCallback(compareFunction(0));
     }
 
     ViewDiff::~ViewDiff() {
-        EventManager::unsubscribe<EventSettingsChanged>(this);
-        EventManager::unsubscribe<EventProviderClosed>(this);
     }
 
-    static void drawProviderSelector(int &provider) {
+    bool ViewDiff::drawDiffColumn(Column &column, float height) const {
+        bool scrolled = false;
+        ImGui::PushID(&column);
+
+        float prevScroll = column.hexEditor.getScrollPosition();
+        column.hexEditor.draw(height);
+        float currScroll = column.hexEditor.getScrollPosition();
+
+        if (prevScroll != currScroll) {
+            scrolled = true;
+            column.scrollLock = 5;
+        }
+
+        ImGui::PopID();
+
+        return scrolled;
+    }
+
+    void ViewDiff::drawProviderSelector(Column &column) {
+        ImGui::PushID(&column);
+
         auto &providers = ImHexApi::Provider::getProviders();
+        auto &providerIndex = column.provider;
 
         std::string preview;
-        if (ImHexApi::Provider::isValid() && provider >= 0)
-            preview = providers[provider]->getName();
+        if (ImHexApi::Provider::isValid() && providerIndex >= 0)
+            preview = providers[providerIndex]->getName();
 
-        ImGui::SetNextItemWidth(200_scaled);
+        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        ImGui::BeginDisabled(this->m_diffTask.isRunning());
         if (ImGui::BeginCombo("", preview.c_str())) {
 
             for (size_t i = 0; i < providers.size(); i++) {
                 if (ImGui::Selectable(providers[i]->getName().c_str())) {
-                    provider = i;
+                    providerIndex = i;
+                    this->m_analyzed = false;
                 }
             }
 
             ImGui::EndCombo();
         }
+        ImGui::EndDisabled();
+
+        ImGui::PopID();
     }
 
-    static u32 getDiffColor(u32 color) {
-        return (color & 0x00FFFFFF) | 0x40000000;
-    }
-
-    enum class DiffResult {
-        Same,
-        Changed,
-        Added,
-        Removed
-    };
-    struct LineInfo {
-        std::vector<u8> bytes;
-        u64 validBytes = 0;
-    };
-
-    static DiffResult diffBytes(u8 index, const LineInfo &a, const LineInfo &b) {
-        /* Very simple binary diff. Only detects additions and changes */
-        if (a.validBytes > index) {
-            if (b.validBytes <= index)
-                return DiffResult::Added;
-            else if (a.bytes[index] != b.bytes[index])
-                return DiffResult::Changed;
-        }
-
-        return DiffResult::Same;
-    }
-
-    void ViewDiff::drawDiffLine(const std::array<int, 2> &providerIds, u64 row) const {
-
-        std::array<LineInfo, 2> lineInfo;
-
-        u8 addressDigitCount = 0;
-        for (u8 i = 0; i < 2; i++) {
-            int id = providerIds[i];
-            if (id < 0) continue;
-
-            auto &provider = ImHexApi::Provider::getProviders()[id];
-
-            // Read one line of each provider
-            if (row * this->m_columnCount >= provider->getSize())
-                lineInfo[i].validBytes = 0;
-            else
-                lineInfo[i].validBytes = std::min<u64>(this->m_columnCount, provider->getSize() - row * this->m_columnCount);
-
-            lineInfo[i].bytes.resize(lineInfo[i].validBytes);
-            provider->read(provider->getBaseAddress() + provider->getCurrentPageAddress() + row * this->m_columnCount, lineInfo[i].bytes.data(), lineInfo[i].validBytes);
-
-            // Calculate address width
-            u8 addressDigits = 0;
-            for (size_t n = provider->getSize() - 1; n > 0; n >>= 4)
-                addressDigits++;
-
-            addressDigitCount = std::max(addressDigits, addressDigitCount);
-        }
-
-        ImDrawList *drawList = ImGui::GetWindowDrawList();
-
-        auto glyphWidth           = ImGui::CalcTextSize("0").x + 1;
-        static auto highlightSize = ImGui::CalcTextSize("00");
-
-        auto startY = ImGui::GetCursorPosY();
-
-        ImGui::TableNextColumn();
-        ImGui::TextFormatted(this->m_upperCaseHex ? "{:0{}X}:" : "{:0{}x}:", row * this->m_columnCount, addressDigitCount);
-        ImGui::SetCursorPosY(startY);
-
-        const ImColor colorText     = ImGui::GetColorU32(ImGuiCol_Text);
-        const ImColor colorDisabled = this->m_greyedOutZeros ? ImGui::GetColorU32(ImGuiCol_TextDisabled) : static_cast<u32>(colorText);
-
-
-        for (i8 curr = 0; curr < 2; curr++) {
-            ImGui::TableNextColumn();
-            auto other = !curr;
-
-            bool hasLastHighlight = false;
-            ImVec2 lastHighlightEnd = { };
-
-            for (u64 col = 0; col < lineInfo[curr].validBytes; col++) {
-                auto pos = ImGui::GetCursorScreenPos();
-
-                // Diff bytes
-                std::optional<u32> highlightColor;
-                switch (diffBytes(col, lineInfo[curr], lineInfo[other])) {
-                    default:
-                    case DiffResult::Same:
-                        /* No highlight */
-                        break;
-                    case DiffResult::Changed:
-                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow));
-                        break;
-                    case DiffResult::Added:
-                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
-                        break;
-                    case DiffResult::Removed:
-                        highlightColor = getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                        break;
-                }
-
-                // Draw byte
-                u8 byte = lineInfo[curr].bytes[col];
-                ImGui::TextFormattedColored(byte == 0x00 ? colorDisabled : colorText, this->m_upperCaseHex ? "{:02X}" : "{:02x}", byte);
-                ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
-
-                ImGui::SetCursorPosY(startY);
-
-                // Draw highlighting
-                if (highlightColor.has_value()) {
-                    if (hasLastHighlight)
-                        drawList->AddRectFilled(lastHighlightEnd, pos + highlightSize, highlightColor.value());
-                    else
-                        drawList->AddRectFilled(pos, pos + highlightSize, highlightColor.value());
-
-                    hasLastHighlight = true;
-                    lastHighlightEnd = pos + ImVec2((glyphWidth - 1) * 2, 0);
-                } else {
-                    hasLastHighlight = false;
-                }
-            }
-        }
+    std::string ViewDiff::getProviderName(Column &column) const {
+        const auto &providers = ImHexApi::Provider::getProviders();
+        return ((column.provider >= 0 && size_t(column.provider) < providers.size()) ? providers[column.provider]->getName() : "???") + "##" + hex::format("{:X}", u64(&column));
     }
 
     void ViewDiff::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.diff.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.builtin.view.diff.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
 
-            ImGui::SameLine();
-            ImGui::PushID(1);
-            drawProviderSelector(this->m_providerA);
-            ImGui::PopID();
-            ImGui::SameLine();
-            ImGui::Spacing();
-            ImGui::SameLine();
-            ImGui::TextUnformatted("<=>");
-            ImGui::SameLine();
-            ImGui::Spacing();
-            ImGui::SameLine();
-            ImGui::PushID(2);
-            drawProviderSelector(this->m_providerB);
-            ImGui::PopID();
-            ImGui::Separator();
+            auto &[a, b] = this->m_columns;
 
-            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(20, 0));
-            if (ImGui::BeginTable("diff", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedFit)) {
-                ImGui::TableSetupScrollFreeze(0, 1);
+            a.hexEditor.enableSyncScrolling(false);
+            b.hexEditor.enableSyncScrolling(false);
+
+            if (a.scrollLock > 0) a.scrollLock--;
+            if (b.scrollLock > 0) b.scrollLock--;
+
+            {
+                const auto &providers = ImHexApi::Provider::getProviders();
+                if (a.provider >= 0 && size_t(a.provider) < providers.size())
+                    a.hexEditor.setProvider(providers[a.provider]);
+                else
+                    a.hexEditor.setProvider(nullptr);
+
+                if (b.provider >= 0 && size_t(b.provider) < providers.size())
+                    b.hexEditor.setProvider(providers[b.provider]);
+                else
+                    b.hexEditor.setProvider(nullptr);
+            }
+
+            if (!this->m_analyzed && a.provider != -1 && b.provider != -1 && !this->m_diffTask.isRunning()) {
+                const auto &providers = ImHexApi::Provider::getProviders();
+                auto providerA = providers[a.provider];
+                auto providerB = providers[b.provider];
+
+                auto commonSize = std::min(providerA->getActualSize(), providerB->getActualSize());
+                this->m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &task) {
+                    std::vector<u8> bufferA(0x1000);
+                    std::vector<u8> bufferB(0x1000);
+
+                    std::vector<Diff> differences;
+
+                    auto readerA = prv::BufferedReader(providerA);
+                    auto readerB = prv::BufferedReader(providerB);
+
+                    for (auto itA = readerA.begin(), itB = readerB.begin(); itA < readerA.end() && itB < readerB.end(); itA++, itB++) {
+                        if (task.wasInterrupted())
+                            break;
+
+                        if (*itA != *itB) {
+                            u64 start = itA.getAddress();
+                            size_t end = 0;
+
+                            while (itA != readerA.end() && itB != readerB.end() && *itA != *itB) {
+                                itA++;
+                                itB++;
+                                end++;
+                            }
+
+                            differences.push_back(Diff { Region{ start, end }, ViewDiff::DifferenceType::Modified });
+                        }
+                    }
+
+                    if (providerA->getActualSize() != providerB->getActualSize()) {
+                        auto endA = providerA->getActualSize() - 1;
+                        auto endB = providerB->getActualSize() - 1;
+
+                        if (endA > endB)
+                            differences.push_back(Diff { Region{ endB, endA - endB }, ViewDiff::DifferenceType::Added });
+                        else
+                            differences.push_back(Diff { Region{ endA, endB - endA }, ViewDiff::DifferenceType::Removed });
+                    }
+
+                    this->m_diffs = std::move(differences);
+                    this->m_analyzed = true;
+                });
+            }
+
+            const auto height = ImGui::GetContentRegionAvail().y;
+
+            if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 200_scaled))) {
+                ImGui::TableSetupColumn("hex.builtin.view.diff.provider_a"_lang);
+                ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
+                ImGui::TableHeadersRow();
+
+                ImGui::TableNextColumn();
+                this->drawProviderSelector(a);
+
+                ImGui::TableNextColumn();
+                this->drawProviderSelector(b);
 
                 ImGui::TableNextRow();
+
                 ImGui::TableNextColumn();
+                bool scrollB = drawDiffColumn(a, height - 250_scaled);
 
+                ImGui::TableNextColumn();
+                bool scrollA = drawDiffColumn(b, height - 250_scaled);
 
-                // Draw header line
-                {
-                    auto glyphWidth = ImGui::CalcTextSize("0").x + 1;
-                    for (u8 i = 0; i < 2; i++) {
-                        ImGui::TableNextColumn();
-                        for (u32 col = 0; col < this->m_columnCount; col++) {
-                            ImGui::TextFormatted(this->m_upperCaseHex ? "{:02X}" : "{:02x}", col);
-                            ImGui::SameLine(0.0F, col % 8 == 7 ? glyphWidth * 1.5F : glyphWidth * 0.75F);
-                        }
-                    }
+                if (scrollA && a.scrollLock == 0) {
+                    a.hexEditor.setScrollPosition(b.hexEditor.getScrollPosition());
+                    a.hexEditor.forceUpdateScrollPosition();
+                }
+                if (scrollB && b.scrollLock == 0) {
+                    b.hexEditor.setScrollPosition(a.hexEditor.getScrollPosition());
+                    b.hexEditor.forceUpdateScrollPosition();
                 }
 
-                if (this->m_providerA >= 0 && this->m_providerB >= 0) {
-                    auto &providers = ImHexApi::Provider::getProviders();
-                    ImGuiListClipper clipper;
-                    clipper.Begin(std::max(providers[this->m_providerA]->getSize() / this->m_columnCount, providers[this->m_providerB]->getSize() / this->m_columnCount) + 1, ImGui::GetTextLineHeight());
-
-                    // Draw diff lines
-                    while (clipper.Step()) {
-                        for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
-                            ImGui::TableNextRow();
-                            drawDiffLine({ this->m_providerA, this->m_providerB }, row);
-                        }
-                    }
-                }
                 ImGui::EndTable();
             }
-            ImGui::PopStyleVar();
+
+            if (ImGui::BeginTable("##differences", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable, ImVec2(0, 200_scaled))) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("hex.builtin.common.begin"_lang);
+                ImGui::TableSetupColumn("hex.builtin.common.end"_lang);
+                ImGui::TableSetupColumn("hex.builtin.common.type"_lang);
+                ImGui::TableHeadersRow();
+
+                if (this->m_analyzed) {
+                    ImGuiListClipper clipper;
+                    clipper.Begin(this->m_diffs.size());
+
+                    while (clipper.Step())
+                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            ImGui::TableNextRow();
+
+                            if (size_t(i) >= this->m_diffs.size())
+                                break;
+
+                            ImGui::PushID(i);
+
+                            const auto &diff = this->m_diffs[i];
+
+                            ImGui::TableNextColumn();
+                            if (ImGui::Selectable(hex::format("0x{:02X}", diff.region.getStartAddress()).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                                a.hexEditor.setSelection(diff.region);
+                                a.hexEditor.jumpToSelection();
+                                b.hexEditor.setSelection(diff.region);
+                                b.hexEditor.jumpToSelection();
+                            }
+
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(hex::format("0x{:02X}", diff.region.getEndAddress()).c_str());
+
+                            ImGui::TableNextColumn();
+                            switch (diff.type) {
+                                case DifferenceType::Modified:
+                                    ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "hex.builtin.view.diff.modified"_lang);
+                                    break;
+                                case DifferenceType::Added:
+                                    ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen), "hex.builtin.view.diff.added"_lang);
+                                    break;
+                                case DifferenceType::Removed:
+                                    ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.diff.removed"_lang);
+                                    break;
+                            }
+
+                            ImGui::PopID();
+                        }
+                }
+
+                ImGui::EndTable();
+            }
+
         }
         ImGui::End();
     }
