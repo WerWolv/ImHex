@@ -140,8 +140,6 @@ namespace hex::plugin::builtin {
                     "hex.builtin.setting.interface.scaling.x1_0"_lang,
                     "hex.builtin.setting.interface.scaling.x1_5"_lang,
                     "hex.builtin.setting.interface.scaling.x2_0"_lang,
-                    "hex.builtin.setting.interface.scaling.x3_0"_lang,
-                    "hex.builtin.setting.interface.scaling.x4_0"_lang,
                 };
 
                 if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
