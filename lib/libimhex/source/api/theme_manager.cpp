@@ -102,7 +102,8 @@ namespace hex::api {
 
         if (theme.contains("base")) {
             if (theme["base"].is_string()) {
-                changeTheme(theme["base"].get<std::string>());
+                if (theme["base"] != name)
+                    changeTheme(theme["base"].get<std::string>());
             } else {
                 hex::log::error("Theme '{}' has invalid base theme!", name);
             }

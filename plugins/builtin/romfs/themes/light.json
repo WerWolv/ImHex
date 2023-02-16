@@ -1,6 +1,5 @@
 {
-    "name": "Light",
-    "image_postfix": "_light",
+    "base": "Light",
     "colors": {
         "imgui": {
             "border": "#0000004C",
@@ -59,20 +58,18 @@
             "title-background-collapse": "#DBDBDBFF",
             "window-background": "#EFEFEFFF"
         },
-        "implot": {
-            "axis-grid": "#FFFFFFFF",
-            "axis-text": "#000000FF",
-            "axis-tick": "#0000003F",
-            "crosshairs": "#0000007F",
-            "frame-bg": "#FFFFFFFF",
-            "inlay-text": "#000000FF",
-            "legend-bg": "#FFFFFFF9",
-            "legend-border": "#D1D1D1CC",
-            "legend-text": "#000000FF",
-            "plot-bg": "#6B91FF21",
-            "plot-border": "#00000000",
-            "selection": "#D1A307FF",
-            "title-text": "#000000FF"
+        "imhex": {
+            "desc-button": "#E6E6E6FF",
+            "desc-button-active": "#BEBEBEFF",
+            "desc-button-hovered": "#D2D2D2FF",
+            "highlight": "#299770FF",
+            "toolbar-blue": "#06539BFF",
+            "toolbar-brown": "#DBB377FF",
+            "toolbar-gray": "#191919FF",
+            "toolbar-green": "#388B42FF",
+            "toolbar-purple": "#672A78FF",
+            "toolbar-red": "#E74C3CFF",
+            "toolbar-yellow": "#F1C40FFF"
         },
         "imnodes": {
             "box-selector": "#5AAAFA1E",
@@ -105,18 +102,28 @@
             "title-bar-hovered": "#D1D1D1FF",
             "title-bar-selected": "#D1D1D1FF"
         },
-        "imhex": {
-            "desc-button": "#E6E6E6FF",
-            "desc-button-active": "#BEBEBEFF",
-            "desc-button-hovered": "#D2D2D2FF",
-            "highlight": "#299770FF",
-            "toolbar-blue": "#06539BFF",
-            "toolbar-brown": "#DBB377FF",
-            "toolbar-gray": "#191919FF",
-            "toolbar-green": "#388B42FF",
-            "toolbar-purple": "#672A78FF",
-            "toolbar-red": "#E74C3CFF",
-            "toolbar-yellow": "#F1C40FFF"
+        "implot": {
+            "axis-bg": "#00000000",
+            "axis-bg-active": "#00000000",
+            "axis-bg-hovered": "#00000000",
+            "axis-grid": "#FFFFFFFF",
+            "axis-text": "#000000FF",
+            "axis-tick": "#0000003F",
+            "crosshairs": "#0000007F",
+            "error-bar": "#00000000",
+            "fill": "#00000000",
+            "frame-bg": "#FFFFFFFF",
+            "inlay-text": "#000000FF",
+            "legend-bg": "#FFFFFFF9",
+            "legend-border": "#D1D1D1CC",
+            "legend-text": "#000000FF",
+            "line": "#00000000",
+            "marker-fill": "#00000000",
+            "marker-outline": "#00000000",
+            "plot-bg": "#6B91FF21",
+            "plot-border": "#00000000",
+            "selection": "#D1A307FF",
+            "title-text": "#000000FF"
         },
         "text-editor": {
             "background": "#FFFFFFFF",
@@ -140,6 +147,166 @@
             "punctuation": "#000000FF",
             "selection": "#00006080",
             "string": "#A02020FF"
+        }
+    },
+    "image_postfix": "_light",
+    "name": "Light",
+    "styles": {
+        "imgui": {
+            "alpha": 1.0,
+            "button-text-align": [
+                0.5,
+                0.5
+            ],
+            "cell-padding": [
+                4.0,
+                2.0
+            ],
+            "child-border-size": 1.0,
+            "child-rounding": 0.0,
+            "disabled-alpha": 0.6000000238418579,
+            "frame-border-size": 0.0,
+            "frame-padding": [
+                4.0,
+                3.0
+            ],
+            "frame-rounding": 0.0,
+            "grab-min-size": 12.0,
+            "grab-rounding": 0.0,
+            "indent-spacing": 10.0,
+            "item-inner-spacing": [
+                4.0,
+                4.0
+            ],
+            "item-spacing": [
+                8.0,
+                4.0
+            ],
+            "popup-border-size": 1.0,
+            "popup-rounding": 0.0,
+            "scrollbar-rounding": 9.0,
+            "scrollbar-size": 14.0,
+            "selectable-text-align": [
+                0.0,
+                0.0
+            ],
+            "tab-rounding": 4.0,
+            "window-border-size": 1.0,
+            "window-min-size": [
+                32.0,
+                32.0
+            ],
+            "window-padding": [
+                8.0,
+                8.0
+            ],
+            "window-rounding": 0.0,
+            "window-title-align": [
+                0.0,
+                0.5
+            ]
+        },
+        "imnodes": {
+            "grid-spacing": 24.0,
+            "link-hover-distance": 10.0,
+            "link-line-segments-per-length": 0.10000000149011612,
+            "link-thickness": 3.0,
+            "mini-map-offset": [
+                4.0,
+                4.0
+            ],
+            "mini-map-padding": [
+                8.0,
+                8.0
+            ],
+            "node-border-thickness": 1.0,
+            "node-corner-rounding": 4.0,
+            "node-padding": [
+                8.0,
+                8.0
+            ],
+            "pin-circle-radius": 4.0,
+            "pin-hover-radius": 10.0,
+            "pin-line-thickness": 1.0,
+            "pin-offset": 0.0,
+            "pin-quad-side-length": 7.0,
+            "pin-triangle-side-length": 9.5
+        },
+        "implot": {
+            "annotation-padding": [
+                2.0,
+                2.0
+            ],
+            "digital-bit-gap": 4.0,
+            "digital-bit-height": 8.0,
+            "error-bar-size": 5.0,
+            "error-bar-weight": 1.5,
+            "fill-alpha": 1.0,
+            "fit-padding": [
+                0.0,
+                0.0
+            ],
+            "label-padding": [
+                5.0,
+                5.0
+            ],
+            "legend-inner-padding": [
+                5.0,
+                5.0
+            ],
+            "legend-padding": [
+                10.0,
+                10.0
+            ],
+            "legend-spacing": [
+                5.0,
+                0.0
+            ],
+            "line-weight": 1.0,
+            "major-grid-size": [
+                1.0,
+                1.0
+            ],
+            "major-tick-len": [
+                10.0,
+                10.0
+            ],
+            "major-tick-size": [
+                1.0,
+                1.0
+            ],
+            "marker-size": 4.0,
+            "marker-weight": 1.0,
+            "minor-alpha": 0.25,
+            "minor-grid-size": [
+                1.0,
+                1.0
+            ],
+            "minor-tick-len": [
+                5.0,
+                5.0
+            ],
+            "minor-tick-size": [
+                1.0,
+                1.0
+            ],
+            "mouse-pos-padding": [
+                10.0,
+                10.0
+            ],
+            "plot-border-size": 1.0,
+            "plot-default-size": [
+                400.0,
+                300.0
+            ],
+            "plot-min-size": [
+                200.0,
+                150.0
+            ],
+            "plot-padding": [
+                10.0,
+                10.0
+            ]
         }
     }
 }
