@@ -654,6 +654,13 @@ namespace hex {
             win->processEvent();
         });
 
+        glfwSetScrollCallback(this->m_window, [](GLFWwindow *window, double xOffset, double yOffset) {
+            hex::unused(xOffset, yOffset);
+
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->processEvent();
+        });
+
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             hex::unused(mods);
 
