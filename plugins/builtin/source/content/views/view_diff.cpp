@@ -53,57 +53,59 @@ namespace hex::plugin::builtin {
     }
 
     ViewDiff::~ViewDiff() {
+        EventManager::unsubscribe<EventProviderClosed>(this);
     }
 
-    bool ViewDiff::drawDiffColumn(Column &column, float height) const {
-        bool scrolled = false;
-        ImGui::PushID(&column);
+    namespace {
 
-        float prevScroll = column.hexEditor.getScrollPosition();
-        column.hexEditor.draw(height);
-        float currScroll = column.hexEditor.getScrollPosition();
+        bool drawDiffColumn(ViewDiff::Column &column, float height) {
+            bool scrolled = false;
+            ImGui::PushID(&column);
 
-        if (prevScroll != currScroll) {
-            scrolled = true;
-            column.scrollLock = 5;
-        }
+            float prevScroll = column.hexEditor.getScrollPosition();
+            column.hexEditor.draw(height);
+            float currScroll = column.hexEditor.getScrollPosition();
 
-        ImGui::PopID();
-
-        return scrolled;
-    }
-
-    void ViewDiff::drawProviderSelector(Column &column) {
-        ImGui::PushID(&column);
-
-        auto &providers = ImHexApi::Provider::getProviders();
-        auto &providerIndex = column.provider;
-
-        std::string preview;
-        if (ImHexApi::Provider::isValid() && providerIndex >= 0)
-            preview = providers[providerIndex]->getName();
-
-        ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-        ImGui::BeginDisabled(this->m_diffTask.isRunning());
-        if (ImGui::BeginCombo("", preview.c_str())) {
-
-            for (size_t i = 0; i < providers.size(); i++) {
-                if (ImGui::Selectable(providers[i]->getName().c_str())) {
-                    providerIndex = i;
-                    this->m_analyzed = false;
-                }
+            if (prevScroll != currScroll) {
+                scrolled = true;
+                column.scrollLock = 5;
             }
 
-            ImGui::EndCombo();
+            ImGui::PopID();
+
+            return scrolled;
         }
-        ImGui::EndDisabled();
 
-        ImGui::PopID();
-    }
+        bool drawProviderSelector(ViewDiff::Column &column) {
+            bool shouldReanalyze = false;
 
-    std::string ViewDiff::getProviderName(Column &column) const {
-        const auto &providers = ImHexApi::Provider::getProviders();
-        return ((column.provider >= 0 && size_t(column.provider) < providers.size()) ? providers[column.provider]->getName() : "???") + "##" + hex::format("{:X}", u64(&column));
+            ImGui::PushID(&column);
+
+            auto &providers = ImHexApi::Provider::getProviders();
+            auto &providerIndex = column.provider;
+
+            std::string preview;
+            if (ImHexApi::Provider::isValid() && providerIndex >= 0)
+                preview = providers[providerIndex]->getName();
+
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+            if (ImGui::BeginCombo("", preview.c_str())) {
+
+                for (size_t i = 0; i < providers.size(); i++) {
+                    if (ImGui::Selectable(providers[i]->getName().c_str())) {
+                        providerIndex = i;
+                        shouldReanalyze = true;
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::PopID();
+
+            return shouldReanalyze;
+        }
+
     }
 
     void ViewDiff::drawContent() {
@@ -137,9 +139,6 @@ namespace hex::plugin::builtin {
 
                 auto commonSize = std::min(providerA->getActualSize(), providerB->getActualSize());
                 this->m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &task) {
-                    std::vector<u8> bufferA(0x1000);
-                    std::vector<u8> bufferB(0x1000);
-
                     std::vector<Diff> differences;
 
                     auto readerA = prv::BufferedReader(providerA);
@@ -159,8 +158,11 @@ namespace hex::plugin::builtin {
                                 end++;
                             }
 
+
                             differences.push_back(Diff { Region{ start, end }, ViewDiff::DifferenceType::Modified });
                         }
+
+                        task.update(itA.getAddress());
                     }
 
                     if (providerA->getActualSize() != providerB->getActualSize()) {
@@ -185,11 +187,13 @@ namespace hex::plugin::builtin {
                 ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
                 ImGui::TableHeadersRow();
 
+                ImGui::BeginDisabled(this->m_diffTask.isRunning());
                 ImGui::TableNextColumn();
-                this->drawProviderSelector(a);
+                if (drawProviderSelector(a)) this->m_analyzed = false;
 
                 ImGui::TableNextColumn();
-                this->drawProviderSelector(b);
+                if (drawProviderSelector(b)) this->m_analyzed = false;
+                ImGui::EndDisabled();
 
                 ImGui::TableNextRow();
 
@@ -220,7 +224,7 @@ namespace hex::plugin::builtin {
 
                 if (this->m_analyzed) {
                     ImGuiListClipper clipper;
-                    clipper.Begin(this->m_diffs.size());
+                    clipper.Begin(int(this->m_diffs.size()));
 
                     while (clipper.Step())
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {

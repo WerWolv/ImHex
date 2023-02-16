@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
 
-    private:
+    public:
         struct Column {
             ui::HexEditor hexEditor;
             int provider = -1;
@@ -40,10 +40,6 @@ namespace hex::plugin::builtin {
             Region region;
             DifferenceType type;
         };
-
-        bool drawDiffColumn(Column &column, float height) const;
-        void drawProviderSelector(Column &column);
-        std::string getProviderName(Column &column) const;
 
     private:
         std::array<Column, 2> m_columns;
