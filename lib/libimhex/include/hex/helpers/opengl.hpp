@@ -75,6 +75,13 @@ namespace hex::gl {
             return copy;
         }
 
+        auto operator==(const Vector<T, Size>& other) {
+            for (size_t i = 0; i < Size; i++)
+                if (this->m_data[i] != other[i])
+                    return false;
+            return true;
+        }
+
     private:
         std::array<T, Size> m_data;
     };

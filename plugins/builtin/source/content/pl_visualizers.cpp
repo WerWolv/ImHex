@@ -184,11 +184,14 @@ namespace hex::plugin::builtin {
             auto indicesPattern  = arguments[1].toPattern();
 
             static ImGui::Texture texture;
-            static float scaling = 0.5F;
-            static gl::Vector<float, 3> rotation = { { 1.0F, -1.0F, 0.0F } };
+
             static gl::Vector<float, 3> translation;
+            static gl::Vector<float, 3> rotation = { { 1.0F, -1.0F, 0.0F } };
+            static float scaling = 0.1F;
+
             static std::vector<float> vertices, normals;
             static std::vector<u32> indices;
+
             static gl::Shader shader;
             static gl::VertexArray vertexArray;
             static gl::Buffer<float> vertexBuffer, normalBuffer;
@@ -264,7 +267,7 @@ namespace hex::plugin::builtin {
             {
                 gl::FrameBuffer frameBuffer;
 
-                gl::Texture renderTexture(512, 512);
+                gl::Texture renderTexture(400_scaled, 400_scaled);
                 frameBuffer.attachTexture(renderTexture);
 
                 frameBuffer.bind();
@@ -298,7 +301,54 @@ namespace hex::plugin::builtin {
                 texture = ImGui::Texture(renderTexture.release(), renderTexture.getWidth(), renderTexture.getHeight());
             }
 
-            ImGui::Image(texture, texture.getSize(), ImVec2(0, 1), ImVec2(1, 0));
+            auto textureSize = texture.getSize();
+
+            if (ImGui::BeginTable("##3DVisualizer", 2, ImGuiTableFlags_SizingFixedFit)) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+                if (ImGui::BeginChild("##image", textureSize, true, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                    ImGui::Image(texture, textureSize, ImVec2(0, 1), ImVec2(1, 0));
+                }
+                ImGui::EndChild();
+                ImGui::PopStyleVar();
+
+                ImGui::TableNextColumn();
+                ImGui::TextUnformatted("hex.builtin.pl_visualizer.3d.rotation"_lang);
+                ImGui::VSliderFloat("##X", ImVec2(18_scaled, textureSize.y), &rotation.data()[0], 0, std::numbers::pi * 2, "", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SameLine();
+                ImGui::VSliderFloat("##Y", ImVec2(18_scaled, textureSize.y), &rotation.data()[1], 0, std::numbers::pi * 2, "", ImGuiSliderFlags_AlwaysClamp);
+                ImGui::SameLine();
+                ImGui::VSliderFloat("##Z", ImVec2(18_scaled, textureSize.y), &rotation.data()[2], 0, std::numbers::pi * 2, "", ImGuiSliderFlags_AlwaysClamp);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::TextUnformatted("hex.builtin.pl_visualizer.3d.scale"_lang);
+                ImGui::SameLine();
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::SliderFloat("##Scale", &scaling, 0.0001F, 0.2F, "");
+                ImGui::PopItemWidth();
+
+                for (u8 i = 0; i < 3; i++) {
+                    while (rotation.data()[i] > std::numbers::pi * 2)
+                        rotation.data()[i] -= std::numbers::pi * 2;
+                    while (rotation.data()[i] < 0)
+                        rotation.data()[i] += std::numbers::pi * 2;
+                }
+
+                ImGui::TableNextColumn();
+
+                if (ImGui::Button("hex.builtin.common.reset"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                    translation = gl::Vector<float, 3>({ 0.0F, 0.0F, 0.0F });
+                    rotation = gl::Vector<float, 3>({ 0.0F, 0.0F, 0.0F });
+                    scaling = 0.1F;
+                }
+
+                ImGui::EndTable();
+            }
+
+
         }
 
         void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
