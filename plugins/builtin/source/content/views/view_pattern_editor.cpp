@@ -217,7 +217,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console) {
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
+        const auto &palette = TextEditor::GetPalette();
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, palette[u32(TextEditor::PaletteIndex::Background)]);
         if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
             ImGuiListClipper clipper;
 
@@ -232,16 +233,16 @@ namespace hex::plugin::builtin {
                         using enum pl::core::LogConsole::Level;
 
                         case Debug:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Comment)]);
                             break;
                         case Info:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Default)]);
                             break;
                         case Warning:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Preprocessor)]);
                             break;
                         case Error:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::ErrorMarker)]);
                             break;
                         default:
                             continue;

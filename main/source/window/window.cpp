@@ -812,6 +812,8 @@ namespace hex {
 
         for (const auto &plugin : PluginManager::getPlugins())
             plugin.setImGuiContext(ImGui::GetCurrentContext());
+
+        EventManager::post<RequestInitThemeHandlers>();
     }
 
     void Window::exitGLFW() {
