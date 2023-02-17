@@ -31,6 +31,9 @@ namespace hex::api {
     }
 
     std::optional<ImColor> ThemeManager::parseColorString(const std::string &colorString) {
+        if (colorString == "auto")
+            return ImVec4(0, 0, 0, -1);
+
         if (colorString.length() != 9 || colorString[0] != '#')
             return std::nullopt;
 
@@ -47,6 +50,9 @@ namespace hex::api {
             else
                 return std::nullopt;
         }
+
+        if (color == 0x00000000)
+            return ImVec4(0, 0, 0, -1);
 
         return ImColor(hex::changeEndianess(color, std::endian::big));
     }
