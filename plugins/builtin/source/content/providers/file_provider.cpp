@@ -15,7 +15,7 @@
 namespace hex::plugin::builtin {
 
     bool FileProvider::isAvailable() const {
-        return this->m_mappedFile != nullptr;
+        return this->m_file.isValid();
     }
 
     bool FileProvider::isReadable() const {
@@ -60,14 +60,29 @@ namespace hex::plugin::builtin {
         if (offset > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, reinterpret_cast<u8 *>(this->m_mappedFile) + offset, size);
+        std::scoped_lock lock(this->m_mutex);
+        if (offset < this->m_bufferStartAddress || offset + size > this->m_bufferStartAddress + this->m_buffer.size() || this->m_buffer.size() < size) {
+            this->m_buffer.resize(std::min<size_t>(std::max<size_t>(0x100, size), this->getActualSize() - offset));
+            this->m_file.seek(offset);
+            this->m_file.readBuffer(this->m_buffer.data(), this->m_buffer.size());
+            this->m_bufferStartAddress = offset;
+        }
+
+        std::memcpy(buffer, this->m_buffer.data() + (offset - this->m_bufferStartAddress), std::min<size_t>(size, this->m_buffer.size()));
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(reinterpret_cast<u8 *>(this->m_mappedFile) + offset, buffer, size);
+        std::scoped_lock lock(this->m_mutex);
+        fs::File writeFile(this->m_path, fs::File::Mode::Write);
+        if (!writeFile.isValid())
+            return;
+        
+        writeFile.seek(offset);
+        writeFile.write(reinterpret_cast<const u8*>(buffer), size);
+        this->m_buffer.clear();
     }
 
     void FileProvider::save() {
@@ -100,7 +115,6 @@ namespace hex::plugin::builtin {
             fs::File file(this->m_path, fs::File::Mode::Write);
 
             file.setSize(newSize);
-            this->m_fileSize = file.getSize();
         }
 
         (void)this->open();
@@ -164,10 +178,10 @@ namespace hex::plugin::builtin {
         result.emplace_back("hex.builtin.provider.file.path"_lang, hex::toUTF8String(this->m_path));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
-        if (this->m_fileStatsValid) {
-            result.emplace_back("hex.builtin.provider.file.creation"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats.st_ctime)));
-            result.emplace_back("hex.builtin.provider.file.access"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats.st_atime)));
-            result.emplace_back("hex.builtin.provider.file.modification"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats.st_mtime)));
+        if (this->m_fileStats.has_value()) {
+            result.emplace_back("hex.builtin.provider.file.creation"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_ctime)));
+            result.emplace_back("hex.builtin.provider.file.access"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_atime)));
+            result.emplace_back("hex.builtin.provider.file.modification"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_mtime)));
         }
 
         return result;
@@ -181,13 +195,13 @@ namespace hex::plugin::builtin {
         else if (category == "file_extension")
             return hex::toUTF8String(this->m_path.extension());
         else if (category == "creation_time")
-            return this->m_fileStats.st_ctime;
+            return this->m_fileStats->st_ctime;
         else if (category == "access_time")
-            return this->m_fileStats.st_atime;
+            return this->m_fileStats->st_atime;
         else if (category == "modification_time")
-            return this->m_fileStats.st_mtime;
+            return this->m_fileStats->st_mtime;
         else if (category == "permissions")
-            return this->m_fileStats.st_mode & 0777;
+            return this->m_fileStats->st_mode & 0777;
         else
             return Provider::queryInformation(category, argument);
     }
@@ -206,101 +220,22 @@ namespace hex::plugin::builtin {
         this->m_readable = true;
         this->m_writable = true;
 
-        #if defined(OS_WINDOWS)
-            const auto &path = this->m_path.native();
+        fs::File file(this->m_path, fs::File::Mode::Read);
+        if (!file.isValid()) {
+            this->m_writable = false;
+            this->m_readable = false;
+            return false;
+        }
 
-            this->m_fileStatsValid = wstat(path.c_str(), &this->m_fileStats) == 0;
-
-            LARGE_INTEGER fileSize = {};
-            auto file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-
-            GetFileSizeEx(file, &fileSize);
-            this->m_fileSize = fileSize.QuadPart;
-            CloseHandle(file);
-
-            file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-            if (file == nullptr || file == INVALID_HANDLE_VALUE) {
-                file = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
-                this->m_writable = false;
-            }
-
-            if (file == nullptr || file == INVALID_HANDLE_VALUE) {
-                return false;
-            }
-
-            ON_SCOPE_EXIT { CloseHandle(file); };
-
-            if (this->m_fileSize > 0) {
-                HANDLE mapping = CreateFileMapping(file, nullptr, PAGE_READWRITE, 0, 0, nullptr);
-                ON_SCOPE_EXIT { CloseHandle(mapping); };
-
-                if (mapping == nullptr || mapping == INVALID_HANDLE_VALUE) {
-                    mapping = CreateFileMapping(file, nullptr, PAGE_READONLY, 0, 0, nullptr);
-
-                    if (mapping == nullptr || mapping == INVALID_HANDLE_VALUE)
-                        return false;
-                }
-
-                this->m_mappedFile = MapViewOfFile(mapping, FILE_MAP_ALL_ACCESS, 0, 0, this->m_fileSize);
-                if (this->m_mappedFile == nullptr) {
-
-                    this->m_mappedFile = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, this->m_fileSize);
-                    if (this->m_mappedFile == nullptr) {
-                        this->m_readable = false;
-
-                        return false;
-                    }
-                }
-            } else if (!this->m_emptyFile) {
-                this->m_emptyFile = true;
-                this->resize(1);
-            } else {
-                return false;
-            }
-        #else
-
-            const auto &path       = this->m_path.native();
-            this->m_fileStatsValid = stat(path.c_str(), &this->m_fileStats) == 0;
-
-            int mmapprot = PROT_READ | PROT_WRITE;
-
-            auto file = ::open(path.c_str(), O_RDWR);
-            if (file == -1) {
-                file = ::open(path.c_str(), O_RDONLY);
-                this->m_writable = false;
-                mmapprot &= ~(PROT_WRITE);
-            }
-
-            if (file == -1) {
-                this->m_readable = false;
-                return false;
-            }
-
-            ON_SCOPE_EXIT { ::close(file); };
-
-            this->m_fileSize = this->m_fileStats.st_size;
-
-            this->m_mappedFile = ::mmap(nullptr, this->m_fileSize, mmapprot, MAP_SHARED, file, 0);
-            if (this->m_mappedFile == MAP_FAILED)
-                return false;
-
-        #endif
+        this->m_fileStats = file.getFileInfo();
+        this->m_fileSize = file.getSize();
+        this->m_file = std::move(file);
 
         return true;
     }
 
     void FileProvider::close() {
-        #if defined(OS_WINDOWS)
 
-            if (this->m_mappedFile != nullptr)
-                ::UnmapViewOfFile(this->m_mappedFile);
-
-        #else
-
-            if (this->m_mappedFile != nullptr)
-                ::munmap(this->m_mappedFile, this->m_fileSize);
-
-        #endif
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {

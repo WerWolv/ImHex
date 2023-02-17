@@ -114,6 +114,10 @@ namespace hex::prv {
         for (auto &[patchAddress, patch] : getPatches()) {
             this->writeRaw(patchAddress - this->getBaseAddress(), &patch, 1);
         }
+
+        if (!this->isWritable())
+            return;
+
         this->markDirty();
 
         this->m_patches.emplace_back();
