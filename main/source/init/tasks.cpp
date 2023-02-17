@@ -54,7 +54,25 @@ namespace hex::init {
     bool setupEnvironment() {
         hex::log::debug("Using romfs: '{}'", romfs::name());
 
-        Net::setCACert(std::string(romfs::get("cacert.pem").string()));
+        // Load the SSL certificate
+        constexpr static auto CaCertPath = "cacert.pem";
+
+        // Look for a custom certificate in the config folder
+        std::fs::path caCertPath;
+        for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+            for (const auto &file : std::fs::directory_iterator(folder)) {
+                if (file.path().filename() == CaCertPath) {
+                    caCertPath = file.path();
+                    break;
+                }
+            }
+        }
+
+        // If a custom certificate was found, use it, otherwise use the one from the romfs
+        if (!caCertPath.empty())
+            Net::setCACert(fs::File(caCertPath, fs::File::Mode::Read).readString());
+        else
+            Net::setCACert(std::string(romfs::get(CaCertPath).string()));
 
         return true;
     }
