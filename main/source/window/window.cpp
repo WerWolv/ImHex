@@ -761,22 +761,7 @@ namespace hex {
         auto scale = ImHexApi::System::getGlobalScale();
         style.ScaleAllSizes(scale);
         io.DisplayFramebufferScale = ImVec2(scale, scale);
-
-        {
-            GLsizei width, height;
-            u8 *fontData;
-
-            io.Fonts->GetTexDataAsRGBA32(&fontData, &width, &height);
-
-            // Create new font atlas
-            GLuint tex;
-            glGenTextures(1, &tex);
-            glBindTexture(GL_TEXTURE_2D, tex);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA8, GL_UNSIGNED_INT, fontData);
-            io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
-        }
+        io.Fonts->SetTexID(fonts->TexID);
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
