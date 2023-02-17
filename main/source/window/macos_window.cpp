@@ -23,6 +23,7 @@ namespace hex {
                 setenv("LD_LIBRARY_PATH", hex::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
 
+        // Redirect stdout to log file if we're not running in a terminal
         if (!isatty(STDOUT_FILENO)) {
             log::redirectToFile();
         }

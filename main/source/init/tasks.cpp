@@ -11,6 +11,7 @@
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
@@ -27,23 +28,30 @@ namespace hex::init {
     using namespace std::literals::string_literals;
 
     static bool checkForUpdates() {
-        // documentation of the value above the setting definition
         int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
+
+        // Check if we should check for updates
         if (showCheckForUpdates == 1){
             hex::Net net;
 
+            // Query the GitHub API for the latest release version
             auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 2000).get();
             if (releases.code != 200)
                 return false;
 
+            // Check if the response is valid
             if (!releases.body.contains("tag_name") || !releases.body["tag_name"].is_string())
                 return false;
 
+            // Convert the current version string to a format that can be compared to the latest release
             auto versionString = std::string(IMHEX_VERSION);
             size_t versionLength = std::min(versionString.find_first_of('-'), versionString.length());
             auto currVersion   = "v" + versionString.substr(0, versionLength);
+
+            // Get the latest release version string
             auto latestVersion = releases.body["tag_name"].get<std::string_view>();
 
+            // Check if the latest release is different from the current version
             if (latestVersion != currVersion)
                 ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
@@ -82,7 +90,7 @@ namespace hex::init {
 
         using enum fs::ImHexPath;
 
-        // Create all folders
+        // Try to create all default directories
         for (u32 path = 0; path < u32(fs::ImHexPath::END); path++) {
             for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(path), true)) {
                 try {
@@ -105,11 +113,13 @@ namespace hex::init {
 
         const auto &fontFile = ImHexApi::System::getCustomFontPath();
 
+        // Setup basic font configuration
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
         cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
         cfg.SizePixels = fontSize;
 
+        // Configure font glyph ranges that should be loaded from the default font and unifont
         ImVector<ImWchar> ranges;
         {
             ImFontGlyphRangesBuilder glyphRangesBuilder;
@@ -131,37 +141,51 @@ namespace hex::init {
             glyphRangesBuilder.BuildRanges(&ranges);
         }
 
+        // Glyph range for font awesome icons
         ImWchar fontAwesomeRange[] = {
                 ICON_MIN_FA, ICON_MAX_FA, 0
         };
 
+        // Glyph range for codicons icons
         ImWchar codiconsRange[] = {
                 ICON_MIN_VS, ICON_MAX_VS, 0
         };
 
+        // Load main font
+        // If a custom font has been specified, load it, otherwise load the default ImGui font
         if (fontFile.empty()) {
-            // Load default font if no custom one has been specified
-
             fonts->Clear();
             fonts->AddFontDefault(&cfg);
         } else {
-            // Load custom font
             fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
         }
 
+        // Merge all fonts into one big font atlas
         cfg.MergeMode = true;
 
+        // Add font awesome and codicons icons to font atlas
         fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange);
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange);
 
+        // Add unifont if unicode support is enabled
         if (loadUnicode)
             fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, ranges.Data);
 
+        // Try to build the font atlas
         if (!fonts->Build()) {
+            // The main reason the font atlas failed to build is that the font is too big for the GPU to handle
+            // If unicode support is enabled, therefor try to load the font atlas without unicode support
+            // If that still didn't work, there's probably something else going on with the graphics drivers
+            // Especially Intel GPU drivers are known to have various bugs
+
             if (loadUnicode) {
                 log::error("Failed to build font atlas! Disabling Unicode support.");
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", false);
                 IM_DELETE(fonts);
+
+                // Disable unicode support in settings
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", false);
+
+                // Try to load the font atlas again
                 return loadFontsImpl(false);
             } else {
                 log::error("Failed to build font atlas! Check your Graphics driver!");
@@ -169,6 +193,7 @@ namespace hex::init {
             }
         }
 
+        // Configure ImGui to use the font atlas
         View::setFontAtlas(fonts);
         View::setFontConfig(cfg);
 
@@ -180,6 +205,10 @@ namespace hex::init {
     }
 
     bool deleteSharedData() {
+        // This function is called when ImHex is closed. It deletes all shared data that was created by plugins
+        // This is a bit of a hack but necessary because when ImHex gets closed, all plugins are unloaded in order for
+        // destructors to be called correctly. To prevent crashes when ImHex exits, we need to delete all shared data
+
         EventManager::clear();
 
         while (ImHexApi::Provider::isValid())
@@ -255,12 +284,15 @@ namespace hex::init {
     }
 
     bool loadPlugins() {
+        // Load plugins
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
             PluginManager::load(dir);
         }
 
+        // Get loaded plugins
         auto &plugins = PluginManager::getPlugins();
 
+        // If no plugins were loaded, ImHex wasn't installed properly. This will trigger an error popup later on
         if (plugins.empty()) {
             log::error("No plugins found!");
 
@@ -269,6 +301,7 @@ namespace hex::init {
         }
 
         const auto shouldLoadPlugin = [executablePath = hex::fs::getExecutablePath()](const Plugin &plugin) {
+            // In debug builds, ignore all plugins that are not part of the executable directory
             #if !defined(DEBUG)
                 return true;
             #endif
@@ -276,12 +309,14 @@ namespace hex::init {
             if (!executablePath.has_value())
                 return true;
 
-            // In debug builds, ignore all plugins that are not part of the executable directory
+            // Check if the plugin is somewhere in the same directory tree as the executable
             return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
         };
 
         u32 builtinPlugins = 0;
         u32 loadErrors     = 0;
+
+        // Load the builtin plugin first, so it can initialize everything that's necessary for ImHex to work
         for (const auto &plugin : plugins) {
             if (!plugin.isBuiltinPlugin()) continue;
 
@@ -290,15 +325,18 @@ namespace hex::init {
                 continue;
             }
 
+            // Make sure there's only one built-in plugin
             builtinPlugins++;
             if (builtinPlugins > 1) continue;
 
+            // Initialize the plugin
             if (!plugin.initializePlugin()) {
                 log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }
 
+        // Load all other plugins
         for (const auto &plugin : plugins) {
             if (plugin.isBuiltinPlugin()) continue;
 
@@ -307,18 +345,22 @@ namespace hex::init {
                 continue;
             }
 
+            // Initialize the plugin
             if (!plugin.initializePlugin()) {
                 log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }
 
+        // If no plugins were loaded successfully, ImHex wasn't installed properly. This will trigger an error popup later on
         if (loadErrors == plugins.size()) {
             log::error("No plugins loaded successfully!");
             ImHexApi::System::impl::addInitArgument("no-plugins");
             return false;
         }
 
+        // ImHex requires exactly one built-in plugin
+        // If no built-in plugin or more than one was found, something's wrong and we can't continue
         if (builtinPlugins == 0) {
             log::error("Built-in plugin not found!");
             ImHexApi::System::impl::addInitArgument("no-builtin-plugin");
@@ -340,8 +382,11 @@ namespace hex::init {
 
     bool loadSettings() {
         try {
+            // Try to load settings from file
             ContentRegistry::Settings::load();
         } catch (std::exception &e) {
+            // If that fails, create a new settings file
+
             log::error("Failed to load configuration! {}", e.what());
 
             ContentRegistry::Settings::clear();

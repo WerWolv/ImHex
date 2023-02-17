@@ -24,6 +24,7 @@ namespace hex {
                 setenv("LD_LIBRARY_PATH", hex::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
 
+        // Redirect stdout to log file if we're not running in a terminal
         if (!isatty(STDOUT_FILENO)) {
             log::redirectToFile();
         }
@@ -39,6 +40,7 @@ namespace hex {
             std::array<char, 128> buffer = { 0 };
             std::string result;
 
+            // Ask GNOME for the current theme
             // TODO: In the future maybe support more DEs instead of just GNOME
             FILE *pipe = popen("gsettings get org.gnome.desktop.interface gtk-theme 2>&1", "r");
             if (pipe == nullptr) return;
