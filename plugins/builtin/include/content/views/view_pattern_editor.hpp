@@ -66,6 +66,9 @@ namespace hex::plugin::builtin {
         bool m_autoLoadPatterns = true;
 
         std::map<prv::Provider*, std::move_only_function<void()>> m_sectionWindowDrawer;
+
+        ui::HexEditor m_sectionHexEditor;
+
     private:
         void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);
         void drawEnvVars(ImVec2 size, std::list<PlData::EnvVar> &envVars);

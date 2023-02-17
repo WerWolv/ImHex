@@ -437,7 +437,8 @@ namespace hex::plugin::builtin {
                     dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
                     dataProvider->setReadOnly(true);
 
-                    auto hexEditor = ui::HexEditor();
+                    auto hexEditor = auto(this->m_sectionHexEditor);
+
                     hexEditor.setBackgroundHighlightCallback([this, id](u64 address, const u8 *, size_t) -> std::optional<color_t> {
                         if (this->m_runningEvaluators != 0)
                             return std::nullopt;
@@ -446,7 +447,7 @@ namespace hex::plugin::builtin {
 
                         std::optional<ImColor> color;
                         for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address, id)) {
-                            if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
+                            if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
                                 continue;
 
                             if (color.has_value())
@@ -460,11 +461,27 @@ namespace hex::plugin::builtin {
 
                     auto patternProvider = ImHexApi::Provider::get();
 
-                    this->m_sectionWindowDrawer[patternProvider] = [id, patternProvider, dataProvider = std::move(dataProvider), hexEditor, patternDrawer = ui::PatternDrawer()] mutable {
+
+                    this->m_sectionWindowDrawer[patternProvider] = [id, patternProvider, dataProvider = std::move(dataProvider), hexEditor = std::move(hexEditor), patternDrawer = ui::PatternDrawer()] mutable {
                         hexEditor.setProvider(dataProvider.get());
                         hexEditor.draw(480_scaled);
+                        patternDrawer.setSelectionCallback([&](const auto &region) {
+                            hexEditor.setSelection(region);
+                        });
 
-                        patternDrawer.draw(ProviderExtraData::get(patternProvider).patternLanguage.runtime->getAllPatterns(id), 150_scaled);
+                        auto &patternLanguage = ProviderExtraData::get(patternProvider).patternLanguage;
+
+                        const auto &patterns = [&] -> const auto& {
+                            if (patternProvider->isReadable() && patternLanguage.runtime != nullptr && patternLanguage.executionDone)
+                                return ProviderExtraData::get(patternProvider).patternLanguage.runtime->getAllPatterns(id);
+                            else {
+                                static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
+                                return empty;
+                            }
+                        }();
+
+                        if (patternLanguage.executionDone)
+                            patternDrawer.draw(patterns, 150_scaled);
                     };
                 }
 
@@ -672,6 +689,7 @@ namespace hex::plugin::builtin {
         this->m_textEditor.SetErrorMarkers({});
         patternLanguage.console.clear();
 
+        this->m_sectionWindowDrawer.clear();
 
         ContentRegistry::PatternLanguage::configureRuntime(*patternLanguage.runtime, provider);
 

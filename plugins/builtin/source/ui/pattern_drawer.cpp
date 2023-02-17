@@ -208,7 +208,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushID(pattern.getVariableName().c_str());
 
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-            ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
+            this->m_selectionCallback(Region { pattern.getOffset(), pattern.getSize() });
             this->resetEditing();
         }
 
