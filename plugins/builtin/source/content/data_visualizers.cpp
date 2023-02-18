@@ -1,5 +1,4 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/providers/provider.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -54,7 +53,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
             }
             else
                 return false;
@@ -107,7 +106,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsHexadecimal);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsHexadecimal);
             }
             else
                 return false;
@@ -298,6 +297,39 @@ namespace hex::plugin::builtin {
 
     };
 
+    class DataVisualizerBinary : public hex::ContentRegistry::HexEditor::DataVisualizer {
+    public:
+        DataVisualizerBinary() : DataVisualizer(1, 8) { }
+
+        void draw(u64 address, const u8 *data, size_t size, bool) override {
+            hex::unused(address);
+
+            if (size == 1)
+                ImGui::TextFormatted("{:08b}", *data);
+        }
+
+        bool drawEditing(u64 address, u8 *data, size_t, bool, bool startedEditing) override {
+            hex::unused(address, startedEditing);
+
+            if (startedEditing) {
+                this->m_inputBuffer = hex::format("{:08b}", *data);
+            }
+
+            if (drawDefaultTextEditingTextBox(address, this->m_inputBuffer, ImGuiInputTextFlags_None)) {
+                hex::trim(this->m_inputBuffer);
+                if (auto result = hex::parseBinaryString(this->m_inputBuffer); result.has_value()) {
+                    *data = result.value();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+    private:
+        std::string m_inputBuffer;
+    };
+
     void registerDataVisualizers() {
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u8>>("hex.builtin.visualizer.hexadecimal.8bit");
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexadecimal<u16>>("hex.builtin.visualizer.hexadecimal.16bit");
@@ -320,6 +352,8 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerRGBA8>("hex.builtin.visualizer.rgba8");
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexii>("hex.builtin.visualizer.hexii");
+
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerBinary>("hex.builtin.visualizer.binary");
     }
 
 }

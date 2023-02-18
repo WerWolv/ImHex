@@ -300,6 +300,8 @@ namespace hex::plugin::builtin::ui {
 
             if (!this->m_editingAddress.has_value())
                 this->m_editingCellType = CellType::None;
+
+            this->m_enteredEditingMode = false;
         }
     }
 
@@ -678,8 +680,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::EndTable();
         }
         ImGui::PopStyleVar();
-
-        this->m_enteredEditingMode = false;
     }
 
     void HexEditor::drawFooter(const ImVec2 &size) {

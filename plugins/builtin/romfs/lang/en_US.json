@@ -821,6 +821,7 @@
         "hex.builtin.view.yara.reset": "Reset",
         "hex.builtin.view.yara.rule_added": "Yara rule added!",
         "hex.builtin.view.yara.whole_data": "Whole file matches!",
+        "hex.builtin.visualizer.binary": "Binary",
         "hex.builtin.visualizer.decimal.signed.16bit": "Decimal Signed (16 bits)",
         "hex.builtin.visualizer.decimal.signed.32bit": "Decimal Signed (32 bits)",
         "hex.builtin.visualizer.decimal.signed.64bit": "Decimal Signed (64 bits)",

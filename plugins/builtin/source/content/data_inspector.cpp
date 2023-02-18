@@ -146,19 +146,11 @@ namespace hex::plugin::builtin {
                     value = value.substr(2);
 
                 if (value.size() > 8) return { };
-                u8 byte = 0x00;
-                for (char c : value) {
-                    byte <<= 1;
 
-                    if (c == '1')
-                        byte |= 0b01;
-                    else if (c == '0')
-                        byte |= 0b00;
-                    else
-                        return { };
-                }
-
-                return { byte };
+                if (auto result = hex::parseBinaryString(value); result.has_value())
+                    return { result.value() };
+                else
+                    return { };
             }
         );
 
