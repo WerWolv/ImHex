@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
             }, [](std::string value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
 
-                if (value.starts_with("0b"))
+                if (value.size() > 2 && value.starts_with("0b"))
                     value = value.substr(2);
 
                 if (value.size() > 8) return { };
