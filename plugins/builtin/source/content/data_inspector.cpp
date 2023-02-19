@@ -139,15 +139,16 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted(binary.c_str());
                     return binary;
                 };
-            }, [](std::string value, std::endian endian) -> std::vector<u8> {
+            }, [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
 
-                if (value.size() > 2 && value.starts_with("0b"))
-                    value = value.substr(2);
+                std::string binary = value;
+                if (binary.starts_with("0b"))
+                    binary = binary.substr(2);
 
-                if (value.size() > 8) return { };
+                if (binary.size() > 8) return { };
 
-                if (auto result = hex::parseBinaryString(value); result.has_value())
+                if (auto result = hex::parseBinaryString(binary); result.has_value())
                     return { result.value() };
                 else
                     return { };
