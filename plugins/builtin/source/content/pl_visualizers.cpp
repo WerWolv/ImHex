@@ -38,20 +38,6 @@ namespace hex::plugin::builtin {
             return result;
         }
 
-        template<typename T>
-        std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
-            size_t stride = std::max(1.0, double(data.size()) / count);
-
-            std::vector<T> result;
-            result.reserve(count);
-
-            for (size_t i = 0; i < data.size(); i += stride) {
-                result.push_back(data[i]);
-            }
-
-            return result;
-        }
-
     }
 
     namespace {
@@ -409,7 +395,7 @@ namespace hex::plugin::builtin {
 
         void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             // variable used to store the result to avoid having to recalculate the result at each frame 
-            static ChunkBasedEntropyAnalysis analyzer;  
+            static DiagramChunkBasedEntropyAnalysis analyzer;  
 
             // compute data    
             if (shouldReset) {
