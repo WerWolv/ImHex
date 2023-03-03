@@ -26,6 +26,7 @@ namespace hex::plugin::builtin::ui {
         void draw(float height = ImGui::GetContentRegionAvail().y);
 
         void setProvider(prv::Provider *provider) { this->m_provider = provider; }
+        void setUnknownDataCharacter(char character) { this->m_unknownDataCharacter = character; }
     private:
         enum class CellType { None, Hex, ASCII };
 
@@ -174,6 +175,7 @@ namespace hex::plugin::builtin::ui {
         u16 m_bytesPerRow = 16;
         ContentRegistry::HexEditor::DataVisualizer *m_currDataVisualizer;
         u32 m_grayZeroHighlighter = 0;
+        char m_unknownDataCharacter = '?';
 
         bool m_shouldJumpToSelection = false;
         bool m_centerOnJump = false;

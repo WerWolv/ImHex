@@ -8,12 +8,20 @@
 
 #include <hex/helpers/fs.hpp>
 
+#include <sys/stat.h>
+
 #if defined(OS_MACOS)
+    #include <unistd.h>
+    #include <sys/fcntl.h>
+
     #define off64_t     off_t
     #define fopen64     fopen
     #define fseeko64    fseek
     #define ftello64    ftell
     #define ftruncate64 ftruncate
+#elif defined(OS_LINUX)
+    #include <unistd.h>
+    #include <fcntl.h>
 #endif
 
 namespace hex::fs {
@@ -64,6 +72,8 @@ namespace hex::fs {
         const std::fs::path &getPath() { return this->m_path; }
 
         void disableBuffering();
+
+        std::optional<struct stat> getFileInfo();
 
     private:
         FILE *m_file;

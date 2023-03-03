@@ -300,6 +300,8 @@ namespace hex::plugin::builtin::ui {
 
             if (!this->m_editingAddress.has_value())
                 this->m_editingCellType = CellType::None;
+
+            this->m_enteredEditingMode = false;
         }
     }
 
@@ -535,7 +537,7 @@ namespace hex::plugin::builtin::ui {
                                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                         ImGui::PushItemWidth(CharacterSize.x);
                                         if (!isCurrRegionValid(byteAddress))
-                                            ImGui::TextDisabled("?");
+                                            ImGui::TextFormattedDisabled("{}", this->m_unknownDataCharacter);
                                         else
                                             this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
                                         ImGui::PopItemWidth();
@@ -673,15 +675,11 @@ namespace hex::plugin::builtin::ui {
                 }
 
 
-            } else {
-                ImGui::TextFormattedCentered("hex.builtin.hex_editor.no_bytes"_lang);
             }
 
             ImGui::EndTable();
         }
         ImGui::PopStyleVar();
-
-        this->m_enteredEditingMode = false;
     }
 
     void HexEditor::drawFooter(const ImVec2 &size) {

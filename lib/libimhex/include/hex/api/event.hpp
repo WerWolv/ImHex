@@ -134,6 +134,7 @@ namespace hex {
     EVENT_DEF(RequestChangeTheme, std::string);
     EVENT_DEF(RequestOpenPopup, std::string);
     EVENT_DEF(RequestCreateProvider, std::string, bool, hex::prv::Provider **);
+    EVENT_DEF(RequestInitThemeHandlers);
 
     EVENT_DEF(RequestShowInfoPopup, std::string);
     EVENT_DEF(RequestShowErrorPopup, std::string);

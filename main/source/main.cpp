@@ -14,8 +14,6 @@ int main(int argc, char **argv, char **envp) {
     using namespace hex;
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
 
-    bool shouldRestart = false;
-
     // Check if ImHex is installed in portable mode
     {
         if (const auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
@@ -26,7 +24,9 @@ int main(int argc, char **argv, char **envp) {
         }
     }
 
+    bool shouldRestart = false;
     do {
+        // Register a event to handle restarting of ImHex
         EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
         shouldRestart = false;
 
@@ -38,15 +38,17 @@ int main(int argc, char **argv, char **envp) {
 
             init::WindowSplash splashWindow;
 
+            // Add initialization tasks to run
             TaskManager::init();
             for (const auto &[name, task, async] : init::getInitTasks())
                 splashWindow.addStartupTask(name, task, async);
 
+            // Draw the splash window while tasks are running
             if (!splashWindow.loop())
                 ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
         }
 
-        // Clean up
+        // Clean up everything after the main window is closed
         ON_SCOPE_EXIT {
             for (const auto &[name, task, async] : init::getExitTasks())
                 task();
@@ -65,7 +67,7 @@ int main(int argc, char **argv, char **envp) {
                 }
             }
 
-
+            // Render the main window
             window.loop();
         }
 

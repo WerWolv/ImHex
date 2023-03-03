@@ -417,7 +417,8 @@ namespace hex {
             protected:
                 const static int TextInputFlags;
 
-                bool drawDefaultEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
+                bool drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
+                bool drawDefaultTextEditingTextBox(u64 address, std::string &data, ImGuiInputTextFlags flags) const;
             private:
                 u16 m_bytesPerCell;
                 u16 m_maxCharsPerCell;

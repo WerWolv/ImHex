@@ -66,6 +66,25 @@ namespace hex {
             return { data + index + 1 };
     }
 
+    std::optional<u8> parseBinaryString(const std::string &string) {
+        if (string.empty())
+            return std::nullopt;
+
+        u8 byte = 0x00;
+        for (char c : string) {
+            byte <<= 1;
+
+            if (c == '1')
+                byte |= 0b01;
+            else if (c == '0')
+                byte |= 0b00;
+            else
+                return std::nullopt;
+        }
+
+        return byte;
+    }
+
     std::string toByteString(u64 bytes) {
         double value = bytes;
         u8 unitIndex = 0;

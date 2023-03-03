@@ -40,9 +40,7 @@ namespace hex {
         void exitGLFW();
         void exitImGui();
 
-        friend void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *);
-        friend void ImHexSettingsHandler_ReadLine(ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line);
-        friend void ImHexSettingsHandler_WriteAll(ImGuiContext *ctx, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf);
+        void registerEventHandlers();
 
         GLFWwindow *m_window = nullptr;
 

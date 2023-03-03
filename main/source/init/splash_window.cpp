@@ -90,29 +90,34 @@ namespace hex::init {
     }
 
     bool WindowSplash::loop() {
+        // Load splash screen image from romfs
         auto splash = romfs::get("splash.png");
         ImGui::Texture splashTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
 
+        // If the image couldn't be loaded correctly, something went wrong during the build process
+        // Close the application since this would lead to errors later on anyway.
         if (!splashTexture.isValid()) {
             log::fatal("Could not load splash screen image!");
             exit(EXIT_FAILURE);
         }
 
+        // Launch init tasks in background
         auto tasksSucceeded = processTasksAsync();
 
         auto scale = ImHexApi::System::getGlobalScale();
 
+        // Splash window rendering loop
         while (!glfwWindowShouldClose(this->m_window)) {
             glfwPollEvents();
 
+            // Start a new ImGui frame
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
 
+            // Draw the splash screen background
+            auto drawList = ImGui::GetForegroundDrawList();
             {
-                std::lock_guard guard(this->m_progressMutex);
-
-                auto drawList = ImGui::GetForegroundDrawList();
 
                 drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.getSize() * scale);
 
@@ -123,11 +128,16 @@ namespace hex::init {
                 #else
                     drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", IMHEX_VERSION).c_str());
                 #endif
+            }
 
+            // Draw the task progress bar
+            {
+                std::lock_guard guard(this->m_progressMutex);
                 drawList->AddRectFilled(ImVec2(0, splashTexture.getSize().y - 5) * scale, ImVec2(splashTexture.getSize().x * this->m_progress, splashTexture.getSize().y) * scale, 0xFFFFFFFF);
                 drawList->AddText(ImVec2(15, splashTexture.getSize().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}...", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
             }
 
+            // Render the frame
             ImGui::Render();
             int displayWidth, displayHeight;
             glfwGetFramebufferSize(this->m_window, &displayWidth, &displayHeight);
@@ -138,6 +148,7 @@ namespace hex::init {
 
             glfwSwapBuffers(this->m_window);
 
+            // Check if all background tasks have finished so the splash screen can be closed
             if (tasksSucceeded.wait_for(0s) == std::future_status::ready) {
                 return tasksSucceeded.get();
             }
@@ -147,20 +158,25 @@ namespace hex::init {
     }
 
     static void centerWindow(GLFWwindow *window) {
+        // Get the primary monitor
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         if (!monitor)
             return;
 
+        // Get information about the monitor
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         if (!mode)
             return;
 
+        // Get the position of the monitor's viewport on the virtual screen
         int monitorX, monitorY;
         glfwGetMonitorPos(monitor, &monitorX, &monitorY);
 
+        // Get the window size
         int windowWidth, windowHeight;
         glfwGetWindowSize(window, &windowWidth, &windowHeight);
 
+        // Center the splash screen on the monitor
         glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
     }
 
@@ -174,22 +190,25 @@ namespace hex::init {
             exit(EXIT_FAILURE);
         }
 
+        // Configure used OpenGL version
         #if defined(OS_MACOS)
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
         #else
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         #endif
 
+        // Make splash screen non-resizable, undecorated and transparent
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
-        glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
 
+        // Create the splash screen window
         this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
         if (this->m_window == nullptr) {
             log::fatal("Failed to create GLFW window!");
@@ -223,6 +242,7 @@ namespace hex::init {
     }
 
     void WindowSplash::initImGui() {
+        // Initialize ImGui
         IMGUI_CHECKVERSION();
         GImGui = ImGui::CreateContext();
         ImGui::StyleColorsDark();
@@ -239,31 +259,36 @@ namespace hex::init {
 
         ImGui::GetStyle().ScaleAllSizes(ImHexApi::System::getGlobalScale());
 
-        io.Fonts->Clear();
+        // Load fonts necessary for the splash screen
+        {
+            io.Fonts->Clear();
 
-        ImFontConfig cfg;
-        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-        cfg.SizePixels = 13.0_scaled;
-        io.Fonts->AddFontDefault(&cfg);
+            ImFontConfig cfg;
+            cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+            cfg.SizePixels = 13.0_scaled;
+            io.Fonts->AddFontDefault(&cfg);
 
-        cfg.MergeMode = true;
+            cfg.MergeMode = true;
 
-        ImWchar fontAwesomeRange[] = {
-            ICON_MIN_FA, ICON_MAX_FA, 0
-        };
-        std::uint8_t *px;
-        int w, h;
-        io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0_scaled, &cfg, fontAwesomeRange);
-        io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
+            ImWchar fontAwesomeRange[] = {
+                ICON_MIN_FA, ICON_MAX_FA, 0
+            };
+            std::uint8_t *px;
+            int w, h;
+            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0_scaled, &cfg, fontAwesomeRange);
+            io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
 
-        // Create new font atlas
-        GLuint tex;
-        glGenTextures(1, &tex);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
-        io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
+            // Create new font atlas
+            GLuint tex;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
+            io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
+        }
+
+        // Don't save window settings for the splash screen
         io.IniFilename = nullptr;
     }
 

@@ -324,8 +324,8 @@ TextEditor::Coordinates TextEditor::FindWordStart(const Coordinates &aFrom) cons
                 break;
             }
 
-            if (isalnum(cstart)) {
-                if (!isalnum(c)) {
+            if (isalnum(cstart) || cstart == '_') {
+                if (!isalnum(c) && c != '_') {
                     cindex++;
                     break;
                 }

@@ -19,6 +19,7 @@ namespace hex::plugin::builtin::ui {
         };
 
         void setTreeStyle(TreeStyle style) { this->m_treeStyle = style; }
+        void setSelectionCallback(std::function<void(Region)> callback) { this->m_selectionCallback = std::move(callback); }
         void reset();
 
     private:
@@ -74,5 +75,7 @@ namespace hex::plugin::builtin::ui {
 
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
         std::string m_lastVisualizerError;
+
+        std::function<void(Region)> m_selectionCallback = [](Region) { };
     };
 }

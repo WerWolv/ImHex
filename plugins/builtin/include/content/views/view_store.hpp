@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
         NotAttempted,
         InProgress,
         Failed,
-        Succeded,
+        Succeeded,
     };
 
     struct StoreEntry {
@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override { return { 600, 400 }; }
-        [[nodiscard]] ImVec2 getMaxSize() const override { return { 800, 600 }; }
+        [[nodiscard]] ImVec2 getMaxSize() const override { return { 900, 700 }; }
 
     private:
         Net m_net;
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
         std::fs::path m_downloadPath;
         RequestStatus m_requestStatus = RequestStatus::NotAttempted;
 
-        std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara, m_encodings;
+        std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara, m_encodings, m_nodes, m_themes;
 
         void drawStore();
 

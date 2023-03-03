@@ -142,24 +142,16 @@ namespace hex::plugin::builtin {
             }, [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
 
-                std::string copy = value;
-                if (copy.starts_with("0b"))
-                    copy = copy.substr(2);
+                std::string binary = value;
+                if (binary.starts_with("0b"))
+                    binary = binary.substr(2);
 
-                if (value.size() > 8) return { };
-                u8 byte = 0x00;
-                for (char c : copy) {
-                    byte <<= 1;
+                if (binary.size() > 8) return { };
 
-                    if (c == '1')
-                        byte |= 0b01;
-                    else if (c == '0')
-                        byte |= 0b00;
-                    else
-                        return { };
-                }
-
-                return { byte };
+                if (auto result = hex::parseBinaryString(binary); result.has_value())
+                    return { result.value() };
+                else
+                    return { };
             }
         );
 
