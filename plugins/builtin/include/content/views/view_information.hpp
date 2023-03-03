@@ -27,8 +27,6 @@ namespace hex::plugin::builtin {
         double m_highestBlockEntropy = -1.0;
         double m_plainTextCharacterPercentage = -1.0;
 
-        double m_diagramHandlePosition = 0.0;
-
         TaskHolder m_analyzerTask;
 
         Region m_analyzedRegion = { 0, 0 };

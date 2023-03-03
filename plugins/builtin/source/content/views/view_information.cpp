@@ -35,8 +35,10 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
             // set the position of the diagram relative to the place where 
             // the user clicked inside the hex editor view 
-            if (this->m_blockSize != 0) 
-                this->m_diagramHandlePosition = region.getStartAddress() / double(this->m_blockSize);
+            if (this->m_blockSize != 0) {
+                this->m_byteTypesDistribution.setHandlePosition(region.getStartAddress());
+                this->m_chunkBasedEntropy.setHandlePosition(region.getStartAddress());
+            } 
         });
 
         EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
@@ -60,23 +62,6 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventRegionSelected>(this);
         EventManager::unsubscribe<EventProviderDeleted>(this);
     }
-
-    /*
-    static double calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
-        double entropy = 0;
-
-        for (auto count : valueCounts) {
-            if (count == 0) [[unlikely]]
-                continue;
-
-            double probability = static_cast<double>(count) / blockSize;
-
-            entropy += probability * std::log2(probability);
-        }
-
-        return std::min(1.0, (-entropy) / 8);    // log2(256) = 8
-    }
-    */
 
     void ViewInformation::analyze() {
         this->m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
@@ -109,7 +94,6 @@ namespace hex::plugin::builtin {
 
             {
                 this->m_blockSize = std::max<u32>(std::ceil(provider->getSize() / 2048.0F), 256);
-                this->m_diagramHandlePosition = this->m_inputStartAddress / double(this->m_blockSize);
 
                 this->m_averageEntropy = -1.0;
                 this->m_highestBlockEntropy = -1.0;
@@ -259,7 +243,7 @@ namespace hex::plugin::builtin {
                             this->m_byteTypesDistribution.draw(
                                     ImVec2(-1, 0), 
                                     ImPlotFlags_NoChild | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_AntiAliased,
-                                    &this->m_diagramHandlePosition
+                                    true
                             );
 
                             // display chunk based entropy analysis
@@ -267,19 +251,13 @@ namespace hex::plugin::builtin {
                             this->m_chunkBasedEntropy.draw(
                                 ImVec2(-1, 0), 
                                 ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased,
-                                &this->m_diagramHandlePosition
+                                true
                             );
 
                             ImPlot::PopStyleColor();
                             ImGui::PopStyleColor();
 
                             ImGui::NewLine();
-
-                            // clamp the value between the start/end of the region to analyze
-                            this->m_diagramHandlePosition = std::clamp<double>(
-                                    this->m_diagramHandlePosition,
-                                    std::ceil(this->m_analyzedRegion.getStartAddress() / double(this->m_blockSize)),
-                                    std::floor(this->m_analyzedRegion.getEndAddress() / double(this->m_blockSize)));
                         }
 
                         // Entropy information
