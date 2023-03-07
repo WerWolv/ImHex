@@ -41,12 +41,13 @@ namespace hex::plugin::builtin {
 
         this->readRaw(offset - this->getBaseAddress(), buffer, size);
 
-        for (u64 i = 0; i < size; i++)
-            if (getPatches().contains(offset + i))
-                reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + i];
+        if (overlays) {
+            for (u64 i = 0; i < size; i++)
+                if (getPatches().contains(offset + i))
+                    reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + i];
 
-        if (overlays)
             this->applyOverlays(offset, buffer, size);
+        }
     }
 
     void FileProvider::write(u64 offset, const void *buffer, size_t size) {

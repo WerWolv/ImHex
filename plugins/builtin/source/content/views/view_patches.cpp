@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             u8 byte = 0x00;
-            provider->readRaw(offset, &byte, sizeof(u8));
+            provider->read(offset, &byte, sizeof(u8), false);
 
             const auto &patches = provider->getPatches();
             if (patches.contains(offset) && patches.at(offset) != byte)

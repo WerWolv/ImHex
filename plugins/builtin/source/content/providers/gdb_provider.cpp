@@ -47,7 +47,8 @@ namespace hex::plugin::builtin {
                 std::string data     = packet.substr(1, packet.length() - 4);
                 std::string checksum = packet.substr(packet.length() - 2, 2);
 
-                if (checksum.length() != 2 || crypt::decode16(checksum)[0] != calculateChecksum(data))
+                auto decodedChecksum = crypt::decode16(checksum);
+                if (checksum.length() != 2 || decodedChecksum.empty() || decodedChecksum[0] != calculateChecksum(data))
                     return std::nullopt;
 
                 return data;
@@ -178,12 +179,13 @@ namespace hex::plugin::builtin {
             }
         }
 
-        for (u64 i = 0; i < size; i++)
-            if (getPatches().contains(offset + i))
-                reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
+        if (overlays) {
+            for (u64 i = 0; i < size; i++)
+                if (getPatches().contains(offset + i))
+                    reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + PageSize * this->m_currPage + i];
 
-        if (overlays)
             this->applyOverlays(offset, buffer, size);
+        }
     }
 
     void GDBProvider::write(u64 offset, const void *buffer, size_t size) {
@@ -200,7 +202,8 @@ namespace hex::plugin::builtin {
             return;
 
         auto data = gdb::readMemory(this->m_socket, offset, size);
-        std::memcpy(buffer, &data[0], data.size());
+        if (!data.empty())
+            std::memcpy(buffer, &data[0], data.size());
     }
 
     void GDBProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
@@ -257,7 +260,13 @@ namespace hex::plugin::builtin {
                         if (cacheLine != this->m_cache.end()) {
                             auto data = gdb::readMemory(this->m_socket, cacheLine->address, 0x1000);
 
-                            while (this->m_cache.size() > 10) {
+                            if (data.empty()) {
+                                this->m_cache.erase(cacheLine);
+                                cacheLine = this->m_cache.begin();
+                                continue;
+                            }
+
+                            while (this->m_cache.size() > 5) {
                                 this->m_cache.pop_front();
                                 cacheLine = this->m_cache.begin();
                             }
@@ -265,9 +274,10 @@ namespace hex::plugin::builtin {
                             std::memcpy(cacheLine->data.data(), data.data(), data.size());
                         }
 
-                        cacheLine++;
                         if (cacheLine == this->m_cache.end())
                             cacheLine = this->m_cache.begin();
+                        else
+                            cacheLine++;
                     }
                     std::this_thread::sleep_for(100ms);
                 }
