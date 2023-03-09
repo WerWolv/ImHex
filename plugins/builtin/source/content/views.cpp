@@ -18,6 +18,7 @@
 #include "content/views/view_diff.hpp"
 #include "content/views/view_provider_settings.hpp"
 #include "content/views/view_find.hpp"
+#include "content/views/view_theme_manager.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -42,6 +43,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewDiff>();
         ContentRegistry::Views::add<ViewProviderSettings>();
         ContentRegistry::Views::add<ViewFind>();
+        ContentRegistry::Views::add<ViewThemeManager>();
     }
 
 }

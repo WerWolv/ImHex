@@ -168,4 +168,18 @@ namespace hex::fs {
         std::setvbuf(this->m_file, nullptr, _IONBF, 0);
     }
 
+    std::optional<struct stat> File::getFileInfo() {
+        struct stat fileInfo = { };
+
+        #if defined(OS_WINDOWS)
+            if (wstat(this->m_path.c_str(), &fileInfo) != 0)
+                return std::nullopt;
+        #else
+            if (stat(hex::toUTF8String(this->m_path).c_str(), &fileInfo) != 0)
+                return std::nullopt;
+        #endif
+
+        return fileInfo;
+    }
+
 }

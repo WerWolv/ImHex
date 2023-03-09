@@ -41,45 +41,22 @@ namespace hex {
 
     using namespace std::literals::chrono_literals;
 
-    void *ImHexSettingsHandler_ReadOpenFn(ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) {
-        return ctx;    // Unused, but the return value has to be non-null
-    }
-
-    void ImHexSettingsHandler_ReadLine(ImGuiContext *, ImGuiSettingsHandler *, void *, const char *line) {
-        for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
-            std::string format = view->getUnlocalizedName() + "=%d";
-            sscanf(line, format.c_str(), &view->getWindowOpenState());
-        }
-        for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
-            std::string format = name + "=%d";
-            sscanf(line, format.c_str(), &detached);
-        }
-    }
-
-    void ImHexSettingsHandler_WriteAll(ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
-        buf->appendf("[%s][General]\n", handler->TypeName);
-
-        for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
-            buf->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
-        }
-        for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
-            buf->appendf("%s=%d\n", name.c_str(), detached);
-        }
-
-        buf->append("\n");
-    }
-
-    static void signalHandler(int signalNumber, std::string signalName) {
+    // Custom signal handler to print various information and a stacktrace when the application crashes
+    static void signalHandler(int signalNumber, const std::string &signalName) {
         log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
+        // Trigger an event so that plugins can handle crashes
         EventManager::post<EventAbnormalTermination>(signalNumber);
 
+        // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
             log::fatal("Uncaught exception thrown!");
         }
 
+        // Reset the signal handler to the default handler
         std::signal(signalNumber, SIG_DFL);
 
+        // Print stack trace
         for (const auto &stackFrame : stacktrace::getStackTrace()) {
             if (stackFrame.line == 0)
                 log::fatal("  {}", stackFrame.function);
@@ -87,7 +64,7 @@ namespace hex {
                 log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
         }
     
-
+        // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
         #if defined(DEBUG)
             assert(!"Debug build, triggering breakpoint");
         #else
@@ -107,6 +84,7 @@ namespace hex {
             });
         };
 
+        // Handle fatal error popups for errors detected during initialization
         {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
@@ -119,13 +97,36 @@ namespace hex {
             }
         }
 
+        // Initialize the window
         this->initGLFW();
         this->initImGui();
         this->setupNativeWindow();
+        this->registerEventHandlers();
 
+        auto logoData      = romfs::get("logo.png");
+        this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
+
+        ContentRegistry::Settings::store();
+        EventManager::post<EventSettingsChanged>();
+        EventManager::post<EventWindowInitialized>();
+    }
+
+    Window::~Window() {
+        EventManager::unsubscribe<EventProviderDeleted>(this);
+        EventManager::unsubscribe<RequestCloseImHex>(this);
+        EventManager::unsubscribe<RequestUpdateWindowTitle>(this);
+        EventManager::unsubscribe<EventAbnormalTermination>(this);
+        EventManager::unsubscribe<RequestOpenPopup>(this);
+
+        this->exitImGui();
+        this->exitGLFW();
+    }
+
+    void Window::registerEventHandlers() {
         // Initialize default theme
         EventManager::post<RequestChangeTheme>("Dark");
 
+        // Handle the close window request by telling GLFW to shut down
         EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
             glfwSetWindowShouldClose(this->m_window, GLFW_TRUE);
 
@@ -133,10 +134,13 @@ namespace hex {
                 EventManager::post<EventWindowClosing>(this->m_window);
         });
 
+        // Handle updating the window title
         EventManager::subscribe<RequestUpdateWindowTitle>(this, [this]() {
             std::string title = "ImHex";
 
             if (ProjectFile::hasPath()) {
+                // If a project is open, show the project name instead of the file name
+
                 title += " - Project " + hex::limitStringLength(ProjectFile::getPath().stem().string(), 32);
 
                 if (ImHexApi::Provider::isDirty())
@@ -161,6 +165,7 @@ namespace hex {
 
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
 
+        // Save a backup project when the application crashes
         EventManager::subscribe<EventAbnormalTermination>(this, [this](int) {
             ImGui::SaveIniSettingsToDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
 
@@ -173,21 +178,28 @@ namespace hex {
             }
         });
 
+        // Handle opening popups
         EventManager::subscribe<RequestOpenPopup>(this, [this](auto name) {
             std::scoped_lock lock(this->m_popupMutex);
 
             this->m_popupsToOpen.push_back(name);
         });
 
-        #define HANDLE_SIGNAL(name) \
-		std::signal(name, [](int signalNumber){ \
-            signalHandler(signalNumber, #name); \
-        });
-        HANDLE_SIGNAL(SIGSEGV)
-        HANDLE_SIGNAL(SIGILL)
-        HANDLE_SIGNAL(SIGABRT)
-        HANDLE_SIGNAL(SIGFPE)
-        #undef HANDLE_SIGNAL
+        // Register signal handlers
+        {
+            #define HANDLE_SIGNAL(name) \
+            std::signal(name, [](int signalNumber){ \
+                signalHandler(signalNumber, #name); \
+            });
+
+            HANDLE_SIGNAL(SIGSEGV)
+            HANDLE_SIGNAL(SIGILL)
+            HANDLE_SIGNAL(SIGABRT)
+            HANDLE_SIGNAL(SIGFPE)
+
+            #undef HANDLE_SIGNAL
+        }
+
         std::set_terminate([]{
             try {
                 std::rethrow_exception(std::current_exception());
@@ -200,56 +212,55 @@ namespace hex {
             }
             EventManager::post<EventAbnormalTermination>(0);
         });
-
-        auto logoData      = romfs::get("logo.png");
-        this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
-
-        ContentRegistry::Settings::store();
-        EventManager::post<EventSettingsChanged>();
-        EventManager::post<EventWindowInitialized>();
-    }
-
-    Window::~Window() {
-        EventManager::unsubscribe<EventProviderDeleted>(this);
-        EventManager::unsubscribe<RequestCloseImHex>(this);
-        EventManager::unsubscribe<RequestUpdateWindowTitle>(this);
-        EventManager::unsubscribe<EventAbnormalTermination>(this);
-        EventManager::unsubscribe<RequestOpenPopup>(this);
-
-        this->exitImGui();
-        this->exitGLFW();
     }
 
     void Window::loop() {
         this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED)) {
+                // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
             } else {
                 glfwPollEvents();
 
-                bool frameRateUnlocked = ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) || TaskManager::getRunningTaskCount() > 0 || this->m_mouseButtonDown || this->m_hadEvent || !this->m_pressedKeys.empty();
-                const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
-                this->m_hadEvent = false;
+                // If no events have been received in a while, lower the frame rate
+                {
+                    // If the mouse is down, the mouse is moving or a popup is open, we don't want to lower the frame rate
+                    bool frameRateUnlocked =
+                            ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ||
+                            TaskManager::getRunningTaskCount() > 0 ||
+                            this->m_mouseButtonDown ||
+                            this->m_hadEvent ||
+                            !this->m_pressedKeys.empty();
 
-                if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
-                    this->m_frameRateTemporarilyUnlocked = false;
-                }
+                    // Calculate the time until the next frame
+                    const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
 
-                if (frameRateUnlocked || this->m_frameRateTemporarilyUnlocked) {
-                    if (!this->m_frameRateTemporarilyUnlocked) {
-                        this->m_frameRateTemporarilyUnlocked = true;
-                        this->m_frameRateUnlockTime = this->m_lastFrameTime;
+                    // If the frame rate has been unlocked for 5 seconds, lock it again
+                    if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
+                        this->m_frameRateTemporarilyUnlocked = false;
                     }
-                } else {
-                    glfwWaitEventsTimeout(timeout);
+
+                    // If the frame rate is locked, wait for events with a timeout
+                    if (frameRateUnlocked || this->m_frameRateTemporarilyUnlocked) {
+                        if (!this->m_frameRateTemporarilyUnlocked) {
+                            this->m_frameRateTemporarilyUnlocked = true;
+                            this->m_frameRateUnlockTime = this->m_lastFrameTime;
+                        }
+                    } else {
+                        glfwWaitEventsTimeout(timeout);
+                    }
+
+                    this->m_hadEvent = false;
                 }
             }
 
+            // Render frame
             this->frameBegin();
             this->frame();
             this->frameEnd();
 
+            // Limit frame rate
             const auto targetFps = ImHexApi::System::getTargetFPS();
             if (targetFps <= 200) {
                 auto leftoverFrameTime = i64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000);
@@ -262,11 +273,12 @@ namespace hex {
     }
 
     void Window::frameBegin() {
-
+        // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        // Handle all undocked floating windows
         ImGuiViewport *viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(ImHexApi::System::getMainWindowSize() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing()));
@@ -279,6 +291,7 @@ namespace hex {
 
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
+        // Render main dock space
         if (ImGui::Begin("ImHexDockSpace", nullptr, windowFlags)) {
             auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
@@ -290,26 +303,31 @@ namespace hex {
             auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
             auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
 
-            auto dockId = ImGui::DockSpace(ImGui::GetID("ImHexMainDock"), dockSpaceSize);
-            ImHexApi::System::impl::setMainDockSpaceId(dockId);
+            // Render footer
+            {
 
-            drawList->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+                auto dockId = ImGui::DockSpace(ImGui::GetID("ImHexMainDock"), dockSpaceSize);
+                ImHexApi::System::impl::setMainDockSpaceId(dockId);
 
-            ImGui::Separator();
-            ImGui::SetCursorPosX(8);
-            for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
-                auto prevIdx = drawList->_VtxCurrentIdx;
-                callback();
-                auto currIdx = drawList->_VtxCurrentIdx;
+                drawList->AddRectFilled(ImGui::GetWindowPos(), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_MenuBarBg));
 
-                // Only draw separator if something was actually drawn
-                if (prevIdx != currIdx) {
-                    ImGui::SameLine();
-                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-                    ImGui::SameLine();
+                ImGui::Separator();
+                ImGui::SetCursorPosX(8);
+                for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
+                    auto prevIdx = drawList->_VtxCurrentIdx;
+                    callback();
+                    auto currIdx = drawList->_VtxCurrentIdx;
+
+                    // Only draw separator if something was actually drawn
+                    if (prevIdx != currIdx) {
+                        ImGui::SameLine();
+                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                        ImGui::SameLine();
+                    }
                 }
             }
 
+            // Render sidebar
             {
                 ImGui::SetCursorPos(sidebarPos);
 
@@ -355,6 +373,7 @@ namespace hex {
                 ImGui::PopID();
             }
 
+            // Render main menu
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
             if (ImGui::BeginMainMenuBar()) {
 
@@ -388,7 +407,7 @@ namespace hex {
             }
             ImGui::PopStyleVar();
 
-            // Draw toolbar
+            // Render toolbar
             if (ImGui::BeginMenuBar()) {
 
                 for (const auto &callback : ContentRegistry::Interface::getToolbarItems()) {
@@ -430,6 +449,7 @@ namespace hex {
                 }
             };
 
+            // No plugins error popup
             ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
             if (ImGui::BeginPopupModal("No Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
                 ImGui::TextUnformatted("No ImHex plugins loaded (including the built-in plugin)!");
@@ -443,6 +463,7 @@ namespace hex {
                 ImGui::EndPopup();
             }
 
+            // No built-in plugin error popup
             ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
             if (ImGui::BeginPopupModal("No Builtin Plugin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
                 ImGui::TextUnformatted("The ImHex built-in plugins could not be loaded!");
@@ -456,6 +477,7 @@ namespace hex {
                 ImGui::EndPopup();
             }
 
+            // Multiple built-in plugins error popup
             ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
             if (ImGui::BeginPopupModal("Multiple Builtin Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
                 ImGui::TextUnformatted("ImHex found and attempted to load multiple built-in plugins!");
@@ -470,6 +492,8 @@ namespace hex {
                 ImGui::EndPopup();
             }
         }
+
+        // Open popups when plugins requested it
         {
             std::scoped_lock lock(this->m_popupMutex);
             this->m_popupsToOpen.remove_if([](const auto &name) {
@@ -482,6 +506,7 @@ namespace hex {
             });
         }
 
+        // Run all deferred calls
         TaskManager::runDeferredCalls();
 
         EventManager::post<EventFrameBegin>();
@@ -489,26 +514,32 @@ namespace hex {
 
     void Window::frame() {
         auto &io = ImGui::GetIO();
+
+        // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
+            // Draw always visible views
             view->drawAlwaysVisible();
 
+            // Skip views that shouldn't be processed currently
             if (!view->shouldProcess())
                 continue;
 
+            // Draw view
             if (view->isAvailable()) {
                 float fontScaling = std::max(1.0F, ImHexApi::System::getFontSize() / ImHexApi::System::DefaultFontSize) * ImHexApi::System::getGlobalScale();
                 ImGui::SetNextWindowSizeConstraints(view->getMinSize() * fontScaling, view->getMaxSize() * fontScaling);
                 view->drawContent();
             }
 
+            // Handle per-view shortcuts
             if (view->getWindowOpenState()) {
                 auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused   = false;
 
-
+                // Get the currently focused view
                 if (hasWindow && !(window->Flags & ImGuiWindowFlags_Popup)) {
                     ImGui::Begin(View::toWindowName(name).c_str());
 
@@ -516,12 +547,14 @@ namespace hex {
                     ImGui::End();
                 }
 
+                // Pass on currently pressed keys to the shortcut handler
                 for (const auto &key : this->m_pressedKeys) {
                     ShortcutManager::process(view, io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, focused, key);
                 }
             }
         }
 
+        // Handle global shortcuts
         for (const auto &key : this->m_pressedKeys) {
             ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
         }
@@ -532,9 +565,12 @@ namespace hex {
     void Window::frameEnd() {
         EventManager::post<EventFrameEnd>();
 
+        // Clean up all tasks that are done
         TaskManager::collectGarbage();
 
         this->endNativeWindowFrame();
+
+        // Render UI
         ImGui::Render();
 
         int displayWidth, displayHeight;
@@ -562,6 +598,7 @@ namespace hex {
             std::abort();
         }
 
+        // Set up used OpenGL version
         #if defined(OS_MACOS)
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
@@ -576,6 +613,7 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
+        // Create window
         this->m_windowTitle = "ImHex";
         this->m_window      = glfwCreateWindow(1280_scaled, 720_scaled, this->m_windowTitle.c_str(), nullptr, nullptr);
 
@@ -589,6 +627,7 @@ namespace hex {
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
 
+        // Center window
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         if (monitor != nullptr) {
             const GLFWvidmode *mode = glfwGetVideoMode(monitor);
@@ -603,6 +642,7 @@ namespace hex {
             }
         }
 
+        // Set up initial window position
         {
             int x = 0, y = 0;
             glfwGetWindowPos(this->m_window, &x, &y);
@@ -610,6 +650,7 @@ namespace hex {
             ImHexApi::System::impl::setMainWindowPosition(x, y);
         }
 
+        // Set up initial window size
         {
             int width = 0, height = 0;
             glfwGetWindowSize(this->m_window, &width, &height);
@@ -617,6 +658,7 @@ namespace hex {
             ImHexApi::System::impl::setMainWindowSize(width, height);
         }
 
+        // Register window move callback
         glfwSetWindowPosCallback(this->m_window, [](GLFWwindow *window, int x, int y) {
             ImHexApi::System::impl::setMainWindowPosition(x, y);
 
@@ -629,6 +671,7 @@ namespace hex {
             win->processEvent();
         });
 
+        // Register window resize callback
         glfwSetWindowSizeCallback(this->m_window, [](GLFWwindow *window, int width, int height) {
             if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
                 ImHexApi::System::impl::setMainWindowSize(width, height);
@@ -642,6 +685,7 @@ namespace hex {
             win->processEvent();
         });
 
+        // Register mouse handling callback
         glfwSetMouseButtonCallback(this->m_window, [](GLFWwindow *window, int button, int action, int mods) {
             hex::unused(button, mods);
 
@@ -654,6 +698,15 @@ namespace hex {
             win->processEvent();
         });
 
+        // Register scrolling callback
+        glfwSetScrollCallback(this->m_window, [](GLFWwindow *window, double xOffset, double yOffset) {
+            hex::unused(xOffset, yOffset);
+
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->processEvent();
+        });
+
+        // Register key press callback
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             hex::unused(mods);
 
@@ -669,28 +722,7 @@ namespace hex {
             win->processEvent();
         });
 
-        glfwSetDropCallback(this->m_window, [](GLFWwindow *, int count, const char **paths) {
-            for (int i = 0; i < count; i++) {
-                auto path = std::fs::path(reinterpret_cast<const char8_t *>(paths[i]));
-
-                bool handled = false;
-                for (const auto &[extensions, handler] : ContentRegistry::FileHandler::getEntries()) {
-                    for (const auto &extension : extensions) {
-                        if (path.extension() == extension) {
-                            if (!handler(path))
-                                log::error("Handler for extensions '{}' failed to process file!", extension);
-
-                            handled = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!handled)
-                    EventManager::post<RequestOpenFile>(path);
-            }
-        });
-
+        // Register cursor position callback
         glfwSetCursorPosCallback(this->m_window, [](GLFWwindow *window, double x, double y) {
             hex::unused(x, y);
 
@@ -698,8 +730,37 @@ namespace hex {
             win->processEvent();
         });
 
+        // Register window close callback
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
             EventManager::post<EventWindowClosing>(window);
+        });
+
+        // Register file drop callback
+        glfwSetDropCallback(this->m_window, [](GLFWwindow *, int count, const char **paths) {
+            // Loop over all dropped files
+            for (int i = 0; i < count; i++) {
+                auto path = std::fs::path(reinterpret_cast<const char8_t *>(paths[i]));
+
+                // Check if a custom file handler can handle the file
+                bool handled = false;
+                for (const auto &[extensions, handler] : ContentRegistry::FileHandler::getEntries()) {
+                    for (const auto &extension : extensions) {
+                        if (path.extension() == extension) {
+                            // Pass the file to the handler and check if it was successful
+                            if (!handler(path)) {
+                                log::error("Handler for extensions '{}' failed to process file!", extension);
+                                break;
+                            }
+
+                            handled = true;
+                        }
+                    }
+                }
+
+                // If no custom handler was found, just open the file regularly
+                if (!handled)
+                    EventManager::post<RequestOpenFile>(path);
+            }
         });
 
         glfwSetWindowSizeLimits(this->m_window, 720_scaled, 480_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
@@ -712,6 +773,7 @@ namespace hex {
 
         auto fonts = View::getFontAtlas();
 
+        // Initialize ImGui and all other ImGui extensions
         GImGui   = ImGui::CreateContext(fonts);
         GImPlot  = ImPlot::CreateContext();
         GImNodes = ImNodes::CreateContext();
@@ -719,6 +781,7 @@ namespace hex {
         ImGuiIO &io       = ImGui::GetIO();
         ImGuiStyle &style = ImGui::GetStyle();
 
+        // Configure window alpha and rounding to make them not stand out when detached
         style.Alpha          = 1.0F;
         style.WindowRounding = 0.0F;
 
@@ -726,9 +789,9 @@ namespace hex {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_NavEnableKeyboard;
         io.ConfigWindowsMoveFromTitleBarOnly = true;
+        io.FontGlobalScale = 1.0F;
 
-        io.FontGlobalScale = ImHexApi::System::getGlobalScale();
-
+        // Disable multi-window support on Wayland since it doesn't support it
         if (glfwGetPrimaryMonitor() != nullptr) {
             auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
             bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", 1) != 0;
@@ -745,8 +808,9 @@ namespace hex {
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkCreationOnSnap);
 
+        // Allow ImNodes links to always be detached without holding down any button
         {
-            static bool always                                    = true;
+            static bool always = true;
             ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &always;
         }
 
@@ -755,46 +819,57 @@ namespace hex {
         auto scale = ImHexApi::System::getGlobalScale();
         style.ScaleAllSizes(scale);
         io.DisplayFramebufferScale = ImVec2(scale, scale);
-
-        {
-            GLsizei width, height;
-            u8 *fontData;
-
-            io.Fonts->GetTexDataAsRGBA32(&fontData, &width, &height);
-
-            // Create new font atlas
-            GLuint tex;
-            glGenTextures(1, &tex);
-            glBindTexture(GL_TEXTURE_2D, tex);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA8, GL_UNSIGNED_INT, fontData);
-            io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
-        }
+        io.Fonts->SetTexID(fonts->TexID);
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
 
         // Install custom settings handler
-        ImGuiSettingsHandler handler;
-        handler.TypeName   = "ImHex";
-        handler.TypeHash   = ImHashStr("ImHex");
-        handler.ReadOpenFn = ImHexSettingsHandler_ReadOpenFn;
-        handler.ReadLineFn = ImHexSettingsHandler_ReadLine;
-        handler.WriteAllFn = ImHexSettingsHandler_WriteAll;
-        handler.UserData   = this;
-        ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+        {
+            ImGuiSettingsHandler handler;
+            handler.TypeName   = "ImHex";
+            handler.TypeHash   = ImHashStr("ImHex");
 
-        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-            if (std::fs::exists(dir) && fs::isPathWritable(dir)) {
-                this->m_imguiSettingsPath = dir / "interface.ini";
-                io.IniFilename            = nullptr;
-                break;
+            handler.ReadOpenFn = [](ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) -> void* { return ctx; };
+
+            handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *, void *, const char *line) {
+                for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+                    std::string format = view->getUnlocalizedName() + "=%d";
+                    sscanf(line, format.c_str(), &view->getWindowOpenState());
+                }
+                for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
+                    std::string format = name + "=%d";
+                    sscanf(line, format.c_str(), &detached);
+                }
+            };
+
+            handler.WriteAllFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
+                buf->appendf("[%s][General]\n", handler->TypeName);
+
+                for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+                    buf->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
+                }
+                for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
+                    buf->appendf("%s=%d\n", name.c_str(), detached);
+                }
+
+                buf->append("\n");
+            };
+
+            handler.UserData   = this;
+            ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                if (std::fs::exists(dir) && fs::isPathWritable(dir)) {
+                    this->m_imguiSettingsPath = dir / "interface.ini";
+                    io.IniFilename            = nullptr;
+                    break;
+                }
             }
-        }
 
-        if (!this->m_imguiSettingsPath.empty() && fs::exists(this->m_imguiSettingsPath))
-            ImGui::LoadIniSettingsFromDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
+            if (!this->m_imguiSettingsPath.empty() && fs::exists(this->m_imguiSettingsPath))
+                ImGui::LoadIniSettingsFromDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
+        }
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
 
@@ -806,6 +881,8 @@ namespace hex {
 
         for (const auto &plugin : PluginManager::getPlugins())
             plugin.setImGuiContext(ImGui::GetCurrentContext());
+
+        EventManager::post<RequestInitThemeHandlers>();
     }
 
     void Window::exitGLFW() {

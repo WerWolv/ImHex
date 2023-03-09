@@ -231,6 +231,12 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<RequestShowFileChooserPopup>([](const std::vector<std::fs::path> &paths, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, bool multiple) {
             s_selectableFileIndices          = { };
             s_selectableFiles                = paths;
+            std::sort(s_selectableFiles.begin(), s_selectableFiles.end(),
+                [](const auto &a, const auto &b) {
+                    return a.filename() < b.filename();
+                }
+            );
+
             s_selectableFilesValidExtensions = validExtensions;
             s_selectableFileOpenCallback     = callback;
             s_selectableFileMultiple         = multiple;

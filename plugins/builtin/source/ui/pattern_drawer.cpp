@@ -208,7 +208,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushID(pattern.getVariableName().c_str());
 
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
-            ImHexApi::HexEditor::setSelection(pattern.getOffset(), pattern.getSize());
+            this->m_selectionCallback(Region { pattern.getOffset(), pattern.getSize() });
             this->resetEditing();
         }
 
@@ -256,7 +256,6 @@ namespace hex::plugin::builtin::ui {
         ImGui::TableNextRow();
         createLeafNode(pattern);
         ImGui::TableNextColumn();
-
         makeSelectable(pattern);
         drawCommentTooltip(pattern);
         ImGui::SameLine();
@@ -287,16 +286,16 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::TableNextColumn();
+            ImGui::SameLine(0, 0);
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
+            ImGui::TableNextColumn();
             drawColorColumn(pattern);
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "bitfield");
 
             drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
-            ImGui::SameLine();
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
@@ -434,9 +433,10 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::TableNextColumn();
+            ImGui::SameLine(0, 0);
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
+            ImGui::TableNextColumn();
             drawColorColumn(pattern);
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
@@ -505,9 +505,10 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::TableNextColumn();
+            ImGui::SameLine(0, 0);
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
+            ImGui::TableNextColumn();
             if (pattern.isSealed())
                 drawColorColumn(pattern);
             else
@@ -532,7 +533,6 @@ namespace hex::plugin::builtin::ui {
                 }
             } else {
                 drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
-                ImGui::SameLine();
                 ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
 
@@ -558,9 +558,10 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::TableNextColumn();
+            ImGui::SameLine(0, 0);
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
+            ImGui::TableNextColumn();
             if (pattern.isSealed())
                 drawColorColumn(pattern);
             else
@@ -585,7 +586,6 @@ namespace hex::plugin::builtin::ui {
                 }
             } else {
                 drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
-                ImGui::SameLine();
                 ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
         }
@@ -654,9 +654,10 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             open = createTreeNode(pattern);
-            ImGui::TableNextColumn();
+            ImGui::SameLine(0, 0);
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
+            ImGui::TableNextColumn();
 
             if (pattern.isSealed())
                 drawColorColumn(pattern);
@@ -676,7 +677,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
 
             drawVisualizerButton(pattern, iteratable);
-            ImGui::SameLine();
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
@@ -801,7 +801,7 @@ namespace hex::plugin::builtin::ui {
     static bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) {
         if (ImGui::BeginTable("##Patterntable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.var_name"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("name"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.var_name"_lang, ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide, 0, ImGui::GetID("name"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.color"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.offset"_lang,   ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("offset"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.size"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));

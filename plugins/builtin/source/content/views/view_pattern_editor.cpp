@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
@@ -217,7 +217,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console) {
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Background)]);
+        const auto &palette = TextEditor::GetPalette();
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, palette[u32(TextEditor::PaletteIndex::Background)]);
         if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
             ImGuiListClipper clipper;
 
@@ -232,16 +233,16 @@ namespace hex::plugin::builtin {
                         using enum pl::core::LogConsole::Level;
 
                         case Debug:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Comment)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Comment)]);
                             break;
                         case Info:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Default)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Default)]);
                             break;
                         case Warning:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::Preprocessor)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Preprocessor)]);
                             break;
                         case Error:
-                            ImGui::PushStyleColor(ImGuiCol_Text, this->m_textEditor.GetPalette()[u32(TextEditor::PaletteIndex::ErrorMarker)]);
+                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::ErrorMarker)]);
                             break;
                         default:
                             continue;
@@ -334,9 +335,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        iter++;
-                        envVars.insert(iter, { envVarCounter++, "", i128(0), PlData::EnvVarType::Integer });
-                        iter--;
+                        envVars.insert(std::next(iter), { envVarCounter++, "", i128(0), PlData::EnvVarType::Integer });
                     }
 
                     ImGui::SameLine();
@@ -438,7 +437,8 @@ namespace hex::plugin::builtin {
                     dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
                     dataProvider->setReadOnly(true);
 
-                    auto hexEditor = ui::HexEditor();
+                    auto hexEditor = auto(this->m_sectionHexEditor);
+
                     hexEditor.setBackgroundHighlightCallback([this, id](u64 address, const u8 *, size_t) -> std::optional<color_t> {
                         if (this->m_runningEvaluators != 0)
                             return std::nullopt;
@@ -447,7 +447,7 @@ namespace hex::plugin::builtin {
 
                         std::optional<ImColor> color;
                         for (const auto &pattern : ProviderExtraData::getCurrent().patternLanguage.runtime->getPatternsAtAddress(address, id)) {
-                            if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
+                            if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
                                 continue;
 
                             if (color.has_value())
@@ -461,11 +461,27 @@ namespace hex::plugin::builtin {
 
                     auto patternProvider = ImHexApi::Provider::get();
 
-                    this->m_sectionWindowDrawer[patternProvider] = [id, patternProvider, dataProvider = std::move(dataProvider), hexEditor, patternDrawer = ui::PatternDrawer()] mutable {
+
+                    this->m_sectionWindowDrawer[patternProvider] = [id, patternProvider, dataProvider = std::move(dataProvider), hexEditor = std::move(hexEditor), patternDrawer = ui::PatternDrawer()] mutable {
                         hexEditor.setProvider(dataProvider.get());
                         hexEditor.draw(480_scaled);
+                        patternDrawer.setSelectionCallback([&](const auto &region) {
+                            hexEditor.setSelection(region);
+                        });
 
-                        patternDrawer.draw(ProviderExtraData::get(patternProvider).patternLanguage.runtime->getAllPatterns(id), 150_scaled);
+                        auto &patternLanguage = ProviderExtraData::get(patternProvider).patternLanguage;
+
+                        const auto &patterns = [&] -> const auto& {
+                            if (patternProvider->isReadable() && patternLanguage.runtime != nullptr && patternLanguage.executionDone)
+                                return ProviderExtraData::get(patternProvider).patternLanguage.runtime->getAllPatterns(id);
+                            else {
+                                static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
+                                return empty;
+                            }
+                        }();
+
+                        if (patternLanguage.executionDone)
+                            patternDrawer.draw(patterns, 150_scaled);
                     };
                 }
 
@@ -673,6 +689,7 @@ namespace hex::plugin::builtin {
         this->m_textEditor.SetErrorMarkers({});
         patternLanguage.console.clear();
 
+        this->m_sectionWindowDrawer.clear();
 
         ContentRegistry::PatternLanguage::configureRuntime(*patternLanguage.runtime, provider);
 

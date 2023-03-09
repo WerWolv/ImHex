@@ -1,23 +1,10 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/file.hpp>
 
 #include <string_view>
 
-#include <sys/stat.h>
-
-#if defined(OS_WINDOWS)
-    #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-#elif defined(OS_MACOS)
-    #include <sys/mman.h>
-    #include <unistd.h>
-    #include <sys/fcntl.h>
-#else
-    #include <sys/mman.h>
-    #include <unistd.h>
-    #include <fcntl.h>
-#endif
 
 namespace hex::plugin::builtin {
 
@@ -69,14 +56,17 @@ namespace hex::plugin::builtin {
 
     protected:
         std::fs::path m_path;
-        void *m_mappedFile = nullptr;
-        size_t m_fileSize  = 0;
+        fs::File m_file;
+        size_t m_fileSize = 0;
 
-        struct stat m_fileStats = { };
-        bool m_fileStatsValid   = false;
-        bool m_emptyFile        = false;
+        std::optional<struct stat> m_fileStats;
 
+        std::mutex m_mutex;
         bool m_readable = false, m_writable = false;
+        bool m_openReadOnly = true;
+
+        u64 m_bufferStartAddress;
+        std::vector<u8> m_buffer;
     };
 
 }

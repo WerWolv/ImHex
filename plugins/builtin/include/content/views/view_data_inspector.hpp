@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
         bool m_shouldInvalidate = true;
 
-        std::endian m_endian                                                    = std::endian::native;
+        std::endian m_endian = std::endian::native;
         ContentRegistry::DataInspector::NumberDisplayStyle m_numberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle::Decimal;
         bool m_invert = false;
 
@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
         std::vector<InspectorCacheEntry> m_cachedData, m_workData;
         TaskHolder m_updateTask;
 
-        std::string m_editingValue;
+        std::string m_editingValue = "";
     };
 
 }

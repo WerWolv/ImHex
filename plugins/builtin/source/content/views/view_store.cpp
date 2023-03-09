@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
             this->refresh();
         }
 
-        auto drawTab = [this](auto title, fs::ImHexPath pathType, auto &content, const std::function<void(const StoreEntry &)> &downloadDoneCallback) {
+        auto drawTab = [this](auto title, fs::ImHexPath pathType, auto &content, const std::function<void()> &downloadDoneCallback = []{}) {
             if (ImGui::BeginTabItem(title)) {
                 if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupScrollFreeze(0, 1);
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
                                             tar.extractAll(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
                                         }
 
-                                        downloadDoneCallback(entry);
+                                        downloadDoneCallback();
                                     } else
                                         log::error("Download failed! HTTP Code {}", response.code);
 
@@ -114,12 +114,14 @@ namespace hex::plugin::builtin {
         };
 
         if (ImGui::BeginTabBar("storeTabs")) {
-            drawTab("hex.builtin.view.store.tab.patterns"_lang, fs::ImHexPath::Patterns, this->m_patterns, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.libraries"_lang, fs::ImHexPath::PatternsInclude, this->m_includes, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.magics"_lang, fs::ImHexPath::Magic, this->m_magics, [](auto) { magic::compile(); });
-            drawTab("hex.builtin.view.store.tab.constants"_lang, fs::ImHexPath::Constants, this->m_constants, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.encodings"_lang, fs::ImHexPath::Encodings, this->m_encodings, [](auto) {});
-            drawTab("hex.builtin.view.store.tab.yara"_lang, fs::ImHexPath::Yara, this->m_yara, [](auto) {});
+            drawTab("hex.builtin.view.store.tab.patterns"_lang,     fs::ImHexPath::Patterns,        this->m_patterns);
+            drawTab("hex.builtin.view.store.tab.libraries"_lang,    fs::ImHexPath::PatternsInclude, this->m_includes);
+            drawTab("hex.builtin.view.store.tab.magics"_lang,       fs::ImHexPath::Magic,           this->m_magics, magic::compile);
+            drawTab("hex.builtin.view.store.tab.constants"_lang,    fs::ImHexPath::Constants,       this->m_constants);
+            drawTab("hex.builtin.view.store.tab.encodings"_lang,    fs::ImHexPath::Encodings,       this->m_encodings);
+            drawTab("hex.builtin.view.store.tab.yara"_lang,         fs::ImHexPath::Yara,            this->m_yara);
+            drawTab("hex.builtin.view.store.tab.nodes"_lang,        fs::ImHexPath::Nodes,           this->m_nodes);
+            drawTab("hex.builtin.view.store.tab.themes"_lang,       fs::ImHexPath::Themes,          this->m_themes);
 
             ImGui::EndTabBar();
         }
@@ -143,8 +145,8 @@ namespace hex::plugin::builtin {
 
     void ViewStore::parseResponse() {
         auto response = this->m_apiRequest.get();
-        this->m_requestStatus = response.code == 200 ? RequestStatus::Succeded : RequestStatus::Failed;
-        if (this->m_requestStatus == RequestStatus::Succeded) {
+        this->m_requestStatus = response.code == 200 ? RequestStatus::Succeeded : RequestStatus::Failed;
+        if (this->m_requestStatus == RequestStatus::Succeeded) {
             auto json = nlohmann::json::parse(response.body);
 
             auto parseStoreEntries = [](auto storeJson, const std::string &name, fs::ImHexPath pathType, std::vector<StoreEntry> &results) {
@@ -191,6 +193,8 @@ namespace hex::plugin::builtin {
             parseStoreEntries(json, "constants", fs::ImHexPath::Constants, this->m_constants);
             parseStoreEntries(json, "yara", fs::ImHexPath::Yara, this->m_yara);
             parseStoreEntries(json, "encodings", fs::ImHexPath::Encodings, this->m_encodings);
+            parseStoreEntries(json, "nodes", fs::ImHexPath::Nodes, this->m_nodes);
+            parseStoreEntries(json, "themes", fs::ImHexPath::Themes, this->m_themes);
         }
         this->m_apiRequest = {};
     }

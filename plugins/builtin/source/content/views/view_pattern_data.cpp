@@ -21,6 +21,8 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventProviderChanged>(this, [this](auto, auto) {
             this->m_patternDrawer.reset();
         });
+
+        this->m_patternDrawer.setSelectionCallback([](Region region){ ImHexApi::HexEditor::setSelection(region); });
     }
 
     ViewPatternData::~ViewPatternData() {

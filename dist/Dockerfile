@@ -1,6 +1,6 @@
 FROM archlinux:latest
 
-LABEL maintainer="hey@werwolv.net" = WerWolv
+LABEL maintainer="hey@werwolv.net WerWolv"
 
 # Install dependencies
 RUN pacman -Syy --needed --noconfirm

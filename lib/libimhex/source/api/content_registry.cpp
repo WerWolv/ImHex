@@ -607,7 +607,7 @@ namespace hex {
 
         const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll;
 
-        bool DataVisualizer::drawDefaultEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const {
+        bool DataVisualizer::drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const {
             struct UserData {
                 u8 *data;
                 i32 maxChars;
@@ -625,6 +625,37 @@ namespace hex {
             ImGui::PushID(reinterpret_cast<void*>(address));
             ImGui::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                 auto &userData = *reinterpret_cast<UserData*>(data->UserData);
+
+                if (data->BufTextLen >= userData.maxChars)
+                    userData.editingDone = true;
+
+                return 0;
+            }, &userData);
+            ImGui::PopID();
+
+            return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape);
+        }
+
+        bool DataVisualizer::drawDefaultTextEditingTextBox(u64 address, std::string &data, ImGuiInputTextFlags flags) const {
+            struct UserData {
+                std::string *data;
+                i32 maxChars;
+
+                bool editingDone;
+            };
+
+            UserData userData = {
+                    .data = &data,
+                    .maxChars = this->getMaxCharsPerCell(),
+
+                    .editingDone = false
+            };
+
+            ImGui::PushID(reinterpret_cast<void*>(address));
+            ImGui::InputText("##editing_input", data.data(), data.size() + 1, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+                auto &userData = *reinterpret_cast<UserData*>(data->UserData);
+
+                userData.data->resize(data->BufSize);
 
                 if (data->BufTextLen >= userData.maxChars)
                     userData.editingDone = true;

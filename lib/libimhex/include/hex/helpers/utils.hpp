@@ -44,6 +44,7 @@ namespace hex {
     std::string to_string(u128 value);
     std::string to_string(i128 value);
 
+    std::optional<u8> parseBinaryString(const std::string &string);
     std::string toByteString(u64 bytes);
     std::string makePrintable(u8 c);
 
