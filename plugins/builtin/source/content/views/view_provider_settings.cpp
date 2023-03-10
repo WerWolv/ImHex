@@ -4,7 +4,7 @@ namespace hex::plugin::builtin {
 
     ViewProviderSettings::ViewProviderSettings() : hex::View("hex.builtin.view.provider_settings.name") {
         EventManager::subscribe<EventProviderCreated>(this, [](hex::prv::Provider *provider) {
-            if (provider->hasLoadInterface())
+            if (provider->hasLoadInterface() && !provider->shouldSkipLoadInterface())
                 EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
         });
     }

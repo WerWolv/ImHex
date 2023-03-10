@@ -65,18 +65,11 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<RequestOpenWindow>([](const std::string &name) {
             if (name == "Create File") {
-                fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-                    fs::File file(path, fs::File::Mode::Create);
-
-                    if (!file.isValid()) {
-                        View::showErrorPopup("hex.builtin.popup.error.create"_lang);
-                        return;
-                    }
-
-                    file.setSize(1);
-
-                    EventManager::post<RequestOpenFile>(path);
-                });
+                auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+                if (newProvider != nullptr && !newProvider->open())
+                    hex::ImHexApi::Provider::remove(newProvider);
+                else
+                    EventManager::post<EventProviderOpened>(newProvider);
             } else if (name == "Open File") {
                 ImHexApi::Provider::createProvider("hex.builtin.provider.file");
             } else if (name == "Open Project") {
