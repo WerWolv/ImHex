@@ -147,15 +147,22 @@ namespace hex::plugin::builtin {
                     {
                         ImGui::Header("hex.builtin.view.disassembler.settings.header"_lang);
 
-                        ImGui::Text("hex.builtin.view.information.block_size"_lang);
                         ImGui::InputInt("##BlockSize", &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
+                        ImGui::SameLine();
+                        ImGui::Text("hex.builtin.view.information.block_size"_lang);
 
+                        ImGui::SliderInt("##StartAddress", &this->m_inputStartAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_None);
+                        ImGui::SameLine();
                         ImGui::Text("hex.builtin.common.begin"_lang);
-                        ImGui::InputInt("##StartAddress", &this->m_inputStartAddress, ImGuiInputTextFlags_CharsDecimal);
 
-                        ImGui::TextFormatted("{} ({}: {})", "hex.builtin.common.end"_lang, "hex.builtin.view.find.value.max"_lang, provider->getSize());
-                        ImGui::InputInt("##EndAddress", &this->m_inputEndAddress, ImGuiInputTextFlags_CharsDecimal);
+                        ImGui::SliderInt("##EndAddress", &this->m_inputEndAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_None);
+                        ImGui::SameLine();
+                        ImGui::TextFormatted("hex.builtin.common.end"_lang);
 
+                        // Clamp the values since the user can Ctrl+Click to transform the slider into a input
+                        this->m_inputStartAddress = std::clamp<int>(this->m_inputStartAddress, 0, int(provider->getSize()));
+                        this->m_inputEndAddress   = std::clamp<int>(this->m_inputEndAddress, 0, int(provider->getSize()));
+                         
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             this->analyze();
                     }
