@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
 
         void analyze();
 
-        // user controlled input (referenced by ImgGui)
+        // User controlled input (referenced by ImgGui)
         int m_inputChunkSize    = 0;
         int m_inputStartAddress = 0;
         int m_inputEndAddress   = 0;

@@ -303,20 +303,24 @@ namespace hex {
                 // Draw the plot
                 ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropy.data(), this->m_blockCount);
 
-                // Set a draggable line on the plot
-                if (updateHandle && ImPlot::DragLineX(1, &this->m_handlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    // The line was dragged, update the position in the hex editor
+                // The parameter updateHandle is used when using the pattern language since we don't have a provider 
+                // but just a set of bytes we won't be able to use the drag bar correctly.
+                if (updateHandle) {
+                    // Set a draggable line on the plot
+                    if (ImPlot::DragLineX(1, &this->m_handlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        // The line was dragged, update the position in the hex editor
 
-                    // Clamp the value between the start/end of the region to analyze
-                    this->m_handlePosition = std::clamp<double>(
-                            this->m_handlePosition,
-                            std::ceil(this->m_startAddress / double(this->m_blockSize)),
-                            std::floor(this->m_endAddress / double(this->m_blockSize)));
+                        // Clamp the value between the start/end of the region to analyze
+                        this->m_handlePosition = std::clamp<double>(
+                                this->m_handlePosition,
+                                std::ceil(this->m_startAddress / double(this->m_blockSize)),
+                                std::floor(this->m_endAddress / double(this->m_blockSize)));
 
-                    // Compute the position inside hex editor 
-                    u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
-                    address     = std::min(address, this->m_baseAddress + this->m_fileSize - 1);
-                    ImHexApi::HexEditor::setSelection(address, 1);
+                        // Compute the position inside hex editor 
+                        u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
+                        address     = std::min(address, this->m_baseAddress + this->m_fileSize - 1);
+                        ImHexApi::HexEditor::setSelection(address, 1);
+                    }
                 }
                 ImPlot::EndPlot();
             }
@@ -648,22 +652,25 @@ namespace hex {
                     ImPlot::PlotLine(Names[i], this->m_xBlockTypeDistributions.data(), this->m_yBlockTypeDistributions[i].data(), this->m_blockCount);
                 }
 
-                // Set a draggable line on the plot
-                if (updateHandle && ImPlot::DragLineX(1, &this->m_handlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    // The line was dragged, update the position in the hex editor
+                // The parameter updateHandle is used when using the pattern language since we don't have a provider 
+                // but just a set of bytes we won't be able to use the drag bar correctly.
+                if (updateHandle) {
+                    // Set a draggable line on the plot
+                    if (ImPlot::DragLineX(1, &this->m_handlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        // The line was dragged, update the position in the hex editor
 
-                    // Clamp the value between the start/end of the region to analyze
-                    this->m_handlePosition = std::clamp<double>(
-                            this->m_handlePosition,
-                            std::ceil(this->m_startAddress / double(this->m_blockSize)),
-                            std::floor(this->m_endAddress / double(this->m_blockSize)));
+                        // Clamp the value between the start/end of the region to analyze
+                        this->m_handlePosition = std::clamp<double>(
+                                this->m_handlePosition,
+                                std::ceil(this->m_startAddress / double(this->m_blockSize)),
+                                std::floor(this->m_endAddress / double(this->m_blockSize)));
 
-                    // Compute the position inside hex editor 
-                    u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
-                    address     = std::min(address, this->m_baseAddress + this->m_fileSize - 1);
-                    ImHexApi::HexEditor::setSelection(address, 1);
+                        // Compute the position inside hex editor 
+                        u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
+                        address     = std::min(address, this->m_baseAddress + this->m_fileSize - 1);
+                        ImHexApi::HexEditor::setSelection(address, 1);
+                    }
                 }
-
                 ImPlot::EndPlot();
             }
         }
