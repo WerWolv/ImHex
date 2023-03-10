@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
-            // set the position of the diagram relative to the place where 
+            // Set the position of the diagram relative to the place where 
             // the user clicked inside the hex editor view 
             if (this->m_blockSize != 0) {
                 this->m_byteTypesDistribution.setHandlePosition(region.getStartAddress());
@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
              || (this->m_inputStartAddress < 0) 
              || (this->m_inputStartAddress >= this->m_inputEndAddress)
              || ((size_t) this->m_inputEndAddress > provider->getSize())) {
-                // invalid parameters, set default one
+                // Invalid parameters, set default one
                 this->m_inputChunkSize    = 256;
                 this->m_inputStartAddress = 0;
                 this->m_inputEndAddress   = provider->getSize(); 
@@ -79,7 +79,7 @@ namespace hex::plugin::builtin {
 
             task.setMaxValue(this->m_inputEndAddress - this->m_inputStartAddress);
 
-            // modify the analyzed region  
+            // Modify the analyzed region  
             this->m_analyzedRegion = { 
                 provider->getBaseAddress() + this->m_inputStartAddress, 
                 size_t(this->m_inputEndAddress - this->m_inputStartAddress)
@@ -99,7 +99,7 @@ namespace hex::plugin::builtin {
                 this->m_highestBlockEntropy = -1.0;
                 this->m_plainTextCharacterPercentage = -1.0;
 
-                // setup / start each analysis
+                // Setup / start each analysis
 
                 this->m_byteDistribution.reset();
                 this->m_digram.reset(this->m_inputEndAddress - this->m_inputStartAddress);
@@ -109,14 +109,14 @@ namespace hex::plugin::builtin {
                 this->m_chunkBasedEntropy.reset(this->m_inputChunkSize, this->m_inputStartAddress, this->m_inputEndAddress,
                     provider->getBaseAddress(), provider->getSize());
 
-                // create a handle to the file
+                // Create a handle to the file
                 auto reader = prv::BufferedReader(provider);
                 reader.seek(provider->getBaseAddress() + this->m_inputStartAddress);
                 reader.setEndAddress(provider->getBaseAddress() + this->m_inputEndAddress);
 
                 u64 count = 0;
 
-                // loop over each byte of the [part of the] file and update each analysis 
+                // Loop over each byte of the [part of the] file and update each analysis 
                 // one byte at the time in order to process the file only once
                 for (u8 byte : reader) {
                     this->m_byteDistribution.update(byte);
@@ -145,15 +145,15 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                     ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
                     {
-                        ImGui::Header("Parameters Selection");
+                        ImGui::Header("hex.builtin.view.disassembler.settings.headers"_lang);
 
-                        ImGui::Text(" Block Size for Entropy Analysis: ");
+                        ImGui::Text("hex.builtin.view.information.block_size"_lang);
                         ImGui::InputInt("##BlockSize", &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
 
-                        ImGui::Text("Start Address: ");
+                        ImGui::Text("hex.builtin.common.begin"_lang);
                         ImGui::InputInt("##StartAddress", &this->m_inputStartAddress, ImGuiInputTextFlags_CharsDecimal);
 
-                        ImGui::TextFormatted("End Address ({} max): ", provider->getSize());
+                        ImGui::TextFormatted("{} ({}: {})", "hex.builtin.common.end"_lang, "hex.builtin.view.find.value.max"_lang, provider->getSize());
                         ImGui::InputInt("##EndAddress", &this->m_inputEndAddress, ImGuiInputTextFlags_CharsDecimal);
 
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
@@ -231,14 +231,14 @@ namespace hex::plugin::builtin {
                             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
                             ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
 
-                            // display byte distribution analysis
+                            // Display byte distribution analysis
                             ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
                             this->m_byteDistribution.draw(
                                 ImVec2(-1, 0), 
                                 ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect
                             );
 
-                            // display byte types distribution analysis
+                            // Display byte types distribution analysis
                             ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
                             this->m_byteTypesDistribution.draw(
                                     ImVec2(-1, 0), 
@@ -246,7 +246,7 @@ namespace hex::plugin::builtin {
                                     true
                             );
 
-                            // display chunk based entropy analysis
+                            // Display chunk based entropy analysis
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
                             this->m_chunkBasedEntropy.draw(
                                 ImVec2(-1, 0), 
