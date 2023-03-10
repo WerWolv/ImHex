@@ -170,7 +170,7 @@ namespace hex {
             }
 
             for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                this->m_glowBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
+                this->m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
             }
 
             this->m_opacity = (log10(float(this->m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
@@ -264,7 +264,7 @@ namespace hex {
             }
 
             for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                this->m_glowBuffer[i] = std::min(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
+                this->m_glowBuffer[i] = std::min<float>(0.2F + (float(heatMap[this->m_buffer[i] << 8 | this->m_buffer[i + 1]]) / float(this->m_highestCount / 1000)), 1.0F);
             }
 
             this->m_opacity = (log10(float(this->m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
@@ -318,7 +318,7 @@ namespace hex {
 
                         // Compute the position inside hex editor 
                         u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
-                        address     = std::min(address, this->m_baseAddress + this->m_fileSize - 1);
+                        address     = std::min<u64>(address, this->m_baseAddress + this->m_fileSize - 1);
                         ImHexApi::HexEditor::setSelection(address, 1);
                     }
                 }
@@ -432,7 +432,7 @@ namespace hex {
                 entropy += probability * std::log2(probability);
             }
 
-            return std::min(1.0, (-entropy) / 8);    // log2(256) = 8
+            return std::min<double>(1.0, (-entropy) / 8);    // log2(256) = 8
         }
 
         // Return the highest entropy value among all of the blocks
@@ -488,7 +488,7 @@ namespace hex {
 
         void processFinalize() {
             // Only save at most m_sampleSize elements of the result
-            this->m_yBlockEntropy = sampleData(this->m_yBlockEntropy, std::min(this->m_blockCount, this->m_sampleSize));
+            this->m_yBlockEntropy = sampleData(this->m_yBlockEntropy, std::min<size_t>(this->m_blockCount, this->m_sampleSize));
 
             size_t stride = std::max(1.0, double(
                 std::ceil((this->m_endAddress - this->m_startAddress) / this->m_blockSize) / this->m_yBlockEntropy.size())) + 1;
@@ -667,7 +667,7 @@ namespace hex {
 
                         // Compute the position inside hex editor 
                         u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
-                        address     = std::min(address, this->m_baseAddress + this->m_fileSize - 1);
+                        address     = std::min<u64>(address, this->m_baseAddress + this->m_fileSize - 1);
                         ImHexApi::HexEditor::setSelection(address, 1);
                     }
                 }
@@ -848,7 +848,7 @@ namespace hex {
         void processFinalize() {
             // Only save at most m_sampleSize elements of the result
             for (u8 i = 0; i < this->m_yBlockTypeDistributions.size(); ++i)
-                this->m_yBlockTypeDistributions[i] = sampleData(this->m_yBlockTypeDistributions[i], std::min(this->m_blockCount, this->m_sampleSize));
+                this->m_yBlockTypeDistributions[i] = sampleData(this->m_yBlockTypeDistributions[i], std::min<size_t>(this->m_blockCount, this->m_sampleSize));
 
             size_t stride = std::max(1.0, double(this->m_blockCount / this->m_yBlockTypeDistributions[0].size())) + 1;
             this->m_blockCount = this->m_yBlockTypeDistributions[0].size();

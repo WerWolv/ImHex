@@ -147,19 +147,13 @@ namespace hex::plugin::builtin {
                     {
                         ImGui::Header("hex.builtin.view.disassembler.settings.header"_lang);
 
-                        ImGui::InputInt("##BlockSize", &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
-                        ImGui::SameLine();
-                        ImGui::Text("hex.builtin.view.information.block_size"_lang);
+                        ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
 
                         // Clamp the values since the user can Ctrl+Click to transform the slider into a input
-                        ImGui::SliderInt("##StartAddress", &this->m_inputStartAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_AlwaysClamp);
-                        ImGui::SameLine();
-                        ImGui::Text("hex.builtin.common.begin"_lang);
+                        ImGui::SliderInt("hex.builtin.common.begin"_lang, &this->m_inputStartAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_AlwaysClamp);
 
                         // Clamp the values since the user can Ctrl+Click to transform the slider into a input
-                        ImGui::SliderInt("##EndAddress", &this->m_inputEndAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_AlwaysClamp);
-                        ImGui::SameLine();
-                        ImGui::TextFormatted("hex.builtin.common.end"_lang);
+                        ImGui::SliderInt("hex.builtin.common.end"_lang, &this->m_inputEndAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_AlwaysClamp);
                          
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             this->analyze();
