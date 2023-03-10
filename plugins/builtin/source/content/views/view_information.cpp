@@ -145,7 +145,7 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                     ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
                     {
-                        ImGui::Header("hex.builtin.view.disassembler.settings.headers"_lang);
+                        ImGui::Header("hex.builtin.view.disassembler.settings.header"_lang);
 
                         ImGui::Text("hex.builtin.view.information.block_size"_lang);
                         ImGui::InputInt("##BlockSize", &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
