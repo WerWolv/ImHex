@@ -26,13 +26,7 @@ namespace hex::plugin::builtin {
         double m_averageEntropy      = -1.0;
         double m_highestBlockEntropy = -1.0;
         double m_plainTextCharacterPercentage = -1.0;
-        std::vector<double> m_blockEntropy;
-        std::array<std::vector<float>, 12> m_blockTypeDistributions;
-        std::atomic<u64> m_processedBlockCount   = 0;
 
-        double m_diagramHandlePosition = 0.0;
-
-        std::array<ImU64, 256> m_valueCounts = { 0 };
         TaskHolder m_analyzerTask;
 
         Region m_analyzedRegion = { 0, 0 };
@@ -42,8 +36,16 @@ namespace hex::plugin::builtin {
 
         DiagramDigram m_digram;
         DiagramLayeredDistribution m_layeredDistribution;
+        DiagramByteDistribution m_byteDistribution;
+        DiagramByteTypesDistribution m_byteTypesDistribution;
+        DiagramChunkBasedEntropyAnalysis m_chunkBasedEntropy;
 
         void analyze();
+
+        // User controlled input (referenced by ImgGui)
+        int m_inputChunkSize    = 0;
+        int m_inputStartAddress = 0;
+        int m_inputEndAddress   = 0;
     };
 
 }

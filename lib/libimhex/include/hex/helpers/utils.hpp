@@ -27,6 +27,20 @@ struct ImVec2;
 
 namespace hex {
 
+    template<typename T>
+    std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
+        size_t stride = std::max(1.0, double(data.size()) / count);
+
+        std::vector<T> result;
+        result.reserve(count);
+
+        for (size_t i = 0; i < data.size(); i += stride) {
+            result.push_back(data[i]);
+        }
+
+        return result;
+    }
+
     float operator""_scaled(long double value);
     float operator""_scaled(unsigned long long value);
     ImVec2 scaled(const ImVec2 &vector);
