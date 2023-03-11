@@ -778,6 +778,7 @@
         "hex.builtin.view.pattern_editor.sections": "Sections",
         "hex.builtin.view.pattern_editor.settings": "Settings",
         "hex.builtin.view.provider_settings.load_error": "An error occurred while trying to open this provider!",
+        "hex.builtin.view.provider_settings.load_error_details": "An error occurred while trying to open this provider!\nDetails: {}",
         "hex.builtin.view.provider_settings.load_popup": "Open Provider",
         "hex.builtin.view.provider_settings.name": "Provider Settings",
         "hex.builtin.view.settings.name": "Settings",

@@ -1,3 +1,5 @@
+#include <hex/helpers/logger.hpp>
+
 #include "content/providers/disk_provider.hpp"
 
 #include <hex/api/localization.hpp>
@@ -121,11 +123,15 @@ namespace hex::plugin::builtin {
 
             this->m_diskHandle = ::open(path.c_str(), O_RDWR);
             if (this->m_diskHandle == -1) {
+                this->setErrorMessage(hex::format("Failed to open disk {} in read/write: {}", path, ::strerror(errno)));
+                log::warn(this->getErrorMessage());
                 this->m_diskHandle = ::open(path.c_str(), O_RDONLY);
                 this->m_writable   = false;
             }
 
             if (this->m_diskHandle == -1) {
+                this->setErrorMessage(hex::format("Failed to open disk {} in read-only: {}", path, ::strerror(errno)));
+                log::warn(this->getErrorMessage());
                 this->m_readable = false;
                 return false;
             }
