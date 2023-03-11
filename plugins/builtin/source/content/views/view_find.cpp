@@ -253,6 +253,7 @@ namespace hex::plugin::builtin {
 
         size_t countedCharacters = 0;
         u64 startAddress = reader.begin().getAddress();
+        u64 endAddress = reader.end().getAddress();
         for (u8 byte : reader) {
             bool validChar =
                 (settings.m_lowerCaseLetters    && std::islower(byte))  ||
@@ -275,7 +276,7 @@ namespace hex::plugin::builtin {
 
             if (validChar)
                 countedCharacters++;
-            else {
+            if (!validChar || startAddress + countedCharacters == endAddress) {
                 if (countedCharacters >= size_t(settings.minLength)) {
                     if (!(settings.nullTermination && byte != 0x00)) {
                         results.push_back(Occurrence { Region { startAddress, countedCharacters }, decodeType, endian });
