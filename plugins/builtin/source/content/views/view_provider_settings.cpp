@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
                     }
                     else {
                         auto errorMessage = provider->getErrorMessage();
-                        if(errorMessage.empty()) {
+                        if (errorMessage.empty()) {
                             View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
                         } else {
                             View::showErrorPopup(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
