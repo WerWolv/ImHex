@@ -335,6 +335,8 @@
   "hex.builtin.provider.disk.reload",
   "hex.builtin.provider.disk.sector_size",
   "hex.builtin.provider.disk.selected_disk",
+  "hex.builtin.provider.disk.error.read_ro",
+  "hex.builtin.provider.disk.error.read_rw",
   "hex.builtin.provider.file",
   "hex.builtin.provider.file.access",
   "hex.builtin.provider.file.creation",

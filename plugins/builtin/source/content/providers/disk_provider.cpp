@@ -123,14 +123,14 @@ namespace hex::plugin::builtin {
 
             this->m_diskHandle = ::open(path.c_str(), O_RDWR);
             if (this->m_diskHandle == -1) {
-                this->setErrorMessage(hex::format("Failed to open disk {} in read/write: {}", path, ::strerror(errno)));
+                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_rw"_lang, path, ::strerror(errno)));
                 log::warn(this->getErrorMessage());
                 this->m_diskHandle = ::open(path.c_str(), O_RDONLY);
                 this->m_writable   = false;
             }
 
             if (this->m_diskHandle == -1) {
-                this->setErrorMessage(hex::format("Failed to open disk {} in read-only: {}", path, ::strerror(errno)));
+                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_ro"_lang, path, ::strerror(errno)));
                 log::warn(this->getErrorMessage());
                 this->m_readable = false;
                 return false;

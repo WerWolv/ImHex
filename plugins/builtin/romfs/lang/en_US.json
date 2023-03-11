@@ -366,6 +366,8 @@
         "hex.builtin.provider.disk.reload": "Reload",
         "hex.builtin.provider.disk.sector_size": "Sector Size",
         "hex.builtin.provider.disk.selected_disk": "Disk",
+        "hex.builtin.provider.disk.error.read_ro": "Failed to open disk {} in read/write: {}",
+        "hex.builtin.provider.disk.error.read_rw": "Failed to open disk {} in read/write: {}",
         "hex.builtin.provider.file": "File Provider",
         "hex.builtin.provider.file.access": "Last access time",
         "hex.builtin.provider.file.creation": "Creation time",
