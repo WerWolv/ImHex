@@ -745,6 +745,7 @@
   "hex.builtin.view.pattern_editor.sections",
   "hex.builtin.view.pattern_editor.settings",
   "hex.builtin.view.provider_settings.load_error",
+  "hex.builtin.view.provider_settings.load_error_details",
   "hex.builtin.view.provider_settings.load_popup",
   "hex.builtin.view.provider_settings.name",
   "hex.builtin.view.settings.name",
