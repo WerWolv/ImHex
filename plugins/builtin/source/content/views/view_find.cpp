@@ -259,10 +259,10 @@ namespace hex::plugin::builtin {
                 (settings.m_lowerCaseLetters    && std::islower(byte))  ||
                 (settings.m_upperCaseLetters    && std::isupper(byte))  ||
                 (settings.m_numbers             && std::isdigit(byte))  ||
-                (settings.m_spaces              && std::isspace(byte))  ||
+                (settings.m_spaces              && std::isspace(byte) && byte != '\r' && byte != '\n')  ||
                 (settings.m_underscores         && byte == '_')             ||
-                (settings.m_symbols             && std::ispunct(byte))  ||
-                (settings.m_lineFeeds           && byte == '\n');
+                (settings.m_symbols             && std::ispunct(byte) && byte != '\r' && byte != '\n')  ||
+                (settings.m_lineFeeds           && (byte == '\r' || byte == '\n'));
 
             if (settings.type == UTF16LE) {
                 // Check if second byte of UTF-16 encoded string is 0x00
@@ -613,8 +613,8 @@ namespace hex::plugin::builtin {
                             ImGui::Checkbox(hex::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.m_numbers);
                             ImGui::Checkbox(hex::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.m_underscores);
                             ImGui::Checkbox(hex::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.m_symbols);
-                            ImGui::Checkbox(hex::format("{} [ ]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.m_spaces);
-                            ImGui::Checkbox(hex::format("{} [\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.m_lineFeeds);
+                            ImGui::Checkbox(hex::format("{} [ \\f\\t\\v]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.m_spaces);
+                            ImGui::Checkbox(hex::format("{} [\\r\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.m_lineFeeds);
                         }
 
                         this->m_settingsValid = true;
