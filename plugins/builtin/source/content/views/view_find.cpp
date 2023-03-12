@@ -261,7 +261,7 @@ namespace hex::plugin::builtin {
                 (settings.m_numbers             && std::isdigit(byte))  ||
                 (settings.m_spaces              && std::isspace(byte) && byte != '\r' && byte != '\n')  ||
                 (settings.m_underscores         && byte == '_')             ||
-                (settings.m_symbols             && std::ispunct(byte) && byte != '\r' && byte != '\n')  ||
+                (settings.m_symbols             && std::ispunct(byte) && !std::isspace(byte))  ||
                 (settings.m_lineFeeds           && (byte == '\r' || byte == '\n'));
 
             if (settings.type == UTF16LE) {
