@@ -47,7 +47,7 @@ namespace hex {
                 if (data == nullptr) break;
 
                 std::fs::path path = data;
-                log::info("Opening file in existing instance: {}", hex::toUTF8String(path));
+                log::info("Opening file in existing instance: {}", wolv::util::toUTF8String(path));
                 EventManager::post<RequestOpenFile>(path);
                 break;
             }

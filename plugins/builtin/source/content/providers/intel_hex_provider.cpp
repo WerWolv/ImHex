@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 
 #include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -222,7 +223,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string IntelHexProvider::getName() const {
-        return hex::format("hex.builtin.provider.intel_hex.name"_lang, hex::toUTF8String(this->m_sourceFilePath.filename()));
+        return hex::format("hex.builtin.provider.intel_hex.name"_lang, wolv::util::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
     bool IntelHexProvider::handleFilePicker() {
@@ -274,7 +275,7 @@ namespace hex::plugin::builtin {
     }
 
     nlohmann::json IntelHexProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = hex::toUTF8String(this->m_sourceFilePath);
+        settings["path"] = wolv::util::toUTF8String(this->m_sourceFilePath);
 
         return Provider::storeSettings(settings);
     }

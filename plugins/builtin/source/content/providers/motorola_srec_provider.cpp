@@ -7,6 +7,7 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -199,7 +200,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {
-        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, hex::toUTF8String(this->m_sourceFilePath.filename()));
+        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
     bool MotorolaSRECProvider::handleFilePicker() {

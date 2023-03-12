@@ -98,7 +98,7 @@ namespace hex::init {
                 try {
                     wolv::io::fs::createDirectories(folder);
                 } catch (...) {
-                    log::error("Failed to create folder {}!", hex::toUTF8String(folder));
+                    log::error("Failed to create folder {}!", wolv::util::toUTF8String(folder));
                     result = false;
                 }
             }
@@ -159,7 +159,7 @@ namespace hex::init {
             fonts->Clear();
             fonts->AddFontDefault(&cfg);
         } else {
-            fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
+            fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
         }
 
         // Merge all fonts into one big font atlas
@@ -333,7 +333,7 @@ namespace hex::init {
 
             // Initialize the plugin
             if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
+                log::error("Failed to initialize plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }
@@ -349,7 +349,7 @@ namespace hex::init {
 
             // Initialize the plugin
             if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
+                log::error("Failed to initialize plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }

@@ -4,6 +4,8 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #include <fstream>
 #include <filesystem>
 #include <nlohmann/json.hpp>
@@ -54,7 +56,7 @@ namespace hex::plugin::builtin {
                         this->m_constants.push_back(constant);
                     }
                 } catch (...) {
-                    log::error("Failed to parse constants file {}", hex::toUTF8String(file.path()));
+                    log::error("Failed to parse constants file {}", wolv::util::toUTF8String(file.path()));
                     continue;
                 }
             }

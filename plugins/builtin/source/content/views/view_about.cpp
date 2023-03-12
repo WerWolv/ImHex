@@ -172,9 +172,9 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 for (auto &path : fs::getDefaultPaths(type, true)){
                     if(wolv::io::fs::isDirectory(path)){
-                        ImGui::TextUnformatted(hex::toUTF8String(path).c_str());
+                        ImGui::TextUnformatted(wolv::util::toUTF8String(path).c_str());
                     }else{
-                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), hex::toUTF8String(path).c_str());
+                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path).c_str());
                     }
                 }
             }

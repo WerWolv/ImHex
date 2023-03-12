@@ -274,13 +274,6 @@ namespace hex {
         return iter != a.end();
     }
 
-    template<typename T> requires requires(T t) { t.u8string(); }
-    std::string toUTF8String(const T &value) {
-        auto result = value.u8string();
-
-        return { result.begin(), result.end() };
-    }
-
     template<typename T, typename... VariantTypes>
     T get_or(const std::variant<VariantTypes...> &variant, T alt) {
         const T *value = std::get_if<T>(&variant);

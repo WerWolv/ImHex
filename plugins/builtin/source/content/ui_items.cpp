@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
                     ImGui::PushID(index);
 
                     bool selected = s_selectableFileIndices.contains(index);
-                    if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), selected)) {
+                    if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), selected)) {
                         if (!s_selectableFileMultiple) {
                             s_selectableFileIndices.clear();
                             s_selectableFileIndices.insert(index);

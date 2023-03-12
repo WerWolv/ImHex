@@ -80,8 +80,8 @@ namespace hex::plugin::builtin {
                 auto &extraData = ProviderExtraData::get(provider).yara;
                 for (auto &[name, path] : extraData.rules) {
                     data["rules"].push_back({
-                        { "name", hex::toUTF8String(name) },
-                        { "path", hex::toUTF8String(path) }
+                        { "name", wolv::util::toUTF8String(name) },
+                        { "path", wolv::util::toUTF8String(path) }
                     });
                 }
 
@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                 for (u32 i = 0; i < rules.size(); i++) {
                     const bool selected = (this->m_selectedRule == i);
-                    if (ImGui::Selectable(hex::toUTF8String(rules[i].first).c_str(), selected)) {
+                    if (ImGui::Selectable(wolv::util::toUTF8String(rules[i].first).c_str(), selected)) {
                         this->m_selectedRule = i;
                     }
                 }
@@ -264,7 +264,7 @@ namespace hex::plugin::builtin {
                     yr_compiler_destroy(compiler);
                 };
 
-                auto currFilePath = hex::toUTF8String(wolv::io::fs::toShortPath(filePath));
+                auto currFilePath = wolv::util::toUTF8String(wolv::io::fs::toShortPath(filePath));
 
                 yr_compiler_set_include_callback(
                     compiler,

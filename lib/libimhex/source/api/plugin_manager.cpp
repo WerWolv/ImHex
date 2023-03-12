@@ -3,6 +3,8 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #include <filesystem>
 #include <system_error>
 
@@ -17,7 +19,7 @@ namespace hex {
                 return;
             }
         #else
-            this->m_handle = dlopen(hex::toUTF8String(path).c_str(), RTLD_LAZY);
+            this->m_handle = dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY);
 
             if (this->m_handle == nullptr) {
                 log::error("dlopen failed: {}!", dlerror());
@@ -69,7 +71,7 @@ namespace hex {
     bool Plugin::initializePlugin() const {
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != IMHEX_VERSION) {
-            log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", hex::toUTF8String(this->m_path.filename()), requestedVersion);
+            log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(this->m_path.filename()), requestedVersion);
             return false;
         }
 

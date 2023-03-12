@@ -48,7 +48,6 @@ if (APPLE)
     endif ()
 
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
-            source/helpers/fs_macos.m
             source/helpers/utils_macos.m)
 endif ()
 

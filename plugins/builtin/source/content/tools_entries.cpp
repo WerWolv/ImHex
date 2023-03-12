@@ -619,7 +619,7 @@ namespace hex::plugin::builtin {
                     try {
                         auto json = nlohmann::json::parse(response.body);
                         links.push_back({
-                            hex::toUTF8String(currFile.filename()),
+                            wolv::util::toUTF8String(currFile.filename()),
                             json["data"]["file"]["url"]["short"],
                             json["data"]["file"]["metadata"]["size"]["readable"]
                         });
@@ -974,7 +974,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
                     u32 index = 0;
                     for (auto &file : files) {
-                        if (ImGui::Selectable(hex::toUTF8String(file).c_str(), index == selectedIndex))
+                        if (ImGui::Selectable(wolv::util::toUTF8String(file).c_str(), index == selectedIndex))
                             selectedIndex = index;
                         index++;
                     }
@@ -1064,7 +1064,7 @@ namespace hex::plugin::builtin {
 
                                 wolv::io::File input(file, wolv::io::File::Mode::Read);
                                 if (!input.isValid()) {
-                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, hex::toUTF8String(file)));
+                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
                                     return;
                                 }
 

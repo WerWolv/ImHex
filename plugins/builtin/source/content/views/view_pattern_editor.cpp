@@ -506,13 +506,13 @@ namespace hex::plugin::builtin {
             entries.resize(this->m_possiblePatternFiles.size());
 
             for (u32 i = 0; i < entries.size(); i++) {
-                entries[i] = hex::toUTF8String(this->m_possiblePatternFiles[i].filename());
+                entries[i] = wolv::util::toUTF8String(this->m_possiblePatternFiles[i].filename());
             }
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
                 u32 index = 0;
                 for (auto &path : this->m_possiblePatternFiles) {
-                    if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile))
+                    if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile))
                         this->m_selectedPatternFile = index;
                     index++;
                 }

@@ -9,6 +9,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
@@ -169,13 +171,13 @@ namespace hex::plugin::builtin {
     }
 
     std::string FileProvider::getName() const {
-        return hex::toUTF8String(this->m_path.filename());
+        return wolv::util::toUTF8String(this->m_path.filename());
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataDescription() const {
         std::vector<std::pair<std::string, std::string>> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, hex::toUTF8String(this->m_path));
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(this->m_path));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStats.has_value()) {
@@ -189,11 +191,11 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> FileProvider::queryInformation(const std::string &category, const std::string &argument) {
         if (category == "file_path")
-            return hex::toUTF8String(this->m_path);
+            return wolv::util::toUTF8String(this->m_path);
         else if (category == "file_name")
-            return hex::toUTF8String(this->m_path.filename());
+            return wolv::util::toUTF8String(this->m_path.filename());
         else if (category == "file_extension")
-            return hex::toUTF8String(this->m_path.extension());
+            return wolv::util::toUTF8String(this->m_path.extension());
         else if (category == "creation_time")
             return this->m_fileStats->st_ctime;
         else if (category == "access_time")
@@ -253,9 +255,9 @@ namespace hex::plugin::builtin {
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
         std::string path;
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            path = hex::toUTF8String(std::fs::proximate(this->m_path, projectPath.parent_path()));
+            path = wolv::util::toUTF8String(std::fs::proximate(this->m_path, projectPath.parent_path()));
         if (path.empty())
-            path = hex::toUTF8String(this->m_path);
+            path = wolv::util::toUTF8String(this->m_path);
 
         settings["path"] = path;
 

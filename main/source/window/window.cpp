@@ -167,7 +167,7 @@ namespace hex {
 
         // Save a backup project when the application crashes
         EventManager::subscribe<EventAbnormalTermination>(this, [this](int) {
-            ImGui::SaveIniSettingsToDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
+            ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(this->m_imguiSettingsPath).c_str());
 
             if (!ImHexApi::Provider::isDirty())
                 return;
@@ -441,7 +441,7 @@ namespace hex {
                         const auto filePath = path / "builtin.hexplug";
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(hex::toUTF8String(filePath).c_str());
+                        ImGui::TextUnformatted(wolv::util::toUTF8String(filePath).c_str());
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(wolv::io::fs::exists(filePath) ? ICON_VS_CHECK : ICON_VS_CLOSE);
                     }
@@ -868,7 +868,7 @@ namespace hex {
             }
 
             if (!this->m_imguiSettingsPath.empty() && wolv::io::fs::exists(this->m_imguiSettingsPath))
-                ImGui::LoadIniSettingsFromDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
+                ImGui::LoadIniSettingsFromDisk(wolv::util::toUTF8String(this->m_imguiSettingsPath).c_str());
         }
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
@@ -893,7 +893,7 @@ namespace hex {
     void Window::exitImGui() {
         delete static_cast<ImGui::ImHexCustomData *>(ImGui::GetIO().UserData);
 
-        ImGui::SaveIniSettingsToDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
+        ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(this->m_imguiSettingsPath).c_str());
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
