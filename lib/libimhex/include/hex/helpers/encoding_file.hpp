@@ -8,7 +8,8 @@
 #include <span>
 
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/file.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex {
 
@@ -28,7 +29,7 @@ namespace hex {
         [[nodiscard]] bool valid() const { return this->m_valid; }
 
     private:
-        void parseThingyFile(fs::File &file);
+        void parseThingyFile(wolv::io::File &file);
 
         bool m_valid = false;
 

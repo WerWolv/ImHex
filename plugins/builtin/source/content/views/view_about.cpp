@@ -171,7 +171,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
                 for (auto &path : fs::getDefaultPaths(type, true)){
-                    if(fs::isDirectory(path)){
+                    if(wolv::io::fs::isDirectory(path)){
                         ImGui::TextUnformatted(hex::toUTF8String(path).c_str());
                     }else{
                         ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), hex::toUTF8String(path).c_str());

@@ -16,6 +16,8 @@
 
 #include <ui/pattern_drawer.hpp>
 
+#include <wolv/utils/guards.hpp>
+
 namespace {
 
     std::vector<std::fs::path> userFolders;
@@ -566,14 +568,14 @@ namespace hex::plugin::builtin {
 
     static void loadFontSettings() {
         std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
-        if (!fs::exists(fontFile) || !fs::isRegularFile(fontFile))
+        if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile))
             fontFile.clear();
 
         // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
         if (fontFile.empty()) {
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
                 auto path = dir / "font.ttf";
-                if (fs::exists(path)) {
+                if (wolv::io::fs::exists(path)) {
                     log::info("Loading custom front from {}", hex::toUTF8String(path));
 
                     fontFile = path;

@@ -5,10 +5,11 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <nlohmann/json.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -192,7 +193,7 @@ namespace hex::plugin::builtin {
     }
 
     bool IntelHexProvider::open() {
-        auto file = fs::File(this->m_sourceFilePath, fs::File::Mode::Read);
+        auto file = wolv::io::File(this->m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid())
             return false;
 
@@ -245,7 +246,7 @@ namespace hex::plugin::builtin {
 
         if (!picked)
             return false;
-        if (!fs::isRegularFile(this->m_sourceFilePath))
+        if (!wolv::io::fs::isRegularFile(this->m_sourceFilePath))
             return false;
 
         return true;

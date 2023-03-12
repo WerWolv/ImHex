@@ -2,7 +2,7 @@
 
 #include <hex/api/theme_manager.hpp>
 
-#include <hex/helpers/file.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Save, { { "ImHex Theme", "json" } }, [this](const std::fs::path &path){
                     auto json = api::ThemeManager::exportCurrentTheme(this->m_themeName);
 
-                    fs::File outputFile(path, fs::File::Mode::Create);
+                    wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                     outputFile.write(json.dump(4));
                 });
             }

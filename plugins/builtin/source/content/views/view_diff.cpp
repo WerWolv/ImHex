@@ -141,8 +141,8 @@ namespace hex::plugin::builtin {
                 this->m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &task) {
                     std::vector<Diff> differences;
 
-                    auto readerA = prv::BufferedReader(providerA);
-                    auto readerB = prv::BufferedReader(providerB);
+                    auto readerA = prv::ProviderReader(providerA);
+                    auto readerB = prv::ProviderReader(providerB);
 
                     for (auto itA = readerA.begin(), itB = readerB.begin(); itA < readerA.end() && itB < readerB.end(); itA++, itB++) {
                         if (task.wasInterrupted())

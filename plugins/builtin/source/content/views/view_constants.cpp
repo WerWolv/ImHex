@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
         this->m_filterIndices.clear();
 
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Constants)) {
-            if (!fs::exists(path)) continue;
+            if (!wolv::io::fs::exists(path)) continue;
 
             std::error_code error;
             for (auto &file : std::fs::directory_iterator(path, error)) {

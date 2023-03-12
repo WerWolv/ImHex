@@ -11,7 +11,6 @@
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/magic.hpp>
 
@@ -19,6 +18,10 @@
 
 #include <nlohmann/json.hpp>
 #include <chrono>
+
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -633,7 +636,7 @@ namespace hex::plugin::builtin {
 
 
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
-        fs::File file(path, fs::File::Mode::Read);
+        wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (file.isValid()) {
             auto code = file.readString();
 
@@ -808,7 +811,7 @@ namespace hex::plugin::builtin {
                         if (!entry.is_regular_file())
                             continue;
 
-                        fs::File file(entry.path(), fs::File::Mode::Read);
+                        wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
                         if (!file.isValid())
                             continue;
 
@@ -871,7 +874,7 @@ namespace hex::plugin::builtin {
                 std::vector<std::fs::path> paths;
 
                 for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
-                    if (!fs::exists(imhexPath)) continue;
+                    if (!wolv::io::fs::exists(imhexPath)) continue;
 
                     std::error_code error;
                     for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
@@ -890,7 +893,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {
                 fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
                 [this](const auto &path) {
-                    fs::File file(path, fs::File::Mode::Create);
+                    wolv::io::File file(path, wolv::io::File::Mode::Create);
 
                     file.write(this->m_textEditor.GetText());
                 });
@@ -969,7 +972,7 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::registerHandlers() {
         ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
-            fs::File file(path, fs::File::Mode::Read);
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
 
             if (file.isValid()) {
                 EventManager::post<RequestSetPatternLanguageCode>(file.readString());

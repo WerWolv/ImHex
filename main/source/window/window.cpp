@@ -443,7 +443,7 @@ namespace hex {
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(hex::toUTF8String(filePath).c_str());
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(fs::exists(filePath) ? ICON_VS_CHECK : ICON_VS_CLOSE);
+                        ImGui::TextUnformatted(wolv::io::fs::exists(filePath) ? ICON_VS_CHECK : ICON_VS_CLOSE);
                     }
                     ImGui::EndTable();
                 }
@@ -867,7 +867,7 @@ namespace hex {
                 }
             }
 
-            if (!this->m_imguiSettingsPath.empty() && fs::exists(this->m_imguiSettingsPath))
+            if (!this->m_imguiSettingsPath.empty() && wolv::io::fs::exists(this->m_imguiSettingsPath))
                 ImGui::LoadIniSettingsFromDisk(hex::toUTF8String(this->m_imguiSettingsPath).c_str());
         }
 

@@ -11,7 +11,6 @@
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
@@ -22,6 +21,9 @@
 #include <filesystem>
 
 #include <nlohmann/json.hpp>
+
+#include <wolv/io/fs.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex::init {
 
@@ -78,7 +80,7 @@ namespace hex::init {
 
         // If a custom certificate was found, use it, otherwise use the one from the romfs
         if (!caCertPath.empty())
-            Net::setCACert(fs::File(caCertPath, fs::File::Mode::Read).readString());
+            Net::setCACert(wolv::io::File(caCertPath, wolv::io::File::Mode::Read).readString());
         else
             Net::setCACert(std::string(romfs::get(CaCertPath).string()));
 
@@ -94,7 +96,7 @@ namespace hex::init {
         for (u32 path = 0; path < u32(fs::ImHexPath::END); path++) {
             for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(path), true)) {
                 try {
-                    fs::createDirectories(folder);
+                    wolv::io::fs::createDirectories(folder);
                 } catch (...) {
                     log::error("Failed to create folder {}!", hex::toUTF8String(folder));
                     result = false;
@@ -300,7 +302,7 @@ namespace hex::init {
             return false;
         }
 
-        const auto shouldLoadPlugin = [executablePath = hex::fs::getExecutablePath()](const Plugin &plugin) {
+        const auto shouldLoadPlugin = [executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
             // In debug builds, ignore all plugins that are not part of the executable directory
             #if !defined(DEBUG)
                 return true;

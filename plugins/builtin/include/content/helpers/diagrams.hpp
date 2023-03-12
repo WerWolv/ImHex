@@ -338,7 +338,7 @@ namespace hex {
             this->m_fileSize     = provider->getSize();
 
             // Get a file reader
-            auto reader = prv::BufferedReader(provider);
+            auto reader = prv::ProviderReader(provider);
             std::vector<u8> bytes = reader.read(this->m_startAddress, this->m_endAddress - this->m_startAddress);
 
             this->processImpl(bytes);
@@ -572,7 +572,7 @@ namespace hex {
             this->m_endAddress   = endAddress;
 
             // Get a file reader
-            auto reader = prv::BufferedReader(provider);
+            auto reader = prv::ProviderReader(provider);
             std::vector<u8> bytes = reader.read(this->m_startAddress, this->m_endAddress - this->m_startAddress);
 
             this->processImpl(bytes);
@@ -685,7 +685,7 @@ namespace hex {
             this->m_fileSize     = provider->getSize();
 
             // Get a file reader
-            auto reader = prv::BufferedReader(provider);
+            auto reader = prv::ProviderReader(provider);
             std::vector<u8> bytes = reader.read(this->m_startAddress, this->m_endAddress - this->m_startAddress);
 
             this->processImpl(bytes);

@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
 
         result += start;
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(offset);
         reader.setEndAddress(offset + size - 1);
 
@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
 
             result += HeaderLine;
 
-            auto reader = prv::BufferedReader(provider);
+            auto reader = prv::ProviderReader(provider);
             reader.seek(offset);
             reader.setEndAddress((offset + size) - 1);
 
@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
                 "    <code>\n"
                 "        <span class=\"offsetheader\">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span>";
 
-            auto reader = prv::BufferedReader(provider);
+            auto reader = prv::ProviderReader(provider);
             reader.seek(offset);
             reader.setEndAddress((offset + size) - 1);
 

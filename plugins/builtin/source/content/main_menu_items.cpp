@@ -6,10 +6,13 @@
 #include <hex/ui/view.hpp>
 #include <hex/api/keybinding.hpp>
 #include <hex/api/project_file_manager.hpp>
-#include <hex/helpers/file.hpp>
+
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
+
 #include "content/global_actions.hpp"
+
+#include <wolv/io/file.hpp>
 
 using namespace std::literals::string_literals;
 
@@ -122,7 +125,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.base64"_lang)) {
 
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                        fs::File inputFile(path, fs::File::Mode::Read);
+                        wolv::io::File inputFile(path, wolv::io::File::Mode::Read);
                         if (!inputFile.isValid()) {
                             View::showErrorPopup("hex.builtin.menu.file.import.base64.popup.open_error"_lang);
                             return;
@@ -137,7 +140,7 @@ namespace hex::plugin::builtin {
                                 View::showErrorPopup("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
                             else {
                                 fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const std::fs::path &path) {
-                                    fs::File outputFile(path, fs::File::Mode::Create);
+                                    wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
 
                                     if (!outputFile.isValid())
                                         View::showErrorPopup("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
@@ -157,7 +160,7 @@ namespace hex::plugin::builtin {
 
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
-                            auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
+                            auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readBytes();
                             auto patch     = hex::loadIPSPatch(patchData);
                             if (!patch.has_value()) {
                                 handleIPSError(patch.error());
@@ -183,7 +186,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.menu.file.import.ips32"_lang, nullptr, false)) {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
-                            auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
+                            auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readBytes();
                             auto patch = hex::loadIPS32Patch(patchData);
                             if (!patch.has_value()) {
                                 handleIPSError(patch.error());
@@ -212,7 +215,7 @@ namespace hex::plugin::builtin {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                         TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                             auto provider = ImHexApi::Provider::get();
-                            auto patchData = fs::File(path, fs::File::Mode::Read).readBytes();
+                            auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readBytes();
 
                             if (patchData.size() != provider->getActualSize()) {
                                 View::showErrorPopup("hex.builtin.menu.file.import.modified_file.popup.invalid_size"_lang);
@@ -254,7 +257,7 @@ namespace hex::plugin::builtin {
 
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
                         TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &) {
-                            fs::File outputFile(path, fs::File::Mode::Create);
+                            wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                             if (!outputFile.isValid()) {
                                 TaskManager::doLater([] {
                                     View::showErrorPopup("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
@@ -291,7 +294,7 @@ namespace hex::plugin::builtin {
 
                         TaskManager::doLater([data] {
                             fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
-                                auto file = fs::File(path, fs::File::Mode::Create);
+                                auto file = wolv::io::File(path, wolv::io::File::Mode::Create);
                                 if (!file.isValid()) {
                                     View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
                                     return;
@@ -322,7 +325,7 @@ namespace hex::plugin::builtin {
 
                         TaskManager::doLater([data] {
                             fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
-                                auto file = fs::File(path, fs::File::Mode::Create);
+                                auto file = wolv::io::File(path, wolv::io::File::Mode::Create);
                                 if (!file.isValid()) {
                                     View::showErrorPopup("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
                                     return;

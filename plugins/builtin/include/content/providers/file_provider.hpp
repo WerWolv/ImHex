@@ -1,7 +1,8 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/file.hpp>
+
+#include <wolv/io/file.hpp>
 
 #include <string_view>
 
@@ -56,7 +57,7 @@ namespace hex::plugin::builtin {
 
     protected:
         std::fs::path m_path;
-        fs::File m_file;
+        wolv::io::File m_file;
         size_t m_fileSize = 0;
 
         std::optional<struct stat> m_fileStats;

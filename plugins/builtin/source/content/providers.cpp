@@ -10,8 +10,11 @@
 #include "content/providers/view_provider.hpp"
 
 #include <hex/api/project_file_manager.hpp>
-#include <nlohmann/json.hpp>
 #include <hex/helpers/fmt.hpp>
+
+#include <nlohmann/json.hpp>
+
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 

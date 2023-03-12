@@ -1,7 +1,6 @@
 #include <hex/helpers/net.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <hex/api/content_registry.hpp>
@@ -11,15 +10,18 @@
 
 #include <nlohmann/json.hpp>
 
+#include <wolv/io/file.hpp>
+#include <wolv/utils/guards.hpp>
+
 namespace hex {
 
     Net::Net() {
-        FIRST_TIME {
+        AT_FIRST_TIME {
             curl_global_sslset(CURLSSLBACKEND_MBEDTLS, nullptr, nullptr);
             curl_global_init(CURL_GLOBAL_ALL);
         };
 
-        FINAL_CLEANUP {
+        AT_FINAL_CLEANUP {
             curl_global_cleanup();
         };
 
@@ -202,7 +204,7 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            fs::File file(filePath, fs::File::Mode::Read);
+            wolv::io::File file(filePath, wolv::io::File::Mode::Read);
             if (!file.isValid())
                 return Response<std::string> { 400, {} };
 
@@ -251,7 +253,7 @@ namespace hex {
 
             ON_SCOPE_EXIT { this->m_transmissionActive.unlock(); };
 
-            fs::File file(filePath, fs::File::Mode::Create);
+            wolv::io::File file(filePath, wolv::io::File::Mode::Create);
             if (!file.isValid())
                 return Response<void> { 400 };
 

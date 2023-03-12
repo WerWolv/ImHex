@@ -7,11 +7,12 @@
 #include <cstring>
 
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <pl/pattern_language.hpp>
 #include <pl/core/evaluator.hpp>
 #include <pl/patterns/pattern.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -106,7 +107,7 @@ namespace hex::plugin::builtin {
                         if (!filePath.exists() || !filePath.is_regular_file() || filePath.path().extension() != ".hexpat")
                             continue;
 
-                        fs::File file(filePath, fs::File::Mode::Read);
+                        wolv::io::File file(filePath, wolv::io::File::Mode::Read);
                         if (file.isValid()) {
                             auto inspectorCode = file.readString();
 

@@ -3,8 +3,10 @@
 
 #include <hex/api/localization.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -168,7 +170,7 @@ namespace hex::plugin::builtin {
     }
 
     bool MotorolaSRECProvider::open() {
-        auto file = fs::File(this->m_sourceFilePath, fs::File::Mode::Read);
+        auto file = wolv::io::File(this->m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid())
             return false;
 
@@ -222,7 +224,7 @@ namespace hex::plugin::builtin {
 
         if (!picked)
             return false;
-        if (!fs::isRegularFile(this->m_sourceFilePath))
+        if (!wolv::io::fs::isRegularFile(this->m_sourceFilePath))
             return false;
 
         return true;

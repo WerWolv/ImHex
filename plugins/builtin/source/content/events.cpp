@@ -1,19 +1,18 @@
 #include <hex/api/event.hpp>
-#include <hex/api/content_registry.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/api/localization.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #include <imgui.h>
-#include <nlohmann/json.hpp>
 
 #include <content/helpers/provider_extra_data.hpp>
 
 #include <content/providers/file_provider.hpp>
+
+#include <wolv/io/fs.hpp>
 
 namespace hex::plugin::builtin {
 

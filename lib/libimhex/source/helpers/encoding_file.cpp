@@ -1,11 +1,12 @@
 #include <hex/helpers/encoding_file.hpp>
 
 #include <hex/helpers/utils.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex {
 
     EncodingFile::EncodingFile(Type type, const std::fs::path &path) {
-        auto file = fs::File(path, fs::File::Mode::Read);
+        auto file = wolv::io::File(path, wolv::io::File::Mode::Read);
         switch (type) {
             case Type::Thingy:
                 parseThingyFile(file);
@@ -31,7 +32,7 @@ namespace hex {
         return { ".", 1 };
     }
 
-    void EncodingFile::parseThingyFile(fs::File &file) {
+    void EncodingFile::parseThingyFile(wolv::io::File &file) {
         for (const auto &line : splitString(file.readString(), "\n")) {
 
             std::string from, to;

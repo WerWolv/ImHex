@@ -145,7 +145,7 @@ namespace hex {
     std::vector<Plugin> PluginManager::s_plugins;
 
     bool PluginManager::load(const std::fs::path &pluginFolder) {
-        if (!fs::exists(pluginFolder))
+        if (!wolv::io::fs::exists(pluginFolder))
             return false;
 
         PluginManager::s_pluginFolder = pluginFolder;

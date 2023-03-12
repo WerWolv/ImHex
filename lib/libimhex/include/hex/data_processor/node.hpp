@@ -5,6 +5,7 @@
 #include <hex/data_processor/attribute.hpp>
 
 #include <set>
+#include <span>
 #include <string_view>
 #include <vector>
 
@@ -77,7 +78,7 @@ namespace hex::dp {
         const i128& getIntegerOnInput(u32 index);
         const long double& getFloatOnInput(u32 index);
 
-        void setBufferOnOutput(u32 index, const std::vector<u8> &data);
+        void setBufferOnOutput(u32 index, std::span<const u8> data);
         void setIntegerOnOutput(u32 index, i128 integer);
         void setFloatOnOutput(u32 index, long double floatingPoint);
 

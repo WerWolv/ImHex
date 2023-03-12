@@ -29,3 +29,6 @@
 [submodule "lib/external/pattern_language"]
 	path = lib/external/pattern_language
 	url = https://github.com/WerWolv/PatternLanguage
+[submodule "lib/external/libwolv"]
+	path = lib/external/libwolv
+	url = https://github.com/WerWolv/libwolv

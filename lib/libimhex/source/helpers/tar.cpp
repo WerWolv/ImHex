@@ -1,7 +1,8 @@
 #include <hex/helpers/tar.hpp>
 #include <hex/helpers/literals.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex {
 
@@ -12,11 +13,11 @@ namespace hex {
 
         // Explicitly create file so a short path gets generated
         if (mode == Mode::Create) {
-            fs::File file(path, fs::File::Mode::Create);
+            wolv::io::File file(path, wolv::io::File::Mode::Create);
             file.flush();
         }
 
-        auto shortPath = hex::fs::toShortPath(path);
+        auto shortPath = wolv::io::fs::toShortPath(path);
         if (mode == Tar::Mode::Read)
             error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "r");
         else if (mode == Tar::Mode::Write)
@@ -58,7 +59,7 @@ namespace hex {
         mtar_header_t header;
         while (mtar_read_header(&this->m_ctx, &header) != MTAR_ENULLRECORD) {
             std::fs::path path = header.name;
-            if (header.name != PaxHeaderName && fs::isSubPath(basePath, path)) {
+            if (header.name != PaxHeaderName && wolv::io::fs::isSubPath(basePath, path)) {
                 result.emplace_back(header.name);
             }
 
@@ -132,7 +133,7 @@ namespace hex {
     static void writeFile(mtar_t *ctx, mtar_header_t *header, const std::fs::path &path) {
         constexpr static u64 BufferSize = 1_MiB;
 
-        fs::File outputFile(path, fs::File::Mode::Create);
+        wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
 
         std::vector<u8> buffer;
         for (u64 offset = 0; offset < header->size; offset += BufferSize) {

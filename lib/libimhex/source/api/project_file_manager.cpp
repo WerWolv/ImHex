@@ -6,6 +6,9 @@
 
 #include <hex/providers/provider.hpp>
 
+#include <wolv/utils/guards.hpp>
+#include <wolv/io/fs.hpp>
+
 namespace hex {
 
     constexpr static auto MetadataHeaderMagic = "HEX";
@@ -24,7 +27,7 @@ namespace hex {
             ProjectFile::s_currProjectPath = originalPath;
         };
 
-        if (!fs::exists(filePath) || !fs::isRegularFile(filePath))
+        if (!wolv::io::fs::exists(filePath) || !wolv::io::fs::isRegularFile(filePath))
             return false;
         if (filePath.extension() != ".hexproj")
             return false;

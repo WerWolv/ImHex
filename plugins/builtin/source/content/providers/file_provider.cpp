@@ -7,7 +7,6 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <nlohmann/json.hpp>
@@ -77,7 +76,7 @@ namespace hex::plugin::builtin {
             return;
 
         std::scoped_lock lock(this->m_mutex);
-        fs::File writeFile(this->m_path, fs::File::Mode::Write);
+        wolv::io::File writeFile(this->m_path, wolv::io::File::Mode::Write);
         if (!writeFile.isValid())
             return;
         
@@ -91,7 +90,7 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::saveAs(const std::fs::path &path) {
-        fs::File file(path, fs::File::Mode::Create);
+        wolv::io::File file(path, wolv::io::File::Mode::Create);
 
         if (file.isValid()) {
             auto provider = ImHexApi::Provider::get();
@@ -113,7 +112,7 @@ namespace hex::plugin::builtin {
         this->close();
 
         {
-            fs::File file(this->m_path, fs::File::Mode::Write);
+            wolv::io::File file(this->m_path, wolv::io::File::Mode::Write);
 
             file.setSize(newSize);
         }
@@ -221,7 +220,7 @@ namespace hex::plugin::builtin {
         this->m_readable = true;
         this->m_writable = true;
 
-        fs::File file(this->m_path, fs::File::Mode::Read);
+        wolv::io::File file(this->m_path, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
             this->m_writable = false;
             this->m_readable = false;

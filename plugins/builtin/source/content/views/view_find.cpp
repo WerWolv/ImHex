@@ -236,7 +236,7 @@ namespace hex::plugin::builtin {
             return results;
         }
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
@@ -295,7 +295,7 @@ namespace hex::plugin::builtin {
     std::vector<ViewFind::Occurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
         std::vector<Occurrence> results;
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
@@ -353,7 +353,7 @@ namespace hex::plugin::builtin {
     std::vector<ViewFind::Occurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
         std::vector<Occurrence> results;
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
@@ -386,7 +386,7 @@ namespace hex::plugin::builtin {
     std::vector<ViewFind::Occurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
         std::vector<Occurrence> results;
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 

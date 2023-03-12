@@ -2,7 +2,6 @@
 
 #include <hex/api/content_registry.hpp>
 
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <hex/providers/provider.hpp>
@@ -13,6 +12,8 @@
 #include <nlohmann/json.hpp>
 
 #include <content/helpers/provider_extra_data.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -73,7 +74,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang, nullptr, false, providerValid)) {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                     [&](const std::fs::path &path) {
-                        fs::File file(path, fs::File::Mode::Read);
+                        wolv::io::File file(path, wolv::io::File::Mode::Read);
                         if (file.isValid()) {
                             ViewDataProcessor::loadNodes(data.mainWorkspace, file.readString());
                             this->m_updateNodePositions = true;
@@ -84,7 +85,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !data.workspaceStack.empty() && !data.workspaceStack.back()->nodes.empty() && providerValid)) {
                 fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                     [&](const std::fs::path &path) {
-                        fs::File file(path, fs::File::Mode::Create);
+                        wolv::io::File file(path, wolv::io::File::Mode::Create);
                         if (file.isValid())
                             file.write(ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
                     });
@@ -92,7 +93,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
-            fs::File file(path, fs::File::Mode::Read);
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid()) return false;
 
             auto &data = ProviderExtraData::getCurrent().dataProcessor;
@@ -204,7 +205,7 @@ namespace hex::plugin::builtin {
             for (const auto &entry : std::fs::recursive_directory_iterator(basePath)) {
                 if (entry.path().extension() == ".hexnode") {
                     try {
-                        nlohmann::json nodeJson = nlohmann::json::parse(fs::File(entry.path(), fs::File::Mode::Read).readString());
+                        nlohmann::json nodeJson = nlohmann::json::parse(wolv::io::File(entry.path(), wolv::io::File::Mode::Read).readString());
 
                         this->m_customNodes.push_back(CustomNode { LangEntry(nodeJson["name"]), nodeJson });
                     } catch (nlohmann::json::exception &e) {
@@ -320,7 +321,7 @@ namespace hex::plugin::builtin {
                     if (it != workspace.nodes.end()) {
                         auto &node = *it;
                         fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } }, [&](const std::fs::path &path){
-                            fs::File outputFile(path, fs::File::Mode::Create);
+                            wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                             outputFile.write(ViewDataProcessor::saveNode(node.get()).dump(4));
                         });
                     }

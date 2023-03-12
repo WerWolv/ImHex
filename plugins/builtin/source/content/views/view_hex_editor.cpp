@@ -292,7 +292,7 @@ namespace hex::plugin::builtin {
         std::optional<Region> findSequence(const std::vector<u8> &sequence, bool backwards) {
             auto provider = ImHexApi::Provider::get();
 
-            hex::prv::BufferedReader reader(provider);
+            prv::ProviderReader reader(provider);
 
             reader.seek(this->m_searchPosition.value_or(provider->getBaseAddress()));
 
@@ -605,7 +605,7 @@ namespace hex::plugin::builtin {
 
         auto provider = ImHexApi::Provider::get();
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader (provider);
         reader.seek(selection.getStartAddress());
         reader.setEndAddress(selection.getEndAddress());
 

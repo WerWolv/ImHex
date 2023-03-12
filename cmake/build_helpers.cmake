@@ -419,6 +419,8 @@ macro(addBundledLibraries)
     add_subdirectory(${EXTERN_LIBS_FOLDER}/intervaltree EXCLUDE_FROM_ALL)
     set_target_properties(intervaltree PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+    add_subdirectory(${EXTERN_LIBS_FOLDER}/libwolv EXCLUDE_FROM_ALL)
+
     set(XDGPP_INCLUDE_DIRS "${EXTERN_LIBS_FOLDER}/xdgpp")
     set(CURL_USE_MBEDTLS ON)
     set(BUILD_CURL_EXE OFF)

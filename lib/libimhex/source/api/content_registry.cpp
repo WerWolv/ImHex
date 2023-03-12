@@ -1,17 +1,17 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <hex/ui/view.hpp>
+#include <hex/data_processor/node.hpp>
 
 #include <filesystem>
 #include <fstream>
 
 #include <nlohmann/json.hpp>
 
-#include <hex/data_processor/node.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex {
 
@@ -22,7 +22,7 @@ namespace hex {
         void load() {
             bool loaded = false;
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                fs::File file(dir / SettingsFile, fs::File::Mode::Read);
+                wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
 
                 if (file.isValid()) {
                     getSettingsData() = nlohmann::json::parse(file.readString());
@@ -37,7 +37,7 @@ namespace hex {
 
         void store() {
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                fs::File file(dir / SettingsFile, fs::File::Mode::Create);
+                wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
 
                 if (file.isValid()) {
                     file.write(getSettingsData().dump(4));
@@ -48,7 +48,7 @@ namespace hex {
 
         void clear() {
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                hex::fs::remove(dir / SettingsFile);
+                wolv::io::fs::remove(dir / SettingsFile);
             }
         }
 

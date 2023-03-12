@@ -4,7 +4,6 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include "content/helpers/provider_extra_data.hpp"
@@ -18,6 +17,10 @@
 #include <filesystem>
 #include <thread>
 
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+#include <wolv/utils/guards.hpp>
+
 namespace hex::plugin::builtin {
 
     ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
@@ -25,7 +28,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
-                if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
+                if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
                     View::showInfoPopup("hex.builtin.view.yara.rule_added"_lang);
                     return true;
                 }
@@ -261,12 +264,12 @@ namespace hex::plugin::builtin {
                     yr_compiler_destroy(compiler);
                 };
 
-                auto currFilePath = hex::toUTF8String(fs::toShortPath(filePath));
+                auto currFilePath = hex::toUTF8String(wolv::io::fs::toShortPath(filePath));
 
                 yr_compiler_set_include_callback(
                     compiler,
                     [](const char *includeName, const char *, const char *, void *userData) -> const char * {
-                        fs::File file(std::fs::path(static_cast<const char *>(userData)).parent_path() / includeName, fs::File::Mode::Read);
+                        wolv::io::File file(std::fs::path(static_cast<const char *>(userData)).parent_path() / includeName, wolv::io::File::Mode::Read);
                         if (!file.isValid())
                             return nullptr;
 
@@ -285,7 +288,7 @@ namespace hex::plugin::builtin {
                     currFilePath.data()
                 );
 
-                fs::File file(rules[this->m_selectedRule].second, fs::File::Mode::Read);
+                wolv::io::File file(rules[this->m_selectedRule].second, wolv::io::File::Mode::Read);
                 if (!file.isValid()) return;
 
                 if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {

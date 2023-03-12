@@ -86,7 +86,7 @@ namespace hex::dp {
         return *reinterpret_cast<long double *>(outputData.data());
     }
 
-    void Node::setBufferOnOutput(u32 index, const std::vector<u8> &data) {
+    void Node::setBufferOnOutput(u32 index, std::span<const u8> data) {
         if (index >= this->getAttributes().size())
             throwNodeError("Attribute index out of bounds!");
 
@@ -95,7 +95,7 @@ namespace hex::dp {
         if (attribute.getIOType() != Attribute::IOType::Out)
             throwNodeError("Tried to set output data of an input attribute!");
 
-        attribute.getOutputData() = data;
+        attribute.getOutputData() = { data.begin(), data.end() };
     }
 
     void Node::setIntegerOnOutput(u32 index, i128 integer) {

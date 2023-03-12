@@ -4,12 +4,14 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <nlohmann/json.hpp>
 #include <cstring>
 
 #include <content/helpers/provider_extra_data.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -388,7 +390,7 @@ namespace hex::plugin::builtin {
             if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.import"_lang, nullptr, false, providerValid)) {
                 fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
                     try {
-                        importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString()));
+                        importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
                     } catch (...) { }
                 });
             }
@@ -397,7 +399,7 @@ namespace hex::plugin::builtin {
                     nlohmann::json json;
                     exportBookmarks(ImHexApi::Provider::get(), json);
 
-                    fs::File(path, fs::File::Mode::Create).write(json.dump(4));
+                    wolv::io::File(path, wolv::io::File::Mode::Create).write(json.dump(4));
                 });
             }
         });

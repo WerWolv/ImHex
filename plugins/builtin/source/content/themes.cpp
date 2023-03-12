@@ -10,9 +10,10 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <hex/api/event.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -334,7 +335,7 @@ namespace hex::plugin::builtin {
         for (const auto &themeFolder : fs::getDefaultPaths(fs::ImHexPath::Themes)) {
             for (const auto &theme : std::fs::directory_iterator(themeFolder)) {
                 if (theme.is_regular_file())
-                    api::ThemeManager::addTheme(fs::File(theme.path(), fs::File::Mode::Read).readString());
+                    api::ThemeManager::addTheme(wolv::io::File(theme.path(), wolv::io::File::Mode::Read).readString());
             }
         }
     }

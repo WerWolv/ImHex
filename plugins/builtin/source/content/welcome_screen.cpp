@@ -7,7 +7,6 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <hex/api/project_file_manager.hpp>
 
@@ -17,6 +16,10 @@
 
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+#include <wolv/utils/guards.hpp>
 
 #include <fonts/codicons_font.h>
 
@@ -85,7 +88,7 @@ namespace hex::plugin::builtin {
             for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < 5; i++) {
                 auto &path = recentFilePaths[i];
                 try {
-                    auto jsonData = nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString());
+                    auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
                     uniqueProviders.insert(RecentProvider {
                         .displayName    = jsonData["displayName"],
                         .type           = jsonData["type"],
@@ -179,14 +182,14 @@ namespace hex::plugin::builtin {
                 for (const auto &provider : ImHexApi::Provider::getProviders())
                     provider->markDirty();
 
-                fs::remove(s_safetyBackupPath);
+                wolv::io::fs::remove(s_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
             if (ImGui::Button("hex.builtin.welcome.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
-                fs::remove(s_safetyBackupPath);
+                wolv::io::fs::remove(s_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();
             }
@@ -476,7 +479,7 @@ namespace hex::plugin::builtin {
             {
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                     auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
-                    fs::File recentFile(recentPath / fileName, fs::File::Mode::Create);
+                    wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())
                         continue;
 
@@ -550,7 +553,7 @@ namespace hex::plugin::builtin {
 
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-            if (auto filePath = std::fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
+            if (auto filePath = std::fs::path(path) / CrashBackupFileName; wolv::io::fs::exists(filePath)) {
                 s_safetyBackupPath = filePath;
                 TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.safety_backup.title"_lang); });
             }

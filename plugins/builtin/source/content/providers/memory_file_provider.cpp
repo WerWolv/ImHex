@@ -6,7 +6,8 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/api/event.hpp>
-#include <hex/helpers/file.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -50,7 +51,7 @@ namespace hex::plugin::builtin {
     }
 
     void MemoryFileProvider::saveAs(const std::fs::path &path) {
-        fs::File file(path, fs::File::Mode::Create);
+        wolv::io::File file(path, wolv::io::File::Mode::Create);
 
         if (file.isValid()) {
             auto provider = ImHexApi::Provider::get();

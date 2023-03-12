@@ -4,7 +4,6 @@
 #include <hex/helpers/net.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/api/localization.hpp>
@@ -26,6 +25,9 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <nlohmann/json.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -747,7 +749,7 @@ namespace hex::plugin::builtin {
                             ON_SCOPE_EXIT {
                                 selectedFile.clear();
                             };
-                            fs::File file(selectedFile, fs::File::Mode::Write);
+                            wolv::io::File file(selectedFile, wolv::io::File::Mode::Write);
 
                             if (!file.isValid()) {
                                 View::showErrorPopup("hex.builtin.tools.file_tools.shredder.error.open"_lang);
@@ -912,7 +914,7 @@ namespace hex::plugin::builtin {
                                 baseOutputPath.clear();
                             };
 
-                            fs::File file(selectedFile, fs::File::Mode::Read);
+                            wolv::io::File file(selectedFile, wolv::io::File::Mode::Read);
 
                             if (!file.isValid()) {
                                 View::showErrorPopup("hex.builtin.tools.file_tools.splitter.picker.error.open"_lang);
@@ -933,7 +935,7 @@ namespace hex::plugin::builtin {
                                 std::fs::path path = baseOutputPath;
                                 path += hex::format(".{:05}", index);
 
-                                fs::File partFile(path, fs::File::Mode::Create);
+                                wolv::io::File partFile(path, wolv::io::File::Mode::Create);
 
                                 if (!partFile.isValid()) {
                                     View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
@@ -1046,7 +1048,7 @@ namespace hex::plugin::builtin {
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
                         combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {
-                            fs::File output(outputPath, fs::File::Mode::Create);
+                            wolv::io::File output(outputPath, wolv::io::File::Mode::Create);
 
                             if (!output.isValid()) {
                                 View::showErrorPopup("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
@@ -1060,14 +1062,14 @@ namespace hex::plugin::builtin {
                                 task.update(fileIndex);
                                 fileIndex++;
 
-                                fs::File input(file, fs::File::Mode::Read);
+                                wolv::io::File input(file, wolv::io::File::Mode::Read);
                                 if (!input.isValid()) {
                                     View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, hex::toUTF8String(file)));
                                     return;
                                 }
 
                                 constexpr static auto BufferSize = 0xFF'FFFF;
-                                auto inputSize            = input.getSize();
+                                auto inputSize = input.getSize();
                                 for (u64 inputOffset = 0; inputOffset < inputSize; inputOffset += BufferSize) {
                                     output.write(input.readBytes(std::min<u64>(BufferSize, inputSize - inputOffset)));
                                     output.flush();

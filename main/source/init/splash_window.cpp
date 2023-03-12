@@ -17,6 +17,8 @@
 #include <fonts/fontawesome_font.h>
 #include <GLFW/glfw3.h>
 
+#include <wolv/utils/guards.hpp>
+
 #include <unistd.h>
 
 #include <chrono>

@@ -10,7 +10,6 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/magic.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/tar.hpp>
 
@@ -18,6 +17,8 @@
 #include <filesystem>
 #include <functional>
 #include <nlohmann/json.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -166,11 +167,11 @@ namespace hex::plugin::builtin {
 
                                 auto path = folder / std::fs::path(storeEntry.fileName);
 
-                                if (fs::exists(path) && fs::isPathWritable(folder)) {
+                                if (wolv::io::fs::exists(path) && fs::isPathWritable(folder)) {
                                     storeEntry.installed = true;
 
                                     std::ifstream file(path, std::ios::in | std::ios::binary);
-                                    std::vector<u8> data(fs::getFileSize(path), 0x00);
+                                    std::vector<u8> data(wolv::io::fs::getFileSize(path), 0x00);
                                     file.read(reinterpret_cast<char *>(data.data()), data.size());
 
                                     auto fileHash = crypt::sha256(data);
@@ -227,7 +228,7 @@ namespace hex::plugin::builtin {
 
             auto fullPath = path / std::fs::path(fileName);
 
-            if (!update || fs::exists(fullPath)) {
+            if (!update || wolv::io::fs::exists(fullPath)) {
                 downloading          = true;
                 this->m_downloadPath = fullPath;
                 this->m_download     = this->m_net.downloadFile(url, fullPath, 30'0000);
@@ -249,10 +250,10 @@ namespace hex::plugin::builtin {
             const auto filePath = path / fileName;
             const auto folderPath = (path / std::fs::path(fileName).stem());
 
-            fs::remove(filePath);
-            fs::removeAll(folderPath);
+            wolv::io::fs::remove(filePath);
+            wolv::io::fs::removeAll(folderPath);
 
-            removed = removed && !fs::exists(filePath) && !fs::exists(folderPath);
+            removed = removed && !wolv::io::fs::exists(filePath) && !wolv::io::fs::exists(folderPath);
         }
 
         return removed;

@@ -25,8 +25,6 @@ set(LIBIMHEX_SOURCES
     source/helpers/crypto.cpp
     source/helpers/net.cpp
     source/helpers/opengl.cpp
-    source/helpers/file.cpp
-    source/helpers/socket.cpp
     source/helpers/patches.cpp
     source/helpers/encoding_file.cpp
     source/helpers/logger.cpp
@@ -72,4 +70,4 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} libpl intervaltree ${MINIAUDIO_LIBRARIES})
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} libpl intervaltree ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash)
