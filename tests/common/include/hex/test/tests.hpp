@@ -6,11 +6,13 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <wolv/utils/preproc.hpp>
+
 #include <string>
 #include <map>
 #include <functional>
 
-#define TEST_SEQUENCE(...) static auto ANONYMOUS_VARIABLE(TEST_SEQUENCE) = ::hex::test::TestSequenceExecutor(__VA_ARGS__) + []() -> int
+#define TEST_SEQUENCE(...) static auto WOLV_ANONYMOUS_VARIABLE(TEST_SEQUENCE) = ::hex::test::TestSequenceExecutor(__VA_ARGS__) + []() -> int
 #define TEST_FAIL()        return EXIT_FAILURE
 #define TEST_SUCCESS()     return EXIT_SUCCESS
 #define FAILING            true
