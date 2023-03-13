@@ -238,26 +238,6 @@ namespace hex {
         return result;
     }
 
-    template<typename T>
-    inline void trimLeft(std::basic_string<T> &s) {
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-            return !std::isspace(ch) && ch >= 0x20;
-        }));
-    }
-
-    template<typename T>
-    inline void trimRight(std::basic_string<T> &s) {
-        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-            return !std::isspace(ch) && ch >= 0x20;
-        }).base(), s.end());
-    }
-
-    template<typename T>
-    inline void trim(std::basic_string<T> &s) {
-        trimLeft(s);
-        trimRight(s);
-    }
-
     float float16ToFloat32(u16 float16);
 
     inline bool equalsIgnoreCase(const std::string &left, const std::string &right) {

@@ -316,8 +316,7 @@ namespace hex::plugin::builtin {
             }
 
             if (drawDefaultTextEditingTextBox(address, this->m_inputBuffer, ImGuiInputTextFlags_None)) {
-                hex::trim(this->m_inputBuffer);
-                if (auto result = hex::parseBinaryString(this->m_inputBuffer); result.has_value()) {
+                if (auto result = hex::parseBinaryString(wolv::util::trim(this->m_inputBuffer)); result.has_value()) {
                     *data = result.value();
                     return true;
                 }

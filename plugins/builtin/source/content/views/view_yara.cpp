@@ -294,9 +294,8 @@ namespace hex::plugin::builtin {
                 if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
                     std::string errorMessage(0xFFFF, '\x00');
                     yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
-                    hex::trim(errorMessage);
 
-                    TaskManager::doLater([this, errorMessage] {
+                    TaskManager::doLater([this, errorMessage = wolv::util::trim(errorMessage)] {
                         this->clearResult();
 
                         this->m_consoleMessages.push_back("Error: " + errorMessage);

@@ -1,7 +1,9 @@
 #include <hex/helpers/encoding_file.hpp>
 
 #include <hex/helpers/utils.hpp>
+
 #include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex {
 
@@ -52,7 +54,7 @@ namespace hex {
             if (fromBytes.empty()) continue;
 
             if (to.length() > 1)
-                hex::trim(to);
+                to = wolv::util::trim(to);
             if (to.empty())
                 to = " ";
 
