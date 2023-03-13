@@ -34,6 +34,8 @@ set(LIBYARA_INCLUDES
         ${LIBYARA_SOURCE_PATH}/include/yara/types.h
         ${LIBYARA_SOURCE_PATH}/include/yara/utils.h
         ${LIBYARA_SOURCE_PATH}/crypto.h
+        ${LIBYARA_SOURCE_PATH}/tlshc/tlsh_impl.h
+        ${LIBYARA_SOURCE_PATH}/tlshc/tlsh_util.h
         )
 
 set(LIBYARA_SOURCE
@@ -66,6 +68,7 @@ set(LIBYARA_SOURCE
         ${LIBYARA_SOURCE_PATH}/scan.c
         ${LIBYARA_SOURCE_PATH}/scanner.c
         ${LIBYARA_SOURCE_PATH}/sizedstr.c
+        ${LIBYARA_SOURCE_PATH}/simple_str.c
         ${LIBYARA_SOURCE_PATH}/stack.c
         ${LIBYARA_SOURCE_PATH}/stopwatch.c
         ${LIBYARA_SOURCE_PATH}/strutils.c
@@ -78,6 +81,9 @@ set(LIBYARA_SOURCE
         ${LIBYARA_SOURCE_PATH}/hex_grammar.c
         ${LIBYARA_SOURCE_PATH}/re_grammar.c
         ${LIBYARA_SOURCE_PATH}/proc/none.c
+        ${LIBYARA_SOURCE_PATH}/tlshc/tlsh.c
+        ${LIBYARA_SOURCE_PATH}/tlshc/tlsh_impl.c
+        ${LIBYARA_SOURCE_PATH}/tlshc/tlsh_util.c
         )
 
 set(LIBYARA_MODULES
@@ -91,6 +97,7 @@ set(LIBYARA_MODULES
         ${LIBYARA_SOURCE_PATH}/modules/math/math.c
         ${LIBYARA_SOURCE_PATH}/modules/pe/pe.c
         ${LIBYARA_SOURCE_PATH}/modules/pe/pe_utils.c
+        ${LIBYARA_SOURCE_PATH}/modules/string/string.c
         ${LIBYARA_SOURCE_PATH}/modules/tests/tests.c
         ${LIBYARA_SOURCE_PATH}/modules/time/time.c
 )
@@ -103,7 +110,7 @@ set_property(TARGET libyara PROPERTY POSITION_INDEPENDENT_CODE ON)
 # Add mbedtls crypto wrappers
 target_compile_definitions(libyara PRIVATE HAVE_MBEDTLS)
 
-target_compile_definitions(libyara PRIVATE USE_NO_PROC)
+target_compile_definitions(libyara PRIVATE USE_NO_PROC BUCKETS_256 CHECKSUM_3B)
 
 target_compile_definitions(libyara PRIVATE HASH_MODULE)
 target_compile_definitions(libyara PRIVATE DOTNET_MODULE)
@@ -128,6 +135,6 @@ else ()
 endif ()
 
 include(GNUInstallDirs)
-configure_file(${LIBYARA_SOURCE_PATH}/yara.pc.in
-        ${LIBYARA_SOURCE_PATH}/yara.pc @ONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/yara/yara.pc.in
+        ${CMAKE_CURRENT_SOURCE_DIR}/yara/yara.pc @ONLY)
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
