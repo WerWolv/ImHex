@@ -17,6 +17,7 @@
 #include <filesystem>
 
 #include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
 
 namespace hex::fs {
 
@@ -87,14 +88,7 @@ namespace hex::fs {
 
         #elif defined(OS_MACOS)
 
-            std::fs::path applicationSupportDirPath;
-            {
-                auto string = getMacApplicationSupportDirectoryPath();
-                applicationSupportDirPath = std::string(string);
-                macFree(string);
-            }
-
-            paths.push_back(applicationSupportDirPath);
+            paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath());
 
         #elif defined(OS_LINUX)
 
@@ -110,7 +104,7 @@ namespace hex::fs {
 
         #if defined(OS_MACOS)
 
-            if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
+            if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
                 paths.push_back(*executablePath);
 
         #else

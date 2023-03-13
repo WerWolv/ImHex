@@ -1,6 +1,5 @@
 #include <hex/providers/provider.hpp>
 
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/logger.hpp>
 #include <stdexcept>
 
@@ -48,7 +47,7 @@ namespace hex::test {
             return this->m_data->size();
         }
 
-        [[nodiscard]] virtual std::string getTypeName() const { return "hex.test.provider.test"; }
+        [[nodiscard]] virtual std::string getTypeName() const override { return "hex.test.provider.test"; }
 
         bool open() override { return true; }
         void close() override { }

@@ -140,7 +140,7 @@
 
 
             void initialize() {
-                if (auto executablePath = fs::getExecutablePath(); executablePath.has_value()) {
+                if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
                     static std::string path = executablePath->string();
                     s_backtraceState = backtrace_create_state(path.c_str(), 1, [](void *, const char *msg, int) { log::error("{}", msg); }, nullptr);
                 }

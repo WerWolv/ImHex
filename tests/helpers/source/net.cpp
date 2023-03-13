@@ -1,7 +1,7 @@
 #include <hex/test/tests.hpp>
 
 #include <hex/helpers/net.hpp>
-#include <hex/helpers/file.hpp>
+#include <wolv/io/file.hpp>
 #include <hex/helpers/fs.hpp>
 
 using namespace std::literals::string_literals;
@@ -43,7 +43,7 @@ TEST_SEQUENCE("ContentAPI") {
 
     TEST_ASSERT(result.code == 200);
 
-    hex::fs::File file(FilePath, hex::fs::File::Mode::Read);
+    wolv::io::File file(FilePath, wolv::io::File::Mode::Read);
     if (!file.isValid())
         TEST_FAIL();
 
