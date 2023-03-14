@@ -139,6 +139,7 @@ namespace hex::plugin::builtin::ui {
 
         void setCustomEncoding(EncodingFile encoding) {
             this->m_currCustomEncoding = std::move(encoding);
+            this->m_encodingLineStartAddresses.clear();
         }
 
         void forceUpdateScrollPosition() {
@@ -202,6 +203,7 @@ namespace hex::plugin::builtin::ui {
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
 
         std::optional<EncodingFile> m_currCustomEncoding;
+        std::vector<u64> m_encodingLineStartAddresses;
 
         std::pair<Region, bool> m_currValidRegion = { Region::Invalid(), false };
 

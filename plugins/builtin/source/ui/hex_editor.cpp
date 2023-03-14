@@ -93,8 +93,10 @@ namespace hex::plugin::builtin::ui {
             {
                 auto bytesPerRow = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row");
 
-                if (bytesPerRow.is_number())
+                if (bytesPerRow.is_number()) {
                     this->m_bytesPerRow = static_cast<int>(bytesPerRow);
+                    this->m_encodingLineStartAddresses.clear();
+                }
             }
 
             {
@@ -195,11 +197,33 @@ namespace hex::plugin::builtin::ui {
         ImColor color;
     };
 
-    static CustomEncodingData queryCustomEncodingData(prv::Provider *provider, const EncodingFile &encodingFile, u64 address) {
+    static CustomEncodingData queryCustomEncodingData(prv::Provider *provider, const EncodingFile &encodingFile, std::vector<u64> &lineStartAddresses, u32 bytesPerRow, u64 address) {
         const auto longestSequence = encodingFile.getLongestSequence();
 
         if (longestSequence == 0)
             return { ".", 1, 0xFFFF8000 };
+
+        if (lineStartAddresses.empty() || lineStartAddresses.size() <= address / bytesPerRow) {
+            auto prevSize = lineStartAddresses.size();
+            auto newSize = address / bytesPerRow + 1;
+            lineStartAddresses.reserve(newSize);
+
+            std::vector<u8> buffer;
+            for (auto i = prevSize; i < newSize; i++) {
+                u32 offset = 0;
+                while (offset < bytesPerRow) {
+                    size_t readSize   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
+                    buffer.resize(readSize);
+                    provider->read(address, buffer.data(), readSize);
+
+                    offset += encodingFile.getEncodingLengthFor(buffer);
+                }
+
+                lineStartAddresses.push_back(offset % bytesPerRow);
+            }
+        }
+
+        address += lineStartAddresses[address / bytesPerRow];
 
         size_t size   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
 
@@ -560,7 +584,7 @@ namespace hex::plugin::builtin::ui {
                             do {
                                 const u64 address = y * this->m_bytesPerRow + offset + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
-                                auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, address);
+                                auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, this->m_encodingLineStartAddresses, this->m_bytesPerRow, address);
                                 offset += std::max<size_t>(1, result.advance);
 
                                 encodingData.emplace_back(address, result);

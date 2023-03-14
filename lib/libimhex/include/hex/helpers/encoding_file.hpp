@@ -24,6 +24,7 @@ namespace hex {
         EncodingFile(Type type, const std::fs::path &path);
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
+        [[nodiscard]] size_t getEncodingLengthFor(std::span<u8> buffer) const;
         [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }
 
         [[nodiscard]] bool valid() const { return this->m_valid; }

@@ -26,12 +26,26 @@ namespace hex {
 
             if (size > buffer.size()) continue;
 
-            auto key = std::vector<u8>(buffer.begin(), buffer.begin() + size);
+            std::vector<u8> key(buffer.begin(), buffer.begin() + size);
             if (mapping.contains(key))
                 return { mapping.at(key), size };
         }
 
         return { ".", 1 };
+    }
+
+    size_t EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
+        for (auto riter = this->m_mapping.crbegin(); riter != this->m_mapping.crend(); ++riter) {
+            const auto &[size, mapping] = *riter;
+
+            if (size > buffer.size()) continue;
+
+            std::vector<u8> key(buffer.begin(), buffer.begin() + size);
+            if (mapping.contains(key))
+                return size;
+        }
+
+        return 1;
     }
 
     void EncodingFile::parseThingyFile(wolv::io::File &file) {
@@ -60,9 +74,11 @@ namespace hex {
 
             if (!this->m_mapping.contains(fromBytes.size()))
                 this->m_mapping.insert({ fromBytes.size(), {} });
-            this->m_mapping[fromBytes.size()].insert({ fromBytes, to });
 
-            this->m_longestSequence = std::max(this->m_longestSequence, fromBytes.size());
+            auto keySize = fromBytes.size();
+            this->m_mapping[keySize].insert({ std::move(fromBytes), to });
+
+            this->m_longestSequence = std::max(this->m_longestSequence, keySize);
         }
     }
 
