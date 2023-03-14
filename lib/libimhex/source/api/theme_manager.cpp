@@ -1,4 +1,5 @@
 #include <hex/api/theme_manager.hpp>
+#include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
@@ -169,6 +170,8 @@ namespace hex::api {
                     }
                 }
             }
+
+            ImGui::GetStyle().ScaleAllSizes(ImHexApi::System::getGlobalScale());
         }
 
         if (theme.contains("image_postfix")) {
