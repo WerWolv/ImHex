@@ -118,26 +118,36 @@ namespace hex::init {
         // Setup basic font configuration
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
-        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+        cfg.OversampleH = cfg.OversampleV = 2, cfg.PixelSnapH = true;
         cfg.SizePixels = fontSize;
+
+        fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
 
         // Configure font glyph ranges that should be loaded from the default font and unifont
         ImVector<ImWchar> ranges;
         {
             ImFontGlyphRangesBuilder glyphRangesBuilder;
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesJapanese());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesChineseFull());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesCyrillic());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesKorean());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesThai());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
 
             {
-                constexpr static ImWchar controlCodeRange[]   = { 0x0000, 0x001F, 0 };
+                constexpr static ImWchar controlCodeRange[]   = { 0x0001, 0x001F, 0 };
                 constexpr static ImWchar extendedAsciiRange[] = { 0x007F, 0x00FF, 0 };
+
                 glyphRangesBuilder.AddRanges(controlCodeRange);
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
                 glyphRangesBuilder.AddRanges(extendedAsciiRange);
+            }
+
+            if (loadUnicode) {
+                constexpr static ImWchar fullRange[]   = { 0x0100, 0xFFEF, 0 };
+
+                glyphRangesBuilder.AddRanges(fullRange);
+            } else {
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesJapanese());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesChineseFull());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesCyrillic());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesKorean());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesThai());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
             }
 
             glyphRangesBuilder.BuildRanges(&ranges);

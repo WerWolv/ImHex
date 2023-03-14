@@ -14,6 +14,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_impl_opengl3_loader.h>
 #include <fonts/fontawesome_font.h>
 #include <GLFW/glfw3.h>
 
@@ -278,7 +279,7 @@ namespace hex::init {
             std::uint8_t *px;
             int w, h;
             io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0_scaled, &cfg, fontAwesomeRange);
-            io.Fonts->GetTexDataAsRGBA32(&px, &w, &h);
+            io.Fonts->GetTexDataAsAlpha8(&px, &w, &h);
 
             // Create new font atlas
             GLuint tex;
@@ -286,7 +287,7 @@ namespace hex::init {
             glBindTexture(GL_TEXTURE_2D, tex);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA8, GL_UNSIGNED_INT, px);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, w, h, 0, GL_ALPHA, GL_UNSIGNED_BYTE, px);
             io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(tex));
         }
 
