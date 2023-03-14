@@ -415,11 +415,8 @@ namespace hex::plugin::builtin {
                 std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(matches));
 
                 auto uniques = std::set(matches.begin(), matches.end(), [](const auto &l, const auto &r) {
-                    return l.address < r.address &&
-                           l.size < r.size &&
-                           l.wholeDataMatch < r.wholeDataMatch &&
-                           l.identifier < r.identifier &&
-                           l.variable < r.variable;
+                    return std::tie(l.address, l.size, l.wholeDataMatch, l.identifier, l.variable) <
+                           std::tie(r.address, r.size, r.wholeDataMatch, r.identifier, r.variable);
                 });
                 matches.clear();
                 std::move(uniques.begin(), uniques.end(), std::back_inserter(matches));
