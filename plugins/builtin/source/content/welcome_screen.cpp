@@ -30,6 +30,8 @@
 
 namespace hex::plugin::builtin {
 
+    constexpr static auto MaxRecentProviders = 5;
+
     static ImGui::Texture s_bannerTexture, s_backdropTexture;
 
     static std::fs::path s_safetyBackupPath;
@@ -85,7 +87,7 @@ namespace hex::plugin::builtin {
             });
 
             std::unordered_set<RecentProvider, RecentProvider::HashFunction> uniqueProviders;
-            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < 5; i++) {
+            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < MaxRecentProviders; i++) {
                 auto &path = recentFilePaths[i];
                 try {
                     auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
@@ -96,6 +98,20 @@ namespace hex::plugin::builtin {
                         .data           = jsonData
                     });
                 } catch (...) { }
+            }
+
+            // Delete all recent provider files that are not in the list
+            for (const auto &path : recentFilePaths) {
+                bool found = false;
+                for (const auto &provider : uniqueProviders) {
+                    if (path == provider.filePath) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    wolv::io::fs::remove(path);
             }
 
             std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentProviders));
@@ -248,7 +264,7 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.builtin.welcome.start.recent"_lang);
+            ImGui::UnderlinedText(s_recentProviders.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 if (!s_recentProvidersUpdating) {
@@ -476,7 +492,7 @@ namespace hex::plugin::builtin {
         });
 
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
-            {
+            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                     auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);

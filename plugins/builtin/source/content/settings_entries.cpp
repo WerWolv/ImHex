@@ -100,6 +100,17 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1, [](auto name, nlohmann::json &setting) {
+            static bool enabled = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &enabled)) {
+                setting = static_cast<int>(enabled);
+                return true;
+            }
+
+            return false;
+        });
+
         /* Interface */
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", "Dark", [](auto name, nlohmann::json &setting) {
