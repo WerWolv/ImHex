@@ -20,8 +20,11 @@
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/literals.hpp>
 
 namespace hex::plugin::builtin {
+
+    using namespace wolv::literals;
 
     ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
         yr_initialize();
@@ -105,6 +108,7 @@ namespace hex::plugin::builtin {
             auto &extraData = ProviderExtraData::getCurrent().yara;
             auto &rules = extraData.rules;
             auto &matches = extraData.matches;
+            auto &sortedMatches = extraData.sortedMatches;
 
             if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                 for (u32 i = 0; i < rules.size(); i++) {
@@ -161,20 +165,46 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang);
-                ImGui::TableSetupColumn("hex.builtin.common.address"_lang);
-                ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
+                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("identifier"));
+                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
+                ImGui::TableSetupColumn("hex.builtin.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
+                ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
 
                 ImGui::TableHeadersRow();
 
+                auto sortSpecs = ImGui::TableGetSortSpecs();
+                if (!matches.empty() && (sortSpecs->SpecsDirty || sortedMatches.empty())) {
+                    sortedMatches.clear();
+                    std::transform(matches.begin(), matches.end(), std::back_inserter(sortedMatches), [](auto &match) {
+                        return &match;
+                    });
+
+                    std::sort(sortedMatches.begin(), sortedMatches.end(), [&sortSpecs](ProviderExtraData::Data::Yara::YaraMatch *left, ProviderExtraData::Data::Yara::YaraMatch *right) -> bool {
+                        if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
+                            return left->identifier < right->identifier;
+                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
+                            return left->variable < right->variable;
+                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("address"))
+                            return left->address < right->address;
+                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size"))
+                            return left->size < right->size;
+                        else
+                            return false;
+                    });
+
+                    if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Descending)
+                        std::reverse(sortedMatches.begin(), sortedMatches.end());
+
+                    sortSpecs->SpecsDirty = false;
+                }
+
                 if (!this->m_matcherTask.isRunning()) {
                     ImGuiListClipper clipper;
-                    clipper.Begin(matches.size());
+                    clipper.Begin(sortedMatches.size());
 
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = matches[i];
+                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *sortedMatches[i];
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::PushID(i);
@@ -357,7 +387,7 @@ namespace hex::plugin::builtin {
 
                     iterator->last_error      = ERROR_SUCCESS;
                     context.currBlock.base    = address;
-                    context.currBlock.size    = ImHexApi::Provider::get()->getActualSize() - address;
+                    context.currBlock.size    = std::min<size_t>(ImHexApi::Provider::get()->getActualSize() - address, 10_MiB);
                     context.currBlock.context = &context;
                     context.task->update(address);
 

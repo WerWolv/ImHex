@@ -110,6 +110,7 @@ namespace hex::plugin::builtin {
 
                 std::vector<std::pair<std::fs::path, std::fs::path>> rules;
                 std::vector<YaraMatch> matches;
+                std::vector<YaraMatch*> sortedMatches;
             } yara;
         };
 
