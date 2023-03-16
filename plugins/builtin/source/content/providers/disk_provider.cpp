@@ -312,7 +312,7 @@ namespace hex::plugin::builtin {
         #endif
     }
 
-    void DiskProvider::drawLoadInterface() {
+    bool DiskProvider::drawLoadInterface() {
         #if defined(OS_WINDOWS)
 
             if (this->m_availableDrives.empty())
@@ -340,6 +340,8 @@ namespace hex::plugin::builtin {
                 this->m_path = this->m_pathBuffer;
 
         #endif
+
+        return !this->m_path.empty();
     }
 
     nlohmann::json DiskProvider::storeSettings(nlohmann::json settings) const {

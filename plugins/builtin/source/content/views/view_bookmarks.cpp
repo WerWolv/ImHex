@@ -65,7 +65,7 @@ namespace hex::plugin::builtin {
                     {
                         ImGui::ColorButton("##color", ImColor(bookmark.color));
                         ImGui::SameLine(0, 10);
-                        ImGui::TextUnformatted(bookmark.name.c_str());
+                        ImGui::TextFormatted("{} ", bookmark.name);
 
                         if (ImGui::GetIO().KeyShift) {
                             ImGui::Indent();
@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                                 if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
                                     ImGui::TableNextRow();

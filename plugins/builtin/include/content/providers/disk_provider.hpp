@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override;
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
-        void drawLoadInterface() override;
+        bool drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings = { }) const override;

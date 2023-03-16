@@ -243,7 +243,8 @@ namespace hex::prv {
         return false;
     }
 
-    void Provider::drawLoadInterface() {
+    bool Provider::drawLoadInterface() {
+        return true;
     }
 
     void Provider::drawInterface() {

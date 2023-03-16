@@ -308,7 +308,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    void GDBProvider::drawLoadInterface() {
+    bool GDBProvider::drawLoadInterface() {
         ImGui::InputText("hex.builtin.provider.gdb.ip"_lang, this->m_ipAddress);
         ImGui::InputInt("hex.builtin.provider.gdb.port"_lang, &this->m_port, 0, 0);
 
@@ -320,6 +320,8 @@ namespace hex::plugin::builtin {
             this->m_port = 0;
         else if (this->m_port > 0xFFFF)
             this->m_port = 0xFFFF;
+
+        return !this->m_ipAddress.empty() && this->m_port != 0;
     }
 
     void GDBProvider::loadSettings(const nlohmann::json &settings) {

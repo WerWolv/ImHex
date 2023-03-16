@@ -55,7 +55,7 @@ namespace hex::plugin::windows {
         return { Region::Invalid(), false };
     }
 
-    void ProcessMemoryProvider::drawLoadInterface() {
+    bool ProcessMemoryProvider::drawLoadInterface() {
         if (this->m_processes.empty() && !this->m_enumerationFailed) {
             DWORD numProcesses = 0;
             std::vector<DWORD> processIds;
@@ -162,6 +162,8 @@ namespace hex::plugin::windows {
             }
 
         }
+
+        return this->m_selectedProcess != nullptr;
     }
 
     void ProcessMemoryProvider::drawInterface() {

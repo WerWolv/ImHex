@@ -51,7 +51,7 @@ namespace hex::plugin::windows {
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
         [[nodiscard]] bool hasInterface() const override { return true; }
-        void drawLoadInterface() override;
+        bool drawLoadInterface() override;
         void drawInterface() override;
 
         void loadSettings(const nlohmann::json &) override {}

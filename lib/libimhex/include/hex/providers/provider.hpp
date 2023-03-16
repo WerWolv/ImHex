@@ -84,7 +84,7 @@ namespace hex::prv {
 
         [[nodiscard]] virtual bool hasLoadInterface() const;
         [[nodiscard]] virtual bool hasInterface() const;
-        virtual void drawLoadInterface();
+        virtual bool drawLoadInterface();
         virtual void drawInterface();
 
         [[nodiscard]] u32 getID() const;

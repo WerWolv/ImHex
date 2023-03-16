@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isConnected() const;
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
-        void drawLoadInterface() override;
+        bool drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
