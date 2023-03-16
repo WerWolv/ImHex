@@ -82,7 +82,9 @@ namespace hex::plugin::builtin {
                                     ImGui::TableNextColumn();
                                     ImGui::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormattedWrapped("\"{}\"", bookmark.comment);
+                                    ImGui::PushTextWrapPos(ImGui::CalcTextSize("X").x * 40);
+                                    ImGui::TextFormattedWrapped("{}", bookmark.comment);
+                                    ImGui::PopTextWrapPos();
                                 }
 
                                 ImGui::EndTable();
