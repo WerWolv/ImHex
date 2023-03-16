@@ -507,7 +507,7 @@
         "hex.builtin.tools.wiki_explain.invalid_response": "Wikipediaからのレスポンスが無効です。",
         "hex.builtin.tools.wiki_explain.results": "結果",
         "hex.builtin.tools.wiki_explain.search": "検索",
-        "hex.builtin.view.bookmarks.address": "0x{0:X} : 0x{1:X} ({2} バイト)",
+        "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "移動",
         "hex.builtin.view.bookmarks.button.remove": "削除",
         "hex.builtin.view.bookmarks.default_title": "ブックマーク [0x{0:X} - 0x{1:X}]",

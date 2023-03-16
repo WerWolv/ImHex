@@ -507,7 +507,7 @@
         "hex.builtin.tools.wiki_explain.invalid_response": "Risposta non valida da Wikipedia!",
         "hex.builtin.tools.wiki_explain.results": "Risultati",
         "hex.builtin.tools.wiki_explain.search": "Cerca",
-        "hex.builtin.view.bookmarks.address": "0x{0:X} : 0x{1:X} ({2} bytes)",
+        "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "Vai a",
         "hex.builtin.view.bookmarks.button.remove": "Rimuovi",
         "hex.builtin.view.bookmarks.default_title": "Segnalibro [0x{0:X} - 0x{1:X}]",

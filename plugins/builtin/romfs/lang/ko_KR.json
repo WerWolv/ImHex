@@ -507,7 +507,7 @@
         "hex.builtin.tools.wiki_explain.invalid_response": "Wikipedia에서 잘못된 응답이 왔습니다!",
         "hex.builtin.tools.wiki_explain.results": "결과",
         "hex.builtin.tools.wiki_explain.search": "검색",
-        "hex.builtin.view.bookmarks.address": "0x{0:X} : 0x{1:X} ({2} bytes)",
+        "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "이동하기",
         "hex.builtin.view.bookmarks.button.remove": "지우기",
         "hex.builtin.view.bookmarks.default_title": "북마크 [0x{0:X} - 0x{1:X}]",

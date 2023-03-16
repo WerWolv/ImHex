@@ -507,7 +507,7 @@
         "hex.builtin.tools.wiki_explain.invalid_response": "接收到来自 Wikipedia 的无效响应！",
         "hex.builtin.tools.wiki_explain.results": "结果",
         "hex.builtin.tools.wiki_explain.search": "搜索",
-        "hex.builtin.view.bookmarks.address": "0x{0:X} : 0x{1:X} ({2} 字节)",
+        "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "转到",
         "hex.builtin.view.bookmarks.button.remove": "移除",
         "hex.builtin.view.bookmarks.default_title": "书签 [0x{0:X} - 0x{1:X}]",

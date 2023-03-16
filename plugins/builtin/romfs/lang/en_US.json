@@ -537,7 +537,7 @@
         "hex.builtin.tools.wiki_explain.invalid_response": "Invalid response from Wikipedia!",
         "hex.builtin.tools.wiki_explain.results": "Results",
         "hex.builtin.tools.wiki_explain.search": "Search",
-        "hex.builtin.view.bookmarks.address": "0x{0:X} : 0x{1:X} ({2} bytes)",
+        "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "Jump to",
         "hex.builtin.view.bookmarks.button.remove": "Remove",
         "hex.builtin.view.bookmarks.default_title": "Bookmark [0x{0:X} - 0x{1:X}]",

@@ -507,7 +507,7 @@
         "hex.builtin.tools.wiki_explain.invalid_response": "維基百科回應無效！",
         "hex.builtin.tools.wiki_explain.results": "結果",
         "hex.builtin.tools.wiki_explain.search": "搜尋",
-        "hex.builtin.view.bookmarks.address": "0x0:{X} : 0x1:{X} ({2} 位元組)",
+        "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "跳至",
         "hex.builtin.view.bookmarks.button.remove": "移除",
         "hex.builtin.view.bookmarks.default_title": "書籤 [0x0:{X} - 0x1:{X}]",
