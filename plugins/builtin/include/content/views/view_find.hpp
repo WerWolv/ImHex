@@ -43,18 +43,20 @@ namespace hex::plugin::builtin {
                 Value
             } mode = Mode::Strings;
 
+            enum class StringType : int { ASCII = 0, UTF16LE = 1, UTF16BE = 2, ASCII_UTF16LE = 3, ASCII_UTF16BE = 4 };
+
             struct Strings {
                 int minLength = 5;
-                enum class Type : int { ASCII = 0, UTF16LE = 1, UTF16BE = 2, ASCII_UTF16LE = 3, ASCII_UTF16BE = 4 } type = Type::ASCII;
                 bool nullTermination = false;
+                StringType type = StringType::ASCII;
 
-                bool m_lowerCaseLetters = true;
-                bool m_upperCaseLetters = true;
-                bool m_numbers = true;
-                bool m_underscores = true;
-                bool m_symbols = true;
-                bool m_spaces = true;
-                bool m_lineFeeds = false;
+                bool lowerCaseLetters = true;
+                bool upperCaseLetters = true;
+                bool numbers = true;
+                bool underscores = true;
+                bool symbols = true;
+                bool spaces = true;
+                bool lineFeeds = false;
             } strings;
 
             struct Sequence {
@@ -62,6 +64,10 @@ namespace hex::plugin::builtin {
             } bytes;
 
             struct Regex {
+                int minLength = 5;
+                bool nullTermination = false;
+                StringType type = StringType::ASCII;
+
                 std::string pattern;
                 bool fullMatch = true;
             } regex;
