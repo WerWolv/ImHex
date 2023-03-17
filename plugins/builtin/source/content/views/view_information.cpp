@@ -319,7 +319,7 @@ namespace hex::plugin::builtin {
                         ImGui::BeginGroup();
                         {
                             ImGui::TextUnformatted("hex.builtin.view.information.digram"_lang);
-                            this->m_digram.draw(ImVec2(300, 300));
+                            this->m_digram.draw(scaled(ImVec2(300, 300)));
                         }
                         ImGui::EndGroup();
 
@@ -328,7 +328,7 @@ namespace hex::plugin::builtin {
                         ImGui::BeginGroup();
                         {
                             ImGui::TextUnformatted("hex.builtin.view.information.layered_distribution"_lang);
-                            this->m_layeredDistribution.draw(ImVec2(300, 300));
+                            this->m_layeredDistribution.draw(scaled(ImVec2(300, 300)));
                         }
                         ImGui::EndGroup();
                     }
