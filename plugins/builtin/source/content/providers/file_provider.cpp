@@ -16,7 +16,7 @@
 namespace hex::plugin::builtin {
 
     bool FileProvider::isAvailable() const {
-        return this->m_file.isValid();
+        return true;
     }
 
     bool FileProvider::isReadable() const {
@@ -62,29 +62,21 @@ namespace hex::plugin::builtin {
         if (offset > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
-        std::scoped_lock lock(this->m_mutex);
-        if (offset < this->m_bufferStartAddress || offset + size > this->m_bufferStartAddress + this->m_buffer.size() || this->m_buffer.size() < size) {
-            this->m_buffer.resize(std::min<size_t>(std::max<size_t>(0x100, size), this->getActualSize() - offset));
-            this->m_file.seek(offset);
-            this->m_file.readBuffer(this->m_buffer.data(), this->m_buffer.size());
-            this->m_bufferStartAddress = offset;
-        }
-
-        std::memcpy(buffer, this->m_buffer.data() + (offset - this->m_bufferStartAddress), std::min<size_t>(size, this->m_buffer.size()));
+        auto &file = this->getFile();
+        file.seek(offset);
+        file.readBuffer(reinterpret_cast<u8*>(buffer), size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::scoped_lock lock(this->m_mutex);
         wolv::io::File writeFile(this->m_path, wolv::io::File::Mode::Write);
         if (!writeFile.isValid())
             return;
         
         writeFile.seek(offset);
         writeFile.write(reinterpret_cast<const u8*>(buffer), size);
-        this->m_buffer.clear();
     }
 
     void FileProvider::save() {
@@ -211,14 +203,23 @@ namespace hex::plugin::builtin {
         }
 
         this->m_fileStats = file.getFileInfo();
-        this->m_fileSize = file.getSize();
-        this->m_file = std::move(file);
+        this->m_fileSize  = file.getSize();
 
         return true;
     }
 
     void FileProvider::close() {
 
+    }
+
+    wolv::io::File& FileProvider::getFile() {
+        if (this->m_files.size() > 5)
+            this->m_files.clear();
+
+        if (!this->m_files.contains(std::this_thread::get_id()))
+            this->m_files.emplace(std::this_thread::get_id(), wolv::io::File(this->m_path, wolv::io::File::Mode::Read));
+
+        return this->m_files[std::this_thread::get_id()];
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
