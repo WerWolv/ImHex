@@ -96,7 +96,7 @@ namespace hex::plugin::builtin {
         std::map<prv::Provider*, OccurrenceTree> m_occurrenceTree;
         std::map<prv::Provider*, std::string> m_currFilter;
 
-        TaskHolder m_searchTask;
+        TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
 
     private:

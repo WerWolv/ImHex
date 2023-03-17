@@ -786,12 +786,22 @@ namespace hex::plugin::builtin {
             auto &currOccurrences = this->m_sortedOccurrences[provider];
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            auto prevFilterLength = this->m_currFilter[provider].length();
             if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter[provider])) {
-                this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
+                if (prevFilterLength > this->m_currFilter[provider].length())
+                    this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
 
-                currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider](const auto &region) {
-                    return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
-                }), currOccurrences.end());
+                if (this->m_filterTask.isRunning())
+                    this->m_filterTask.interrupt();
+
+                if (!this->m_currFilter[provider].empty()) {
+                    this->m_filterTask = TaskManager::createTask("Filtering", 0, [this, provider, &currOccurrences](Task &task) {
+                        currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider, &task](const auto &region) {
+                            task.update();
+                            return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
+                        }), currOccurrences.end());
+                    });
+                }
             }
             ImGui::PopItemWidth();
 
