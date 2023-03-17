@@ -9,6 +9,7 @@
 #include <optional>
 
 #include <hex/helpers/magic.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex::prv {
 
@@ -36,7 +37,20 @@ namespace hex::prv {
 
     void Provider::save() { }
     void Provider::saveAs(const std::fs::path &path) {
-        hex::unused(path);
+        wolv::io::File file(path, wolv::io::File::Mode::Create);
+
+        if (file.isValid()) {
+            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, this->getActualSize()), 0x00);
+            size_t bufferSize = buffer.size();
+
+            for (u64 offset = 0; offset < this->getActualSize(); offset += bufferSize) {
+                if (bufferSize > this->getActualSize() - offset)
+                    bufferSize = this->getActualSize() - offset;
+
+                this->read(offset + this->getBaseAddress(), buffer.data(), bufferSize, true);
+                file.write(buffer.data(), bufferSize);
+            }
+        }
     }
 
     void Provider::resize(size_t newSize) {

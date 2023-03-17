@@ -50,25 +50,6 @@ namespace hex::plugin::builtin {
         });
     }
 
-    void MemoryFileProvider::saveAs(const std::fs::path &path) {
-        wolv::io::File file(path, wolv::io::File::Mode::Create);
-
-        if (file.isValid()) {
-            auto provider = ImHexApi::Provider::get();
-
-            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, provider->getActualSize()), 0x00);
-            size_t bufferSize = buffer.size();
-
-            for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
-                if (bufferSize > provider->getActualSize() - offset)
-                    bufferSize = provider->getActualSize() - offset;
-
-                provider->read(offset + this->getBaseAddress(), buffer.data(), bufferSize);
-                file.write(buffer);
-            }
-        }
-    }
-
     void MemoryFileProvider::resize(size_t newSize) {
         this->m_data.resize(newSize);
 

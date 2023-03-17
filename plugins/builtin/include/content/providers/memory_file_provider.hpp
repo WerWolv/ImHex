@@ -28,7 +28,6 @@ namespace hex::plugin::builtin {
         void remove(u64 offset, size_t size) override;
 
         void save() override;
-        void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override { return LangEntry("hex.builtin.provider.mem_file.unsaved"); }
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override { return { }; }

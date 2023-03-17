@@ -32,7 +32,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
-        void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override;

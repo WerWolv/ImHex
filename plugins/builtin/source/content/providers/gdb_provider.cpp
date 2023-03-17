@@ -221,10 +221,6 @@ namespace hex::plugin::builtin {
         this->applyPatches();
     }
 
-    void GDBProvider::saveAs(const std::fs::path &path) {
-        hex::unused(path);
-    }
-
     size_t GDBProvider::getActualSize() const {
         return this->m_size;
     }

@@ -36,7 +36,6 @@ namespace hex::plugin::windows {
         [[nodiscard]] size_t getActualSize() const override { return 0xFFFF'FFFF'FFFF;  }
 
         void save() override {}
-        void saveAs(const std::fs::path &) override {}
 
         [[nodiscard]] std::string getName() const override { return hex::format("hex.windows.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override {
