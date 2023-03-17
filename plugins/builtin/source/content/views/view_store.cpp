@@ -140,6 +140,8 @@ namespace hex::plugin::builtin {
         this->m_constants.clear();
         this->m_yara.clear();
         this->m_encodings.clear();
+        this->m_nodes.clear();
+        this->m_themes.clear();
 
         this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s, 30'0000);
     }
