@@ -11,7 +11,6 @@
 #include <cstring>
 #include <cmath>
 #include <filesystem>
-#include <numeric>
 #include <span>
 
 #include <implot.h>
@@ -67,14 +66,13 @@ namespace hex::plugin::builtin {
         this->m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
-            if ((this->m_inputChunkSize <= 0) 
-             || (this->m_inputStartAddress < 0) 
+            if ((this->m_inputChunkSize <= 0)
              || (this->m_inputStartAddress >= this->m_inputEndAddress)
-             || ((size_t) this->m_inputEndAddress > provider->getSize())) {
+             || ((size_t) this->m_inputEndAddress > provider->getActualSize())) {
                 // Invalid parameters, set default one
                 this->m_inputChunkSize    = 256;
                 this->m_inputStartAddress = 0;
-                this->m_inputEndAddress   = provider->getSize(); 
+                this->m_inputEndAddress   = provider->getActualSize();
             }
 
             task.setMaxValue(this->m_inputEndAddress - this->m_inputStartAddress);
@@ -129,7 +127,10 @@ namespace hex::plugin::builtin {
                 }
 
                 this->m_averageEntropy = this->m_chunkBasedEntropy.calculateEntropy(this->m_byteDistribution.get(), this->m_inputEndAddress - this->m_inputStartAddress);
-                this->m_highestBlockEntropy = this->m_chunkBasedEntropy.getHighestBlockEntropy();
+                this->m_highestBlockEntropy = this->m_chunkBasedEntropy.getHighestEntropyBlockValue();
+                this->m_highestBlockEntropyAddress = this->m_chunkBasedEntropy.getHighestEntropyBlockAddress();
+                this->m_lowestBlockEntropy = this->m_chunkBasedEntropy.getLowestEntropyBlockValue();
+                this->m_lowestBlockEntropyAddress = this->m_chunkBasedEntropy.getLowestEntropyBlockAddress();
                 this->m_plainTextCharacterPercentage = this->m_byteTypesDistribution.getPlainTextCharacterPercentage();
             }
                 
@@ -145,16 +146,17 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                     ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
                     {
-                        ImGui::Header("hex.builtin.view.disassembler.settings.header"_lang);
+                        ImGui::Header("hex.builtin.common.settings"_lang, true);
+
+                        const u64 min = 0;
+                        const u64 max = provider->getActualSize();
+                        ImGui::SliderScalar("hex.builtin.common.begin"_lang, ImGuiDataType_U64, &this->m_inputStartAddress, &min, &max, "0x%02llX", ImGuiSliderFlags_AlwaysClamp);
+                        ImGui::SliderScalar("hex.builtin.common.end"_lang, ImGuiDataType_U64, &this->m_inputEndAddress, &min, &max, "0x%02llX", ImGuiSliderFlags_AlwaysClamp);
+
+                        ImGui::NewLine();
 
                         ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
 
-                        // Clamp the values since the user can Ctrl+Click to transform the slider into a input
-                        ImGui::SliderInt("hex.builtin.common.begin"_lang, &this->m_inputStartAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_AlwaysClamp);
-
-                        // Clamp the values since the user can Ctrl+Click to transform the slider into a input
-                        ImGui::SliderInt("hex.builtin.common.end"_lang, &this->m_inputEndAddress, 0, provider->getSize(), "%d", ImGuiSliderFlags_AlwaysClamp);
-                         
                         if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                             this->analyze();
                     }
@@ -168,8 +170,8 @@ namespace hex::plugin::builtin {
 
                     if (!this->m_analyzerTask.isRunning() && this->m_dataValid) {
 
-                        // Analyzed region
-                        ImGui::Header("hex.builtin.view.information.region"_lang, true);
+                        // Provider information
+                        ImGui::Header("hex.builtin.view.information.provider_information"_lang, true);
 
                         if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
                             ImGui::TableSetupColumn("type");
@@ -191,8 +193,6 @@ namespace hex::plugin::builtin {
 
                             ImGui::EndTable();
                         }
-
-                        ImGui::NewLine();
 
                         // Magic information
                         if (!(this->m_dataDescription.empty() && this->m_dataMimeType.empty())) {
@@ -275,19 +275,23 @@ namespace hex::plugin::builtin {
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
                             ImGui::TableNextColumn();
                             if (this->m_averageEntropy < 0) ImGui::TextUnformatted("???");
-                            else ImGui::TextFormatted("{:.8f}", this->m_averageEntropy);
+                            else ImGui::TextFormatted("{:.5f}", this->m_averageEntropy);
 
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
                             ImGui::TableNextColumn();
-                            if (this->m_highestBlockEntropy < 0) ImGui::TextUnformatted("???");
-                            else ImGui::TextFormatted("{:.8f}", this->m_highestBlockEntropy);
+                            ImGui::TextFormatted("{:.5f} @ 0x{:02X}", this->m_highestBlockEntropy, this->m_highestBlockEntropyAddress);
+
+                            ImGui::TableNextColumn();
+                            ImGui::TextFormatted("{}", "hex.builtin.view.information.lowest_entropy"_lang);
+                            ImGui::TableNextColumn();
+                            ImGui::TextFormatted("{:.5f} @ 0x{:02X}", this->m_lowestBlockEntropy, this->m_lowestBlockEntropyAddress);
 
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
                             ImGui::TableNextColumn();
                             if (this->m_plainTextCharacterPercentage < 0) ImGui::TextUnformatted("???");
-                            else ImGui::TextFormatted("{:.8f}", this->m_plainTextCharacterPercentage);
+                            else ImGui::TextFormatted("{:.2f}%", this->m_plainTextCharacterPercentage);
 
                             ImGui::EndTable();
                         }
@@ -304,15 +308,13 @@ namespace hex::plugin::builtin {
                                 ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
                             }
 
-                            if (this->m_plainTextCharacterPercentage > 99) {
+                            if (this->m_plainTextCharacterPercentage > 95) {
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.plain_text"_lang);
                             }
 
                             ImGui::EndTable();
                         }
-
-                        ImGui::NewLine();
 
                         ImGui::BeginGroup();
                         {

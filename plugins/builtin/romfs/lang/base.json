@@ -590,7 +590,6 @@
   "hex.builtin.view.disassembler.ppc.spe",
   "hex.builtin.view.disassembler.region",
   "hex.builtin.view.disassembler.riscv.compressed",
-  "hex.builtin.view.disassembler.settings.header",
   "hex.builtin.view.disassembler.settings.mode",
   "hex.builtin.view.disassembler.sparc.v9",
   "hex.builtin.view.find.binary_pattern",

@@ -113,9 +113,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::HexEditor::setSelection(0, 0);
                 }
 
-                ImGui::NewLine();
-                ImGui::TextUnformatted("hex.builtin.view.disassembler.settings.header"_lang);
-                ImGui::Separator();
+                ImGui::Header("hex.builtin.common.settings"_lang);
 
                 if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames, Disassembler::getArchitectureSupportedCount()))
                     this->m_mode = cs_mode(0);

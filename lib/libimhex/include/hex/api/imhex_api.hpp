@@ -8,11 +8,12 @@
 #include <vector>
 #include <variant>
 #include <map>
-#include <filesystem>
 
 #include <hex/helpers/concepts.hpp>
 #include <hex/api/task.hpp>
 #include <hex/api/keybinding.hpp>
+
+#include <wolv/io/fs.hpp>
 
 using ImGuiID = unsigned int;
 struct ImVec2;

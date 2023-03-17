@@ -21,10 +21,15 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        bool m_dataValid             = false;
-        u32 m_blockSize              = 0;
-        double m_averageEntropy      = -1.0;
+        bool m_dataValid = false;
+        u32 m_blockSize = 0;
+        double m_averageEntropy = -1.0;
+
         double m_highestBlockEntropy = -1.0;
+        u64 m_highestBlockEntropyAddress = 0x00;
+        double m_lowestBlockEntropy = -1.0;
+        u64 m_lowestBlockEntropyAddress = 0x00;
+
         double m_plainTextCharacterPercentage = -1.0;
 
         TaskHolder m_analyzerTask;
@@ -44,8 +49,8 @@ namespace hex::plugin::builtin {
 
         // User controlled input (referenced by ImgGui)
         int m_inputChunkSize    = 0;
-        int m_inputStartAddress = 0;
-        int m_inputEndAddress   = 0;
+        u64 m_inputStartAddress = 0;
+        u64 m_inputEndAddress   = 0;
     };
 
 }

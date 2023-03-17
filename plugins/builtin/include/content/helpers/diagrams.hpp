@@ -436,11 +436,35 @@ namespace hex {
         }
 
         // Return the highest entropy value among all of the blocks
-        double getHighestBlockEntropy() {
-            double highestBlockEntropy = 0.0f;
+        double getHighestEntropyBlockValue() {
+            double result = 0.0f;
             if (!this->m_yBlockEntropy.empty())
-                highestBlockEntropy = *std::max_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end());
-            return highestBlockEntropy;
+                result = *std::max_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end());
+            return result;
+        }
+
+        // Return the highest entropy value among all of the blocks
+        u64 getHighestEntropyBlockAddress() {
+            u64 address = 0x00;
+            if (!this->m_yBlockEntropy.empty())
+                address = (std::max_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end()) - this->m_yBlockEntropy.begin()) * this->m_blockSize;
+            return address;
+        }
+
+        // Return the highest entropy value among all of the blocks
+        double getLowestEntropyBlockValue() {
+            double result = 0.0f;
+            if (!this->m_yBlockEntropy.empty())
+                result = *std::min_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end());
+            return result;
+        }
+
+        // Return the highest entropy value among all of the blocks
+        u64 getLowestEntropyBlockAddress() {
+            u64 address = 0x00;
+            if (!this->m_yBlockEntropy.empty())
+                address = (std::min_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end()) - this->m_yBlockEntropy.begin()) * this->m_blockSize;
+            return address;
         }
 
         // Return the number of blocks that have been processed
@@ -828,8 +852,8 @@ namespace hex {
             this->m_blockCount = 0;
 
             // Loop over each byte of the file (or a part of it)
-            for (u64 i = 0; i < bytes.size(); ++i) {
-                this->m_blockValueCounts[bytes[i]]++;
+            for (u8 byte : bytes) {
+                this->m_blockValueCounts[byte]++;
 
                 this->m_byteCount++;
                 if (((this->m_byteCount % this->m_blockSize) == 0) || this->m_byteCount == (this->m_endAddress - this->m_startAddress)) [[unlikely]] {
