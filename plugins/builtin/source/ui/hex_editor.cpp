@@ -381,12 +381,12 @@ namespace hex::plugin::builtin::ui {
                 if (isColumnSeparatorColumn(i, columnCount))
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 
-                ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + 6 + this->m_byteCellPadding);
+                ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + (6 + this->m_byteCellPadding) * 1_scaled);
             }
 
             // ASCII column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding) * this->m_bytesPerRow);
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow);
 
             // Custom encoding column
             ImGui::TableSetupColumn("");
@@ -468,7 +468,7 @@ namespace hex::plugin::builtin::ui {
 
                             if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                 auto cellStartPos = getCellPosition();
-                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1 + this->m_byteCellPadding, 0);
+                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + scaled(ImVec2(1 + this->m_byteCellPadding, 0));
                                 auto maxCharsPerCell = this->m_currDataVisualizer->getMaxCharsPerCell();
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
@@ -528,7 +528,7 @@ namespace hex::plugin::builtin::ui {
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
                             if (ImGui::BeginTable("##ascii_column", this->m_bytesPerRow)) {
                                 for (u64 x = 0; x < this->m_bytesPerRow; x++)
-                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + this->m_characterCellPadding);
+                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + this->m_characterCellPadding * 1_scaled);
 
                                 ImGui::TableNextRow();
 
@@ -538,7 +538,7 @@ namespace hex::plugin::builtin::ui {
                                     const u64 byteAddress = y * this->m_bytesPerRow + x + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
                                     const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = CharacterSize + ImVec2(this->m_characterCellPadding, 0);
+                                    const auto cellSize = CharacterSize + scaled(ImVec2(this->m_characterCellPadding, 0));
 
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
@@ -559,7 +559,7 @@ namespace hex::plugin::builtin::ui {
                                             this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
                                         }
 
-                                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + this->m_characterCellPadding / 2);
+                                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (this->m_characterCellPadding * 1_scaled) / 2);
                                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                         ImGui::PushItemWidth(CharacterSize.x);
                                         if (!isCurrRegionValid(byteAddress))

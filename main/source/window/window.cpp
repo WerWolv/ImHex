@@ -528,8 +528,7 @@ namespace hex {
 
             // Draw view
             if (view->isAvailable()) {
-                float fontScaling = std::max(1.0F, ImHexApi::System::getFontSize() / ImHexApi::System::DefaultFontSize) * ImHexApi::System::getGlobalScale();
-                ImGui::SetNextWindowSizeConstraints(view->getMinSize() * fontScaling, view->getMaxSize() * fontScaling);
+                ImGui::SetNextWindowSizeConstraints(scaled(view->getMinSize()), scaled(view->getMaxSize()));
                 view->drawContent();
             }
 
@@ -823,6 +822,7 @@ namespace hex {
 
         style.WindowMenuButtonPosition = ImGuiDir_None;
         style.IndentSpacing            = 10.0F;
+        style.DisplaySafeAreaPadding  = ImVec2(0.0F, 0.0F);
 
         // Install custom settings handler
         {
