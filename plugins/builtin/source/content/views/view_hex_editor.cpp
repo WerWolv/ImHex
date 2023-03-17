@@ -702,9 +702,10 @@ namespace hex::plugin::builtin {
         // Move cursor around
         ShortcutManager::addShortcut(this, Keys::Up, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
-            if (selection.getEndAddress() >= this->m_hexEditor.getBytesPerRow()) {
-                auto pos = selection.getEndAddress() - this->m_hexEditor.getBytesPerRow();
+            if (cursor >= this->m_hexEditor.getBytesPerRow()) {
+                auto pos = cursor - this->m_hexEditor.getBytesPerRow();
                 this->setSelection(pos, pos);
                 this->m_hexEditor.scrollToSelection();
                 this->m_hexEditor.jumpIfOffScreen();
@@ -712,17 +713,19 @@ namespace hex::plugin::builtin {
         });
         ShortcutManager::addShortcut(this, Keys::Down, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
-            auto pos = selection.getEndAddress() + this->m_hexEditor.getBytesPerRow();
+            auto pos = cursor + this->m_hexEditor.getBytesPerRow();
             this->setSelection(pos, pos);
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, Keys::Left, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
-            if (selection.getEndAddress() > 0) {
-                auto pos = selection.getEndAddress() - 1;
+            if (cursor > 0) {
+                auto pos = cursor - 1;
                 this->setSelection(pos, pos);
                 this->m_hexEditor.scrollToSelection();
                 this->m_hexEditor.jumpIfOffScreen();
@@ -730,8 +733,9 @@ namespace hex::plugin::builtin {
         });
         ShortcutManager::addShortcut(this, Keys::Right, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
-            auto pos = selection.getEndAddress() + 1;
+            auto pos = cursor + 1;
             this->setSelection(pos, pos);
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
@@ -739,10 +743,11 @@ namespace hex::plugin::builtin {
 
         ShortcutManager::addShortcut(this, Keys::PageUp, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
             u64 visibleByteCount = this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount();
-            if (selection.getEndAddress() >= visibleByteCount) {
-                auto pos = selection.getEndAddress() - visibleByteCount;
+            if (cursor >= visibleByteCount) {
+                auto pos = cursor - visibleByteCount;
                 this->setSelection(pos, pos);
                 this->m_hexEditor.scrollToSelection();
                 this->m_hexEditor.jumpIfOffScreen();
@@ -750,8 +755,9 @@ namespace hex::plugin::builtin {
         });
         ShortcutManager::addShortcut(this, Keys::PageDown, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
-            auto pos = selection.getEndAddress() + (this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount());
+            auto pos = cursor + (this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount());
             this->setSelection(pos, pos);
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
@@ -760,29 +766,69 @@ namespace hex::plugin::builtin {
         // Move selection around
         ShortcutManager::addShortcut(this, SHIFT + Keys::Up, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition();
 
-            this->setSelection(std::max<u64>(selection.getStartAddress(), this->m_hexEditor.getBytesPerRow()) - this->m_hexEditor.getBytesPerRow(), selection.getEndAddress());
+            if (cursor == selection.getEndAddress()) {
+                auto newCursor = std::max<u64>(cursor.value_or(selection.getEndAddress()), this->m_hexEditor.getBytesPerRow()) - this->m_hexEditor.getBytesPerRow();
+                setSelection(selection.getStartAddress(), newCursor);
+                this->m_hexEditor.setCursorPosition(newCursor);
+            } else {
+                auto newCursor = std::max<u64>(cursor.value_or(selection.getEndAddress()), this->m_hexEditor.getBytesPerRow()) - this->m_hexEditor.getBytesPerRow();
+                setSelection(newCursor, selection.getEndAddress());
+                this->m_hexEditor.setCursorPosition(newCursor);
+            }
+
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Down, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition();
 
-            this->setSelection(selection.getStartAddress() + this->m_hexEditor.getBytesPerRow(), selection.getEndAddress());
+            if (cursor == selection.getEndAddress()) {
+                auto newCursor = cursor.value_or(selection.getEndAddress()) + this->m_hexEditor.getBytesPerRow();
+                setSelection(selection.getStartAddress(), newCursor);
+                this->m_hexEditor.setCursorPosition(newCursor);
+            } else {
+                auto newCursor = cursor.value_or(selection.getEndAddress()) + this->m_hexEditor.getBytesPerRow();
+                setSelection(newCursor, selection.getEndAddress());
+                this->m_hexEditor.setCursorPosition(newCursor);
+            }
+
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Left, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition();
 
-            this->setSelection(std::max<u64>(selection.getStartAddress(), 1) - 1, selection.getEndAddress());
+            if (cursor == selection.getEndAddress()) {
+                auto newCursor = std::max<u64>(cursor.value_or(selection.getEndAddress()), 1) - 1;
+                setSelection(selection.getStartAddress(), newCursor);
+                this->m_hexEditor.setCursorPosition(newCursor);
+            } else {
+                auto newCursor = std::max<u64>(cursor.value_or(selection.getEndAddress()), 1) - 1;
+                setSelection(newCursor, selection.getEndAddress());
+                this->m_hexEditor.setCursorPosition(newCursor);
+            }
+
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
         ShortcutManager::addShortcut(this, SHIFT + Keys::Right, [this] {
             auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition();
 
-            this->setSelection(selection.getStartAddress() + 1, selection.getEndAddress());
+            if (cursor == selection.getEndAddress()) {
+                auto newCursor = cursor.value_or(selection.getEndAddress()) + 1;
+                setSelection(selection.getStartAddress(), newCursor);
+                this->m_hexEditor.setCursorPosition(newCursor);
+            } else {
+                auto newCursor = cursor.value_or(selection.getEndAddress()) + 1;
+                setSelection(newCursor, selection.getEndAddress());
+                this->m_hexEditor.setCursorPosition(newCursor);
+            }
+
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });

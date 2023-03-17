@@ -51,8 +51,8 @@ namespace hex::prv {
                     offset = region.getEndAddress() + 1;
 
                 auto [newRegion, newValid] = this->getRegionValidity(offset + this->getBaseAddress());
-                bufferSize = std::min(bufferSize, (newRegion.getEndAddress() - offset) + 1);
-                bufferSize = std::min(bufferSize, this->getActualSize() - offset);
+                bufferSize = std::min<size_t>(bufferSize, (newRegion.getEndAddress() - offset) + 1);
+                bufferSize = std::min<size_t>(bufferSize, this->getActualSize() - offset);
 
                 this->read(offset + this->getBaseAddress(), buffer.data(), bufferSize, true);
                 file.write(buffer.data(), bufferSize);
