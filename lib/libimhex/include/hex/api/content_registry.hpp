@@ -385,7 +385,7 @@ namespace hex {
 
             namespace impl {
 
-                using Callback = std::function<bool(std::filesystem::path)>;
+                using Callback = std::function<bool(std::fs::path)>;
                 struct Entry {
                     std::vector<std::string> extensions;
                     Callback callback;

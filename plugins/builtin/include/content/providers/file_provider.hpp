@@ -4,8 +4,8 @@
 
 #include <wolv/io/file.hpp>
 
+#include <mutex>
 #include <string_view>
-
 
 namespace hex::plugin::builtin {
 
@@ -59,13 +59,15 @@ namespace hex::plugin::builtin {
 
     protected:
         std::fs::path m_path;
+
+        wolv::io::File m_sizeFile;
         std::map<std::thread::id, wolv::io::File> m_files;
-        size_t m_fileSize = 0;
 
         std::optional<struct stat> m_fileStats;
 
         bool m_readable = false, m_writable = false;
-        bool m_openReadOnly = true;
+
+        std::mutex m_fileAccessMutex, m_writeMutex;
     };
 
 }

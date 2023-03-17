@@ -71,6 +71,7 @@ namespace hex::plugin::builtin {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
+        std::scoped_lock lock(this->m_writeMutex);
         wolv::io::File writeFile(this->m_path, wolv::io::File::Mode::Write);
         if (!writeFile.isValid())
             return;
@@ -140,7 +141,7 @@ namespace hex::plugin::builtin {
     }
 
     size_t FileProvider::getActualSize() const {
-        return this->m_fileSize;
+        return this->m_sizeFile.getSize();
     }
 
     std::string FileProvider::getName() const {
@@ -203,7 +204,7 @@ namespace hex::plugin::builtin {
         }
 
         this->m_fileStats = file.getFileInfo();
-        this->m_fileSize  = file.getSize();
+        this->m_sizeFile  = wolv::io::File(this->m_path, wolv::io::File::Mode::Read);
 
         return true;
     }
@@ -213,6 +214,8 @@ namespace hex::plugin::builtin {
     }
 
     wolv::io::File& FileProvider::getFile() {
+        std::scoped_lock lock(this->m_fileAccessMutex);
+
         if (this->m_files.size() > 5)
             this->m_files.clear();
 
@@ -229,7 +232,7 @@ namespace hex::plugin::builtin {
         std::fs::path path = std::u8string(pathString.begin(), pathString.end());
 
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            this->setPath(std::filesystem::weakly_canonical(projectPath.parent_path() / path));
+            this->setPath(std::fs::weakly_canonical(projectPath.parent_path() / path));
         else
             this->setPath(path);
     }

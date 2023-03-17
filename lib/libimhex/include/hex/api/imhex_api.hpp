@@ -175,7 +175,7 @@ namespace hex {
 
                 void setBorderlessWindowMode(bool enabled);
 
-                void setCustomFontPath(const std::filesystem::path &path);
+                void setCustomFontPath(const std::fs::path &path);
                 void setFontSize(float size);
 
                 void setGPUVendor(const std::string &vendor);
