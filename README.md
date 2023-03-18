@@ -25,6 +25,9 @@
   <a title="Translation" href="https://weblate.werwolv.net/projects/imhex/">
     <img alt="Translation" src="https://img.shields.io/weblate/progress/imhex?logo=weblate&logoColor=%23FFFFFF&server=https%3A%2F%2Fweblate.werwolv.net&style=for-the-badge">
   </a>
+  <a title="Documentation" href="https://imhex.werwolv.net/docs">
+    <img alt="Documentation" src="https://img.shields.io/badge/Docs-Available-green?style=for-the-badge&logo=gitbook&logoColor=%23FFFFFF&style=for-the-badge">
+  </a>
 </p>
 
 ## Supporting
