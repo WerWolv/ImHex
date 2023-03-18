@@ -9,6 +9,8 @@
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/logger.hpp>
 
+    #include <wolv/utils/core.hpp>
+
     #include <nlohmann/json.hpp>
     #include <cstdio>
     #include <sys/wait.h>
@@ -27,7 +29,7 @@ namespace hex {
 
         // Various libraries sadly directly print to stderr with no way to disable it
         // We redirect stderr to /dev/null to prevent this
-        freopen("/dev/null", "w", stderr);
+        wolv::util::unused(freopen("/dev/null", "w", stderr));
         setvbuf(stderr, nullptr, _IONBF, 0);
 
         // Redirect stdout to log file if we're not running in a terminal
