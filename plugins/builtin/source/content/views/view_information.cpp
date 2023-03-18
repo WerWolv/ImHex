@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                this->m_blockSize = std::max<u32>(std::ceil(provider->getSize() / 2048.0F), 256);
+                this->m_blockSize = std::max<u32>(std::ceil(provider->getActualSize() / 2048.0F), 256);
 
                 this->m_averageEntropy = -1.0;
                 this->m_highestBlockEntropy = -1.0;
@@ -103,9 +103,9 @@ namespace hex::plugin::builtin {
                 this->m_digram.reset(this->m_inputEndAddress - this->m_inputStartAddress);
                 this->m_layeredDistribution.reset(this->m_inputEndAddress - this->m_inputStartAddress);
                 this->m_byteTypesDistribution.reset(this->m_inputStartAddress, this->m_inputEndAddress, 
-                    provider->getBaseAddress(), provider->getSize());
+                    provider->getBaseAddress(), provider->getActualSize());
                 this->m_chunkBasedEntropy.reset(this->m_inputChunkSize, this->m_inputStartAddress, this->m_inputEndAddress,
-                    provider->getBaseAddress(), provider->getSize());
+                    provider->getBaseAddress(), provider->getActualSize());
 
                 // Create a handle to the file
                 auto reader = prv::ProviderReader(provider);

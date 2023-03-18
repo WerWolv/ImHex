@@ -21,6 +21,7 @@ namespace hex::api {
             std::variant<ImVec2*, float*> value;
             float min;
             float max;
+            bool needsScaling;
         };
         using StyleMap = std::map<std::string, Style>;
 

@@ -164,7 +164,7 @@
             ],
             "child-border-size": 1.0,
             "child-rounding": 0.0,
-            "disabled-alpha": 0.6000000238418579,
+            "disabled-alpha": 0.6,
             "frame-border-size": 0.0,
             "frame-padding": [
                 4.0,
@@ -209,7 +209,7 @@
         "imnodes": {
             "grid-spacing": 24.0,
             "link-hover-distance": 10.0,
-            "link-line-segments-per-length": 0.10000000149011612,
+            "link-line-segments-per-length": 0.1,
             "link-thickness": 3.0,
             "mini-map-offset": [
                 4.0,

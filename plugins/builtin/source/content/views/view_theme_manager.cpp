@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
             for (auto &[name, handler] : api::ThemeManager::getStyleHandlers()) {
                 if (ImGui::CollapsingHeader(name.c_str())) {
                     for (auto &[styleName, style] : handler.styleMap) {
-                        auto &[value, min, max] = style;
+                        auto &[value, min, max, needsScaling] = style;
 
                         if (auto floatValue = std::get_if<float*>(&value); floatValue != nullptr)
                             ImGui::SliderFloat(styleName.c_str(), *floatValue, min, max, "%.1f");

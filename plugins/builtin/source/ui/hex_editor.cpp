@@ -344,19 +344,19 @@ namespace hex::plugin::builtin::ui {
 
         // Draw vertical line at the left of first byte and the start of the line
         if (x == 0 || byteAddress == selection.getStartAddress())
-            drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1_scaled);
 
         // Draw vertical line at the right of the last byte and the end of the line
         if (x == u16((this->m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > selection.getEndAddress())
-            drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1_scaled);
 
         // Draw horizontal line at the top of the bytes
         if (y == 0 || (byteAddress - this->m_bytesPerRow) < selection.getStartAddress())
-            drawList->AddLine(cellPos, cellPos + ImVec2(cellSize.x + 1, 0), ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos, cellPos + ImVec2(cellSize.x + 1, 0), ImColor(SelectionFrameColor), 1_scaled);
 
         // Draw horizontal line at the bottom of the bytes
         if ((byteAddress + this->m_bytesPerRow) > selection.getEndAddress())
-            drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1_scaled);
     }
 
     void HexEditor::drawEditor(const ImVec2 &size) {
@@ -457,7 +457,7 @@ namespace hex::plugin::builtin::ui {
                         }
 
                         // Draw byte columns
-                        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(3, 0));
+                        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, scaled(ImVec2(2.75F, 0.0F)));
 
                         for (u64 x = 0; x < columnCount; x++) {
                             const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
@@ -468,7 +468,7 @@ namespace hex::plugin::builtin::ui {
 
                             if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                 auto cellStartPos = getCellPosition();
-                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + scaled(ImVec2(1 + this->m_byteCellPadding, 0));
+                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1)) + (ImVec2(2, 2) * ImGui::GetStyle().CellPadding) + scaled(ImVec2(1 + this->m_byteCellPadding, 0));
                                 auto maxCharsPerCell = this->m_currDataVisualizer->getMaxCharsPerCell();
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
