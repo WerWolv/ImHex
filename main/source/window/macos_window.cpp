@@ -10,6 +10,7 @@
     #include <hex/helpers/logger.hpp>
 
     #include <nlohmann/json.hpp>
+    #include <cstdio>
     #include <unistd.h>
 
     #include <imgui_impl_glfw.h>
@@ -22,6 +23,11 @@ namespace hex {
             if (std::fs::exists(path))
                 setenv("LD_LIBRARY_PATH", hex::format("{};{}", hex::getEnvironmentVariable("LD_LIBRARY_PATH").value_or(""), path.string().c_str()).c_str(), true);
         }
+
+        // Various libraries sadly directly print to stderr with no way to disable it
+        // We redirect stderr to /dev/null to prevent this
+        freopen("/dev/null", "w", stderr);
+        setvbuf(stderr, nullptr, _IONBF, 0);
 
         // Redirect stdout to log file if we're not running in a terminal
         if (!isatty(STDOUT_FILENO)) {
