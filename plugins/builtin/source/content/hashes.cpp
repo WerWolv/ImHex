@@ -176,7 +176,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::Hashes::add<HashCRC<u8>>("hex.builtin.hash.crc8",  crypt::crc8,  0x07,        0x0000,      0x0000);
         ContentRegistry::Hashes::add<HashCRC<u16>>("hex.builtin.hash.crc16", crypt::crc16, 0x8005,      0x0000,      0x0000);
         ContentRegistry::Hashes::add<HashCRC<u32>>("hex.builtin.hash.crc32", crypt::crc32, 0x04C1'1DB7, 0xFFFF'FFFF, 0xFFFF'FFFF);
-
+        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.builtin.hash.crc32mpeg",  crypt::crc32, 0x04C1'1DB7, 0xFFFF'FFFF, 0x0000'0000, false, false);
+        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.builtin.hash.crc32posix", crypt::crc32, 0x04C1'1DB7, 0x0000'0000, 0xFFFF'FFFF, false, false);
+        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.builtin.hash.crc32c",     crypt::crc32, 0x1EDC'6F41, 0xFFFF'FFFF, 0xFFFF'FFFF, true,  true);
     }
 
 }
