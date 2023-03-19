@@ -108,8 +108,8 @@ namespace hex::plugin::builtin {
     class HashCRC : public ContentRegistry::Hashes::Hash {
     public:
         using CRCFunction = T(*)(prv::Provider*&, u64, size_t, u32, u32, u32, bool, bool);
-        HashCRC(const std::string &name, const CRCFunction &crcFunction, u32 polynomial, u32 initialValue, u32 xorOut)
-            : Hash(name), m_crcFunction(crcFunction), m_polynomial(polynomial), m_initialValue(initialValue), m_xorOut(xorOut) {}
+        HashCRC(const std::string &name, const CRCFunction &crcFunction, u32 polynomial, u32 initialValue, u32 xorOut, bool reflectIn = false, bool reflectOut = false)
+            : Hash(name), m_crcFunction(crcFunction), m_polynomial(polynomial), m_initialValue(initialValue), m_xorOut(xorOut), m_reflectIn(reflectIn), m_reflectOut(reflectOut) {}
 
         void draw() override {
             ImGui::InputHexadecimal("hex.builtin.hash.crc.poly"_lang, &this->m_polynomial);
