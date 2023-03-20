@@ -95,8 +95,14 @@ namespace hex {
                 KeywordCommand
             };
 
+            struct QueryResult {
+                std::string name;
+                std::function<void(std::string)> callback;
+            };
+
             using DisplayCallback = std::function<std::string(std::string)>;
             using ExecuteCallback = std::function<void(std::string)>;
+            using QueryCallback   = std::function<std::vector<QueryResult>(std::string)>;
 
             struct Entry {
                 Type type;
@@ -106,13 +112,28 @@ namespace hex {
                 ExecuteCallback executeCallback;
             };
 
+            struct Handler {
+                Type type;
+                std::string command;
+                QueryCallback queryCallback;
+                DisplayCallback displayCallback;
+            };
+
             void add(
                 Type type,
                 const std::string &command,
                 const std::string &unlocalizedDescription,
                 const DisplayCallback &displayCallback,
                 const ExecuteCallback &executeCallback = [](auto) {});
+
+            void addHandler(
+                Type type,
+                const std::string &command,
+                const QueryCallback &queryCallback,
+                const DisplayCallback &displayCallback);
+
             std::vector<Entry> &getEntries();
+            std::vector<Handler> &getHandlers();
         }
 
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */

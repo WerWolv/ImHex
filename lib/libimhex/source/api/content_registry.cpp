@@ -220,8 +220,20 @@ namespace hex {
             getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
         }
 
+        void addHandler(Type type, const std::string &command, const QueryCallback &queryCallback, const DisplayCallback &displayCallback) {
+            log::debug("Registered new command palette command handler: {}", command);
+
+            getHandlers().push_back(ContentRegistry::CommandPaletteCommands::Handler { type, command, queryCallback, displayCallback });
+        }
+
         std::vector<Entry> &getEntries() {
             static std::vector<Entry> commands;
+
+            return commands;
+        }
+
+        std::vector<Handler> &getHandlers() {
+            static std::vector<Handler> commands;
 
             return commands;
         }

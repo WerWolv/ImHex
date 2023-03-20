@@ -122,6 +122,26 @@ namespace hex::plugin::builtin {
             }
         }
 
+        for (const auto &handler : ContentRegistry::CommandPaletteCommands::getHandlers()) {
+            const auto &[type, command, queryCallback, displayCallback] = handler;
+
+            auto processedInput = input;
+            if (processedInput.starts_with(command))
+                processedInput = processedInput.substr(command.length());
+
+            for (const auto &[description, callback] : queryCallback(processedInput)) {
+                if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
+                    if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
+                        results.push_back({ hex::format("{} ({})", command, description), "", callback });
+                    }
+                } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
+                    if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
+                        results.push_back({ hex::format("{} ({})", command, description), "", callback });
+                    }
+                }
+            }
+        }
+
         return results;
     }
 
