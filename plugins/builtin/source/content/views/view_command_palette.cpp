@@ -1,14 +1,13 @@
 #include "content/views/view_command_palette.hpp"
 
 #include <hex/api/content_registry.hpp>
+#include <wolv/utils/guards.hpp>
 
 #include <cstring>
 
 namespace hex::plugin::builtin {
 
     ViewCommandPalette::ViewCommandPalette() : View("hex.builtin.view.command_palette.name") {
-        this->m_commandBuffer = std::vector<char>(1024, 0x00);
-
         ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, [this] {
             EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
             this->m_commandPaletteOpen = true;
@@ -28,44 +27,60 @@ namespace hex::plugin::builtin {
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
 
+
+            ImGui::PushItemWidth(-1);
+            if (ImGui::InputText("##command_input", this->m_commandBuffer)) {
+                this->m_lastResults = this->getCommandResults(this->m_commandBuffer);
+            }
+            ImGui::PopItemWidth();
+            ImGui::SetItemDefaultFocus();
+
             if (this->m_focusInputTextBox) {
+                ImGui::SetKeyboardFocusHere(-1);
+                ImGui::ActivateItem(ImGui::GetID("##command_input"));
+
                 auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
                 if (textState != nullptr) {
-                    textState->Stb.cursor = strlen(this->m_commandBuffer.data());
+                    textState->Stb.cursor = this->m_commandBuffer.size();
+                    textState->Stb.select_start = this->m_commandBuffer.size();
+                    textState->Stb.select_end = this->m_commandBuffer.size();
                 }
 
-                ImGui::SetKeyboardFocusHere(0);
                 this->m_focusInputTextBox = false;
             }
 
-            ImGui::PushItemWidth(-1);
-            if (ImGui::InputText("##command_input", this->m_commandBuffer.data(), this->m_commandBuffer.size(), ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_EnterReturnsTrue,
-                 [](ImGuiInputTextCallbackData *callbackData) -> int {
-                     auto _this           = static_cast<ViewCommandPalette *>(callbackData->UserData);
-                     _this->m_lastResults = _this->getCommandResults(callbackData->Buf);
-
-                     return 0;
-                 }, this)) {
+            if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false))) {
                 if (!this->m_lastResults.empty()) {
                     auto &[displayResult, matchedCommand, callback] = this->m_lastResults.front();
                     callback(matchedCommand);
                 }
                 ImGui::CloseCurrentPopup();
             }
-            ImGui::PopItemWidth();
 
             if (this->m_justOpened) {
                 focusInputTextBox();
                 this->m_lastResults = this->getCommandResults("");
-                std::memset(this->m_commandBuffer.data(), 0x00, this->m_commandBuffer.size());
+                this->m_commandBuffer.clear();
                 this->m_justOpened = false;
             }
 
             ImGui::Separator();
 
-            for (const auto &[displayResult, matchedCommand, callback] : this->m_lastResults) {
-                if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_DontClosePopups))
-                    callback(matchedCommand);
+            if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), false, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened)) {
+                for (const auto &[displayResult, matchedCommand, callback] : this->m_lastResults) {;
+                    ImGui::PushAllowKeyboardFocus(true);
+                    ON_SCOPE_EXIT { ImGui::PopAllowKeyboardFocus(); };
+
+                    if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_DontClosePopups)) {
+                        callback(matchedCommand);
+                        break;
+                    }
+                    if (ImGui::IsItemFocused() && (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))) {
+                        callback(matchedCommand);
+                        break;
+                    }
+                }
+                ImGui::EndChild();
             }
 
             ImGui::EndPopup();
@@ -95,9 +110,9 @@ namespace hex::plugin::builtin {
 
         for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::getEntries()) {
 
-            auto AutoComplete = [this, &currCommand = command](auto) {
-                focusInputTextBox();
-                std::strncpy(this->m_commandBuffer.data(), currCommand.data(), this->m_commandBuffer.size());
+            auto AutoComplete = [this, currCommand = command](auto) {
+                this->focusInputTextBox();
+                this->m_commandBuffer = currCommand;
                 this->m_lastResults = this->getCommandResults(currCommand);
             };
 

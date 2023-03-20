@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
         bool m_justOpened         = false;
         bool m_focusInputTextBox  = false;
 
-        std::vector<char> m_commandBuffer;
+        std::string m_commandBuffer;
         std::vector<CommandResult> m_lastResults;
         std::string m_exactResult;
 
