@@ -119,20 +119,28 @@ namespace hex::plugin::builtin {
                                         if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
                                             continue;
 
+                                        auto formatWriteFunction = pattern->getWriteFormatterFunction();
+                                        std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
+                                        if (!formatWriteFunction.empty()) {
+                                            editingFunction = [formatWriteFunction, &pattern](const std::string &value, std::endian) -> std::vector<u8> {
+                                                pattern->setValue(value);
+                                            };
+                                        }
+
                                         this->m_workData.push_back({
                                             pattern->getDisplayName(),
                                             [value = pattern->getFormattedValue()]() {
                                                 ImGui::TextUnformatted(value.c_str());
                                                 return value;
                                             },
-                                            std::nullopt,
+                                            editingFunction,
                                             false
                                         });
                                     }
                                 } else {
                                     const auto& error = runtime.getError();
 
-                                    log::error("Failed to execute inspectors.hexpat!");
+                                    log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(filePath.path()));
                                     if (error.has_value())
                                         log::error("{}", error.value().what());
                                 }
