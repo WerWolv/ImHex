@@ -239,6 +239,7 @@ namespace hex::init {
         ContentRegistry::Settings::getSettingsData().clear();
 
         ContentRegistry::CommandPaletteCommands::getEntries().clear();
+        ContentRegistry::CommandPaletteCommands::getHandlers().clear();
 
         ContentRegistry::PatternLanguage::getFunctions().clear();
         ContentRegistry::PatternLanguage::getPragmas().clear();
