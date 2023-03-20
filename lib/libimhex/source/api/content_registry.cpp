@@ -474,11 +474,29 @@ namespace hex {
             getMainMenuItems().insert({ priority, { unlocalizedName } });
         }
 
-        void addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function) {
-            log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuName, priority);
+        void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
+            log::debug("Added new menu item to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
 
             getMenuItems().insert({
-                priority, {unlocalizedMainMenuName, function}
+                priority, { unlocalizedMainMenuNames, shortcut, function, enabledCallback }
+            });
+
+            ShortcutManager::addGlobalShortcut(shortcut, function);
+        }
+
+        void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
+            log::debug("Added new menu item sub menu to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
+
+            unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
+            getMenuItems().insert({
+                priority, { unlocalizedMainMenuNames, {}, function, enabledCallback }
+            });
+        }
+
+        void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority) {
+            unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
+            getMenuItems().insert({
+                priority, { unlocalizedMainMenuNames, {}, []{}, []{ return true; } }
             });
         }
 

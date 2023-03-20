@@ -159,7 +159,7 @@
         "hex.builtin.menu.file.open_project": "프로젝트 열기...",
         "hex.builtin.menu.file.open_recent": "최근 파일",
         "hex.builtin.menu.file.quit": "ImHex 종료하기",
-        "hex.builtin.menu.file.reload_file": "",
+        "hex.builtin.menu.file.reload_provider": "",
         "hex.builtin.menu.file.save_project": "프로젝트 저장",
         "hex.builtin.menu.file.save_project_as": "",
         "hex.builtin.menu.help": "도움말",

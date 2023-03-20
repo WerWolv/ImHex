@@ -159,7 +159,7 @@
         "hex.builtin.menu.file.open_project": "Apri un Progetto...",
         "hex.builtin.menu.file.open_recent": "File recenti",
         "hex.builtin.menu.file.quit": "Uscita ImHex",
-        "hex.builtin.menu.file.reload_file": "",
+        "hex.builtin.menu.file.reload_provider": "",
         "hex.builtin.menu.file.save_project": "Salva Progetto",
         "hex.builtin.menu.file.save_project_as": "",
         "hex.builtin.menu.help": "Aiuto",

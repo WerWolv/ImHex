@@ -272,6 +272,27 @@ namespace hex {
         }
     }
 
+    static void createNestedMenu(std::span<const std::string> menuItems, const Shortcut &shortcut, const std::function<void()> &callback, const std::function<bool()> &enabledCallback) {
+        const auto &name = menuItems.front();
+
+        if (name == ContentRegistry::Interface::impl::SeparatorValue) {
+            ImGui::Separator();
+            return;
+        }
+
+        if (name == ContentRegistry::Interface::impl::SubMenuValue) {
+            callback();
+        } else if (menuItems.size() == 1) {
+            if (ImGui::MenuItem(LangEntry(name), shortcut.toString().c_str(), false, enabledCallback()))
+                callback();
+        } else {
+            if (ImGui::BeginMenu(LangEntry(name))) {
+                createNestedMenu({ menuItems.begin() + 1, menuItems.end() }, shortcut, callback, enabledCallback);
+                ImGui::EndMenu();
+            }
+        }
+    }
+
     void Window::frameBegin() {
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -389,16 +410,9 @@ namespace hex {
                     }
                 }
 
-                std::set<std::string> encounteredMenus;
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::getMenuItems()) {
-                    if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
-                        auto [iter, inserted] = encounteredMenus.insert(menuItem.unlocalizedName);
-                        if (!inserted)
-                            ImGui::Separator();
-
-                        menuItem.callback();
-                        ImGui::EndMenu();
-                    }
+                    const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
+                    createNestedMenu(unlocalizedNames, shortcut, callback, enabledCallback);
                 }
 
                 this->drawTitleBar();
@@ -508,6 +522,16 @@ namespace hex {
 
         // Run all deferred calls
         TaskManager::runDeferredCalls();
+
+        // Draw main menu popups
+        for (auto &[priority, menuItem] : ContentRegistry::Interface::getMenuItems()) {
+            const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
+
+            if (ImGui::BeginPopup(unlocalizedNames.front().c_str())) {
+                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, shortcut, callback, enabledCallback);
+                ImGui::EndPopup();
+            }
+        }
 
         EventManager::post<EventFrameBegin>();
     }

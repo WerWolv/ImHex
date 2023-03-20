@@ -560,23 +560,7 @@ namespace hex::plugin::builtin {
 
         // Right click menu
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
-            ImGui::OpenPopup("hex.builtin.menu.edit"_lang);
-
-        if (ImGui::BeginPopup("hex.builtin.menu.edit"_lang)) {
-            bool needsSeparator = false;
-            for (auto &[priority, menuItem] : ContentRegistry::Interface::getMenuItems()) {
-                if (menuItem.unlocalizedName != "hex.builtin.menu.edit")
-                    continue;
-
-                if (needsSeparator)
-                    ImGui::Separator();
-
-                menuItem.callback();
-                needsSeparator = true;
-            }
-
-            ImGui::EndPopup();
-        }
+            EventManager::post<RequestOpenPopup>("hex.builtin.menu.edit");
     }
 
     void ViewHexEditor::drawContent() {
@@ -665,6 +649,24 @@ namespace hex::plugin::builtin {
         provider->read(selection.getStartAddress(), buffer.data(), selection.size);
 
         ImGui::SetClipboardText(buffer.c_str());
+    }
+
+    static void copyCustomEncoding(const EncodingFile &customEncoding, const Region &selection) {
+        auto provider = ImHexApi::Provider::get();
+
+        std::vector<u8> buffer(customEncoding.getLongestSequence(), 0x00);
+        std::string string;
+
+        u64 offset = selection.getStartAddress();
+        while (offset < selection.getEndAddress()) {
+            provider->read(offset, buffer.data(), std::min<size_t>(buffer.size(), selection.size - (offset - selection.getStartAddress())));
+            auto [result, size] = customEncoding.getEncodingFor(buffer);
+
+            string += result;
+            offset += size;
+        };
+
+        ImGui::SetClipboardText(string.c_str());
     }
 
     void ViewHexEditor::registerShortcuts() {
@@ -953,159 +955,235 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::registerMenuItems() {
-        // Basic operations
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1100, [&] {
-            auto provider      = ImHexApi::Provider::get();
-            bool providerValid = ImHexApi::Provider::isValid();
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.save"_lang, (CTRLCMD_NAME + " + S"s).c_str(), false, providerValid && provider->isWritable())) {
-                save();
-            }
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1300);
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.save_as"_lang, (CTRLCMD_NAME + " + "s + SHIFT_NAME + " + S"s).c_str(), false, providerValid && provider->isWritable())) {
-                saveAs();
-            }
-        });
+        /* Save */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save"_lang }, 1350,
+                                                CTRL + Keys::S,
+                                                save,
+                                                [] {
+                                                    auto provider      = ImHexApi::Provider::get();
+                                                    bool providerValid = ImHexApi::Provider::isValid();
+
+                                                    return providerValid && provider->isWritable();
+                                                });
+
+        /* Save As */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save_as"_lang }, 1375,
+                                                CTRL + SHIFT + Keys::S,
+                                                saveAs,
+                                                [] {
+                                                    auto provider      = ImHexApi::Provider::get();
+                                                    bool providerValid = ImHexApi::Provider::isValid();
+
+                                                    return providerValid && provider->isWritable();
+                                                });
+
+        /* Load Encoding File */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.custom_encoding" }, 5050,
+                                                Shortcut::None,
+                                                [this]{
+                                                    std::vector<std::fs::path> paths;
+                                                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Encodings)) {
+                                                        std::error_code error;
+                                                        for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
+                                                            if (!entry.is_regular_file()) continue;
+
+                                                            paths.push_back(entry);
+                                                        }
+                                                    }
+
+                                                    View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} }, false,
+                                                                               [this](const auto &path) {
+                                                                                   this->m_hexEditor.setCustomEncoding(EncodingFile(EncodingFile::Type::Thingy, path));
+                                                                               });
+                                                },
+                                                ImHexApi::Provider::isValid);
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1500);
+
+        /* Search */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.search" }, 1550,
+                                                CTRLCMD + Keys::F,
+                                                [this] {
+                                                    this->openPopup<PopupFind>();
+                                                },
+                                                ImHexApi::Provider::isValid);
+
+        /* Goto */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.goto" }, 1600,
+                                                CTRLCMD + Keys::G,
+                                                [this] {
+                                                    this->openPopup<PopupGoto>();
+                                                },
+                                                ImHexApi::Provider::isValid);
+
+        /* Select */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.select" }, 1650,
+                                                CTRLCMD + SHIFT + Keys::A,
+                                                [this] {
+                                                    this->openPopup<PopupSelect>();
+                                                },
+                                                ImHexApi::Provider::isValid);
 
 
-        // Metadata save/load
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1200, [&, this] {
-            bool providerValid = ImHexApi::Provider::isValid();
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.load_encoding_file"_lang, nullptr, false, providerValid)) {
-                std::vector<std::fs::path> paths;
-                for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Encodings)) {
-                    std::error_code error;
-                    for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
-                        if (!entry.is_regular_file()) continue;
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1100);
 
-                        paths.push_back(entry);
-                    }
-                }
+        /* Copy */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy" }, 1150,
+                                                CTRLCMD + Keys::C,
+                                                [] {
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
+                                                    if (selection.has_value() && selection != Region::Invalid())
+                                                        copyBytes(*selection);
+                                                },
+                                                ImHexApi::HexEditor::isSelectionValid);
 
-                View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} }, false,
-                    [this](const auto &path) {
-                        this->m_hexEditor.setCustomEncoding(EncodingFile(EncodingFile::Type::Thingy, path));
-                    });
-            }
-        });
+        /* Copy As */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.ascii" }, 1200,
+                                                CTRLCMD + SHIFT + Keys::C,
+                                                [] {
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
+                                                    if (selection.has_value() && selection != Region::Invalid())
+                                                        copyString(*selection);
+                                                },
+                                                ImHexApi::HexEditor::isSelectionValid);
 
+        /* Copy address */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.address" }, 1250,
+                                                Shortcut::None,
+                                                [] {
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
+                                                    if (selection.has_value() && selection != Region::Invalid())
+                                                        ImGui::SetClipboardText(hex::format("0x{:08X}", selection->getStartAddress()).c_str());
+                                                },
+                                                ImHexApi::HexEditor::isSelectionValid);
 
-        // Search / Goto
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1400, [&, this] {
-            bool providerValid = ImHexApi::Provider::isValid();
+        /* Copy custom encoding */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.custom_encoding" }, 1300,
+                                                Shortcut::None,
+                                                [this] {
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
+                                                    auto customEncoding = this->m_hexEditor.getCustomEncoding();
+                                                    if (customEncoding.has_value() && selection.has_value() && selection != Region::Invalid())
+                                                        copyCustomEncoding(*customEncoding, *selection);
+                                                },
+                                                [this] {
+                                                    return ImHexApi::HexEditor::isSelectionValid() && this->m_hexEditor.getCustomEncoding().has_value();
+                                                });
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.search"_lang, (CTRLCMD_NAME + " + F"s).c_str(), false, providerValid)) {
-                this->openPopup<PopupFind>();
-            }
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as" }, 1350);
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.goto"_lang, (CTRLCMD_NAME + " + G"s).c_str(), false, providerValid)) {
-                this->openPopup<PopupGoto>();
-            }
+        /* Copy as... */
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as" }, 1400, []{
+            auto selection = ImHexApi::HexEditor::getSelection();
+            auto provider  = ImHexApi::Provider::get();
 
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.file.select"_lang, (CTRLCMD_NAME + " + "s + SHIFT_NAME + " + A"s).c_str(), false, providerValid)) {
-                this->openPopup<PopupSelect>();
-            }
-        });
-
-
-        // Copy / Paste
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1100, [&] {
-            auto provider      = ImHexApi::Provider::get();
-            bool providerValid = ImHexApi::Provider::isValid();
-            auto selection     = ImHexApi::HexEditor::getSelection();
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, (CTRLCMD_NAME + " + C"s).c_str(), false, selection.has_value()))
-                copyBytes(*selection);
-
-            if (ImGui::BeginMenu("hex.builtin.view.hex_editor.menu.edit.copy_as"_lang, selection.has_value() && providerValid)) {
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.ascii"_lang, (CTRLCMD_NAME + " + "s + SHIFT_NAME + " + C"s).c_str()))
-                    copyString(*selection);
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.address"_lang))
-                    ImGui::SetClipboardText(hex::format("0x{:08X}", selection->getStartAddress()).c_str());
-
-                auto &customEncoding = this->m_hexEditor.getCustomEncoding();
-                if (ImGui::MenuItem("hex.builtin.view.hex_editor.copy.custom_encoding"_lang, "", false, customEncoding.has_value())) {
-                    std::vector<u8> buffer(customEncoding->getLongestSequence(), 0x00);
-                    std::string string;
-
-                    u64 offset = selection->getStartAddress();
-                    while (offset < selection->getEndAddress()) {
-                        provider->read(offset, buffer.data(), std::min<size_t>(buffer.size(), selection->size - (offset - selection->getStartAddress())));
-                        auto [result, size] = customEncoding->getEncodingFor(buffer);
-
-                        string += result;
-                        offset += size;
-                    };
-
-                    ImGui::SetClipboardText(string.c_str());
-                }
-                ImGui::Separator();
-
-                for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::getEntries()) {
-                    if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
-                        ImGui::SetClipboardText(
+            for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::getEntries()) {
+                if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
+                    ImGui::SetClipboardText(
                             callback(
-                                provider,
-                                selection->getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(),
-                                selection->size
-                                ).c_str()
-                        );
-                    }
-                }
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste"_lang, (CTRLCMD_NAME + " + V"s).c_str(), false, selection.has_value()))
-                pasteBytes(*selection, true);
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste_all"_lang, (CTRLCMD_NAME + " + "s + SHIFT_NAME + " + V"s).c_str(), false, selection.has_value()))
-                pasteBytes(*selection, false);
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.select_all"_lang, (CTRLCMD_NAME + " + A"s).c_str(), false, selection.has_value() && providerValid))
-                ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
-        });
-
-        // Popups
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1200, [&] {
-            auto provider       = ImHexApi::Provider::get();
-            bool providerValid  = ImHexApi::Provider::isValid();
-            auto selection      = ImHexApi::HexEditor::getSelection();
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.set_base"_lang, nullptr, false, providerValid && provider->isReadable())) {
-                this->openPopup<PopupBaseAddress>(provider->getBaseAddress());
-            }
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.resize"_lang, nullptr, false, providerValid && provider->isResizable())) {
-                this->openPopup<PopupResize>(provider->getActualSize());
-            }
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.insert"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
-                this->openPopup<PopupInsert>(selection->getStartAddress(), 0x00);
-            }
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.remove"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
-                this->openPopup<PopupRemove>(selection->getStartAddress(), selection->getSize());
-            }
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.jump_to"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value() && selection->getSize() <= sizeof(u64))) {
-                u64 value = 0;
-                provider->read(selection->getStartAddress(), &value, selection->getSize());
-
-                if (value < provider->getBaseAddress() + provider->getActualSize()) {
-                    ImHexApi::HexEditor::setSelection(value, 1);
-                }
-            }
-
-            if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.open_in_new_provider"_lang, nullptr, false, providerValid && provider->isResizable() && selection.has_value())) {
-                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
-                    viewProvider->setProvider(selection->getStartAddress(), selection->getSize(), selection->getProvider());
-                    if (viewProvider->open())
-                        EventManager::post<EventProviderOpened>(viewProvider);
+                                    provider,
+                                    selection->getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(),
+                                    selection->size
+                            ).c_str()
+                    );
                 }
             }
         });
+
+        /* Paste */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, 1450, CTRL + Keys::V,
+                                                [] {
+                                                    pasteBytes(*ImHexApi::HexEditor::getSelection(), true);
+                                                },
+                                                ImHexApi::HexEditor::isSelectionValid);
+
+        /* Paste All */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_all" }, 1500, CTRL + SHIFT + Keys::V,
+                                                [] {
+                                                    pasteBytes(*ImHexApi::HexEditor::getSelection(), false);
+                                                },
+                                                ImHexApi::HexEditor::isSelectionValid);
+
+        /* Select All */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select_all" }, 1550, CTRL + Keys::A,
+                                                [] {
+                                                    auto provider = ImHexApi::Provider::get();
+                                                    ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
+                                                },
+                                                ImHexApi::HexEditor::isSelectionValid);
+
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1600);
+
+        /* Set Base Address */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.set_base" }, 1650, Shortcut::None,
+                                                [this] {
+                                                    auto provider = ImHexApi::Provider::get();
+                                                    this->openPopup<PopupBaseAddress>(provider->getBaseAddress());
+                                                },
+                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isReadable(); });
+
+        /* Resize */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.resize" }, 1700, Shortcut::None,
+                                                [this] {
+                                                    auto provider = ImHexApi::Provider::get();
+                                                    this->openPopup<PopupResize>(provider->getBaseAddress());
+                                                },
+                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isResizable(); });
+
+        /* Insert */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.insert" }, 1750, Shortcut::None,
+                                                [this] {
+                                                    auto selection      = ImHexApi::HexEditor::getSelection();
+
+                                                    this->openPopup<PopupInsert>(selection->getStartAddress(), 0x00);
+                                                },
+                                                [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isResizable(); });
+
+        /* Remove */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.remove" }, 1800, Shortcut::None,
+                                                [this] {
+                                                    auto selection      = ImHexApi::HexEditor::getSelection();
+
+                                                    this->openPopup<PopupRemove>(selection->getStartAddress(), selection->getSize());
+                                                },
+                                                [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isResizable(); });
+
+        /* Jump to */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, 1850, Shortcut::None,
+                                                [] {
+                                                    auto provider = ImHexApi::Provider::get();
+                                                    auto selection      = ImHexApi::HexEditor::getSelection();
+
+                                                    u64 value = 0;
+                                                    provider->read(selection->getStartAddress(), &value, selection->getSize());
+
+                                                    if (value < provider->getBaseAddress() + provider->getActualSize()) {
+                                                        ImHexApi::HexEditor::setSelection(value, 1);
+                                                    }
+                                                },
+                                                [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); });
+                                                        // Popups
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1900);
+
+        /* Open in new provider */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.open_in_new_provider" }, 1950, Shortcut::None,
+                                                [] {
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
+
+                                                    auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                                                    if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                                        viewProvider->setProvider(selection->getStartAddress(), selection->getSize(), selection->getProvider());
+                                                        if (viewProvider->open())
+                                                            EventManager::post<EventProviderOpened>(viewProvider);
+                                                    }
+                                                },
+                                                [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid(); });
     }
 
 }

@@ -26,13 +26,13 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
-                if (this->m_requestStatus == RequestStatus::NotAttempted)
-                    this->refresh();
-                TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
-                this->getWindowOpenState() = true;
-            }
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.store.name" }, 2050, Shortcut::None, [&, this] {
+            if (this->m_requestStatus == RequestStatus::NotAttempted)
+                this->refresh();
+            TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
+            this->getWindowOpenState() = true;
         });
     }
 

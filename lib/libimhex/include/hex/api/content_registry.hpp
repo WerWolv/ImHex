@@ -277,9 +277,11 @@ namespace hex {
 
             namespace impl {
 
-                using DrawCallback   = std::function<void()>;
-                using LayoutFunction = std::function<void(u32)>;
-                using ClickCallback  = std::function<void()>;
+                using DrawCallback      = std::function<void()>;
+                using MenuCallback      = std::function<void()>;
+                using EnabledCallback   = std::function<bool()>;
+                using LayoutFunction    = std::function<void(u32)>;
+                using ClickCallback     = std::function<void()>;
 
                 struct Layout {
                     std::string unlocalizedName;
@@ -291,8 +293,10 @@ namespace hex {
                 };
 
                 struct MenuItem {
-                    std::string unlocalizedName;
-                    DrawCallback callback;
+                    std::vector<std::string> unlocalizedNames;
+                    Shortcut shortcut;
+                    MenuCallback callback;
+                    EnabledCallback enabledCallback;
                 };
 
                 struct SidebarItem {
@@ -306,10 +310,16 @@ namespace hex {
                     ClickCallback callback;
                 };
 
+                constexpr static auto SeparatorValue = "$SEPARATOR$";
+                constexpr static auto SubMenuValue = "$SUBMENU$";
+
             }
 
             void registerMainMenuItem(const std::string &unlocalizedName, u32 priority);
-            void addMenuItem(const std::string &unlocalizedMainMenuName, u32 priority, const impl::DrawCallback &function);
+            void addMenuItem(const std::string &unlocalizedMainMenuNames, u32 priority, const impl::DrawCallback &function);
+            void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+            void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+            void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority);
 
             void addWelcomeScreenEntry(const impl::DrawCallback &function);
             void addFooterItem(const impl::DrawCallback &function);

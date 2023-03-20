@@ -159,7 +159,7 @@
         "hex.builtin.menu.file.open_project": "開啟專案...",
         "hex.builtin.menu.file.open_recent": "開啟近期",
         "hex.builtin.menu.file.quit": "退出 ImHex",
-        "hex.builtin.menu.file.reload_file": "重新載入檔案",
+        "hex.builtin.menu.file.reload_file": "",
         "hex.builtin.menu.file.save_project": "儲存專案",
         "hex.builtin.menu.file.save_project_as": "另存專案為...",
         "hex.builtin.menu.help": "幫助",

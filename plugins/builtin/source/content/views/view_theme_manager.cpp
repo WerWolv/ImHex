@@ -7,11 +7,9 @@
 namespace hex::plugin::builtin {
 
     ViewThemeManager::ViewThemeManager() : View("hex.builtin.view.theme_manager.name") {
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1200, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.theme_manager.name"_lang, "")) {
-                this->m_viewOpen = true;
-                this->getWindowOpenState() = true;
-            }
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.theme_manager.name" }, 3000, Shortcut::None, [&, this] {
+            this->m_viewOpen = true;
+            this->getWindowOpenState() = true;
         });
     }
 

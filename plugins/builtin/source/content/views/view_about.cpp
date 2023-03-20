@@ -12,16 +12,14 @@ namespace hex::plugin::builtin {
 
     ViewAbout::ViewAbout() : View("hex.builtin.view.help.about.name") {
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1000, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.help.about.name"_lang, "")) {
-                TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
-                this->m_aboutWindowOpen    = true;
-                this->getWindowOpenState() = true;
-            }
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, 1000, Shortcut::None, [this] {
+            TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
+            this->m_aboutWindowOpen    = true;
+            this->getWindowOpenState() = true;
+        });
 
-            if (ImGui::MenuItem("hex.builtin.view.help.documentation"_lang, "")) {
-                hex::openWebpage("https://imhex.werwolv.net/docs");
-            }
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 1050, Shortcut::None, [] {
+            hex::openWebpage("https://imhex.werwolv.net/docs");
         });
     }
 

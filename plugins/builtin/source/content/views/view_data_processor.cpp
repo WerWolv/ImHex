@@ -66,30 +66,33 @@ namespace hex::plugin::builtin {
             ViewDataProcessor::processNodes(workspace);
         });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 3000, [&] {
-            bool providerValid = ImHexApi::Provider::isValid();
-
+        /* Import bookmarks */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, 4050, Shortcut::None, [this]{
             auto &data = ProviderExtraData::getCurrent().dataProcessor;
 
-            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.load_processor"_lang, nullptr, false, providerValid)) {
-                fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
-                    [&](const std::fs::path &path) {
-                        wolv::io::File file(path, wolv::io::File::Mode::Read);
-                        if (file.isValid()) {
-                            ViewDataProcessor::loadNodes(data.mainWorkspace, file.readString());
-                            this->m_updateNodePositions = true;
-                        }
-                    });
-            }
+            fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
+                                [&](const std::fs::path &path) {
+                                    wolv::io::File file(path, wolv::io::File::Mode::Read);
+                                    if (file.isValid()) {
+                                        ViewDataProcessor::loadNodes(data.mainWorkspace, file.readString());
+                                        this->m_updateNodePositions = true;
+                                    }
+                                });
+        }, ImHexApi::Provider::isValid);
 
-            if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.file.save_processor"_lang, nullptr, false, !data.workspaceStack.empty() && !data.workspaceStack.back()->nodes.empty() && providerValid)) {
-                fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
-                    [&](const std::fs::path &path) {
-                        wolv::io::File file(path, wolv::io::File::Mode::Create);
-                        if (file.isValid())
-                            file.write(ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
-                    });
-            }
+        /* Export bookmarks */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, 8050, Shortcut::None, []{
+            auto &data = ProviderExtraData::getCurrent().dataProcessor;
+
+            fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
+                                [&](const std::fs::path &path) {
+                                    wolv::io::File file(path, wolv::io::File::Mode::Create);
+                                    if (file.isValid())
+                                        file.write(ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
+                                });
+        }, []{
+            auto &data = ProviderExtraData::getCurrent().dataProcessor;
+            return !data.workspaceStack.empty() && !data.workspaceStack.back()->nodes.empty() && ImHexApi::Provider::isValid();
         });
 
         ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {

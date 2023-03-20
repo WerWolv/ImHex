@@ -18,11 +18,11 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 2000, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.settings.name"_lang)) {
-                TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
-                this->getWindowOpenState() = true;
-            }
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.settings.name"_lang }, 4050, Shortcut::None, [&, this] {
+            TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
+            this->getWindowOpenState() = true;
         });
     }
 

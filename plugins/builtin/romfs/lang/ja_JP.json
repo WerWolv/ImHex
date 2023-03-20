@@ -159,7 +159,7 @@
         "hex.builtin.menu.file.open_project": "プロジェクトを開く…",
         "hex.builtin.menu.file.open_recent": "最近使用したファイル",
         "hex.builtin.menu.file.quit": "ImHexを終了",
-        "hex.builtin.menu.file.reload_file": "",
+        "hex.builtin.menu.file.reload_provider": "",
         "hex.builtin.menu.file.save_project": "プロジェクトを保存",
         "hex.builtin.menu.file.save_project_as": "",
         "hex.builtin.menu.help": "ヘルプ",

@@ -124,6 +124,8 @@ namespace hex::plugin::builtin {
                                         if (!formatWriteFunction.empty()) {
                                             editingFunction = [formatWriteFunction, &pattern](const std::string &value, std::endian) -> std::vector<u8> {
                                                 pattern->setValue(value);
+
+                                                return { };
                                             };
                                         }
 

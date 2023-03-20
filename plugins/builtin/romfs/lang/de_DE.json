@@ -159,7 +159,7 @@
         "hex.builtin.menu.file.open_project": "Projekt öffnen...",
         "hex.builtin.menu.file.open_recent": "Zuletzt geöffnete Dateien",
         "hex.builtin.menu.file.quit": "ImHex beenden",
-        "hex.builtin.menu.file.reload_file": "Datei neu laden",
+        "hex.builtin.menu.file.reload_provider": "Provider neu laden",
         "hex.builtin.menu.file.save_project": "Projekt speichern",
         "hex.builtin.menu.file.save_project_as": "Projekt speichern unter...",
         "hex.builtin.menu.help": "Hilfe",

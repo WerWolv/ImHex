@@ -543,7 +543,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
             if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProvidersUpdating && !s_recentProviders.empty())) {
                 // Copy to avoid changing list while iteration
                 auto recentProviders = s_recentProviders;
