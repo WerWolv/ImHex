@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
         void drawColorPicker() {
             static std::array<float, 4> pickedColor = { 0 };
 
-            ImGui::SetNextItemWidth(300.0F);
+            ImGui::SetNextItemWidth(300_scaled);
             ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(), ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
         }
 
@@ -483,6 +483,28 @@ namespace hex::plugin::builtin {
 
             if (ImGui::InputTextIcon("hex.builtin.tools.base_converter.bin"_lang, ICON_VS_SYMBOL_NUMERIC, buffers[3]))
                 ConvertBases(2);
+        }
+
+        void drawByteSwapper() {
+            static std::string input, buffer, output;
+
+            if (ImGui::InputTextIcon("hex.builtin.tools.input"_lang, ICON_VS_SYMBOL_NUMERIC, input, ImGuiInputTextFlags_CharsHexadecimal)) {
+                auto nextAlignedSize = std::max<size_t>(2, std::bit_ceil(input.size()));
+
+                buffer.clear();
+                buffer.resize(nextAlignedSize - input.size(), '0');
+                buffer += input;
+
+                output.clear();
+                for (u32 i = 0; i < buffer.size(); i += 2) {
+                    output += buffer[buffer.size() - i - 2];
+                    output += buffer[buffer.size() - i - 1];
+                }
+            }
+
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().DisabledAlpha);
+            ImGui::InputTextIcon("hex.builtin.tools.output"_lang, ICON_VS_SYMBOL_NUMERIC, output, ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopStyleVar();
         }
 
         void drawPermissionsCalculator() {
@@ -1374,6 +1396,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.color", drawColorPicker);
         ContentRegistry::Tools::add("hex.builtin.tools.calc", drawMathEvaluator);
         ContentRegistry::Tools::add("hex.builtin.tools.base_converter", drawBaseConverter);
+        ContentRegistry::Tools::add("hex.builtin.tools.byte_swapper", drawByteSwapper);
         ContentRegistry::Tools::add("hex.builtin.tools.permissions", drawPermissionsCalculator);
         ContentRegistry::Tools::add("hex.builtin.tools.file_uploader", drawFileUploader);
         ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain", drawWikiExplainer);

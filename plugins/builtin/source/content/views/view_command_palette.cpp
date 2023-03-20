@@ -41,8 +41,8 @@ namespace hex::plugin::builtin {
 
                 auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
                 if (textState != nullptr) {
-                    textState->Stb.cursor = this->m_commandBuffer.size();
-                    textState->Stb.select_start = this->m_commandBuffer.size();
+                    textState->Stb.cursor =
+                    textState->Stb.select_start =
                     textState->Stb.select_end = this->m_commandBuffer.size();
                 }
 
