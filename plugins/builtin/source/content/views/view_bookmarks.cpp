@@ -377,7 +377,7 @@ namespace hex::plugin::builtin {
 
     void ViewBookmarks::registerMenuItems() {
         /* Create bookmark */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, 1900, CTRL + Keys::B, [&] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, 1900, CTRLCMD + Keys::B, [&] {
             auto selection = ImHexApi::HexEditor::getSelection();
             ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
         }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); });

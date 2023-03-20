@@ -960,7 +960,7 @@ namespace hex::plugin::builtin {
 
         /* Save */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save"_lang }, 1350,
-                                                CTRL + Keys::S,
+                                                CTRLCMD + Keys::S,
                                                 save,
                                                 [] {
                                                     auto provider      = ImHexApi::Provider::get();
@@ -971,7 +971,7 @@ namespace hex::plugin::builtin {
 
         /* Save As */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save_as"_lang }, 1375,
-                                                CTRL + SHIFT + Keys::S,
+                                                CTRLCMD + SHIFT + Keys::S,
                                                 saveAs,
                                                 [] {
                                                     auto provider      = ImHexApi::Provider::get();
@@ -1033,23 +1033,25 @@ namespace hex::plugin::builtin {
 
         /* Copy */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy" }, 1150,
-                                                CTRLCMD + Keys::C,
+                                                CurrentView + CTRLCMD + Keys::C,
                                                 [] {
                                                     auto selection = ImHexApi::HexEditor::getSelection();
                                                     if (selection.has_value() && selection != Region::Invalid())
                                                         copyBytes(*selection);
                                                 },
-                                                ImHexApi::HexEditor::isSelectionValid);
+                                                ImHexApi::HexEditor::isSelectionValid,
+                                                this);
 
         /* Copy As */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.ascii" }, 1200,
-                                                CTRLCMD + SHIFT + Keys::C,
+                                                CurrentView + CTRLCMD + SHIFT + Keys::C,
                                                 [] {
                                                     auto selection = ImHexApi::HexEditor::getSelection();
                                                     if (selection.has_value() && selection != Region::Invalid())
                                                         copyString(*selection);
                                                 },
-                                                ImHexApi::HexEditor::isSelectionValid);
+                                                ImHexApi::HexEditor::isSelectionValid,
+                                                this);
 
         /* Copy address */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.copy_as", "hex.builtin.view.hex_editor.copy.address" }, 1250,
@@ -1095,26 +1097,29 @@ namespace hex::plugin::builtin {
         });
 
         /* Paste */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, 1450, CTRL + Keys::V,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, 1450, CurrentView + CTRLCMD + Keys::V,
                                                 [] {
                                                     pasteBytes(*ImHexApi::HexEditor::getSelection(), true);
                                                 },
-                                                ImHexApi::HexEditor::isSelectionValid);
+                                                ImHexApi::HexEditor::isSelectionValid,
+                                                this);
 
         /* Paste All */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_all" }, 1500, CTRL + SHIFT + Keys::V,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_all" }, 1500, CurrentView + CTRLCMD + SHIFT + Keys::V,
                                                 [] {
                                                     pasteBytes(*ImHexApi::HexEditor::getSelection(), false);
                                                 },
-                                                ImHexApi::HexEditor::isSelectionValid);
+                                                ImHexApi::HexEditor::isSelectionValid,
+                                                this);
 
         /* Select All */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select_all" }, 1550, CTRL + Keys::A,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.select_all" }, 1550, CurrentView + CTRLCMD + Keys::A,
                                                 [] {
                                                     auto provider = ImHexApi::Provider::get();
                                                     ImHexApi::HexEditor::setSelection(provider->getBaseAddress(), provider->getActualSize());
                                                 },
-                                                ImHexApi::HexEditor::isSelectionValid);
+                                                ImHexApi::HexEditor::isSelectionValid,
+                                                this);
 
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.edit" }, 1600);

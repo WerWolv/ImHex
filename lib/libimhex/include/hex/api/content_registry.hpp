@@ -337,8 +337,7 @@ namespace hex {
             }
 
             void registerMainMenuItem(const std::string &unlocalizedName, u32 priority);
-            void addMenuItem(const std::string &unlocalizedMainMenuNames, u32 priority, const impl::DrawCallback &function);
-            void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+            void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; }, View *view = nullptr);
             void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
             void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority);
 

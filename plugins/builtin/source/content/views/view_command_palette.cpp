@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
     ViewCommandPalette::ViewCommandPalette() : View("hex.builtin.view.command_palette.name") {
         this->m_commandBuffer = std::vector<char>(1024, 0x00);
 
-        ShortcutManager::addGlobalShortcut(CTRL + SHIFT + Keys::P, [this] {
+        ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, [this] {
             EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
             this->m_commandPaletteOpen = true;
             this->m_justOpened         = true;

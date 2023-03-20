@@ -486,14 +486,17 @@ namespace hex {
             getMainMenuItems().insert({ priority, { unlocalizedName } });
         }
 
-        void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
+        void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
             log::debug("Added new menu item to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
 
             getMenuItems().insert({
                 priority, { unlocalizedMainMenuNames, shortcut, function, enabledCallback }
             });
 
-            ShortcutManager::addGlobalShortcut(shortcut, function);
+            if (shortcut.isLocal() && view != nullptr)
+                ShortcutManager::addShortcut(view, shortcut, function);
+            else
+                ShortcutManager::addGlobalShortcut(shortcut, function);
         }
 
         void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {

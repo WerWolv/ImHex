@@ -143,10 +143,11 @@ namespace hex {
     };
 
 
-    constexpr static auto CTRL  = Key(static_cast<Keys>(0x1000'0000));
-    constexpr static auto ALT   = Key(static_cast<Keys>(0x2000'0000));
-    constexpr static auto SHIFT = Key(static_cast<Keys>(0x4000'0000));
-    constexpr static auto SUPER = Key(static_cast<Keys>(0x8000'0000));
+    constexpr static auto CTRL          = Key(static_cast<Keys>(0x0100'0000));
+    constexpr static auto ALT           = Key(static_cast<Keys>(0x0200'0000));
+    constexpr static auto SHIFT         = Key(static_cast<Keys>(0x0400'0000));
+    constexpr static auto SUPER         = Key(static_cast<Keys>(0x0800'0000));
+    constexpr static auto CurrentView   = Key(static_cast<Keys>(0x1000'0000));
 
     #if defined (OS_MACOS)
         constexpr static auto CTRLCMD = SUPER;
@@ -180,6 +181,10 @@ namespace hex {
 
         bool operator==(const Shortcut &other) const {
             return this->m_keys == other.m_keys;
+        }
+
+        bool isLocal() const {
+            return this->m_keys.contains(CurrentView);
         }
 
         std::string toString() const {
@@ -216,6 +221,7 @@ namespace hex {
                 result += SUPER_NAME;
                 result += Concatination;
             }
+            keys.erase(CurrentView);
 
             for (const auto &key : keys) {
                 switch (Keys(key.getKeyCode())) {
