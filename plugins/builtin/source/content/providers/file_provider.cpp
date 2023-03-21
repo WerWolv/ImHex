@@ -84,6 +84,13 @@ namespace hex::plugin::builtin {
         this->applyPatches();
     }
 
+    void FileProvider::saveAs(const std::fs::path &path) {
+        if (path == this->m_path)
+            this->save();
+        else
+            Provider::saveAs(path);
+    }
+
     void FileProvider::resize(size_t newSize) {
         this->close();
 
