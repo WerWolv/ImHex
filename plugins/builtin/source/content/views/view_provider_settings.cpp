@@ -41,7 +41,12 @@ namespace hex::plugin::builtin {
                         ImGui::CloseCurrentPopup();
                     }
                     else {
-                        View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
+                        auto errorMessage = provider->getErrorMessage();
+                        if (errorMessage.empty()) {
+                            View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
+                        } else {
+                            View::showErrorPopup(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                        }
                         TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                     }
                 }
