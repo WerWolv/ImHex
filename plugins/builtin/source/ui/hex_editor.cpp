@@ -358,7 +358,7 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
 
             if (this->m_provider != nullptr && this->m_provider->isReadable()) {
-                const auto isCurrRegionValid = [this](u64 address){
+                const auto isCurrRegionValid = [this](u64 address) {
                     auto &[currRegion, currRegionValid] = this->m_currValidRegion;
                     if (!Region{ address, 1 }.isWithin(currRegion)) {
                         this->m_currValidRegion = this->m_provider->getRegionValidity(address);

@@ -25,7 +25,10 @@ namespace hex::plugin::builtin::ui {
         ~HexEditor();
         void draw(float height = ImGui::GetContentRegionAvail().y);
 
-        void setProvider(prv::Provider *provider) { this->m_provider = provider; }
+        void setProvider(prv::Provider *provider) {
+            this->m_provider = provider;
+            this->m_currValidRegion = { Region::Invalid(), false };
+        }
         void setUnknownDataCharacter(char character) { this->m_unknownDataCharacter = character; }
     private:
         enum class CellType { None, Hex, ASCII };
