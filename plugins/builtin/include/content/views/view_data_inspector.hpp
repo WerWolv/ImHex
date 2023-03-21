@@ -39,6 +39,8 @@ namespace hex::plugin::builtin {
         TaskHolder m_updateTask;
 
         std::string m_editingValue = "";
+
+        pl::PatternLanguage m_runtime;
     };
 
 }

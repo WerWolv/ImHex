@@ -85,10 +85,9 @@ namespace hex::plugin::builtin {
                         { "numberDisplayStyle", u128(numberDisplayStyle) }
                 };
 
-                pl::PatternLanguage runtime;
-                ContentRegistry::PatternLanguage::configureRuntime(runtime, nullptr);
+                ContentRegistry::PatternLanguage::configureRuntime(this->m_runtime, this->m_selectedProvider);
 
-                runtime.setDataSource(this->m_selectedProvider->getBaseAddress(), this->m_selectedProvider->getActualSize(),
+                this->m_runtime.setDataSource(this->m_selectedProvider->getBaseAddress(), this->m_selectedProvider->getActualSize(),
                 [this, invert](u64 offset, u8 *buffer, size_t size) {
                     this->m_selectedProvider->read(offset, buffer, size);
 
@@ -98,9 +97,9 @@ namespace hex::plugin::builtin {
                     }
                 });
 
-                runtime.setDangerousFunctionCallHandler([]{ return false; });
-                runtime.setDefaultEndian(endian);
-                runtime.setStartAddress(startAddress);
+                this->m_runtime.setDangerousFunctionCallHandler([]{ return false; });
+                this->m_runtime.setDefaultEndian(endian);
+                this->m_runtime.setStartAddress(startAddress);
 
                 for (const auto &folderPath : fs::getDefaultPaths(fs::ImHexPath::Inspectors)) {
                     for (const auto &filePath : std::fs::recursive_directory_iterator(folderPath)) {
@@ -112,8 +111,8 @@ namespace hex::plugin::builtin {
                             auto inspectorCode = file.readString();
 
                             if (!inspectorCode.empty()) {
-                                if (runtime.executeString(inspectorCode, {}, inVariables, true)) {
-                                    const auto &patterns = runtime.getAllPatterns();
+                                if (this->m_runtime.executeString(inspectorCode, {}, inVariables, true)) {
+                                    const auto &patterns = this->m_runtime.getAllPatterns();
 
                                     for (const auto &pattern : patterns) {
                                         if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
@@ -123,24 +122,33 @@ namespace hex::plugin::builtin {
                                         std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
                                         if (!formatWriteFunction.empty()) {
                                             editingFunction = [formatWriteFunction, &pattern](const std::string &value, std::endian) -> std::vector<u8> {
-                                                pattern->setValue(value);
+                                                try {
+                                                    pattern->setValue(value);
+                                                } catch (const pl::core::err::EvaluatorError::Exception &error) {
+                                                    log::error("Failed to set value of pattern '{}' to '{}': {}", pattern->getDisplayName(), value, error.what());
+                                                    return { };
+                                                }
 
                                                 return { };
                                             };
                                         }
 
-                                        this->m_workData.push_back({
-                                            pattern->getDisplayName(),
-                                            [value = pattern->getFormattedValue()]() {
-                                                ImGui::TextUnformatted(value.c_str());
-                                                return value;
-                                            },
-                                            editingFunction,
-                                            false
-                                        });
+                                        try {
+                                            this->m_workData.push_back({
+                                                pattern->getDisplayName(),
+                                                [value = pattern->getFormattedValue()]() {
+                                                    ImGui::TextUnformatted(value.c_str());
+                                                    return value;
+                                                },
+                                                editingFunction,
+                                                false
+                                            });
+                                        } catch (const pl::core::err::EvaluatorError::Exception &error) {
+                                            log::error("Failed to get value of pattern '{}': {}", pattern->getDisplayName(), error.what());
+                                        }
                                     }
                                 } else {
-                                    const auto& error = runtime.getError();
+                                    const auto& error = this->m_runtime.getError();
 
                                     log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(filePath.path()));
                                     if (error.has_value())
