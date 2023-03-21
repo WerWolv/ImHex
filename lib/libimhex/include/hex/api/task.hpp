@@ -17,6 +17,9 @@ namespace hex {
     class TaskHolder;
     class TaskManager;
 
+    /**
+     * @brief A type representing a running asynchronous task
+     */
     class Task {
     public:
         Task() = default;
@@ -26,24 +29,44 @@ namespace hex {
         Task(Task &&other) noexcept;
         ~Task();
 
+        /**
+         * @brief Updates the current process value of the task
+         * @param value Current value
+         */
         void update(u64 value = 0);
+
+        /**
+         * @brief Sets the maximum value of the task
+         * @param value Maximum value of the task
+         */
         void setMaxValue(u64 value);
+
+
+        /**
+         * @brief Interrupts the task
+         * For regular Tasks, this just throws an exception to stop the task.
+         * If a custom interrupt callback is set, an exception is thrown and the callback is called.
+         */
+        void interrupt();
+
+        /**
+         * @brief Sets a callback that is called when the task is interrupted
+         * @param callback Callback to be called
+         */
+        void setInterruptCallback(std::function<void()> callback);
 
         [[nodiscard]] bool isBackgroundTask() const;
         [[nodiscard]] bool isFinished() const;
         [[nodiscard]] bool hadException() const;
         [[nodiscard]] bool wasInterrupted() const;
         [[nodiscard]] bool shouldInterrupt() const;
+
         void clearException();
         [[nodiscard]] std::string getExceptionMessage() const;
 
         [[nodiscard]] const std::string &getUnlocalizedName();
         [[nodiscard]] u64 getValue() const;
         [[nodiscard]] u64 getMaxValue() const;
-
-        void interrupt();
-
-        void setInterruptCallback(std::function<void()> callback);
 
     private:
         void finish();
@@ -72,6 +95,9 @@ namespace hex {
         friend class TaskManager;
     };
 
+    /**
+     * @brief A type holding a weak reference to a Task
+     */
     class TaskHolder {
     public:
         TaskHolder() = default;
@@ -87,6 +113,9 @@ namespace hex {
         std::weak_ptr<Task> m_task;
     };
 
+    /**
+     * @brief The Task Manager is responsible for running and managing asynchronous tasks
+     */
     class TaskManager {
     public:
         TaskManager() = delete;
@@ -96,19 +125,45 @@ namespace hex {
 
         constexpr static auto NoProgress = 0;
 
+        /**
+         * @brief Creates a new asynchronous task that gets displayed in the Task Manager in the footer
+         * @param name Name of the task
+         * @param maxValue Maximum value of the task
+         * @param function Function to be executed
+         * @return A TaskHolder holding a weak reference to the task
+         */
         static TaskHolder createTask(std::string name, u64 maxValue, std::function<void(Task &)> function);
+
+        /**
+         * @brief Creates a new asynchronous task that does not get displayed in the Task Manager
+         * @param name Name of the task
+         * @param function Function to be executed
+         * @return A TaskHolder holding a weak reference to the task
+         */
         static TaskHolder createBackgroundTask(std::string name, std::function<void(Task &)> function);
+
+
+        /**
+         * @brief Creates a new synchronous task that will execute the given function at the start of the next frame
+         * @param function Function to be executed
+         */
+        static void doLater(const std::function<void()> &function);
+
+        /**
+         * @brief Creates a callback that will be executed when all tasks are finished
+         * @param function Function to be executed
+         */
+        static void runWhenTasksFinished(const std::function<void()> &function);
+
 
         static void collectGarbage();
 
         static size_t getRunningTaskCount();
         static size_t getRunningBackgroundTaskCount();
-        static std::list<std::shared_ptr<Task>> &getRunningTasks();
 
-        static void doLater(const std::function<void()> &function);
+        static std::list<std::shared_ptr<Task>> &getRunningTasks();
         static void runDeferredCalls();
 
-        static void runWhenTasksFinished(const std::function<void()> &function);
     private:
         static std::mutex s_deferredCallsMutex, s_tasksFinishedMutex;
 

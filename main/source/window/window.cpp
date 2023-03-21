@@ -106,7 +106,7 @@ namespace hex {
         auto logoData      = romfs::get("logo.png");
         this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
 
-        ContentRegistry::Settings::store();
+        ContentRegistry::Settings::impl::store();
         EventManager::post<EventSettingsChanged>();
         EventManager::post<EventWindowInitialized>();
     }
@@ -317,7 +317,7 @@ namespace hex {
             auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
             auto sidebarPos   = ImGui::GetCursorPos();
-            auto sidebarWidth = ContentRegistry::Interface::getSidebarItems().empty() ? 0 : 30_scaled;
+            auto sidebarWidth = ContentRegistry::Interface::impl::getSidebarItems().empty() ? 0 : 30_scaled;
 
             ImGui::SetCursorPosX(sidebarWidth);
 
@@ -334,7 +334,7 @@ namespace hex {
 
                 ImGui::Separator();
                 ImGui::SetCursorPosX(8);
-                for (const auto &callback : ContentRegistry::Interface::getFooterItems()) {
+                for (const auto &callback : ContentRegistry::Interface::impl::getFooterItems()) {
                     auto prevIdx = drawList->_VtxCurrentIdx;
                     callback();
                     auto currIdx = drawList->_VtxCurrentIdx;
@@ -355,7 +355,7 @@ namespace hex {
                 static i32 openWindow = -1;
                 u32 index             = 0;
                 ImGui::PushID("SideBarWindows");
-                for (const auto &[icon, callback] : ContentRegistry::Interface::getSidebarItems()) {
+                for (const auto &[icon, callback] : ContentRegistry::Interface::impl::getSidebarItems()) {
                     ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
 
                     ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
@@ -404,13 +404,13 @@ namespace hex {
                     ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
                 }
 
-                for (const auto &[priority, menuItem] : ContentRegistry::Interface::getMainMenuItems()) {
+                for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
                     if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
                         ImGui::EndMenu();
                     }
                 }
 
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::getMenuItems()) {
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
                     const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
                     createNestedMenu(unlocalizedNames, shortcut, callback, enabledCallback);
                 }
@@ -424,7 +424,7 @@ namespace hex {
             // Render toolbar
             if (ImGui::BeginMenuBar()) {
 
-                for (const auto &callback : ContentRegistry::Interface::getToolbarItems()) {
+                for (const auto &callback : ContentRegistry::Interface::impl::getToolbarItems()) {
                     callback();
                     ImGui::SameLine();
                 }
@@ -524,7 +524,7 @@ namespace hex {
         TaskManager::runDeferredCalls();
 
         // Draw main menu popups
-        for (auto &[priority, menuItem] : ContentRegistry::Interface::getMenuItems()) {
+        for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
             const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
 
             if (ImGui::BeginPopup(unlocalizedNames.front().c_str())) {
@@ -540,7 +540,7 @@ namespace hex {
         auto &io = ImGui::GetIO();
 
         // Loop through all views and draw them
-        for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+        for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
             // Draw always visible views
@@ -766,7 +766,7 @@ namespace hex {
 
                 // Check if a custom file handler can handle the file
                 bool handled = false;
-                for (const auto &[extensions, handler] : ContentRegistry::FileHandler::getEntries()) {
+                for (const auto &[extensions, handler] : ContentRegistry::FileHandler::impl::getEntries()) {
                     for (const auto &extension : extensions) {
                         if (path.extension() == extension) {
                             // Pass the file to the handler and check if it was successful
@@ -857,11 +857,11 @@ namespace hex {
             handler.ReadOpenFn = [](ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) -> void* { return ctx; };
 
             handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *, void *, const char *line) {
-                for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+                for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                     std::string format = view->getUnlocalizedName() + "=%d";
                     sscanf(line, format.c_str(), &view->getWindowOpenState());
                 }
-                for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
+                for (auto &[name, function, detached] : ContentRegistry::Tools::impl::getEntries()) {
                     std::string format = name + "=%d";
                     sscanf(line, format.c_str(), &detached);
                 }
@@ -870,10 +870,10 @@ namespace hex {
             handler.WriteAllFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
                 buf->appendf("[%s][General]\n", handler->TypeName);
 
-                for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+                for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                     buf->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
                 }
-                for (auto &[name, function, detached] : ContentRegistry::Tools::getEntries()) {
+                for (auto &[name, function, detached] : ContentRegistry::Tools::impl::getEntries()) {
                     buf->appendf("%s=%d\n", name.c_str(), detached);
                 }
 

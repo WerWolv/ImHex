@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
 
         std::vector<CommandResult> results;
 
-        for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::getEntries()) {
+        for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::impl::getEntries()) {
 
             auto AutoComplete = [this, currCommand = command](auto) {
                 this->focusInputTextBox();
@@ -137,7 +137,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        for (const auto &handler : ContentRegistry::CommandPaletteCommands::getHandlers()) {
+        for (const auto &handler : ContentRegistry::CommandPaletteCommands::impl::getHandlers()) {
             const auto &[type, command, queryCallback, displayCallback] = handler;
 
             auto processedInput = input;

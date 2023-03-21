@@ -22,13 +22,13 @@ namespace {
 
     std::vector<std::fs::path> userFolders;
 
-    void loadUserFoldersFromSetting(nlohmann::json &setting) {
+    void loadUserFoldersFromSetting(const std::vector<std::string> &paths) {
         userFolders.clear();
-        std::vector<std::string> paths = setting;
         for (const auto &path : paths) {
-            // JSON reads char8_t as array, char8_t is not supported as of now
-            std::u8string_view uString(reinterpret_cast<const char8_t *>(&path.front()), reinterpret_cast<const char8_t *>(std::next(&path.back())));
-            userFolders.emplace_back(uString);
+            userFolders.emplace_back(
+                reinterpret_cast<const char8_t*>(path.data()),
+                reinterpret_cast<const char8_t*>(path.data() + path.size())
+            );
         }
     }
 
@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
                     setting = selection;
 
-                    ImHexApi::Common::restartImHex();
+                    ImHexApi::System::restartImHex();
 
                     return true;
                 }
@@ -618,9 +618,9 @@ namespace hex::plugin::builtin {
     }
 
     static void loadFoldersSettings() {
-        static const std::string dirsSetting { "hex.builtin.setting.folders" };
-        auto dirs = ContentRegistry::Settings::getSetting(dirsSetting, dirsSetting);
-        loadUserFoldersFromSetting(dirs);
+        auto directories = ContentRegistry::Settings::read("hex.builtin.setting.folders", "hex.builtin.setting.folders", std::vector<std::string> { });
+
+        loadUserFoldersFromSetting(directories);
         ImHexApi::System::setAdditionalFolderPaths(userFolders);
     }
 

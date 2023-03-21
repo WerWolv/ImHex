@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.settings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoResize)) {
             if (ImGui::BeginTabBar("settings")) {
-                auto &entries = ContentRegistry::Settings::getEntries();
+                auto &entries = ContentRegistry::Settings::impl::getEntries();
 
                 std::vector<std::decay_t<decltype(entries)>::const_iterator> sortedCategories;
 
@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
                     return item0->first.slot < item1->first.slot;
                 });
 
-                const auto &descriptions = ContentRegistry::Settings::getCategoryDescriptions();
+                const auto &descriptions = ContentRegistry::Settings::impl::getCategoryDescriptions();
 
                 for (auto &it : sortedCategories) {
                     auto &[category, settings] = *it;
@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
                         ImGui::Separator();
 
                         for (auto &[name, requiresRestart, callback] : settings) {
-                            auto &setting = ContentRegistry::Settings::getSettingsData()[category.name][name];
+                            auto &setting = ContentRegistry::Settings::impl::getSettingsData()[category.name][name];
                             if (callback(LangEntry(name), setting)) {
                                 log::debug("Setting [{}]: {} was changed to {}", category.name, name, [&] -> std::string{
                                    if (setting.is_number())
@@ -87,7 +87,7 @@ namespace hex::plugin::builtin {
             this->getWindowOpenState() = false;
 
         if (!this->getWindowOpenState() && this->m_restartRequested) {
-            View::showYesNoQuestionPopup("hex.builtin.view.settings.restart_question"_lang, ImHexApi::Common::restartImHex, [] {});
+            View::showYesNoQuestionPopup("hex.builtin.view.settings.restart_question"_lang, ImHexApi::System::restartImHex, [] {});
         }
     }
 

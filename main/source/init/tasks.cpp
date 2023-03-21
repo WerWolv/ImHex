@@ -225,7 +225,7 @@ namespace hex::init {
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
-        ContentRegistry::Provider::getEntries().clear();
+        ContentRegistry::Provider::impl::getEntries().clear();
 
         ImHexApi::System::getInitArguments().clear();
         ImHexApi::HexEditor::impl::getBackgroundHighlights().clear();
@@ -235,48 +235,48 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getTooltips().clear();
         ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
 
-        ContentRegistry::Settings::getEntries().clear();
-        ContentRegistry::Settings::getSettingsData().clear();
+        ContentRegistry::Settings::impl::getEntries().clear();
+        ContentRegistry::Settings::impl::getSettingsData().clear();
 
-        ContentRegistry::CommandPaletteCommands::getEntries().clear();
-        ContentRegistry::CommandPaletteCommands::getHandlers().clear();
+        ContentRegistry::CommandPaletteCommands::impl::getEntries().clear();
+        ContentRegistry::CommandPaletteCommands::impl::getHandlers().clear();
 
-        ContentRegistry::PatternLanguage::getFunctions().clear();
-        ContentRegistry::PatternLanguage::getPragmas().clear();
+        ContentRegistry::PatternLanguage::impl::getFunctions().clear();
+        ContentRegistry::PatternLanguage::impl::getPragmas().clear();
         ContentRegistry::PatternLanguage::impl::getVisualizers().clear();
 
         {
-            auto &views = ContentRegistry::Views::getEntries();
+            auto &views = ContentRegistry::Views::impl::getEntries();
             for (auto &[name, view] : views)
                 delete view;
             views.clear();
         }
 
 
-        ContentRegistry::Tools::getEntries().clear();
-        ContentRegistry::DataInspector::getEntries().clear();
+        ContentRegistry::Tools::impl::getEntries().clear();
+        ContentRegistry::DataInspector::impl::getEntries().clear();
 
-        ContentRegistry::Language::getLanguages().clear();
-        ContentRegistry::Language::getLanguageDefinitions().clear();
+        ContentRegistry::Language::impl::getLanguages().clear();
+        ContentRegistry::Language::impl::getLanguageDefinitions().clear();
         LangEntry::resetLanguageStrings();
 
-        ContentRegistry::Interface::getWelcomeScreenEntries().clear();
-        ContentRegistry::Interface::getFooterItems().clear();
-        ContentRegistry::Interface::getToolbarItems().clear();
-        ContentRegistry::Interface::getMainMenuItems().clear();
-        ContentRegistry::Interface::getMenuItems().clear();
-        ContentRegistry::Interface::getSidebarItems().clear();
-        ContentRegistry::Interface::getTitleBarButtons().clear();
-        ContentRegistry::Interface::getLayouts().clear();
+        ContentRegistry::Interface::impl::getWelcomeScreenEntries().clear();
+        ContentRegistry::Interface::impl::getFooterItems().clear();
+        ContentRegistry::Interface::impl::getToolbarItems().clear();
+        ContentRegistry::Interface::impl::getMainMenuItems().clear();
+        ContentRegistry::Interface::impl::getMenuItems().clear();
+        ContentRegistry::Interface::impl::getSidebarItems().clear();
+        ContentRegistry::Interface::impl::getTitleBarButtons().clear();
+        ContentRegistry::Interface::impl::getLayouts().clear();
 
         ShortcutManager::clearShortcuts();
 
         TaskManager::getRunningTasks().clear();
 
-        ContentRegistry::DataProcessorNode::getEntries().clear();
+        ContentRegistry::DataProcessorNode::impl::getEntries().clear();
 
-        ContentRegistry::DataFormatter::getEntries().clear();
-        ContentRegistry::FileHandler::getEntries().clear();
+        ContentRegistry::DataFormatter::impl::getEntries().clear();
+        ContentRegistry::FileHandler::impl::getEntries().clear();
         ContentRegistry::Hashes::impl::getHashes().clear();
 
         api::ThemeManager::reset();
@@ -396,14 +396,14 @@ namespace hex::init {
     bool loadSettings() {
         try {
             // Try to load settings from file
-            ContentRegistry::Settings::load();
+            ContentRegistry::Settings::impl::load();
         } catch (std::exception &e) {
             // If that fails, create a new settings file
 
             log::error("Failed to load configuration! {}", e.what());
 
-            ContentRegistry::Settings::clear();
-            ContentRegistry::Settings::store();
+            ContentRegistry::Settings::impl::clear();
+            ContentRegistry::Settings::impl::store();
 
             return false;
         }
@@ -413,7 +413,7 @@ namespace hex::init {
 
     bool storeSettings() {
         try {
-            ContentRegistry::Settings::store();
+            ContentRegistry::Settings::impl::store();
         } catch (std::exception &e) {
             log::error("Failed to store configuration! {}", e.what());
             return false;

@@ -363,14 +363,54 @@ namespace hex {
         return result;
     }
 
+    /**
+     * @brief The ShortcutManager handles global and view-specific shortcuts.
+     * New shortcuts can be constructed using the + operator on Key objects. For example: CTRL + ALT + Keys::A
+     */
     class ShortcutManager {
     public:
+
+        /**
+         * @brief Add a global shortcut. Global shortcuts can be triggered regardless of what view is currently focused
+         * @param shortcut The shortcut to add.
+         * @param callback The callback to call when the shortcut is triggered.
+         */
         static void addGlobalShortcut(const Shortcut &shortcut, const std::function<void()> &callback);
+
+        /**
+         * @brief Add a view-specific shortcut. View-specific shortcuts can only be triggered when the specified view is focused.
+         * @param view The view to add the shortcut to.
+         * @param shortcut The shortcut to add.
+         * @param callback The callback to call when the shortcut is triggered.
+         */
         static void addShortcut(View *view, const Shortcut &shortcut, const std::function<void()> &callback);
 
+
+        /**
+         * @brief Process a key event. This should be called from the main loop.
+         * @param currentView Current view to process
+         * @param ctrl Whether the CTRL key is pressed
+         * @param alt Whether the ALT key is pressed
+         * @param shift Whether the SHIFT key is pressed
+         * @param super Whether the SUPER key is pressed
+         * @param focused Whether the current view is focused
+         * @param keyCode The key code of the key that was pressed
+         */
         static void process(View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode);
+
+        /**
+         * @brief Process a key event. This should be called from the main loop.
+         * @param ctrl Whether the CTRL key is pressed
+         * @param alt Whether the ALT key is pressed
+         * @param shift Whether the SHIFT key is pressed
+         * @param super Whether the SUPER key is pressed
+         * @param keyCode The key code of the key that was pressed
+         */
         static void processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode);
 
+        /**
+         * @brief Clear all shortcuts
+         */
         static void clearShortcuts();
 
     private:

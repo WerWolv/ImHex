@@ -264,7 +264,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                for (const auto &[unlocalizedCategory, unlocalizedName, function] : ContentRegistry::DataProcessorNode::getEntries()) {
+                for (const auto &[unlocalizedCategory, unlocalizedName, function] : ContentRegistry::DataProcessorNode::impl::getEntries()) {
                     if (unlocalizedCategory.empty() && unlocalizedName.empty()) {
                         ImGui::Separator();
                     } else if (unlocalizedCategory.empty()) {
@@ -617,7 +617,7 @@ namespace hex::plugin::builtin {
     std::unique_ptr<dp::Node> ViewDataProcessor::loadNode(const nlohmann::json &node) {
         try {
 
-            auto &nodeEntries = ContentRegistry::DataProcessorNode::getEntries();
+            auto &nodeEntries = ContentRegistry::DataProcessorNode::impl::getEntries();
 
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {

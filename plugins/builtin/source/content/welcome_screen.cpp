@@ -136,10 +136,10 @@ namespace hex::plugin::builtin {
     }
 
     static void loadDefaultLayout() {
-        auto layouts = ContentRegistry::Interface::getLayouts();
+        auto layouts = ContentRegistry::Interface::impl::getLayouts();
         if (!layouts.empty()) {
 
-            for (auto &[viewName, view] : ContentRegistry::Views::getEntries()) {
+            for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
                 view->getWindowOpenState() = false;
             }
 
@@ -153,7 +153,7 @@ namespace hex::plugin::builtin {
     }
 
     static bool isAnyViewOpen() {
-        const auto &views = ContentRegistry::Views::getEntries();
+        const auto &views = ContentRegistry::Views::impl::getEntries();
         return std::any_of(views.begin(), views.end(),
             [](const std::pair<std::string, View*> &entry) {
                 return entry.second->getWindowOpenState();
@@ -252,7 +252,7 @@ namespace hex::plugin::builtin {
             ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetCursorPos());
             if (ImGui::BeginPopup("hex.builtin.welcome.start.popup.open_other"_lang)) {
 
-                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
+                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
                     if (ImGui::Hyperlink(LangEntry(unlocalizedProviderName))) {
                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
                         ImGui::CloseCurrentPopup();
@@ -365,7 +365,7 @@ namespace hex::plugin::builtin {
                     hex::openWebpage("hex.builtin.welcome.learn.plugins.link"_lang);
             }
 
-            auto extraWelcomeScreenEntries = ContentRegistry::Interface::getWelcomeScreenEntries();
+            auto extraWelcomeScreenEntries = ContentRegistry::Interface::impl::getWelcomeScreenEntries();
             if (!extraWelcomeScreenEntries.empty()) {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                 ImGui::TableNextColumn();
@@ -442,36 +442,28 @@ namespace hex::plugin::builtin {
 
         (void)EventManager::subscribe<EventSettingsChanged>([]() {
             {
-                auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
+                auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", api::ThemeManager::NativeTheme);
 
-                if (theme.is_string()) {
-                    if (theme != api::ThemeManager::NativeTheme) {
-                        static std::string lastTheme;
+                if (theme != api::ThemeManager::NativeTheme) {
+                    static std::string lastTheme;
 
-                        if (const auto thisTheme = theme.get<std::string>(); thisTheme != lastTheme) {
-                            EventManager::post<RequestChangeTheme>(thisTheme);
-                            lastTheme = thisTheme;
-                        }
+                    if (theme != lastTheme) {
+                        EventManager::post<RequestChangeTheme>(theme);
+                        lastTheme = theme;
                     }
                 }
             }
 
             {
-                auto language = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.language");
+                auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US");
 
-                if (language.is_string()) {
-                    LangEntry::loadLanguage(static_cast<std::string>(language));
-                } else {
-                    // If no language is specified, fall back to English.
-                    LangEntry::loadLanguage("en-US");
-                }
+                LangEntry::loadLanguage(language);
             }
 
             {
-                auto targetFps = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps");
+                auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60);
 
-                if (targetFps.is_number())
-                    ImHexApi::System::setTargetFPS(targetFps);
+                ImHexApi::System::setTargetFPS(targetFps);
             }
         });
 

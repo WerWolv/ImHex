@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
             View::confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
                 [] {
                         ImHexApi::Provider::resetDirty();
-                        ImHexApi::Common::closeImHex();
+                        ImHexApi::System::closeImHex();
                     },
                 [] { ImGui::CloseCurrentPopup(); }
             );
@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
 
             if (TaskManager::getRunningTaskCount() == 0 && TaskManager::getRunningBackgroundTaskCount() == 0) {
                 ImGui::CloseCurrentPopup();
-                ImHexApi::Common::closeImHex();
+                ImHexApi::System::closeImHex();
             }
 
             ImGui::EndPopup();
@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
             ImGui::Separator();
             if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape)) {
-                ImHexApi::Common::closeImHex();
+                ImHexApi::System::closeImHex();
                 ImGui::CloseCurrentPopup();
             }
 

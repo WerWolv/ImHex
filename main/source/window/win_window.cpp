@@ -418,7 +418,7 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-        auto &titleBarButtons = ContentRegistry::Interface::getTitleBarButtons();
+        auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
@@ -446,7 +446,7 @@ namespace hex {
 
         // Draw close button
         if (ImGui::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
-            ImHexApi::Common::closeImHex();
+            ImHexApi::System::closeImHex();
         }
 
         ImGui::PopStyleColor(5);

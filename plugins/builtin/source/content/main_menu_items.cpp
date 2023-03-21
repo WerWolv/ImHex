@@ -297,7 +297,7 @@ namespace hex::plugin::builtin {
 
         /* Open Other */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, 1150, Shortcut::None, [] {
-            for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
+            for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
                 if (ImGui::MenuItem(LangEntry(unlocalizedProviderName)))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
             }
@@ -390,7 +390,7 @@ namespace hex::plugin::builtin {
 
         /* Quit ImHex */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.quit"}, 10100, ALT + Keys::F4, [] {
-            ImHexApi::Common::closeImHex();
+            ImHexApi::System::closeImHex();
         });
     }
 
@@ -415,7 +415,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.view", 3000);
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 1000, [] {
-            for (auto &[name, view] : ContentRegistry::Views::getEntries()) {
+            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                 if (view->hasViewMenuItemEntry())
                     ImGui::MenuItem(LangEntry(view->getUnlocalizedName()), "", &view->getWindowOpenState());
             }
@@ -433,11 +433,11 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.layout", 4000);
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 1000, [] {
-            for (auto &[layoutName, func] : ContentRegistry::Interface::getLayouts()) {
+            for (auto &[layoutName, func] : ContentRegistry::Interface::impl::getLayouts()) {
                 if (ImGui::MenuItem(LangEntry(layoutName), "", false, ImHexApi::Provider::isValid())) {
                     auto dock = ImHexApi::System::getMainDockSpaceId();
 
-                    for (auto &[viewName, view] : ContentRegistry::Views::getEntries()) {
+                    for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
                         view->getWindowOpenState() = false;
                     }
 

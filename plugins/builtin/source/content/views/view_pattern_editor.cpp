@@ -753,19 +753,8 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            {
-                auto syncPatternSource = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source");
-
-                if (syncPatternSource.is_number())
-                    this->m_syncPatternSourceCode = static_cast<int>(syncPatternSource);
-            }
-
-            {
-                auto autoLoadPatterns = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns");
-
-                if (autoLoadPatterns.is_number())
-                    this->m_autoLoadPatterns = static_cast<int>(autoLoadPatterns);
-            }
+            this->m_syncPatternSourceCode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", 0);
+            this->m_autoLoadPatterns = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1);
         });
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {

@@ -1083,7 +1083,7 @@ namespace hex::plugin::builtin {
             auto selection = ImHexApi::HexEditor::getSelection();
             auto provider  = ImHexApi::Provider::get();
 
-            for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::getEntries()) {
+            for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::impl::getEntries()) {
                 if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
                     ImGui::SetClipboardText(
                             callback(

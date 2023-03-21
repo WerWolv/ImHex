@@ -10,68 +10,98 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/fs.hpp>
 
-#define EVENT_DEF(event_name, ...)                                               \
-    struct event_name final : public hex::Event<__VA_ARGS__> {                   \
-        constexpr static auto id = [] { return hex::EventId(); }();              \
-        explicit event_name(Callback func) noexcept : Event(std::move(func)) { } \
+#define EVENT_DEF(event_name, ...)                                                      \
+    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                    \
+        constexpr static auto id = [] { return hex::impl::EventId(); }();               \
+        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }        \
     }
 
 struct GLFWwindow;
 
 namespace hex {
 
-    class EventId {
-    public:
-        explicit constexpr EventId(const char *func = __builtin_FUNCTION(), u32 line = __builtin_LINE()) {
-            this->m_hash = line ^ 987654321;
-            for (auto c : std::string_view(func)) {
-                this->m_hash = (this->m_hash >> 5) | (this->m_hash << 27);
-                this->m_hash ^= c;
+    namespace impl {
+
+        class EventId {
+        public:
+            explicit constexpr EventId(const char *func = __builtin_FUNCTION(), u32 line = __builtin_LINE()) {
+                this->m_hash = line ^ 987654321;
+                for (auto c : std::string_view(func)) {
+                    this->m_hash = (this->m_hash >> 5) | (this->m_hash << 27);
+                    this->m_hash ^= c;
+                }
             }
-        }
 
-        constexpr bool operator==(const EventId &rhs) const = default;
+            constexpr bool operator==(const EventId &rhs) const = default;
 
-    private:
-        u32 m_hash;
-    };
+        private:
+            u32 m_hash;
+        };
 
-    struct EventBase {
-        EventBase() noexcept = default;
-    };
+        struct EventBase {
+            EventBase() noexcept = default;
+        };
 
-    template<typename... Params>
-    struct Event : public EventBase {
-        using Callback = std::function<void(Params...)>;
+        template<typename... Params>
+        struct Event : public EventBase {
+            using Callback = std::function<void(Params...)>;
 
-        explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
+            explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
-        void operator()(Params... params) const noexcept {
-            this->m_func(params...);
-        }
+            void operator()(Params... params) const noexcept {
+                this->m_func(params...);
+            }
 
-    private:
-        Callback m_func;
-    };
+        private:
+            Callback m_func;
+        };
 
+    }
+
+
+    /**
+     * @brief The EventManager allows subscribing to and posting events to different parts of the program.
+     * To create a new event, use the EVENT_DEF macro. This will create a new event type with the given name and parameters
+     */
     class EventManager {
     public:
-        using EventList = std::list<std::pair<EventId, EventBase *>>;
+        using EventList = std::list<std::pair<impl::EventId, impl::EventBase *>>;
 
+        /**
+         * @brief Subscribes to an event
+         * @tparam E Event
+         * @param function Function to call when the event is posted
+         * @return Token to unsubscribe from the event
+         */
         template<typename E>
         static EventList::iterator subscribe(typename E::Callback function) {
             return s_events.insert(s_events.end(), std::make_pair(E::id, new E(function)));
         }
 
+        /**
+         * @brief Subscribes to an event
+         * @tparam E Event
+         * @param token Unique token to register the event to. Later required to unsubscribe again
+         * @param function Function to call when the event is posted
+         */
         template<typename E>
         static void subscribe(void *token, typename E::Callback function) {
             s_tokenStore.insert(std::make_pair(token, subscribe<E>(function)));
         }
 
-        static void unsubscribe(EventList::iterator iter) noexcept {
-            s_events.remove(*iter);
+        /**
+         * @brief Unsubscribes from an event
+         * @param token Token returned by subscribe
+         */
+        static void unsubscribe(const EventList::iterator &token) noexcept {
+            s_events.remove(*token);
         }
 
+        /**
+         * @brief Unsubscribes from an event
+         * @tparam E Event
+         * @param token Token passed to subscribe
+         */
         template<typename E>
         static void unsubscribe(void *token) noexcept {
             auto iter = std::find_if(s_tokenStore.begin(), s_tokenStore.end(), [&](auto &item) {
@@ -85,6 +115,11 @@ namespace hex {
 
         }
 
+        /**
+         * @brief Posts an event to all subscribers of it
+         * @tparam E Event
+         * @param args Arguments to pass to the event
+         */
         template<typename E>
         static void post(auto &&...args) noexcept {
             for (const auto &[id, event] : s_events) {
@@ -93,6 +128,9 @@ namespace hex {
             }
         }
 
+        /**
+         * @brief Unsubscribe all subscribers from all events
+         */
         static void clear() noexcept {
             s_events.clear();
             s_tokenStore.clear();

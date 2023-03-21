@@ -19,58 +19,89 @@ namespace hex {
 
         constexpr auto SettingsFile = "settings.json";
 
-        void load() {
-            bool loaded = false;
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
+        namespace impl {
 
-                if (file.isValid()) {
-                    getSettingsData() = nlohmann::json::parse(file.readString());
-                    loaded = true;
-                    break;
+            std::map<Category, std::vector<Entry>> &getEntries() {
+                static std::map<Category, std::vector<Entry>> entries;
+
+                return entries;
+            }
+
+            std::map<std::string, std::string> &getCategoryDescriptions() {
+                static std::map<std::string, std::string> descriptions;
+
+                return descriptions;
+            }
+
+            nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
+                auto &settings = getSettingsData();
+
+                if (!settings.contains(unlocalizedCategory)) return {};
+                if (!settings[unlocalizedCategory].contains(unlocalizedName)) return {};
+
+                return settings[unlocalizedCategory][unlocalizedName];
+            }
+
+            nlohmann::json &getSettingsData() {
+                static nlohmann::json settings;
+
+                return settings;
+            }
+
+            void load() {
+                bool loaded = false;
+                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
+
+                    if (file.isValid()) {
+                        getSettingsData() = nlohmann::json::parse(file.readString());
+                        loaded = true;
+                        break;
+                    }
+                }
+
+                if (!loaded)
+                    store();
+            }
+
+            void store() {
+                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
+
+                    if (file.isValid()) {
+                        file.write(getSettingsData().dump(4));
+                        break;
+                    }
                 }
             }
 
-            if (!loaded)
-                store();
-        }
-
-        void store() {
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
-
-                if (file.isValid()) {
-                    file.write(getSettingsData().dump(4));
-                    break;
+            void clear() {
+                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    wolv::io::fs::remove(dir / SettingsFile);
                 }
             }
-        }
 
-        void clear() {
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                wolv::io::fs::remove(dir / SettingsFile);
-            }
-        }
+            static auto getCategoryEntry(const std::string &unlocalizedCategory) {
+                auto &entries        = getEntries();
+                const size_t curSlot = entries.size();
+                auto found           = entries.find(Category { unlocalizedCategory });
 
-        static auto getCategoryEntry(const std::string &unlocalizedCategory) {
-            auto &entries        = getEntries();
-            const size_t curSlot = entries.size();
-            auto found           = entries.find(Category { unlocalizedCategory });
+                if (found == entries.end()) {
+                    auto [iter, _] = entries.emplace(Category { unlocalizedCategory, curSlot }, std::vector<Entry> {});
+                    return iter;
+                }
 
-            if (found == entries.end()) {
-                auto [iter, _] = entries.emplace(Category { unlocalizedCategory, curSlot }, std::vector<Entry> {});
-                return iter;
+                return found;
             }
 
-            return found;
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const Callback &callback, bool requiresRestart) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const impl::Callback &callback, bool requiresRestart) {
             log::debug("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
+            impl::getCategoryEntry(unlocalizedCategory)->second.emplace_back(impl::Entry { unlocalizedName, requiresRestart, callback });
 
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
@@ -78,12 +109,12 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const Callback &callback, bool requiresRestart) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const impl::Callback &callback, bool requiresRestart) {
             log::debug("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
+            impl::getCategoryEntry(unlocalizedCategory)->second.emplace_back(impl::Entry { unlocalizedName, requiresRestart, callback });
 
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
@@ -91,12 +122,12 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const Callback &callback, bool requiresRestart) {
+        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const impl::Callback &callback, bool requiresRestart) {
             log::debug("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
-            getCategoryEntry(unlocalizedCategory)->second.emplace_back(Entry { unlocalizedName, requiresRestart, callback });
+            impl::getCategoryEntry(unlocalizedCategory)->second.emplace_back(impl::Entry { unlocalizedName, requiresRestart, callback });
 
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
@@ -105,11 +136,11 @@ namespace hex {
         }
 
         void addCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription) {
-            getCategoryDescriptions()[unlocalizedCategory] = unlocalizedCategoryDescription;
+            impl::getCategoryDescriptions()[unlocalizedCategory] = unlocalizedCategoryDescription;
         }
 
         void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value) {
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
@@ -118,7 +149,7 @@ namespace hex {
         }
 
         void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value) {
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
@@ -127,7 +158,7 @@ namespace hex {
         }
 
         void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value) {
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
@@ -137,7 +168,7 @@ namespace hex {
 
 
         i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue) {
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 return defaultValue;
@@ -151,7 +182,7 @@ namespace hex {
         }
 
         std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue) {
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 return defaultValue;
@@ -165,7 +196,7 @@ namespace hex {
         }
 
         std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue) {
-            auto &json = getSettingsData();
+            auto &json = impl::getSettingsData();
 
             if (!json.contains(unlocalizedCategory))
                 return defaultValue;
@@ -181,61 +212,37 @@ namespace hex {
             return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::string>>();
         }
 
-
-        std::map<Category, std::vector<Entry>> &getEntries() {
-            static std::map<Category, std::vector<Entry>> entries;
-
-            return entries;
-        }
-
-        std::map<std::string, std::string> &getCategoryDescriptions() {
-            static std::map<std::string, std::string> descriptions;
-
-            return descriptions;
-        }
-
-        nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
-            auto &settings = getSettingsData();
-
-            if (!settings.contains(unlocalizedCategory)) return {};
-            if (!settings[unlocalizedCategory].contains(unlocalizedName)) return {};
-
-            return settings[unlocalizedCategory][unlocalizedName];
-        }
-
-        nlohmann::json &getSettingsData() {
-            static nlohmann::json settings;
-
-            return settings;
-        }
-
     }
 
 
     namespace ContentRegistry::CommandPaletteCommands {
 
-        void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const DisplayCallback &displayCallback, const ExecuteCallback &executeCallback) {
+        void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const impl::DisplayCallback &displayCallback, const impl::ExecuteCallback &executeCallback) {
             log::debug("Registered new command palette command: {}", command);
 
-            getEntries().push_back(ContentRegistry::CommandPaletteCommands::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
+            impl::getEntries().push_back(ContentRegistry::CommandPaletteCommands::impl::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
         }
 
-        void addHandler(Type type, const std::string &command, const QueryCallback &queryCallback, const DisplayCallback &displayCallback) {
+        void addHandler(Type type, const std::string &command, const impl::QueryCallback &queryCallback, const impl::DisplayCallback &displayCallback) {
             log::debug("Registered new command palette command handler: {}", command);
 
-            getHandlers().push_back(ContentRegistry::CommandPaletteCommands::Handler { type, command, queryCallback, displayCallback });
+            impl::getHandlers().push_back(ContentRegistry::CommandPaletteCommands::impl::Handler { type, command, queryCallback, displayCallback });
         }
 
-        std::vector<Entry> &getEntries() {
-            static std::vector<Entry> commands;
+        namespace impl {
 
-            return commands;
-        }
+            std::vector<Entry> &getEntries() {
+                static std::vector<Entry> commands;
 
-        std::vector<Handler> &getHandlers() {
-            static std::vector<Handler> commands;
+                return commands;
+            }
 
-            return commands;
+            std::vector<Handler> &getHandlers() {
+                static std::vector<Handler> commands;
+
+                return commands;
+            }
+
         }
 
     }
@@ -270,14 +277,14 @@ namespace hex {
 
             runtime.setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
 
-            for (const auto &func : getFunctions()) {
+            for (const auto &func : impl::getFunctions()) {
                 if (func.dangerous)
                     runtime.addDangerousFunction(func.ns, func.name, func.parameterCount, func.callback);
                 else
                     runtime.addFunction(func.ns, func.name, func.parameterCount, func.callback);
             }
 
-            for (const auto &[name, callback] : getPragmas()) {
+            for (const auto &[name, callback] : impl::getPragmas()) {
                 runtime.addPragma(name, callback);
             }
 
@@ -288,13 +295,13 @@ namespace hex {
         void addPragma(const std::string &name, const pl::api::PragmaHandler &handler) {
             log::debug("Registered new pattern language pragma: {}", name);
 
-            getPragmas()[name] = handler;
+            impl::getPragmas()[name] = handler;
         }
 
         void addFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func) {
             log::debug("Registered new pattern language function: {}", getFunctionName(ns, name));
 
-            getFunctions().push_back({
+            impl::getFunctions().push_back({
                 ns, name,
                 parameterCount, func,
                 false
@@ -304,7 +311,7 @@ namespace hex {
         void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func) {
             log::debug("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
 
-            getFunctions().push_back({
+            impl::getFunctions().push_back({
                 ns, name,
                 parameterCount, func,
                 true
@@ -312,48 +319,58 @@ namespace hex {
         }
 
 
-        std::map<std::string, impl::Visualizer> &impl::getVisualizers() {
-            static std::map<std::string, impl::Visualizer> visualizers;
-
-            return visualizers;
-        }
-
-        void addVisualizer(const std::string &name, const VisualizerFunctionCallback &function, u32 parameterCount) {
+        void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, u32 parameterCount) {
             log::debug("Registered new pattern visualizer function: {}", name);
             impl::getVisualizers()[name] = impl::Visualizer { parameterCount, function };
         }
 
-        std::map<std::string, pl::api::PragmaHandler> &getPragmas() {
-            static std::map<std::string, pl::api::PragmaHandler> pragmas;
 
-            return pragmas;
+        namespace impl {
+
+            std::map<std::string, impl::Visualizer> &getVisualizers() {
+                static std::map<std::string, impl::Visualizer> visualizers;
+
+                return visualizers;
+            }
+
+            std::map<std::string, pl::api::PragmaHandler> &getPragmas() {
+                static std::map<std::string, pl::api::PragmaHandler> pragmas;
+
+                return pragmas;
+            }
+
+            std::vector<impl::FunctionDefinition> &getFunctions() {
+                static std::vector<impl::FunctionDefinition> functions;
+
+                return functions;
+            }
+
         }
 
-        std::vector<impl::FunctionDefinition> &getFunctions() {
-            static std::vector<impl::FunctionDefinition> functions;
-
-            return functions;
-        }
 
     }
 
 
     namespace ContentRegistry::Views {
 
+        namespace impl {
+
+            std::map<std::string, View *> &getEntries() {
+                static std::map<std::string, View *> views;
+
+                return views;
+            }
+
+        }
+
         void impl::add(View *view) {
             log::debug("Registered new view: {}", view->getUnlocalizedName());
 
-            getEntries().insert({ view->getUnlocalizedName(), view });
-        }
-
-        std::map<std::string, View *> &getEntries() {
-            static std::map<std::string, View *> views;
-
-            return views;
+            impl::getEntries().insert({ view->getUnlocalizedName(), view });
         }
 
         View *getViewByName(const std::string &unlocalizedName) {
-            auto &views = getEntries();
+            auto &views = impl::getEntries();
 
             if (views.contains(unlocalizedName))
                 return views[unlocalizedName];
@@ -368,13 +385,17 @@ namespace hex {
         void add(const std::string &unlocalizedName, const impl::Callback &function) {
             log::debug("Registered new tool: {}", unlocalizedName);
 
-            getEntries().emplace_back(impl::Entry { unlocalizedName, function, false });
+            impl::getEntries().emplace_back(impl::Entry { unlocalizedName, function, false });
         }
 
-        std::vector<impl::Entry> &getEntries() {
-            static std::vector<impl::Entry> entries;
+        namespace impl {
 
-            return entries;
+            std::vector<Entry> &getEntries() {
+                static std::vector<Entry> tools;
+
+                return tools;
+            }
+
         }
 
     }
@@ -384,20 +405,25 @@ namespace hex {
         void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
             log::debug("Registered new data inspector format: {}", unlocalizedName);
 
-            getEntries().push_back({ unlocalizedName, requiredSize, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
+            impl::getEntries().push_back({ unlocalizedName, requiredSize, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
 
         void add(const std::string &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
             log::debug("Registered new data inspector format: {}", unlocalizedName);
 
-            getEntries().push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
+            impl::getEntries().push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
 
-        std::vector<impl::Entry> &getEntries() {
-            static std::vector<impl::Entry> entries;
+        namespace impl {
 
-            return entries;
+            std::vector<impl::Entry> &getEntries() {
+                static std::vector<impl::Entry> entries;
+
+                return entries;
+            }
+
         }
+
 
     }
 
@@ -410,13 +436,17 @@ namespace hex {
         }
 
         void addSeparator() {
-            getEntries().push_back({ "", "", [] { return nullptr; } });
+            impl::getEntries().push_back({ "", "", [] { return nullptr; } });
         }
 
-        std::vector<impl::Entry> &getEntries() {
-            static std::vector<impl::Entry> nodes;
+        namespace impl {
 
-            return nodes;
+            std::vector<impl::Entry> &getEntries() {
+                static std::vector<impl::Entry> nodes;
+
+                return nodes;
+            }
+
         }
 
     }
@@ -449,7 +479,7 @@ namespace hex {
                     LangEntry::setFallbackLanguage(code.get<std::string>());
             }
 
-            getLanguages().insert({ code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()) });
+            impl::getLanguages().insert({ code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()) });
 
             std::map<std::string, std::string> translationDefinitions;
             for (auto &[key, value] : translations.items()) {
@@ -461,20 +491,25 @@ namespace hex {
                 translationDefinitions[key] = value.get<std::string>();
             }
 
-            getLanguageDefinitions()[code.get<std::string>()].emplace_back(std::move(translationDefinitions));
+            impl::getLanguageDefinitions()[code.get<std::string>()].emplace_back(std::move(translationDefinitions));
         }
 
-        std::map<std::string, std::string> &getLanguages() {
-            static std::map<std::string, std::string> languages;
+        namespace impl {
 
-            return languages;
+            std::map<std::string, std::string> &getLanguages() {
+                static std::map<std::string, std::string> languages;
+
+                return languages;
+            }
+
+            std::map<std::string, std::vector<LanguageDefinition>> &getLanguageDefinitions() {
+                static std::map<std::string, std::vector<LanguageDefinition>> definitions;
+
+                return definitions;
+            }
+
         }
 
-        std::map<std::string, std::vector<LanguageDefinition>> &getLanguageDefinitions() {
-            static std::map<std::string, std::vector<LanguageDefinition>> definitions;
-
-            return definitions;
-        }
 
     }
 
@@ -483,13 +518,13 @@ namespace hex {
         void registerMainMenuItem(const std::string &unlocalizedName, u32 priority) {
             log::debug("Registered new main menu item: {}", unlocalizedName);
 
-            getMainMenuItems().insert({ priority, { unlocalizedName } });
+            impl::getMainMenuItems().insert({ priority, { unlocalizedName } });
         }
 
         void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
             log::debug("Added new menu item to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
 
-            getMenuItems().insert({
+            impl::getMenuItems().insert({
                 priority, { unlocalizedMainMenuNames, shortcut, function, enabledCallback }
             });
 
@@ -503,86 +538,89 @@ namespace hex {
             log::debug("Added new menu item sub menu to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
-            getMenuItems().insert({
+            impl::getMenuItems().insert({
                 priority, { unlocalizedMainMenuNames, {}, function, enabledCallback }
             });
         }
 
         void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
-            getMenuItems().insert({
+            impl::getMenuItems().insert({
                 priority, { unlocalizedMainMenuNames, {}, []{}, []{ return true; } }
             });
         }
 
         void addWelcomeScreenEntry(const impl::DrawCallback &function) {
-            getWelcomeScreenEntries().push_back(function);
+            impl::getWelcomeScreenEntries().push_back(function);
         }
 
         void addFooterItem(const impl::DrawCallback &function) {
-            getFooterItems().push_back(function);
+            impl::getFooterItems().push_back(function);
         }
 
         void addToolbarItem(const impl::DrawCallback &function) {
-            getToolbarItems().push_back(function);
+            impl::getToolbarItems().push_back(function);
         }
 
         void addSidebarItem(const std::string &icon, const impl::DrawCallback &function) {
-            getSidebarItems().push_back({ icon, function });
+            impl::getSidebarItems().push_back({ icon, function });
         }
 
         void addTitleBarButton(const std::string &icon, const std::string &unlocalizedTooltip, const impl::ClickCallback &function) {
-            getTitleBarButtons().push_back({ icon, unlocalizedTooltip, function });
+            impl::getTitleBarButtons().push_back({ icon, unlocalizedTooltip, function });
         }
 
         void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function) {
             log::debug("Added new layout: {}", unlocalizedName);
 
-            getLayouts().push_back({ unlocalizedName, function });
+            impl::getLayouts().push_back({ unlocalizedName, function });
         }
 
+        namespace impl {
 
-        std::multimap<u32, impl::MainMenuItem> &getMainMenuItems() {
-            static std::multimap<u32, impl::MainMenuItem> items;
+            std::multimap<u32, impl::MainMenuItem> &getMainMenuItems() {
+                static std::multimap<u32, impl::MainMenuItem> items;
 
-            return items;
-        }
-        std::multimap<u32, impl::MenuItem> &getMenuItems() {
-            static std::multimap<u32, impl::MenuItem> items;
+                return items;
+            }
+            std::multimap<u32, impl::MenuItem> &getMenuItems() {
+                static std::multimap<u32, impl::MenuItem> items;
 
-            return items;
-        }
+                return items;
+            }
 
-        std::vector<impl::DrawCallback> &getWelcomeScreenEntries() {
-            static std::vector<impl::DrawCallback> entries;
+            std::vector<impl::DrawCallback> &getWelcomeScreenEntries() {
+                static std::vector<impl::DrawCallback> entries;
 
-            return entries;
-        }
-        std::vector<impl::DrawCallback> &getFooterItems() {
-            static std::vector<impl::DrawCallback> items;
+                return entries;
+            }
+            std::vector<impl::DrawCallback> &getFooterItems() {
+                static std::vector<impl::DrawCallback> items;
 
-            return items;
-        }
-        std::vector<impl::DrawCallback> &getToolbarItems() {
-            static std::vector<impl::DrawCallback> items;
+                return items;
+            }
+            std::vector<impl::DrawCallback> &getToolbarItems() {
+                static std::vector<impl::DrawCallback> items;
 
-            return items;
-        }
-        std::vector<impl::SidebarItem> &getSidebarItems() {
-            static std::vector<impl::SidebarItem> items;
+                return items;
+            }
+            std::vector<impl::SidebarItem> &getSidebarItems() {
+                static std::vector<impl::SidebarItem> items;
 
-            return items;
-        }
-        std::vector<impl::TitleBarButton> &getTitleBarButtons() {
-            static std::vector<impl::TitleBarButton> buttons;
+                return items;
+            }
+            std::vector<impl::TitleBarButton> &getTitleBarButtons() {
+                static std::vector<impl::TitleBarButton> buttons;
 
-            return buttons;
-        }
+                return buttons;
+            }
 
-        std::vector<impl::Layout> &getLayouts() {
-            static std::vector<impl::Layout> layouts;
+            std::vector<impl::Layout> &getLayouts() {
+                static std::vector<impl::Layout> layouts;
 
-            return layouts;
+                return layouts;
+            }
+
         }
 
     }
@@ -595,11 +633,17 @@ namespace hex {
             getEntries().push_back(unlocalizedName);
         }
 
-        std::vector<std::string> &getEntries() {
-            static std::vector<std::string> providerNames;
 
-            return providerNames;
+        namespace impl {
+
+            std::vector<std::string> &getEntries() {
+                static std::vector<std::string> providerNames;
+
+                return providerNames;
+            }
+
         }
+
 
     }
 
@@ -608,13 +652,17 @@ namespace hex {
         void add(const std::string &unlocalizedName, const impl::Callback &callback) {
             log::debug("Registered new data formatter: {}", unlocalizedName);
 
-            getEntries().push_back({ unlocalizedName, callback });
+            impl::getEntries().push_back({ unlocalizedName, callback });
         }
 
-        std::vector<impl::Entry> &getEntries() {
-            static std::vector<impl::Entry> entries;
+        namespace impl {
 
-            return entries;
+            std::vector<impl::Entry> &getEntries() {
+                static std::vector<impl::Entry> entries;
+
+                return entries;
+            }
+
         }
 
     }
@@ -625,13 +673,17 @@ namespace hex {
             for (const auto &extension : extensions)
                 log::debug("Registered new data handler for extensions: {}", extension);
 
-            getEntries().push_back({ extensions, callback });
+            impl::getEntries().push_back({ extensions, callback });
         }
 
-        std::vector<impl::Entry> &getEntries() {
-            static std::vector<impl::Entry> entries;
+        namespace impl {
 
-            return entries;
+            std::vector<impl::Entry> &getEntries() {
+                static std::vector<impl::Entry> entries;
+
+                return entries;
+            }
+
         }
 
     }
@@ -700,29 +752,38 @@ namespace hex {
             return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape);
         }
 
-        void impl::addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer) {
-            getVisualizers().insert({ unlocalizedName, visualizer });
+        namespace impl {
+
+            void addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer) {
+                getVisualizers().insert({ unlocalizedName, visualizer });
+
+            }
+
+            std::map<std::string, DataVisualizer*> &getVisualizers() {
+                static std::map<std::string, DataVisualizer*> visualizers;
+
+                return visualizers;
+            }
 
         }
 
-        std::map<std::string, DataVisualizer*> &impl::getVisualizers() {
-            static std::map<std::string, DataVisualizer*> visualizers;
-
-            return visualizers;
-        }
 
     }
 
     namespace ContentRegistry::Hashes {
 
-        std::vector<Hash *> &impl::getHashes() {
-            static std::vector<Hash *> hashes;
+        namespace impl {
 
-            return hashes;
-        }
+            std::vector<Hash *> &getHashes() {
+                static std::vector<Hash *> hashes;
 
-        void impl::add(Hash *hash) {
-            getHashes().push_back(hash);
+                return hashes;
+            }
+
+            void add(Hash *hash) {
+                getHashes().push_back(hash);
+            }
+
         }
 
     }

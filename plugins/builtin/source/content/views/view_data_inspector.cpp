@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
                     return;
 
                 // Decode bytes using registered inspectors
-                for (auto &entry : ContentRegistry::DataInspector::getEntries()) {
+                for (auto &entry : ContentRegistry::DataInspector::impl::getEntries()) {
                     if (validBytes < entry.requiredSize)
                         continue;
 

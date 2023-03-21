@@ -19,19 +19,6 @@
 
 namespace hex {
 
-    namespace ImHexApi::Common {
-
-        void closeImHex(bool noQuestions) {
-            EventManager::post<RequestCloseImHex>(noQuestions);
-        }
-
-        void restartImHex() {
-            EventManager::post<RequestRestartImHex>();
-            EventManager::post<RequestCloseImHex>(false);
-        }
-
-    }
-
 
     namespace ImHexApi::HexEditor {
 
@@ -408,6 +395,14 @@ namespace hex {
 
         }
 
+        void closeImHex(bool noQuestions) {
+            EventManager::post<RequestCloseImHex>(noQuestions);
+        }
+
+        void restartImHex() {
+            EventManager::post<RequestRestartImHex>();
+            EventManager::post<RequestCloseImHex>(false);
+        }
 
         void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress) {
             EventManager::post<EventSetTaskBarIconState>(u32(state), u32(type), progress);

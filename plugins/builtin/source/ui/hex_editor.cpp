@@ -91,72 +91,27 @@ namespace hex::plugin::builtin::ui {
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             {
-                auto bytesPerRow = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row");
-
-                if (bytesPerRow.is_number()) {
-                    this->m_bytesPerRow = static_cast<int>(bytesPerRow);
-                    this->m_encodingLineStartAddresses.clear();
-                }
-            }
-
-            {
-                auto ascii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii");
-
-                if (ascii.is_number())
-                    this->m_showAscii = static_cast<int>(ascii);
-            }
-
-            {
-                auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
-
-                if (greyOutZeros.is_number())
-                    this->m_grayOutZero = static_cast<int>(greyOutZeros);
-            }
-
-            {
-                auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
-
-                if (upperCaseHex.is_number())
-                    this->m_upperCaseHex = static_cast<int>(upperCaseHex);
-            }
-
-            {
-                auto selectionColor = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color");
-
-                if (selectionColor.is_number())
-                    this->m_selectionColor = static_cast<color_t>(selectionColor);
+                this->m_bytesPerRow = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", 16);
+                this->m_encodingLineStartAddresses.clear();
             }
 
             {
                 auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
-                auto selectedVisualizer = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer");
+                auto selectedVisualizer = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer", "hex.builtin.visualizer.hexadecimal.8bit");
 
-                if (selectedVisualizer.is_string() && visualizers.contains(selectedVisualizer))
+                if (visualizers.contains(selectedVisualizer))
                     this->m_currDataVisualizer = visualizers[selectedVisualizer];
                 else
                     this->m_currDataVisualizer = visualizers["hex.builtin.visualizer.hexadecimal.8bit"];
             }
 
-            {
-                auto syncScrolling = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling");
-
-                if (syncScrolling.is_number())
-                    this->m_syncScrolling = static_cast<int>(syncScrolling);
-            }
-
-            {
-                auto padding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding");
-
-                if (padding.is_number())
-                    this->m_byteCellPadding = static_cast<int>(padding);
-            }
-
-            {
-                auto padding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding");
-
-                if (padding.is_number())
-                    this->m_characterCellPadding = static_cast<int>(padding);
-            }
+            this->m_showAscii = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii", 1);
+            this->m_grayOutZero = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros", 1);
+            this->m_upperCaseHex = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex", 1);
+            this->m_selectionColor = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080);
+            this->m_syncScrolling = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", 0);
+            this->m_byteCellPadding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0);
+            this->m_characterCellPadding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", 0);
         });
     }
 
