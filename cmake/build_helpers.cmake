@@ -14,13 +14,16 @@ macro(addVersionDefines)
         message(FATAL_ERROR "IMHEX_VERSION is not defined")
     endif ()
 
-    if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
+    if (DEFINED IMHEX_COMMIT_HASH AND DEFINED IMHEX_COMMIT_BRANCH)
+        add_compile_definitions(GIT_COMMIT_HASH="${IMHEX_COMMIT_HASH}" GIT_BRANCH="${IMHEX_COMMIT_BRANCH}")
+    else()
         # Get the current working branch
         execute_process(
                 COMMAND git rev-parse --abbrev-ref HEAD
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 OUTPUT_VARIABLE GIT_BRANCH
                 OUTPUT_STRIP_TRAILING_WHITESPACE
+                RESULT_VARIABLE RESULT_BRANCH
         )
 
         # Get the latest abbreviated commit hash of the working branch
@@ -29,9 +32,12 @@ macro(addVersionDefines)
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 OUTPUT_VARIABLE GIT_COMMIT_HASH
                 OUTPUT_STRIP_TRAILING_WHITESPACE
+                RESULT_VARIABLE RESULT_HASH
         )
 
-        add_compile_definitions(GIT_COMMIT_HASH="${GIT_COMMIT_HASH}" GIT_BRANCH="${GIT_BRANCH}")
+        if (RESULT_BRANCH EQUAL 0 AND RESULT_HASH EQUAL 0)
+            add_compile_definitions(GIT_COMMIT_HASH="${GIT_COMMIT_HASH}" GIT_BRANCH="${GIT_BRANCH}")
+        endif ()
     endif ()
 
     set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR} -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH} ")
