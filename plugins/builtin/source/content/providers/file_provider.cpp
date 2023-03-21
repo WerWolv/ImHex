@@ -204,7 +204,9 @@ namespace hex::plugin::builtin {
         }
 
         this->m_fileStats = file.getFileInfo();
-        this->m_sizeFile  = wolv::io::File(this->m_path, wolv::io::File::Mode::Read);
+        this->m_sizeFile  = file.clone();
+
+        this->m_files.emplace(std::this_thread::get_id(), std::move(file));
 
         return true;
     }
@@ -214,15 +216,15 @@ namespace hex::plugin::builtin {
     }
 
     wolv::io::File& FileProvider::getFile() {
-        std::scoped_lock lock(this->m_fileAccessMutex);
 
-        if (this->m_files.size() > 5)
-            this->m_files.clear();
+        auto threadId = std::this_thread::get_id();
+        if (!this->m_files.contains(threadId)) {
+            std::scoped_lock lock(this->m_fileAccessMutex);
+            if (!this->m_files.contains(threadId))
+                this->m_files.emplace(threadId, this->m_sizeFile.clone());
+        }
 
-        if (!this->m_files.contains(std::this_thread::get_id()))
-            this->m_files.emplace(std::this_thread::get_id(), wolv::io::File(this->m_path, wolv::io::File::Mode::Read));
-
-        return this->m_files[std::this_thread::get_id()];
+        return this->m_files[threadId];
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
