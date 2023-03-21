@@ -177,7 +177,7 @@ namespace hex::fs {
                 result = appendPath(getDataPaths(), "encodings");
                 break;
             case ImHexPath::Logs:
-                result = appendPath(getConfigPaths(), "logs");
+                result = appendPath(getDataPaths(), "logs");
                 break;
             case ImHexPath::Plugins:
                 result = appendPath(getPluginPaths(), "plugins");
