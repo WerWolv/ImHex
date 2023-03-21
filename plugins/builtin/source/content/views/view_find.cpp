@@ -254,6 +254,8 @@ namespace hex::plugin::builtin {
         size_t countedCharacters = 0;
         u64 startAddress = reader.begin().getAddress();
         u64 endAddress = reader.end().getAddress();
+
+        u64 progress = 0;
         for (u8 byte : reader) {
             bool validChar =
                 (settings.lowerCaseLetters    && std::islower(byte))  ||
@@ -274,6 +276,8 @@ namespace hex::plugin::builtin {
                     validChar =  byte == 0x00;
             }
 
+            task.update(progress);
+
             if (validChar)
                 countedCharacters++;
             if (!validChar || startAddress + countedCharacters == endAddress) {
@@ -285,7 +289,8 @@ namespace hex::plugin::builtin {
 
                 startAddress += countedCharacters + 1;
                 countedCharacters = 0;
-                task.update(startAddress - searchRegion.getStartAddress());
+                progress = startAddress - searchRegion.getStartAddress();
+
             }
         }
 
@@ -305,7 +310,10 @@ namespace hex::plugin::builtin {
             return { };
 
         auto occurrence = reader.begin();
+        u64 progress = 0;
         while (true) {
+            task.update(progress);
+
             occurrence = std::search(reader.begin(), reader.end(), std::boyer_moore_horspool_searcher(bytes.begin(), bytes.end()));
             if (occurrence == reader.end())
                 break;
@@ -313,7 +321,7 @@ namespace hex::plugin::builtin {
             auto address = occurrence.getAddress();
             reader.seek(address + 1);
             results.push_back(Occurrence{ Region { address, bytes.size() }, Occurrence::DecodeType::Binary, std::endian::native });
-            task.update(address - searchRegion.getStartAddress());
+            progress = address - searchRegion.getStartAddress();
         }
 
         return results;
@@ -339,6 +347,8 @@ namespace hex::plugin::builtin {
             std::string string(occurrence.region.getSize(), '\x00');
             provider->read(occurrence.region.getStartAddress(), string.data(), occurrence.region.getSize());
 
+            task.update();
+
             if (settings.fullMatch) {
                 if (std::regex_match(string, regex))
                     result.push_back(occurrence);
@@ -361,16 +371,18 @@ namespace hex::plugin::builtin {
         u32 matchedBytes = 0;
         const size_t patternSize = settings.pattern.size();
 
+        u64 progress = 0;
         for (auto it = reader.begin(); it != reader.end(); ++it) {
             auto byte = *it;
 
+            task.update(progress);
             if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
                 matchedBytes++;
                 if (matchedBytes == settings.pattern.size()) {
                     auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
                     results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
-                    task.update(occurrenceAddress);
+                    progress = occurrenceAddress;
                     it.setAddress(occurrenceAddress);
                     matchedBytes = 0;
                 }
@@ -408,6 +420,8 @@ namespace hex::plugin::builtin {
 
             if (validBytes == size) {
                 bytes &= hex::bitmask(size * 8);
+
+                task.update(address);
 
                 auto result = std::visit([&](auto tag) {
                     using T = std::remove_cvref_t<std::decay_t<decltype(tag)>>;
@@ -456,7 +470,6 @@ namespace hex::plugin::builtin {
             }
 
             address++;
-            task.update(address);
         }
 
         return results;
