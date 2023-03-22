@@ -1,8 +1,15 @@
 #pragma once
 
+#include <hex.hpp>
+
 #include <future>
+#include <map>
+#include <string>
+#include <vector>
 
 #include <curl/curl.h>
+
+#include <hex/helpers/fmt.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/core.hpp>
@@ -62,7 +69,36 @@ namespace hex {
             curl_easy_cleanup(this->m_curl);
         }
 
-        static void setCaCert(std::string data) {
+        HttpRequest(const HttpRequest&) = delete;
+        HttpRequest& operator=(const HttpRequest&) = delete;
+
+        HttpRequest(HttpRequest &&other) noexcept {
+            this->m_curl = other.m_curl;
+            other.m_curl = nullptr;
+
+            this->m_method = std::move(other.m_method);
+            this->m_url = std::move(other.m_url);
+            this->m_headers = std::move(other.m_headers);
+            this->m_body = std::move(other.m_body);
+
+            this->m_caCert = std::move(other.m_caCert);
+        }
+
+        HttpRequest& operator=(HttpRequest &&other) noexcept {
+            this->m_curl = other.m_curl;
+            other.m_curl = nullptr;
+
+            this->m_method = std::move(other.m_method);
+            this->m_url = std::move(other.m_url);
+            this->m_headers = std::move(other.m_headers);
+            this->m_body = std::move(other.m_body);
+
+            this->m_caCert = std::move(other.m_caCert);
+
+            return *this;
+        }
+
+        static void setCACert(std::string data) {
             HttpRequest::s_caCertData = std::move(data);
         }
 
@@ -74,7 +110,7 @@ namespace hex {
             this->m_body = std::move(body);
         }
 
-        template<typename T>
+        template<typename T = std::string>
         std::future<Result<T>> downloadFile(const std::fs::path &path) {
             return std::async(std::launch::async, [this, path] {
                 T response;
@@ -112,7 +148,7 @@ namespace hex {
             });
         }
 
-        template<typename T>
+        template<typename T = std::string>
         std::future<Result<T>> uploadFile(const std::fs::path &path, const std::string &mimeName = "filename") {
             return std::async(std::launch::async, [this, path, mimeName]{
                 auto fileName = wolv::util::toUTF8String(path.filename());
@@ -154,9 +190,9 @@ namespace hex {
                 return this->executeImpl<T>(responseData);
             });
         }
-        template<typename T>
+        template<typename T = std::string>
         std::future<Result<T>> uploadFile(std::vector<u8> data, const std::string &mimeName = "filename") {
-            return std::async(std::launch::async, [this, data = std::move(data)]{
+            return std::async(std::launch::async, [this, data = std::move(data), mimeName]{
                 curl_mime *mime     = curl_mime_init(this->m_curl);
                 curl_mimepart *part = curl_mime_addpart(mime);
 
@@ -174,7 +210,7 @@ namespace hex {
             });
         }
 
-        template<typename T>
+        template<typename T = std::string>
         std::future<Result<T>> execute() {
             return std::async(std::launch::async, [this] {
                 T data;
@@ -187,29 +223,14 @@ namespace hex {
         }
 
     protected:
+        void setDefaultConfig();
+
         template<typename T>
         Result<T> executeImpl(T &data) {
             curl_easy_setopt(this->m_curl, CURLOPT_URL, this->m_url.c_str());
             curl_easy_setopt(this->m_curl, CURLOPT_CUSTOMREQUEST, this->m_method.c_str());
 
-            curl_easy_setopt(this->m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
-            curl_easy_setopt(this->m_curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-            curl_easy_setopt(this->m_curl, CURLOPT_FOLLOWLOCATION, 1L);
-            curl_easy_setopt(this->m_curl, CURLOPT_USERAGENT, "ImHex/1.0");
-            curl_easy_setopt(this->m_curl, CURLOPT_DEFAULT_PROTOCOL, "https");
-            curl_easy_setopt(this->m_curl, CURLOPT_SSL_VERIFYPEER, 1L);
-            curl_easy_setopt(this->m_curl, CURLOPT_SSL_VERIFYHOST, 2L);
-            curl_easy_setopt(this->m_curl, CURLOPT_TIMEOUT_MS, 0L);
-            curl_easy_setopt(this->m_curl, CURLOPT_CONNECTTIMEOUT_MS, 10000);
-            curl_easy_setopt(this->m_curl, CURLOPT_NOSIGNAL, 1L);
-
-            #if defined(IMHEX_USE_BUNDLED_CA)
-                curl_easy_setopt(this->m_curl, CURLOPT_CAINFO, nullptr);
-                curl_easy_setopt(this->m_curl, CURLOPT_CAPATH, nullptr);
-                curl_easy_setopt(this->m_curl, CURLOPT_SSLCERTTYPE, "PEM");
-                curl_easy_setopt(this->m_curl, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
-                curl_easy_setopt(this->m_curl, CURLOPT_SSL_CTX_DATA, &this->m_caCert);
-            #endif
+            setDefaultConfig();
 
             if (!this->m_body.empty()) {
                 curl_easy_setopt(this->m_curl, CURLOPT_POSTFIELDS, this->m_body.c_str());
@@ -219,13 +240,13 @@ namespace hex {
             headers = curl_slist_append(headers, "Cache-Control: no-cache");
 
             for (auto &[key, value] : this->m_headers) {
-                std::string header = key + ": " + value;
+                std::string header = hex::format("{}: {}", key, value);
                 headers = curl_slist_append(headers, header.c_str());
             }
             curl_easy_setopt(this->m_curl, CURLOPT_HTTPHEADER, headers);
 
             auto result = curl_easy_perform(this->m_curl);
-            printf("curl result: %d\n", result);
+            printf("Curl result: %s\n", curl_easy_strerror(result));
 
             u32 statusCode = 0;
             curl_easy_getinfo(this->m_curl, CURLINFO_RESPONSE_CODE, &statusCode);
@@ -268,8 +289,8 @@ namespace hex {
         std::string m_body;
         std::map<std::string, std::string> m_headers;
 
-        mbedtls_x509_crt m_caCert;
-        static inline std::string s_caCertData;
+        [[maybe_unused]] std::unique_ptr<mbedtls_x509_crt> m_caCert;
+        static std::string s_caCertData;
     };
 
 }

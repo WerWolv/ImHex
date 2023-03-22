@@ -24,6 +24,7 @@ set(LIBIMHEX_SOURCES
     source/helpers/magic.cpp
     source/helpers/crypto.cpp
     source/helpers/net.cpp
+    source/helpers/http_requests.cpp
     source/helpers/opengl.cpp
     source/helpers/patches.cpp
     source/helpers/encoding_file.cpp

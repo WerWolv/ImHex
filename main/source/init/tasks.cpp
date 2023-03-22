@@ -9,6 +9,7 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/net.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -65,13 +66,13 @@ namespace hex::init {
         hex::log::debug("Using romfs: '{}'", romfs::name());
 
         // Load the SSL certificate
-        constexpr static auto CaCertPath = "cacert.pem";
+        constexpr static auto CaCertFileName = "cacert.pem";
 
         // Look for a custom certificate in the config folder
         std::fs::path caCertPath;
         for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             for (const auto &file : std::fs::directory_iterator(folder)) {
-                if (file.path().filename() == CaCertPath) {
+                if (file.path().filename() == CaCertFileName) {
                     caCertPath = file.path();
                     break;
                 }
@@ -79,10 +80,14 @@ namespace hex::init {
         }
 
         // If a custom certificate was found, use it, otherwise use the one from the romfs
+        std::string caCertData;
         if (!caCertPath.empty())
-            Net::setCACert(wolv::io::File(caCertPath, wolv::io::File::Mode::Read).readString());
+            caCertData = wolv::io::File(caCertPath, wolv::io::File::Mode::Read).readString();
         else
-            Net::setCACert(std::string(romfs::get(CaCertPath).string()));
+            caCertData = std::string(romfs::get(CaCertFileName).string());
+
+        Net::setCACert(caCertData);
+        HttpRequest::setCACert(caCertData);
 
         return true;
     }
