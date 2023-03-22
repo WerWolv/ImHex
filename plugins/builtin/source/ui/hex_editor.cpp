@@ -661,6 +661,8 @@ namespace hex::plugin::builtin::ui {
             ImGui::EndTable();
         }
         ImGui::PopStyleVar();
+
+        this->m_shouldScrollToSelection = false;
     }
 
     void HexEditor::drawFooter(const ImVec2 &size) {
