@@ -438,6 +438,13 @@ namespace hex::plugin::builtin {
                     return true;
                 }
 
+                if (fontPath.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                    ImGui::SetNextWindowSize(scaled(ImVec2(300, 0)));
+                    ImGui::BeginTooltip();
+                    ImGui::TextFormattedWrapped("{}", "hex.builtin.setting.font.font_size.tooltip"_lang);
+                    ImGui::EndTooltip();
+                }
+
                 return false;
             },
             true);

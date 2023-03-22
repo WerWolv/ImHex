@@ -405,6 +405,7 @@
         "hex.builtin.setting.font": "Font",
         "hex.builtin.setting.font.font_path": "Custom Font Path",
         "hex.builtin.setting.font.font_size": "Font Size",
+        "hex.builtin.setting.font.font_size.tooltip": "The font size can only be adjusted when a custom font has been selected above.\n\nThis is because ImHex uses a pixel-perfect bitmap font by default. Scaling it by any non-integer factor will only cause it to become blurry.",
         "hex.builtin.setting.general": "General",
         "hex.builtin.setting.general.auto_load_patterns": "Auto-load supported pattern",
         "hex.builtin.setting.general.check_for_updates": "Check for updates on startup",
