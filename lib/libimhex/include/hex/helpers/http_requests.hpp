@@ -9,6 +9,7 @@
 
 #include <curl/curl.h>
 
+#include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <wolv/io/file.hpp>
@@ -25,7 +26,8 @@ namespace hex {
 
         class ResultBase {
         public:
-            explicit ResultBase(u32 statusCode) : m_statusCode(statusCode) { }
+            ResultBase() = default;
+            explicit ResultBase(u32 statusCode) : m_statusCode(statusCode), m_valid(true) { }
 
             [[nodiscard]] u32 getStatusCode() const {
                 return this->m_statusCode;
@@ -35,13 +37,19 @@ namespace hex {
                 return this->getStatusCode() == 200;
             }
 
+            [[nodiscard]] bool isValid() const {
+                return this->m_valid;
+            }
+
         private:
-            u32 m_statusCode;
+            u32 m_statusCode = 0;
+            bool m_valid = false;
         };
 
         template<typename T>
         class Result : public ResultBase {
         public:
+            Result() = default;
             Result(u32 statusCode, T data) : ResultBase(statusCode), m_data(std::move(data)) { }
 
             [[nodiscard]]
@@ -102,6 +110,18 @@ namespace hex {
             HttpRequest::s_caCertData = std::move(data);
         }
 
+        static void setProxy(std::string proxy) {
+            HttpRequest::s_proxyUrl = std::move(proxy);
+        }
+
+        void setMethod(std::string method) {
+            this->m_method = std::move(method);
+        }
+
+        void setUrl(std::string url) {
+            this->m_url = std::move(url);
+        }
+
         void addHeader(std::string key, std::string value) {
             this->m_headers[std::move(key)] = std::move(value);
         }
@@ -110,24 +130,28 @@ namespace hex {
             this->m_body = std::move(body);
         }
 
+        void setTimeout(u32 timeout) {
+            this->m_timeout = timeout;
+        }
+
+        float getProgress() const {
+            return this->m_progress;
+        }
+
+        void cancel() {
+            this->m_canceled = true;
+        }
+
         template<typename T = std::string>
         std::future<Result<T>> downloadFile(const std::fs::path &path) {
             return std::async(std::launch::async, [this, path] {
-                T response;
+                std::vector<u8> response;
 
                 wolv::io::File file(path, wolv::io::File::Mode::Create);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, [](void *contents, size_t size, size_t nmemb, void *userdata){
-                    auto &file = *reinterpret_cast<wolv::io::File*>(userdata);
-
-                    file.write(reinterpret_cast<const u8*>(contents), size * nmemb);
-
-                    return size * nmemb;
-                });
+                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToFile);
                 curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &file);
 
-                this->executeImpl<T>(response);
-
-                return Result<T>(200, std::move(response));
+                return this->executeImpl<T>(response);
             });
         }
 
@@ -135,13 +159,7 @@ namespace hex {
             return std::async(std::launch::async, [this] {
                 std::vector<u8> response;
 
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, [](void *contents, size_t size, size_t nmemb, void *userdata){
-                    auto &response = *reinterpret_cast<std::vector<u8>*>(userdata);
-
-                    response.insert(response.end(), reinterpret_cast<const u8*>(contents), reinterpret_cast<const u8*>(contents) + size * nmemb);
-
-                    return size * nmemb;
-                });
+                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
                 curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &response);
 
                 return this->executeImpl<std::vector<u8>>(response);
@@ -183,8 +201,8 @@ namespace hex {
 
                 curl_easy_setopt(this->m_curl, CURLOPT_MIMEPOST, mime);
 
-                T responseData;
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToContainer<T>);
+                std::vector<u8> responseData;
+                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
                 curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &responseData);
 
                 return this->executeImpl<T>(responseData);
@@ -202,8 +220,8 @@ namespace hex {
 
                 curl_easy_setopt(this->m_curl, CURLOPT_MIMEPOST, mime);
 
-                T responseData;
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToContainer<T>);
+                std::vector<u8> responseData;
+                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
                 curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &responseData);
 
                 return this->executeImpl<T>(responseData);
@@ -213,20 +231,46 @@ namespace hex {
         template<typename T = std::string>
         std::future<Result<T>> execute() {
             return std::async(std::launch::async, [this] {
-                T data;
 
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToContainer<T>);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &data);
+                std::vector<u8> responseData;
+                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
+                curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &responseData);
 
-                return this->executeImpl<T>(data);
+                return this->executeImpl<T>(responseData);
             });
+        }
+
+        std::string urlEncode(const std::string &input) {
+            auto escapedString = curl_easy_escape(this->m_curl, input.c_str(), std::strlen(input.c_str()));
+
+            if (escapedString != nullptr) {
+                std::string output = escapedString;
+                curl_free(escapedString);
+
+                return output;
+            }
+
+            return {};
+        }
+
+        std::string urlDecode(const std::string &input) {
+            auto unescapedString = curl_easy_unescape(this->m_curl, input.c_str(), std::strlen(input.c_str()), nullptr);
+
+            if (unescapedString != nullptr) {
+                std::string output = unescapedString;
+                curl_free(unescapedString);
+
+                return output;
+            }
+
+            return {};
         }
 
     protected:
         void setDefaultConfig();
 
         template<typename T>
-        Result<T> executeImpl(T &data) {
+        Result<T> executeImpl(std::vector<u8> &data) {
             curl_easy_setopt(this->m_curl, CURLOPT_URL, this->m_url.c_str());
             curl_easy_setopt(this->m_curl, CURLOPT_CUSTOMREQUEST, this->m_method.c_str());
 
@@ -245,52 +289,49 @@ namespace hex {
             }
             curl_easy_setopt(this->m_curl, CURLOPT_HTTPHEADER, headers);
 
-            auto result = curl_easy_perform(this->m_curl);
-            printf("Curl result: %s\n", curl_easy_strerror(result));
+            {
+                std::scoped_lock lock(this->m_transmissionMutex);
+
+                auto result = curl_easy_perform(this->m_curl);
+                if (result != CURLE_OK){
+                    char *url = nullptr;
+                    curl_easy_getinfo(this->m_curl, CURLINFO_EFFECTIVE_URL, &url);
+                    log::error("Http request '{0} {1}' failed with error {2}: '{3}'", this->m_method, url, u32(result), curl_easy_strerror(result));
+                    if (!HttpRequest::s_proxyUrl.empty()){
+                        log::info("A custom proxy '{0}' is in use. Is it working correctly?", HttpRequest::s_proxyUrl);
+                    }
+
+                    return { };
+                }
+            }
 
             u32 statusCode = 0;
             curl_easy_getinfo(this->m_curl, CURLINFO_RESPONSE_CODE, &statusCode);
 
-            return Result<T>(statusCode, std::move(data));
+            return Result<T>(statusCode, { data.begin(), data.end() });
         }
 
-        [[maybe_unused]]
-        static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData) {
-            hex::unused(ctx, userData);
-
-            auto *cfg = static_cast<mbedtls_ssl_config *>(sslctx);
-
-            auto crt = static_cast<mbedtls_x509_crt*>(userData);
-            mbedtls_x509_crt_init(crt);
-
-            mbedtls_x509_crt_parse(crt, reinterpret_cast<const u8 *>(HttpRequest::s_caCertData.data()), HttpRequest::s_caCertData.size());
-
-            mbedtls_ssl_conf_ca_chain(cfg, crt, nullptr);
-
-            return CURLE_OK;
-        }
-
-        template<typename T>
-        static size_t writeToContainer(void *contents, size_t size, size_t nmemb, void *userdata) {
-            auto &response = *reinterpret_cast<T*>(userdata);
-            auto startSize = response.size();
-
-            response.resize(startSize + size * nmemb);
-            std::memcpy(response.data() + startSize, contents, size * nmemb);
-
-            return size * nmemb;
-        }
+        [[maybe_unused]] static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData);
+        static size_t writeToVector(void *contents, size_t size, size_t nmemb, void *userdata);
+        static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata);
+        static int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow);
 
     private:
         CURL *m_curl;
+
+        std::mutex m_transmissionMutex;
 
         std::string m_method;
         std::string m_url;
         std::string m_body;
         std::map<std::string, std::string> m_headers;
+        u32 m_timeout = 1000;
+
+        float m_progress = 0.0F;
+        bool m_canceled = false;
 
         [[maybe_unused]] std::unique_ptr<mbedtls_x509_crt> m_caCert;
-        static std::string s_caCertData;
+        static std::string s_caCertData, s_proxyUrl;
     };
 
 }

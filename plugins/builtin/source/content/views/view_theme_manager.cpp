@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
                     auto json = api::ThemeManager::exportCurrentTheme(this->m_themeName);
 
                     wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
-                    outputFile.write(json.dump(4));
+                    outputFile.writeString(json.dump(4));
                 });
             }
 

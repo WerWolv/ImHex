@@ -1,7 +1,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 
-#include <hex/helpers/net.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/literals.hpp>
@@ -570,8 +570,8 @@ namespace hex::plugin::builtin {
                 std::string fileName, link, size;
             };
 
-            static hex::Net net;
-            static std::future<Response<std::string>> uploadProcess;
+            static HttpRequest request("POST", "https://api.anonfiles.com/upload");
+            static std::future<HttpRequest::Result<std::string>> uploadProcess;
             static std::fs::path currFile;
             static std::vector<UploadedFile> links;
 
@@ -581,19 +581,19 @@ namespace hex::plugin::builtin {
             if (!uploading) {
                 if (ImGui::Button("hex.builtin.tools.file_uploader.upload"_lang)) {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [&](auto path) {
-                        uploadProcess = net.uploadFile("https://api.anonfiles.com/upload", path);
+                        uploadProcess = request.uploadFile(path);
                         currFile      = path;
                     });
                 }
             } else {
                 if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
-                    net.cancel();
+                    request.cancel();
                 }
             }
 
             ImGui::SameLine();
 
-            ImGui::ProgressBar(net.getProgress(), ImVec2(0, 0), uploading ? nullptr : "Done!");
+            ImGui::ProgressBar(request.getProgress(), ImVec2(0, 0), uploading ? nullptr : "Done!");
 
             ImGui::Header("hex.builtin.tools.file_uploader.recent"_lang);
 
@@ -637,9 +637,9 @@ namespace hex::plugin::builtin {
 
             if (uploadProcess.valid() && uploadProcess.wait_for(0s) == std::future_status::ready) {
                 auto response = uploadProcess.get();
-                if (response.code == 200) {
+                if (response.getStatusCode() == 200) {
                     try {
-                        auto json = nlohmann::json::parse(response.body);
+                        auto json = nlohmann::json::parse(response.getData());
                         links.push_back({
                             wolv::util::toUTF8String(currFile.filename()),
                             json["data"]["file"]["url"]["short"],
@@ -648,9 +648,9 @@ namespace hex::plugin::builtin {
                     } catch (...) {
                         View::showErrorPopup("hex.builtin.tools.file_uploader.invalid_response"_lang);
                     }
-                } else if (response.code == 0) {
+                } else if (response.getStatusCode() == 0) {
                     // Canceled by user, no action needed
-                } else View::showErrorPopup(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.code));
+                } else View::showErrorPopup(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
 
                 uploadProcess = {};
                 currFile.clear();
@@ -663,19 +663,13 @@ namespace hex::plugin::builtin {
         }
 
         void drawWikiExplainer() {
-            static hex::Net net;
+            static HttpRequest request("GET", "");
 
             static std::string resultTitle, resultExtract;
-            static std::future<Response<std::string>> searchProcess;
+            static std::future<HttpRequest::Result<std::string>> searchProcess;
             static bool extendedSearch = false;
 
-            static auto searchString = [] {
-                std::string s;
-                s.reserve(0xFFFF);
-                std::memset(s.data(), 0x00, s.capacity());
-
-                return s;
-            }();
+            std::string searchString;
 
             ImGui::Header("hex.builtin.tools.wiki_explain.control"_lang, true);
 
@@ -689,7 +683,8 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
 
             if (startSearch && !searchString.empty()) {
-                searchProcess = net.getString(getWikipediaApiUrl() + "&exintro"s + "&titles="s + net.encode(searchString));
+                request.setUrl(getWikipediaApiUrl() + "&exintro"s + "&titles="s + request.urlEncode(searchString));
+                searchProcess = request.execute();
             }
 
             ImGui::Header("hex.builtin.tools.wiki_explain.results"_lang);
@@ -705,16 +700,19 @@ namespace hex::plugin::builtin {
             if (searchProcess.valid() && searchProcess.wait_for(0s) == std::future_status::ready) {
                 try {
                     auto response = searchProcess.get();
-                    if (response.code != 200) throw std::runtime_error("Invalid response");
+                    if (response.getStatusCode() != 200) throw std::runtime_error("Invalid response");
 
-                    auto json = nlohmann::json::parse(response.body);
+                    auto json = nlohmann::json::parse(response.getData());
 
                     resultTitle   = json["query"]["pages"][0]["title"].get<std::string>();
                     resultExtract = json["query"]["pages"][0]["extract"].get<std::string>();
 
                     if (!extendedSearch && resultExtract.ends_with(':')) {
                         extendedSearch = true;
-                        searchProcess  = net.getString(getWikipediaApiUrl() + "&titles="s + net.encode(searchString));
+
+                        request.setUrl(getWikipediaApiUrl() + "&titles="s + request.urlEncode(searchString));
+                        searchProcess  = request.execute();
+
                         resultTitle.clear();
                         resultExtract.clear();
                     } else {
@@ -839,7 +837,7 @@ namespace hex::plugin::builtin {
 
                             for (const auto &pattern : overwritePattern) {
                                 for (u64 offset = 0; offset < fileSize; offset += 3) {
-                                    file.write(pattern.data(), std::min<u64>(pattern.size(), fileSize - offset));
+                                    file.writeBuffer(pattern.data(), std::min<u64>(pattern.size(), fileSize - offset));
                                     task.update(offset);
                                 }
 
@@ -966,7 +964,7 @@ namespace hex::plugin::builtin {
 
                                 constexpr static auto BufferSize = 0xFF'FFFF;
                                 for (u64 partOffset = 0; partOffset < splitSize; partOffset += BufferSize) {
-                                    partFile.write(file.readBytes(std::min<u64>(BufferSize, splitSize - partOffset)));
+                                    partFile.writeVector(file.readVector(std::min<u64>(BufferSize, splitSize - partOffset)));
                                     partFile.flush();
                                 }
 
@@ -1093,7 +1091,7 @@ namespace hex::plugin::builtin {
                                 constexpr static auto BufferSize = 0xFF'FFFF;
                                 auto inputSize = input.getSize();
                                 for (u64 inputOffset = 0; inputOffset < inputSize; inputOffset += BufferSize) {
-                                    output.write(input.readBytes(std::min<u64>(BufferSize, inputSize - inputOffset)));
+                                    output.writeVector(input.readVector(std::min<u64>(BufferSize, inputSize - inputOffset)));
                                     output.flush();
                                 }
                             }

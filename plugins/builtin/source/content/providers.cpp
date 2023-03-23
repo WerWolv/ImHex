@@ -67,11 +67,11 @@ namespace hex::plugin::builtin {
                      json["type"] = provider->getTypeName();
                      json["settings"] = provider->storeSettings();
 
-                     tar.write(basePath / hex::format("{}.json", id), json.dump(4));
+                     tar.writeString(basePath / hex::format("{}.json", id), json.dump(4));
                  }
 
-                 tar.write(basePath / "providers.json",
-                    nlohmann::json({ {"providers", providerIds } }).dump(4)
+                 tar.writeString(basePath / "providers.json",
+                    nlohmann::json({ { "providers", providerIds } }).dump(4)
                  );
 
                  return true;

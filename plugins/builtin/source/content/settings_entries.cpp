@@ -4,8 +4,8 @@
 #include <hex/api/localization.hpp>
 #include <hex/api/theme_manager.hpp>
 
-#include <hex/helpers/net.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <imgui.h>
@@ -517,8 +517,7 @@ namespace hex::plugin::builtin {
 
         static const std::string proxySetting { "hex.builtin.setting.proxy" };
 
-        // init hex::Net proxy url
-        hex::Net::setProxy(ContentRegistry::Settings::read(proxySetting, "hex.builtin.setting.proxy.url", ""));
+        HttpRequest::setProxy(ContentRegistry::Settings::read(proxySetting, "hex.builtin.setting.proxy.url", ""));
 
         ContentRegistry::Settings::addCategoryDescription(proxySetting, "hex.builtin.setting.proxy.description");
 
@@ -531,14 +530,14 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Checkbox("hex.builtin.setting.proxy.enable"_lang, &enableProxy)) {
                     setting = enableProxy ? proxyUrl : "";
-                    hex::Net::setProxy(enableProxy ? proxyUrl : "");
+                    HttpRequest::setProxy(enableProxy ? proxyUrl : "");
                     result = true;
                 }
 
                 ImGui::BeginDisabled(!enableProxy);
                 if (ImGui::InputText("##proxy_url", proxyUrl)) {
                     setting = proxyUrl;
-                    hex::Net::setProxy(proxyUrl);
+                    HttpRequest::setProxy(proxyUrl);
                     result = true;
                 }
                 ImGui::EndDisabled();

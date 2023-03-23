@@ -5,8 +5,8 @@
 #include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/string.hpp>
+#include <wolv/io/file.hpp>
 
-#include <fstream>
 #include <filesystem>
 #include <nlohmann/json.hpp>
 
@@ -31,8 +31,8 @@ namespace hex::plugin::builtin {
                 if (!file.is_regular_file()) continue;
 
                 try {
-                    nlohmann::json content;
-                    std::ifstream(file.path()) >> content;
+                    auto fileData = wolv::io::File(file.path(), wolv::io::File::Mode::Read).readString();
+                    auto content = nlohmann::json::parse(fileData);
 
                     for (auto value : content["values"]) {
                         Constant constant;

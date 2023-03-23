@@ -496,7 +496,7 @@ namespace hex::plugin::builtin {
                         ProjectFile::clearPath();
 
                         if (auto settings = provider->storeSettings(); !settings.is_null())
-                            recentFile.write(settings.dump(4));
+                            recentFile.writeString(settings.dump(4));
 
                         ProjectFile::setPath(path);
                     }

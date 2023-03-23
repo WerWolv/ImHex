@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
             .basePath = "yara.json",
             .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
-                auto fileContent = tar.read(basePath);
+                auto fileContent = tar.readString(basePath);
                 if (fileContent.empty())
                     return true;
 
@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
                     });
                 }
 
-                tar.write(basePath, data.dump(4));
+                tar.writeString(basePath, data.dump(4));
 
                 return true;
             }

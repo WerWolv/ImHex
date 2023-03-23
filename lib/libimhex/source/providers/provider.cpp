@@ -55,7 +55,7 @@ namespace hex::prv {
                 bufferSize = std::min<size_t>(bufferSize, this->getActualSize() - offset);
 
                 this->read(offset + this->getBaseAddress(), buffer.data(), bufferSize, true);
-                file.write(buffer.data(), bufferSize);
+                file.writeBuffer(buffer.data(), bufferSize);
 
             }
         }

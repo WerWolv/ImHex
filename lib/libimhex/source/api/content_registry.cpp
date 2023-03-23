@@ -7,7 +7,6 @@
 #include <hex/data_processor/node.hpp>
 
 #include <filesystem>
-#include <fstream>
 
 #include <nlohmann/json.hpp>
 
@@ -69,7 +68,7 @@ namespace hex {
                     wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
 
                     if (file.isValid()) {
-                        file.write(getSettingsData().dump(4));
+                        file.writeString(getSettingsData().dump(4));
                         break;
                     }
                 }

@@ -40,7 +40,7 @@ namespace hex {
             return false;
 
         {
-            const auto metadataContent = tar.read(MetadataPath);
+            const auto metadataContent = tar.readVector(MetadataPath);
 
             if (!std::string(metadataContent.begin(), metadataContent.end()).starts_with(MetadataHeaderMagic))
                 return false;
@@ -131,7 +131,7 @@ namespace hex {
 
         {
             const auto metadataContent = hex::format("{}\n{}", MetadataHeaderMagic, IMHEX_VERSION);
-            tar.write(MetadataPath, metadataContent);
+            tar.writeString(MetadataPath, metadataContent);
         }
 
         ImHexApi::Provider::resetDirty();

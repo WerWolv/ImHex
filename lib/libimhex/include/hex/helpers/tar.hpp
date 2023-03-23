@@ -26,11 +26,11 @@ namespace hex {
 
         void close();
 
-        [[nodiscard]] std::vector<u8> read(const std::fs::path &path);
+        [[nodiscard]] std::vector<u8> readVector(const std::fs::path &path);
         [[nodiscard]] std::string readString(const std::fs::path &path);
 
-        void write(const std::fs::path &path, const std::vector<u8> &data);
-        void write(const std::fs::path &path, const std::string &data);
+        void writeVector(const std::fs::path &path, const std::vector<u8> &data);
+        void writeString(const std::fs::path &path, const std::string &data);
 
         [[nodiscard]] std::vector<std::fs::path> listEntries(const std::fs::path &basePath = "/");
         [[nodiscard]] bool contains(const std::fs::path &path);

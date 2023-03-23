@@ -885,7 +885,7 @@ namespace hex::plugin::builtin {
                                                                         [this](const auto &path) {
                                                                             wolv::io::File file(path, wolv::io::File::Mode::Create);
 
-                                                                            file.write(wolv::util::trim(this->m_textEditor.GetText()));
+                                                                            file.writeString(wolv::util::trim(this->m_textEditor.GetText()));
                                                                         });
                                                 }, ImHexApi::Provider::isValid);
 
@@ -1047,7 +1047,7 @@ namespace hex::plugin::builtin {
                 else
                     sourceCode = ProviderExtraData::get(provider).patternLanguage.sourceCode;
 
-                tar.write(basePath, wolv::util::trim(sourceCode));
+                tar.writeString(basePath, wolv::util::trim(sourceCode));
                 return true;
             }
         });

@@ -1,47 +1,47 @@
 #include <hex/test/tests.hpp>
 
-#include <hex/helpers/net.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <wolv/io/file.hpp>
 #include <hex/helpers/fs.hpp>
 
 using namespace std::literals::string_literals;
 
 TEST_SEQUENCE("StoreAPI") {
-    hex::Net net;
+    hex::HttpRequest request("GET", ImHexApiURL + "/store"s);
 
-    auto result = net.getString(ImHexApiURL + "/store"s).get();
+    auto result = request.execute().get();
 
-    if (result.code != 200)
+    if (result.getStatusCode() != 200)
         TEST_FAIL();
 
-    if (result.body.empty())
+    if (result.getData().empty())
         TEST_FAIL();
 
     TEST_SUCCESS();
 };
 
 TEST_SEQUENCE("TipsAPI") {
-    hex::Net net;
+    hex::HttpRequest request("GET", ImHexApiURL + "/tip"s);
 
-    auto result = net.getString(ImHexApiURL + "/tip"s).get();
+    auto result = request.execute().get();
 
-    if (result.code != 200)
+    if (result.getStatusCode() != 200)
         TEST_FAIL();
 
-    if (result.body.empty())
+    if (result.getData().empty())
         TEST_FAIL();
 
     TEST_SUCCESS();
 };
 
 TEST_SEQUENCE("ContentAPI") {
-    hex::Net net;
+    hex::HttpRequest request("GET", "https://api.werwolv.net/content/imhex/patterns/elf.hexpat");
 
     const auto FilePath = std::fs::current_path() / "elf.hexpat";
 
-    auto result = net.downloadFile("https://api.werwolv.net/content/imhex/patterns/elf.hexpat", FilePath).get();
+    auto result = request.downloadFile(FilePath).get();
 
-    TEST_ASSERT(result.code == 200);
+    TEST_ASSERT(result.getStatusCode() == 200);
 
     wolv::io::File file(FilePath, wolv::io::File::Mode::Read);
     if (!file.isValid())

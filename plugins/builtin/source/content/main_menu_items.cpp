@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
                     return;
                 }
 
-                auto base64 = inputFile.readBytes();
+                auto base64 = inputFile.readVector();
 
                 if (!base64.empty()) {
                     auto data = crypt::decode64(base64);
@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
                             if (!outputFile.isValid())
                                 View::showErrorPopup("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
 
-                            outputFile.write(data);
+                            outputFile.writeVector(data);
                         });
                     }
                 } else {
@@ -95,7 +95,7 @@ namespace hex::plugin::builtin {
         void importIPSPatch() {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
-                    auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readBytes();
+                    auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
                     auto patch     = hex::loadIPSPatch(patchData);
                     if (!patch.has_value()) {
                         handleIPSError(patch.error());
@@ -121,7 +121,7 @@ namespace hex::plugin::builtin {
         void importIPS32Patch() {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
-                    auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readBytes();
+                    auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
                     auto patch = hex::loadIPS32Patch(patchData);
                     if (!patch.has_value()) {
                         handleIPSError(patch.error());
@@ -148,7 +148,7 @@ namespace hex::plugin::builtin {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     auto provider = ImHexApi::Provider::get();
-                    auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readBytes();
+                    auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
 
                     if (patchData.size() != provider->getActualSize()) {
                         View::showErrorPopup("hex.builtin.menu.file.import.modified_file.popup.invalid_size"_lang);
@@ -202,7 +202,7 @@ namespace hex::plugin::builtin {
                         bytes.resize(std::min<u64>(3000, provider->getActualSize() - address));
                         provider->read(provider->getBaseAddress() + address, bytes.data(), bytes.size());
 
-                        outputFile.write(crypt::encode64(bytes));
+                        outputFile.writeVector(crypt::encode64(bytes));
                     }
                 });
             });
@@ -232,7 +232,7 @@ namespace hex::plugin::builtin {
                         }
 
                         if (data.has_value())
-                            file.write(data.value());
+                            file.writeVector(data.value());
                         else {
                             handleIPSError(data.error());
                         }
@@ -265,7 +265,7 @@ namespace hex::plugin::builtin {
                         }
 
                         if (data.has_value())
-                            file.write(data.value());
+                            file.writeVector(data.value());
                         else
                             handleIPSError(data.error());
                     });

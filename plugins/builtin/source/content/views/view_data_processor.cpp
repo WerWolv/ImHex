@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
             .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 auto &data = ProviderExtraData::get(provider).dataProcessor;
 
-                tar.write(basePath, ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
+                tar.writeString(basePath, ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
 
                 return true;
             }
@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Create);
                                     if (file.isValid())
-                                        file.write(ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
+                                        file.writeString(ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
                                 });
         }, []{
             auto &data = ProviderExtraData::getCurrent().dataProcessor;
@@ -325,7 +325,7 @@ namespace hex::plugin::builtin {
                         auto &node = *it;
                         fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } }, [&](const std::fs::path &path){
                             wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
-                            outputFile.write(ViewDataProcessor::saveNode(node.get()).dump(4));
+                            outputFile.writeString(ViewDataProcessor::saveNode(node.get()).dump(4));
                         });
                     }
                 }

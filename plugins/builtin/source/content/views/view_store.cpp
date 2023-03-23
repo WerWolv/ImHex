@@ -13,7 +13,6 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/tar.hpp>
 
-#include <fstream>
 #include <filesystem>
 #include <functional>
 #include <nlohmann/json.hpp>
@@ -34,6 +33,8 @@ namespace hex::plugin::builtin {
             TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
             this->getWindowOpenState() = true;
         });
+
+        this->m_httpRequest.setTimeout(30'0000);
     }
 
     void ViewStore::drawStore() {
@@ -72,7 +73,7 @@ namespace hex::plugin::builtin {
                                     entry.downloading = false;
 
                                     auto response = this->m_download.get();
-                                    if (response.code == 200) {
+                                    if (response.isSuccess()) {
                                         entry.installed = true;
                                         entry.hasUpdate = false;
 
@@ -83,7 +84,7 @@ namespace hex::plugin::builtin {
 
                                         downloadDoneCallback();
                                     } else
-                                        log::error("Download failed! HTTP Code {}", response.code);
+                                        log::error("Download failed! HTTP Code {}", response.getStatusCode());
 
 
                                     this->m_download = {};
@@ -143,14 +144,15 @@ namespace hex::plugin::builtin {
         this->m_nodes.clear();
         this->m_themes.clear();
 
-        this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s, 30'0000);
+        this->m_httpRequest.setUrl(ImHexApiURL + "/store"s);
+        this->m_apiRequest = this->m_httpRequest.execute();
     }
 
     void ViewStore::parseResponse() {
         auto response = this->m_apiRequest.get();
-        this->m_requestStatus = response.code == 200 ? RequestStatus::Succeeded : RequestStatus::Failed;
+        this->m_requestStatus = response.isSuccess() ? RequestStatus::Succeeded : RequestStatus::Failed;
         if (this->m_requestStatus == RequestStatus::Succeeded) {
-            auto json = nlohmann::json::parse(response.body);
+            auto json = nlohmann::json::parse(response.getData());
 
             auto parseStoreEntries = [](auto storeJson, const std::string &name, fs::ImHexPath pathType, std::vector<StoreEntry> &results) {
                 // Check if the response handles the type of files
@@ -172,11 +174,10 @@ namespace hex::plugin::builtin {
                                 if (wolv::io::fs::exists(path) && fs::isPathWritable(folder)) {
                                     storeEntry.installed = true;
 
-                                    std::ifstream file(path, std::ios::in | std::ios::binary);
-                                    std::vector<u8> data(wolv::io::fs::getFileSize(path), 0x00);
-                                    file.read(reinterpret_cast<char *>(data.data()), data.size());
+                                    wolv::io::File file(path, wolv::io::File::Mode::Read);
+                                    auto bytes = file.readVector();
 
-                                    auto fileHash = crypt::sha256(data);
+                                    auto fileHash = crypt::sha256(bytes);
 
                                     // Compare installed file hash with hash of repo file
                                     if (std::vector(fileHash.begin(), fileHash.end()) != crypt::decode16(storeEntry.hash))
@@ -233,7 +234,9 @@ namespace hex::plugin::builtin {
             if (!update || wolv::io::fs::exists(fullPath)) {
                 downloading          = true;
                 this->m_downloadPath = fullPath;
-                this->m_download     = this->m_net.downloadFile(url, fullPath, 30'0000);
+
+                this->m_httpRequest.setUrl(url);
+                this->m_download     = this->m_httpRequest.downloadFile(fullPath);
                 break;
             }
         }

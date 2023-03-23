@@ -8,7 +8,6 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/net.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
@@ -35,15 +34,23 @@ namespace hex::init {
 
         // Check if we should check for updates
         if (showCheckForUpdates == 1){
-            hex::Net net;
+            HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
+            request.setTimeout(2000);
 
             // Query the GitHub API for the latest release version
-            auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 2000).get();
-            if (releases.code != 200)
+            auto response = request.execute().get();
+            if (response.getStatusCode() != 200)
                 return false;
 
+            nlohmann::json releases;
+            try {
+                releases = nlohmann::json::parse(response.getData());
+            } catch (std::exception &e) {
+                return false;
+            }
+
             // Check if the response is valid
-            if (!releases.body.contains("tag_name") || !releases.body["tag_name"].is_string())
+            if (!releases.contains("tag_name") || !releases["tag_name"].is_string())
                 return false;
 
             // Convert the current version string to a format that can be compared to the latest release
@@ -52,7 +59,7 @@ namespace hex::init {
             auto currVersion   = "v" + versionString.substr(0, versionLength);
 
             // Get the latest release version string
-            auto latestVersion = releases.body["tag_name"].get<std::string_view>();
+            auto latestVersion = releases["tag_name"].get<std::string_view>();
 
             // Check if the latest release is different from the current version
             if (latestVersion != currVersion)
@@ -86,7 +93,6 @@ namespace hex::init {
         else
             caCertData = std::string(romfs::get(CaCertFileName).string());
 
-        Net::setCACert(caCertData);
         HttpRequest::setCACert(caCertData);
 
         return true;

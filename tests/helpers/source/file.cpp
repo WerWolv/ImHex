@@ -15,7 +15,7 @@ TEST_SEQUENCE("FileAccess") {
         wolv::io::File file(FilePath, wolv::io::File::Mode::Create);
         TEST_ASSERT(file.isValid());
 
-        file.write(FileContent);
+        file.writeString(FileContent);
     }
 
     {
@@ -53,7 +53,7 @@ TEST_SEQUENCE("UTF-8 Path") {
         wolv::io::File file(FilePath, wolv::io::File::Mode::Create);
         TEST_ASSERT(file.isValid());
 
-        file.write(FileContent);
+        file.writeU8String(FileContent);
     }
 
     {
