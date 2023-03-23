@@ -282,6 +282,7 @@ namespace hex {
 
             curl_slist *headers = nullptr;
             headers = curl_slist_append(headers, "Cache-Control: no-cache");
+            ON_SCOPE_EXIT { curl_slist_free_all(headers); };
 
             for (auto &[key, value] : this->m_headers) {
                 std::string header = hex::format("{}: {}", key, value);
