@@ -16,6 +16,7 @@ namespace hex {
         curl_easy_setopt(this->m_curl, CURLOPT_TIMEOUT_MS, 0L);
         curl_easy_setopt(this->m_curl, CURLOPT_CONNECTTIMEOUT_MS, this->m_timeout);
         curl_easy_setopt(this->m_curl, CURLOPT_NOSIGNAL, 1L);
+        curl_easy_setopt(this->m_curl, CURLOPT_NOPROGRESS, 0L);
         curl_easy_setopt(this->m_curl, CURLOPT_XFERINFODATA, this);
         curl_easy_setopt(this->m_curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
         curl_easy_setopt(this->m_curl, CURLOPT_PROXY, s_proxyUrl.c_str());

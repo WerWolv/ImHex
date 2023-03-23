@@ -328,8 +328,8 @@ namespace hex {
         std::map<std::string, std::string> m_headers;
         u32 m_timeout = 1000;
 
-        float m_progress = 0.0F;
-        bool m_canceled = false;
+        std::atomic<float> m_progress = 0.0F;
+        std::atomic<bool> m_canceled = false;
 
         [[maybe_unused]] std::unique_ptr<mbedtls_x509_crt> m_caCert;
         static std::string s_caCertData, s_proxyUrl;
