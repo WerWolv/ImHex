@@ -73,7 +73,7 @@ namespace hex::fs {
         return result == NFD_OKAY;
     }
 
-    static std::vector<std::fs::path> getDataPaths() {
+    std::vector<std::fs::path> getDataPaths() {
         std::vector<std::fs::path> paths;
 
         #if defined(OS_WINDOWS)
