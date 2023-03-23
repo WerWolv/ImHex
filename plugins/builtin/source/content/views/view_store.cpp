@@ -1,4 +1,5 @@
 #include "content/views/view_store.hpp"
+#include "hex/api/theme_manager.hpp"
 
 #include <hex/api/content_registry.hpp>
 
@@ -141,11 +142,17 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginTabBar("storeTabs")) {
             drawTab("hex.builtin.view.store.tab.patterns"_lang,     fs::ImHexPath::Patterns,        this->m_patterns);
             drawTab("hex.builtin.view.store.tab.libraries"_lang,    fs::ImHexPath::PatternsInclude, this->m_includes);
-            drawTab("hex.builtin.view.store.tab.magics"_lang,       fs::ImHexPath::Magic,           this->m_magics, magic::compile);
+            drawTab("hex.builtin.view.store.tab.magics"_lang,       fs::ImHexPath::Magic,           this->m_magics, []{
+                magic::compile();
+            });
             drawTab("hex.builtin.view.store.tab.nodes"_lang,        fs::ImHexPath::Nodes,           this->m_nodes);
             drawTab("hex.builtin.view.store.tab.encodings"_lang,    fs::ImHexPath::Encodings,       this->m_encodings);
             drawTab("hex.builtin.view.store.tab.constants"_lang,    fs::ImHexPath::Constants,       this->m_constants);
-            drawTab("hex.builtin.view.store.tab.themes"_lang,       fs::ImHexPath::Themes,          this->m_themes);
+            drawTab("hex.builtin.view.store.tab.themes"_lang,       fs::ImHexPath::Themes,          this->m_themes, [this]{
+                auto themeFile = wolv::io::File(this->m_downloadPath, wolv::io::File::Mode::Read);
+
+                ThemeManager::addTheme(themeFile.readString());
+            });
             drawTab("hex.builtin.view.store.tab.yara"_lang,         fs::ImHexPath::Yara,            this->m_yara);
 
             ImGui::EndTabBar();

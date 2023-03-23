@@ -6,7 +6,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace hex::api {
+namespace hex {
 
     std::map<std::string, nlohmann::json> ThemeManager::s_themes;
     std::map<std::string, ThemeManager::ThemeHandler> ThemeManager::s_themeHandlers;

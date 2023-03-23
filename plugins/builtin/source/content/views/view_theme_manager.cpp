@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
             ImGui::Header("hex.builtin.view.theme_manager.colors"_lang, true);
 
             ImGui::PushID(1);
-            const auto &themeHandlers = api::ThemeManager::getThemeHandlers();
+            const auto &themeHandlers = ThemeManager::getThemeHandlers();
             for (auto &[name, handler] : themeHandlers) {
                 if (ImGui::CollapsingHeader(name.c_str())) {
                     for (auto &[colorName, colorId] : handler.colorMap) {
@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
             ImGui::Header("hex.builtin.view.theme_manager.styles"_lang);
 
             ImGui::PushID(2);
-            for (auto &[name, handler] : api::ThemeManager::getStyleHandlers()) {
+            for (auto &[name, handler] : ThemeManager::getStyleHandlers()) {
                 if (ImGui::CollapsingHeader(name.c_str())) {
                     for (auto &[styleName, style] : handler.styleMap) {
                         auto &[value, min, max, needsScaling] = style;
@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
             ImGui::InputTextIcon("hex.builtin.view.theme_manager.export.name"_lang, ICON_VS_SYMBOL_KEY, this->m_themeName);
             if (ImGui::Button("hex.builtin.view.theme_manager.save_theme"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 fs::openFileBrowser(fs::DialogMode::Save, { { "ImHex Theme", "json" } }, [this](const std::fs::path &path){
-                    auto json = api::ThemeManager::exportCurrentTheme(this->m_themeName);
+                    auto json = ThemeManager::exportCurrentTheme(this->m_themeName);
 
                     wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                     outputFile.writeString(json.dump(4));

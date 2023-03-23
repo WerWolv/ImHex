@@ -290,7 +290,7 @@ namespace hex::init {
         ContentRegistry::FileHandler::impl::getEntries().clear();
         ContentRegistry::Hashes::impl::getHashes().clear();
 
-        api::ThemeManager::reset();
+        ThemeManager::reset();
 
         {
             auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();

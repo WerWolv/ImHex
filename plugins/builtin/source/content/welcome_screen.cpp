@@ -442,9 +442,9 @@ namespace hex::plugin::builtin {
 
         (void)EventManager::subscribe<EventSettingsChanged>([]() {
             {
-                auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", api::ThemeManager::NativeTheme);
+                auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
 
-                if (theme != api::ThemeManager::NativeTheme) {
+                if (theme != ThemeManager::NativeTheme) {
                     static std::string lastTheme;
 
                     if (theme != lastTheme) {
@@ -474,9 +474,9 @@ namespace hex::plugin::builtin {
                 return ImGui::Texture(reinterpret_cast<const ImU8*>(textureData.data()), textureData.size());
             };
 
-            api::ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTexture(hex::format("banner{}.png", api::ThemeManager::getThemeImagePostfix()));
-            s_backdropTexture = changeTexture(hex::format("backdrop{}.png", api::ThemeManager::getThemeImagePostfix()));
+            ThemeManager::changeTheme(theme);
+            s_bannerTexture = changeTexture(hex::format("banner{}.png", ThemeManager::getThemeImagePostfix()));
+            s_backdropTexture = changeTexture(hex::format("backdrop{}.png", ThemeManager::getThemeImagePostfix()));
 
             if (!s_bannerTexture.isValid()) {
                 log::error("Failed to load banner texture!");

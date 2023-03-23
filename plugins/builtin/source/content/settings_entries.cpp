@@ -116,12 +116,12 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", "Dark", [](auto name, nlohmann::json &setting) {
             static auto selection = static_cast<std::string>(setting);
 
-            const auto themeNames = hex::api::ThemeManager::getThemeNames();
+            const auto themeNames = ThemeManager::getThemeNames();
             bool changed = false;
 
             if (ImGui::BeginCombo(name.data(), selection.c_str())) {
-                if (ImGui::Selectable(api::ThemeManager::NativeTheme, selection == api::ThemeManager::NativeTheme)) {
-                    selection = api::ThemeManager::NativeTheme;
+                if (ImGui::Selectable(ThemeManager::NativeTheme, selection == ThemeManager::NativeTheme)) {
+                    selection = ThemeManager::NativeTheme;
                     setting = selection;
                     ImHexApi::System::enableSystemThemeDetection(true);
                     changed = true;
@@ -132,7 +132,7 @@ namespace hex::plugin::builtin {
                         selection = themeName;
                         setting = selection;
                         ImHexApi::System::enableSystemThemeDetection(false);
-                        api::ThemeManager::changeTheme(selection);
+                        ThemeManager::changeTheme(selection);
                         changed = true;
                     }
                 }
@@ -613,13 +613,13 @@ namespace hex::plugin::builtin {
     }
 
     static void loadThemeSettings() {
-        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", api::ThemeManager::NativeTheme);
+        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
 
-        if (theme == api::ThemeManager::NativeTheme)
+        if (theme == ThemeManager::NativeTheme)
             ImHexApi::System::enableSystemThemeDetection(true);
         else {
             ImHexApi::System::enableSystemThemeDetection(false);
-            api::ThemeManager::changeTheme(theme);
+            ThemeManager::changeTheme(theme);
         }
     }
 

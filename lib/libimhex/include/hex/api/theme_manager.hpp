@@ -9,7 +9,7 @@
 #include <nlohmann/json_fwd.hpp>
 #include <imgui.h>
 
-namespace hex::api {
+namespace hex {
 
     /**
      * @brief The Theme Manager takes care of loading and applying themes

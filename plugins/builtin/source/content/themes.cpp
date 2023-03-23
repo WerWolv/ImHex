@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
     void registerThemeHandlers() {
         EventManager::subscribe<RequestInitThemeHandlers>([]() {
             {
-                const static api::ThemeManager::ColorMap ImGuiColorMap = {
+                const static ThemeManager::ColorMap ImGuiColorMap = {
                     { "text",                           ImGuiCol_Text                   },
                     { "text-disabled",                  ImGuiCol_TextDisabled           },
                     { "window-background",              ImGuiCol_WindowBg               },
@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
                     { "modal-window-dim-background",    ImGuiCol_ModalWindowDimBg       }
                 };
 
-                api::ThemeManager::addThemeHandler("imgui", ImGuiColorMap,
+                ThemeManager::addThemeHandler("imgui", ImGuiColorMap,
                     [](u32 colorId) -> ImColor {
                         return ImGui::GetStyle().Colors[colorId];
                     },
@@ -89,7 +89,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap ImPlotColorMap = {
+                const static ThemeManager::ColorMap ImPlotColorMap = {
                     { "line",               ImPlotCol_Line              },
                     { "fill",               ImPlotCol_Fill              },
                     { "marker-outline",     ImPlotCol_MarkerOutline     },
@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
                     { "crosshairs",         ImPlotCol_Crosshairs        }
                 };
 
-                api::ThemeManager::addThemeHandler("implot", ImPlotColorMap,
+                ThemeManager::addThemeHandler("implot", ImPlotColorMap,
                    [](u32 colorId) -> ImColor {
                        return ImPlot::GetStyle().Colors[colorId];
                    },
@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap ImNodesColorMap = {
+                const static ThemeManager::ColorMap ImNodesColorMap = {
                     { "node-background",                    ImNodesCol_NodeBackground                   },
                     { "node-background-hovered",            ImNodesCol_NodeBackgroundHovered            },
                     { "node-background-selected",           ImNodesCol_NodeBackgroundSelected           },
@@ -156,7 +156,7 @@ namespace hex::plugin::builtin {
                     { "mini-map-canvas-outline",            ImNodesCol_MiniMapCanvasOutline             },
                 };
 
-                api::ThemeManager::addThemeHandler("imnodes", ImNodesColorMap,
+                ThemeManager::addThemeHandler("imnodes", ImNodesColorMap,
                    [](u32 colorId) -> ImColor {
                        return ImNodes::GetStyle().Colors[colorId];
                    },
@@ -167,7 +167,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap ImHexColorMap = {
+                const static ThemeManager::ColorMap ImHexColorMap = {
                     { "desc-button",            ImGuiCustomCol_DescButton           },
                     { "desc-button-hovered",    ImGuiCustomCol_DescButtonHovered    },
                     { "desc-button-active",     ImGuiCustomCol_DescButtonActive     },
@@ -181,7 +181,7 @@ namespace hex::plugin::builtin {
                     { "highlight",              ImGuiCustomCol_Highlight            }
                 };
 
-                api::ThemeManager::addThemeHandler("imhex", ImHexColorMap,
+                ThemeManager::addThemeHandler("imhex", ImHexColorMap,
                    [](u32 colorId) -> ImColor {
                        return static_cast<ImGui::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId];
 
@@ -193,7 +193,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap TextEditorColorMap = {
+                const static ThemeManager::ColorMap TextEditorColorMap = {
                     { "default",                    u32(TextEditor::PaletteIndex::Default)                 },
                     { "keyword",                    u32(TextEditor::PaletteIndex::Keyword)                 },
                     { "number",                     u32(TextEditor::PaletteIndex::Number)                  },
@@ -217,7 +217,7 @@ namespace hex::plugin::builtin {
                     { "current-line-edge",          u32(TextEditor::PaletteIndex::CurrentLineEdge)         }
                 };
 
-                api::ThemeManager::addThemeHandler("text-editor", TextEditorColorMap,
+                ThemeManager::addThemeHandler("text-editor", TextEditorColorMap,
                     [](u32 colorId) -> ImColor {
                         return TextEditor::GetPalette()[colorId];
                     },
@@ -235,7 +235,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<RequestInitThemeHandlers>([]() {
             {
                 auto &style = ImGui::GetStyle();
-                const static api::ThemeManager::StyleMap ImGuiStyleMap = {
+                const static ThemeManager::StyleMap ImGuiStyleMap = {
                     { "alpha",                  { &style.Alpha,                0.001F, 1.0F,    false } },
                     { "disabled-alpha",         { &style.DisabledAlpha,        0.0F,   1.0F,    false } },
                     { "window-padding",         { &style.WindowPadding,        0.0F,   20.0F,   true  } },
@@ -263,12 +263,12 @@ namespace hex::plugin::builtin {
                     { "selectable-text-align",  { &style.SelectableTextAlign,  0.0F,   1.0F,    false } },
                 };
 
-                api::ThemeManager::addStyleHandler("imgui", ImGuiStyleMap);
+                ThemeManager::addStyleHandler("imgui", ImGuiStyleMap);
             }
 
             {
                 auto &style = ImPlot::GetStyle();
-                const static api::ThemeManager::StyleMap ImPlotStyleMap = {
+                const static ThemeManager::StyleMap ImPlotStyleMap = {
                         { "line-weight",            { &style.LineWeight,         0.0F, 5.0F,    true  } },
                         { "marker-size",            { &style.MarkerSize,         2.0F, 10.0F,   true  } },
                         { "marker-weight",          { &style.MarkerWeight,       0.0F, 5.0F,    true  } },
@@ -297,12 +297,12 @@ namespace hex::plugin::builtin {
                         { "plot-min-size",          { &style.PlotMinSize,        0.0F, 300.0F,  true  } },
                 };
 
-                api::ThemeManager::addStyleHandler("implot", ImPlotStyleMap);
+                ThemeManager::addStyleHandler("implot", ImPlotStyleMap);
             }
 
             {
                 auto &style = ImNodes::GetStyle();
-                const static api::ThemeManager::StyleMap ImNodesStyleMap = {
+                const static ThemeManager::StyleMap ImNodesStyleMap = {
                         { "grid-spacing",                  { &style.GridSpacing,               0.0F,    100.0F, true } },
                         { "node-corner-rounding",          { &style.NodeCornerRounding,        0.0F,    12.0F,  true } },
                         { "node-padding",                  { &style.NodePadding,               0.0F,    20.0F,  true } },
@@ -320,7 +320,7 @@ namespace hex::plugin::builtin {
                         { "mini-map-offset",               { &style.MiniMapOffset,             -10.0F,  10.0F,  true } },
                 };
 
-                api::ThemeManager::addStyleHandler("imnodes", ImNodesStyleMap);
+                ThemeManager::addStyleHandler("imnodes", ImNodesStyleMap);
             }
         });
     }
@@ -328,14 +328,14 @@ namespace hex::plugin::builtin {
     void registerThemes() {
         // Load built-in themes
         for (const auto &theme : romfs::list("themes")) {
-            api::ThemeManager::addTheme(std::string(romfs::get(theme).string()));
+            ThemeManager::addTheme(std::string(romfs::get(theme).string()));
         }
 
         // Load user themes
         for (const auto &themeFolder : fs::getDefaultPaths(fs::ImHexPath::Themes)) {
             for (const auto &theme : std::fs::directory_iterator(themeFolder)) {
                 if (theme.is_regular_file())
-                    api::ThemeManager::addTheme(wolv::io::File(theme.path(), wolv::io::File::Mode::Read).readString());
+                    ThemeManager::addTheme(wolv::io::File(theme.path(), wolv::io::File::Mode::Read).readString());
             }
         }
     }
