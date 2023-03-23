@@ -20,10 +20,16 @@ namespace hex {
         TMS320C64X,
         M680X,
         EVM,
-        MOS65XX,
         WASM,
+        #if defined(CS_MODE_RISCV32)
+            RISCV,
+        #endif
+        #if defined(CS_MODE_MOS65XX_6502)
+            MOS65XX,
+        #endif
+        #if defined(CS_MODE_BPF_CLASSIC)
         BPF,
-        RISCV,
+        #endif
 
         MAX,
         MIN = ARM
