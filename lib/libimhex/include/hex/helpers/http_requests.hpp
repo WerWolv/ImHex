@@ -305,7 +305,7 @@ namespace hex {
                 }
             }
 
-            u32 statusCode = 0;
+            long statusCode = 0;
             curl_easy_getinfo(this->m_curl, CURLINFO_RESPONSE_CODE, &statusCode);
 
             return Result<T>(statusCode, { data.begin(), data.end() });
