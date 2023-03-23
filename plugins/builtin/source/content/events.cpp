@@ -123,11 +123,11 @@ namespace hex::plugin::builtin {
            ImHexApi::HexEditor::impl::setCurrentSelection(region);
         });
 
-        fs::setFileBrowserErrorCallback([]{
+        fs::setFileBrowserErrorCallback([](const std::string& errMsg){
             #if defined(NFD_PORTAL)
-                View::showErrorPopup("hex.builtin.popup.error.file_dialog.portal"_lang);
+                View::showErrorPopup(hex::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));
             #else
-                View::showErrorPopup("hex.builtin.popup.error.file_dialog.common"_lang);
+                View::showErrorPopup(hex::format("hex.builtin.popup.error.file_dialog.common"_lang, errMsg));
             #endif
         });
 
