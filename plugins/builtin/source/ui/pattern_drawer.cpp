@@ -92,13 +92,34 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
         }
 
+        inline void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
+            auto bitOffset = pattern.getBitOffsetForDisplay();
+            if (pattern.getBitSize() <= 1)
+                ImGui::TextFormatted("bit {0}", bitOffset);
+            else
+                ImGui::TextFormatted("bits {0} - {1}", bitOffset, bitOffset + pattern.getBitSize() - 1);
+        }
+
         void drawOffsetColumn(const pl::ptrn::Pattern& pattern) {
-            ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
+            if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
+                drawOffsetColumnForBitfieldMember(*bitfieldMember);
+            else
+                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
             ImGui::TableNextColumn();
         }
 
+        inline void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
+            if (pattern.getBitSize() == 1)
+                ImGui::TextFormatted("1 bit");
+            else
+                ImGui::TextFormatted("{0} bits", pattern.getBitSize());
+        }
+
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
-            ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
+            if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
+                drawSizeColumnForBitfieldMember(*bitfieldMember);
+            else
+                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
             ImGui::TableNextColumn();
         }
 
@@ -261,23 +282,18 @@ namespace hex::plugin::builtin::ui {
         ImGui::SameLine();
         drawNameColumn(pattern);
         drawColorColumn(pattern);
-
-        auto firstBitIdx = pattern.getBitOffset();
-        auto lastBitIdx = firstBitIdx + (pattern.getBitSize() - 1);
-        if (firstBitIdx == lastBitIdx)
-            ImGui::TextFormatted("bit {0}", firstBitIdx);
-        else
-            ImGui::TextFormatted("bits {0} - {1}", firstBitIdx, lastBitIdx);
+        drawOffsetColumnForBitfieldMember(pattern);
         ImGui::TableNextColumn();
-        if (pattern.getBitSize() == 1)
-            ImGui::TextFormatted("{0} bit", pattern.getBitSize());
-        else
-            ImGui::TextFormatted("{0} bits", pattern.getBitSize());
+        drawSizeColumnForBitfieldMember(pattern);
         ImGui::TableNextColumn();
         ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
         ImGui::TableNextColumn();
 
         ImGui::TextFormatted("{}", pattern.getFormattedValue());
+    }
+
+    void PatternDrawer::visit(pl::ptrn::PatternBitfieldArray& pattern) {
+        drawArray(pattern, pattern, pattern.isInlined());
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternBitfield& pattern) {
@@ -770,14 +786,14 @@ namespace hex::plugin::builtin::ui {
                 return left->getDisplayName() > right->getDisplayName();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getOffset() < right->getOffset();
+                return left->getOffsetForSorting() < right->getOffsetForSorting();
             else
-                return left->getOffset() > right->getOffset();
+                return left->getOffsetForSorting() > right->getOffsetForSorting();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getSize() < right->getSize();
+                return left->getSizeForSorting() < right->getSizeForSorting();
             else
-                return left->getSize() > right->getSize();
+                return left->getSizeForSorting() > right->getSizeForSorting();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                 return left->getValue() < right->getValue();
