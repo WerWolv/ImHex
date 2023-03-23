@@ -131,17 +131,7 @@ namespace hex::fs {
         #elif defined(OS_MACOS)
             return getDataPaths();
         #elif defined(OS_LINUX)
-            std::vector<std::fs::path> paths;
-
-            paths.push_back(xdg::DataHomeDir());
-
-            auto dataDirs = xdg::DataDirs();
-            std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
-
-            for (auto &path : paths)
-                path = path / "imhex";
-
-            return paths;
+            return {xdg::ConfigHomeDir() / "imhex"};
         #endif
     }
 
