@@ -40,9 +40,25 @@ namespace hex::plugin::builtin {
     void ViewStore::drawStore() {
         ImGui::Header("hex.builtin.view.store.desc"_lang, true);
 
+        bool reloading = false;
+        if (this->m_apiRequest.valid()) {
+            if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)
+                reloading = true;
+            else
+                this->parseResponse();
+        }
+
+        ImGui::BeginDisabled(reloading);
         if (ImGui::Button("hex.builtin.view.store.reload"_lang)) {
             this->refresh();
         }
+        ImGui::EndDisabled();
+
+        if (reloading) {
+            ImGui::SameLine();
+            ImGui::TextSpinner("hex.builtin.view.store.loading"_lang);
+        }
+
 
         auto drawTab = [this](auto title, fs::ImHexPath pathType, auto &content, const std::function<void()> &downloadDoneCallback = []{}) {
             if (ImGui::BeginTabItem(title)) {
@@ -56,18 +72,20 @@ namespace hex::plugin::builtin {
 
                     u32 id = 1;
                     for (auto &entry : content) {
-                        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeight() + 4.0F * ImGui::GetStyle().FramePadding.y);
+                        ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(entry.name.c_str());
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(entry.description.c_str());
                         ImGui::TableNextColumn();
 
+                        const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
+
                         ImGui::PushID(id);
                         ImGui::BeginDisabled(this->m_download.valid() && this->m_download.wait_for(0s) != std::future_status::ready);
                         {
                             if (entry.downloading) {
-                                ImGui::TextSpinner("");
+                                ImGui::ProgressBar(this->m_httpRequest.getProgress(), buttonSize, "");
 
                                 if (this->m_download.valid() && this->m_download.wait_for(0s) == std::future_status::ready) {
                                     entry.downloading = false;
@@ -90,18 +108,23 @@ namespace hex::plugin::builtin {
                                     this->m_download = {};
                                 }
 
-                            } else if (entry.hasUpdate) {
-                                if (ImGui::Button("hex.builtin.view.store.update"_lang)) {
-                                    entry.downloading = this->download(pathType, entry.fileName, entry.link, true);
-                                }
-                            } else if (!entry.installed) {
-                                if (ImGui::Button("hex.builtin.view.store.download"_lang)) {
-                                    entry.downloading = this->download(pathType, entry.fileName, entry.link, false);
-                                }
                             } else {
-                                if (ImGui::Button("hex.builtin.view.store.remove"_lang)) {
-                                    entry.installed = !this->remove(pathType, entry.fileName);
+                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+                                if (entry.hasUpdate) {
+                                    if (ImGui::Button("hex.builtin.view.store.update"_lang, buttonSize)) {
+                                        entry.downloading = this->download(pathType, entry.fileName, entry.link, true);
+                                    }
+                                } else if (!entry.installed) {
+                                    if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
+                                        entry.downloading = this->download(pathType, entry.fileName, entry.link, false);
+                                    }
+                                } else {
+                                    if (ImGui::Button("hex.builtin.view.store.remove"_lang, buttonSize)) {
+                                        entry.installed = !this->remove(pathType, entry.fileName);
+                                    }
                                 }
+                                ImGui::PopStyleVar();
                             }
                         }
                         ImGui::EndDisabled();
@@ -119,11 +142,11 @@ namespace hex::plugin::builtin {
             drawTab("hex.builtin.view.store.tab.patterns"_lang,     fs::ImHexPath::Patterns,        this->m_patterns);
             drawTab("hex.builtin.view.store.tab.libraries"_lang,    fs::ImHexPath::PatternsInclude, this->m_includes);
             drawTab("hex.builtin.view.store.tab.magics"_lang,       fs::ImHexPath::Magic,           this->m_magics, magic::compile);
-            drawTab("hex.builtin.view.store.tab.constants"_lang,    fs::ImHexPath::Constants,       this->m_constants);
-            drawTab("hex.builtin.view.store.tab.encodings"_lang,    fs::ImHexPath::Encodings,       this->m_encodings);
-            drawTab("hex.builtin.view.store.tab.yara"_lang,         fs::ImHexPath::Yara,            this->m_yara);
             drawTab("hex.builtin.view.store.tab.nodes"_lang,        fs::ImHexPath::Nodes,           this->m_nodes);
+            drawTab("hex.builtin.view.store.tab.encodings"_lang,    fs::ImHexPath::Encodings,       this->m_encodings);
+            drawTab("hex.builtin.view.store.tab.constants"_lang,    fs::ImHexPath::Constants,       this->m_constants);
             drawTab("hex.builtin.view.store.tab.themes"_lang,       fs::ImHexPath::Themes,          this->m_themes);
+            drawTab("hex.builtin.view.store.tab.yara"_lang,         fs::ImHexPath::Yara,            this->m_yara);
 
             ImGui::EndTabBar();
         }
@@ -189,6 +212,10 @@ namespace hex::plugin::builtin {
                         }
                     }
                 }
+
+                std::sort(results.begin(), results.end(), [](const auto &lhs, const auto &rhs) {
+                    return lhs.name < rhs.name;
+                });
             };
 
             parseStoreEntries(json, "patterns", fs::ImHexPath::Patterns, this->m_patterns);
@@ -205,13 +232,6 @@ namespace hex::plugin::builtin {
 
     void ViewStore::drawContent() {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.store.name").c_str(), &this->getWindowOpenState())) {
-            if (this->m_apiRequest.valid()) {
-                if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)
-                    ImGui::TextSpinner("hex.builtin.view.store.loading"_lang);
-                else
-                    this->parseResponse();
-            }
-
             if (this->m_requestStatus == RequestStatus::Failed)
                 ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
             
