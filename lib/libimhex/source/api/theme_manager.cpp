@@ -1,11 +1,12 @@
 #include <hex/api/theme_manager.hpp>
+#include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <nlohmann/json.hpp>
 
-namespace hex::api {
+namespace hex {
 
     std::map<std::string, nlohmann::json> ThemeManager::s_themes;
     std::map<std::string, ThemeManager::ThemeHandler> ThemeManager::s_themeHandlers;
@@ -153,15 +154,16 @@ namespace hex::api {
                         continue;
 
                     auto &style = handler.styleMap.at(key);
+                    const float scale = style.needsScaling ? 1_scaled : 1.0F;
 
                     if (value.is_number_float()) {
                         if (auto newValue = std::get_if<float*>(&style.value); newValue != nullptr)
-                            **newValue = value.get<float>();
+                            **newValue = value.get<float>() * scale;
                         else
                             log::warn("Style variable '{}' was of type ImVec2 but a float was expected.", name);
                     } else if (value.is_array() && value.size() == 2 && value[0].is_number_float() && value[1].is_number_float()) {
                         if (auto newValue = std::get_if<ImVec2*>(&style.value); newValue != nullptr)
-                            **newValue = ImVec2(value[0].get<float>(), value[1].get<float>());
+                            **newValue = ImVec2(value[0].get<float>() * scale, value[1].get<float>() * scale);
                         else
                             log::warn("Style variable '{}' was of type float but a ImVec2 was expected.", name);
                     } else {

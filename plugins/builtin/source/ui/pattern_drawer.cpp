@@ -765,34 +765,34 @@ namespace hex::plugin::builtin::ui {
     static bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) {
         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getDisplayName() > right->getDisplayName();
-            else
                 return left->getDisplayName() < right->getDisplayName();
+            else
+                return left->getDisplayName() > right->getDisplayName();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getOffset() > right->getOffset();
-            else
                 return left->getOffset() < right->getOffset();
+            else
+                return left->getOffset() > right->getOffset();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getSize() > right->getSize();
-            else
                 return left->getSize() < right->getSize();
+            else
+                return left->getSize() > right->getSize();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getValue() > right->getValue();
-            else
                 return left->getValue() < right->getValue();
+            else
+                return left->getValue() > right->getValue();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getTypeName() > right->getTypeName();
-            else
                 return left->getTypeName() < right->getTypeName();
+            else
+                return left->getTypeName() > right->getTypeName();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getColor() > right->getColor();
-            else
                 return left->getColor() < right->getColor();
+            else
+                return left->getColor() > right->getColor();
         }
 
         return false;

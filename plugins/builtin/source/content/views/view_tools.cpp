@@ -8,7 +8,7 @@ namespace hex::plugin::builtin {
     ViewTools::ViewTools() : View("hex.builtin.view.tools.name") { }
 
     void ViewTools::drawContent() {
-        auto &tools = ContentRegistry::Tools::getEntries();
+        auto &tools = ContentRegistry::Tools::impl::getEntries();
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.tools.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             for (auto iter = tools.begin(); iter != tools.end(); iter++) {

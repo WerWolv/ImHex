@@ -70,15 +70,17 @@ jobs:
         mkdir -p build
         cd build
 
-        cmake -G "MinGW Makefiles"                \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
-          -DCREATE_PACKAGE=ON                     \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"        \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON         \
+        cmake -G "MinGW Makefiles"                  \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"     \
+          -DCREATE_PACKAGE=ON                       \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
+          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
           ..
         mingw32-make -j4 install
         cpack
@@ -179,12 +181,14 @@ jobs:
         mkdir build
         cd build
 
-        cmake                                     \
-          -DBUILD_SHARED_LIBS=ON                  \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
+        cmake                                       \
+          -DBUILD_SHARED_LIBS=ON                    \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache     \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache   \
+          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
         ..
         make -j 4 install
 
@@ -193,22 +197,24 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=$(brew --prefix gcc@12)/bin/gcc-12     \
-        CXX=$(brew --prefix gcc@12)/bin/g++-12    \
-        OBJC=$(brew --prefix llvm)/bin/clang      \
-        OBJCXX=$(brew --prefix llvm)/bin/clang++  \
+        CC=$(brew --prefix gcc@12)/bin/gcc-12       \
+        CXX=$(brew --prefix gcc@12)/bin/g++-12      \
+        OBJC=$(brew --prefix llvm)/bin/clang        \
+        OBJCXX=$(brew --prefix llvm)/bin/clang++    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
-        MACOSX_DEPLOYMENT_TARGET="10.10"          \
-        cmake                                     \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE          \
-          -DCREATE_BUNDLE=ON                      \
-          -DCREATE_PACKAGE=ON                     \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON         \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"   \
+        MACOSX_DEPLOYMENT_TARGET="10.10"            \
+        cmake                                       \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
+          -DCREATE_BUNDLE=ON                        \
+          -DCREATE_PACKAGE=ON                       \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache     \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache   \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"     \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"  \
           ..
         make -j4 package
@@ -260,6 +266,8 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+            -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
             ..
           make -j 4 install DESTDIR=DebDir
@@ -330,6 +338,8 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
             -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+            -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
             -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
             -DIMHEX_PLUGINS_IN_SHARE=ON               \
             -DIMHEX_USE_BUNDLED_CA=ON                 \
@@ -410,6 +420,8 @@ jobs:
           -DUSE_SYSTEM_NLOHMANN_JSON=ON             \
           -DUSE_SYSTEM_CAPSTONE=OFF                 \
           -DIMHEX_PATTERNS_PULL_MASTER=ON           \
+          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
           ..
           make -j 4 install DESTDIR=installDir
@@ -519,7 +531,7 @@ jobs:
       - name: 🗜️ Create tarball from sources with dependencies
         run: tar --exclude-vcs -czf $GITHUB_WORKSPACE/imhex-$IMHEX_VERSION.tar.gz ImHex
 
-      - name: "✒️ Modify spec file: set version, use latest pattern language, enable online build"
+      - name: ✒️ Modify spec file
         run: |
           sed -i \
           -e 's/Version:        [0-9]*\.[0-9]*\.[0-9]*$/Version:        ${{env.IMHEX_VERSION}}/g' \
@@ -550,9 +562,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: /var/cache/mock
-          key: ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-mock-${{ github.run_id }}
+          key: ${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-mock-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-${{secrets.CACHE_VERSION }}-mock-
+            ${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-mock-
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM

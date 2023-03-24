@@ -14,13 +14,16 @@ macro(addVersionDefines)
         message(FATAL_ERROR "IMHEX_VERSION is not defined")
     endif ()
 
-    if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/.git")
+    if (DEFINED IMHEX_COMMIT_HASH AND DEFINED IMHEX_COMMIT_BRANCH)
+        add_compile_definitions(GIT_COMMIT_HASH="${IMHEX_COMMIT_HASH}" GIT_BRANCH="${IMHEX_COMMIT_BRANCH}")
+    else()
         # Get the current working branch
         execute_process(
                 COMMAND git rev-parse --abbrev-ref HEAD
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 OUTPUT_VARIABLE GIT_BRANCH
                 OUTPUT_STRIP_TRAILING_WHITESPACE
+                RESULT_VARIABLE RESULT_BRANCH
         )
 
         # Get the latest abbreviated commit hash of the working branch
@@ -29,9 +32,12 @@ macro(addVersionDefines)
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                 OUTPUT_VARIABLE GIT_COMMIT_HASH
                 OUTPUT_STRIP_TRAILING_WHITESPACE
+                RESULT_VARIABLE RESULT_HASH
         )
 
-        add_compile_definitions(GIT_COMMIT_HASH="${GIT_COMMIT_HASH}" GIT_BRANCH="${GIT_BRANCH}")
+        if (RESULT_BRANCH EQUAL 0 AND RESULT_HASH EQUAL 0)
+            add_compile_definitions(GIT_COMMIT_HASH="${GIT_COMMIT_HASH}" GIT_BRANCH="${GIT_BRANCH}")
+        endif ()
     endif ()
 
     set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR} -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH} ")
@@ -60,7 +66,9 @@ macro(detectOS)
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
 
-        SET(IMHEX_USE_BUNDLED_CA ON)
+        if (NOT USE_SYSTEM_CURL)
+            SET(IMHEX_USE_BUNDLED_CA ON)
+        endif ()
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -384,7 +392,7 @@ endfunction()
 
 macro(setupCompilerWarnings target)
     set(IMHEX_COMMON_FLAGS "-Wall -Wextra -Wpedantic -Werror")
-    set(IMHEX_C_FLAGS "${IMHEX_COMMON_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow")
+    set(IMHEX_C_FLAGS "${IMHEX_COMMON_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow -Wno-array-bounds")
 
     set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_C_FLAGS}")
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_C_FLAGS}")
@@ -418,6 +426,13 @@ macro(addBundledLibraries)
 
     add_subdirectory(${EXTERN_LIBS_FOLDER}/intervaltree EXCLUDE_FROM_ALL)
     set_target_properties(intervaltree PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    add_subdirectory(${EXTERN_LIBS_FOLDER}/libwolv EXCLUDE_FROM_ALL)
+    set_property(TARGET libwolv-types PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET libwolv-utils PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET libwolv-io PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET libwolv-hash PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 
     set(XDGPP_INCLUDE_DIRS "${EXTERN_LIBS_FOLDER}/xdgpp")
     set(CURL_USE_MBEDTLS ON)

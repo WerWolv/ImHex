@@ -1,10 +1,9 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 
-#include <hex/helpers/net.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/api/localization.hpp>
@@ -26,6 +25,9 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <nlohmann/json.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -122,7 +124,7 @@ namespace hex::plugin::builtin {
         void drawColorPicker() {
             static std::array<float, 4> pickedColor = { 0 };
 
-            ImGui::SetNextItemWidth(300.0F);
+            ImGui::SetNextItemWidth(300_scaled);
             ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(), ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
         }
 
@@ -483,6 +485,28 @@ namespace hex::plugin::builtin {
                 ConvertBases(2);
         }
 
+        void drawByteSwapper() {
+            static std::string input, buffer, output;
+
+            if (ImGui::InputTextIcon("hex.builtin.tools.input"_lang, ICON_VS_SYMBOL_NUMERIC, input, ImGuiInputTextFlags_CharsHexadecimal)) {
+                auto nextAlignedSize = std::max<size_t>(2, std::bit_ceil(input.size()));
+
+                buffer.clear();
+                buffer.resize(nextAlignedSize - input.size(), '0');
+                buffer += input;
+
+                output.clear();
+                for (u32 i = 0; i < buffer.size(); i += 2) {
+                    output += buffer[buffer.size() - i - 2];
+                    output += buffer[buffer.size() - i - 1];
+                }
+            }
+
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().DisabledAlpha);
+            ImGui::InputTextIcon("hex.builtin.tools.output"_lang, ICON_VS_SYMBOL_NUMERIC, output, ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopStyleVar();
+        }
+
         void drawPermissionsCalculator() {
             static bool setuid, setgid, sticky;
             static bool r[3], w[3], x[3];
@@ -546,8 +570,8 @@ namespace hex::plugin::builtin {
                 std::string fileName, link, size;
             };
 
-            static hex::Net net;
-            static std::future<Response<std::string>> uploadProcess;
+            static HttpRequest request("POST", "https://api.anonfiles.com/upload");
+            static std::future<HttpRequest::Result<std::string>> uploadProcess;
             static std::fs::path currFile;
             static std::vector<UploadedFile> links;
 
@@ -557,19 +581,19 @@ namespace hex::plugin::builtin {
             if (!uploading) {
                 if (ImGui::Button("hex.builtin.tools.file_uploader.upload"_lang)) {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [&](auto path) {
-                        uploadProcess = net.uploadFile("https://api.anonfiles.com/upload", path);
+                        uploadProcess = request.uploadFile(path);
                         currFile      = path;
                     });
                 }
             } else {
                 if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
-                    net.cancel();
+                    request.cancel();
                 }
             }
 
             ImGui::SameLine();
 
-            ImGui::ProgressBar(net.getProgress(), ImVec2(0, 0), uploading ? nullptr : "Done!");
+            ImGui::ProgressBar(request.getProgress(), ImVec2(0, 0), uploading ? nullptr : "Done!");
 
             ImGui::Header("hex.builtin.tools.file_uploader.recent"_lang);
 
@@ -613,20 +637,20 @@ namespace hex::plugin::builtin {
 
             if (uploadProcess.valid() && uploadProcess.wait_for(0s) == std::future_status::ready) {
                 auto response = uploadProcess.get();
-                if (response.code == 200) {
+                if (response.getStatusCode() == 200) {
                     try {
-                        auto json = nlohmann::json::parse(response.body);
+                        auto json = nlohmann::json::parse(response.getData());
                         links.push_back({
-                            hex::toUTF8String(currFile.filename()),
+                            wolv::util::toUTF8String(currFile.filename()),
                             json["data"]["file"]["url"]["short"],
                             json["data"]["file"]["metadata"]["size"]["readable"]
                         });
                     } catch (...) {
                         View::showErrorPopup("hex.builtin.tools.file_uploader.invalid_response"_lang);
                     }
-                } else if (response.code == 0) {
+                } else if (response.getStatusCode() == 0) {
                     // Canceled by user, no action needed
-                } else View::showErrorPopup(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.code));
+                } else View::showErrorPopup(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
 
                 uploadProcess = {};
                 currFile.clear();
@@ -634,24 +658,18 @@ namespace hex::plugin::builtin {
         }
 
         std::string getWikipediaApiUrl() {
-            auto setting = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language");
-            return "https://" + std::string(setting) + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
+            auto setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en");
+            return "https://" + setting + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
         }
 
         void drawWikiExplainer() {
-            static hex::Net net;
+            static HttpRequest request("GET", "");
 
             static std::string resultTitle, resultExtract;
-            static std::future<Response<std::string>> searchProcess;
+            static std::future<HttpRequest::Result<std::string>> searchProcess;
             static bool extendedSearch = false;
 
-            static auto searchString = [] {
-                std::string s;
-                s.reserve(0xFFFF);
-                std::memset(s.data(), 0x00, s.capacity());
-
-                return s;
-            }();
+            std::string searchString;
 
             ImGui::Header("hex.builtin.tools.wiki_explain.control"_lang, true);
 
@@ -665,7 +683,8 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
 
             if (startSearch && !searchString.empty()) {
-                searchProcess = net.getString(getWikipediaApiUrl() + "&exintro"s + "&titles="s + net.encode(searchString));
+                request.setUrl(getWikipediaApiUrl() + "&exintro"s + "&titles="s + request.urlEncode(searchString));
+                searchProcess = request.execute();
             }
 
             ImGui::Header("hex.builtin.tools.wiki_explain.results"_lang);
@@ -681,16 +700,19 @@ namespace hex::plugin::builtin {
             if (searchProcess.valid() && searchProcess.wait_for(0s) == std::future_status::ready) {
                 try {
                     auto response = searchProcess.get();
-                    if (response.code != 200) throw std::runtime_error("Invalid response");
+                    if (response.getStatusCode() != 200) throw std::runtime_error("Invalid response");
 
-                    auto json = nlohmann::json::parse(response.body);
+                    auto json = nlohmann::json::parse(response.getData());
 
                     resultTitle   = json["query"]["pages"][0]["title"].get<std::string>();
                     resultExtract = json["query"]["pages"][0]["extract"].get<std::string>();
 
                     if (!extendedSearch && resultExtract.ends_with(':')) {
                         extendedSearch = true;
-                        searchProcess  = net.getString(getWikipediaApiUrl() + "&titles="s + net.encode(searchString));
+
+                        request.setUrl(getWikipediaApiUrl() + "&titles="s + request.urlEncode(searchString));
+                        searchProcess  = request.execute();
+
                         resultTitle.clear();
                         resultExtract.clear();
                     } else {
@@ -747,7 +769,7 @@ namespace hex::plugin::builtin {
                             ON_SCOPE_EXIT {
                                 selectedFile.clear();
                             };
-                            fs::File file(selectedFile, fs::File::Mode::Write);
+                            wolv::io::File file(selectedFile, wolv::io::File::Mode::Write);
 
                             if (!file.isValid()) {
                                 View::showErrorPopup("hex.builtin.tools.file_tools.shredder.error.open"_lang);
@@ -815,7 +837,7 @@ namespace hex::plugin::builtin {
 
                             for (const auto &pattern : overwritePattern) {
                                 for (u64 offset = 0; offset < fileSize; offset += 3) {
-                                    file.write(pattern.data(), std::min<u64>(pattern.size(), fileSize - offset));
+                                    file.writeBuffer(pattern.data(), std::min<u64>(pattern.size(), fileSize - offset));
                                     task.update(offset);
                                 }
 
@@ -912,7 +934,7 @@ namespace hex::plugin::builtin {
                                 baseOutputPath.clear();
                             };
 
-                            fs::File file(selectedFile, fs::File::Mode::Read);
+                            wolv::io::File file(selectedFile, wolv::io::File::Mode::Read);
 
                             if (!file.isValid()) {
                                 View::showErrorPopup("hex.builtin.tools.file_tools.splitter.picker.error.open"_lang);
@@ -933,7 +955,7 @@ namespace hex::plugin::builtin {
                                 std::fs::path path = baseOutputPath;
                                 path += hex::format(".{:05}", index);
 
-                                fs::File partFile(path, fs::File::Mode::Create);
+                                wolv::io::File partFile(path, wolv::io::File::Mode::Create);
 
                                 if (!partFile.isValid()) {
                                     View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
@@ -942,7 +964,7 @@ namespace hex::plugin::builtin {
 
                                 constexpr static auto BufferSize = 0xFF'FFFF;
                                 for (u64 partOffset = 0; partOffset < splitSize; partOffset += BufferSize) {
-                                    partFile.write(file.readBytes(std::min<u64>(BufferSize, splitSize - partOffset)));
+                                    partFile.writeVector(file.readVector(std::min<u64>(BufferSize, splitSize - partOffset)));
                                     partFile.flush();
                                 }
 
@@ -972,7 +994,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginListBox("##files", { -FLT_MIN, 10 * ImGui::GetTextLineHeightWithSpacing() })) {
                     u32 index = 0;
                     for (auto &file : files) {
-                        if (ImGui::Selectable(hex::toUTF8String(file).c_str(), index == selectedIndex))
+                        if (ImGui::Selectable(wolv::util::toUTF8String(file).c_str(), index == selectedIndex))
                             selectedIndex = index;
                         index++;
                     }
@@ -1046,7 +1068,7 @@ namespace hex::plugin::builtin {
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
                         combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {
-                            fs::File output(outputPath, fs::File::Mode::Create);
+                            wolv::io::File output(outputPath, wolv::io::File::Mode::Create);
 
                             if (!output.isValid()) {
                                 View::showErrorPopup("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
@@ -1060,16 +1082,16 @@ namespace hex::plugin::builtin {
                                 task.update(fileIndex);
                                 fileIndex++;
 
-                                fs::File input(file, fs::File::Mode::Read);
+                                wolv::io::File input(file, wolv::io::File::Mode::Read);
                                 if (!input.isValid()) {
-                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, hex::toUTF8String(file)));
+                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
                                     return;
                                 }
 
                                 constexpr static auto BufferSize = 0xFF'FFFF;
-                                auto inputSize            = input.getSize();
+                                auto inputSize = input.getSize();
                                 for (u64 inputOffset = 0; inputOffset < inputSize; inputOffset += BufferSize) {
-                                    output.write(input.readBytes(std::min<u64>(BufferSize, inputSize - inputOffset)));
+                                    output.writeVector(input.readVector(std::min<u64>(BufferSize, inputSize - inputOffset)));
                                     output.flush();
                                 }
                             }
@@ -1372,6 +1394,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.color", drawColorPicker);
         ContentRegistry::Tools::add("hex.builtin.tools.calc", drawMathEvaluator);
         ContentRegistry::Tools::add("hex.builtin.tools.base_converter", drawBaseConverter);
+        ContentRegistry::Tools::add("hex.builtin.tools.byte_swapper", drawByteSwapper);
         ContentRegistry::Tools::add("hex.builtin.tools.permissions", drawPermissionsCalculator);
         ContentRegistry::Tools::add("hex.builtin.tools.file_uploader", drawFileUploader);
         ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain", drawWikiExplainer);

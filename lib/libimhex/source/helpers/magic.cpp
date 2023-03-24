@@ -3,6 +3,9 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
+#include <wolv/utils/guards.hpp>
+#include <wolv/utils/string.hpp>
+
 #include <hex/providers/provider.hpp>
 
 #include <filesystem>
@@ -25,9 +28,9 @@ namespace hex::magic {
 
         std::error_code error;
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
-            for (const auto &entry : std::fs::directory_iterator(dir, error)) {
+            for (const auto &entry : std::fs::recursive_directory_iterator(dir, error)) {
                 if (entry.is_regular_file() && ((sourceFiles && entry.path().extension().empty()) || (!sourceFiles && entry.path().extension() == ".mgc"))) {
-                    magicFiles += hex::toUTF8String(fs::toShortPath(entry.path())) + MAGIC_PATH_SEPARATOR;
+                    magicFiles += wolv::util::toUTF8String(wolv::io::fs::toShortPath(entry.path())) + MAGIC_PATH_SEPARATOR;
                 }
             }
         }

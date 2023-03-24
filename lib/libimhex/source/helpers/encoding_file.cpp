@@ -2,10 +2,13 @@
 
 #include <hex/helpers/utils.hpp>
 
+#include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
+
 namespace hex {
 
     EncodingFile::EncodingFile(Type type, const std::fs::path &path) {
-        auto file = fs::File(path, fs::File::Mode::Read);
+        auto file = wolv::io::File(path, wolv::io::File::Mode::Read);
         switch (type) {
             case Type::Thingy:
                 parseThingyFile(file);
@@ -23,7 +26,7 @@ namespace hex {
 
             if (size > buffer.size()) continue;
 
-            auto key = std::vector<u8>(buffer.begin(), buffer.begin() + size);
+            std::vector<u8> key(buffer.begin(), buffer.begin() + size);
             if (mapping.contains(key))
                 return { mapping.at(key), size };
         }
@@ -31,7 +34,21 @@ namespace hex {
         return { ".", 1 };
     }
 
-    void EncodingFile::parseThingyFile(fs::File &file) {
+    size_t EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
+        for (auto riter = this->m_mapping.crbegin(); riter != this->m_mapping.crend(); ++riter) {
+            const auto &[size, mapping] = *riter;
+
+            if (size > buffer.size()) continue;
+
+            std::vector<u8> key(buffer.begin(), buffer.begin() + size);
+            if (mapping.contains(key))
+                return size;
+        }
+
+        return 1;
+    }
+
+    void EncodingFile::parseThingyFile(wolv::io::File &file) {
         for (const auto &line : splitString(file.readString(), "\n")) {
 
             std::string from, to;
@@ -51,15 +68,17 @@ namespace hex {
             if (fromBytes.empty()) continue;
 
             if (to.length() > 1)
-                hex::trim(to);
+                to = wolv::util::trim(to);
             if (to.empty())
                 to = " ";
 
             if (!this->m_mapping.contains(fromBytes.size()))
                 this->m_mapping.insert({ fromBytes.size(), {} });
-            this->m_mapping[fromBytes.size()].insert({ fromBytes, to });
 
-            this->m_longestSequence = std::max(this->m_longestSequence, fromBytes.size());
+            auto keySize = fromBytes.size();
+            this->m_mapping[keySize].insert({ std::move(fromBytes), to });
+
+            this->m_longestSequence = std::max(this->m_longestSequence, keySize);
         }
     }
 

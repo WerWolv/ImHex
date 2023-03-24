@@ -212,7 +212,7 @@ namespace hex::plugin::builtin {
     }
 
     std::vector<ViewFind::Occurrence> ViewFind::searchStrings(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Strings &settings) {
-        using enum SearchSettings::Strings::Type;
+        using enum SearchSettings::StringType;
 
         std::vector<Occurrence> results;
 
@@ -236,16 +236,16 @@ namespace hex::plugin::builtin {
             return results;
         }
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
         const auto [decodeType, endian] = [&] -> std::pair<Occurrence::DecodeType, std::endian> {
             if (settings.type == ASCII)
                 return { Occurrence::DecodeType::ASCII, std::endian::native };
-            else if (settings.type == SearchSettings::Strings::Type::UTF16BE)
+            else if (settings.type == SearchSettings::StringType::UTF16BE)
                 return { Occurrence::DecodeType::UTF16, std::endian::big };
-            else if (settings.type == SearchSettings::Strings::Type::UTF16LE)
+            else if (settings.type == SearchSettings::StringType::UTF16LE)
                 return { Occurrence::DecodeType::UTF16, std::endian::little };
             else
                 return { Occurrence::DecodeType::Binary, std::endian::native };
@@ -253,15 +253,18 @@ namespace hex::plugin::builtin {
 
         size_t countedCharacters = 0;
         u64 startAddress = reader.begin().getAddress();
+        u64 endAddress = reader.end().getAddress();
+
+        u64 progress = 0;
         for (u8 byte : reader) {
             bool validChar =
-                (settings.m_lowerCaseLetters    && std::islower(byte))  ||
-                (settings.m_upperCaseLetters    && std::isupper(byte))  ||
-                (settings.m_numbers             && std::isdigit(byte))  ||
-                (settings.m_spaces              && std::isspace(byte))  ||
-                (settings.m_underscores         && byte == '_')             ||
-                (settings.m_symbols             && std::ispunct(byte))  ||
-                (settings.m_lineFeeds           && byte == '\n');
+                (settings.lowerCaseLetters    && std::islower(byte))  ||
+                (settings.upperCaseLetters    && std::isupper(byte))  ||
+                (settings.numbers             && std::isdigit(byte))  ||
+                (settings.spaces              && std::isspace(byte) && byte != '\r' && byte != '\n')  ||
+                (settings.underscores         && byte == '_')             ||
+                (settings.symbols             && std::ispunct(byte) && !std::isspace(byte))  ||
+                (settings.lineFeeds           && (byte == '\r' || byte == '\n'));
 
             if (settings.type == UTF16LE) {
                 // Check if second byte of UTF-16 encoded string is 0x00
@@ -273,9 +276,11 @@ namespace hex::plugin::builtin {
                     validChar =  byte == 0x00;
             }
 
+            task.update(progress);
+
             if (validChar)
                 countedCharacters++;
-            else {
+            if (!validChar || startAddress + countedCharacters == endAddress) {
                 if (countedCharacters >= size_t(settings.minLength)) {
                     if (!(settings.nullTermination && byte != 0x00)) {
                         results.push_back(Occurrence { Region { startAddress, countedCharacters }, decodeType, endian });
@@ -284,7 +289,8 @@ namespace hex::plugin::builtin {
 
                 startAddress += countedCharacters + 1;
                 countedCharacters = 0;
-                task.update(startAddress - searchRegion.getStartAddress());
+                progress = startAddress - searchRegion.getStartAddress();
+
             }
         }
 
@@ -294,7 +300,7 @@ namespace hex::plugin::builtin {
     std::vector<ViewFind::Occurrence> ViewFind::searchSequence(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Sequence &settings) {
         std::vector<Occurrence> results;
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
@@ -304,7 +310,10 @@ namespace hex::plugin::builtin {
             return { };
 
         auto occurrence = reader.begin();
+        u64 progress = 0;
         while (true) {
+            task.update(progress);
+
             occurrence = std::search(reader.begin(), reader.end(), std::boyer_moore_horspool_searcher(bytes.begin(), bytes.end()));
             if (occurrence == reader.end())
                 break;
@@ -312,7 +321,7 @@ namespace hex::plugin::builtin {
             auto address = occurrence.getAddress();
             reader.seek(address + 1);
             results.push_back(Occurrence{ Region { address, bytes.size() }, Occurrence::DecodeType::Binary, std::endian::native });
-            task.update(address - searchRegion.getStartAddress());
+            progress = address - searchRegion.getStartAddress();
         }
 
         return results;
@@ -320,15 +329,16 @@ namespace hex::plugin::builtin {
 
     std::vector<ViewFind::Occurrence> ViewFind::searchRegex(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::Regex &settings) {
         auto stringOccurrences = searchStrings(task, provider, searchRegion, SearchSettings::Strings {
-            .minLength          = 1,
-            .type               = SearchSettings::Strings::Type::ASCII,
-            .m_lowerCaseLetters = true,
-            .m_upperCaseLetters = true,
-            .m_numbers          = true,
-            .m_underscores      = true,
-            .m_symbols          = true,
-            .m_spaces           = true,
-            .m_lineFeeds        = true
+            .minLength          = settings.minLength,
+            .nullTermination    = settings.nullTermination,
+            .type               = settings.type,
+            .lowerCaseLetters   = true,
+            .upperCaseLetters   = true,
+            .numbers            = true,
+            .underscores        = true,
+            .symbols            = true,
+            .spaces             = true,
+            .lineFeeds          = true
         });
 
         std::vector<Occurrence> result;
@@ -336,6 +346,8 @@ namespace hex::plugin::builtin {
         for (const auto &occurrence : stringOccurrences) {
             std::string string(occurrence.region.getSize(), '\x00');
             provider->read(occurrence.region.getStartAddress(), string.data(), occurrence.region.getSize());
+
+            task.update();
 
             if (settings.fullMatch) {
                 if (std::regex_match(string, regex))
@@ -352,23 +364,25 @@ namespace hex::plugin::builtin {
     std::vector<ViewFind::Occurrence> ViewFind::searchBinaryPattern(Task &task, prv::Provider *provider, hex::Region searchRegion, const SearchSettings::BinaryPattern &settings) {
         std::vector<Occurrence> results;
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
         u32 matchedBytes = 0;
         const size_t patternSize = settings.pattern.size();
 
+        u64 progress = 0;
         for (auto it = reader.begin(); it != reader.end(); ++it) {
             auto byte = *it;
 
+            task.update(progress);
             if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
                 matchedBytes++;
                 if (matchedBytes == settings.pattern.size()) {
                     auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
                     results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
-                    task.update(occurrenceAddress);
+                    progress = occurrenceAddress;
                     it.setAddress(occurrenceAddress);
                     matchedBytes = 0;
                 }
@@ -385,7 +399,7 @@ namespace hex::plugin::builtin {
     std::vector<ViewFind::Occurrence> ViewFind::searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings) {
         std::vector<Occurrence> results;
 
-        auto reader = prv::BufferedReader(provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
@@ -406,6 +420,8 @@ namespace hex::plugin::builtin {
 
             if (validBytes == size) {
                 bytes &= hex::bitmask(size * 8);
+
+                task.update(address);
 
                 auto result = std::visit([&](auto tag) {
                     using T = std::remove_cvref_t<std::decay_t<decltype(tag)>>;
@@ -454,7 +470,6 @@ namespace hex::plugin::builtin {
             }
 
             address++;
-            task.update(address);
         }
 
         return results;
@@ -576,6 +591,14 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 if (ImGui::BeginTabBar("SearchMethods")) {
+                    const std::array<std::string, 5> StringTypes = {
+                            "hex.builtin.common.encoding.ascii"_lang,
+                            "hex.builtin.common.encoding.utf16le"_lang,
+                            "hex.builtin.common.encoding.utf16be"_lang,
+                            hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16le"_lang),
+                            hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16be"_lang)
+                    };
+
                     auto &mode = this->m_searchSettings.mode;
                     if (ImGui::BeginTabItem("hex.builtin.view.find.strings"_lang)) {
                         auto &settings = this->m_searchSettings.strings;
@@ -585,17 +608,9 @@ namespace hex::plugin::builtin {
                         if (settings.minLength < 1)
                             settings.minLength = 1;
 
-                        const std::array<std::string, 5> StringTypes = {
-                            "hex.builtin.common.encoding.ascii"_lang,
-                            "hex.builtin.common.encoding.utf16le"_lang,
-                            "hex.builtin.common.encoding.utf16be"_lang,
-                            hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16le"_lang),
-                            hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16be"_lang)
-                        };
-
                         if (ImGui::BeginCombo("hex.builtin.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
                             for (size_t i = 0; i < StringTypes.size(); i++) {
-                                auto type = static_cast<SearchSettings::Strings::Type>(i);
+                                auto type = static_cast<SearchSettings::StringType>(i);
 
                                 if (ImGui::Selectable(StringTypes[i].c_str(), type == settings.type))
                                     settings.type = type;
@@ -607,13 +622,13 @@ namespace hex::plugin::builtin {
                             ImGui::Checkbox("hex.builtin.view.find.strings.null_term"_lang, &settings.nullTermination);
 
                             ImGui::Header("hex.builtin.view.find.strings.chars"_lang);
-                            ImGui::Checkbox(hex::format("{} [a-z]", "hex.builtin.view.find.strings.lower_case"_lang.get()).c_str(), &settings.m_lowerCaseLetters);
-                            ImGui::Checkbox(hex::format("{} [A-Z]", "hex.builtin.view.find.strings.upper_case"_lang.get()).c_str(), &settings.m_upperCaseLetters);
-                            ImGui::Checkbox(hex::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.m_numbers);
-                            ImGui::Checkbox(hex::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.m_underscores);
-                            ImGui::Checkbox(hex::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.m_symbols);
-                            ImGui::Checkbox(hex::format("{} [ ]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.m_spaces);
-                            ImGui::Checkbox(hex::format("{} [\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.m_lineFeeds);
+                            ImGui::Checkbox(hex::format("{} [a-z]", "hex.builtin.view.find.strings.lower_case"_lang.get()).c_str(), &settings.lowerCaseLetters);
+                            ImGui::Checkbox(hex::format("{} [A-Z]", "hex.builtin.view.find.strings.upper_case"_lang.get()).c_str(), &settings.upperCaseLetters);
+                            ImGui::Checkbox(hex::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.numbers);
+                            ImGui::Checkbox(hex::format("{} [_]", "hex.builtin.view.find.strings.underscores"_lang.get()).c_str(), &settings.underscores);
+                            ImGui::Checkbox(hex::format("{} [!\"#$%...]", "hex.builtin.view.find.strings.symbols"_lang.get()).c_str(), &settings.symbols);
+                            ImGui::Checkbox(hex::format("{} [ \\f\\t\\v]", "hex.builtin.view.find.strings.spaces"_lang.get()).c_str(), &settings.spaces);
+                            ImGui::Checkbox(hex::format("{} [\\r\\n]", "hex.builtin.view.find.strings.line_feeds"_lang.get()).c_str(), &settings.lineFeeds);
                         }
 
                         this->m_settingsValid = true;
@@ -635,6 +650,24 @@ namespace hex::plugin::builtin {
                         auto &settings = this->m_searchSettings.regex;
 
                         mode = SearchSettings::Mode::Regex;
+
+                        ImGui::InputInt("hex.builtin.view.find.strings.min_length"_lang, &settings.minLength, 1, 1);
+                        if (settings.minLength < 1)
+                            settings.minLength = 1;
+
+                        if (ImGui::BeginCombo("hex.builtin.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
+                            for (size_t i = 0; i < StringTypes.size(); i++) {
+                                auto type = static_cast<SearchSettings::StringType>(i);
+
+                                if (ImGui::Selectable(StringTypes[i].c_str(), type == settings.type))
+                                    settings.type = type;
+                            }
+                            ImGui::EndCombo();
+                        }
+
+                        ImGui::Checkbox("hex.builtin.view.find.strings.null_term"_lang, &settings.nullTermination);
+
+                        ImGui::NewLine();
 
                         ImGui::InputTextIcon("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, settings.pattern);
 
@@ -766,12 +799,22 @@ namespace hex::plugin::builtin {
             auto &currOccurrences = this->m_sortedOccurrences[provider];
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            auto prevFilterLength = this->m_currFilter[provider].length();
             if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter[provider])) {
-                this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
+                if (prevFilterLength > this->m_currFilter[provider].length())
+                    this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
 
-                currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider](const auto &region) {
-                    return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
-                }), currOccurrences.end());
+                if (this->m_filterTask.isRunning())
+                    this->m_filterTask.interrupt();
+
+                if (!this->m_currFilter[provider].empty()) {
+                    this->m_filterTask = TaskManager::createTask("Filtering", 0, [this, provider, &currOccurrences](Task &task) {
+                        currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider, &task](const auto &region) {
+                            task.update();
+                            return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
+                        }), currOccurrences.end());
+                    });
+                }
             }
             ImGui::PopItemWidth();
 

@@ -3,8 +3,11 @@
 
 #include <hex/api/localization.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -168,7 +171,7 @@ namespace hex::plugin::builtin {
     }
 
     bool MotorolaSRECProvider::open() {
-        auto file = fs::File(this->m_sourceFilePath, fs::File::Mode::Read);
+        auto file = wolv::io::File(this->m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid())
             return false;
 
@@ -197,7 +200,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {
-        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, hex::toUTF8String(this->m_sourceFilePath.filename()));
+        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
     bool MotorolaSRECProvider::handleFilePicker() {
@@ -222,7 +225,7 @@ namespace hex::plugin::builtin {
 
         if (!picked)
             return false;
-        if (!fs::isRegularFile(this->m_sourceFilePath))
+        if (!wolv::io::fs::isRegularFile(this->m_sourceFilePath))
             return false;
 
         return true;

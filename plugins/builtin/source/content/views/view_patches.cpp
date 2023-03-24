@@ -17,14 +17,14 @@ namespace hex::plugin::builtin {
             .basePath = "patches.json",
             .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                auto json = nlohmann::json::parse(tar.read(basePath));
+                auto json = nlohmann::json::parse(tar.readString(basePath));
                 provider->getPatches() = json["patches"].get<std::map<u64, u8>>();
                 return true;
             },
             .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 nlohmann::json json;
                 json["patches"] = provider->getPatches();
-                tar.write(basePath, json.dump(4));
+                tar.writeString(basePath, json.dump(4));
 
                 return true;
             }

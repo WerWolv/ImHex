@@ -4,7 +4,6 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include "content/helpers/provider_extra_data.hpp"
@@ -18,14 +17,21 @@
 #include <filesystem>
 #include <thread>
 
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+#include <wolv/utils/guards.hpp>
+#include <wolv/literals.hpp>
+
 namespace hex::plugin::builtin {
+
+    using namespace wolv::literals;
 
     ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
         yr_initialize();
 
         ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
-                if (fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
+                if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
                     View::showInfoPopup("hex.builtin.view.yara.rule_added"_lang);
                     return true;
                 }
@@ -38,7 +44,7 @@ namespace hex::plugin::builtin {
             .basePath = "yara.json",
             .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
-                auto fileContent = tar.read(basePath);
+                auto fileContent = tar.readString(basePath);
                 if (fileContent.empty())
                     return true;
 
@@ -77,12 +83,12 @@ namespace hex::plugin::builtin {
                 auto &extraData = ProviderExtraData::get(provider).yara;
                 for (auto &[name, path] : extraData.rules) {
                     data["rules"].push_back({
-                        { "name", hex::toUTF8String(name) },
-                        { "path", hex::toUTF8String(path) }
+                        { "name", wolv::util::toUTF8String(name) },
+                        { "path", wolv::util::toUTF8String(path) }
                     });
                 }
 
-                tar.write(basePath, data.dump(4));
+                tar.writeString(basePath, data.dump(4));
 
                 return true;
             }
@@ -102,11 +108,12 @@ namespace hex::plugin::builtin {
             auto &extraData = ProviderExtraData::getCurrent().yara;
             auto &rules = extraData.rules;
             auto &matches = extraData.matches;
+            auto &sortedMatches = extraData.sortedMatches;
 
             if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                 for (u32 i = 0; i < rules.size(); i++) {
                     const bool selected = (this->m_selectedRule == i);
-                    if (ImGui::Selectable(hex::toUTF8String(rules[i].first).c_str(), selected)) {
+                    if (ImGui::Selectable(wolv::util::toUTF8String(rules[i].first).c_str(), selected)) {
                         this->m_selectedRule = i;
                     }
                 }
@@ -158,20 +165,46 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang);
-                ImGui::TableSetupColumn("hex.builtin.common.address"_lang);
-                ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
+                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("identifier"));
+                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
+                ImGui::TableSetupColumn("hex.builtin.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
+                ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
 
                 ImGui::TableHeadersRow();
 
+                auto sortSpecs = ImGui::TableGetSortSpecs();
+                if (!matches.empty() && (sortSpecs->SpecsDirty || sortedMatches.empty())) {
+                    sortedMatches.clear();
+                    std::transform(matches.begin(), matches.end(), std::back_inserter(sortedMatches), [](auto &match) {
+                        return &match;
+                    });
+
+                    std::sort(sortedMatches.begin(), sortedMatches.end(), [&sortSpecs](ProviderExtraData::Data::Yara::YaraMatch *left, ProviderExtraData::Data::Yara::YaraMatch *right) -> bool {
+                        if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
+                            return left->identifier < right->identifier;
+                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
+                            return left->variable < right->variable;
+                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("address"))
+                            return left->address < right->address;
+                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size"))
+                            return left->size < right->size;
+                        else
+                            return false;
+                    });
+
+                    if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Descending)
+                        std::reverse(sortedMatches.begin(), sortedMatches.end());
+
+                    sortSpecs->SpecsDirty = false;
+                }
+
                 if (!this->m_matcherTask.isRunning()) {
                     ImGuiListClipper clipper;
-                    clipper.Begin(matches.size());
+                    clipper.Begin(sortedMatches.size());
 
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = matches[i];
+                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *sortedMatches[i];
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::PushID(i);
@@ -261,12 +294,12 @@ namespace hex::plugin::builtin {
                     yr_compiler_destroy(compiler);
                 };
 
-                auto currFilePath = hex::toUTF8String(fs::toShortPath(filePath));
+                auto currFilePath = wolv::util::toUTF8String(wolv::io::fs::toShortPath(filePath));
 
                 yr_compiler_set_include_callback(
                     compiler,
                     [](const char *includeName, const char *, const char *, void *userData) -> const char * {
-                        fs::File file(std::fs::path(static_cast<const char *>(userData)).parent_path() / includeName, fs::File::Mode::Read);
+                        wolv::io::File file(std::fs::path(static_cast<const char *>(userData)).parent_path() / includeName, wolv::io::File::Mode::Read);
                         if (!file.isValid())
                             return nullptr;
 
@@ -285,15 +318,14 @@ namespace hex::plugin::builtin {
                     currFilePath.data()
                 );
 
-                fs::File file(rules[this->m_selectedRule].second, fs::File::Mode::Read);
+                wolv::io::File file(rules[this->m_selectedRule].second, wolv::io::File::Mode::Read);
                 if (!file.isValid()) return;
 
                 if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
                     std::string errorMessage(0xFFFF, '\x00');
                     yr_compiler_get_error_message(compiler, errorMessage.data(), errorMessage.size());
-                    hex::trim(errorMessage);
 
-                    TaskManager::doLater([this, errorMessage] {
+                    TaskManager::doLater([this, errorMessage = wolv::util::trim(errorMessage)] {
                         this->clearResult();
 
                         this->m_consoleMessages.push_back("Error: " + errorMessage);
@@ -355,7 +387,7 @@ namespace hex::plugin::builtin {
 
                     iterator->last_error      = ERROR_SUCCESS;
                     context.currBlock.base    = address;
-                    context.currBlock.size    = ImHexApi::Provider::get()->getActualSize() - address;
+                    context.currBlock.size    = std::min<size_t>(ImHexApi::Provider::get()->getActualSize() - address, 10_MiB);
                     context.currBlock.context = &context;
                     context.task->update(address);
 
@@ -413,11 +445,8 @@ namespace hex::plugin::builtin {
                 std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(matches));
 
                 auto uniques = std::set(matches.begin(), matches.end(), [](const auto &l, const auto &r) {
-                    return l.address < r.address &&
-                           l.size < r.size &&
-                           l.wholeDataMatch < r.wholeDataMatch &&
-                           l.identifier < r.identifier &&
-                           l.variable < r.variable;
+                    return std::tie(l.address, l.size, l.wholeDataMatch, l.identifier, l.variable) <
+                           std::tie(r.address, r.size, r.wholeDataMatch, r.identifier, r.variable);
                 });
                 matches.clear();
                 std::move(uniques.begin(), uniques.end(), std::back_inserter(matches));

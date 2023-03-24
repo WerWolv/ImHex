@@ -1,7 +1,8 @@
 #pragma once
 
-#include <hex/helpers/socket.hpp>
 #include <hex/providers/provider.hpp>
+
+#include <wolv/utils/socket.hpp>
 
 #include <array>
 #include <mutex>
@@ -29,7 +30,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
-        void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override;
@@ -40,7 +40,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isConnected() const;
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
-        void drawLoadInterface() override;
+        bool drawLoadInterface() override;
 
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
@@ -53,14 +53,14 @@ namespace hex::plugin::builtin {
         std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
 
     protected:
-        hex::Socket m_socket;
+        wolv::util::Socket m_socket;
 
         std::string m_ipAddress;
         int m_port = 0;
 
         u64 m_size = 0;
 
-        constexpr static size_t CacheLineSize = 0x1000;
+        constexpr static size_t CacheLineSize = 0x10;
 
         struct CacheLine {
             u64 address;
@@ -69,6 +69,7 @@ namespace hex::plugin::builtin {
         };
 
         std::list<CacheLine> m_cache;
+        std::atomic<bool> m_resetCache = false;
 
         std::thread m_cacheUpdateThread;
         std::mutex m_cacheLock;

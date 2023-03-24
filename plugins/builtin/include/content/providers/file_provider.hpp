@@ -1,10 +1,11 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/file.hpp>
 
+#include <wolv/io/file.hpp>
+
+#include <mutex>
 #include <string_view>
-
 
 namespace hex::plugin::builtin {
 
@@ -54,19 +55,20 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
+    private:
+        wolv::io::File& getFile();
+
     protected:
         std::fs::path m_path;
-        fs::File m_file;
-        size_t m_fileSize = 0;
+
+        wolv::io::File m_sizeFile;
+        std::map<std::thread::id, wolv::io::File> m_files;
 
         std::optional<struct stat> m_fileStats;
 
-        std::mutex m_mutex;
         bool m_readable = false, m_writable = false;
-        bool m_openReadOnly = true;
 
-        u64 m_bufferStartAddress;
-        std::vector<u8> m_buffer;
+        std::mutex m_fileAccessMutex, m_writeMutex;
     };
 
 }

@@ -2,16 +2,14 @@
 
 #include <hex/api/theme_manager.hpp>
 
-#include <hex/helpers/file.hpp>
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
     ViewThemeManager::ViewThemeManager() : View("hex.builtin.view.theme_manager.name") {
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 1200, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.theme_manager.name"_lang, "")) {
-                this->m_viewOpen = true;
-                this->getWindowOpenState() = true;
-            }
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.theme_manager.name" }, 3000, Shortcut::None, [&, this] {
+            this->m_viewOpen = true;
+            this->getWindowOpenState() = true;
         });
     }
 
@@ -20,7 +18,7 @@ namespace hex::plugin::builtin {
             ImGui::Header("hex.builtin.view.theme_manager.colors"_lang, true);
 
             ImGui::PushID(1);
-            const auto &themeHandlers = api::ThemeManager::getThemeHandlers();
+            const auto &themeHandlers = ThemeManager::getThemeHandlers();
             for (auto &[name, handler] : themeHandlers) {
                 if (ImGui::CollapsingHeader(name.c_str())) {
                     for (auto &[colorName, colorId] : handler.colorMap) {
@@ -39,10 +37,10 @@ namespace hex::plugin::builtin {
             ImGui::Header("hex.builtin.view.theme_manager.styles"_lang);
 
             ImGui::PushID(2);
-            for (auto &[name, handler] : api::ThemeManager::getStyleHandlers()) {
+            for (auto &[name, handler] : ThemeManager::getStyleHandlers()) {
                 if (ImGui::CollapsingHeader(name.c_str())) {
                     for (auto &[styleName, style] : handler.styleMap) {
-                        auto &[value, min, max] = style;
+                        auto &[value, min, max, needsScaling] = style;
 
                         if (auto floatValue = std::get_if<float*>(&value); floatValue != nullptr)
                             ImGui::SliderFloat(styleName.c_str(), *floatValue, min, max, "%.1f");
@@ -57,10 +55,10 @@ namespace hex::plugin::builtin {
             ImGui::InputTextIcon("hex.builtin.view.theme_manager.export.name"_lang, ICON_VS_SYMBOL_KEY, this->m_themeName);
             if (ImGui::Button("hex.builtin.view.theme_manager.save_theme"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 fs::openFileBrowser(fs::DialogMode::Save, { { "ImHex Theme", "json" } }, [this](const std::fs::path &path){
-                    auto json = api::ThemeManager::exportCurrentTheme(this->m_themeName);
+                    auto json = ThemeManager::exportCurrentTheme(this->m_themeName);
 
-                    fs::File outputFile(path, fs::File::Mode::Create);
-                    outputFile.write(json.dump(4));
+                    wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
+                    outputFile.writeString(json.dump(4));
                 });
             }
 

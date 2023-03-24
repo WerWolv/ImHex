@@ -1,3 +1,5 @@
+#include <hex/helpers/logger.hpp>
+
 #include "content/providers/disk_provider.hpp"
 
 #include <hex/api/localization.hpp>
@@ -5,6 +7,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
+
+#include <wolv/utils/string.hpp>
 
 #include <bitset>
 #include <filesystem>
@@ -121,11 +125,15 @@ namespace hex::plugin::builtin {
 
             this->m_diskHandle = ::open(path.c_str(), O_RDWR);
             if (this->m_diskHandle == -1) {
+                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_rw"_lang, path, ::strerror(errno)));
+                log::warn(this->getErrorMessage());
                 this->m_diskHandle = ::open(path.c_str(), O_RDONLY);
                 this->m_writable   = false;
             }
 
             if (this->m_diskHandle == -1) {
+                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_ro"_lang, path, ::strerror(errno)));
+                log::warn(this->getErrorMessage());
                 this->m_readable = false;
                 return false;
             }
@@ -259,12 +267,12 @@ namespace hex::plugin::builtin {
     }
 
     std::string DiskProvider::getName() const {
-        return hex::toUTF8String(this->m_path);
+        return wolv::util::toUTF8String(this->m_path);
     }
 
     std::vector<std::pair<std::string, std::string>> DiskProvider::getDataDescription() const {
         return {
-            { "hex.builtin.provider.disk.selected_disk"_lang, hex::toUTF8String(this->m_path)       },
+            { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(this->m_path)       },
             { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(this->m_diskSize)    },
             { "hex.builtin.provider.disk.sector_size"_lang,   hex::toByteString(this->m_sectorSize)  }
         };
@@ -310,7 +318,7 @@ namespace hex::plugin::builtin {
         #endif
     }
 
-    void DiskProvider::drawLoadInterface() {
+    bool DiskProvider::drawLoadInterface() {
         #if defined(OS_WINDOWS)
 
             if (this->m_availableDrives.empty())
@@ -338,10 +346,12 @@ namespace hex::plugin::builtin {
                 this->m_path = this->m_pathBuffer;
 
         #endif
+
+        return !this->m_path.empty();
     }
 
     nlohmann::json DiskProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = hex::toUTF8String(this->m_path);
+        settings["path"] = wolv::util::toUTF8String(this->m_path);
 
         return Provider::storeSettings(settings);
     }
@@ -365,7 +375,7 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> DiskProvider::queryInformation(const std::string &category, const std::string &argument) {
         if (category == "file_path")
-            return hex::toUTF8String(this->m_path);
+            return wolv::util::toUTF8String(this->m_path);
         else if (category == "sector_size")
             return this->m_sectorSize;
         else

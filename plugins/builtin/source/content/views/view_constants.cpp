@@ -4,7 +4,9 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <fstream>
+#include <wolv/utils/string.hpp>
+#include <wolv/io/file.hpp>
+
 #include <filesystem>
 #include <nlohmann/json.hpp>
 
@@ -22,15 +24,15 @@ namespace hex::plugin::builtin {
         this->m_filterIndices.clear();
 
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Constants)) {
-            if (!fs::exists(path)) continue;
+            if (!wolv::io::fs::exists(path)) continue;
 
             std::error_code error;
             for (auto &file : std::fs::directory_iterator(path, error)) {
                 if (!file.is_regular_file()) continue;
 
                 try {
-                    nlohmann::json content;
-                    std::ifstream(file.path()) >> content;
+                    auto fileData = wolv::io::File(file.path(), wolv::io::File::Mode::Read).readString();
+                    auto content = nlohmann::json::parse(fileData);
 
                     for (auto value : content["values"]) {
                         Constant constant;
@@ -54,7 +56,7 @@ namespace hex::plugin::builtin {
                         this->m_constants.push_back(constant);
                     }
                 } catch (...) {
-                    log::error("Failed to parse constants file {}", hex::toUTF8String(file.path()));
+                    log::error("Failed to parse constants file {}", wolv::util::toUTF8String(file.path()));
                     continue;
                 }
             }

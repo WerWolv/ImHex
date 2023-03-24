@@ -6,6 +6,9 @@
 
 #include <hex/providers/provider.hpp>
 
+#include <wolv/utils/guards.hpp>
+#include <wolv/io/fs.hpp>
+
 namespace hex {
 
     constexpr static auto MetadataHeaderMagic = "HEX";
@@ -24,7 +27,7 @@ namespace hex {
             ProjectFile::s_currProjectPath = originalPath;
         };
 
-        if (!fs::exists(filePath) || !fs::isRegularFile(filePath))
+        if (!wolv::io::fs::exists(filePath) || !wolv::io::fs::isRegularFile(filePath))
             return false;
         if (filePath.extension() != ".hexproj")
             return false;
@@ -37,7 +40,7 @@ namespace hex {
             return false;
 
         {
-            const auto metadataContent = tar.read(MetadataPath);
+            const auto metadataContent = tar.readVector(MetadataPath);
 
             if (!std::string(metadataContent.begin(), metadataContent.end()).starts_with(MetadataHeaderMagic))
                 return false;
@@ -128,7 +131,7 @@ namespace hex {
 
         {
             const auto metadataContent = hex::format("{}\n{}", MetadataHeaderMagic, IMHEX_VERSION);
-            tar.write(MetadataPath, metadataContent);
+            tar.writeString(MetadataPath, metadataContent);
         }
 
         ImHexApi::Provider::resetDirty();

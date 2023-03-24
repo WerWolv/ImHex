@@ -84,7 +84,7 @@ namespace hex::prv {
 
         [[nodiscard]] virtual bool hasLoadInterface() const;
         [[nodiscard]] virtual bool hasInterface() const;
-        virtual void drawLoadInterface();
+        virtual bool drawLoadInterface();
         virtual void drawInterface();
 
         [[nodiscard]] u32 getID() const;
@@ -103,6 +103,9 @@ namespace hex::prv {
         void skipLoadInterface() { this->m_skipLoadInterface = true; }
         [[nodiscard]] bool shouldSkipLoadInterface() const { return this->m_skipLoadInterface; }
 
+        void setErrorMessage(const std::string &errorMessage) { this->m_errorMessage = errorMessage; }
+        [[nodiscard]] const std::string& getErrorMessage() const { return this->m_errorMessage; }
+
     protected:
         u32 m_currPage    = 0;
         u64 m_baseAddress = 0;
@@ -115,6 +118,8 @@ namespace hex::prv {
 
         bool m_dirty = false;
         bool m_skipLoadInterface = false;
+
+        std::string m_errorMessage;
 
     private:
         static u32 s_idCounter;

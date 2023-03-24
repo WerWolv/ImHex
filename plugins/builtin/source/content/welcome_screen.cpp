@@ -7,7 +7,6 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <hex/api/project_file_manager.hpp>
 
@@ -18,6 +17,10 @@
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
 
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+#include <wolv/utils/guards.hpp>
+
 #include <fonts/codicons_font.h>
 
 #include <string>
@@ -26,6 +29,8 @@
 #include <random>
 
 namespace hex::plugin::builtin {
+
+    constexpr static auto MaxRecentProviders = 5;
 
     static ImGui::Texture s_bannerTexture, s_backdropTexture;
 
@@ -82,10 +87,10 @@ namespace hex::plugin::builtin {
             });
 
             std::unordered_set<RecentProvider, RecentProvider::HashFunction> uniqueProviders;
-            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < 5; i++) {
+            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < MaxRecentProviders; i++) {
                 auto &path = recentFilePaths[i];
                 try {
-                    auto jsonData = nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString());
+                    auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
                     uniqueProviders.insert(RecentProvider {
                         .displayName    = jsonData["displayName"],
                         .type           = jsonData["type"],
@@ -93,6 +98,20 @@ namespace hex::plugin::builtin {
                         .data           = jsonData
                     });
                 } catch (...) { }
+            }
+
+            // Delete all recent provider files that are not in the list
+            for (const auto &path : recentFilePaths) {
+                bool found = false;
+                for (const auto &provider : uniqueProviders) {
+                    if (path == provider.filePath) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    wolv::io::fs::remove(path);
             }
 
             std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentProviders));
@@ -117,10 +136,10 @@ namespace hex::plugin::builtin {
     }
 
     static void loadDefaultLayout() {
-        auto layouts = ContentRegistry::Interface::getLayouts();
+        auto layouts = ContentRegistry::Interface::impl::getLayouts();
         if (!layouts.empty()) {
 
-            for (auto &[viewName, view] : ContentRegistry::Views::getEntries()) {
+            for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
                 view->getWindowOpenState() = false;
             }
 
@@ -134,7 +153,7 @@ namespace hex::plugin::builtin {
     }
 
     static bool isAnyViewOpen() {
-        const auto &views = ContentRegistry::Views::getEntries();
+        const auto &views = ContentRegistry::Views::impl::getEntries();
         return std::any_of(views.begin(), views.end(),
             [](const std::pair<std::string, View*> &entry) {
                 return entry.second->getWindowOpenState();
@@ -179,14 +198,14 @@ namespace hex::plugin::builtin {
                 for (const auto &provider : ImHexApi::Provider::getProviders())
                     provider->markDirty();
 
-                fs::remove(s_safetyBackupPath);
+                wolv::io::fs::remove(s_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
             if (ImGui::Button("hex.builtin.welcome.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
-                fs::remove(s_safetyBackupPath);
+                wolv::io::fs::remove(s_safetyBackupPath);
 
                 ImGui::CloseCurrentPopup();
             }
@@ -233,7 +252,7 @@ namespace hex::plugin::builtin {
             ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetCursorPos());
             if (ImGui::BeginPopup("hex.builtin.welcome.start.popup.open_other"_lang)) {
 
-                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::getEntries()) {
+                for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
                     if (ImGui::Hyperlink(LangEntry(unlocalizedProviderName))) {
                         ImHexApi::Provider::createProvider(unlocalizedProviderName);
                         ImGui::CloseCurrentPopup();
@@ -245,7 +264,7 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
-            ImGui::UnderlinedText("hex.builtin.welcome.start.recent"_lang);
+            ImGui::UnderlinedText(s_recentProviders.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 if (!s_recentProvidersUpdating) {
@@ -346,7 +365,7 @@ namespace hex::plugin::builtin {
                     hex::openWebpage("hex.builtin.welcome.learn.plugins.link"_lang);
             }
 
-            auto extraWelcomeScreenEntries = ContentRegistry::Interface::getWelcomeScreenEntries();
+            auto extraWelcomeScreenEntries = ContentRegistry::Interface::impl::getWelcomeScreenEntries();
             if (!extraWelcomeScreenEntries.empty()) {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                 ImGui::TableNextColumn();
@@ -423,36 +442,28 @@ namespace hex::plugin::builtin {
 
         (void)EventManager::subscribe<EventSettingsChanged>([]() {
             {
-                auto theme = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.color");
+                auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
 
-                if (theme.is_string()) {
-                    if (theme != api::ThemeManager::NativeTheme) {
-                        static std::string lastTheme;
+                if (theme != ThemeManager::NativeTheme) {
+                    static std::string lastTheme;
 
-                        if (const auto thisTheme = theme.get<std::string>(); thisTheme != lastTheme) {
-                            EventManager::post<RequestChangeTheme>(thisTheme);
-                            lastTheme = thisTheme;
-                        }
+                    if (theme != lastTheme) {
+                        EventManager::post<RequestChangeTheme>(theme);
+                        lastTheme = theme;
                     }
                 }
             }
 
             {
-                auto language = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.language");
+                auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US");
 
-                if (language.is_string()) {
-                    LangEntry::loadLanguage(static_cast<std::string>(language));
-                } else {
-                    // If no language is specified, fall back to English.
-                    LangEntry::loadLanguage("en-US");
-                }
+                LangEntry::loadLanguage(language);
             }
 
             {
-                auto targetFps = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps");
+                auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60);
 
-                if (targetFps.is_number())
-                    ImHexApi::System::setTargetFPS(targetFps);
+                ImHexApi::System::setTargetFPS(targetFps);
             }
         });
 
@@ -463,9 +474,9 @@ namespace hex::plugin::builtin {
                 return ImGui::Texture(reinterpret_cast<const ImU8*>(textureData.data()), textureData.size());
             };
 
-            api::ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTexture(hex::format("banner{}.png", api::ThemeManager::getThemeImagePostfix()));
-            s_backdropTexture = changeTexture(hex::format("backdrop{}.png", api::ThemeManager::getThemeImagePostfix()));
+            ThemeManager::changeTheme(theme);
+            s_bannerTexture = changeTexture(hex::format("banner{}.png", ThemeManager::getThemeImagePostfix()));
+            s_backdropTexture = changeTexture(hex::format("backdrop{}.png", ThemeManager::getThemeImagePostfix()));
 
             if (!s_bannerTexture.isValid()) {
                 log::error("Failed to load banner texture!");
@@ -473,10 +484,10 @@ namespace hex::plugin::builtin {
         });
 
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
-            {
+            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                     auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
-                    fs::File recentFile(recentPath / fileName, fs::File::Mode::Create);
+                    wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())
                         continue;
 
@@ -485,7 +496,7 @@ namespace hex::plugin::builtin {
                         ProjectFile::clearPath();
 
                         if (auto settings = provider->storeSettings(); !settings.is_null())
-                            recentFile.write(settings.dump(4));
+                            recentFile.writeString(settings.dump(4));
 
                         ProjectFile::setPath(path);
                     }
@@ -524,7 +535,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 1075, [&] {
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
             if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProvidersUpdating && !s_recentProviders.empty())) {
                 // Copy to avoid changing list while iteration
                 auto recentProviders = s_recentProviders;
@@ -550,7 +561,7 @@ namespace hex::plugin::builtin {
 
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-            if (auto filePath = std::fs::path(path) / CrashBackupFileName; fs::exists(filePath)) {
+            if (auto filePath = std::fs::path(path) / CrashBackupFileName; wolv::io::fs::exists(filePath)) {
                 s_safetyBackupPath = filePath;
                 TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.safety_backup.title"_lang); });
             }

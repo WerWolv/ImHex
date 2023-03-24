@@ -76,7 +76,7 @@ namespace hex {
     void LangEntry::loadLanguage(const std::string &language) {
         LangEntry::s_currStrings.clear();
 
-        auto &definitions = ContentRegistry::Language::getLanguageDefinitions();
+        auto &definitions = ContentRegistry::Language::impl::getLanguageDefinitions();
 
         if (!definitions.contains(language))
             return;
@@ -92,7 +92,7 @@ namespace hex {
     }
 
     const std::map<std::string, std::string> &LangEntry::getSupportedLanguages() {
-        return ContentRegistry::Language::getLanguages();
+        return ContentRegistry::Language::impl::getLanguages();
     }
 
     void LangEntry::setFallbackLanguage(const std::string &language) {

@@ -21,6 +21,9 @@
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <wolv/utils/core.hpp>
+#include <wolv/utils/guards.hpp>
+
 namespace hex::plugin::builtin {
 
     class NodeNullptr : public dp::Node {
@@ -167,10 +170,10 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            this->setBufferOnOutput(0, hex::toBytes<u8>(u8(this->m_color.Value.x * 0xFF)));
-            this->setBufferOnOutput(1, hex::toBytes<u8>(u8(this->m_color.Value.y * 0xFF)));
-            this->setBufferOnOutput(2, hex::toBytes<u8>(u8(this->m_color.Value.z * 0xFF)));
-            this->setBufferOnOutput(3, hex::toBytes<u8>(u8(this->m_color.Value.w * 0xFF)));
+            this->setBufferOnOutput(0, wolv::util::toBytes<u8>(u8(this->m_color.Value.x * 0xFF)));
+            this->setBufferOnOutput(1, wolv::util::toBytes<u8>(u8(this->m_color.Value.y * 0xFF)));
+            this->setBufferOnOutput(2, wolv::util::toBytes<u8>(u8(this->m_color.Value.z * 0xFF)));
+            this->setBufferOnOutput(3, wolv::util::toBytes<u8>(u8(this->m_color.Value.w * 0xFF)));
         }
 
         void store(nlohmann::json &j) const override {
@@ -1169,7 +1172,7 @@ namespace hex::plugin::builtin {
             const auto &outVars = pl.runtime->getOutVariables();
 
             if (outVars.contains(this->m_name)) {
-                std::visit(overloaded {
+                std::visit(wolv::util::overloaded {
                     [](const std::string &) {},
                     [](pl::ptrn::Pattern *) {},
                     [this](auto &&value) {
@@ -1231,7 +1234,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            std::visit(overloaded {
+            std::visit(wolv::util::overloaded {
                 [this](i128 value) { this->setIntegerOnOutput(0, value); },
                 [this](long double value) { this->setFloatOnOutput(0, value); },
                 [this](const std::vector<u8> &value) { this->setBufferOnOutput(0, value); }

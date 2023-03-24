@@ -29,21 +29,28 @@ namespace hex::plugin::builtin {
 
             auto provider = hex::ImHexApi::Provider::get();
             if (provider != nullptr) {
-                provider->drawLoadInterface();
+                bool settingsValid = provider->drawLoadInterface();
 
                 ImGui::NewLine();
                 ImGui::Separator();
 
+                ImGui::BeginDisabled(!settingsValid);
                 if (ImGui::Button("hex.builtin.common.open"_lang)) {
                     if (provider->open()) {
                         EventManager::post<EventProviderOpened>(provider);
                         ImGui::CloseCurrentPopup();
                     }
                     else {
-                        View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
+                        auto errorMessage = provider->getErrorMessage();
+                        if (errorMessage.empty()) {
+                            View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
+                        } else {
+                            View::showErrorPopup(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                        }
                         TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                     }
                 }
+                ImGui::EndDisabled();
 
                 ImGui::SameLine();
 

@@ -3,6 +3,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <wolv/utils/guards.hpp>
+
 namespace hex::gl {
 
     Shader::Shader(std::string_view vertexSource, std::string_view fragmentSource) {

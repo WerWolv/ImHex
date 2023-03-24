@@ -23,10 +23,8 @@ set(LIBIMHEX_SOURCES
     source/helpers/fs.cpp
     source/helpers/magic.cpp
     source/helpers/crypto.cpp
-    source/helpers/net.cpp
+    source/helpers/http_requests.cpp
     source/helpers/opengl.cpp
-    source/helpers/file.cpp
-    source/helpers/socket.cpp
     source/helpers/patches.cpp
     source/helpers/encoding_file.cpp
     source/helpers/logger.cpp
@@ -49,9 +47,7 @@ if (APPLE)
         endif ()
     endif ()
 
-    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES}
-            source/helpers/fs_macos.m
-            source/helpers/utils_macos.m)
+    set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
 endif ()
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
@@ -72,4 +68,4 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} libpl intervaltree ${MINIAUDIO_LIBRARIES})
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} libpl intervaltree ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash)

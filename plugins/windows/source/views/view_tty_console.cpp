@@ -4,6 +4,8 @@
 
 #include <hex/helpers/utils.hpp>
 
+#include <wolv/utils/guards.hpp>
+
 namespace hex::plugin::windows {
 
     ViewTTYConsole::ViewTTYConsole() : View("hex.windows.view.tty_console.name") {

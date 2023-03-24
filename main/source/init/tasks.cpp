@@ -8,10 +8,9 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/net.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
@@ -23,6 +22,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include <wolv/io/fs.hpp>
+#include <wolv/io/file.hpp>
+
 namespace hex::init {
 
     using namespace std::literals::string_literals;
@@ -32,15 +34,23 @@ namespace hex::init {
 
         // Check if we should check for updates
         if (showCheckForUpdates == 1){
-            hex::Net net;
+            HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
+            request.setTimeout(2000);
 
             // Query the GitHub API for the latest release version
-            auto releases = net.getJson(GitHubApiURL + "/releases/latest"s, 2000).get();
-            if (releases.code != 200)
+            auto response = request.execute().get();
+            if (response.getStatusCode() != 200)
                 return false;
 
+            nlohmann::json releases;
+            try {
+                releases = nlohmann::json::parse(response.getData());
+            } catch (std::exception &e) {
+                return false;
+            }
+
             // Check if the response is valid
-            if (!releases.body.contains("tag_name") || !releases.body["tag_name"].is_string())
+            if (!releases.contains("tag_name") || !releases["tag_name"].is_string())
                 return false;
 
             // Convert the current version string to a format that can be compared to the latest release
@@ -49,7 +59,7 @@ namespace hex::init {
             auto currVersion   = "v" + versionString.substr(0, versionLength);
 
             // Get the latest release version string
-            auto latestVersion = releases.body["tag_name"].get<std::string_view>();
+            auto latestVersion = releases["tag_name"].get<std::string_view>();
 
             // Check if the latest release is different from the current version
             if (latestVersion != currVersion)
@@ -63,13 +73,13 @@ namespace hex::init {
         hex::log::debug("Using romfs: '{}'", romfs::name());
 
         // Load the SSL certificate
-        constexpr static auto CaCertPath = "cacert.pem";
+        constexpr static auto CaCertFileName = "cacert.pem";
 
         // Look for a custom certificate in the config folder
         std::fs::path caCertPath;
         for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             for (const auto &file : std::fs::directory_iterator(folder)) {
-                if (file.path().filename() == CaCertPath) {
+                if (file.path().filename() == CaCertFileName) {
                     caCertPath = file.path();
                     break;
                 }
@@ -77,10 +87,13 @@ namespace hex::init {
         }
 
         // If a custom certificate was found, use it, otherwise use the one from the romfs
+        std::string caCertData;
         if (!caCertPath.empty())
-            Net::setCACert(fs::File(caCertPath, fs::File::Mode::Read).readString());
+            caCertData = wolv::io::File(caCertPath, wolv::io::File::Mode::Read).readString();
         else
-            Net::setCACert(std::string(romfs::get(CaCertPath).string()));
+            caCertData = std::string(romfs::get(CaCertFileName).string());
+
+        HttpRequest::setCACert(caCertData);
 
         return true;
     }
@@ -94,9 +107,9 @@ namespace hex::init {
         for (u32 path = 0; path < u32(fs::ImHexPath::END); path++) {
             for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(path), true)) {
                 try {
-                    fs::createDirectories(folder);
+                    wolv::io::fs::createDirectories(folder);
                 } catch (...) {
-                    log::error("Failed to create folder {}!", hex::toUTF8String(folder));
+                    log::error("Failed to create folder {}!", wolv::util::toUTF8String(folder));
                     result = false;
                 }
             }
@@ -116,26 +129,36 @@ namespace hex::init {
         // Setup basic font configuration
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
-        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
+        cfg.OversampleH = cfg.OversampleV = 2, cfg.PixelSnapH = true;
         cfg.SizePixels = fontSize;
+
+        fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
 
         // Configure font glyph ranges that should be loaded from the default font and unifont
         ImVector<ImWchar> ranges;
         {
             ImFontGlyphRangesBuilder glyphRangesBuilder;
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesJapanese());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesChineseFull());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesCyrillic());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesKorean());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesThai());
-            glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
 
             {
-                constexpr static ImWchar controlCodeRange[]   = { 0x0000, 0x001F, 0 };
+                constexpr static ImWchar controlCodeRange[]   = { 0x0001, 0x001F, 0 };
                 constexpr static ImWchar extendedAsciiRange[] = { 0x007F, 0x00FF, 0 };
+
                 glyphRangesBuilder.AddRanges(controlCodeRange);
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
                 glyphRangesBuilder.AddRanges(extendedAsciiRange);
+            }
+
+            if (loadUnicode) {
+                constexpr static ImWchar fullRange[]   = { 0x0100, 0xFFEF, 0 };
+
+                glyphRangesBuilder.AddRanges(fullRange);
+            } else {
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesJapanese());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesChineseFull());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesCyrillic());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesKorean());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesThai());
+                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
             }
 
             glyphRangesBuilder.BuildRanges(&ranges);
@@ -157,7 +180,7 @@ namespace hex::init {
             fonts->Clear();
             fonts->AddFontDefault(&cfg);
         } else {
-            fonts->AddFontFromFileTTF(hex::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
+            fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
         }
 
         // Merge all fonts into one big font atlas
@@ -213,7 +236,7 @@ namespace hex::init {
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
-        ContentRegistry::Provider::getEntries().clear();
+        ContentRegistry::Provider::impl::getEntries().clear();
 
         ImHexApi::System::getInitArguments().clear();
         ImHexApi::HexEditor::impl::getBackgroundHighlights().clear();
@@ -223,50 +246,51 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getTooltips().clear();
         ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
 
-        ContentRegistry::Settings::getEntries().clear();
-        ContentRegistry::Settings::getSettingsData().clear();
+        ContentRegistry::Settings::impl::getEntries().clear();
+        ContentRegistry::Settings::impl::getSettingsData().clear();
 
-        ContentRegistry::CommandPaletteCommands::getEntries().clear();
+        ContentRegistry::CommandPaletteCommands::impl::getEntries().clear();
+        ContentRegistry::CommandPaletteCommands::impl::getHandlers().clear();
 
-        ContentRegistry::PatternLanguage::getFunctions().clear();
-        ContentRegistry::PatternLanguage::getPragmas().clear();
+        ContentRegistry::PatternLanguage::impl::getFunctions().clear();
+        ContentRegistry::PatternLanguage::impl::getPragmas().clear();
         ContentRegistry::PatternLanguage::impl::getVisualizers().clear();
 
         {
-            auto &views = ContentRegistry::Views::getEntries();
+            auto &views = ContentRegistry::Views::impl::getEntries();
             for (auto &[name, view] : views)
                 delete view;
             views.clear();
         }
 
 
-        ContentRegistry::Tools::getEntries().clear();
-        ContentRegistry::DataInspector::getEntries().clear();
+        ContentRegistry::Tools::impl::getEntries().clear();
+        ContentRegistry::DataInspector::impl::getEntries().clear();
 
-        ContentRegistry::Language::getLanguages().clear();
-        ContentRegistry::Language::getLanguageDefinitions().clear();
+        ContentRegistry::Language::impl::getLanguages().clear();
+        ContentRegistry::Language::impl::getLanguageDefinitions().clear();
         LangEntry::resetLanguageStrings();
 
-        ContentRegistry::Interface::getWelcomeScreenEntries().clear();
-        ContentRegistry::Interface::getFooterItems().clear();
-        ContentRegistry::Interface::getToolbarItems().clear();
-        ContentRegistry::Interface::getMainMenuItems().clear();
-        ContentRegistry::Interface::getMenuItems().clear();
-        ContentRegistry::Interface::getSidebarItems().clear();
-        ContentRegistry::Interface::getTitleBarButtons().clear();
-        ContentRegistry::Interface::getLayouts().clear();
+        ContentRegistry::Interface::impl::getWelcomeScreenEntries().clear();
+        ContentRegistry::Interface::impl::getFooterItems().clear();
+        ContentRegistry::Interface::impl::getToolbarItems().clear();
+        ContentRegistry::Interface::impl::getMainMenuItems().clear();
+        ContentRegistry::Interface::impl::getMenuItems().clear();
+        ContentRegistry::Interface::impl::getSidebarItems().clear();
+        ContentRegistry::Interface::impl::getTitleBarButtons().clear();
+        ContentRegistry::Interface::impl::getLayouts().clear();
 
         ShortcutManager::clearShortcuts();
 
         TaskManager::getRunningTasks().clear();
 
-        ContentRegistry::DataProcessorNode::getEntries().clear();
+        ContentRegistry::DataProcessorNode::impl::getEntries().clear();
 
-        ContentRegistry::DataFormatter::getEntries().clear();
-        ContentRegistry::FileHandler::getEntries().clear();
+        ContentRegistry::DataFormatter::impl::getEntries().clear();
+        ContentRegistry::FileHandler::impl::getEntries().clear();
         ContentRegistry::Hashes::impl::getHashes().clear();
 
-        api::ThemeManager::reset();
+        ThemeManager::reset();
 
         {
             auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
@@ -300,7 +324,7 @@ namespace hex::init {
             return false;
         }
 
-        const auto shouldLoadPlugin = [executablePath = hex::fs::getExecutablePath()](const Plugin &plugin) {
+        const auto shouldLoadPlugin = [executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
             // In debug builds, ignore all plugins that are not part of the executable directory
             #if !defined(DEBUG)
                 return true;
@@ -331,7 +355,7 @@ namespace hex::init {
 
             // Initialize the plugin
             if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
+                log::error("Failed to initialize plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }
@@ -347,7 +371,7 @@ namespace hex::init {
 
             // Initialize the plugin
             if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize plugin {}", hex::toUTF8String(plugin.getPath().filename()));
+                log::error("Failed to initialize plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
         }
@@ -383,14 +407,14 @@ namespace hex::init {
     bool loadSettings() {
         try {
             // Try to load settings from file
-            ContentRegistry::Settings::load();
+            ContentRegistry::Settings::impl::load();
         } catch (std::exception &e) {
             // If that fails, create a new settings file
 
             log::error("Failed to load configuration! {}", e.what());
 
-            ContentRegistry::Settings::clear();
-            ContentRegistry::Settings::store();
+            ContentRegistry::Settings::impl::clear();
+            ContentRegistry::Settings::impl::store();
 
             return false;
         }
@@ -400,7 +424,7 @@ namespace hex::init {
 
     bool storeSettings() {
         try {
-            ContentRegistry::Settings::store();
+            ContentRegistry::Settings::impl::store();
         } catch (std::exception &e) {
             log::error("Failed to store configuration! {}", e.what());
             return false;

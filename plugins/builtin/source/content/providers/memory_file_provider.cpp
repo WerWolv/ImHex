@@ -6,7 +6,8 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/api/event.hpp>
-#include <hex/helpers/file.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -47,25 +48,6 @@ namespace hex::plugin::builtin {
                 ImHexApi::Provider::remove(this, true);
             }
         });
-    }
-
-    void MemoryFileProvider::saveAs(const std::fs::path &path) {
-        fs::File file(path, fs::File::Mode::Create);
-
-        if (file.isValid()) {
-            auto provider = ImHexApi::Provider::get();
-
-            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, provider->getActualSize()), 0x00);
-            size_t bufferSize = buffer.size();
-
-            for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
-                if (bufferSize > provider->getActualSize() - offset)
-                    bufferSize = provider->getActualSize() - offset;
-
-                provider->read(offset + this->getBaseAddress(), buffer.data(), bufferSize);
-                file.write(buffer);
-            }
-        }
     }
 
     void MemoryFileProvider::resize(size_t newSize) {

@@ -10,8 +10,11 @@
 #include "content/providers/view_provider.hpp"
 
 #include <hex/api/project_file_manager.hpp>
-#include <nlohmann/json.hpp>
 #include <hex/helpers/fmt.hpp>
+
+#include <nlohmann/json.hpp>
+
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -64,11 +67,11 @@ namespace hex::plugin::builtin {
                      json["type"] = provider->getTypeName();
                      json["settings"] = provider->storeSettings();
 
-                     tar.write(basePath / hex::format("{}.json", id), json.dump(4));
+                     tar.writeString(basePath / hex::format("{}.json", id), json.dump(4));
                  }
 
-                 tar.write(basePath / "providers.json",
-                    nlohmann::json({ {"providers", providerIds } }).dump(4)
+                 tar.writeString(basePath / "providers.json",
+                    nlohmann::json({ { "providers", providerIds } }).dump(4)
                  );
 
                  return true;

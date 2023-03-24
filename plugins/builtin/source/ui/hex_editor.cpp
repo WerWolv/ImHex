@@ -91,70 +91,27 @@ namespace hex::plugin::builtin::ui {
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             {
-                auto bytesPerRow = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row");
-
-                if (bytesPerRow.is_number())
-                    this->m_bytesPerRow = static_cast<int>(bytesPerRow);
-            }
-
-            {
-                auto ascii = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii");
-
-                if (ascii.is_number())
-                    this->m_showAscii = static_cast<int>(ascii);
-            }
-
-            {
-                auto greyOutZeros = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros");
-
-                if (greyOutZeros.is_number())
-                    this->m_grayOutZero = static_cast<int>(greyOutZeros);
-            }
-
-            {
-                auto upperCaseHex = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex");
-
-                if (upperCaseHex.is_number())
-                    this->m_upperCaseHex = static_cast<int>(upperCaseHex);
-            }
-
-            {
-                auto selectionColor = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color");
-
-                if (selectionColor.is_number())
-                    this->m_selectionColor = static_cast<color_t>(selectionColor);
+                this->m_bytesPerRow = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", 16);
+                this->m_encodingLineStartAddresses.clear();
             }
 
             {
                 auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
-                auto selectedVisualizer = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer");
+                auto selectedVisualizer = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer", "hex.builtin.visualizer.hexadecimal.8bit");
 
-                if (selectedVisualizer.is_string() && visualizers.contains(selectedVisualizer))
+                if (visualizers.contains(selectedVisualizer))
                     this->m_currDataVisualizer = visualizers[selectedVisualizer];
                 else
                     this->m_currDataVisualizer = visualizers["hex.builtin.visualizer.hexadecimal.8bit"];
             }
 
-            {
-                auto syncScrolling = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling");
-
-                if (syncScrolling.is_number())
-                    this->m_syncScrolling = static_cast<int>(syncScrolling);
-            }
-
-            {
-                auto padding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding");
-
-                if (padding.is_number())
-                    this->m_byteCellPadding = static_cast<int>(padding);
-            }
-
-            {
-                auto padding = ContentRegistry::Settings::getSetting("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding");
-
-                if (padding.is_number())
-                    this->m_characterCellPadding = static_cast<int>(padding);
-            }
+            this->m_showAscii = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii", 1);
+            this->m_grayOutZero = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros", 1);
+            this->m_upperCaseHex = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex", 1);
+            this->m_selectionColor = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080);
+            this->m_syncScrolling = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", 0);
+            this->m_byteCellPadding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0);
+            this->m_characterCellPadding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", 0);
         });
     }
 
@@ -195,11 +152,33 @@ namespace hex::plugin::builtin::ui {
         ImColor color;
     };
 
-    static CustomEncodingData queryCustomEncodingData(prv::Provider *provider, const EncodingFile &encodingFile, u64 address) {
+    static CustomEncodingData queryCustomEncodingData(prv::Provider *provider, const EncodingFile &encodingFile, std::vector<u64> &lineStartAddresses, u32 bytesPerRow, u64 address) {
         const auto longestSequence = encodingFile.getLongestSequence();
 
         if (longestSequence == 0)
             return { ".", 1, 0xFFFF8000 };
+
+        if (lineStartAddresses.empty() || lineStartAddresses.size() <= address / bytesPerRow) {
+            auto prevSize = lineStartAddresses.size();
+            auto newSize = address / bytesPerRow + 1;
+            lineStartAddresses.reserve(newSize);
+
+            std::vector<u8> buffer;
+            for (auto i = prevSize; i < newSize; i++) {
+                u32 offset = 0;
+                while (offset < bytesPerRow) {
+                    size_t readSize   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
+                    buffer.resize(readSize);
+                    provider->read(address, buffer.data(), readSize);
+
+                    offset += encodingFile.getEncodingLengthFor(buffer);
+                }
+
+                lineStartAddresses.push_back(offset % bytesPerRow);
+            }
+        }
+
+        address += lineStartAddresses[address / bytesPerRow];
 
         size_t size   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
 
@@ -238,11 +217,13 @@ namespace hex::plugin::builtin::ui {
     void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
         static DataVisualizerAscii asciiVisualizer;
 
-        if (this->m_shouldUpdateEditingValue) {
-            this->m_shouldUpdateEditingValue = false;
+        if (this->m_shouldUpdateEditingValue && this->m_editingAddress.has_value()) {
+            if (!((this->m_editingAddress.value() % this->m_bytesPerRow) == 0 && address != this->m_editingAddress.value())) {
+                this->m_shouldUpdateEditingValue = false;
 
-            this->m_editingBytes.resize(size);
-            std::memcpy(this->m_editingBytes.data(), data, size);
+                this->m_editingBytes.resize(size);
+                std::memcpy(this->m_editingBytes.data(), data, size);
+            }
         }
 
         if (this->m_editingAddress != address || this->m_editingCellType != cellType) {
@@ -318,19 +299,19 @@ namespace hex::plugin::builtin::ui {
 
         // Draw vertical line at the left of first byte and the start of the line
         if (x == 0 || byteAddress == selection.getStartAddress())
-            drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos, cellPos + ImVec2(0, cellSize.y), ImColor(SelectionFrameColor), 1_scaled);
 
         // Draw vertical line at the right of the last byte and the end of the line
         if (x == u16((this->m_bytesPerRow / bytesPerCell) - 1) || (byteAddress + bytesPerCell) > selection.getEndAddress())
-            drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos + ImVec2(cellSize.x, -1), cellPos + cellSize, ImColor(SelectionFrameColor), 1_scaled);
 
         // Draw horizontal line at the top of the bytes
         if (y == 0 || (byteAddress - this->m_bytesPerRow) < selection.getStartAddress())
-            drawList->AddLine(cellPos, cellPos + ImVec2(cellSize.x + 1, 0), ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos, cellPos + ImVec2(cellSize.x + 1, 0), ImColor(SelectionFrameColor), 1_scaled);
 
         // Draw horizontal line at the bottom of the bytes
         if ((byteAddress + this->m_bytesPerRow) > selection.getEndAddress())
-            drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1.0F);
+            drawList->AddLine(cellPos + ImVec2(0, cellSize.y), cellPos + cellSize + ImVec2(1, 0), ImColor(SelectionFrameColor), 1_scaled);
     }
 
     void HexEditor::drawEditor(const ImVec2 &size) {
@@ -355,12 +336,12 @@ namespace hex::plugin::builtin::ui {
                 if (isColumnSeparatorColumn(i, columnCount))
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
 
-                ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + 6 + this->m_byteCellPadding);
+                ImGui::TableSetupColumn(hex::format(this->m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, this->m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * this->m_currDataVisualizer->getMaxCharsPerCell() + (6 + this->m_byteCellPadding) * 1_scaled);
             }
 
             // ASCII column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding) * this->m_bytesPerRow);
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow);
 
             // Custom encoding column
             ImGui::TableSetupColumn("");
@@ -377,7 +358,7 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
 
             if (this->m_provider != nullptr && this->m_provider->isReadable()) {
-                const auto isCurrRegionValid = [this](u64 address){
+                const auto isCurrRegionValid = [this](u64 address) {
                     auto &[currRegion, currRegionValid] = this->m_currValidRegion;
                     if (!Region{ address, 1 }.isWithin(currRegion)) {
                         this->m_currValidRegion = this->m_provider->getRegionValidity(address);
@@ -431,7 +412,7 @@ namespace hex::plugin::builtin::ui {
                         }
 
                         // Draw byte columns
-                        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(3, 0));
+                        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, scaled(ImVec2(2.75F, 0.0F)));
 
                         for (u64 x = 0; x < columnCount; x++) {
                             const u64 byteAddress = y * this->m_bytesPerRow + x * bytesPerCell + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
@@ -442,7 +423,7 @@ namespace hex::plugin::builtin::ui {
 
                             if (x < std::ceil(float(validBytes) / bytesPerCell)) {
                                 auto cellStartPos = getCellPosition();
-                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1) + (ImVec2(3, 2) * ImGui::GetStyle().CellPadding) - ImVec2(1, 0) * ImGui::GetStyle().CellPadding) + ImVec2(1 + this->m_byteCellPadding, 0);
+                                auto cellSize = (CharacterSize * ImVec2(this->m_currDataVisualizer->getMaxCharsPerCell(), 1)) + (ImVec2(2, 2) * ImGui::GetStyle().CellPadding) + scaled(ImVec2(1 + this->m_byteCellPadding, 0));
                                 auto maxCharsPerCell = this->m_currDataVisualizer->getMaxCharsPerCell();
 
                                 auto [foregroundColor, backgroundColor] = cellColors[x];
@@ -502,7 +483,7 @@ namespace hex::plugin::builtin::ui {
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
                             if (ImGui::BeginTable("##ascii_column", this->m_bytesPerRow)) {
                                 for (u64 x = 0; x < this->m_bytesPerRow; x++)
-                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + this->m_characterCellPadding);
+                                    ImGui::TableSetupColumn(hex::format("##ascii_cell{}", x).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x + this->m_characterCellPadding * 1_scaled);
 
                                 ImGui::TableNextRow();
 
@@ -512,7 +493,7 @@ namespace hex::plugin::builtin::ui {
                                     const u64 byteAddress = y * this->m_bytesPerRow + x + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
                                     const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = CharacterSize + ImVec2(this->m_characterCellPadding, 0);
+                                    const auto cellSize = CharacterSize + scaled(ImVec2(this->m_characterCellPadding, 0));
 
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
 
@@ -533,7 +514,7 @@ namespace hex::plugin::builtin::ui {
                                             this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
                                         }
 
-                                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + this->m_characterCellPadding / 2);
+                                        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (this->m_characterCellPadding * 1_scaled) / 2);
                                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                         ImGui::PushItemWidth(CharacterSize.x);
                                         if (!isCurrRegionValid(byteAddress))
@@ -560,7 +541,7 @@ namespace hex::plugin::builtin::ui {
                             do {
                                 const u64 address = y * this->m_bytesPerRow + offset + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
-                                auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, address);
+                                auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, this->m_encodingLineStartAddresses, this->m_bytesPerRow, address);
                                 offset += std::max<size_t>(1, result.advance);
 
                                 encodingData.emplace_back(address, result);
@@ -680,6 +661,8 @@ namespace hex::plugin::builtin::ui {
             ImGui::EndTable();
         }
         ImGui::PopStyleVar();
+
+        this->m_shouldScrollToSelection = false;
     }
 
     void HexEditor::drawFooter(const ImVec2 &size) {

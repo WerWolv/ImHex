@@ -11,7 +11,6 @@
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/magic.hpp>
 
@@ -19,6 +18,10 @@
 
 #include <nlohmann/json.hpp>
 #include <chrono>
+
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -503,13 +506,13 @@ namespace hex::plugin::builtin {
             entries.resize(this->m_possiblePatternFiles.size());
 
             for (u32 i = 0; i < entries.size(); i++) {
-                entries[i] = hex::toUTF8String(this->m_possiblePatternFiles[i].filename());
+                entries[i] = wolv::util::toUTF8String(this->m_possiblePatternFiles[i].filename());
             }
 
             if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
                 u32 index = 0;
                 for (auto &path : this->m_possiblePatternFiles) {
-                    if (ImGui::Selectable(hex::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile))
+                    if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile))
                         this->m_selectedPatternFile = index;
                     index++;
                 }
@@ -633,7 +636,7 @@ namespace hex::plugin::builtin {
 
 
     void ViewPatternEditor::loadPatternFile(const std::fs::path &path, prv::Provider *provider) {
-        fs::File file(path, fs::File::Mode::Read);
+        wolv::io::File file(path, wolv::io::File::Mode::Read);
         if (file.isValid()) {
             auto code = file.readString();
 
@@ -750,19 +753,8 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            {
-                auto syncPatternSource = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source");
-
-                if (syncPatternSource.is_number())
-                    this->m_syncPatternSourceCode = static_cast<int>(syncPatternSource);
-            }
-
-            {
-                auto autoLoadPatterns = ContentRegistry::Settings::getSetting("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns");
-
-                if (autoLoadPatterns.is_number())
-                    this->m_autoLoadPatterns = static_cast<int>(autoLoadPatterns);
-            }
+            this->m_syncPatternSourceCode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", 0);
+            this->m_autoLoadPatterns = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1);
         });
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
@@ -808,7 +800,7 @@ namespace hex::plugin::builtin {
                         if (!entry.is_regular_file())
                             continue;
 
-                        fs::File file(entry.path(), fs::File::Mode::Read);
+                        wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
                         if (!file.isValid())
                             continue;
 
@@ -863,113 +855,114 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerMenuItems() {
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 2000, [&, this] {
-            bool providerValid = ImHexApi::Provider::isValid();
-            auto provider = ImHexApi::Provider::get();
+        /* Import Pattern */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, 4050, Shortcut::None,
+                                                [this] {
+                                                    auto provider = ImHexApi::Provider::get();
+                                                    std::vector<std::fs::path> paths;
 
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.load_pattern"_lang, nullptr, false, providerValid)) {
-                std::vector<std::fs::path> paths;
+                                                    for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                                                        if (!wolv::io::fs::exists(imhexPath)) continue;
 
-                for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
-                    if (!fs::exists(imhexPath)) continue;
+                                                        std::error_code error;
+                                                        for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
+                                                            if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
+                                                                paths.push_back(entry.path());
+                                                            }
+                                                        }
+                                                    }
 
-                    std::error_code error;
-                    for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
-                        if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
-                            paths.push_back(entry.path());
-                        }
-                    }
-                }
+                                                    View::showFileChooserPopup(paths, { { "Pattern File", "hexpat" } }, false,
+                                                                               [this, provider](const std::fs::path &path) {
+                                                                                   this->loadPatternFile(path, provider);
+                                                                               });
+                                                }, ImHexApi::Provider::isValid);
 
-                View::showFileChooserPopup(paths, { { "Pattern File", "hexpat" } }, false,
-                    [this, provider](const std::fs::path &path) {
-                        this->loadPatternFile(path, provider);
-                    });
-            }
+        /* Export Pattern */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, 7050, Shortcut::None,
+                                                [this] {
+                                                    fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
+                                                                        [this](const auto &path) {
+                                                                            wolv::io::File file(path, wolv::io::File::Mode::Create);
 
-            if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.file.save_pattern"_lang, nullptr, false, providerValid)) {
-                fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
-                [this](const auto &path) {
-                    fs::File file(path, fs::File::Mode::Create);
+                                                                            file.writeString(wolv::util::trim(this->m_textEditor.GetText()));
+                                                                        });
+                                                }, ImHexApi::Provider::isValid);
 
-                    file.write(this->m_textEditor.GetText());
-                });
-            }
-        });
+        const auto appendEditorText = [this](const std::string &text){
+            this->m_textEditor.SetCursorPosition(TextEditor::Coordinates { this->m_textEditor.GetTotalLines(), 0 });
+            this->m_textEditor.InsertText(hex::format("\n{0}", text));
+            this->m_hasUnevaluatedChanges = true;
+        };
 
-        // Place Pattern Type...
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 3000, [this] {
-            bool available = ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && this->m_runningParsers == 0;
+        const auto appendVariable = [&](const std::string &type) {
             auto selection = ImHexApi::HexEditor::getSelection();
 
-            const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
+            appendEditorText(hex::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
+        };
 
-            const auto appendEditorText = [this](const std::string &text){
-                this->m_textEditor.SetCursorPosition(TextEditor::Coordinates { this->m_textEditor.GetTotalLines(), 0 });
-                this->m_textEditor.InsertText(hex::format("\n{0}", text));
-                this->m_hasUnevaluatedChanges = true;
-            };
+        const auto appendArray = [&](const std::string &type, size_t size) {
+            auto selection = ImHexApi::HexEditor::getSelection();
 
-            const auto appendVariable = [&](const std::string &type) {
-                appendEditorText(hex::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
-            };
+            appendEditorText(hex::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
+        };
 
-            const auto appendArray = [&](const std::string &type, size_t size) {
-                appendEditorText(hex::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
-            };
+        constexpr static std::array<std::pair<const char *, size_t>, 21>  Types = {{
+           { "u8", 1 }, { "u16", 2 }, { "u24", 3 }, { "u32", 4 }, { "u48", 6 }, { "u64", 8 }, { "u96", 12 }, { "u128", 16 },
+           { "s8", 1 }, { "s16", 2 }, { "s24", 3 }, { "s32", 4 }, { "s48", 6 }, { "s64", 8 }, { "s96", 12 }, { "s128", 16 },
+           { "float", 4 }, { "double", 8 },
+           { "bool", 1 }, { "char", 1 }, { "char16", 2 }
+        }};
 
-            if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern"_lang, available)) {
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
-                    constexpr static std::array<std::pair<const char *, size_t>, 21>  Types = {{
-                        { "u8", 1 }, { "u16", 2 }, { "u24", 3 }, { "u32", 4 }, { "u48", 6 }, { "u64", 8 }, { "u96", 12 }, { "u128", 16 },
-                        { "s8", 1 }, { "s16", 2 }, { "s24", 3 }, { "s32", 4 }, { "s48", 6 }, { "s64", 8 }, { "s96", 12 }, { "s128", 16 },
-                        { "float", 4 }, { "double", 8 },
-                        { "bool", 1 }, { "char", 1 }, { "char16", 2 }
-                    }};
+        /* Place pattern... */
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern", "hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin" }, 3000,
+                                                       [&]{
+                                                           if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
+                                                               for (const auto &[type, size] : Types)
+                                                                   if (ImGui::MenuItem(type))
+                                                                       appendVariable(type);
+                                                               ImGui::EndMenu();
+                                                           }
 
-                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
-                        for (const auto &[type, size] : Types)
-                            if (ImGui::MenuItem(type))
-                                appendVariable(type);
-                        ImGui::EndMenu();
-                    }
+                                                           if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
+                                                               for (const auto &[type, size] : Types)
+                                                                   if (ImGui::MenuItem(type))
+                                                                       appendArray(type, size);
+                                                               ImGui::EndMenu();
+                                                           }
+                                                       }, [this] {
+                                                           return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && this->m_runningParsers == 0;
+                                                       });
 
-                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
-                        for (const auto &[type, size] : Types)
-                            if (ImGui::MenuItem(type))
-                                appendArray(type, size);
-                        ImGui::EndMenu();
-                    }
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern", "hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom" }, 3050,
+                                                       [&]{
+                                                           const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
+                                                           auto selection = ImHexApi::HexEditor::getSelection();
 
-                    ImGui::EndMenu();
-                }
+                                                           for (const auto &[typeName, type] : types) {
+                                                               if (type->isTemplateType())
+                                                                   continue;
 
-                bool hasPlaceableTypes = std::any_of(types.begin(), types.end(), [](const auto &type) { return !type.second->isTemplateType(); });
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
-                    for (const auto &[typeName, type] : types) {
-                        if (type->isTemplateType())
-                            continue;
+                                                               createNestedMenu(hex::splitString(typeName, "::"), [&] {
+                                                                   std::string variableName;
+                                                                   for (char &c : hex::replaceStrings(typeName, "::", "_"))
+                                                                       variableName += static_cast<char>(std::tolower(c));
+                                                                   variableName += hex::format("_at_0x{:02X}", selection->getStartAddress());
 
-                        createNestedMenu(hex::splitString(typeName, "::"), [&] {
-                            std::string variableName;
-                            for (char &c : hex::replaceStrings(typeName, "::", "_"))
-                                variableName += static_cast<char>(std::tolower(c));
-                            variableName += hex::format("_at_0x{:02X}", selection->getStartAddress());
+                                                                   appendEditorText(hex::format("{0} {1} @ 0x{2:02X};", typeName, variableName, selection->getStartAddress()));
+                                                               });
+                                                           }
+                                                       }, [this] {
+                                                           const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
+                                                           bool hasPlaceableTypes = std::any_of(types.begin(), types.end(), [](const auto &type) { return !type.second->isTemplateType(); });
 
-                            appendEditorText(hex::format("{0} {1} @ 0x{2:02X};", typeName, variableName, selection->getStartAddress()));
-                        });
-                    }
-                    ImGui::EndMenu();
-                }
-
-                ImGui::EndMenu();
-            }
-        });
+                                                           return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && this->m_runningParsers == 0 && hasPlaceableTypes;
+                                                       });
     }
 
     void ViewPatternEditor::registerHandlers() {
         ContentRegistry::FileHandler::add({ ".hexpat", ".pat" }, [](const std::fs::path &path) -> bool {
-            fs::File file(path, fs::File::Mode::Read);
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
 
             if (file.isValid()) {
                 EventManager::post<RequestSetPatternLanguageCode>(file.readString());
@@ -1054,7 +1047,7 @@ namespace hex::plugin::builtin {
                 else
                     sourceCode = ProviderExtraData::get(provider).patternLanguage.sourceCode;
 
-                tar.write(basePath, sourceCode);
+                tar.writeString(basePath, wolv::util::trim(sourceCode));
                 return true;
             }
         });

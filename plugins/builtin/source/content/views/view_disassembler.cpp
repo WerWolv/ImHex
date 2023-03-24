@@ -113,9 +113,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::HexEditor::setSelection(0, 0);
                 }
 
-                ImGui::NewLine();
-                ImGui::TextUnformatted("hex.builtin.view.disassembler.settings.header"_lang);
-                ImGui::Separator();
+                ImGui::Header("hex.builtin.common.settings"_lang);
 
                 if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames, Disassembler::getArchitectureSupportedCount()))
                     this->m_mode = cs_mode(0);
@@ -188,12 +186,17 @@ namespace hex::plugin::builtin {
 
                                 static bool qpx = false;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.ppc.qpx"_lang, &qpx);
-                                static bool spe = false;
-                                ImGui::Checkbox("hex.builtin.view.disassembler.ppc.spe"_lang, &spe);
-                                static bool booke = false;
-                                ImGui::Checkbox("hex.builtin.view.disassembler.ppc.booke"_lang, &booke);
 
-                                this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)) | (spe ? CS_MODE_SPE : cs_mode(0)) | (booke ? CS_MODE_BOOKE : cs_mode(0)));
+                                #if defined (CS_MODE_SPE)
+                                    static bool spe = false;
+                                    ImGui::Checkbox("hex.builtin.view.disassembler.ppc.spe"_lang, &spe);
+                                    static bool booke = false;
+                                    ImGui::Checkbox("hex.builtin.view.disassembler.ppc.booke"_lang, &booke);
+
+                                    this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)) | (spe ? CS_MODE_SPE : cs_mode(0)) | (booke ? CS_MODE_BOOKE : cs_mode(0)));
+                                #else
+                                    this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)));
+                                #endif
                             }
                             break;
                         case Architecture::SPARC:
@@ -204,6 +207,7 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(v9Mode ? CS_MODE_V9 : cs_mode(0));
                             }
                             break;
+                        #if defined (CS_MODE_RISCV32)
                         case Architecture::RISCV:
                             {
                                 static int mode = CS_MODE_RISCV32;
@@ -217,6 +221,7 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(mode | (compressed ? CS_MODE_RISCVC : cs_mode(0)));
                             }
                             break;
+                        #endif
                         case Architecture::M68K:
                             {
                                 static int selectedMode = 0;
@@ -269,6 +274,7 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(modes[selectedMode].second);
                             }
                             break;
+                        #if defined(CS_MODE_MOS65XX_6502)
                         case Architecture::MOS65XX:
                             {
                                 static int selectedMode = 0;
@@ -294,6 +300,8 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(modes[selectedMode].second);
                             }
                             break;
+                        #endif
+                        #if defined(CS_MODE_BPF_CLASSIC)
                         case Architecture::BPF:
                             {
                                 static int mode = CS_MODE_BPF_CLASSIC;
@@ -304,6 +312,7 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(mode);
                             }
                             break;
+                        #endif
                         case Architecture::EVM:
                         case Architecture::TMS320C64X:
                         case Architecture::ARM64:

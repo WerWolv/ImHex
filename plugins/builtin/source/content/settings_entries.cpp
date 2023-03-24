@@ -4,8 +4,8 @@
 #include <hex/api/localization.hpp>
 #include <hex/api/theme_manager.hpp>
 
-#include <hex/helpers/net.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <imgui.h>
@@ -16,17 +16,19 @@
 
 #include <ui/pattern_drawer.hpp>
 
+#include <wolv/utils/guards.hpp>
+
 namespace {
 
     std::vector<std::fs::path> userFolders;
 
-    void loadUserFoldersFromSetting(nlohmann::json &setting) {
+    void loadUserFoldersFromSetting(const std::vector<std::string> &paths) {
         userFolders.clear();
-        std::vector<std::string> paths = setting;
         for (const auto &path : paths) {
-            // JSON reads char8_t as array, char8_t is not supported as of now
-            std::u8string_view uString(reinterpret_cast<const char8_t *>(&path.front()), reinterpret_cast<const char8_t *>(std::next(&path.back())));
-            userFolders.emplace_back(uString);
+            userFolders.emplace_back(
+                reinterpret_cast<const char8_t*>(path.data()),
+                reinterpret_cast<const char8_t*>(path.data() + path.size())
+            );
         }
     }
 
@@ -98,17 +100,28 @@ namespace hex::plugin::builtin {
             return false;
         });
 
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1, [](auto name, nlohmann::json &setting) {
+            static bool enabled = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &enabled)) {
+                setting = static_cast<int>(enabled);
+                return true;
+            }
+
+            return false;
+        });
+
         /* Interface */
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", "Dark", [](auto name, nlohmann::json &setting) {
             static auto selection = static_cast<std::string>(setting);
 
-            const auto themeNames = hex::api::ThemeManager::getThemeNames();
+            const auto themeNames = ThemeManager::getThemeNames();
             bool changed = false;
 
             if (ImGui::BeginCombo(name.data(), selection.c_str())) {
-                if (ImGui::Selectable(api::ThemeManager::NativeTheme, selection == api::ThemeManager::NativeTheme)) {
-                    selection = api::ThemeManager::NativeTheme;
+                if (ImGui::Selectable(ThemeManager::NativeTheme, selection == ThemeManager::NativeTheme)) {
+                    selection = ThemeManager::NativeTheme;
                     setting = selection;
                     ImHexApi::System::enableSystemThemeDetection(true);
                     changed = true;
@@ -119,7 +132,7 @@ namespace hex::plugin::builtin {
                         selection = themeName;
                         setting = selection;
                         ImHexApi::System::enableSystemThemeDetection(false);
-                        api::ThemeManager::changeTheme(selection);
+                        ThemeManager::changeTheme(selection);
                         changed = true;
                     }
                 }
@@ -145,7 +158,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
                     setting = selection;
 
-                    ImHexApi::Common::restartImHex();
+                    ImHexApi::System::restartImHex();
 
                     return true;
                 }
@@ -400,7 +413,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
                         [&](const std::fs::path &path) {
-                            fontPath = hex::toUTF8String(path);
+                            fontPath = wolv::util::toUTF8String(path);
                             setting  = fontPath;
                         });
                 }
@@ -423,6 +436,13 @@ namespace hex::plugin::builtin {
                 if (ImGui::SliderInt(name.data(), &fontSize, 0, 100, "%d", ImGuiSliderFlags_NoInput)) {
                     setting = fontSize;
                     return true;
+                }
+
+                if (fontPath.empty() && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                    ImGui::SetNextWindowSize(scaled(ImVec2(300, 0)));
+                    ImGui::BeginTooltip();
+                    ImGui::TextFormattedWrapped("{}", "hex.builtin.setting.font.font_size.tooltip"_lang);
+                    ImGui::EndTooltip();
                 }
 
                 return false;
@@ -459,7 +479,7 @@ namespace hex::plugin::builtin {
             } else {
                 for (size_t n = 0; n < userFolders.size(); n++) {
                     const bool isSelected = (currentItemIndex == n);
-                    if (ImGui::Selectable(hex::toUTF8String(userFolders.at(n)).c_str(), isSelected)) { currentItemIndex = n; }
+                    if (ImGui::Selectable(wolv::util::toUTF8String(userFolders.at(n)).c_str(), isSelected)) { currentItemIndex = n; }
                     if (isSelected) { ImGui::SetItemDefaultFocus(); }
                 }
                 ImGui::EndListBox();
@@ -497,8 +517,7 @@ namespace hex::plugin::builtin {
 
         static const std::string proxySetting { "hex.builtin.setting.proxy" };
 
-        // init hex::Net proxy url
-        hex::Net::setProxy(ContentRegistry::Settings::read(proxySetting, "hex.builtin.setting.proxy.url", ""));
+        HttpRequest::setProxy(ContentRegistry::Settings::read(proxySetting, "hex.builtin.setting.proxy.url", ""));
 
         ContentRegistry::Settings::addCategoryDescription(proxySetting, "hex.builtin.setting.proxy.description");
 
@@ -511,14 +530,14 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Checkbox("hex.builtin.setting.proxy.enable"_lang, &enableProxy)) {
                     setting = enableProxy ? proxyUrl : "";
-                    hex::Net::setProxy(enableProxy ? proxyUrl : "");
+                    HttpRequest::setProxy(enableProxy ? proxyUrl : "");
                     result = true;
                 }
 
                 ImGui::BeginDisabled(!enableProxy);
                 if (ImGui::InputText("##proxy_url", proxyUrl)) {
                     setting = proxyUrl;
-                    hex::Net::setProxy(proxyUrl);
+                    HttpRequest::setProxy(proxyUrl);
                     result = true;
                 }
                 ImGui::EndDisabled();
@@ -566,15 +585,15 @@ namespace hex::plugin::builtin {
 
     static void loadFontSettings() {
         std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
-        if (!fs::exists(fontFile) || !fs::isRegularFile(fontFile))
+        if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile))
             fontFile.clear();
 
         // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
         if (fontFile.empty()) {
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
                 auto path = dir / "font.ttf";
-                if (fs::exists(path)) {
-                    log::info("Loading custom front from {}", hex::toUTF8String(path));
+                if (wolv::io::fs::exists(path)) {
+                    log::info("Loading custom front from {}", wolv::util::toUTF8String(path));
 
                     fontFile = path;
                     break;
@@ -594,20 +613,20 @@ namespace hex::plugin::builtin {
     }
 
     static void loadThemeSettings() {
-        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", api::ThemeManager::NativeTheme);
+        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
 
-        if (theme == api::ThemeManager::NativeTheme)
+        if (theme == ThemeManager::NativeTheme)
             ImHexApi::System::enableSystemThemeDetection(true);
         else {
             ImHexApi::System::enableSystemThemeDetection(false);
-            api::ThemeManager::changeTheme(theme);
+            ThemeManager::changeTheme(theme);
         }
     }
 
     static void loadFoldersSettings() {
-        static const std::string dirsSetting { "hex.builtin.setting.folders" };
-        auto dirs = ContentRegistry::Settings::getSetting(dirsSetting, dirsSetting);
-        loadUserFoldersFromSetting(dirs);
+        auto directories = ContentRegistry::Settings::read("hex.builtin.setting.folders", "hex.builtin.setting.folders", std::vector<std::string> { });
+
+        loadUserFoldersFromSetting(directories);
         ImHexApi::System::setAdditionalFolderPaths(userFolders);
     }
 

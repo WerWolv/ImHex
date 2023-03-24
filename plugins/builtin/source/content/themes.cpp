@@ -10,16 +10,17 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/file.hpp>
 
 #include <hex/api/event.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
     void registerThemeHandlers() {
         EventManager::subscribe<RequestInitThemeHandlers>([]() {
             {
-                const static api::ThemeManager::ColorMap ImGuiColorMap = {
+                const static ThemeManager::ColorMap ImGuiColorMap = {
                     { "text",                           ImGuiCol_Text                   },
                     { "text-disabled",                  ImGuiCol_TextDisabled           },
                     { "window-background",              ImGuiCol_WindowBg               },
@@ -77,7 +78,7 @@ namespace hex::plugin::builtin {
                     { "modal-window-dim-background",    ImGuiCol_ModalWindowDimBg       }
                 };
 
-                api::ThemeManager::addThemeHandler("imgui", ImGuiColorMap,
+                ThemeManager::addThemeHandler("imgui", ImGuiColorMap,
                     [](u32 colorId) -> ImColor {
                         return ImGui::GetStyle().Colors[colorId];
                     },
@@ -88,7 +89,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap ImPlotColorMap = {
+                const static ThemeManager::ColorMap ImPlotColorMap = {
                     { "line",               ImPlotCol_Line              },
                     { "fill",               ImPlotCol_Fill              },
                     { "marker-outline",     ImPlotCol_MarkerOutline     },
@@ -112,7 +113,7 @@ namespace hex::plugin::builtin {
                     { "crosshairs",         ImPlotCol_Crosshairs        }
                 };
 
-                api::ThemeManager::addThemeHandler("implot", ImPlotColorMap,
+                ThemeManager::addThemeHandler("implot", ImPlotColorMap,
                    [](u32 colorId) -> ImColor {
                        return ImPlot::GetStyle().Colors[colorId];
                    },
@@ -123,7 +124,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap ImNodesColorMap = {
+                const static ThemeManager::ColorMap ImNodesColorMap = {
                     { "node-background",                    ImNodesCol_NodeBackground                   },
                     { "node-background-hovered",            ImNodesCol_NodeBackgroundHovered            },
                     { "node-background-selected",           ImNodesCol_NodeBackgroundSelected           },
@@ -155,7 +156,7 @@ namespace hex::plugin::builtin {
                     { "mini-map-canvas-outline",            ImNodesCol_MiniMapCanvasOutline             },
                 };
 
-                api::ThemeManager::addThemeHandler("imnodes", ImNodesColorMap,
+                ThemeManager::addThemeHandler("imnodes", ImNodesColorMap,
                    [](u32 colorId) -> ImColor {
                        return ImNodes::GetStyle().Colors[colorId];
                    },
@@ -166,7 +167,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap ImHexColorMap = {
+                const static ThemeManager::ColorMap ImHexColorMap = {
                     { "desc-button",            ImGuiCustomCol_DescButton           },
                     { "desc-button-hovered",    ImGuiCustomCol_DescButtonHovered    },
                     { "desc-button-active",     ImGuiCustomCol_DescButtonActive     },
@@ -180,7 +181,7 @@ namespace hex::plugin::builtin {
                     { "highlight",              ImGuiCustomCol_Highlight            }
                 };
 
-                api::ThemeManager::addThemeHandler("imhex", ImHexColorMap,
+                ThemeManager::addThemeHandler("imhex", ImHexColorMap,
                    [](u32 colorId) -> ImColor {
                        return static_cast<ImGui::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId];
 
@@ -192,7 +193,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                const static api::ThemeManager::ColorMap TextEditorColorMap = {
+                const static ThemeManager::ColorMap TextEditorColorMap = {
                     { "default",                    u32(TextEditor::PaletteIndex::Default)                 },
                     { "keyword",                    u32(TextEditor::PaletteIndex::Keyword)                 },
                     { "number",                     u32(TextEditor::PaletteIndex::Number)                  },
@@ -216,7 +217,7 @@ namespace hex::plugin::builtin {
                     { "current-line-edge",          u32(TextEditor::PaletteIndex::CurrentLineEdge)         }
                 };
 
-                api::ThemeManager::addThemeHandler("text-editor", TextEditorColorMap,
+                ThemeManager::addThemeHandler("text-editor", TextEditorColorMap,
                     [](u32 colorId) -> ImColor {
                         return TextEditor::GetPalette()[colorId];
                     },
@@ -234,92 +235,92 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<RequestInitThemeHandlers>([]() {
             {
                 auto &style = ImGui::GetStyle();
-                const static api::ThemeManager::StyleMap ImGuiStyleMap = {
-                    { "alpha",                  { &style.Alpha,                0.001F, 1.0F    } },
-                    { "disabled-alpha",         { &style.DisabledAlpha,        0.0F,   1.0F    } },
-                    { "window-padding",         { &style.WindowPadding,        0.0F,   20.0F   } },
-                    { "window-rounding",        { &style.WindowRounding,       0.0F,   12.0F   } },
-                    { "window-border-size",     { &style.WindowBorderSize,     0.0F,   1.0F    } },
-                    { "window-min-size",        { &style.WindowMinSize,        0.0F,   1000.0F } },
-                    { "window-title-align",     { &style.WindowTitleAlign,     0.0F,   1.0F    } },
-                    { "child-rounding",         { &style.ChildRounding,        0.0F,   12.0F   } },
-                    { "child-border-size",      { &style.ChildBorderSize,      0.0F,   1.0F    } },
-                    { "popup-rounding",         { &style.PopupRounding,        0.0F,   12.0F   } },
-                    { "popup-border-size",      { &style.PopupBorderSize,      0.0F,   1.0F    } },
-                    { "frame-padding",          { &style.FramePadding,         0.0F,   20.0F   } },
-                    { "frame-rounding",         { &style.FrameRounding,        0.0F,   12.0F   } },
-                    { "frame-border-size",      { &style.FrameBorderSize,      0.0F,   1.0F    } },
-                    { "item-spacing",           { &style.ItemSpacing,          0.0F,   20.0F   } },
-                    { "item-inner-spacing",     { &style.ItemInnerSpacing,     0.0F,   20.0F   } },
-                    { "indent-spacing",         { &style.IndentSpacing,        0.0F,   30.0F   } },
-                    { "cell-padding",           { &style.CellPadding,          0.0F,   20.0F   } },
-                    { "scrollbar-size",         { &style.ScrollbarSize,        0.0F,   20.0F   } },
-                    { "scrollbar-rounding",     { &style.ScrollbarRounding,    0.0F,   12.0F   } },
-                    { "grab-min-size",          { &style.GrabMinSize,          0.0F,   20.0F   } },
-                    { "grab-rounding",          { &style.GrabRounding,         0.0F,   12.0F   } },
-                    { "tab-rounding",           { &style.TabRounding,          0.0F,   12.0F   } },
-                    { "button-text-align",      { &style.ButtonTextAlign,      0.0F,   1.0F    } },
-                    { "selectable-text-align",  { &style.SelectableTextAlign,  0.0F,   1.0F    } },
+                const static ThemeManager::StyleMap ImGuiStyleMap = {
+                    { "alpha",                  { &style.Alpha,                0.001F, 1.0F,    false } },
+                    { "disabled-alpha",         { &style.DisabledAlpha,        0.0F,   1.0F,    false } },
+                    { "window-padding",         { &style.WindowPadding,        0.0F,   20.0F,   true  } },
+                    { "window-rounding",        { &style.WindowRounding,       0.0F,   12.0F,   true  } },
+                    { "window-border-size",     { &style.WindowBorderSize,     0.0F,   1.0F,    true  } },
+                    { "window-min-size",        { &style.WindowMinSize,        0.0F,   1000.0F, true  } },
+                    { "window-title-align",     { &style.WindowTitleAlign,     0.0F,   1.0F ,   false } },
+                    { "child-rounding",         { &style.ChildRounding,        0.0F,   12.0F,   true  } },
+                    { "child-border-size",      { &style.ChildBorderSize,      0.0F,   1.0F ,   true  } },
+                    { "popup-rounding",         { &style.PopupRounding,        0.0F,   12.0F,   true  } },
+                    { "popup-border-size",      { &style.PopupBorderSize,      0.0F,   1.0F,    true  } },
+                    { "frame-padding",          { &style.FramePadding,         0.0F,   20.0F,   true  } },
+                    { "frame-rounding",         { &style.FrameRounding,        0.0F,   12.0F,   true  } },
+                    { "frame-border-size",      { &style.FrameBorderSize,      0.0F,   1.0F,    true  } },
+                    { "item-spacing",           { &style.ItemSpacing,          0.0F,   20.0F,   true  } },
+                    { "item-inner-spacing",     { &style.ItemInnerSpacing,     0.0F,   20.0F,   true  } },
+                    { "indent-spacing",         { &style.IndentSpacing,        0.0F,   30.0F,   true  } },
+                    { "cell-padding",           { &style.CellPadding,          0.0F,   20.0F,   true  } },
+                    { "scrollbar-size",         { &style.ScrollbarSize,        0.0F,   20.0F,   true  } },
+                    { "scrollbar-rounding",     { &style.ScrollbarRounding,    0.0F,   12.0F,   true  } },
+                    { "grab-min-size",          { &style.GrabMinSize,          0.0F,   20.0F,   true  } },
+                    { "grab-rounding",          { &style.GrabRounding,         0.0F,   12.0F,   true  } },
+                    { "tab-rounding",           { &style.TabRounding,          0.0F,   12.0F,   true  } },
+                    { "button-text-align",      { &style.ButtonTextAlign,      0.0F,   1.0F,    false } },
+                    { "selectable-text-align",  { &style.SelectableTextAlign,  0.0F,   1.0F,    false } },
                 };
 
-                api::ThemeManager::addStyleHandler("imgui", ImGuiStyleMap);
+                ThemeManager::addStyleHandler("imgui", ImGuiStyleMap);
             }
 
             {
                 auto &style = ImPlot::GetStyle();
-                const static api::ThemeManager::StyleMap ImPlotStyleMap = {
-                        { "line-weight",            { &style.LineWeight,         0.0F, 5.0F     } },
-                        { "marker-size",            { &style.MarkerSize,         2.0F, 10.0F    } },
-                        { "marker-weight",          { &style.MarkerWeight,       0.0F, 5.0F     } },
-                        { "fill-alpha",             { &style.FillAlpha,          0.0F, 1.0F     } },
-                        { "error-bar-size",         { &style.ErrorBarSize,       0.0F, 10.0F    } },
-                        { "error-bar-weight",       { &style.ErrorBarWeight,     0.0F, 5.0F     } },
-                        { "digital-bit-height",     { &style.DigitalBitHeight,   0.0F, 20.0F    } },
-                        { "digital-bit-gap",        { &style.DigitalBitGap,      0.0F, 20.0F    } },
-                        { "plot-border-size",       { &style.PlotBorderSize,     0.0F, 2.0F     } },
-                        { "minor-alpha",            { &style.MinorAlpha,         0.0F, 1.0F     } },
-                        { "major-tick-len",         { &style.MajorTickLen,       0.0F, 20.0F    } },
-                        { "minor-tick-len",         { &style.MinorTickLen,       0.0F, 20.0F    } },
-                        { "major-tick-size",        { &style.MajorTickSize,      0.0F, 2.0F     } },
-                        { "minor-tick-size",        { &style.MinorTickSize,      0.0F, 2.0F     } },
-                        { "major-grid-size",        { &style.MajorGridSize,      0.0F, 2.0F     } },
-                        { "minor-grid-size",        { &style.MinorGridSize,      0.0F, 2.0F     } },
-                        { "plot-padding",           { &style.PlotPadding,        0.0F, 20.0F    } },
-                        { "label-padding",          { &style.LabelPadding,       0.0F, 20.0F    } },
-                        { "legend-padding",         { &style.LegendPadding,      0.0F, 20.0F    } },
-                        { "legend-inner-padding",   { &style.LegendInnerPadding, 0.0F, 10.0F    } },
-                        { "legend-spacing",         { &style.LegendSpacing,      0.0F, 5.0F     } },
-                        { "mouse-pos-padding",      { &style.MousePosPadding,    0.0F, 20.0F    } },
-                        { "annotation-padding",     { &style.AnnotationPadding,  0.0F, 5.0F     } },
-                        { "fit-padding",            { &style.FitPadding,         0.0F, 0.2F     } },
-                        { "plot-default-size",      { &style.PlotDefaultSize,    0.0F, 1000.0F  } },
-                        { "plot-min-size",          { &style.PlotMinSize,        0.0F, 300.0F   } },
+                const static ThemeManager::StyleMap ImPlotStyleMap = {
+                        { "line-weight",            { &style.LineWeight,         0.0F, 5.0F,    true  } },
+                        { "marker-size",            { &style.MarkerSize,         2.0F, 10.0F,   true  } },
+                        { "marker-weight",          { &style.MarkerWeight,       0.0F, 5.0F,    true  } },
+                        { "fill-alpha",             { &style.FillAlpha,          0.0F, 1.0F,    false } },
+                        { "error-bar-size",         { &style.ErrorBarSize,       0.0F, 10.0F,   true  } },
+                        { "error-bar-weight",       { &style.ErrorBarWeight,     0.0F, 5.0F,    true  } },
+                        { "digital-bit-height",     { &style.DigitalBitHeight,   0.0F, 20.0F,   true  } },
+                        { "digital-bit-gap",        { &style.DigitalBitGap,      0.0F, 20.0F,   true  } },
+                        { "plot-border-size",       { &style.PlotBorderSize,     0.0F, 2.0F,    true  } },
+                        { "minor-alpha",            { &style.MinorAlpha,         0.0F, 1.0F,    false } },
+                        { "major-tick-len",         { &style.MajorTickLen,       0.0F, 20.0F,   true  } },
+                        { "minor-tick-len",         { &style.MinorTickLen,       0.0F, 20.0F,   true  } },
+                        { "major-tick-size",        { &style.MajorTickSize,      0.0F, 2.0F,    true  } },
+                        { "minor-tick-size",        { &style.MinorTickSize,      0.0F, 2.0F,    true  } },
+                        { "major-grid-size",        { &style.MajorGridSize,      0.0F, 2.0F,    true  } },
+                        { "minor-grid-size",        { &style.MinorGridSize,      0.0F, 2.0F,    true  } },
+                        { "plot-padding",           { &style.PlotPadding,        0.0F, 20.0F,   true  } },
+                        { "label-padding",          { &style.LabelPadding,       0.0F, 20.0F,   true  } },
+                        { "legend-padding",         { &style.LegendPadding,      0.0F, 20.0F,   true  } },
+                        { "legend-inner-padding",   { &style.LegendInnerPadding, 0.0F, 10.0F,   true  } },
+                        { "legend-spacing",         { &style.LegendSpacing,      0.0F, 5.0F,    true  } },
+                        { "mouse-pos-padding",      { &style.MousePosPadding,    0.0F, 20.0F,   true  } },
+                        { "annotation-padding",     { &style.AnnotationPadding,  0.0F, 5.0F,    true  } },
+                        { "fit-padding",            { &style.FitPadding,         0.0F, 0.2F,    true  } },
+                        { "plot-default-size",      { &style.PlotDefaultSize,    0.0F, 1000.0F, true  } },
+                        { "plot-min-size",          { &style.PlotMinSize,        0.0F, 300.0F,  true  } },
                 };
 
-                api::ThemeManager::addStyleHandler("implot", ImPlotStyleMap);
+                ThemeManager::addStyleHandler("implot", ImPlotStyleMap);
             }
 
             {
                 auto &style = ImNodes::GetStyle();
-                const static api::ThemeManager::StyleMap ImNodesStyleMap = {
-                        { "grid-spacing",                  { &style.GridSpacing,               0.0F, 100.0F     } },
-                        { "node-corner-rounding",          { &style.NodeCornerRounding,        0.0F, 12.0F      } },
-                        { "node-padding",                  { &style.NodePadding,               0.0F, 20.0F      } },
-                        { "node-border-thickness",         { &style.NodeBorderThickness,       0.0F, 1.0F       } },
-                        { "link-thickness",                { &style.LinkThickness,             0.0F, 10.0F      } },
-                        { "link-line-segments-per-length", { &style.LinkLineSegmentsPerLength, 0.0F, 2.0F       } },
-                        { "link-hover-distance",           { &style.LinkHoverDistance,         0.0F, 20.0F      } },
-                        { "pin-circle-radius",             { &style.PinCircleRadius,           0.0F, 20.0F      } },
-                        { "pin-quad-side-length",          { &style.PinQuadSideLength,         0.0F, 20.0F      } },
-                        { "pin-triangle-side-length",      { &style.PinTriangleSideLength,     0.0F, 20.0F      } },
-                        { "pin-line-thickness",            { &style.PinLineThickness,          0.0F, 5.0F       } },
-                        { "pin-hover-radius",              { &style.PinHoverRadius,            0.0F, 20.0F      } },
-                        { "pin-offset",                    { &style.PinOffset,                 -10.0F, 10.0F    } },
-                        { "mini-map-padding",              { &style.MiniMapPadding,            0.0F, 20.0F      } },
-                        { "mini-map-offset",               { &style.MiniMapOffset,             -10.0F, 10.0F    } },
+                const static ThemeManager::StyleMap ImNodesStyleMap = {
+                        { "grid-spacing",                  { &style.GridSpacing,               0.0F,    100.0F, true } },
+                        { "node-corner-rounding",          { &style.NodeCornerRounding,        0.0F,    12.0F,  true } },
+                        { "node-padding",                  { &style.NodePadding,               0.0F,    20.0F,  true } },
+                        { "node-border-thickness",         { &style.NodeBorderThickness,       0.0F,    1.0F,   true } },
+                        { "link-thickness",                { &style.LinkThickness,             0.0F,    10.0F,  true } },
+                        { "link-line-segments-per-length", { &style.LinkLineSegmentsPerLength, 0.0F,    2.0F,   true } },
+                        { "link-hover-distance",           { &style.LinkHoverDistance,         0.0F,    20.0F,  true } },
+                        { "pin-circle-radius",             { &style.PinCircleRadius,           0.0F,    20.0F,  true } },
+                        { "pin-quad-side-length",          { &style.PinQuadSideLength,         0.0F,    20.0F,  true } },
+                        { "pin-triangle-side-length",      { &style.PinTriangleSideLength,     0.0F,    20.0F,  true } },
+                        { "pin-line-thickness",            { &style.PinLineThickness,          0.0F,    5.0F,   true } },
+                        { "pin-hover-radius",              { &style.PinHoverRadius,            0.0F,    20.0F,  true } },
+                        { "pin-offset",                    { &style.PinOffset,                 -10.0F,  10.0F,  true } },
+                        { "mini-map-padding",              { &style.MiniMapPadding,            0.0F,    20.0F,  true } },
+                        { "mini-map-offset",               { &style.MiniMapOffset,             -10.0F,  10.0F,  true } },
                 };
 
-                api::ThemeManager::addStyleHandler("imnodes", ImNodesStyleMap);
+                ThemeManager::addStyleHandler("imnodes", ImNodesStyleMap);
             }
         });
     }
@@ -327,14 +328,14 @@ namespace hex::plugin::builtin {
     void registerThemes() {
         // Load built-in themes
         for (const auto &theme : romfs::list("themes")) {
-            api::ThemeManager::addTheme(std::string(romfs::get(theme).string()));
+            ThemeManager::addTheme(std::string(romfs::get(theme).string()));
         }
 
         // Load user themes
         for (const auto &themeFolder : fs::getDefaultPaths(fs::ImHexPath::Themes)) {
             for (const auto &theme : std::fs::directory_iterator(themeFolder)) {
                 if (theme.is_regular_file())
-                    api::ThemeManager::addTheme(fs::File(theme.path(), fs::File::Mode::Read).readString());
+                    ThemeManager::addTheme(wolv::io::File(theme.path(), wolv::io::File::Mode::Read).readString());
             }
         }
     }

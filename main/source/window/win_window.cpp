@@ -24,6 +24,7 @@
     #include <wrl/client.h>
 
     #include <csignal>
+    #include <cstdio>
 
     #include <imgui_impl_glfw.h>
 
@@ -47,7 +48,7 @@ namespace hex {
                 if (data == nullptr) break;
 
                 std::fs::path path = data;
-                log::info("Opening file in existing instance: {}", hex::toUTF8String(path));
+                log::info("Opening file in existing instance: {}", wolv::util::toUTF8String(path));
                 EventManager::post<RequestOpenFile>(path);
                 break;
             }
@@ -203,15 +204,18 @@ namespace hex {
                 AddDllDirectory(path.c_str());
         }
 
+        // Various libraries sadly directly print to stderr with no way to disable it
+        // We redirect stderr to NUL to prevent this
+        freopen("NUL:", "w", stderr);
+        setvbuf(stderr, nullptr, _IONBF, 0);
+
         // Attach to parent console if one exists
         if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-            // Redirect cin, cout and cerr to that console
+            // Redirect stdin and stdout to that new console
             freopen("CONIN$", "r", stdin);
             freopen("CONOUT$", "w", stdout);
-            freopen("CONOUT$", "w", stderr);
             setvbuf(stdin, nullptr, _IONBF, 0);
             setvbuf(stdout, nullptr, _IONBF, 0);
-            setvbuf(stderr, nullptr, _IONBF, 0);
 
             fmt::print("\n");
 
@@ -414,7 +418,7 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-        auto &titleBarButtons = ContentRegistry::Interface::getTitleBarButtons();
+        auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
@@ -442,7 +446,7 @@ namespace hex {
 
         // Draw close button
         if (ImGui::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
-            ImHexApi::Common::closeImHex();
+            ImHexApi::System::closeImHex();
         }
 
         ImGui::PopStyleColor(5);

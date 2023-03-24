@@ -12,10 +12,8 @@ namespace hex::plugin::builtin {
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
 
         EventManager::subscribe<EventSettingsChanged>(this, [this]() {
-            auto patternStyle = ContentRegistry::Settings::getSetting("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style");
-
-            if (patternStyle.is_number())
-                this->m_patternDrawer.setTreeStyle(static_cast<ui::PatternDrawer::TreeStyle>(patternStyle.get<int>()));
+            auto patternStyle = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0);
+            this->m_patternDrawer.setTreeStyle(static_cast<ui::PatternDrawer::TreeStyle>(patternStyle));
         });
 
         EventManager::subscribe<EventProviderChanged>(this, [this](auto, auto) {

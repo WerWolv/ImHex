@@ -1,7 +1,8 @@
 #include <hex/helpers/tar.hpp>
 #include <hex/helpers/literals.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex {
 
@@ -12,11 +13,11 @@ namespace hex {
 
         // Explicitly create file so a short path gets generated
         if (mode == Mode::Create) {
-            fs::File file(path, fs::File::Mode::Create);
+            wolv::io::File file(path, wolv::io::File::Mode::Create);
             file.flush();
         }
 
-        auto shortPath = hex::fs::toShortPath(path);
+        auto shortPath = wolv::io::fs::toShortPath(path);
         if (mode == Tar::Mode::Read)
             error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "r");
         else if (mode == Tar::Mode::Write)
@@ -58,7 +59,7 @@ namespace hex {
         mtar_header_t header;
         while (mtar_read_header(&this->m_ctx, &header) != MTAR_ENULLRECORD) {
             std::fs::path path = header.name;
-            if (header.name != PaxHeaderName && fs::isSubPath(basePath, path)) {
+            if (header.name != PaxHeaderName && wolv::io::fs::isSubPath(basePath, path)) {
                 result.emplace_back(header.name);
             }
 
@@ -83,7 +84,7 @@ namespace hex {
         this->m_valid = false;
     }
 
-    std::vector<u8> Tar::read(const std::fs::path &path) {
+    std::vector<u8> Tar::readVector(const std::fs::path &path) {
         mtar_header_t header;
 
         auto fixedPath = path.string();
@@ -99,11 +100,11 @@ namespace hex {
     }
 
     std::string Tar::readString(const std::fs::path &path) {
-        auto result = this->read(path);
+        auto result = this->readVector(path);
         return { result.begin(), result.end() };
     }
 
-    void Tar::write(const std::fs::path &path, const std::vector<u8> &data) {
+    void Tar::writeVector(const std::fs::path &path, const std::vector<u8> &data) {
         if (path.has_parent_path()) {
             std::fs::path pathPart;
             for (const auto &part : path.parent_path()) {
@@ -125,21 +126,21 @@ namespace hex {
         mtar_write_data(&this->m_ctx, data.data(), data.size());
     }
 
-    void Tar::write(const std::fs::path &path, const std::string &data) {
-        this->write(path, std::vector<u8>(data.begin(), data.end()));
+    void Tar::writeString(const std::fs::path &path, const std::string &data) {
+        this->writeVector(path, { data.begin(), data.end() });
     }
 
     static void writeFile(mtar_t *ctx, mtar_header_t *header, const std::fs::path &path) {
         constexpr static u64 BufferSize = 1_MiB;
 
-        fs::File outputFile(path, fs::File::Mode::Create);
+        wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
 
         std::vector<u8> buffer;
         for (u64 offset = 0; offset < header->size; offset += BufferSize) {
             buffer.resize(std::min<u64>(BufferSize, header->size - offset));
 
             mtar_read_data(ctx, buffer.data(), buffer.size());
-            outputFile.write(buffer);
+            outputFile.writeVector(buffer);
         }
     }
 

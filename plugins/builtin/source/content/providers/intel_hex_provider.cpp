@@ -5,10 +5,12 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <nlohmann/json.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -192,7 +194,7 @@ namespace hex::plugin::builtin {
     }
 
     bool IntelHexProvider::open() {
-        auto file = fs::File(this->m_sourceFilePath, fs::File::Mode::Read);
+        auto file = wolv::io::File(this->m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid())
             return false;
 
@@ -221,7 +223,7 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string IntelHexProvider::getName() const {
-        return hex::format("hex.builtin.provider.intel_hex.name"_lang, hex::toUTF8String(this->m_sourceFilePath.filename()));
+        return hex::format("hex.builtin.provider.intel_hex.name"_lang, wolv::util::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
     bool IntelHexProvider::handleFilePicker() {
@@ -245,7 +247,7 @@ namespace hex::plugin::builtin {
 
         if (!picked)
             return false;
-        if (!fs::isRegularFile(this->m_sourceFilePath))
+        if (!wolv::io::fs::isRegularFile(this->m_sourceFilePath))
             return false;
 
         return true;
@@ -273,7 +275,7 @@ namespace hex::plugin::builtin {
     }
 
     nlohmann::json IntelHexProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = hex::toUTF8String(this->m_sourceFilePath);
+        settings["path"] = wolv::util::toUTF8String(this->m_sourceFilePath);
 
         return Provider::storeSettings(settings);
     }

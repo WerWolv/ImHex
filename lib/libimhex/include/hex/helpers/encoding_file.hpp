@@ -8,7 +8,8 @@
 #include <span>
 
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/file.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex {
 
@@ -23,12 +24,13 @@ namespace hex {
         EncodingFile(Type type, const std::fs::path &path);
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
+        [[nodiscard]] size_t getEncodingLengthFor(std::span<u8> buffer) const;
         [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }
 
         [[nodiscard]] bool valid() const { return this->m_valid; }
 
     private:
-        void parseThingyFile(fs::File &file);
+        void parseThingyFile(wolv::io::File &file);
 
         bool m_valid = false;
 

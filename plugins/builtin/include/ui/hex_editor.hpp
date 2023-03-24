@@ -25,7 +25,10 @@ namespace hex::plugin::builtin::ui {
         ~HexEditor();
         void draw(float height = ImGui::GetContentRegionAvail().y);
 
-        void setProvider(prv::Provider *provider) { this->m_provider = provider; }
+        void setProvider(prv::Provider *provider) {
+            this->m_provider = provider;
+            this->m_currValidRegion = { Region::Invalid(), false };
+        }
         void setUnknownDataCharacter(char character) { this->m_unknownDataCharacter = character; }
     private:
         enum class CellType { None, Hex, ASCII };
@@ -43,6 +46,7 @@ namespace hex::plugin::builtin::ui {
         void setSelectionUnchecked(std::optional<u64> start, std::optional<u64> end) {
             this->m_selectionStart = start;
             this->m_selectionEnd = end;
+            this->m_cursorPosition = end;
         }
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
         void setSelection(u128 start, u128 end) {
@@ -55,6 +59,7 @@ namespace hex::plugin::builtin::ui {
 
             this->m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
             this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
+            this->m_cursorPosition = this->m_selectionEnd;
 
             if (this->m_selectionChanged) {
                 auto selection = this->getSelection();
@@ -72,6 +77,14 @@ namespace hex::plugin::builtin::ui {
             const size_t size = end - start + 1;
 
             return { start, size };
+        }
+
+        [[nodiscard]] std::optional<u64> getCursorPosition() const {
+            return this->m_cursorPosition;
+        }
+
+        void setCursorPosition(u64 cursorPosition) {
+            this->m_cursorPosition = cursorPosition;
         }
 
         [[nodiscard]] bool isSelectionValid() const {
@@ -139,6 +152,7 @@ namespace hex::plugin::builtin::ui {
 
         void setCustomEncoding(EncodingFile encoding) {
             this->m_currCustomEncoding = std::move(encoding);
+            this->m_encodingLineStartAddresses.clear();
         }
 
         void forceUpdateScrollPosition() {
@@ -170,6 +184,7 @@ namespace hex::plugin::builtin::ui {
 
         std::optional<u64> m_selectionStart;
         std::optional<u64> m_selectionEnd;
+        std::optional<u64> m_cursorPosition;
         float m_scrollPosition = 0;
 
         u16 m_bytesPerRow = 16;
@@ -202,6 +217,7 @@ namespace hex::plugin::builtin::ui {
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
 
         std::optional<EncodingFile> m_currCustomEncoding;
+        std::vector<u64> m_encodingLineStartAddresses;
 
         std::pair<Region, bool> m_currValidRegion = { Region::Invalid(), false };
 

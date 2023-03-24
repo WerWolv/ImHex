@@ -1,4 +1,5 @@
 #include "content/views/view_store.hpp"
+#include "hex/api/theme_manager.hpp"
 
 #include <hex/api/content_registry.hpp>
 
@@ -10,14 +11,14 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/magic.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/tar.hpp>
 
-#include <fstream>
 #include <filesystem>
 #include <functional>
 #include <nlohmann/json.hpp>
+
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -25,22 +26,40 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.help", 3000, [&, this] {
-            if (ImGui::MenuItem("hex.builtin.view.store.name"_lang)) {
-                if (this->m_requestStatus == RequestStatus::NotAttempted)
-                    this->refresh();
-                TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
-                this->getWindowOpenState() = true;
-            }
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.store.name" }, 2050, Shortcut::None, [&, this] {
+            if (this->m_requestStatus == RequestStatus::NotAttempted)
+                this->refresh();
+            TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
+            this->getWindowOpenState() = true;
         });
+
+        this->m_httpRequest.setTimeout(30'0000);
     }
 
     void ViewStore::drawStore() {
         ImGui::Header("hex.builtin.view.store.desc"_lang, true);
 
+        bool reloading = false;
+        if (this->m_apiRequest.valid()) {
+            if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)
+                reloading = true;
+            else
+                this->parseResponse();
+        }
+
+        ImGui::BeginDisabled(reloading);
         if (ImGui::Button("hex.builtin.view.store.reload"_lang)) {
             this->refresh();
         }
+        ImGui::EndDisabled();
+
+        if (reloading) {
+            ImGui::SameLine();
+            ImGui::TextSpinner("hex.builtin.view.store.loading"_lang);
+        }
+
 
         auto drawTab = [this](auto title, fs::ImHexPath pathType, auto &content, const std::function<void()> &downloadDoneCallback = []{}) {
             if (ImGui::BeginTabItem(title)) {
@@ -54,24 +73,26 @@ namespace hex::plugin::builtin {
 
                     u32 id = 1;
                     for (auto &entry : content) {
-                        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeight() + 4.0F * ImGui::GetStyle().FramePadding.y);
+                        ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(entry.name.c_str());
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(entry.description.c_str());
                         ImGui::TableNextColumn();
 
+                        const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
+
                         ImGui::PushID(id);
                         ImGui::BeginDisabled(this->m_download.valid() && this->m_download.wait_for(0s) != std::future_status::ready);
                         {
                             if (entry.downloading) {
-                                ImGui::TextSpinner("");
+                                ImGui::ProgressBar(this->m_httpRequest.getProgress(), buttonSize, "");
 
                                 if (this->m_download.valid() && this->m_download.wait_for(0s) == std::future_status::ready) {
                                     entry.downloading = false;
 
                                     auto response = this->m_download.get();
-                                    if (response.code == 200) {
+                                    if (response.isSuccess()) {
                                         entry.installed = true;
                                         entry.hasUpdate = false;
 
@@ -82,24 +103,29 @@ namespace hex::plugin::builtin {
 
                                         downloadDoneCallback();
                                     } else
-                                        log::error("Download failed! HTTP Code {}", response.code);
+                                        log::error("Download failed! HTTP Code {}", response.getStatusCode());
 
 
                                     this->m_download = {};
                                 }
 
-                            } else if (entry.hasUpdate) {
-                                if (ImGui::Button("hex.builtin.view.store.update"_lang)) {
-                                    entry.downloading = this->download(pathType, entry.fileName, entry.link, true);
-                                }
-                            } else if (!entry.installed) {
-                                if (ImGui::Button("hex.builtin.view.store.download"_lang)) {
-                                    entry.downloading = this->download(pathType, entry.fileName, entry.link, false);
-                                }
                             } else {
-                                if (ImGui::Button("hex.builtin.view.store.remove"_lang)) {
-                                    entry.installed = !this->remove(pathType, entry.fileName);
+                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+                                if (entry.hasUpdate) {
+                                    if (ImGui::Button("hex.builtin.view.store.update"_lang, buttonSize)) {
+                                        entry.downloading = this->download(pathType, entry.fileName, entry.link, true);
+                                    }
+                                } else if (!entry.installed) {
+                                    if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
+                                        entry.downloading = this->download(pathType, entry.fileName, entry.link, false);
+                                    }
+                                } else {
+                                    if (ImGui::Button("hex.builtin.view.store.remove"_lang, buttonSize)) {
+                                        entry.installed = !this->remove(pathType, entry.fileName);
+                                    }
                                 }
+                                ImGui::PopStyleVar();
                             }
                         }
                         ImGui::EndDisabled();
@@ -116,12 +142,18 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginTabBar("storeTabs")) {
             drawTab("hex.builtin.view.store.tab.patterns"_lang,     fs::ImHexPath::Patterns,        this->m_patterns);
             drawTab("hex.builtin.view.store.tab.libraries"_lang,    fs::ImHexPath::PatternsInclude, this->m_includes);
-            drawTab("hex.builtin.view.store.tab.magics"_lang,       fs::ImHexPath::Magic,           this->m_magics, magic::compile);
-            drawTab("hex.builtin.view.store.tab.constants"_lang,    fs::ImHexPath::Constants,       this->m_constants);
-            drawTab("hex.builtin.view.store.tab.encodings"_lang,    fs::ImHexPath::Encodings,       this->m_encodings);
-            drawTab("hex.builtin.view.store.tab.yara"_lang,         fs::ImHexPath::Yara,            this->m_yara);
+            drawTab("hex.builtin.view.store.tab.magics"_lang,       fs::ImHexPath::Magic,           this->m_magics, []{
+                magic::compile();
+            });
             drawTab("hex.builtin.view.store.tab.nodes"_lang,        fs::ImHexPath::Nodes,           this->m_nodes);
-            drawTab("hex.builtin.view.store.tab.themes"_lang,       fs::ImHexPath::Themes,          this->m_themes);
+            drawTab("hex.builtin.view.store.tab.encodings"_lang,    fs::ImHexPath::Encodings,       this->m_encodings);
+            drawTab("hex.builtin.view.store.tab.constants"_lang,    fs::ImHexPath::Constants,       this->m_constants);
+            drawTab("hex.builtin.view.store.tab.themes"_lang,       fs::ImHexPath::Themes,          this->m_themes, [this]{
+                auto themeFile = wolv::io::File(this->m_downloadPath, wolv::io::File::Mode::Read);
+
+                ThemeManager::addTheme(themeFile.readString());
+            });
+            drawTab("hex.builtin.view.store.tab.yara"_lang,         fs::ImHexPath::Yara,            this->m_yara);
 
             ImGui::EndTabBar();
         }
@@ -139,15 +171,18 @@ namespace hex::plugin::builtin {
         this->m_constants.clear();
         this->m_yara.clear();
         this->m_encodings.clear();
+        this->m_nodes.clear();
+        this->m_themes.clear();
 
-        this->m_apiRequest = this->m_net.getString(ImHexApiURL + "/store"s, 30'0000);
+        this->m_httpRequest.setUrl(ImHexApiURL + "/store"s);
+        this->m_apiRequest = this->m_httpRequest.execute();
     }
 
     void ViewStore::parseResponse() {
         auto response = this->m_apiRequest.get();
-        this->m_requestStatus = response.code == 200 ? RequestStatus::Succeeded : RequestStatus::Failed;
+        this->m_requestStatus = response.isSuccess() ? RequestStatus::Succeeded : RequestStatus::Failed;
         if (this->m_requestStatus == RequestStatus::Succeeded) {
-            auto json = nlohmann::json::parse(response.body);
+            auto json = nlohmann::json::parse(response.getData());
 
             auto parseStoreEntries = [](auto storeJson, const std::string &name, fs::ImHexPath pathType, std::vector<StoreEntry> &results) {
                 // Check if the response handles the type of files
@@ -166,14 +201,13 @@ namespace hex::plugin::builtin {
 
                                 auto path = folder / std::fs::path(storeEntry.fileName);
 
-                                if (fs::exists(path) && fs::isPathWritable(folder)) {
+                                if (wolv::io::fs::exists(path) && fs::isPathWritable(folder)) {
                                     storeEntry.installed = true;
 
-                                    std::ifstream file(path, std::ios::in | std::ios::binary);
-                                    std::vector<u8> data(fs::getFileSize(path), 0x00);
-                                    file.read(reinterpret_cast<char *>(data.data()), data.size());
+                                    wolv::io::File file(path, wolv::io::File::Mode::Read);
+                                    auto bytes = file.readVector();
 
-                                    auto fileHash = crypt::sha256(data);
+                                    auto fileHash = crypt::sha256(bytes);
 
                                     // Compare installed file hash with hash of repo file
                                     if (std::vector(fileHash.begin(), fileHash.end()) != crypt::decode16(storeEntry.hash))
@@ -185,6 +219,10 @@ namespace hex::plugin::builtin {
                         }
                     }
                 }
+
+                std::sort(results.begin(), results.end(), [](const auto &lhs, const auto &rhs) {
+                    return lhs.name < rhs.name;
+                });
             };
 
             parseStoreEntries(json, "patterns", fs::ImHexPath::Patterns, this->m_patterns);
@@ -201,13 +239,6 @@ namespace hex::plugin::builtin {
 
     void ViewStore::drawContent() {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.store.name").c_str(), &this->getWindowOpenState())) {
-            if (this->m_apiRequest.valid()) {
-                if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)
-                    ImGui::TextSpinner("hex.builtin.view.store.loading"_lang);
-                else
-                    this->parseResponse();
-            }
-
             if (this->m_requestStatus == RequestStatus::Failed)
                 ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
             
@@ -227,10 +258,12 @@ namespace hex::plugin::builtin {
 
             auto fullPath = path / std::fs::path(fileName);
 
-            if (!update || fs::exists(fullPath)) {
+            if (!update || wolv::io::fs::exists(fullPath)) {
                 downloading          = true;
                 this->m_downloadPath = fullPath;
-                this->m_download     = this->m_net.downloadFile(url, fullPath, 30'0000);
+
+                this->m_httpRequest.setUrl(url);
+                this->m_download     = this->m_httpRequest.downloadFile(fullPath);
                 break;
             }
         }
@@ -249,10 +282,10 @@ namespace hex::plugin::builtin {
             const auto filePath = path / fileName;
             const auto folderPath = (path / std::fs::path(fileName).stem());
 
-            fs::remove(filePath);
-            fs::removeAll(folderPath);
+            wolv::io::fs::remove(filePath);
+            wolv::io::fs::removeAll(folderPath);
 
-            removed = removed && !fs::exists(filePath) && !fs::exists(folderPath);
+            removed = removed && !wolv::io::fs::exists(filePath) && !wolv::io::fs::exists(folderPath);
         }
 
         return removed;

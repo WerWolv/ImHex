@@ -1,7 +1,7 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/providers/provider.hpp>
-#include <hex/helpers/net.hpp>
+#include <hex/helpers/http_requests.hpp>
 
 #include <pl/core/token.hpp>
 #include <pl/core/log_console.hpp>
@@ -9,6 +9,7 @@
 #include <pl/patterns/pattern.hpp>
 
 #include <llvm/Demangle/Demangle.h>
+
 namespace hex::plugin::builtin {
 
     void registerPatternLanguageFunctions() {
@@ -67,8 +68,8 @@ namespace hex::plugin::builtin {
             ContentRegistry::PatternLanguage::addDangerousFunction(nsHexHttp, "get", FunctionParameterCount::exactly(1), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 const auto url = params[0].toString(false);
 
-                hex::Net net;
-                return net.getString(url).get().body;
+                hex::HttpRequest request("GET", url);
+                return request.execute().get().getData();
             });
         }
     }

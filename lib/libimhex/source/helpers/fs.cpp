@@ -3,11 +3,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 
-#include <hex/helpers/fs_macos.hpp>
-#include <hex/helpers/file.hpp>
-#include <hex/helpers/intrinsics.hpp>
-#include <hex/helpers/utils.hpp>
-
 #include <xdg.hpp>
 
 #if defined(OS_WINDOWS)
@@ -21,60 +16,10 @@
 #include <algorithm>
 #include <filesystem>
 
+#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
+
 namespace hex::fs {
-
-    std::optional<std::fs::path> getExecutablePath() {
-#if defined(OS_WINDOWS)
-        std::wstring exePath(MAX_PATH, '\0');
-        if (GetModuleFileNameW(nullptr, exePath.data(), exePath.length()) == 0)
-            return std::nullopt;
-
-        hex::trim(exePath);
-
-        return exePath;
-#elif defined(OS_LINUX)
-        std::string exePath(PATH_MAX, '\0');
-        if (readlink("/proc/self/exe", exePath.data(), PATH_MAX) < 0)
-            return std::nullopt;
-
-        hex::trim(exePath);
-
-        return exePath;
-#elif defined(OS_MACOS)
-        std::string exePath;
-
-        {
-            auto string = getMacExecutableDirectoryPath();
-            exePath = string;
-            macFree(string);
-        }
-
-        hex::trim(exePath);
-
-        return exePath;
-#else
-        return std::nullopt;
-#endif
-    }
-
-
-    bool isPathWritable(const std::fs::path &path) {
-        constexpr static auto TestFileName = "__imhex__tmp__";
-        {
-            File file(path / TestFileName, File::Mode::Read);
-            if (file.isValid()) {
-                if (!file.remove())
-                    return false;
-            }
-        }
-
-        File file(path / TestFileName, File::Mode::Create);
-        bool result = file.isValid();
-        if (!file.remove())
-            return false;
-
-        return result;
-    }
 
     static std::function<void()> s_fileBrowserErrorCallback;
     void setFileBrowserErrorCallback(const std::function<void()> &callback) {
@@ -143,14 +88,7 @@ namespace hex::fs {
 
         #elif defined(OS_MACOS)
 
-            std::fs::path applicationSupportDirPath;
-            {
-                auto string = getMacApplicationSupportDirectoryPath();
-                applicationSupportDirPath = std::string(string);
-                macFree(string);
-            }
-
-            paths.push_back(applicationSupportDirPath);
+            paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath());
 
         #elif defined(OS_LINUX)
 
@@ -166,12 +104,12 @@ namespace hex::fs {
 
         #if defined(OS_MACOS)
 
-            if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
+            if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
                 paths.push_back(*executablePath);
 
         #else
 
-            if (auto executablePath = fs::getExecutablePath(); executablePath.has_value())
+            if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
                 paths.push_back(executablePath->parent_path());
 
         #endif
@@ -281,9 +219,27 @@ namespace hex::fs {
 
         if (!listNonExisting) {
             result.erase(std::remove_if(result.begin(), result.end(), [](const auto &path) {
-                return !fs::isDirectory(path);
+                return !wolv::io::fs::isDirectory(path);
             }), result.end());
         }
+
+        return result;
+    }
+
+    bool isPathWritable(const std::fs::path &path) {
+        constexpr static auto TestFileName = "__imhex__tmp__";
+        {
+            wolv::io::File file(path / TestFileName, wolv::io::File::Mode::Read);
+            if (file.isValid()) {
+                if (!file.remove())
+                    return false;
+            }
+        }
+
+        wolv::io::File file(path / TestFileName, wolv::io::File::Mode::Create);
+        bool result = file.isValid();
+        if (!file.remove())
+            return false;
 
         return result;
     }

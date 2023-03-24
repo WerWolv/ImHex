@@ -19,13 +19,23 @@
 #include <variant>
 #include <vector>
 
-#define TOKEN_CONCAT_IMPL(x, y)    x##y
-#define TOKEN_CONCAT(x, y)         TOKEN_CONCAT_IMPL(x, y)
-#define ANONYMOUS_VARIABLE(prefix) TOKEN_CONCAT(prefix, __COUNTER__)
-
 struct ImVec2;
 
 namespace hex {
+
+    template<typename T>
+    std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
+        size_t stride = std::max(1.0, double(data.size()) / count);
+
+        std::vector<T> result;
+        result.reserve(count);
+
+        for (size_t i = 0; i < data.size(); i += stride) {
+            result.push_back(data[i]);
+        }
+
+        return result;
+    }
 
     float operator""_scaled(long double value);
     float operator""_scaled(unsigned long long value);
@@ -101,11 +111,6 @@ namespace hex {
 
         return i;
     }
-
-    template<class... Ts>
-    struct overloaded : Ts... { using Ts::operator()...; };
-    template<class... Ts>
-    overloaded(Ts...) -> overloaded<Ts...>;
 
     template<size_t Size>
     struct SizeTypeImpl { };
@@ -206,14 +211,6 @@ namespace hex {
 
     std::string toEngineeringString(double value);
 
-    template<typename T>
-    std::vector<u8> toBytes(T value) {
-        std::vector<u8> bytes(sizeof(T));
-        std::memcpy(bytes.data(), &value, sizeof(T));
-
-        return bytes;
-    }
-
     inline std::vector<u8> parseByteString(const std::string &string) {
         auto byteString = std::string(string);
         byteString.erase(std::remove(byteString.begin(), byteString.end(), ' '), byteString.end());
@@ -241,26 +238,6 @@ namespace hex {
         return result;
     }
 
-    template<typename T>
-    inline void trimLeft(std::basic_string<T> &s) {
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
-            return !std::isspace(ch) && ch >= 0x20;
-        }));
-    }
-
-    template<typename T>
-    inline void trimRight(std::basic_string<T> &s) {
-        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-            return !std::isspace(ch) && ch >= 0x20;
-        }).base(), s.end());
-    }
-
-    template<typename T>
-    inline void trim(std::basic_string<T> &s) {
-        trimLeft(s);
-        trimRight(s);
-    }
-
     float float16ToFloat32(u16 float16);
 
     inline bool equalsIgnoreCase(const std::string &left, const std::string &right) {
@@ -275,13 +252,6 @@ namespace hex {
         });
 
         return iter != a.end();
-    }
-
-    template<typename T> requires requires(T t) { t.u8string(); }
-    std::string toUTF8String(const T &value) {
-        auto result = value.u8string();
-
-        return { result.begin(), result.end() };
     }
 
     template<typename T, typename... VariantTypes>
@@ -311,91 +281,6 @@ namespace hex {
             return string;
 
         return string.substr(0, maxLength - 3) + "...";
-    }
-
-    namespace scope_guard {
-
-#define SCOPE_GUARD   ::hex::scope_guard::ScopeGuardOnExit() + [&]()
-#define ON_SCOPE_EXIT [[maybe_unused]] auto ANONYMOUS_VARIABLE(SCOPE_EXIT_) = SCOPE_GUARD
-
-        template<class F>
-        class ScopeGuard {
-        private:
-            F m_func;
-            bool m_active;
-
-        public:
-            explicit constexpr ScopeGuard(F func) : m_func(std::move(func)), m_active(true) { }
-            ~ScopeGuard() {
-                if (this->m_active) { this->m_func(); }
-            }
-            void release() { this->m_active = false; }
-
-            ScopeGuard(ScopeGuard &&other) noexcept : m_func(std::move(other.m_func)), m_active(other.m_active) {
-                other.cancel();
-            }
-
-            ScopeGuard &operator=(ScopeGuard &&) = delete;
-        };
-
-        enum class ScopeGuardOnExit
-        {
-        };
-
-        template<typename F>
-        constexpr ScopeGuard<F> operator+(ScopeGuardOnExit, F &&f) {
-            return ScopeGuard<F>(std::forward<F>(f));
-        }
-
-    }
-
-    namespace first_time_exec {
-
-        #define FIRST_TIME [[maybe_unused]] static auto ANONYMOUS_VARIABLE(FIRST_TIME_) = ::hex::first_time_exec::FirstTimeExecutor() + [&]()
-
-        template<class F>
-        class FirstTimeExecute {
-        public:
-            explicit constexpr FirstTimeExecute(F func) { func(); }
-
-            FirstTimeExecute &operator=(FirstTimeExecute &&) = delete;
-        };
-
-        enum class FirstTimeExecutor
-        {
-        };
-
-        template<typename F>
-        constexpr FirstTimeExecute<F> operator+(FirstTimeExecutor, F &&f) {
-            return FirstTimeExecute<F>(std::forward<F>(f));
-        }
-
-    }
-
-    namespace final_cleanup {
-
-        #define FINAL_CLEANUP [[maybe_unused]] static auto ANONYMOUS_VARIABLE(ON_EXIT_) = ::hex::final_cleanup::FinalCleanupExecutor() + [&]()
-
-        template<class F>
-        class FinalCleanupExecute {
-            F m_func;
-
-        public:
-            explicit constexpr FinalCleanupExecute(F func) : m_func(func) { }
-            constexpr ~FinalCleanupExecute() { this->m_func(); }
-
-            FinalCleanupExecute &operator=(FinalCleanupExecute &&) = delete;
-        };
-
-        enum class FinalCleanupExecutor
-        {
-        };
-
-        template<typename F>
-        constexpr FinalCleanupExecute<F> operator+(FinalCleanupExecutor, F &&f) {
-            return FinalCleanupExecute<F>(std::forward<F>(f));
-        }
-
     }
 
 }

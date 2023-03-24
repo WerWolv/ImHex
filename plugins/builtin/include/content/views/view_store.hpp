@@ -3,7 +3,7 @@
 #include <hex.hpp>
 
 #include <hex/ui/view.hpp>
-#include <hex/helpers/net.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <array>
@@ -48,9 +48,9 @@ namespace hex::plugin::builtin {
         [[nodiscard]] ImVec2 getMaxSize() const override { return { 900, 700 }; }
 
     private:
-        Net m_net;
-        std::future<Response<std::string>> m_apiRequest;
-        std::future<Response<void>> m_download;
+        HttpRequest m_httpRequest = HttpRequest("GET", "");
+        std::future<HttpRequest::Result<std::string>> m_apiRequest;
+        std::future<HttpRequest::Result<std::string>> m_download;
         std::fs::path m_downloadPath;
         RequestStatus m_requestStatus = RequestStatus::NotAttempted;
 

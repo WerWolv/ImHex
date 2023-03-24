@@ -7,15 +7,16 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/file.hpp>
 #include <hex/helpers/fmt.hpp>
+
+#include <wolv/utils/string.hpp>
 
 #include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 
     bool FileProvider::isAvailable() const {
-        return this->m_file.isValid();
+        return true;
     }
 
     bool FileProvider::isReadable() const {
@@ -61,29 +62,22 @@ namespace hex::plugin::builtin {
         if (offset > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
-        std::scoped_lock lock(this->m_mutex);
-        if (offset < this->m_bufferStartAddress || offset + size > this->m_bufferStartAddress + this->m_buffer.size() || this->m_buffer.size() < size) {
-            this->m_buffer.resize(std::min<size_t>(std::max<size_t>(0x100, size), this->getActualSize() - offset));
-            this->m_file.seek(offset);
-            this->m_file.readBuffer(this->m_buffer.data(), this->m_buffer.size());
-            this->m_bufferStartAddress = offset;
-        }
-
-        std::memcpy(buffer, this->m_buffer.data() + (offset - this->m_bufferStartAddress), std::min<size_t>(size, this->m_buffer.size()));
+        auto &file = this->getFile();
+        file.seek(offset);
+        file.readBuffer(reinterpret_cast<u8*>(buffer), size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::scoped_lock lock(this->m_mutex);
-        fs::File writeFile(this->m_path, fs::File::Mode::Write);
+        std::scoped_lock lock(this->m_writeMutex);
+        wolv::io::File writeFile(this->m_path, wolv::io::File::Mode::Write);
         if (!writeFile.isValid())
             return;
         
         writeFile.seek(offset);
-        writeFile.write(reinterpret_cast<const u8*>(buffer), size);
-        this->m_buffer.clear();
+        writeFile.writeBuffer(reinterpret_cast<const u8*>(buffer), size);
     }
 
     void FileProvider::save() {
@@ -91,29 +85,17 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::saveAs(const std::fs::path &path) {
-        fs::File file(path, fs::File::Mode::Create);
-
-        if (file.isValid()) {
-            auto provider = ImHexApi::Provider::get();
-
-            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, provider->getActualSize()), 0x00);
-            size_t bufferSize = buffer.size();
-
-            for (u64 offset = 0; offset < provider->getActualSize(); offset += bufferSize) {
-                if (bufferSize > provider->getActualSize() - offset)
-                    bufferSize = provider->getActualSize() - offset;
-
-                provider->read(offset + this->getBaseAddress(), buffer.data(), bufferSize);
-                file.write(buffer.data(), bufferSize);
-            }
-        }
+        if (path == this->m_path)
+            this->save();
+        else
+            Provider::saveAs(path);
     }
 
     void FileProvider::resize(size_t newSize) {
         this->close();
 
         {
-            fs::File file(this->m_path, fs::File::Mode::Write);
+            wolv::io::File file(this->m_path, wolv::io::File::Mode::Write);
 
             file.setSize(newSize);
         }
@@ -166,17 +148,17 @@ namespace hex::plugin::builtin {
     }
 
     size_t FileProvider::getActualSize() const {
-        return this->m_fileSize;
+        return this->m_sizeFile.getSize();
     }
 
     std::string FileProvider::getName() const {
-        return hex::toUTF8String(this->m_path.filename());
+        return wolv::util::toUTF8String(this->m_path.filename());
     }
 
     std::vector<std::pair<std::string, std::string>> FileProvider::getDataDescription() const {
         std::vector<std::pair<std::string, std::string>> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, hex::toUTF8String(this->m_path));
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(this->m_path));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStats.has_value()) {
@@ -190,11 +172,11 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> FileProvider::queryInformation(const std::string &category, const std::string &argument) {
         if (category == "file_path")
-            return hex::toUTF8String(this->m_path);
+            return wolv::util::toUTF8String(this->m_path);
         else if (category == "file_name")
-            return hex::toUTF8String(this->m_path.filename());
+            return wolv::util::toUTF8String(this->m_path.filename());
         else if (category == "file_extension")
-            return hex::toUTF8String(this->m_path.extension());
+            return wolv::util::toUTF8String(this->m_path.extension());
         else if (category == "creation_time")
             return this->m_fileStats->st_ctime;
         else if (category == "access_time")
@@ -221,7 +203,7 @@ namespace hex::plugin::builtin {
         this->m_readable = true;
         this->m_writable = true;
 
-        fs::File file(this->m_path, fs::File::Mode::Read);
+        wolv::io::File file(this->m_path, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
             this->m_writable = false;
             this->m_readable = false;
@@ -229,14 +211,27 @@ namespace hex::plugin::builtin {
         }
 
         this->m_fileStats = file.getFileInfo();
-        this->m_fileSize = file.getSize();
-        this->m_file = std::move(file);
+        this->m_sizeFile  = file.clone();
+
+        this->m_files.emplace(std::this_thread::get_id(), std::move(file));
 
         return true;
     }
 
     void FileProvider::close() {
 
+    }
+
+    wolv::io::File& FileProvider::getFile() {
+
+        auto threadId = std::this_thread::get_id();
+        if (!this->m_files.contains(threadId)) {
+            std::scoped_lock lock(this->m_fileAccessMutex);
+            if (!this->m_files.contains(threadId))
+                this->m_files.emplace(threadId, this->m_sizeFile.clone());
+        }
+
+        return this->m_files[threadId];
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
@@ -246,7 +241,7 @@ namespace hex::plugin::builtin {
         std::fs::path path = std::u8string(pathString.begin(), pathString.end());
 
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            this->setPath(std::filesystem::weakly_canonical(projectPath.parent_path() / path));
+            this->setPath(std::fs::weakly_canonical(projectPath.parent_path() / path));
         else
             this->setPath(path);
     }
@@ -254,9 +249,9 @@ namespace hex::plugin::builtin {
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
         std::string path;
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            path = hex::toUTF8String(std::fs::proximate(this->m_path, projectPath.parent_path()));
+            path = wolv::util::toUTF8String(std::fs::proximate(this->m_path, projectPath.parent_path()));
         if (path.empty())
-            path = hex::toUTF8String(this->m_path);
+            path = wolv::util::toUTF8String(this->m_path);
 
         settings["path"] = path;
 

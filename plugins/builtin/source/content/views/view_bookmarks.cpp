@@ -2,14 +2,19 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
-#include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/file.hpp>
+#include <hex/helpers/utils.hpp>
+
+#include <hex/providers/provider.hpp>
+#include <content/providers/view_provider.hpp>
 
 #include <nlohmann/json.hpp>
 #include <cstring>
 
 #include <content/helpers/provider_extra_data.hpp>
+
+#include <wolv/io/file.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -60,7 +65,7 @@ namespace hex::plugin::builtin {
                     {
                         ImGui::ColorButton("##color", ImColor(bookmark.color));
                         ImGui::SameLine(0, 10);
-                        ImGui::TextUnformatted(bookmark.name.c_str());
+                        ImGui::TextFormatted("{} ", bookmark.name);
 
                         if (ImGui::GetIO().KeyShift) {
                             ImGui::Indent();
@@ -73,14 +78,16 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                                 if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
                                     ImGui::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormattedWrapped("\"{}\"", bookmark.comment);
+                                    ImGui::PushTextWrapPos(ImGui::CalcTextSize("X").x * 40);
+                                    ImGui::TextFormattedWrapped("{}", bookmark.comment);
+                                    ImGui::PopTextWrapPos();
                                 }
 
                                 ImGui::EndTable();
@@ -105,7 +112,7 @@ namespace hex::plugin::builtin {
             .basePath = "bookmarks.json",
             .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
-                auto fileContent = tar.read(basePath);
+                auto fileContent = tar.readString(basePath);
                 if (fileContent.empty())
                     return true;
 
@@ -117,7 +124,7 @@ namespace hex::plugin::builtin {
                 nlohmann::json data;
 
                 bool result = ViewBookmarks::exportBookmarks(provider, data);
-                tar.write(basePath, data.dump(4));
+                tar.writeString(basePath, data.dump(4));
 
                 return result;
             }
@@ -169,6 +176,7 @@ namespace hex::plugin::builtin {
 
     void ViewBookmarks::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
+            auto provider = ImHexApi::Provider::get();
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter);
@@ -208,7 +216,7 @@ namespace hex::plugin::builtin {
                     };
 
                     bool open = true;
-                    if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), &open)) {
+                    if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), locked ? nullptr : &open)) {
                         if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == bookmarks.end())
                             this->m_dragStartIterator = iter;
 
@@ -220,95 +228,90 @@ namespace hex::plugin::builtin {
                         if (!ImGui::IsMouseDown(0))
                             this->m_dragStartIterator = bookmarks.end();
                     } else {
-                        ImGui::TextUnformatted("hex.builtin.view.bookmarks.title.info"_lang);
-                        ImGui::Separator();
-                        ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.address, region.address + region.size - 1, region.size);
+                        const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() + 2 * ImGui::GetStyle().FramePadding.y;
+                        if (ImGui::BeginTable("##bookmark_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+                            ImGui::TableSetupColumn("##name");
+                            ImGui::TableSetupColumn("##spacing", ImGuiTableColumnFlags_WidthFixed, 20);
+                            ImGui::TableSetupColumn("##value", ImGuiTableColumnFlags_WidthStretch);
 
-                        if (ImGui::BeginChild("hexData", ImVec2(0, ImGui::GetTextLineHeight() * 8), true)) {
-                            size_t offset = region.address % 0x10;
+                            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                            ImGui::TableNextColumn();
 
-                            for (u8 byte = 0; byte < 0x10; byte++) {
-                                ImGui::TextFormattedDisabled("{0:02X}", byte);
-                                ImGui::SameLine();
+                            ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.name"_lang);
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+
+                            if (locked) {
+                                if (ImGui::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
+                            } else {
+                                if (ImGui::IconButton(ICON_VS_UNLOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = true;
                             }
 
-                            ImGui::NewLine();
+                            ImGui::SameLine();
 
-                            // TODO: Clip this somehow
+                            if (ImGui::ColorButton("hex.builtin.view.bookmarks.header.color"_lang, headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha)) {
+                                if (!locked)
+                                    ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
+                            }
 
-                            // First line
-                            {
-                                std::array<u8, 0x10> bytes = { 0 };
-                                size_t byteCount           = std::min<size_t>(0x10 - offset, region.size);
-                                ImHexApi::Provider::get()->read(region.address, bytes.data() + offset, byteCount);
+                            if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
+                                drawColorPopup(headerColor);
+                                color = headerColor;
+                                ImGui::EndPopup();
+                            }
 
-                                for (size_t byte = 0; byte < (offset % 0x10) + byteCount; byte++) {
-                                    if (byte < offset)
-                                        ImGui::TextUnformatted("  ");
-                                    else
-                                        ImGui::TextFormatted("{0:02X}", bytes[byte]);
-                                    ImGui::SameLine();
+                            ImGui::SameLine();
+
+                            if (locked)
+                                ImGui::TextUnformatted(name.data());
+                            else {
+                                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                                ImGui::InputText("##nameInput", name);
+                                ImGui::PopItemWidth();
+                            }
+
+                            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                            ImGui::TableNextColumn();
+
+                            ImGui::TextUnformatted("hex.builtin.common.address"_lang);
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+
+                            if (ImGui::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                                ImHexApi::HexEditor::setSelection(region);
+                            ImGui::SameLine();
+                            if (ImGui::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                                if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                    viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
+                                    if (viewProvider->open())
+                                        EventManager::post<EventProviderOpened>(viewProvider);
                                 }
-                                ImGui::NewLine();
                             }
+                            ImGui::SameLine();
+                            ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.getStartAddress(), region.getEndAddress());
 
-                            // Other lines
-                            {
-                                std::array<u8, 0x10> bytes = { 0 };
-                                for (u32 i = 0x10 - offset; i < region.size; i += 0x10) {
-                                    size_t byteCount = std::min<size_t>(region.size - i, 0x10);
-                                    ImHexApi::Provider::get()->read(region.address + i, bytes.data(), byteCount);
+                            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                            ImGui::TableNextColumn();
 
-                                    for (size_t byte = 0; byte < byteCount; byte++) {
-                                        ImGui::TextFormatted("{0:02X}", bytes[byte]);
-                                        ImGui::SameLine();
-                                    }
-                                    ImGui::NewLine();
-                                }
-                            }
+                            ImGui::TextUnformatted("hex.builtin.common.size"_lang);
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+                            ImGui::TextFormatted(hex::toByteString(region.size));
+
+                            ImGui::EndTable();
                         }
-                        ImGui::EndChild();
-
-                        if (ImGui::Button("hex.builtin.view.bookmarks.button.jump"_lang))
-                            ImHexApi::HexEditor::setSelection(region);
-                        ImGui::SameLine(0, 15);
 
                         if (locked) {
-                            if (ImGui::Button(ICON_FA_LOCK)) locked = false;
-                        } else {
-                            if (ImGui::Button(ICON_FA_UNLOCK)) locked = true;
+                            if (!comment.empty()) {
+                                ImGui::Header("hex.builtin.view.bookmarks.header.comment"_lang);
+                                ImGui::TextFormattedWrapped("{}", comment.data());
+                            }
                         }
-
-                        ImGui::NewLine();
-                        ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.name"_lang);
-                        ImGui::Separator();
-
-                        if (ImGui::ColorButton("hex.builtin.view.bookmarks.header.color"_lang, headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha)) {
-                            if (!locked)
-                                ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
+                        else {
+                            ImGui::Header("hex.builtin.view.bookmarks.header.comment"_lang);
+                            ImGui::InputTextMultiline("##commentInput", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled));
                         }
-
-                        if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
-                            drawColorPopup(headerColor);
-                            color = headerColor;
-                            ImGui::EndPopup();
-                        }
-
-                        ImGui::SameLine();
-
-                        if (locked)
-                            ImGui::TextUnformatted(name.data());
-                        else
-                            ImGui::InputText("##nameInput", name);
-
-                        ImGui::NewLine();
-                        ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.comment"_lang);
-                        ImGui::Separator();
-
-                        if (locked)
-                            ImGui::TextFormattedWrapped("{}", comment.data());
-                        else
-                            ImGui::InputTextMultiline("##commentInput", comment);
 
                         ImGui::NewLine();
                     }
@@ -373,33 +376,37 @@ namespace hex::plugin::builtin {
     }
 
     void ViewBookmarks::registerMenuItems() {
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.edit", 1050, [&] {
-            bool providerValid = ImHexApi::Provider::isValid();
-            auto selection     = ImHexApi::HexEditor::getSelection();
+        /* Create bookmark */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, 1900, CTRLCMD + Keys::B, [&] {
+            auto selection = ImHexApi::HexEditor::getSelection();
+            ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
+        }, []{ return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid(); });
 
-            if (ImGui::MenuItem("hex.builtin.menu.edit.bookmark.create"_lang, nullptr, false, selection.has_value() && providerValid)) {
-                ImHexApi::Bookmarks::add(selection->getStartAddress(), selection->getSize(), {}, {});
-            }
-        });
 
-        ContentRegistry::Interface::addMenuItem("hex.builtin.menu.file", 4000, [&] {
-            bool providerValid = ImHexApi::Provider::isValid();
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 3000);
 
-            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.import"_lang, nullptr, false, providerValid)) {
-                fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
-                    try {
-                        importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(fs::File(path, fs::File::Mode::Read).readString()));
-                    } catch (...) { }
-                });
-            }
-            if (ImGui::MenuItem("hex.builtin.menu.file.bookmark.export"_lang, nullptr, false, providerValid && !ProviderExtraData::getCurrent().bookmarks.empty())) {
-                fs::openFileBrowser(fs::DialogMode::Save, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
-                    nlohmann::json json;
-                    exportBookmarks(ImHexApi::Provider::get(), json);
+        /* Import bookmarks */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, 3050, Shortcut::None, []{
+            fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
+                try {
+                    importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
+                } catch (...) { }
+            });
+        }, ImHexApi::Provider::isValid);
 
-                    fs::File(path, fs::File::Mode::Create).write(json.dump(4));
-                });
-            }
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, 6200);
+
+
+        /* Export bookmarks */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.bookmark" }, 6250, Shortcut::None, []{
+            fs::openFileBrowser(fs::DialogMode::Save, { { "Bookmarks File", "hexbm"} }, [&](const std::fs::path &path) {
+                nlohmann::json json;
+                exportBookmarks(ImHexApi::Provider::get(), json);
+
+                wolv::io::File(path, wolv::io::File::Mode::Create).writeString(json.dump(4));
+            });
+        }, []{
+            return ImHexApi::Provider::isValid() && !ProviderExtraData::getCurrent().bookmarks.empty();
         });
     }
 
