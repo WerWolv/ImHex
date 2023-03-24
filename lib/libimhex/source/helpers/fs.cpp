@@ -30,7 +30,7 @@ namespace hex::fs {
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
         NFD::ClearError();
 
-        if(NFD::Init() != NFD_OKAY){
+        if (NFD::Init() != NFD_OKAY) {
             log::error("NFD init returned an error: {}", NFD::GetError());
             if (s_fileBrowserErrorCallback != nullptr)
                 s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
