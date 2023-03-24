@@ -33,7 +33,7 @@ namespace hex::fs {
         if(NFD::Init() != NFD_OKAY){
             log::error("NFD init returned an error: {}", NFD::GetError());
             if (s_fileBrowserErrorCallback != nullptr)
-                s_fileBrowserErrorCallback(NFD::GetError());
+                s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
             return false;
         }
 
@@ -74,7 +74,7 @@ namespace hex::fs {
         } else if (result == NFD_ERROR) {
             log::error("Requested file dialog returned an error: {}", NFD::GetError());
             if (s_fileBrowserErrorCallback != nullptr)
-                s_fileBrowserErrorCallback(NFD::GetError());
+                s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
         }
 
         NFD::Quit();
