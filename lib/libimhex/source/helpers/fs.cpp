@@ -73,7 +73,7 @@ namespace hex::fs {
         return result == NFD_OKAY;
     }
 
-    static std::vector<std::fs::path> getDataPaths() {
+    std::vector<std::fs::path> getDataPaths() {
         std::vector<std::fs::path> paths;
 
         #if defined(OS_WINDOWS)
@@ -131,17 +131,7 @@ namespace hex::fs {
         #elif defined(OS_MACOS)
             return getDataPaths();
         #elif defined(OS_LINUX)
-            std::vector<std::fs::path> paths;
-
-            paths.push_back(xdg::DataHomeDir());
-
-            auto dataDirs = xdg::DataDirs();
-            std::copy(dataDirs.begin(), dataDirs.end(), std::back_inserter(paths));
-
-            for (auto &path : paths)
-                path = path / "imhex";
-
-            return paths;
+            return {xdg::ConfigHomeDir() / "imhex"};
         #endif
     }
 
@@ -177,7 +167,7 @@ namespace hex::fs {
                 result = appendPath(getDataPaths(), "encodings");
                 break;
             case ImHexPath::Logs:
-                result = appendPath(getConfigPaths(), "logs");
+                result = appendPath(getDataPaths(), "logs");
                 break;
             case ImHexPath::Plugins:
                 result = appendPath(getPluginPaths(), "plugins");

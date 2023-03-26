@@ -121,6 +121,44 @@ namespace hex::init {
         return result;
     }
 
+    bool migrateConfig(){
+
+        // check if there is a new config in folder
+        auto configPaths = hex::fs::getDefaultPaths(hex::fs::ImHexPath::Config, false);
+        // There should always be exactly one config path on Linux
+        std::fs::path newConfigPath = configPaths[0];
+        wolv::io::File newConfigFile(newConfigPath / "settings.json", wolv::io::File::Mode::Read);
+        if (!newConfigFile.isValid()) {
+
+            // find an old config
+            std::fs::path oldConfigPath;
+            for(auto dir : hex::fs::appendPath(hex::fs::getDataPaths(), "config")) {
+                wolv::io::File oldConfigFile(dir / "settings.json", wolv::io::File::Mode::Read);
+                if (oldConfigFile.isValid()) {
+                    oldConfigPath = dir;
+                    break;
+                }
+            }
+
+            if (!oldConfigPath.empty()) {
+                // move it to new location
+                auto configPaths = hex::fs::getDefaultPaths(hex::fs::ImHexPath::Config, false);
+                // There should always be exactly one config path on Linux
+                std::fs::path newConfigPath = configPaths[0];
+                log::info("Found config file in {} ! Migrating to {}", oldConfigPath.string(), newConfigPath.string());
+
+                std::fs::rename(oldConfigPath / "settings.json", newConfigPath / "settings.json");
+                wolv::io::File oldIniFile(oldConfigPath / "interface.ini", wolv::io::File::Mode::Read);
+                if (oldIniFile.isValid()) {
+                    std::fs::rename(oldConfigPath / "interface.ini", newConfigPath / "interface.ini");
+                }
+
+                std::fs::remove(oldConfigPath);
+            }
+        }
+        return true;
+    }
+
     static bool loadFontsImpl(bool loadUnicode) {
         float fontSize = ImHexApi::System::getFontSize();
 
@@ -436,6 +474,9 @@ namespace hex::init {
         return {
             { "Setting up environment",  setupEnvironment,    false },
             { "Creating directories",    createDirectories,   false },
+            #if defined(OS_LINUX)
+            { "Migrate config to .config", migrateConfig,     false },
+            #endif
             { "Loading settings",        loadSettings,        false },
             { "Loading plugins",         loadPlugins,         false },
             { "Checking for updates",    checkForUpdates,     true  },
