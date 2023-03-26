@@ -20,7 +20,7 @@ namespace hex::fs {
         Folder
     };
 
-    void setFileBrowserErrorCallback(const std::function<void()> &callback);
+    void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback);
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
 
     enum class ImHexPath : u32 {

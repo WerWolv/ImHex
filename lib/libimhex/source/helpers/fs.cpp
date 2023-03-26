@@ -2,6 +2,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <xdg.hpp>
 
@@ -21,13 +22,20 @@
 
 namespace hex::fs {
 
-    static std::function<void()> s_fileBrowserErrorCallback;
-    void setFileBrowserErrorCallback(const std::function<void()> &callback) {
+    static std::function<void(const std::string&)> s_fileBrowserErrorCallback;
+    void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback) {
         s_fileBrowserErrorCallback = callback;
     }
 
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
-        NFD::Init();
+        NFD::ClearError();
+
+        if (NFD::Init() != NFD_OKAY) {
+            log::error("NFD init returned an error: {}", NFD::GetError());
+            if (s_fileBrowserErrorCallback != nullptr)
+                s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
+            return false;
+        }
 
         NFD::UniquePathU8 outPath;
         NFD::UniquePathSet outPaths;
@@ -64,8 +72,9 @@ namespace hex::fs {
                 }
             }
         } else if (result == NFD_ERROR) {
+            log::error("Requested file dialog returned an error: {}", NFD::GetError());
             if (s_fileBrowserErrorCallback != nullptr)
-                    s_fileBrowserErrorCallback();
+                s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
         }
 
         NFD::Quit();
