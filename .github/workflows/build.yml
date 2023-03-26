@@ -84,7 +84,7 @@ jobs:
           ..
         mingw32-make -j4 install
         cpack
-        mv imhex-*.msi ../imhex-${{env.IMHEX_VERSION}}-Windows-x86_64.msi
+        mv ImHex-*.msi ../imhex-${{env.IMHEX_VERSION}}-Windows-x86_64.msi
 
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 

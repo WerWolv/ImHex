@@ -122,7 +122,7 @@ macro(configurePackingResources)
 
         if (CREATE_PACKAGE)
             set(CPACK_GENERATOR "WIX")
-            set(CPACK_PACKAGE_NAME "imhex")
+            set(CPACK_PACKAGE_NAME "ImHex")
             set(CPACK_PACKAGE_VENDOR "WerWolv")
             set(CPACK_WIX_UPGRADE_GUID "05000E99-9659-42FD-A1CF-05C554B39285")
             set(CPACK_WIX_PRODUCT_ICON "${PROJECT_SOURCE_DIR}/resources/dist/windows/icon.ico")
