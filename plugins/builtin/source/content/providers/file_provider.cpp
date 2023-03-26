@@ -37,15 +37,14 @@ namespace hex::plugin::builtin {
 
 
     void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
-            return;
-
         this->readRaw(offset - this->getBaseAddress(), buffer, size);
 
         if (overlays) {
-            for (u64 i = 0; i < size; i++)
-                if (getPatches().contains(offset + i))
-                    reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + i];
+            if (auto &patches = this->getPatches(); !patches.empty()) {
+                for (u64 i = 0; i < size; i++)
+                    if (patches.contains(offset + i))
+                        reinterpret_cast<u8 *>(buffer)[i] = patches[offset + i];
+            }
 
             this->applyOverlays(offset, buffer, size);
         }
