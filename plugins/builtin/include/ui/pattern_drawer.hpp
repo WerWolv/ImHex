@@ -29,6 +29,7 @@ namespace hex::plugin::builtin::ui {
         void visit(pl::ptrn::PatternArrayDynamic& pattern) override;
         void visit(pl::ptrn::PatternArrayStatic& pattern) override;
         void visit(pl::ptrn::PatternBitfieldField& pattern) override;
+        void visit(pl::ptrn::PatternBitfieldArray& pattern) override;
         void visit(pl::ptrn::PatternBitfield& pattern) override;
         void visit(pl::ptrn::PatternBoolean& pattern) override;
         void visit(pl::ptrn::PatternCharacter& pattern) override;
