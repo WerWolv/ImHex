@@ -296,7 +296,7 @@ namespace hex::plugin::builtin {
         }, noRunningTasks);
 
         /* Open Other */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, 1150, Shortcut::None, [] {
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, 1150, [] {
             for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
                 if (ImGui::MenuItem(LangEntry(unlocalizedProviderName)))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
