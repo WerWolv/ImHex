@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
         pl::api::Namespace nsHexPrv = { "builtin", "hex", "prv" };
         {
             /* get_information() */
-            ContentRegistry::PatternLanguage::addFunction(nsHexCore, "get_information", FunctionParameterCount::between(1, 2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+            ContentRegistry::PatternLanguage::addFunction(nsHexPrv, "get_information", FunctionParameterCount::between(1, 2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
                 std::string category = params[0].toString(false);
                 std::string argument = params.size() == 2 ? params[1].toString(false) : "";
 
