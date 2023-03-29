@@ -165,6 +165,8 @@ namespace hex {
     EVENT_DEF(RequestSelectionChange, Region);
     EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t);
     EVENT_DEF(RequestSetPatternLanguageCode, std::string);
+    EVENT_DEF(RequestLoadPatternLanguageFile, std::fs::path);
+    EVENT_DEF(RequestSavePatternLanguageFile, std::fs::path);
     EVENT_DEF(RequestUpdateWindowTitle);
     EVENT_DEF(RequestCloseImHex, bool);
     EVENT_DEF(RequestRestartImHex);
