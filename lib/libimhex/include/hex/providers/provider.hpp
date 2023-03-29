@@ -16,6 +16,9 @@
 
 namespace hex::prv {
 
+    /**
+        Represent the data source for a tab
+    */
     class Provider {
     public:
         constexpr static size_t PageSize = 0x1000'0000;
@@ -29,7 +32,13 @@ namespace hex::prv {
         [[nodiscard]] virtual bool isResizable() const = 0;
         [[nodiscard]] virtual bool isSavable() const   = 0;
 
+        /**
+            Read data from this provider, applying overlays and patches
+        */
         virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
+        /**
+            Write data to the patches of this provider. Will not directly modify provider.
+        */
         virtual void write(u64 offset, const void *buffer, size_t size);
 
         virtual void resize(size_t newSize);
@@ -39,7 +48,13 @@ namespace hex::prv {
         virtual void save();
         virtual void saveAs(const std::fs::path &path);
 
+        /**
+            Read data from this provider, without applying overlays and patches
+        */
         virtual void readRaw(u64 offset, void *buffer, size_t size)        = 0;
+        /*
+            Write data directly to this provider
+        */
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
         [[nodiscard]] virtual size_t getActualSize() const                 = 0;
 
