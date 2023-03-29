@@ -17,8 +17,8 @@
 namespace hex::prv {
 
     /**
-        Represent the data source for a tab
-    */
+     * @brief Represent the data source for a tab
+     */
     class Provider {
     public:
         constexpr static size_t PageSize = 0x1000'0000;
@@ -33,12 +33,20 @@ namespace hex::prv {
         [[nodiscard]] virtual bool isSavable() const   = 0;
 
         /**
-            Read data from this provider, applying overlays and patches
-        */
+         * @brief Read data from this provider, applying overlays and patches
+         * @param offset offset to start reading the data
+         * @param buffer buffer to write read data
+         * @param size number of bytes to read
+         * @param overlays apply overlays and patches is true. Same as readRaw() if false
+         */
         virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
+        
         /**
-            Write data to the patches of this provider. Will not directly modify provider.
-        */
+         * @brief Write data to the patches of this provider. Will not directly modify provider.
+         * @param offset offset to start writing the data
+         * @param buffer buffer to take data to write from
+         * @param size number of bytes to write
+         */
         virtual void write(u64 offset, const void *buffer, size_t size);
 
         virtual void resize(size_t newSize);
@@ -49,12 +57,18 @@ namespace hex::prv {
         virtual void saveAs(const std::fs::path &path);
 
         /**
-            Read data from this provider, without applying overlays and patches
-        */
+         * @brief Read data from this provider, without applying overlays and patches
+         * @param offset offset to start reading the data
+         * @param buffer buffer to write read data
+         * @param size number of bytes to read
+         */
         virtual void readRaw(u64 offset, void *buffer, size_t size)        = 0;
-        /*
-            Write data directly to this provider
-        */
+        /**
+         * @brief Write data directly to this provider
+         * @param offset offset to start writing the data
+         * @param buffer buffer to take data to write from
+         * @param size number of bytes to write
+         */
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
         [[nodiscard]] virtual size_t getActualSize() const                 = 0;
 
