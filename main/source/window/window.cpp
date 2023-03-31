@@ -539,6 +539,8 @@ namespace hex {
     void Window::frame() {
         auto &io = ImGui::GetIO();
 
+        const bool popupOpen = ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId);
+
         // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
@@ -557,7 +559,7 @@ namespace hex {
             }
 
             // Handle per-view shortcuts
-            if (view->getWindowOpenState()) {
+            if (view->getWindowOpenState() && !popupOpen) {
                 auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused   = false;
@@ -578,8 +580,10 @@ namespace hex {
         }
 
         // Handle global shortcuts
-        for (const auto &key : this->m_pressedKeys) {
-            ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
+        if (!popupOpen) {
+            for (const auto &key : this->m_pressedKeys) {
+                ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
+            }
         }
 
         this->m_pressedKeys.clear();
