@@ -77,6 +77,7 @@ namespace hex::plugin::builtin {
         
         writeFile.seek(offset);
         writeFile.writeBuffer(reinterpret_cast<const u8*>(buffer), size);
+        this->m_files.clear();
     }
 
     void FileProvider::save() {
