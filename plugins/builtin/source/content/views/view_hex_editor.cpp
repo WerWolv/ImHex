@@ -1016,8 +1016,12 @@ namespace hex::plugin::builtin {
                                                     View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
                                                         TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
-                                                            this->m_hexEditor.setCustomEncoding(EncodingFile(EncodingFile::Type::Thingy, path));
+                                                            auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
                                                             ImHexApi::Provider::markDirty();
+
+                                                            TaskManager::doLater([this, encoding = std::move(encoding)] mutable {
+                                                                this->m_hexEditor.setCustomEncoding(std::move(encoding));
+                                                            });
                                                         });
                                                     });
                                                 },

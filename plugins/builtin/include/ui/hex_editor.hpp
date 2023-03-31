@@ -150,7 +150,12 @@ namespace hex::plugin::builtin::ui {
             return this->m_currCustomEncoding;
         }
 
-        void setCustomEncoding(EncodingFile encoding) {
+        void setCustomEncoding(const EncodingFile &encoding) {
+            this->m_currCustomEncoding = encoding;
+            this->m_encodingLineStartAddresses.clear();
+        }
+
+        void setCustomEncoding(EncodingFile &&encoding) {
             this->m_currCustomEncoding = std::move(encoding);
             this->m_encodingLineStartAddresses.clear();
         }
