@@ -341,7 +341,7 @@ namespace hex::plugin::builtin::ui {
 
             // ASCII column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow);
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, this->m_showAscii ? (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow : 0);
 
             // Custom encoding column
             ImGui::TableSetupColumn("");
@@ -556,9 +556,8 @@ namespace hex::plugin::builtin::ui {
                                     ImGui::TableNextColumn();
 
                                     const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(0, CharacterSize.y);
+                                    const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(this->m_characterCellPadding * 1_scaled, CharacterSize.y);
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
-
 
                                     const auto x = address % this->m_bytesPerRow;
                                     if (x < validBytes && isCurrRegionValid(address)) {
