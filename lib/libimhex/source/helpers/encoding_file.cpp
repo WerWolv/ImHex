@@ -11,7 +11,19 @@ namespace hex {
         auto file = wolv::io::File(path, wolv::io::File::Mode::Read);
         switch (type) {
             case Type::Thingy:
-                parseThingyFile(file);
+                parse(file.readString());
+                break;
+            default:
+                return;
+        }
+
+        this->m_valid = true;
+    }
+
+    EncodingFile::EncodingFile(Type type, const std::string &content) {
+        switch (type) {
+            case Type::Thingy:
+                parse(content);
                 break;
             default:
                 return;
@@ -48,8 +60,9 @@ namespace hex {
         return 1;
     }
 
-    void EncodingFile::parseThingyFile(wolv::io::File &file) {
-        for (const auto &line : splitString(file.readString(), "\n")) {
+    void EncodingFile::parse(const std::string &content) {
+        this->m_tableContent = content;
+        for (const auto &line : splitString(this->m_tableContent, "\n")) {
 
             std::string from, to;
             {
