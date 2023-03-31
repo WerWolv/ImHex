@@ -820,7 +820,12 @@ static void ImGui_ImplGlfw_UpdateMonitors()
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     int monitors_count = 0;
     GLFWmonitor** glfw_monitors = glfwGetMonitors(&monitors_count);
-    platform_io.Monitors.resize(0);
+
+    // IMHEX PATCH BEGIN
+    if (monitors_count > 0)
+        platform_io.Monitors.resize(0);
+    // IMHEX PATCH END
+
     for (int n = 0; n < monitors_count; n++)
     {
         ImGuiPlatformMonitor monitor;
