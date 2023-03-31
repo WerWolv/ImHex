@@ -213,6 +213,7 @@ namespace hex::plugin::builtin::ui {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
+        bool m_showCustomEncoding = true;
         bool m_syncScrolling = false;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
 
