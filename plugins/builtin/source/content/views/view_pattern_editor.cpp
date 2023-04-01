@@ -748,6 +748,15 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerEvents() {
+        EventManager::subscribe<RequestLoadPatternLanguageFile>(this, [this](const std::fs::path &path) {
+            this->loadPatternFile(path, ImHexApi::Provider::get());
+        });
+
+        EventManager::subscribe<RequestSavePatternLanguageFile>(this, [this](const std::fs::path &path) {
+            wolv::io::File file(path, wolv::io::File::Mode::Create);
+            file.writeString(wolv::util::trim(this->m_textEditor.GetText()));
+        });
+
         EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
             this->m_textEditor.SetText(code);
         });
