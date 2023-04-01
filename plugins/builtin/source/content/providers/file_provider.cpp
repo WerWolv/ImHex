@@ -77,7 +77,8 @@ namespace hex::plugin::builtin {
         
         writeFile.seek(offset);
         writeFile.writeBuffer(reinterpret_cast<const u8*>(buffer), size);
-        this->m_files.clear();
+
+        this->invalidateFiles();
     }
 
     void FileProvider::save() {
@@ -122,6 +123,13 @@ namespace hex::plugin::builtin {
         }
 
         Provider::insert(offset, size);
+    }
+
+    void FileProvider::invalidateFiles() {
+        for(auto & [threadId, file] : this->m_files){
+            file.close();
+        }
+        this->m_files.clear();
     }
 
     void FileProvider::remove(u64 offset, size_t size) {

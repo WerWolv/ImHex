@@ -29,6 +29,11 @@ namespace hex::plugin::builtin {
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
+        /**
+         * @brief closes the file streams used to read the file.
+         * Need to be called on file write, see https://github.com/WerWolv/ImHex/issues/988
+         */
+        void invalidateFiles();
         [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
