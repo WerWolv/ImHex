@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     {
-                        const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value);
+                        const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value, 256);
 
                         ImGui::ColorButton("##color", ImColor(HighlightColor()));
                         ImGui::SameLine(0, 10);
@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
 
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
+                                ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang);
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", occurrence.value.region.getStartAddress(), occurrence.value.region.getEndAddress());
 
@@ -72,7 +72,7 @@ namespace hex::plugin::builtin {
                                 if (value != demangledValue) {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormatted("{}: ", "hex.builtin.view.find.demangled"_lang.get());
+                                    ImGui::TextFormatted("{}: ", "hex.builtin.view.find.demangled"_lang);
                                     ImGui::TableNextColumn();
                                     ImGui::TextFormatted("{}", demangledValue);
                                 }
@@ -516,8 +516,8 @@ namespace hex::plugin::builtin {
         });
     }
 
-    std::string ViewFind::decodeValue(prv::Provider *provider, Occurrence occurrence) const {
-        std::vector<u8> bytes(std::min<size_t>(occurrence.region.getSize(), 128));
+    std::string ViewFind::decodeValue(prv::Provider *provider, Occurrence occurrence, size_t maxBytes) const {
+        std::vector<u8> bytes(std::min<size_t>(occurrence.region.getSize(), maxBytes));
         provider->read(occurrence.region.getStartAddress(), bytes.data(), bytes.size());
 
         std::string result;
@@ -558,6 +558,9 @@ namespace hex::plugin::builtin {
                 result = hex::encodeByteString(bytes);
                 break;
         }
+
+        if (occurrence.region.getSize() > maxBytes)
+            result += "...";
 
         return result;
     }
@@ -815,7 +818,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::PopItemWidth();
 
-            if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+            if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.common.offset"_lang, 0, -1, ImGui::GetID("offset"));
                 ImGui::TableSetupColumn("hex.builtin.common.size"_lang, 0, -1, ImGui::GetID("size"));
@@ -867,7 +870,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::PushID(i);
 
-                        auto value = this->decodeValue(provider, foundItem);
+                        auto value = this->decodeValue(provider, foundItem, 256);
                         ImGui::TextFormatted("{}", value);
                         ImGui::SameLine();
                         if (ImGui::Selectable("##line", false, ImGuiSelectableFlags_SpanAllColumns))
