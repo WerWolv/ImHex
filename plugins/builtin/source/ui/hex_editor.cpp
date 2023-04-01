@@ -106,6 +106,7 @@ namespace hex::plugin::builtin::ui {
             }
 
             this->m_showAscii = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii", 1);
+            this->m_showCustomEncoding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding", 1);
             this->m_grayOutZero = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros", 1);
             this->m_upperCaseHex = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex", 1);
             this->m_selectionColor = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080);
@@ -341,7 +342,7 @@ namespace hex::plugin::builtin::ui {
 
             // ASCII column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow);
+            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, this->m_showAscii ? (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow : 0);
 
             // Custom encoding column
             ImGui::TableSetupColumn("");
@@ -535,7 +536,7 @@ namespace hex::plugin::builtin::ui {
                         ImGui::TableNextColumn();
 
                         // Draw Custom encoding column
-                        if (this->m_currCustomEncoding.has_value()) {
+                        if (this->m_showCustomEncoding && this->m_currCustomEncoding.has_value()) {
                             std::vector<std::pair<u64, CustomEncodingData>> encodingData;
                             u32 offset = 0;
                             do {
@@ -556,9 +557,8 @@ namespace hex::plugin::builtin::ui {
                                     ImGui::TableNextColumn();
 
                                     const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(0, CharacterSize.y);
+                                    const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(this->m_characterCellPadding * 1_scaled, CharacterSize.y);
                                     const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
-
 
                                     const auto x = address % this->m_bytesPerRow;
                                     if (x < validBytes && isCurrRegionValid(address)) {
@@ -576,9 +576,9 @@ namespace hex::plugin::builtin::ui {
                                             this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
                                         }
 
-                                        ImGui::PushItemWidth(cellSize.x);
+                                        auto startPos = ImGui::GetCursorPosX();
                                         ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
-                                        ImGui::PopItemWidth();
+                                        ImGui::SetCursorPosX(startPos + cellSize.x);
 
                                         this->handleSelection(address, data.advance, &bytes[address % this->m_bytesPerRow], cellHovered);
                                     }

@@ -163,6 +163,8 @@ namespace hex::plugin::builtin {
                         }
                     }
 
+                    ImGui::InfoTooltip(wolv::util::toUTF8String(path).c_str());
+
                     ImGui::PopID();
                     index++;
                 }

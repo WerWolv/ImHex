@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsHexadecimal);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_None);
             }
             else
                 return false;
@@ -149,14 +149,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, upperCase, startedEditing);
 
             if (size == ByteCount) {
-                return ImGui::InputScalar(
-                           "##hex_input",
-                           getImGuiDataType<T>(),
-                           data,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           DataVisualizer::TextInputFlags);
+                return drawDefaultScalarEditingTextBox(address, FormatString.c_str(), getImGuiDataType<T>(), data, ImGuiInputTextFlags_None);
             }
             else
                 return false;
@@ -193,14 +186,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, upperCase, startedEditing);
 
             if (size == ByteCount) {
-                return ImGui::InputScalar(
-                           "##hex_input",
-                           getImGuiDataType<T>(),
-                           data,
-                           nullptr,
-                           nullptr,
-                           nullptr,
-                           DataVisualizer::TextInputFlags | ImGuiInputTextFlags_CharsScientific);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsScientific);
             }
             else
                 return false;

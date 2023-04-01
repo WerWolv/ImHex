@@ -5,6 +5,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/providers/buffered_reader.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <content/providers/view_provider.hpp>
 #include <content/helpers/math_evaluator.hpp>
@@ -952,6 +953,24 @@ namespace hex::plugin::builtin {
                 EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), newProvider });
             }
         });
+
+        ProjectFile::registerPerProviderHandler({
+            .basePath = "custom_encoding.json",
+            .required = false,
+            .load = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
+                this->m_hexEditor.setCustomEncoding(EncodingFile(hex::EncodingFile::Type::Thingy, tar.readString(basePath)));
+
+                return true;
+            },
+            .store = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
+                if (const auto &encoding = this->m_hexEditor.getCustomEncoding(); encoding.has_value()) {
+                    tar.writeString(basePath, encoding->getTableContent());
+                    return true;
+                }
+
+                return false;
+            }
+        });
     }
 
     void ViewHexEditor::registerMenuItems() {
@@ -995,9 +1014,16 @@ namespace hex::plugin::builtin {
                                                     }
 
                                                     View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} }, false,
-                                                                               [this](const auto &path) {
-                                                                                   this->m_hexEditor.setCustomEncoding(EncodingFile(EncodingFile::Type::Thingy, path));
-                                                                               });
+                                                    [this](const auto &path) {
+                                                        TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
+                                                            auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
+                                                            ImHexApi::Provider::markDirty();
+
+                                                            TaskManager::doLater([this, encoding = std::move(encoding)] mutable {
+                                                                this->m_hexEditor.setCustomEncoding(std::move(encoding));
+                                                            });
+                                                        });
+                                                    });
                                                 },
                                                 ImHexApi::Provider::isValid);
 

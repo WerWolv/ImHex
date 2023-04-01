@@ -22,6 +22,7 @@ namespace hex {
 
         EncodingFile() = default;
         EncodingFile(Type type, const std::fs::path &path);
+        EncodingFile(Type type, const std::string &path);
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
         [[nodiscard]] size_t getEncodingLengthFor(std::span<u8> buffer) const;
@@ -29,11 +30,14 @@ namespace hex {
 
         [[nodiscard]] bool valid() const { return this->m_valid; }
 
+        [[nodiscard]] const std::string& getTableContent() const { return this->m_tableContent; }
+
     private:
-        void parseThingyFile(wolv::io::File &file);
+        void parse(const std::string &content);
 
         bool m_valid = false;
 
+        std::string m_tableContent;
         std::map<size_t, std::map<std::vector<u8>, std::string>> m_mapping;
         size_t m_longestSequence = 0;
     };

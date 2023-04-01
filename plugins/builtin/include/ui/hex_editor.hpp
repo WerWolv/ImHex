@@ -150,7 +150,12 @@ namespace hex::plugin::builtin::ui {
             return this->m_currCustomEncoding;
         }
 
-        void setCustomEncoding(EncodingFile encoding) {
+        void setCustomEncoding(const EncodingFile &encoding) {
+            this->m_currCustomEncoding = encoding;
+            this->m_encodingLineStartAddresses.clear();
+        }
+
+        void setCustomEncoding(EncodingFile &&encoding) {
             this->m_currCustomEncoding = std::move(encoding);
             this->m_encodingLineStartAddresses.clear();
         }
@@ -213,6 +218,7 @@ namespace hex::plugin::builtin::ui {
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
+        bool m_showCustomEncoding = true;
         bool m_syncScrolling = false;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
 

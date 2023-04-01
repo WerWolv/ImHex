@@ -110,7 +110,7 @@ namespace hex::plugin::builtin {
         static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValueInput(const std::string &input, SearchSettings::Value::Type type);
 
         void runSearch();
-        std::string decodeValue(prv::Provider *provider, Occurrence occurrence) const;
+        std::string decodeValue(prv::Provider *provider, Occurrence occurrence, size_t maxBytes = 0xFFFF'FFFF) const;
     };
 
 }
