@@ -21,14 +21,11 @@ namespace hex {
         M680X,
         EVM,
         WASM,
-        #if defined(CS_MODE_RISCV32)
+
+        #if CS_API_MAJOR >= 5
             RISCV,
-        #endif
-        #if defined(CS_MODE_MOS65XX_6502)
             MOS65XX,
-        #endif
-        #if defined(CS_MODE_BPF_CLASSIC)
-        BPF,
+            BPF,
         #endif
 
         MAX,

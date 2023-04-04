@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                                 static bool qpx = false;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.ppc.qpx"_lang, &qpx);
 
-                                #if defined (CS_MODE_SPE)
+                                #if CS_API_MAJOR >= 5
                                     static bool spe = false;
                                     ImGui::Checkbox("hex.builtin.view.disassembler.ppc.spe"_lang, &spe);
                                     static bool booke = false;
@@ -207,7 +207,7 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(v9Mode ? CS_MODE_V9 : cs_mode(0));
                             }
                             break;
-                        #if defined (CS_MODE_RISCV32)
+                        #if CS_API_MAJOR >= 5
                         case Architecture::RISCV:
                             {
                                 static int mode = CS_MODE_RISCV32;
@@ -274,7 +274,7 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(modes[selectedMode].second);
                             }
                             break;
-                        #if defined(CS_MODE_MOS65XX_6502)
+                        #if CS_API_MAJOR >= 5
                         case Architecture::MOS65XX:
                             {
                                 static int selectedMode = 0;
@@ -301,7 +301,7 @@ namespace hex::plugin::builtin {
                             }
                             break;
                         #endif
-                        #if defined(CS_MODE_BPF_CLASSIC)
+                        #if CS_API_MAJOR >= 5
                         case Architecture::BPF:
                             {
                                 static int mode = CS_MODE_BPF_CLASSIC;
