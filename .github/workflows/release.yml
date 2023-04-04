@@ -14,13 +14,25 @@ jobs:
     name: Release Update Repos
 
     steps:
+      - name: 📜 Verify version and set version variable
+        run: |
+          project_version=`cat ImHex/VERSION`
+          tag_version="${{github.event.release.tag_name}}"
+          tag_version="${tag_version:1}"
+          if [ "$project_version" != "$tag_version" ]; then
+            echo "::warning::$project_version and $tag_version are not the same ! Refusing to populate release"
+            exit 1
+          fi
+
+          echo "IMHEX_VERSION=$project_version" >> $GITHUB_ENV
+
       - name: 🎫 Create PatternLanguage release
         uses: ncipollo/release-action@v1
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         if: "${{ env.RELEASE_TOKEN != '' }}"
         with:
-          tag: ImHex-v${{env.IMHEX_VERSION}}
+          tag: ImHex-v${{ env.IMHEX_VERSION }}
           repo: PatternLanguage
           token: ${{ secrets.RELEASE_TOKEN }}
 
@@ -30,7 +42,7 @@ jobs:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         if: "${{ env.RELEASE_TOKEN != '' }}"
         with:
-          tag: ImHex-v${{env.IMHEX_VERSION}}
+          tag: ImHex-v${{ env.IMHEX_VERSION }}
           repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}
 
@@ -105,8 +117,8 @@ jobs:
 
       - name: 🟩 Rename artifacts when needed
         run: |
-          mv "Windows Portable x86_64.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable-x86_64.zip
-          mv "Windows Portable NoGPU x86_64.zip" imhex-${{env.IMHEX_VERSION}}-Windows-Portable-NoGPU-x86_64.zip
+          mv "Windows Portable x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-x86_64.zip
+          mv "Windows Portable NoGPU x86_64.zip" imhex-${{ env.IMHEX_VERSION }}-Windows-Portable-NoGPU-x86_64.zip
 
       - name: ⬆️ Upload everything to release
         uses: softprops/action-gh-release@v1
@@ -117,9 +129,9 @@ jobs:
         run: |
           cp ImHex/dist/Arch/PKGBUILD .
           
-          hash=`md5sum imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst | cut -d ' ' -f 1`
+          hash=`md5sum imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst | cut -d ' ' -f 1`
 
-          sed -i 's/%version%/${{env.IMHEX_VERSION}}/g' PKGBUILD
+          sed -i 's/%version%/${{ env.IMHEX_VERSION }}/g' PKGBUILD
           sed -i "s/(SKIP)/($hash)/g" PKGBUILD
 
       - name: ⬆️ Publish AUR package
@@ -135,7 +147,7 @@ jobs:
           commit_username: iTrooz
           commit_email: itrooz@protonmail.com
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: Bump to version ${{env.IMHEX_VERSION}}
+          commit_message: Bump to version ${{ env.IMHEX_VERSION }}
           ssh_keyscan_types: rsa,dsa,ecdsa,ed25519
 
   release-update-winget:
