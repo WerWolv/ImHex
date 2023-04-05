@@ -144,13 +144,15 @@ namespace hex::plugin::builtin {
         bool opened = true;
         ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
         if (ImGui::BeginPopupModal("hex.builtin.common.choose_file"_lang, &opened, ImGuiWindowFlags_AlwaysAutoResize)) {
+            bool doubleClicked = false;
+
             if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
                 u32 index = 0;
                 for (auto &path : s_selectableFiles) {
                     ImGui::PushID(index);
 
                     bool selected = s_selectableFileIndices.contains(index);
-                    if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), selected)) {
+                    if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), selected, ImGuiSelectableFlags_DontClosePopups)) {
                         if (!s_selectableFileMultiple) {
                             s_selectableFileIndices.clear();
                             s_selectableFileIndices.insert(index);
@@ -163,6 +165,9 @@ namespace hex::plugin::builtin {
                         }
                     }
 
+                    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+                        doubleClicked = true;
+
                     ImGui::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                     ImGui::PopID();
@@ -172,7 +177,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndListBox();
             }
 
-            if (ImGui::Button("hex.builtin.common.open"_lang)) {
+            if (ImGui::Button("hex.builtin.common.open"_lang) || doubleClicked) {
                 for (auto &index : s_selectableFileIndices)
                     s_selectableFileOpenCallback(s_selectableFiles[index]);
                 ImGui::CloseCurrentPopup();
