@@ -42,7 +42,7 @@ namespace hex {
             return cs_support(toCapstoneArchitecture(architecture));
         }
 
-        constexpr static const char *const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "MOS65XX", "WebAssembly", "Berkeley Packet Filter", "RISC-V" };
+        constexpr static const char *const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "WebAssembly", "RISC-V", "MOS65XX", "Berkeley Packet Filter" };
 
         static inline i32 getArchitectureSupportedCount() {
             static i32 supportedCount = -1;
