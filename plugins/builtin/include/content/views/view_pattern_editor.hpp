@@ -85,6 +85,10 @@ namespace hex::plugin::builtin {
         void registerEvents();
         void registerMenuItems();
         void registerHandlers();
+
+        void appendEditorText(const std::string &text);
+        void appendVariable(const std::string &type);
+        void appendArray(const std::string &type, size_t size);
     };
 
 }

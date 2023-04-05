@@ -863,6 +863,24 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewPatternEditor::appendEditorText(const std::string &text) {
+        this->m_textEditor.SetCursorPosition(TextEditor::Coordinates { this->m_textEditor.GetTotalLines(), 0 });
+        this->m_textEditor.InsertText(hex::format("\n{0}", text));
+        this->m_hasUnevaluatedChanges = true;
+    }
+
+    void ViewPatternEditor::appendVariable(const std::string &type) {
+        auto selection = ImHexApi::HexEditor::getSelection();
+
+        appendEditorText(hex::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
+    }
+
+    void ViewPatternEditor::appendArray(const std::string &type, size_t size) {
+        auto selection = ImHexApi::HexEditor::getSelection();
+
+        appendEditorText(hex::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
+    }
+
     void ViewPatternEditor::registerMenuItems() {
         /* Import Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, 4050, Shortcut::None,
@@ -897,24 +915,6 @@ namespace hex::plugin::builtin {
                                                                             file.writeString(wolv::util::trim(this->m_textEditor.GetText()));
                                                                         });
                                                 }, ImHexApi::Provider::isValid);
-
-        const auto appendEditorText = [this](const std::string &text){
-            this->m_textEditor.SetCursorPosition(TextEditor::Coordinates { this->m_textEditor.GetTotalLines(), 0 });
-            this->m_textEditor.InsertText(hex::format("\n{0}", text));
-            this->m_hasUnevaluatedChanges = true;
-        };
-
-        const auto appendVariable = [&](const std::string &type) {
-            auto selection = ImHexApi::HexEditor::getSelection();
-
-            appendEditorText(hex::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
-        };
-
-        const auto appendArray = [&](const std::string &type, size_t size) {
-            auto selection = ImHexApi::HexEditor::getSelection();
-
-            appendEditorText(hex::format("{0} {0}_array_at_0x{1:02X}[0x{2:02X}] @ 0x{1:02X};", type, selection->getStartAddress(), (selection->getSize() + (size - 1)) / size));
-        };
 
         constexpr static std::array<std::pair<const char *, size_t>, 21>  Types = {{
            { "u8", 1 }, { "u16", 2 }, { "u24", 3 }, { "u32", 4 }, { "u48", 6 }, { "u64", 8 }, { "u96", 12 }, { "u128", 16 },
