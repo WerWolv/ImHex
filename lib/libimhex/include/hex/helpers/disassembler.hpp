@@ -8,28 +8,28 @@ namespace hex {
 
     enum class Architecture : i32
     {
-        ARM,
-        ARM64,
-        MIPS,
-        X86,
-        PPC,
-        SPARC,
-        SYSZ,
-        XCORE,
-        M68K,
-        TMS320C64X,
-        M680X,
-        EVM,
-        WASM,
+        ARM         = CS_ARCH_ARM,
+        ARM64       = CS_ARCH_ARM64,
+        MIPS        = CS_ARCH_MIPS,
+        X86         = CS_ARCH_X86,
+        PPC         = CS_ARCH_PPC,
+        SPARC       = CS_ARCH_SPARC,
+        SYSZ        = CS_ARCH_SYSZ,
+        XCORE       = CS_ARCH_XCORE,
+        M68K        = CS_ARCH_M68K,
+        TMS320C64X  = CS_ARCH_TMS320C64X,
+        M680X       = CS_ARCH_M680X,
+        EVM         = CS_ARCH_EVM,
+        WASM        = CS_ARCH_WASM,
 
         #if CS_API_MAJOR >= 5
-            RISCV,
-            MOS65XX,
-            BPF,
+            RISCV   = CS_ARCH_RISCV,
+            MOS65XX = CS_ARCH_MOS65XX,
+            BPF     = CS_ARCH_BPF,
         #endif
 
-        MAX,
-        MIN = ARM
+        MAX         = CS_ARCH_MAX,
+        MIN         = ARM
     };
 
     class Disassembler {
@@ -42,7 +42,31 @@ namespace hex {
             return cs_support(toCapstoneArchitecture(architecture));
         }
 
-        constexpr static const char *const ArchitectureNames[] = { "ARM32", "ARM64", "MIPS", "x86", "PowerPC", "Sparc", "SystemZ", "XCore", "68K", "TMS320C64x", "680X", "Ethereum", "WebAssembly", "RISC-V", "MOS65XX", "Berkeley Packet Filter" };
+        constexpr static auto ArchitectureNames = [](){
+            std::array<const char *, static_cast<u32>(Architecture::MAX)> names = { };
+
+            names[CS_ARCH_ARM]          = "ARM";
+            names[CS_ARCH_ARM64]        = "AArch64";
+            names[CS_ARCH_MIPS]         = "MIPS";
+            names[CS_ARCH_X86]          = "Intel x86";
+            names[CS_ARCH_PPC]          = "PowerPC";
+            names[CS_ARCH_SPARC]        = "SPARC";
+            names[CS_ARCH_SYSZ]         = "SystemZ";
+            names[CS_ARCH_XCORE]        = "XCore";
+            names[CS_ARCH_M68K]         = "Motorola 68K";
+            names[CS_ARCH_TMS320C64X]   = "TMS320C64x";
+            names[CS_ARCH_M680X]        = "M680X";
+            names[CS_ARCH_EVM]          = "Ethereum Virtual Machine";
+            names[CS_ARCH_WASM]         = "WebAssembly";
+
+            #if CS_API_MAJOR >= 5
+                names[CS_ARCH_RISCV]    = "RISC-V";
+                names[CS_ARCH_MOS65XX]  = "MOS Technology 65xx";
+                names[CS_ARCH_BPF]      = "Berkeley Packet Filter";
+            #endif
+
+            return names;
+        }();
 
         static inline i32 getArchitectureSupportedCount() {
             static i32 supportedCount = -1;

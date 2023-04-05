@@ -115,7 +115,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::Header("hex.builtin.common.settings"_lang);
 
-                if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames, Disassembler::getArchitectureSupportedCount()))
+                if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames.data(), Disassembler::getArchitectureSupportedCount()))
                     this->m_mode = cs_mode(0);
 
 
