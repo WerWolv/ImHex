@@ -147,7 +147,8 @@ namespace hex::plugin::builtin {
                     if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
                         runtime->abort();
                 } else {
-                    if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                    if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
+                        this->m_triggerEvaluation = false;
                         this->evaluatePattern(this->m_textEditor.GetText(), provider);
                     }
                 }
@@ -869,7 +870,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::appendEditorText(const std::string &text) {
         this->m_textEditor.SetCursorPosition(TextEditor::Coordinates { this->m_textEditor.GetTotalLines(), 0 });
         this->m_textEditor.InsertText(hex::format("\n{0}", text));
-        this->m_hasUnevaluatedChanges = true;
+        this->m_triggerEvaluation = true;
     }
 
     void ViewPatternEditor::appendVariable(const std::string &type) {

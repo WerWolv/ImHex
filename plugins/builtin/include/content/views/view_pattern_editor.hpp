@@ -46,6 +46,7 @@ namespace hex::plugin::builtin {
         std::vector<std::fs::path> m_possiblePatternFiles;
         u32 m_selectedPatternFile = 0;
         bool m_runAutomatically   = false;
+        bool m_triggerEvaluation  = false;
 
         bool m_lastEvaluationProcessed = true;
         bool m_lastEvaluationResult    = false;
