@@ -162,6 +162,11 @@ namespace hex {
                 if (result != 0 && (ImGui::IsItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
                     break;
 
+                if (GImGui->HoveredWindow != nullptr &&
+                    GImGui->HoveredWindow->Name != std::string("##MainMenuBar") &&
+                    GImGui->HoveredWindow->Name != std::string("ImHexDockSpace"))
+                    break;
+
                 switch (result) {
                     case RegionLeft:
                         return HTLEFT;
