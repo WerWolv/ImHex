@@ -286,7 +286,7 @@ namespace hex {
             if (ImGui::MenuItem(LangEntry(name), shortcut.toString().c_str(), false, enabledCallback()))
                 callback();
         } else {
-            if (ImGui::BeginMenu(LangEntry(name))) {
+            if (ImGui::BeginMenu(LangEntry(name), *(menuItems.begin() + 1) == ContentRegistry::Interface::impl::SubMenuValue ? enabledCallback() : true)) {
                 createNestedMenu({ menuItems.begin() + 1, menuItems.end() }, shortcut, callback, enabledCallback);
                 ImGui::EndMenu();
             }
