@@ -239,12 +239,13 @@ namespace hex {
     }
 
     void TaskManager::collectGarbage() {
-        std::unique_lock lock1(s_queueMutex);
-        std::unique_lock lock2(s_deferredCallsMutex);
-
-        std::erase_if(s_tasks, [](const auto &task) { return task->isFinished() && !task->hadException(); });
+        {
+            std::unique_lock lock1(s_queueMutex);
+            std::erase_if(s_tasks, [](const auto &task) { return task->isFinished() && !task->hadException(); });
+        }
 
         if (s_tasks.empty()) {
+            std::unique_lock lock2(s_deferredCallsMutex);
             for (auto &call : s_tasksFinishedCallbacks)
                 call();
             s_tasksFinishedCallbacks.clear();
