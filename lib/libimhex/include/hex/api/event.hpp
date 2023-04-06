@@ -156,10 +156,17 @@ namespace hex {
     EVENT_DEF(EventProviderClosing, prv::Provider *, bool *);
     EVENT_DEF(EventProviderClosed,  prv::Provider *);
     EVENT_DEF(EventProviderDeleted, prv::Provider *);
+    EVENT_DEF(EventProviderSaved,   prv::Provider *);
     EVENT_DEF(EventFrameBegin);
     EVENT_DEF(EventFrameEnd);
     EVENT_DEF(EventWindowInitialized);
     EVENT_DEF(EventSetTaskBarIconState, u32, u32, u32);
+    EVENT_DEF(EventBookmarkCreated, ImHexApi::Bookmarks::Entry&);
+    EVENT_DEF(EventPatchCreated, u64, u8, u8);
+    EVENT_DEF(EventPatternExecuted, const std::string&);
+    EVENT_DEF(EventPatternEditorChanged, const std::string&);
+    EVENT_DEF(EventStoreContentDownloaded, const std::fs::path&);
+    EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);

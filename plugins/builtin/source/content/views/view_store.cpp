@@ -99,6 +99,9 @@ namespace hex::plugin::builtin {
                                         if (entry.isFolder) {
                                             Tar tar(this->m_downloadPath, Tar::Mode::Read);
                                             tar.extractAll(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
+                                            EventManager::post<EventStoreContentDownloaded>(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
+                                        } else {
+                                            EventManager::post<EventStoreContentDownloaded>(this->m_downloadPath);
                                         }
 
                                         downloadDoneCallback();
@@ -286,6 +289,7 @@ namespace hex::plugin::builtin {
             wolv::io::fs::removeAll(folderPath);
 
             removed = removed && !wolv::io::fs::exists(filePath) && !wolv::io::fs::exists(folderPath);
+            EventManager::post<EventStoreContentRemoved>(filePath);
         }
 
         return removed;

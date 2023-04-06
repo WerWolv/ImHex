@@ -83,6 +83,7 @@ namespace hex::plugin::builtin {
 
     void FileProvider::save() {
         this->applyPatches();
+        Provider::save();
     }
 
     void FileProvider::saveAs(const std::fs::path &path) {

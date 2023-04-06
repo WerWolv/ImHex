@@ -35,7 +35,9 @@ namespace hex::prv {
         this->markDirty();
     }
 
-    void Provider::save() { }
+    void Provider::save() {
+        EventManager::post<EventProviderSaved>(this);
+    }
     void Provider::saveAs(const std::fs::path &path) {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
 
@@ -56,8 +58,9 @@ namespace hex::prv {
 
                 this->read(offset + this->getBaseAddress(), buffer.data(), bufferSize, true);
                 file.writeBuffer(buffer.data(), bufferSize);
-
             }
+
+            EventManager::post<EventProviderSaved>(this);
         }
     }
 
@@ -222,9 +225,12 @@ namespace hex::prv {
                 getPatches().erase(offset + i);
             else
                 getPatches()[offset + i] = patch;
+
+            EventManager::post<EventPatchCreated>(offset, originalValue, patch);
         }
 
         this->markDirty();
+
     }
 
     void Provider::createUndoPoint() {

@@ -219,6 +219,7 @@ namespace hex::plugin::builtin {
 
     void GDBProvider::save() {
         this->applyPatches();
+        Provider::save();
     }
 
     size_t GDBProvider::getActualSize() const {

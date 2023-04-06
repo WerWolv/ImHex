@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
                              });
                          }
                      };
-                     
+
                      if (provider == nullptr) {
                          success = false;
                          continue;

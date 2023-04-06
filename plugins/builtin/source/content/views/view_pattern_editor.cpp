@@ -181,8 +181,10 @@ namespace hex::plugin::builtin {
                 if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
                     this->m_hasUnevaluatedChanges = false;
 
+                    auto code = this->m_textEditor.GetText();
+                    EventManager::post<EventPatternEditorChanged>(code);
 
-                    TaskManager::createBackgroundTask("Pattern Parsing", [this, code = this->m_textEditor.GetText(), provider](auto &){
+                    TaskManager::createBackgroundTask("Pattern Parsing", [this, code, provider](auto &){
                         this->parsePattern(code, provider);
 
                         if (this->m_runAutomatically)
@@ -697,6 +699,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguage::configureRuntime(*patternLanguage.runtime, provider);
 
         EventManager::post<EventHighlightingChanged>();
+        EventManager::post<EventPatternExecuted>(code);
 
         TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, &patternLanguage, code](auto &task) {
             std::scoped_lock lock(patternLanguage.runtimeMutex);

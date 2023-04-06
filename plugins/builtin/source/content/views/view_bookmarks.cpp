@@ -36,6 +36,8 @@ namespace hex::plugin::builtin {
             });
 
             ImHexApi::Provider::markDirty();
+
+            EventManager::post<EventBookmarkCreated>(ProviderExtraData::getCurrent().bookmarks.back());
         });
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
