@@ -774,7 +774,7 @@
         "hex.builtin.view.patches.remove": "Remove patch",
         "hex.builtin.view.pattern_data.name": "Pattern Data",
         "hex.builtin.view.pattern_editor.accept_pattern": "Accept pattern",
-        "hex.builtin.view.pattern_editor.accept_pattern.desc": "One or more pattern_language compatible with this data type has been found",
+        "hex.builtin.view.pattern_editor.accept_pattern.desc": "One or more Patterns compatible with this data type has been found",
         "hex.builtin.view.pattern_editor.accept_pattern.pattern_language": "Patterns",
         "hex.builtin.view.pattern_editor.accept_pattern.question": "Do you want to apply the selected pattern?",
         "hex.builtin.view.pattern_editor.auto": "Auto evaluate",

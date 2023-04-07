@@ -5,37 +5,38 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 set(LIBIMHEX_SOURCES
-    source/api/event.cpp
-    source/api/imhex_api.cpp
-    source/api/content_registry.cpp
-    source/api/task.cpp
-    source/api/keybinding.cpp
-    source/api/plugin_manager.cpp
-    source/api/localization.cpp
-    source/api/project_file_manager.cpp
-    source/api/theme_manager.cpp
+        source/api/event.cpp
+        source/api/imhex_api.cpp
+        source/api/content_registry.cpp
+        source/api/task.cpp
+        source/api/keybinding.cpp
+        source/api/plugin_manager.cpp
+        source/api/localization.cpp
+        source/api/project_file_manager.cpp
+        source/api/theme_manager.cpp
 
-    source/data_processor/attribute.cpp
-    source/data_processor/link.cpp
-    source/data_processor/node.cpp
+        source/data_processor/attribute.cpp
+        source/data_processor/link.cpp
+        source/data_processor/node.cpp
 
-    source/helpers/utils.cpp
-    source/helpers/fs.cpp
-    source/helpers/magic.cpp
-    source/helpers/crypto.cpp
-    source/helpers/http_requests.cpp
-    source/helpers/opengl.cpp
-    source/helpers/patches.cpp
-    source/helpers/encoding_file.cpp
-    source/helpers/logger.cpp
-    source/helpers/stacktrace.cpp
-    source/helpers/tar.cpp
+        source/helpers/utils.cpp
+        source/helpers/fs.cpp
+        source/helpers/magic.cpp
+        source/helpers/crypto.cpp
+        source/helpers/http_requests.cpp
+        source/helpers/opengl.cpp
+        source/helpers/patches.cpp
+        source/helpers/encoding_file.cpp
+        source/helpers/logger.cpp
+        source/helpers/stacktrace.cpp
+        source/helpers/tar.cpp
 
-    source/providers/provider.cpp
+        source/providers/provider.cpp
 
-    source/ui/imgui_imhex_extensions.cpp
-    source/ui/view.cpp
-    )
+        source/ui/imgui_imhex_extensions.cpp
+        source/ui/view.cpp
+        source/ui/popup.cpp
+)
 
 if (APPLE)
     set(OSX_11_0_SDK_PATH  /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk)

@@ -767,7 +767,7 @@
         "hex.builtin.view.patches.remove": "パッチを削除",
         "hex.builtin.view.pattern_data.name": "パターンデータ",
         "hex.builtin.view.pattern_editor.accept_pattern": "使用できるパターン",
-        "hex.builtin.view.pattern_editor.accept_pattern.desc": "このデータ型と互換性のある pattern_language が1つ以上見つかりました",
+        "hex.builtin.view.pattern_editor.accept_pattern.desc": "このデータ型と互換性のある Patterns が1つ以上見つかりました",
         "hex.builtin.view.pattern_editor.accept_pattern.pattern_language": "パターン",
         "hex.builtin.view.pattern_editor.accept_pattern.question": "選択したパターンを反映してよろしいですか？",
         "hex.builtin.view.pattern_editor.auto": "常に実行",

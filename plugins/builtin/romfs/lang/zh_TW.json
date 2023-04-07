@@ -767,7 +767,7 @@
         "hex.builtin.view.patches.remove": "Remove patch",
         "hex.builtin.view.pattern_data.name": "模式資料",
         "hex.builtin.view.pattern_editor.accept_pattern": "接受模式",
-        "hex.builtin.view.pattern_editor.accept_pattern.desc": "已找到一或多個與此資料類型相容的 pattern_language",
+        "hex.builtin.view.pattern_editor.accept_pattern.desc": "已找到一或多個與此資料類型相容的 Patterns",
         "hex.builtin.view.pattern_editor.accept_pattern.pattern_language": "模式",
         "hex.builtin.view.pattern_editor.accept_pattern.question": "您要套用所選的模式嗎？",
         "hex.builtin.view.pattern_editor.auto": "自動評估",

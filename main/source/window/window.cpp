@@ -11,6 +11,9 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/stacktrace.hpp>
 
+#include <hex/ui/view.hpp>
+#include <hex/ui/popup.hpp>
+
 #include <chrono>
 #include <csignal>
 #include <set>
@@ -518,6 +521,27 @@ namespace hex {
 
                 return false;
             });
+        }
+
+        // Draw popup stack
+        {
+            if (auto &popups = PopupBase::getOpenPopups(); !popups.empty()) {
+                auto &currPopup = popups.back();
+                const auto &name = LangEntry(currPopup->getUnlocalizedName());
+
+                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
+                    ImGui::OpenPopup(name);
+
+                bool open = true;
+                if (ImGui::BeginPopupModal(name, currPopup->hasCloseButton() ? &open : nullptr, currPopup->getFlags())) {
+                    currPopup->drawContent();
+
+                    ImGui::EndPopup();
+                }
+
+                if (!open)
+                    popups.pop_back();
+            }
         }
 
         // Run all deferred calls
