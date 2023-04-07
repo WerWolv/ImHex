@@ -18,6 +18,7 @@
 
 #include <llvm/Demangle/Demangle.h>
 #include <content/helpers/math_evaluator.hpp>
+#include <content/popups/popup_notification.hpp>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -646,11 +647,11 @@ namespace hex::plugin::builtin {
                             json["data"]["file"]["metadata"]["size"]["readable"]
                         });
                     } catch (...) {
-                        View::showErrorPopup("hex.builtin.tools.file_uploader.invalid_response"_lang);
+                        PopupError::open("hex.builtin.tools.file_uploader.invalid_response"_lang);
                     }
                 } else if (response.getStatusCode() == 0) {
                     // Canceled by user, no action needed
-                } else View::showErrorPopup(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
+                } else PopupError::open(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
 
                 uploadProcess = {};
                 currFile.clear();
@@ -772,7 +773,7 @@ namespace hex::plugin::builtin {
                             wolv::io::File file(selectedFile, wolv::io::File::Mode::Write);
 
                             if (!file.isValid()) {
-                                View::showErrorPopup("hex.builtin.tools.file_tools.shredder.error.open"_lang);
+                                PopupError::open("hex.builtin.tools.file_tools.shredder.error.open"_lang);
                                 return;
                             }
 
@@ -846,7 +847,7 @@ namespace hex::plugin::builtin {
 
                             file.remove();
 
-                            View::showInfoPopup("hex.builtin.tools.file_tools.shredder.success"_lang);
+                            PopupInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
                         });
                     }
                 }
@@ -937,12 +938,12 @@ namespace hex::plugin::builtin {
                             wolv::io::File file(selectedFile, wolv::io::File::Mode::Read);
 
                             if (!file.isValid()) {
-                                View::showErrorPopup("hex.builtin.tools.file_tools.splitter.picker.error.open"_lang);
+                                PopupError::open("hex.builtin.tools.file_tools.splitter.picker.error.open"_lang);
                                 return;
                             }
 
                             if (file.getSize() < splitSize) {
-                                View::showErrorPopup("hex.builtin.tools.file_tools.splitter.picker.error.size"_lang);
+                                PopupError::open("hex.builtin.tools.file_tools.splitter.picker.error.size"_lang);
                                 return;
                             }
 
@@ -958,7 +959,7 @@ namespace hex::plugin::builtin {
                                 wolv::io::File partFile(path, wolv::io::File::Mode::Create);
 
                                 if (!partFile.isValid()) {
-                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
+                                    PopupError::open(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
                                     return;
                                 }
 
@@ -971,7 +972,7 @@ namespace hex::plugin::builtin {
                                 index++;
                             }
 
-                            View::showInfoPopup("hex.builtin.tools.file_tools.splitter.picker.success"_lang);
+                            PopupInfo::open("hex.builtin.tools.file_tools.splitter.picker.success"_lang);
                         });
                     }
                 }
@@ -1071,7 +1072,7 @@ namespace hex::plugin::builtin {
                             wolv::io::File output(outputPath, wolv::io::File::Mode::Create);
 
                             if (!output.isValid()) {
-                                View::showErrorPopup("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
+                                PopupError::open("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
                                 return;
                             }
 
@@ -1084,7 +1085,7 @@ namespace hex::plugin::builtin {
 
                                 wolv::io::File input(file, wolv::io::File::Mode::Read);
                                 if (!input.isValid()) {
-                                    View::showErrorPopup(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
+                                    PopupError::open(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
                                     return;
                                 }
 
@@ -1100,7 +1101,7 @@ namespace hex::plugin::builtin {
                             selectedIndex = 0;
                             outputPath.clear();
 
-                            View::showInfoPopup("hex.builtin.tools.file_tools.combiner.success"_lang);
+                            PopupInfo::open("hex.builtin.tools.file_tools.combiner.success"_lang);
                         });
                     }
                 }

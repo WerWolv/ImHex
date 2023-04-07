@@ -15,6 +15,8 @@
 #include <hex/helpers/magic.hpp>
 
 #include <content/helpers/provider_extra_data.hpp>
+#include <content/popups/popup_file_chooser.hpp>
+#include <content/popups/popup_question.hpp>
 
 #include <nlohmann/json.hpp>
 #include <chrono>
@@ -82,7 +84,6 @@ namespace hex::plugin::builtin {
         }
         return langDef;
     }
-
 
     ViewPatternEditor::ViewPatternEditor() : View("hex.builtin.view.pattern_editor.name") {
         this->m_parserRuntime = std::make_unique<pl::PatternLanguage>();
@@ -196,25 +197,18 @@ namespace hex::plugin::builtin {
 
             if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
                 ImGui::OpenPopup(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str());
-                this->m_dangerousFunctionCalled = false;
-            }
 
-            if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
-                ImGui::NewLine();
-                ImGui::TextUnformatted("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang);
-                ImGui::NewLine();
-
-                View::confirmButtons(
-                    "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
+                PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
                     [this] {
                         this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
                         ImGui::CloseCurrentPopup();
                     }, [this] {
                         this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Deny;
                         ImGui::CloseCurrentPopup();
-                    });
+                    }
+                );
 
-                ImGui::EndPopup();
+                this->m_dangerousFunctionCalled = false;
             }
 
             View::discardNavigationRequests();
@@ -500,42 +494,6 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::drawAlwaysVisible() {
         auto provider = ImHexApi::Provider::get();
-
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        if (ImGui::BeginPopupModal("hex.builtin.view.pattern_editor.accept_pattern"_lang, &this->m_acceptPatternWindowOpen, ImGuiWindowFlags_AlwaysAutoResize)) {
-            ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
-
-            std::vector<std::string> entries;
-            entries.resize(this->m_possiblePatternFiles.size());
-
-            for (u32 i = 0; i < entries.size(); i++) {
-                entries[i] = wolv::util::toUTF8String(this->m_possiblePatternFiles[i].filename());
-            }
-
-            if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
-                u32 index = 0;
-                for (auto &path : this->m_possiblePatternFiles) {
-                    if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile))
-                        this->m_selectedPatternFile = index;
-                    index++;
-                }
-
-                ImGui::EndListBox();
-            }
-
-            ImGui::NewLine();
-            ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
-
-            confirmButtons(
-                "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [this, provider] {
-                this->loadPatternFile(this->m_possiblePatternFiles[this->m_selectedPatternFile], provider);
-                ImGui::CloseCurrentPopup(); }, [] { ImGui::CloseCurrentPopup(); });
-
-            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
-                ImGui::CloseCurrentPopup();
-
-            ImGui::EndPopup();
-        }
 
         auto open = this->m_sectionWindowDrawer.contains(provider);
         if (open) {
@@ -828,7 +786,7 @@ namespace hex::plugin::builtin {
 
                 if (!this->m_possiblePatternFiles.empty()) {
                     this->m_selectedPatternFile = 0;
-                    EventManager::post<RequestOpenPopup>("hex.builtin.view.pattern_editor.accept_pattern"_lang);
+                    PopupAcceptPattern::open(this);
                     this->m_acceptPatternWindowOpen = true;
                 }
             });
@@ -903,7 +861,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    View::showFileChooserPopup(paths, { { "Pattern File", "hexpat" } }, false,
+                                                    PopupFileChooser::open(paths, std::vector<nfdfilteritem_t>{ { "Pattern File", "hexpat" } }, false,
                                                                                [this, provider](const std::fs::path &path) {
                                                                                    this->loadPatternFile(path, provider);
                                                                                });

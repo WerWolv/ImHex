@@ -183,10 +183,7 @@ namespace hex {
     EVENT_DEF(RequestCreateProvider, std::string, bool, hex::prv::Provider **);
     EVENT_DEF(RequestInitThemeHandlers);
 
-    EVENT_DEF(RequestShowInfoPopup, std::string);
-    EVENT_DEF(RequestShowErrorPopup, std::string);
-    EVENT_DEF(RequestShowFatalErrorPopup, std::string);
-    EVENT_DEF(RequestShowYesNoQuestionPopup, std::string, std::function<void()>, std::function<void()>);
-    EVENT_DEF(RequestShowFileChooserPopup, std::vector<std::fs::path>, std::vector<nfdfilteritem_t>, std::function<void(std::fs::path)>, bool);
-
+    EVENT_DEF(RequestOpenInfoPopup, const std::string);
+    EVENT_DEF(RequestOpenErrorPopup, const std::string);
+    EVENT_DEF(RequestOpenFatalPopup, const std::string);
 }

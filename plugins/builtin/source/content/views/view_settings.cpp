@@ -1,10 +1,11 @@
 #include "content/views/view_settings.hpp"
 
 #include <hex/api/content_registry.hpp>
-
 #include <hex/helpers/logger.hpp>
 
 #include <nlohmann/json.hpp>
+
+#include <content/popups/popup_question.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -87,7 +88,7 @@ namespace hex::plugin::builtin {
             this->getWindowOpenState() = false;
 
         if (!this->getWindowOpenState() && this->m_restartRequested) {
-            View::showYesNoQuestionPopup("hex.builtin.view.settings.restart_question"_lang, ImHexApi::System::restartImHex, [] {});
+            PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang, ImHexApi::System::restartImHex, [] {});
         }
     }
 

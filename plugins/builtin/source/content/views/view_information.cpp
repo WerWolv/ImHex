@@ -15,6 +15,8 @@
 
 #include <implot.h>
 
+#include <content/popups/popup_notification.hpp>
+
 namespace hex::plugin::builtin {
 
     using namespace hex::literals;
@@ -47,7 +49,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    View::showInfoPopup("hex.builtin.view.information.magic_db_added"_lang);
+                    PopupInfo::open("hex.builtin.view.information.magic_db_added"_lang);
                     return true;
                 }
             }

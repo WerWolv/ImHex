@@ -9,6 +9,7 @@
 
 #include <content/providers/view_provider.hpp>
 #include <content/helpers/math_evaluator.hpp>
+#include <content/popups/popup_file_chooser.hpp>
 
 #include <imgui_internal.h>
 #include <nlohmann/json.hpp>
@@ -1013,7 +1014,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    View::showFileChooserPopup(paths, { {"Thingy Table File", "tbl"} }, false,
+                                                    PopupFileChooser::open(paths, std::vector<nfdfilteritem_t>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
                                                         TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);

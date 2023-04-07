@@ -108,6 +108,8 @@ namespace hex {
         [[nodiscard]] bool wasInterrupted() const;
         [[nodiscard]] bool shouldInterrupt() const;
 
+        [[nodiscard]] u32 getProgress() const;
+
         void interrupt();
     private:
         std::weak_ptr<Task> m_task;

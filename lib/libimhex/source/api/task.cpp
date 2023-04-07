@@ -165,6 +165,14 @@ namespace hex {
         task->interrupt();
     }
 
+    u32 TaskHolder::getProgress() const {
+        if (this->m_task.expired())
+            return 0;
+
+        auto task = this->m_task.lock();
+        return (u32)((task->getValue() * 100) / task->getMaxValue());
+    }
+
 
     void TaskManager::init() {
         for (u32 i = 0; i < std::thread::hardware_concurrency(); i++)

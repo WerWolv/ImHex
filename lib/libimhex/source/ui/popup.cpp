@@ -1,7 +1,8 @@
 #include <hex/ui/popup.hpp>
 
-namespace hex {
+namespace hex::impl {
 
     std::vector<std::unique_ptr<PopupBase>> PopupBase::s_openPopups;
+    std::mutex PopupBase::s_mutex;
 
 }

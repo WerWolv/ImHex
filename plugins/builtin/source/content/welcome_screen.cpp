@@ -23,6 +23,9 @@
 
 #include <fonts/codicons_font.h>
 
+#include <content/popups/popup_notification.hpp>
+#include <content/popups/popup_question.hpp>
+
 #include <string>
 #include <list>
 #include <unordered_set>
@@ -57,6 +60,59 @@ namespace hex::plugin::builtin {
             }
         };
 
+    };
+
+    class PopupRestoreBackup : public Popup<PopupRestoreBackup> {
+    public:
+        PopupRestoreBackup() : Popup("hex.builtin.popup.safety_backup.title") { }
+
+        void drawContent() override {
+            ImGui::TextUnformatted("hex.builtin.welcome.safety_backup.desc"_lang);
+            ImGui::NewLine();
+
+            auto width = ImGui::GetWindowWidth();
+            ImGui::SetCursorPosX(width / 9);
+            if (ImGui::Button("hex.builtin.welcome.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
+                ProjectFile::load(s_safetyBackupPath);
+                ProjectFile::clearPath();
+
+                for (const auto &provider : ImHexApi::Provider::getProviders())
+                    provider->markDirty();
+
+                wolv::io::fs::remove(s_safetyBackupPath);
+
+                Popup::close();
+            }
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(width / 9 * 5);
+            if (ImGui::Button("hex.builtin.welcome.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
+                wolv::io::fs::remove(s_safetyBackupPath);
+
+                Popup::close();
+            }
+        }
+    };
+
+    class PopupTipOfTheDay : public Popup<PopupTipOfTheDay> {
+    public:
+        PopupTipOfTheDay() : Popup("hex.builtin.popup.tip_of_the_day.title", true, false) { }
+
+        void drawContent() override {
+            ImGui::Header("hex.builtin.welcome.tip_of_the_day"_lang, true);
+
+            ImGui::TextFormattedWrapped("{}", s_tipOfTheDay.c_str());
+            ImGui::NewLine();
+
+            static bool dontShowAgain = false;
+            if (ImGui::Checkbox("hex.builtin.common.dont_show_again"_lang, &dontShowAgain)) {
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
+            }
+
+            ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.builtin.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
+
+            if (ImGui::Button("hex.builtin.common.close"_lang))
+                Popup::close();
+        }
     };
 
     static std::atomic<bool> s_recentProvidersUpdating = false;
@@ -124,7 +180,7 @@ namespace hex::plugin::builtin {
             provider->loadSettings(recentProvider.data);
 
             if (!provider->open() || !provider->isAvailable()) {
-                View::showErrorPopup("hex.builtin.popup.error.open"_lang);
+                PopupError::open("hex.builtin.popup.error.open"_lang);
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 return;
             }
@@ -158,60 +214,6 @@ namespace hex::plugin::builtin {
             [](const std::pair<std::string, View*> &entry) {
                 return entry.second->getWindowOpenState();
             });
-    }
-
-    static void drawPopups() {
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        ImGui::SetNextWindowSize(ImGui::GetMainViewport()->Size / 3, ImGuiCond_Appearing);
-        if (ImGui::BeginPopup("hex.builtin.welcome.tip_of_the_day"_lang)) {
-            ImGui::Header("hex.builtin.welcome.tip_of_the_day"_lang, true);
-
-            ImGui::TextFormattedWrapped("{}", s_tipOfTheDay.c_str());
-            ImGui::NewLine();
-
-            static bool dontShowAgain = false;
-            if (ImGui::Checkbox("hex.builtin.common.dont_show_again"_lang, &dontShowAgain)) {
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
-            }
-
-            ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.builtin.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
-
-            if (ImGui::Button("hex.builtin.common.close"_lang))
-                ImGui::CloseCurrentPopup();
-
-            ImGui::EndPopup();
-        }
-
-
-        // Popup for if there is a safety backup present because ImHex crashed
-        ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-        if (ImGui::BeginPopupModal("hex.builtin.welcome.safety_backup.title"_lang, nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-            ImGui::TextUnformatted("hex.builtin.welcome.safety_backup.desc"_lang);
-            ImGui::NewLine();
-
-            auto width = ImGui::GetWindowWidth();
-            ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.builtin.welcome.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
-                ProjectFile::load(s_safetyBackupPath);
-                ProjectFile::clearPath();
-
-                for (const auto &provider : ImHexApi::Provider::getProviders())
-                    provider->markDirty();
-
-                wolv::io::fs::remove(s_safetyBackupPath);
-
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::SameLine();
-            ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.builtin.welcome.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
-                wolv::io::fs::remove(s_safetyBackupPath);
-
-                ImGui::CloseCurrentPopup();
-            }
-
-            ImGui::EndPopup();
-        }
     }
 
     static void drawWelcomeScreenContent() {
@@ -406,8 +408,6 @@ namespace hex::plugin::builtin {
             }
         }
         ImGui::End();
-
-        drawPopups();
     }
 
     static void drawNoViewsBackground() {
@@ -515,8 +515,8 @@ namespace hex::plugin::builtin {
             // documentation of the value above the setting definition
             int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
             if (showCheckForUpdates == 2) {
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 0); 
-                View::showYesNoQuestionPopup("hex.builtin.welcome.check_for_updates_text"_lang,
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 0);
+                PopupQuestion::open("hex.builtin.welcome.check_for_updates_text"_lang,
                     [] { // yes
                         ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 1);
                         ImGui::CloseCurrentPopup();
@@ -526,7 +526,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        // clear project context if we go back to the welcome screen
+        // Clear project context if we go back to the welcome screen
         EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
             hex::unused(oldProvider);
             if (newProvider == nullptr) {
@@ -559,14 +559,16 @@ namespace hex::plugin::builtin {
             }
         });
 
+        // Check for crash backup
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             if (auto filePath = std::fs::path(path) / CrashBackupFileName; wolv::io::fs::exists(filePath)) {
                 s_safetyBackupPath = filePath;
-                TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.safety_backup.title"_lang); });
+                PopupRestoreBackup::open();
             }
         }
 
+        // Tip of the day
         auto tipsData = romfs::get("tips.json");
         if(s_safetyBackupPath.empty() && tipsData.valid()){
             auto tipsCategories = nlohmann::json::parse(tipsData.string());
@@ -581,7 +583,7 @@ namespace hex::plugin::builtin {
 
             bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
             if (showTipOfTheDay)
-                TaskManager::doLater([] { ImGui::OpenPopup("hex.builtin.welcome.tip_of_the_day"_lang); });
+                PopupTipOfTheDay::open();
         }
     }
 

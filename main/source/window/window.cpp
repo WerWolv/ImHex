@@ -525,7 +525,8 @@ namespace hex {
 
         // Draw popup stack
         {
-            if (auto &popups = PopupBase::getOpenPopups(); !popups.empty()) {
+            std::scoped_lock lock(impl::PopupBase::getMutex());
+            if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 auto &currPopup = popups.back();
                 const auto &name = LangEntry(currPopup->getUnlocalizedName());
 
@@ -533,10 +534,24 @@ namespace hex {
                     ImGui::OpenPopup(name);
 
                 bool open = true;
-                if (ImGui::BeginPopupModal(name, currPopup->hasCloseButton() ? &open : nullptr, currPopup->getFlags())) {
-                    currPopup->drawContent();
+                ImGui::SetNextWindowSizeConstraints(currPopup->getMinSize(), currPopup->getMaxSize());
 
-                    ImGui::EndPopup();
+                auto closeButton = currPopup->hasCloseButton() ? &open : nullptr;
+                auto flags = currPopup->getFlags();
+
+                ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+                if (currPopup->isModal()) {
+                    if (ImGui::BeginPopupModal(name, closeButton, flags)) {
+                        currPopup->drawContent();
+
+                        ImGui::EndPopup();
+                    }
+                } else {
+                    if (ImGui::BeginPopup(name, flags)) {
+                        currPopup->drawContent();
+
+                        ImGui::EndPopup();
+                    }
                 }
 
                 if (!open)

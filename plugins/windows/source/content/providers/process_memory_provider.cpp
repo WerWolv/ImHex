@@ -215,7 +215,7 @@ namespace hex::plugin::windows {
                         if (loadLibraryW != nullptr) {
                             if (auto threadHandle = CreateRemoteThread(this->m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
                                 WaitForSingleObject(threadHandle, INFINITE);
-                                hex::View::showInfoPopup(hex::format("hex.windows.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.windows.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
                                 this->reloadProcessModules();
                                 CloseHandle(threadHandle);
                                 return;
@@ -224,7 +224,7 @@ namespace hex::plugin::windows {
                     }
                 }
 
-                hex::View::showErrorPopup(hex::format("hex.windows.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.windows.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
             });
         }
     }

@@ -1,5 +1,7 @@
 #include "content/views/view_provider_settings.hpp"
 
+#include <content/popups/popup_notification.hpp>
+
 namespace hex::plugin::builtin {
 
     ViewProviderSettings::ViewProviderSettings() : hex::View("hex.builtin.view.provider_settings.name") {
@@ -43,9 +45,9 @@ namespace hex::plugin::builtin {
                     else {
                         auto errorMessage = provider->getErrorMessage();
                         if (errorMessage.empty()) {
-                            View::showErrorPopup("hex.builtin.view.provider_settings.load_error"_lang);
+                            PopupError::open("hex.builtin.view.provider_settings.load_error"_lang);
                         } else {
-                            View::showErrorPopup(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                            PopupError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
                         }
                         TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                     }

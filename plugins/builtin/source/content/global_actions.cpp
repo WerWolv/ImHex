@@ -3,6 +3,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <content/popups/popup_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -10,7 +11,7 @@ namespace hex::plugin::builtin {
         fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                             [](const auto &path) {
                                 if (!ProjectFile::load(path)) {
-                                    View::showErrorPopup("hex.builtin.popup.error.project.load"_lang);
+                                    PopupError::open("hex.builtin.popup.error.project.load"_lang);
                                 }
                             });
     }
@@ -18,7 +19,7 @@ namespace hex::plugin::builtin {
     void saveProject() {
         if (ImHexApi::Provider::isValid() && ProjectFile::hasPath()) {
             if (!ProjectFile::store()) {
-                View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);
+                PopupError::open("hex.builtin.popup.error.project.save"_lang);
             } else {
                 log::debug("Project saved");
             }
@@ -33,7 +34,7 @@ namespace hex::plugin::builtin {
                                 }
 
                                 if (!ProjectFile::store(path)) {
-                                    View::showErrorPopup("hex.builtin.popup.error.project.save"_lang);
+                                    PopupError::open("hex.builtin.popup.error.project.save"_lang);
                                 }
                             });
     }
