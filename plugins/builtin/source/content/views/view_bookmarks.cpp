@@ -245,8 +245,10 @@ namespace hex::plugin::builtin {
 
                             if (locked) {
                                 if (ImGui::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
+                                ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
                             } else {
                                 if (ImGui::IconButton(ICON_VS_UNLOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = true;
+                                ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.lock"_lang);
                             }
 
                             ImGui::SameLine();
@@ -255,6 +257,7 @@ namespace hex::plugin::builtin {
                                 if (!locked)
                                     ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
                             }
+                            ImGui::InfoTooltip("hex.builtin.view.bookmarks.header.color"_lang);
 
                             if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
                                 drawColorPopup(headerColor);
@@ -281,6 +284,8 @@ namespace hex::plugin::builtin {
 
                             if (ImGui::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                                 ImHexApi::HexEditor::setSelection(region);
+                            ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
+
                             ImGui::SameLine();
                             if (ImGui::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                 auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
@@ -290,6 +295,8 @@ namespace hex::plugin::builtin {
                                         EventManager::post<EventProviderOpened>(viewProvider);
                                 }
                             }
+                            ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
+
                             ImGui::SameLine();
                             ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.getStartAddress(), region.getEndAddress());
 
