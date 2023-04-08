@@ -408,9 +408,11 @@ namespace hex {
                 }
 
                 for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
+                    ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
                     if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
                         ImGui::EndMenu();
                     }
+                    ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
                 }
 
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
