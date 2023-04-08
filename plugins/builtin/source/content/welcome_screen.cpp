@@ -211,7 +211,7 @@ namespace hex::plugin::builtin {
     static bool isAnyViewOpen() {
         const auto &views = ContentRegistry::Views::impl::getEntries();
         return std::any_of(views.begin(), views.end(),
-            [](const std::pair<std::string, View*> &entry) {
+            [](const auto &entry) {
                 return entry.second->getWindowOpenState();
             });
     }

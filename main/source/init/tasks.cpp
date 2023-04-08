@@ -7,10 +7,11 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/theme_manager.hpp>
-#include <hex/ui/view.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/ui/view.hpp>
+#include <hex/ui/popup.hpp>
 
 #include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
@@ -123,8 +124,9 @@ namespace hex::init {
 
     bool migrateConfig(){
 
-        // check if there is a new config in folder
+        // Check if there is a new config in folder
         auto configPaths = hex::fs::getDefaultPaths(hex::fs::ImHexPath::Config, false);
+
         // There should always be exactly one config path on Linux
         std::fs::path newConfigPath = configPaths[0];
         wolv::io::File newConfigFile(newConfigPath / "settings.json", wolv::io::File::Mode::Read);
@@ -132,7 +134,7 @@ namespace hex::init {
 
             // find an old config
             std::fs::path oldConfigPath;
-            for(auto dir : hex::fs::appendPath(hex::fs::getDataPaths(), "config")) {
+            for (const auto &dir : hex::fs::appendPath(hex::fs::getDataPaths(), "config")) {
                 wolv::io::File oldConfigFile(dir / "settings.json", wolv::io::File::Mode::Read);
                 if (oldConfigFile.isValid()) {
                     oldConfigPath = dir;
@@ -141,11 +143,7 @@ namespace hex::init {
             }
 
             if (!oldConfigPath.empty()) {
-                // move it to new location
-                auto configPaths = hex::fs::getDefaultPaths(hex::fs::ImHexPath::Config, false);
-                // There should always be exactly one config path on Linux
-                std::fs::path newConfigPath = configPaths[0];
-                log::info("Found config file in {} ! Migrating to {}", oldConfigPath.string(), newConfigPath.string());
+                log::info("Found config file in {}! Migrating to {}", oldConfigPath.string(), newConfigPath.string());
 
                 std::fs::rename(oldConfigPath / "settings.json", newConfigPath / "settings.json");
                 wolv::io::File oldIniFile(oldConfigPath / "interface.ini", wolv::io::File::Mode::Read);
@@ -294,12 +292,8 @@ namespace hex::init {
         ContentRegistry::PatternLanguage::impl::getPragmas().clear();
         ContentRegistry::PatternLanguage::impl::getVisualizers().clear();
 
-        {
-            auto &views = ContentRegistry::Views::impl::getEntries();
-            for (auto &[name, view] : views)
-                delete view;
-            views.clear();
-        }
+        ContentRegistry::Views::impl::getEntries().clear();
+        impl::PopupBase::getOpenPopups().clear();
 
 
         ContentRegistry::Tools::impl::getEntries().clear();

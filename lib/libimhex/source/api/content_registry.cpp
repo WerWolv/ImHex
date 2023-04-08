@@ -354,25 +354,25 @@ namespace hex {
 
         namespace impl {
 
-            std::map<std::string, View *> &getEntries() {
-                static std::map<std::string, View *> views;
+            std::map<std::string, std::unique_ptr<View>> &getEntries() {
+                static std::map<std::string, std::unique_ptr<View>> views;
 
                 return views;
             }
 
         }
 
-        void impl::add(View *view) {
+        void impl::add(std::unique_ptr<View> &&view) {
             log::debug("Registered new view: {}", view->getUnlocalizedName());
 
-            impl::getEntries().insert({ view->getUnlocalizedName(), view });
+            impl::getEntries().insert({ view->getUnlocalizedName(), std::move(view) });
         }
 
-        View *getViewByName(const std::string &unlocalizedName) {
+        View* getViewByName(const std::string &unlocalizedName) {
             auto &views = impl::getEntries();
 
             if (views.contains(unlocalizedName))
-                return views[unlocalizedName];
+                return views[unlocalizedName].get();
             else
                 return nullptr;
         }

@@ -32,7 +32,7 @@ namespace hex {
         return pressedShortcut;
     }
 
-    void ShortcutManager::process(View *currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
+    void ShortcutManager::process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
         Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, keyCode);
 
         if (focused && currentView->m_shortcuts.contains(pressedShortcut))

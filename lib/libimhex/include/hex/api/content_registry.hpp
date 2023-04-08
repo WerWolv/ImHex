@@ -311,8 +311,8 @@ namespace hex {
 
             namespace impl {
 
-                void add(View *view);
-                std::map<std::string, View *> &getEntries();
+                void add(std::unique_ptr<View> &&view);
+                std::map<std::string, std::unique_ptr<View>> &getEntries();
 
             }
 
@@ -324,7 +324,7 @@ namespace hex {
              */
             template<std::derived_from<View> T, typename... Args>
             void add(Args &&...args) {
-                return impl::add(new T(std::forward<Args>(args)...));
+                return impl::add(std::make_unique<T>(std::forward<Args>(args)...));
             }
 
             /**
@@ -332,7 +332,7 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the view
              * @return The view if it exists, nullptr otherwise
              */
-            View *getViewByName(const std::string &unlocalizedName);
+            View* getViewByName(const std::string &unlocalizedName);
         }
 
         /* Tools Registry. Allows adding new entries to the tools window */
