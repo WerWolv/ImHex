@@ -3,12 +3,21 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 
+#include <hex/api/event.hpp>
+
 namespace hex::plugin::builtin {
 
     class ViewProvider : public hex::prv::Provider {
     public:
-        explicit ViewProvider() = default;
-        ~ViewProvider() override = default;
+        explicit ViewProvider() {
+            EventManager::subscribe<EventProviderClosing>(this, [this](prv::Provider *provider, bool*) {
+                if (this->m_provider == provider)
+                    ImHexApi::Provider::remove(this, true);
+            });
+        }
+        ~ViewProvider() override {
+            EventManager::unsubscribe<EventProviderClosing>(this);
+        }
 
         [[nodiscard]] bool isAvailable() const override {
             if (this->m_provider == nullptr)
