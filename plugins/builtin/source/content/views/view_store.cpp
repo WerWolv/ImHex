@@ -272,7 +272,7 @@ namespace hex::plugin::builtin {
         }
 
         if (!downloading) {
-            View::showErrorPopup("hex.builtin.view.store.download_error"_lang);
+            PopupError::open("hex.builtin.view.store.download_error"_lang);
             return false;
         }
 
