@@ -75,11 +75,14 @@ namespace hex::plugin::builtin {
             struct BinaryPattern {
                 std::string input;
                 std::vector<ViewFind::BinaryPattern> pattern;
+                bool aligned = false;
             } binaryPattern;
 
             struct Value {
                 std::string inputMin, inputMax;
                 std::endian endian = std::endian::native;
+                bool aligned = false;
+                bool range = false;
 
                 enum class Type {
                     U8 = 0, U16 = 1, U32 = 2, U64 = 3,

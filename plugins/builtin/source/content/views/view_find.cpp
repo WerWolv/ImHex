@@ -368,28 +368,46 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        u32 matchedBytes = 0;
         const size_t patternSize = settings.pattern.size();
 
-        u64 progress = 0;
-        for (auto it = reader.begin(); it != reader.end(); ++it) {
-            auto byte = *it;
+        if (!settings.aligned) {
+            u32 matchedBytes = 0;
+            for (auto it = reader.begin(); it < reader.end(); it += 1) {
+                auto byte = *it;
 
-            task.update(progress);
-            if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
-                matchedBytes++;
-                if (matchedBytes == settings.pattern.size()) {
-                    auto occurrenceAddress = it.getAddress() - (patternSize - 1);
+                task.update(it.getAddress());
+                if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
+                    matchedBytes++;
+                    if (matchedBytes == settings.pattern.size()) {
+                        auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
-                    results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
-                    progress = occurrenceAddress;
-                    it.setAddress(occurrenceAddress);
+                        results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
+                        it.setAddress(occurrenceAddress);
+                        matchedBytes = 0;
+                    }
+                } else {
+                    if (matchedBytes > 0)
+                        it -= matchedBytes;
                     matchedBytes = 0;
                 }
-            } else {
-                if (matchedBytes > 0)
-                    it -= matchedBytes;
-                matchedBytes = 0;
+            }
+        } else {
+            std::vector<u8> data(patternSize);
+            for (u64 address = searchRegion.getStartAddress(); address < searchRegion.getEndAddress(); address += patternSize) {
+                reader.read(address, data.data(), data.size());
+
+                task.update(address);
+
+                bool match = true;
+                for (u32 i = 0; i < patternSize; i++) {
+                    if ((data[i] & settings.pattern[i].mask) != settings.pattern[i].value) {
+                        match = false;
+                        break;
+                    }
+                }
+
+                if (match)
+                    results.push_back(Occurrence { Region { address, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
             }
         }
 
@@ -403,73 +421,65 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        const auto [validMin, min, sizeMin] = parseNumericValueInput(settings.inputMin, settings.type);
-        const auto [validMax, max, sizeMax] = parseNumericValueInput(settings.inputMax, settings.type);
+        auto inputMin = settings.inputMin;
+        auto inputMax = settings.inputMax;
+
+        if (inputMax.empty())
+            inputMax = inputMin;
+
+        const auto [validMin, min, sizeMin] = parseNumericValueInput(inputMin, settings.type);
+        const auto [validMax, max, sizeMax] = parseNumericValueInput(inputMax, settings.type);
 
         if (!validMin || !validMax || sizeMin != sizeMax)
             return { };
 
         const auto size = sizeMin;
 
-        u64 bytes = 0x00;
-        u64 address = searchRegion.getStartAddress();
-        size_t validBytes = 0;
-        for (u8 byte : reader) {
-            bytes <<= 8;
-            bytes |= byte;
+        const auto advance = settings.aligned ? size : 1;
 
-            if (validBytes == size) {
-                bytes &= hex::bitmask(size * 8);
+        for (u64 address = searchRegion.getStartAddress(); address < searchRegion.getEndAddress(); address += advance) {
+            task.update(address);
 
-                task.update(address);
+            auto result = std::visit([&](auto tag) {
+                using T = std::remove_cvref_t<std::decay_t<decltype(tag)>>;
 
-                auto result = std::visit([&](auto tag) {
-                    using T = std::remove_cvref_t<std::decay_t<decltype(tag)>>;
+                auto minValue = std::get<T>(min);
+                auto maxValue = std::get<T>(max);
 
-                    auto minValue = std::get<T>(min);
-                    auto maxValue = std::get<T>(max);
+                T value = 0;
+                reader.read(address, reinterpret_cast<u8*>(&value), size);
+                value = hex::changeEndianess(value, size, settings.endian);
 
-                    T value = 0;
-                    std::memcpy(&value, &bytes, size);
-                    value = hex::changeEndianess(value, size, std::endian::big);
-                    value = hex::changeEndianess(value, size, settings.endian);
+                return value >= minValue && value <= maxValue;
+            }, min);
 
-                    return value >= minValue && value <= maxValue;
-                }, min);
+            if (result) {
+                Occurrence::DecodeType decodeType = [&]{
+                    switch (settings.type) {
+                        using enum SearchSettings::Value::Type;
+                        using enum Occurrence::DecodeType;
 
-                if (result) {
-                    Occurrence::DecodeType decodeType = [&]{
-                        switch (settings.type) {
-                            using enum SearchSettings::Value::Type;
-                            using enum Occurrence::DecodeType;
+                        case U8:
+                        case U16:
+                        case U32:
+                        case U64:
+                            return Unsigned;
+                        case I8:
+                        case I16:
+                        case I32:
+                        case I64:
+                            return Signed;
+                        case F32:
+                            return Float;
+                        case F64:
+                            return Double;
+                        default:
+                            return Binary;
+                    }
+                }();
 
-                            case U8:
-                            case U16:
-                            case U32:
-                            case U64:
-                                return Unsigned;
-                            case I8:
-                            case I16:
-                            case I32:
-                            case I64:
-                                return Signed;
-                            case F32:
-                                return Float;
-                            case F64:
-                                return Double;
-                            default:
-                                return Binary;
-                        }
-                    }();
-
-
-                    results.push_back(Occurrence { Region { address - (size - 1), size }, decodeType, settings.endian });
-                }
-            } else {
-                validBytes++;
+                results.push_back(Occurrence { Region { address, size }, decodeType, settings.endian });
             }
-
-            address++;
         }
 
         return results;
@@ -511,7 +521,7 @@ namespace hex::plugin::builtin {
 
             OccurrenceTree::interval_vector intervals;
             for (const auto &occurrence : this->m_foundOccurrences[provider])
-                intervals.push_back(OccurrenceTree::interval(occurrence.region.getStartAddress(), occurrence.region.getEndAddress(), occurrence));
+                intervals.emplace_back(occurrence.region.getStartAddress(), occurrence.region.getEndAddress(), occurrence);
             this->m_occurrenceTree[provider] = std::move(intervals);
         });
     }
@@ -691,6 +701,7 @@ namespace hex::plugin::builtin {
                         mode = SearchSettings::Mode::BinaryPattern;
 
                         ImGui::InputTextIcon("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, settings.input);
+                        ImGui::Checkbox("hex.builtin.view.find.aligned"_lang, &settings.aligned);
 
                         settings.pattern = parseBinaryPatternString(settings.input);
                         this->m_settingsValid = !settings.pattern.empty();
@@ -704,8 +715,22 @@ namespace hex::plugin::builtin {
 
                         bool edited = false;
 
-                        if (ImGui::InputTextIcon("hex.builtin.view.find.value.min"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) edited = true;
-                        if (ImGui::InputTextIcon("hex.builtin.view.find.value.max"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMax)) edited = true;
+                        if (settings.range) {
+                            if (ImGui::InputTextIcon("hex.builtin.view.find.value.min"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) edited = true;
+                            if (ImGui::InputTextIcon("hex.builtin.view.find.value.max"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMax)) edited = true;
+                        } else {
+                            if (ImGui::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) {
+                                edited = true;
+                                settings.inputMax = settings.inputMin;
+                            }
+
+                            ImGui::BeginDisabled();
+                            ImGui::InputTextIcon("##placeholder_value", ICON_VS_SYMBOL_NUMERIC, settings.inputMax);
+                            ImGui::EndDisabled();
+                        }
+
+                        ImGui::Checkbox("hex.builtin.view.find.value.range"_lang, &settings.range);
+                        ImGui::NewLine();
 
                         const std::array<std::string, 10> InputTypes = {
                                 "hex.builtin.common.type.u8"_lang,
@@ -751,6 +776,8 @@ namespace hex::plugin::builtin {
                                 }
                             }
                         }
+
+                        ImGui::Checkbox("hex.builtin.view.find.aligned"_lang, &settings.aligned);
 
                         if (edited) {
                             auto [minValid, min, minSize] = parseNumericValueInput(settings.inputMin, settings.type);
@@ -808,9 +835,12 @@ namespace hex::plugin::builtin {
                     this->m_filterTask.interrupt();
 
                 if (!this->m_currFilter[provider].empty()) {
-                    this->m_filterTask = TaskManager::createTask("Filtering", 0, [this, provider, &currOccurrences](Task &task) {
-                        currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider, &task](const auto &region) {
-                            task.update();
+                    this->m_filterTask = TaskManager::createTask("Filtering", currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
+                        u64 progress = 0;
+                        currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider, &task, &progress](const auto &region) {
+                            task.update(progress);
+                            progress += 1;
+
                             return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
                         }), currOccurrences.end());
                     });
