@@ -96,8 +96,8 @@
             "node-background-hovered": "#4B4B4BFF",
             "node-background-selected": "#4B4B4BFF",
             "node-outline": "#646464FF",
-            "pin": "#59669CAA",
-            "pin-hovered": "#667AB3C8",
+            "pin": "#F5CB25FF",
+            "pin-hovered": "#FA8335FF",
             "title-bar": "#45458AFF",
             "title-bar-hovered": "#5252A1FF",
             "title-bar-selected": "#5252A1FF"
