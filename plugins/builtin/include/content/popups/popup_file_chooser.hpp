@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
             if (ImGui::Button("hex.builtin.common.open"_lang) || doubleClicked) {
                 for (const auto &index : this->m_indices)
                     this->m_openCallback(this->m_files[index]);
-                ImGui::CloseCurrentPopup();
+                Popup::close();
             }
 
             ImGui::SameLine();
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
             if (ImGui::Button("hex.builtin.common.browse"_lang)) {
                 fs::openFileBrowser(fs::DialogMode::Open, this->m_validExtensions, [this](const auto &path) {
                     this->m_openCallback(path);
-                    ImGui::CloseCurrentPopup();
+                    Popup::close();
                 }, {}, this->m_multiple);
             }
         }

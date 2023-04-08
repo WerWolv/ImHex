@@ -86,6 +86,10 @@ namespace hex::plugin::builtin {
                     Popup::close();
             }
 
+            [[nodiscard]] ImGuiWindowFlags getFlags() const override {
+                return ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize;
+            }
+
         private:
             ViewPatternEditor *m_view;
         };

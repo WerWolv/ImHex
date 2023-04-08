@@ -771,7 +771,7 @@ namespace hex {
                 this->m_byteCount++;
                 if (((this->m_byteCount % this->m_blockSize) == 0) || this->m_byteCount == (this->m_endAddress - this->m_startAddress)) [[unlikely]] {
                     auto typeDist = calculateTypeDistribution(this->m_blockValueCounts, this->m_blockSize);
-                    for (u8 i = 0; i < typeDist.size(); i++)
+                    for (size_t i = 0; i < typeDist.size(); i++)
                         this->m_yBlockTypeDistributions[i][this->m_blockCount] = typeDist[i] * 100;
 
                     this->m_blockCount += 1;
@@ -858,7 +858,7 @@ namespace hex {
                 this->m_byteCount++;
                 if (((this->m_byteCount % this->m_blockSize) == 0) || this->m_byteCount == (this->m_endAddress - this->m_startAddress)) [[unlikely]] {
                     auto typeDist = calculateTypeDistribution(this->m_blockValueCounts, this->m_blockSize);
-                    for (u8 i = 0; i < typeDist.size(); i++)
+                    for (size_t i = 0; i < typeDist.size(); i++)
                         this->m_yBlockTypeDistributions[i][this->m_blockCount] = typeDist[i] * 100;
 
                     this->m_blockCount += 1;
@@ -871,7 +871,7 @@ namespace hex {
 
         void processFinalize() {
             // Only save at most m_sampleSize elements of the result
-            for (u8 i = 0; i < this->m_yBlockTypeDistributions.size(); ++i)
+            for (size_t i = 0; i < this->m_yBlockTypeDistributions.size(); ++i)
                 this->m_yBlockTypeDistributions[i] = sampleData(this->m_yBlockTypeDistributions[i], std::min<size_t>(this->m_blockCount, this->m_sampleSize));
 
             size_t stride = std::max(1.0, double(this->m_blockCount / this->m_yBlockTypeDistributions[0].size())) + 1;

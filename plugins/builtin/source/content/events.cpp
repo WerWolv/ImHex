@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventProviderClosing>([](hex::prv::Provider *provider, bool *shouldClose) {
             if (provider->isDirty()) {
                 *shouldClose = false;
-                PopupQuestion::open("hex.builtin.popup.close_provider.desc",
+                PopupQuestion::open("hex.builtin.popup.close_provider.desc"_lang,
                                     []{
                                         ImHexApi::Provider::remove(ImHexApi::Provider::impl::getClosingProvider(), true);
                                         PopupQuestion::close();
