@@ -576,9 +576,10 @@ namespace hex {
                     }
                 }
 
-                if (!open || !popupDisplaying) {
+                if (!open && !popupDisplaying) {
                     sizeSet = false;
                     popupDisplaying = false;
+                    popupSize = ImVec2(0, 0);
                     popups.pop_back();
                 }
             }
