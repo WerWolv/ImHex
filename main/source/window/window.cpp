@@ -538,18 +538,23 @@ namespace hex {
                 bool open = true;
                 ImGui::SetNextWindowSizeConstraints(currPopup->getMinSize(), currPopup->getMaxSize());
 
-                auto closeButton = currPopup->hasCloseButton() ? &open : nullptr;
-                auto flags = currPopup->getFlags();
+                const auto closeButton = currPopup->hasCloseButton() ? &open : nullptr;
+                const auto flags = currPopup->getFlags();
 
-                ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
+                const auto windowSize = ImHexApi::System::getMainWindowSize();
+
                 if (currPopup->isModal()) {
                     if (ImGui::BeginPopupModal(name, closeButton, flags)) {
+                        ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+
                         currPopup->drawContent();
 
                         ImGui::EndPopup();
                     }
                 } else {
                     if (ImGui::BeginPopup(name, flags)) {
+                        ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+
                         currPopup->drawContent();
 
                         ImGui::EndPopup();
