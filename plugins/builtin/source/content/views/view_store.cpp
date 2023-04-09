@@ -146,8 +146,8 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTabBar("storeTabs")) {
             drawTab("hex.builtin.view.store.tab.patterns"_lang,     fs::ImHexPath::Patterns,        this->m_patterns);
-            drawTab("hex.builtin.view.store.tab.libraries"_lang,    fs::ImHexPath::PatternsInclude, this->m_includes);
-            drawTab("hex.builtin.view.store.tab.magics"_lang,       fs::ImHexPath::Magic,           this->m_magics, []{
+            drawTab("hex.builtin.view.store.tab.includes"_lang,     fs::ImHexPath::PatternsInclude, this->m_includes);
+            drawTab("hex.builtin.view.store.tab.magic"_lang,        fs::ImHexPath::Magic,           this->m_magics, []{
                 magic::compile();
             });
             drawTab("hex.builtin.view.store.tab.nodes"_lang,        fs::ImHexPath::Nodes,           this->m_nodes);
