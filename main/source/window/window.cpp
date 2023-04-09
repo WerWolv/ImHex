@@ -529,10 +529,14 @@ namespace hex {
         {
             std::scoped_lock lock(impl::PopupBase::getMutex());
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
+                static bool popupDisplaying = false;
+                static bool sizeSet = false;
+                static ImVec2 popupSize;
+
                 auto &currPopup = popups.back();
                 const auto &name = LangEntry(currPopup->getUnlocalizedName());
 
-                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
+                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) && !popupDisplaying)
                     ImGui::OpenPopup(name);
 
                 bool open = true;
@@ -541,28 +545,42 @@ namespace hex {
                 const auto closeButton = currPopup->hasCloseButton() ? &open : nullptr;
                 const auto flags = currPopup->getFlags();
 
-                const auto windowSize = ImHexApi::System::getMainWindowSize();
+                auto emptyWindowSize = ImGui::GetStyle().FramePadding * 4;
+                if (!sizeSet && popupSize.x > emptyWindowSize.x && popupSize.y > emptyWindowSize.y && popupSize.y < ImGui::GetMainViewport()->Size.y) {
+                    ImGui::SetNextWindowSize(popupSize, ImGuiCond_FirstUseEver);
+                    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5F, 0.5F));
+                    sizeSet = true;
+                }
 
                 if (currPopup->isModal()) {
                     if (ImGui::BeginPopupModal(name, closeButton, flags)) {
-                        ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
 
                         currPopup->drawContent();
+                        popupDisplaying = true;
+                        popupSize = ImGui::GetWindowSize();
 
                         ImGui::EndPopup();
+                    } else {
+                        popupDisplaying = false;
                     }
                 } else {
                     if (ImGui::BeginPopup(name, flags)) {
-                        ImGui::SetWindowPos((windowSize - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
 
                         currPopup->drawContent();
+                        popupDisplaying = true;
+                        popupSize = ImGui::GetWindowSize();
 
                         ImGui::EndPopup();
+                    } else {
+                        popupDisplaying = false;
                     }
                 }
 
-                if (!open)
+                if (!open || !popupDisplaying) {
+                    sizeSet = false;
+                    popupDisplaying = false;
                     popups.pop_back();
+                }
             }
         }
 
