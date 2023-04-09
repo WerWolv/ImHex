@@ -370,7 +370,7 @@ namespace hex::plugin::builtin {
 
         const size_t patternSize = settings.pattern.size();
 
-        if (!settings.aligned) {
+        if (settings.alignment == 1) {
             u32 matchedBytes = 0;
             for (auto it = reader.begin(); it < reader.end(); it += 1) {
                 auto byte = *it;
@@ -393,7 +393,7 @@ namespace hex::plugin::builtin {
             }
         } else {
             std::vector<u8> data(patternSize);
-            for (u64 address = searchRegion.getStartAddress(); address < searchRegion.getEndAddress(); address += patternSize) {
+            for (u64 address = searchRegion.getStartAddress(); address < searchRegion.getEndAddress(); address += settings.alignment) {
                 reader.read(address, data.data(), data.size());
 
                 task.update(address);
@@ -701,10 +701,12 @@ namespace hex::plugin::builtin {
                         mode = SearchSettings::Mode::BinaryPattern;
 
                         ImGui::InputTextIcon("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, settings.input);
-                        ImGui::Checkbox("hex.builtin.view.find.aligned"_lang, &settings.aligned);
+
+                        constexpr static u32 min = 1, max = 0x1000;
+                        ImGui::SliderScalar("hex.builtin.view.find.binary_pattern.alignment"_lang, ImGuiDataType_U32, &settings.alignment, &min, &max);
 
                         settings.pattern = parseBinaryPatternString(settings.input);
-                        this->m_settingsValid = !settings.pattern.empty();
+                        this->m_settingsValid = !settings.pattern.empty() && settings.alignment > 0;
 
                         ImGui::EndTabItem();
                     }
@@ -777,7 +779,7 @@ namespace hex::plugin::builtin {
                             }
                         }
 
-                        ImGui::Checkbox("hex.builtin.view.find.aligned"_lang, &settings.aligned);
+                        ImGui::Checkbox("hex.builtin.view.find.value.aligned"_lang, &settings.aligned);
 
                         if (edited) {
                             auto [minValid, min, minSize] = parseNumericValueInput(settings.inputMin, settings.type);

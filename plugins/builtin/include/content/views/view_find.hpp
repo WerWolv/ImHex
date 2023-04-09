@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
             struct BinaryPattern {
                 std::string input;
                 std::vector<ViewFind::BinaryPattern> pattern;
-                bool aligned = false;
+                u32 alignment = 1;
             } binaryPattern;
 
             struct Value {
