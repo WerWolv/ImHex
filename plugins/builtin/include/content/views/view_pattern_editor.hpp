@@ -47,6 +47,8 @@ namespace hex::plugin::builtin {
             PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern"), m_view(view) {}
 
             void drawContent() override {
+                auto provider = ImHexApi::Provider::get();
+
                 ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
                 std::vector<std::string> entries;
@@ -59,8 +61,14 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
                     u32 index = 0;
                     for (auto &path : this->m_view->m_possiblePatternFiles) {
-                        if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_view->m_selectedPatternFile))
+                        if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_view->m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
                             this->m_view->m_selectedPatternFile = index;
+
+                        if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_view->m_selectedPatternFile], provider);
+
+                        ImGui::InfoTooltip(wolv::util::toUTF8String(path).c_str());
+
                         index++;
                     }
 
@@ -69,8 +77,6 @@ namespace hex::plugin::builtin {
 
                 ImGui::NewLine();
                 ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
-
-                auto provider = ImHexApi::Provider::get();
 
                 confirmButtons(
                         "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [this, provider] {

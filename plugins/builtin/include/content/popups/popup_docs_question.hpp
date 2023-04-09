@@ -37,7 +37,9 @@ namespace hex::plugin::builtin {
                         else
                             ImGui::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.prompt"_lang);
                     } else {
+                        int id = 1;
                         for (auto &[type, text] : this->m_answer) {
+                            ImGui::PushID(id);
                             switch (type) {
                                 case TextBlockType::Text:
                                     ImGui::TextFormattedWrapped("{}", text);
@@ -54,6 +56,9 @@ namespace hex::plugin::builtin {
 
                                     break;
                             }
+
+                            ImGui::PopID();
+                            id += 1;
                         }
                     }
                 } else {
