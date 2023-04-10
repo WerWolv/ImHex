@@ -883,12 +883,16 @@ namespace hex {
         io.ConfigWindowsMoveFromTitleBarOnly = true;
         io.FontGlobalScale = 1.0F;
 
-        // Disable multi-window support on Wayland since it doesn't support it
         if (glfwGetPrimaryMonitor() != nullptr) {
-            auto sessionType = hex::getEnvironmentVariable("XDG_SESSION_TYPE");
-            bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", 1) != 0;
+            #if defined (OS_LINUX)
+                constexpr static auto MultiWindowSupportEnabledDefault = 0;
+            #else
+                constexpr static auto MultiWindowSupportEnabledDefault = 1;
+            #endif
 
-            if ((!sessionType || !hex::containsIgnoreCase(*sessionType, "wayland")) && multiWindowEnabled)
+            bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault) != 0;
+
+            if (multiWindowEnabled)
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         }
 
