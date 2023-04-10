@@ -619,7 +619,7 @@ namespace hex {
 
             // Draw view
             if (view->isAvailable()) {
-                ImGui::SetNextWindowSizeConstraints(scaled(view->getMinSize()), scaled(view->getMaxSize()));
+                ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
                 view->drawContent();
             }
 

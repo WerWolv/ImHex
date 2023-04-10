@@ -66,6 +66,7 @@ namespace hex::plugin::builtin {
     void ViewConstants::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.constants.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
+            ImGui::PushItemWidth(-1);
             ImGui::InputText(
                 "##search", this->m_filter.data(), this->m_filter.capacity(), ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) {
                     auto &view = *static_cast<ViewConstants *>(data->UserData);
@@ -84,6 +85,7 @@ namespace hex::plugin::builtin {
                     return 0;
                 },
                 this);
+            ImGui::PopItemWidth();
 
             if (ImGui::BeginTable("##strings", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupScrollFreeze(0, 1);

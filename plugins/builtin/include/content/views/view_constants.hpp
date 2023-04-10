@@ -28,6 +28,14 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
 
+        ImVec2 getMinSize() const override {
+            return scaled(ImVec2(300, 400));
+        }
+
+        ImVec2 getMaxSize() const override {
+            return { FLT_MAX, 800_scaled };
+        }
+
     private:
         void reloadConstants();
 

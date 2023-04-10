@@ -44,8 +44,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
-        [[nodiscard]] ImVec2 getMinSize() const override { return { 600, 400 }; }
-        [[nodiscard]] ImVec2 getMaxSize() const override { return { 900, 700 }; }
+        [[nodiscard]] ImVec2 getMinSize() const override { return scaled({ 600, 400 }); }
+        [[nodiscard]] ImVec2 getMaxSize() const override { return scaled({ 900, 700 }); }
 
     private:
         HttpRequest m_httpRequest = HttpRequest("GET", "");
