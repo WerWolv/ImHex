@@ -802,10 +802,6 @@ namespace hex::plugin::builtin {
                     this->m_textEditor.SetText(ProviderExtraData::get(newProvider).patternLanguage.sourceCode);
                 else
                     this->m_textEditor.SetText("");
-
-                auto lines = this->m_textEditor.GetTextLines();
-                lines.pop_back();
-                this->m_textEditor.SetTextLines(lines);
             }
         });
     }
