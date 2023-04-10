@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
         TaskHolder m_disassemblerTask;
 
         u64 m_baseAddress   = 0;
-        ui::SelectedRegion m_range = ui::SelectedRegion::EntireData;
+        ui::RegionType m_range = ui::RegionType::EntireData;
         Region m_codeRegion = { 0, 0 };
 
         Architecture m_architecture = Architecture::ARM;

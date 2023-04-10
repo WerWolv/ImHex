@@ -486,14 +486,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewFind::runSearch() {
-        Region searchRegion = [this]{
-            if (this->m_searchSettings.range == ui::SelectedRegion::EntireData || !ImHexApi::HexEditor::isSelectionValid()) {
-                auto provider = ImHexApi::Provider::get();
-                return Region { provider->getBaseAddress(), provider->getActualSize() };
-            } else {
-                return ImHexApi::HexEditor::getSelection()->getRegion();
-            }
-        }();
+        Region searchRegion = this->m_searchSettings.region;
 
         this->m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = this->m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
@@ -596,7 +589,7 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(this->m_searchTask.isRunning());
             {
-                ui::regionSelectionPicker(&this->m_searchSettings.range, true, true);
+                ui::regionSelectionPicker(&this->m_searchSettings.region, provider, &this->m_searchSettings.range, true, true);
 
                 ImGui::NewLine();
 

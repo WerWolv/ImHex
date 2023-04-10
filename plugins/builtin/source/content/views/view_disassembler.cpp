@@ -92,21 +92,8 @@ namespace hex::plugin::builtin {
 
                 ImGui::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
 
-                ui::regionSelectionPicker(&this->m_range);
-                switch (this->m_range) {
-                    case ui::SelectedRegion::Selection: {
-                        auto region = ImHexApi::HexEditor::getSelection();
-                        if (region.has_value()) {
-                            this->m_codeRegion = region.value();
-                        }
-                    }
-                        break;
-                    case ui::SelectedRegion::EntireData: {
-                        auto base = provider->getBaseAddress();
-                        this->m_codeRegion = { base, base + provider->getActualSize() - 1 };
-                    }
-                    break;
-                }
+                ui::regionSelectionPicker(&this->m_codeRegion, provider, &this->m_range);
+
 
                 if (ImGui::IsItemEdited()) {
                     // Force execution of Region Selection Event

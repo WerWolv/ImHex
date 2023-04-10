@@ -33,7 +33,8 @@ namespace hex::plugin::builtin {
         };
 
         struct SearchSettings {
-            ui::SelectedRegion range = ui::SelectedRegion::EntireData;
+            ui::RegionType range = ui::RegionType::EntireData;
+            Region region = { 0, 0 };
 
             enum class Mode : int {
                 Strings,

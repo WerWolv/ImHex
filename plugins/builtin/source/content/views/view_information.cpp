@@ -8,7 +8,6 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/magic.hpp>
 
-#include <cstring>
 #include <cmath>
 #include <filesystem>
 #include <span>
@@ -69,21 +68,14 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             if ((this->m_inputChunkSize <= 0)
-             || (this->m_inputStartAddress >= this->m_inputEndAddress)
-             || ((size_t) this->m_inputEndAddress > provider->getActualSize())) {
+             || (this->m_analyzedRegion.getStartAddress() >= this->m_analyzedRegion.getEndAddress())
+             || (this->m_analyzedRegion.getEndAddress() > provider->getActualSize())) {
                 // Invalid parameters, set default one
                 this->m_inputChunkSize    = 256;
-                this->m_inputStartAddress = 0;
-                this->m_inputEndAddress   = provider->getActualSize();
+                this->m_analyzedRegion = { provider->getBaseAddress(), provider->getActualSize() };
             }
 
-            task.setMaxValue(this->m_inputEndAddress - this->m_inputStartAddress);
-
-            // Modify the analyzed region  
-            this->m_analyzedRegion = { 
-                provider->getBaseAddress() + this->m_inputStartAddress, 
-                size_t(this->m_inputEndAddress - this->m_inputStartAddress)
-            };
+            task.setMaxValue(this->m_analyzedRegion.getSize());
 
             {
                 magic::compile();
@@ -102,17 +94,18 @@ namespace hex::plugin::builtin {
                 // Setup / start each analysis
 
                 this->m_byteDistribution.reset();
-                this->m_digram.reset(this->m_inputEndAddress - this->m_inputStartAddress);
-                this->m_layeredDistribution.reset(this->m_inputEndAddress - this->m_inputStartAddress);
-                this->m_byteTypesDistribution.reset(this->m_inputStartAddress, this->m_inputEndAddress, 
-                    provider->getBaseAddress(), provider->getActualSize());
-                this->m_chunkBasedEntropy.reset(this->m_inputChunkSize, this->m_inputStartAddress, this->m_inputEndAddress,
+                this->m_digram.reset(this->m_analysisRegion.getSize());
+                this->m_layeredDistribution.reset(this->m_analysisRegion.getSize());
+                this->m_byteTypesDistribution.reset(this->m_analysisRegion.getStartAddress(), this->m_analysisRegion.getEndAddress(), provider->getBaseAddress(), provider->getActualSize());
+                this->m_chunkBasedEntropy.reset(this->m_inputChunkSize, this->m_analysisRegion.getStartAddress(), this->m_analysisRegion.getEndAddress(),
                     provider->getBaseAddress(), provider->getActualSize());
 
                 // Create a handle to the file
                 auto reader = prv::ProviderReader(provider);
-                reader.seek(provider->getBaseAddress() + this->m_inputStartAddress);
-                reader.setEndAddress(provider->getBaseAddress() + this->m_inputEndAddress);
+                reader.seek(this->m_analysisRegion.getStartAddress());
+                reader.setEndAddress(this->m_analysisRegion.getEndAddress());
+
+                this->m_analyzedRegion = this->m_analysisRegion;
 
                 u64 count = 0;
 
@@ -128,7 +121,7 @@ namespace hex::plugin::builtin {
                     task.update(count);
                 }
 
-                this->m_averageEntropy = this->m_chunkBasedEntropy.calculateEntropy(this->m_byteDistribution.get(), this->m_inputEndAddress - this->m_inputStartAddress);
+                this->m_averageEntropy = this->m_chunkBasedEntropy.calculateEntropy(this->m_byteDistribution.get(), this->m_analyzedRegion.getSize());
                 this->m_highestBlockEntropy = this->m_chunkBasedEntropy.getHighestEntropyBlockValue();
                 this->m_highestBlockEntropyAddress = this->m_chunkBasedEntropy.getHighestEntropyBlockAddress();
                 this->m_lowestBlockEntropy = this->m_chunkBasedEntropy.getLowestEntropyBlockValue();
@@ -150,11 +143,7 @@ namespace hex::plugin::builtin {
                     {
                         ImGui::Header("hex.builtin.common.settings"_lang, true);
 
-                        const u64 min = 0;
-                        const u64 max = provider->getActualSize();
-                        ImGui::SliderScalar("hex.builtin.common.begin"_lang, ImGuiDataType_U64, &this->m_inputStartAddress, &min, &max, "0x%02llX", ImGuiSliderFlags_AlwaysClamp);
-                        ImGui::SliderScalar("hex.builtin.common.end"_lang, ImGuiDataType_U64, &this->m_inputEndAddress, &min, &max, "0x%02llX", ImGuiSliderFlags_AlwaysClamp);
-
+                        ui::regionSelectionPicker(&this->m_analysisRegion, provider, &this->m_selectionType, false);
                         ImGui::NewLine();
 
                         ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);

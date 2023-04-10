@@ -4,6 +4,7 @@
 #include <hex/api/task.hpp>
 
 #include "content/helpers/diagrams.hpp"
+#include <ui/widgets.hpp>
 
 #include <array>
 #include <atomic>
@@ -34,6 +35,7 @@ namespace hex::plugin::builtin {
 
         TaskHolder m_analyzerTask;
 
+        Region m_analysisRegion = { 0, 0 };
         Region m_analyzedRegion = { 0, 0 };
 
         std::string m_dataDescription;
@@ -47,10 +49,8 @@ namespace hex::plugin::builtin {
 
         void analyze();
 
-        // User controlled input (referenced by ImgGui)
         int m_inputChunkSize    = 0;
-        u64 m_inputStartAddress = 0;
-        u64 m_inputEndAddress   = 0;
+        ui::RegionType m_selectionType  = ui::RegionType::EntireData;
     };
 
 }
