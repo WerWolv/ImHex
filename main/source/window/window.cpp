@@ -547,8 +547,8 @@ namespace hex {
 
                 auto emptyWindowSize = ImGui::GetStyle().FramePadding * 4;
                 if (!sizeSet && popupSize.x > emptyWindowSize.x && popupSize.y > emptyWindowSize.y && popupSize.y < ImGui::GetMainViewport()->Size.y) {
-                    ImGui::SetNextWindowSize(popupSize, ImGuiCond_FirstUseEver);
-                    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_FirstUseEver, ImVec2(0.5F, 0.5F));
+                    ImGui::SetNextWindowSize(popupSize, ImGuiCond_Always);
+                    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
                     sizeSet = true;
                 }
 
