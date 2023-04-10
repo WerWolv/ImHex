@@ -81,7 +81,8 @@ namespace hex::plugin::builtin {
 
                     auto request = HttpRequest("POST", hex::format("https://api.gitbook.com/v1/spaces/{}/search/ask", space));
 
-                    request.setBody(hex::format(R"({{ "query": "{}" }})", input));
+                    const nlohmann::json body = { { "query", input } };
+                    request.setBody(body.dump());
                     request.addHeader("Content-Type", "application/json");
 
                     auto response = request.execute().get();
