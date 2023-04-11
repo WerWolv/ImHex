@@ -8,6 +8,8 @@
 #include <hex/data_processor/node.hpp>
 #include <hex/data_processor/link.hpp>
 
+#include <hex/helpers/logger.hpp>
+
 #include <map>
 
 #include <imnodes.h>
@@ -18,6 +20,10 @@ namespace hex::plugin::builtin {
     class ProviderExtraData {
     public:
         struct Data {
+            Data() : patternLanguage(), bookmarks(), dataProcessor(), editor(), hashes(), yara() {
+                log::debug("Creating new extra data instance");
+            }
+
             bool dataDirty = false;
 
             struct PatternLanguage {
@@ -88,7 +94,7 @@ namespace hex::plugin::builtin {
             } dataProcessor;
 
             struct HexEditor {
-                std::optional<u64> selectionStart, selectionEnd;
+                std::optional<u64> selectionStart = std::nullopt, selectionEnd = std::nullopt;
                 float scrollPosition = 0.0F;
             } editor;
 
@@ -132,6 +138,7 @@ namespace hex::plugin::builtin {
 
     private:
         ProviderExtraData() = default;
+
         static inline std::map<const hex::prv::Provider*, Data> s_data = {};
     };
 

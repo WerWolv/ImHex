@@ -942,6 +942,9 @@ namespace hex::plugin::builtin {
                 }
             }
 
+            this->m_hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+            this->m_hexEditor.setScrollPosition(0);
+
             if (newProvider != nullptr) {
                 auto &newData = ProviderExtraData::get(newProvider).editor;
 

@@ -297,8 +297,6 @@ namespace hex {
             if (it == s_providers.end())
                 return;
 
-            EventManager::post<EventProviderDeleted>(provider);
-
             if (!s_providers.empty() && it - s_providers.begin() == s_currentProvider)
                 setCurrentProvider(0);
 
@@ -310,6 +308,7 @@ namespace hex {
             EventManager::post<EventProviderClosed>(provider);
 
             TaskManager::runWhenTasksFinished([provider] {
+                EventManager::post<EventProviderDeleted>(provider);
                 delete provider;
             });
         }

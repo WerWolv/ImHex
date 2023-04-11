@@ -78,6 +78,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventProviderOpened>([](hex::prv::Provider *provider) {
             if (provider != nullptr && ImHexApi::Provider::get() == provider)
                 EventManager::post<RequestUpdateWindowTitle>();
+            EventManager::post<EventProviderChanged>(nullptr, provider);
         });
 
         EventManager::subscribe<RequestOpenFile>(openFile);
