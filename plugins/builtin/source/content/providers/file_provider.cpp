@@ -41,9 +41,10 @@ namespace hex::plugin::builtin {
 
         if (overlays) {
             if (auto &patches = this->getPatches(); !patches.empty()) {
-                for (u64 i = 0; i < size; i++)
-                    if (patches.contains(offset + i))
-                        reinterpret_cast<u8 *>(buffer)[i] = patches[offset + i];
+                for (const auto&[patchOffset, patchData] : patches) {
+                    if (patchOffset >= offset && patchOffset <= (offset + size))
+                        reinterpret_cast<u8 *>(buffer)[patchOffset] = patchData;
+                }
             }
 
             this->applyOverlays(offset, buffer, size);

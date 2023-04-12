@@ -139,8 +139,8 @@ namespace hex::prv {
         u32 m_currPage    = 0;
         u64 m_baseAddress = 0;
 
-        u32 m_patchTreeOffset = 0;
         std::list<std::map<u64, u8>> m_patches;
+        decltype(m_patches)::iterator m_currPatches;
         std::list<Overlay *> m_overlays;
 
         u32 m_id;

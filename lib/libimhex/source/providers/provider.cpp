@@ -17,6 +17,7 @@ namespace hex::prv {
 
     Provider::Provider() : m_id(s_idCounter++) {
         this->m_patches.emplace_back();
+        this->m_currPatches = this->m_patches.begin();
     }
 
     Provider::~Provider() {
@@ -120,19 +121,11 @@ namespace hex::prv {
 
 
     std::map<u64, u8> &Provider::getPatches() {
-        auto iter = this->m_patches.end();
-        for (u32 i = 0; i < this->m_patchTreeOffset + 1; i++)
-            iter--;
-
-        return *(iter);
+        return *this->m_currPatches;
     }
 
     const std::map<u64, u8> &Provider::getPatches() const {
-        auto iter = this->m_patches.end();
-        for (u32 i = 0; i < this->m_patchTreeOffset + 1; i++)
-            iter--;
-
-        return *(iter);
+        return *this->m_currPatches;
     }
 
     void Provider::applyPatches() {
@@ -204,15 +197,6 @@ namespace hex::prv {
     }
 
     void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {
-        if (this->m_patchTreeOffset > 0) {
-            auto iter = this->m_patches.end();
-            for (u32 i = 0; i < this->m_patchTreeOffset; i++)
-                iter--;
-
-            this->m_patches.erase(iter, this->m_patches.end());
-            this->m_patchTreeOffset = 0;
-        }
-
         if (createUndo)
             createUndoPoint();
 
@@ -235,24 +219,25 @@ namespace hex::prv {
 
     void Provider::createUndoPoint() {
         this->m_patches.push_back(getPatches());
+        this->m_currPatches = std::prev(this->m_patches.end());
     }
 
     void Provider::undo() {
         if (canUndo())
-            this->m_patchTreeOffset++;
+            this->m_currPatches--;
     }
 
     void Provider::redo() {
         if (canRedo())
-            this->m_patchTreeOffset--;
+            this->m_currPatches++;
     }
 
     bool Provider::canUndo() const {
-        return this->m_patchTreeOffset < this->m_patches.size() - 1;
+        return this->m_currPatches != this->m_patches.begin();
     }
 
     bool Provider::canRedo() const {
-        return this->m_patchTreeOffset > 0;
+        return std::next(this->m_currPatches) != this->m_patches.end();
     }
 
     bool Provider::hasFilePicker() const {
