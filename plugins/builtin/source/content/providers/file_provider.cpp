@@ -39,12 +39,10 @@ namespace hex::plugin::builtin {
     void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
         this->readRaw(offset - this->getBaseAddress(), buffer, size);
 
-        if (overlays) {
-            if (auto &patches = this->getPatches(); !patches.empty()) {
-                for (const auto&[patchOffset, patchData] : patches) {
-                    if (patchOffset >= offset && patchOffset <= (offset + size))
-                        reinterpret_cast<u8 *>(buffer)[patchOffset] = patchData;
-                }
+        if (overlays) [[likely]] {
+            for (const auto&[patchOffset, patchData] : getPatches()) {
+                if (patchOffset >= offset && patchOffset <= (offset + size))
+                    reinterpret_cast<u8 *>(buffer)[patchOffset - offset] = patchData;
             }
 
             this->applyOverlays(offset, buffer, size);

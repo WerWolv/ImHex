@@ -24,7 +24,6 @@ add_library(${PROJECT_NAME} SHARED
         source/content/data_visualizers.cpp
         source/content/events.cpp
         source/content/hashes.cpp
-        source/content/shortcuts.cpp
         source/content/global_actions.cpp
         source/content/themes.cpp
 

@@ -672,25 +672,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::registerShortcuts() {
-        // Save operations
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::S, [] {
-            save();
-        });
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::S, [] {
-            saveAs();
-        });
-
-        // Select All
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A, [this] {
-            if (ImHexApi::Provider::isValid())
-                this->setSelection(size_t(0), ImHexApi::Provider::get()->getActualSize());
-        });
-
-        // Select range
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::A, [this] {
-            if (ImHexApi::Provider::isValid())
-                this->openPopup<PopupSelect>();
-        });
 
         // Remove selection
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
@@ -856,48 +837,7 @@ namespace hex::plugin::builtin {
             this->m_hexEditor.jumpIfOffScreen();
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::G, [this] {
-            if (!ImHexApi::Provider::isValid()) return;
-
-            this->openPopup<PopupGoto>();
-        });
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::F, [this] {
-            if (!ImHexApi::Provider::isValid()) return;
-
-            this->openPopup<PopupFind>();
-        });
-
-        // Copy
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::C, [this] {
-            const auto selection = getSelection();
-            copyBytes(selection);
-        });
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::C, [this] {
-            const auto selection = getSelection();
-            copyString(selection);
-        });
-
-        // Paste
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::V, [this] {
-            const auto selection = getSelection();
-            pasteBytes(selection, true);
-        });
-
-        // Paste and resize
-        ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::V, [this] {
-            const auto selection = getSelection();
-            pasteBytes(selection, false);
-        });
-
-        // Undo / Redo
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Z, [] {
-            if (ImHexApi::Provider::isValid())
-                ImHexApi::Provider::get()->undo();
-        });
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::Y, [] {
-            if (ImHexApi::Provider::isValid())
-                ImHexApi::Provider::get()->redo();
-        });
+        // Redo shortcut alternative
         ShortcutManager::addShortcut(this, CTRLCMD + SHIFT + Keys::Z, [] {
             if (ImHexApi::Provider::isValid())
                 ImHexApi::Provider::get()->redo();
@@ -959,7 +899,7 @@ namespace hex::plugin::builtin {
         });
 
         ProjectFile::registerPerProviderHandler({
-            .basePath = "custom_encoding.json",
+            .basePath = "custom_encoding.tbl",
             .required = false,
             .load = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
                 this->m_hexEditor.setCustomEncoding(EncodingFile(hex::EncodingFile::Type::Thingy, tar.readString(basePath)));
