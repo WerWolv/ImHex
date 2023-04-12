@@ -306,7 +306,12 @@ namespace hex::plugin::builtin::ui {
             makeSelectable(pattern);
             drawCommentTooltip(pattern);
             ImGui::TableNextColumn();
-            drawColorColumn(pattern);
+
+            if (pattern.isSealed())
+                drawColorColumn(pattern);
+            else
+                ImGui::TableNextColumn();
+
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "bitfield");
