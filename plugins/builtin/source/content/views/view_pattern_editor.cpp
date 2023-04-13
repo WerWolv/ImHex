@@ -799,7 +799,7 @@ namespace hex::plugin::builtin {
                 if (oldProvider != nullptr) ProviderExtraData::get(oldProvider).patternLanguage.sourceCode = this->m_textEditor.GetText();
 
                 if (newProvider != nullptr)
-                    this->m_textEditor.SetText(ProviderExtraData::get(newProvider).patternLanguage.sourceCode);
+                    this->m_textEditor.SetText(wolv::util::trim(ProviderExtraData::get(newProvider).patternLanguage.sourceCode));
                 else
                     this->m_textEditor.SetText("");
             }
