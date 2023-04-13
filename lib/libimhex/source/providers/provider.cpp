@@ -197,8 +197,14 @@ namespace hex::prv {
     }
 
     void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {
-        if (createUndo)
+        if (createUndo) {
+            // Delete all patches after the current one if a modification is made while
+            // the current patch list is not at the end of the undo stack
+            if (std::next(this->m_currPatches) != this->m_patches.end())
+                this->m_patches.erase(std::next(this->m_currPatches), this->m_patches.end());
+
             createUndoPoint();
+        }
 
         for (u64 i = 0; i < size; i++) {
             u8 patch         = reinterpret_cast<const u8 *>(buffer)[i];
