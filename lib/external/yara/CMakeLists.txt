@@ -108,17 +108,13 @@ add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODUL
 set_property(TARGET libyara PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Add mbedtls crypto wrappers
-target_compile_definitions(libyara PRIVATE HAVE_MBEDTLS)
+target_compile_definitions(libyara PRIVATE
+        HAVE_MBEDTLS
+        USE_NO_PROC BUCKETS_256 CHECKSUM_3B
+        HASH_MODULE DOTNET_MODULE MAGIC_MODULE MACHO_MODULE DEX_MODULE
+)
 
-target_compile_definitions(libyara PRIVATE USE_NO_PROC BUCKETS_256 CHECKSUM_3B)
-
-target_compile_definitions(libyara PRIVATE HASH_MODULE)
-target_compile_definitions(libyara PRIVATE DOTNET_MODULE)
-target_compile_definitions(libyara PRIVATE MAGIC_MODULE)
-target_compile_definitions(libyara PRIVATE MACHO_MODULE)
-target_compile_definitions(libyara PRIVATE DEX_MODULE)
-
-target_compile_options(libyara PRIVATE "-Wno-shift-count-overflow")
+target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
 
 target_include_directories(
         libyara

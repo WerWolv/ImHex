@@ -70,17 +70,18 @@ jobs:
         mkdir -p build
         cd build
 
-        cmake -G "MinGW Makefiles"                  \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install"     \
-          -DCREATE_PACKAGE=ON                       \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"            \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"          \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
-          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
+        cmake -G "MinGW Makefiles"                      \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
+          -DCREATE_PACKAGE=ON                           \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
+          -DCMAKE_C_FLAGS="-fuse-ld=lld"                \
+          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"              \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON               \
+          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
           ..
         mingw32-make -j4 install
         cpack
@@ -181,14 +182,15 @@ jobs:
         mkdir build
         cd build
 
-        cmake                                       \
-          -DBUILD_SHARED_LIBS=ON                    \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache     \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache   \
-          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
+        cmake                                           \
+          -DBUILD_SHARED_LIBS=ON                        \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
+          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
         ..
         make -j 4 install
 
@@ -197,25 +199,26 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=$(brew --prefix gcc@12)/bin/gcc-12       \
-        CXX=$(brew --prefix gcc@12)/bin/g++-12      \
-        OBJC=$(brew --prefix llvm)/bin/clang        \
-        OBJCXX=$(brew --prefix llvm)/bin/clang++    \
-        PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
-        MACOSX_DEPLOYMENT_TARGET="10.10"            \
-        cmake                                       \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCREATE_BUNDLE=ON                        \
-          -DCREATE_PACKAGE=ON                       \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache     \
-          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache   \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
-          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"     \
-          -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"  \
+        CC=$(brew --prefix gcc@12)/bin/gcc-12                                                       \
+        CXX=$(brew --prefix gcc@12)/bin/g++-12                                                      \
+        OBJC=$(brew --prefix llvm)/bin/clang                                                        \
+        OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
+        PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
+        MACOSX_DEPLOYMENT_TARGET="10.10"                                                            \
+        cmake                                                                                       \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                                                            \
+          -DCREATE_BUNDLE=ON                                                                        \
+          -DCREATE_PACKAGE=ON                                                                       \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
+          -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
+          -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache                                                   \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           \
+          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"                                              \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
+          -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"                                                     \
+          -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"   \
           ..
         make -j4 package
 
@@ -260,15 +263,16 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          CC=gcc-12 CXX=g++-12 cmake                  \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-            -DCMAKE_INSTALL_PREFIX="/usr"             \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-            -DIMHEX_PATTERNS_PULL_MASTER=ON           \
-            -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
-            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
+          CC=gcc-12 CXX=g++-12 cmake                      \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+            -DCMAKE_INSTALL_PREFIX="/usr"                 \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
+            -DIMHEX_PATTERNS_PULL_MASTER=ON               \
+            -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
+            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON       \
             ..
           make -j 4 install DESTDIR=DebDir
 
@@ -332,17 +336,18 @@ jobs:
         run: |
           mkdir -p build-appimage
           cd build-appimage
-          CC=gcc-12 CXX=g++-12 cmake                  \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-            -DCMAKE_INSTALL_PREFIX="/usr"             \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-            -DIMHEX_PATTERNS_PULL_MASTER=ON           \
-            -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
-            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
-            -DIMHEX_PLUGINS_IN_SHARE=ON               \
-            -DIMHEX_USE_BUNDLED_CA=ON                 \
+          CC=gcc-12 CXX=g++-12 cmake                      \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+            -DCMAKE_INSTALL_PREFIX="/usr"                 \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
+            -DIMHEX_PATTERNS_PULL_MASTER=ON               \
+            -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
+            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON       \
+            -DIMHEX_PLUGINS_IN_SHARE=ON                   \
+            -DIMHEX_USE_BUNDLED_CA=ON                     \
             ..
           make -j 4 install DESTDIR=AppDir
 
@@ -409,20 +414,21 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          CC=gcc CXX=g++ cmake                      \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE            \
-          -DCMAKE_INSTALL_PREFIX="/usr"             \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache        \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache      \
-          -DUSE_SYSTEM_CURL=ON                      \
-          -DUSE_SYSTEM_FMT=ON                       \
-          -DUSE_SYSTEM_YARA=ON                      \
-          -DUSE_SYSTEM_NLOHMANN_JSON=ON             \
-          -DUSE_SYSTEM_CAPSTONE=OFF                 \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON           \
-          -DIMHEX_COMMIT_HASH="${GITHUB_SHA::7}"    \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}" \
-          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON   \
+          CC=gcc CXX=g++ cmake                          \
+          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+          -DCMAKE_INSTALL_PREFIX="/usr"                 \
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
+          -DUSE_SYSTEM_CURL=ON                          \
+          -DUSE_SYSTEM_FMT=ON                           \
+          -DUSE_SYSTEM_YARA=ON                          \
+          -DUSE_SYSTEM_NLOHMANN_JSON=ON                 \
+          -DUSE_SYSTEM_CAPSTONE=OFF                     \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON               \
+          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON       \
           ..
           make -j 4 install DESTDIR=installDir
 

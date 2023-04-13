@@ -14,8 +14,12 @@ macro(addVersionDefines)
         message(FATAL_ERROR "IMHEX_VERSION is not defined")
     endif ()
 
-    if (DEFINED IMHEX_COMMIT_HASH AND DEFINED IMHEX_COMMIT_BRANCH)
-        add_compile_definitions(GIT_COMMIT_HASH="${IMHEX_COMMIT_HASH}" GIT_BRANCH="${IMHEX_COMMIT_BRANCH}")
+    if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_HASH_SHORT AND DEFINED IMHEX_COMMIT_BRANCH)
+        add_compile_definitions(
+                GIT_COMMIT_HASH_LONG="${IMHEX_COMMIT_HASH_LONG}"
+                IMHEX_COMMIT_HASH_SHORT="${IMHEX_COMMIT_HASH_SHORT}"
+                GIT_BRANCH="${IMHEX_COMMIT_BRANCH}"
+        )
     else()
         # Get the current working branch
         execute_process(
@@ -28,15 +32,26 @@ macro(addVersionDefines)
 
         # Get the latest abbreviated commit hash of the working branch
         execute_process(
-                COMMAND git log -1 --format=%h
+                COMMAND git log -1 --format=%h --abbrev=7
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                OUTPUT_VARIABLE GIT_COMMIT_HASH
+                OUTPUT_VARIABLE GIT_COMMIT_HASH_SHORT
                 OUTPUT_STRIP_TRAILING_WHITESPACE
-                RESULT_VARIABLE RESULT_HASH
+                RESULT_VARIABLE RESULT_HASH_SHORT
         )
 
-        if (RESULT_BRANCH EQUAL 0 AND RESULT_HASH EQUAL 0)
-            add_compile_definitions(GIT_COMMIT_HASH="${GIT_COMMIT_HASH}" GIT_BRANCH="${GIT_BRANCH}")
+        execute_process(
+                COMMAND git log -1 --format=%H
+                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+                OUTPUT_VARIABLE GIT_COMMIT_HASH_LONG
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                RESULT_VARIABLE RESULT_HASH_LONG
+        )
+
+        if (RESULT_BRANCH EQUAL 0 AND RESULT_HASH_LONG EQUAL 0 AND RESULT_HASH_SHORT EQUAL 0)
+            add_compile_definitions(
+                    GIT_COMMIT_HASH_SHORT="${GIT_COMMIT_HASH_SHORT}"
+                    GIT_COMMIT_HASH_LONG="${GIT_COMMIT_HASH_LONG}"
+                    GIT_BRANCH="${GIT_BRANCH}")
         endif ()
     endif ()
 
@@ -147,7 +162,7 @@ macro(configurePackingResources)
             set(MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/dist/macos/Info.plist.in")
             set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
             set(MACOSX_BUNDLE_GUI_IDENTIFIER "net.WerWolv.ImHex")
-            set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}-${GIT_COMMIT_HASH}")
+            set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}-${GIT_COMMIT_HASH_SHORT}")
             set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
             string(TIMESTAMP CURR_YEAR "%Y")
@@ -474,6 +489,7 @@ macro(addBundledLibraries)
     if(NOT USE_SYSTEM_CURL)
         add_subdirectory(${EXTERN_LIBS_FOLDER}/curl EXCLUDE_FROM_ALL)
         set_target_properties(libcurl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+        target_compile_options(libcurl PRIVATE -Wno-deprecated-declarations)
         set(LIBCURL_LIBRARIES libcurl)
     else()
         find_package(PkgConfig REQUIRED)
