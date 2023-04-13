@@ -28,7 +28,7 @@ int main(int argc, char **argv, char **envp) {
 
     bool shouldRestart = false;
     do {
-        // Register a event to handle restarting of ImHex
+        // Register an event to handle restarting of ImHex
         EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
         shouldRestart = false;
 

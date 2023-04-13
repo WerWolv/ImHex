@@ -54,11 +54,11 @@ namespace hex::plugin::builtin {
 
             ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
 
-#if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH)
-            ImGui::SameLine();
-            if (ImGui::Hyperlink(hex::format("{0}@{1}", GIT_BRANCH, GIT_COMMIT_HASH).c_str()))
-                hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH);
-#endif
+            #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH_SHORT) && defined(GIT_COMMIT_HASH_LONG)
+                ImGui::SameLine();
+                if (ImGui::Hyperlink(hex::format("{0}@{1}", GIT_BRANCH, GIT_COMMIT_HASH_SHORT).c_str()))
+                    hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH_LONG);
+            #endif
 
             ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
 

@@ -1,7 +1,6 @@
 #include "init/tasks.hpp"
 
 #include <imgui.h>
-#include <imgui_freetype.h>
 #include <romfs/romfs.hpp>
 
 #include <hex/api/content_registry.hpp>
