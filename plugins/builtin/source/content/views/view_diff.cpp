@@ -92,10 +92,12 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginCombo("", preview.c_str())) {
 
                 for (size_t i = 0; i < providers.size(); i++) {
+                    ImGui::PushID(i + 1);
                     if (ImGui::Selectable(providers[i]->getName().c_str())) {
                         providerIndex = i;
                         shouldReanalyze = true;
                     }
+                    ImGui::PopID();
                 }
 
                 ImGui::EndCombo();
