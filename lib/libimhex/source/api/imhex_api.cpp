@@ -427,7 +427,7 @@ namespace hex {
         }
 
 
-        static float s_targetFPS = 60.0F;
+        static float s_targetFPS = 14.0F;
 
         float getTargetFPS() {
             return s_targetFPS;

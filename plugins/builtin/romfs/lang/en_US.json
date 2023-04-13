@@ -435,6 +435,7 @@
         "hex.builtin.setting.interface.color": "Color theme",
         "hex.builtin.setting.interface.fps": "FPS Limit",
         "hex.builtin.setting.interface.fps.unlocked": "Unlocked",
+        "hex.builtin.setting.interface.fps.native": "Native",
         "hex.builtin.setting.interface.language": "Language",
         "hex.builtin.setting.interface.multi_windows": "Enable Multi Window support",
         "hex.builtin.setting.interface.pattern_tree_style": "Pattern Tree Style",

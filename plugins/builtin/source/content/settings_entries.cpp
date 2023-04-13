@@ -223,9 +223,16 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60, [](auto name, nlohmann::json &setting) {
             static int fps = static_cast<int>(setting);
 
-            auto format = fps > 200 ? "hex.builtin.setting.interface.fps.unlocked"_lang : "%d FPS";
+            auto format = [] -> std::string {
+                if (fps > 200)
+                    return "hex.builtin.setting.interface.fps.unlocked"_lang;
+                else if (fps < 15)
+                    return "hex.builtin.setting.interface.fps.native"_lang;
+                else
+                    return "%d FPS";
+            }();
 
-            if (ImGui::SliderInt(name.data(), &fps, 15, 201, format, ImGuiSliderFlags_AlwaysClamp)) {
+            if (ImGui::SliderInt(name.data(), &fps, 14, 201, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
                 setting = fps;
                 return true;
             }

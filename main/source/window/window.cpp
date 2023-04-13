@@ -265,7 +265,10 @@ namespace hex {
 
             // Limit frame rate
             const auto targetFps = ImHexApi::System::getTargetFPS();
-            if (targetFps <= 200) {
+            if (targetFps < 15) {
+                glfwSwapInterval(1);
+            } else if (targetFps <= 200) {
+                glfwSwapInterval(0);
                 auto leftoverFrameTime = i64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000);
                 if (leftoverFrameTime > 0)
                     std::this_thread::sleep_for(std::chrono::milliseconds(leftoverFrameTime));

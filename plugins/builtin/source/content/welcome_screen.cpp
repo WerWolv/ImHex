@@ -461,7 +461,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 60);
+                auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 14);
 
                 ImHexApi::System::setTargetFPS(targetFps);
             }
