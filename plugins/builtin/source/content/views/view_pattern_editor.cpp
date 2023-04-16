@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
             langDef.mTokenize = [](const char *inBegin, const char *inEnd, const char *&outBegin, const char *&outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
                 paletteIndex = TextEditor::PaletteIndex::Max;
 
-                while (inBegin < inEnd && isascii(*inBegin) && isblank(*inBegin))
+                while (inBegin < inEnd && isascii(*inBegin) && std::isblank(*inBegin))
                     inBegin++;
 
                 if (inBegin == inEnd) {
@@ -279,9 +279,9 @@ namespace hex::plugin::builtin {
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                    constexpr static const char *Types[] = { "I", "F", "S", "B" };
+                    constexpr static std::array Types = { "I", "F", "S", "B" };
                     if (ImGui::BeginCombo("", Types[static_cast<int>(type)])) {
-                        for (auto i = 0; i < IM_ARRAYSIZE(Types); i++) {
+                        for (size_t i = 0; i < Types.size(); i++) {
                             if (ImGui::Selectable(Types[i]))
                                 type = static_cast<PlData::EnvVarType>(i);
                         }
@@ -398,8 +398,8 @@ namespace hex::plugin::builtin {
                                 ImGui::Checkbox(label.c_str(), &value);
                                 variable.value = value;
                             } else if (variable.type == pl::core::Token::ValueType::Character) {
-                                char buffer[2];
-                                ImGui::InputText(label.c_str(), buffer, 2);
+                                std::array<char, 2> buffer;
+                                ImGui::InputText(label.c_str(), buffer.data(), buffer.size());
                                 variable.value = buffer[0];
                             }
                         }
@@ -462,7 +462,7 @@ namespace hex::plugin::builtin {
                     auto patternProvider = ImHexApi::Provider::get();
 
 
-                    this->m_sectionWindowDrawer[patternProvider] = [id, patternProvider, dataProvider = std::move(dataProvider), hexEditor = std::move(hexEditor), patternDrawer = ui::PatternDrawer()] mutable {
+                    this->m_sectionWindowDrawer[patternProvider] = [id, patternProvider, dataProvider = std::move(dataProvider), hexEditor, patternDrawer = ui::PatternDrawer()] mutable {
                         hexEditor.setProvider(dataProvider.get());
                         hexEditor.draw(480_scaled);
                         patternDrawer.setSelectionCallback([&](const auto &region) {
@@ -724,8 +724,8 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            this->m_syncPatternSourceCode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", 0);
-            this->m_autoLoadPatterns = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1);
+            this->m_syncPatternSourceCode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", 0) == 1;
+            this->m_autoLoadPatterns      = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1) == 1;
         });
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
@@ -785,9 +785,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (!this->m_possiblePatternFiles.empty()) {
-                    this->m_selectedPatternFile = 0;
                     PopupAcceptPattern::open(this);
-                    this->m_acceptPatternWindowOpen = true;
                 }
             });
 
@@ -883,7 +881,7 @@ namespace hex::plugin::builtin {
 
         /* Place pattern... */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern", "hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin" }, 3000,
-                                                       [&]{
+                                                       [&, this] {
                                                            if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
                                                                for (const auto &[type, size] : Types)
                                                                    if (ImGui::MenuItem(type))
@@ -902,7 +900,7 @@ namespace hex::plugin::builtin {
                                                        });
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern", "hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom" }, 3050,
-                                                       [&]{
+                                                       [&, this] {
                                                            const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
                                                            auto selection = ImHexApi::HexEditor::getSelection();
 
@@ -910,7 +908,7 @@ namespace hex::plugin::builtin {
                                                                if (type->isTemplateType())
                                                                    continue;
 
-                                                               createNestedMenu(hex::splitString(typeName, "::"), [&] {
+                                                               createNestedMenu(hex::splitString(typeName, "::"), [&, this] {
                                                                    std::string variableName;
                                                                    for (char &c : hex::replaceStrings(typeName, "::", "_"))
                                                                        variableName += static_cast<char>(std::tolower(c));

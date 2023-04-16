@@ -44,10 +44,10 @@ namespace hex::plugin::builtin {
 
         class PopupAcceptPattern : public Popup<PopupAcceptPattern> {
         public:
-            PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern"), m_view(view) {}
+            explicit PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern"), m_view(view) {}
 
             void drawContent() override {
-                auto provider = ImHexApi::Provider::get();
+                auto* provider = ImHexApi::Provider::get();
 
                 ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
@@ -61,11 +61,11 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
                     u32 index = 0;
                     for (auto &path : this->m_view->m_possiblePatternFiles) {
-                        if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_view->m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
-                            this->m_view->m_selectedPatternFile = index;
+                        if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
+                            this->m_selectedPatternFile = index;
 
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_view->m_selectedPatternFile], provider);
+                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_selectedPatternFile], provider);
 
                         ImGui::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
 
                 confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
                         [this, provider] {
-                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_view->m_selectedPatternFile], provider);
+                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_selectedPatternFile], provider);
                             this->close();
                         },
                         [this] {
@@ -98,6 +98,7 @@ namespace hex::plugin::builtin {
 
         private:
             ViewPatternEditor *m_view;
+            u32 m_selectedPatternFile = 0;
         };
 
     private:
@@ -106,7 +107,6 @@ namespace hex::plugin::builtin {
         std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
 
         std::vector<std::fs::path> m_possiblePatternFiles;
-        u32 m_selectedPatternFile = 0;
         bool m_runAutomatically   = false;
         bool m_triggerEvaluation  = false;
 
@@ -117,8 +117,6 @@ namespace hex::plugin::builtin {
         std::atomic<u32> m_runningParsers    = 0;
 
         bool m_hasUnevaluatedChanges = false;
-
-        bool m_acceptPatternWindowOpen = false;
 
         TextEditor m_textEditor;
 
