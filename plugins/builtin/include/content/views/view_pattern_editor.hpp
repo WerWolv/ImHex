@@ -78,18 +78,18 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
                 ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
-                confirmButtons(
-                        "hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang, [this, provider] {
+                confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
+                        [this, provider] {
                             this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_view->m_selectedPatternFile], provider);
-                            Popup::close();
+                            this->close();
                         },
-                        [] {
-                            Popup::close();
+                        [this] {
+                            this->close();
                         }
                 );
 
                 if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
-                    Popup::close();
+                    this->close();
             }
 
             [[nodiscard]] ImGuiWindowFlags getFlags() const override {

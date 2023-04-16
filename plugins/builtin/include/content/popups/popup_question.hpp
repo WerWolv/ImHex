@@ -21,12 +21,16 @@ namespace hex::plugin::builtin {
 
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.builtin.common.yes"_lang, ImVec2(width / 3, 0)))
+            if (ImGui::Button("hex.builtin.common.yes"_lang, ImVec2(width / 3, 0))) {
                 this->m_yesFunction();
+                this->close();
+            }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0)))
+            if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0))) {
                 this->m_noFunction();
+                this->close();
+            }
 
             ImGui::SetWindowPos((ImHexApi::System::getMainWindowSize() - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
         }

@@ -39,9 +39,7 @@ namespace hex::plugin::builtin {
                         ImHexApi::Provider::resetDirty();
                         ImHexApi::System::closeImHex();
                     },
-                    []{
-                        PopupQuestion::close();
-                    }
+                    [] { }
                 );
             } else if (TaskManager::getRunningTaskCount() > 0 || TaskManager::getRunningBackgroundTaskCount() > 0) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
@@ -59,11 +57,8 @@ namespace hex::plugin::builtin {
                 PopupQuestion::open("hex.builtin.popup.close_provider.desc"_lang,
                                     []{
                                         ImHexApi::Provider::remove(ImHexApi::Provider::impl::getClosingProvider(), true);
-                                        PopupQuestion::close();
                                     },
-                                    []{
-                                        PopupQuestion::close();
-                                    }
+                                    [] { }
                 );
             }
         });

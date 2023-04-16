@@ -31,7 +31,7 @@ namespace hex {
             }
 
             [[nodiscard]] virtual ImVec2 getMaxSize() const {
-                return { FLT_MAX, FLT_MAX };
+                return { 0, 0 };
             }
 
             [[nodiscard]] static std::vector<std::unique_ptr<PopupBase>> &getOpenPopups() {
@@ -50,30 +50,22 @@ namespace hex {
                 return this->m_modal;
             }
 
-            static void close() {
-                if (s_openPopups.empty())
-                    return;
-
-                TaskManager::doLater([]{
-                    std::lock_guard lock(s_mutex);
-
-                    ImGui::CloseCurrentPopup();
-                    s_openPopups.pop_back();
-                });
+            void close() {
+                this->m_close = true;
             }
 
-            static std::mutex& getMutex() {
-                return s_mutex;
+            [[nodiscard]] bool shouldClose() const {
+                return this->m_close;
             }
 
         protected:
             static std::vector<std::unique_ptr<PopupBase>> s_openPopups;
-            static std::mutex s_mutex;
 
         private:
 
             std::string m_unlocalizedName;
             bool m_closeButton, m_modal;
+            std::atomic<bool> m_close = false;
         };
 
     }
@@ -87,7 +79,8 @@ namespace hex {
     public:
         template<typename ...Args>
         static void open(Args && ... args) {
-            std::lock_guard lock(s_mutex);
+            static std::mutex mutex;
+            std::lock_guard lock(mutex);
 
             auto popup = std::make_unique<T>(std::forward<Args>(args)...);
 

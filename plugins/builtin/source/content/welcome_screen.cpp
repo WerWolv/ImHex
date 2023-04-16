@@ -67,12 +67,12 @@ namespace hex::plugin::builtin {
         PopupRestoreBackup() : Popup("hex.builtin.popup.safety_backup.title") { }
 
         void drawContent() override {
-            ImGui::TextUnformatted("hex.builtin.welcome.safety_backup.desc"_lang);
+            ImGui::TextUnformatted("hex.builtin.popup.safety_backup.desc"_lang);
             ImGui::NewLine();
 
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.builtin.welcome.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
+            if (ImGui::Button("hex.builtin.popup.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
                 ProjectFile::load(s_safetyBackupPath);
                 ProjectFile::clearPath();
 
@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.builtin.welcome.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
+            if (ImGui::Button("hex.builtin.popup.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
                 wolv::io::fs::remove(s_safetyBackupPath);
 
                 Popup::close();
@@ -513,16 +513,17 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventWindowInitialized>([] {
             // documentation of the value above the setting definition
-            int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
+            auto showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
             if (showCheckForUpdates == 2) {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 0);
                 PopupQuestion::open("hex.builtin.welcome.check_for_updates_text"_lang,
-                    [] { // yes
+                    [] {
                         ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 1);
-                        ImGui::CloseCurrentPopup();
-                    }, [] { // no
-                        ImGui::CloseCurrentPopup();
-                    });
+                    },
+                    [] {
+
+                    }
+                );
             }
         });
 

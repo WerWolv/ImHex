@@ -530,59 +530,61 @@ namespace hex {
 
         // Draw popup stack
         {
-            std::scoped_lock lock(impl::PopupBase::getMutex());
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 static bool popupDisplaying = false;
+                static bool positionSet = false;
                 static bool sizeSet = false;
-                static ImVec2 popupSize;
 
                 auto &currPopup = popups.back();
                 const auto &name = LangEntry(currPopup->getUnlocalizedName());
 
-                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) && !popupDisplaying)
+                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
                     ImGui::OpenPopup(name);
 
                 bool open = true;
-                ImGui::SetNextWindowSizeConstraints(currPopup->getMinSize(), currPopup->getMaxSize());
 
-                const auto closeButton = currPopup->hasCloseButton() ? &open : nullptr;
-                const auto flags = currPopup->getFlags();
+                const auto &minSize = currPopup->getMinSize();
+                const auto &maxSize = currPopup->getMaxSize();
+                const bool hasConstraints = minSize.x != 0 && minSize.y != 0 && maxSize.x != 0 && maxSize.y != 0;
 
-                auto emptyWindowSize = ImGui::GetStyle().FramePadding * 4;
-                if (!sizeSet && popupSize.x > emptyWindowSize.x && popupSize.y > emptyWindowSize.y && popupSize.y < ImGui::GetMainViewport()->Size.y) {
-                    ImGui::SetNextWindowSize(popupSize, ImGuiCond_Always);
-                    ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
-                    sizeSet = true;
+                if (hasConstraints)
+                    ImGui::SetNextWindowSizeConstraints(minSize, maxSize);
+                else
+                    ImGui::SetNextWindowSize(ImVec2(0, 0), ImGuiCond_Appearing);
+
+                auto* closeButton = currPopup->hasCloseButton() ? &open : nullptr;
+
+                const auto flags = currPopup->getFlags() | (!hasConstraints ? (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize) : ImGuiWindowFlags_None);
+
+                if (!positionSet) {
+                    ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + (ImHexApi::System::getMainWindowSize() / 2.0F), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+                    if (sizeSet)
+                        positionSet = true;
                 }
 
-                if (currPopup->isModal()) {
-                    if (ImGui::BeginPopupModal(name, closeButton, flags)) {
-
+                const auto createPopup = [&](bool displaying) {
+                    if (displaying) {
                         currPopup->drawContent();
                         popupDisplaying = true;
-                        popupSize = ImGui::GetWindowSize();
+
+                        if (ImGui::GetWindowSize().x > ImGui::GetStyle().FramePadding.x * 10)
+                            sizeSet = true;
 
                         ImGui::EndPopup();
                     } else {
                         popupDisplaying = false;
                     }
-                } else {
-                    if (ImGui::BeginPopup(name, flags)) {
+                };
 
-                        currPopup->drawContent();
-                        popupDisplaying = true;
-                        popupSize = ImGui::GetWindowSize();
+                if (currPopup->isModal())
+                    createPopup(ImGui::BeginPopupModal(name, closeButton, flags));
+                else
+                    createPopup(ImGui::BeginPopup(name, flags));
 
-                        ImGui::EndPopup();
-                    } else {
-                        popupDisplaying = false;
-                    }
-                }
+                if (!popupDisplaying || currPopup->shouldClose()) {
+                    log::debug("Closing popup '{}'", name);
+                    positionSet = sizeSet = false;
 
-                if (!open && !popupDisplaying) {
-                    sizeSet = false;
-                    popupDisplaying = false;
-                    popupSize = ImVec2(0, 0);
                     popups.pop_back();
                 }
             }

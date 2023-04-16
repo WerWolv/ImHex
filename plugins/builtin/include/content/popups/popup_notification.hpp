@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
     class PopupInfo : public impl::PopupNotification<PopupInfo> {
     public:
         explicit PopupInfo(std::string message)
-        : PopupNotification("hex.builtin.common.info", std::move(message), []() {
+        : PopupNotification("hex.builtin.common.info", std::move(message), [this]() {
             Popup::close();
         }) { }
     };
@@ -56,7 +56,7 @@ namespace hex::plugin::builtin {
     class PopupError : public impl::PopupNotification<PopupError> {
     public:
         explicit PopupError(std::string message)
-        : PopupNotification("hex.builtin.common.error", std::move(message), []() {
+        : PopupNotification("hex.builtin.common.error", std::move(message), [this]() {
             Popup::close();
         }) { }
     };
@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
     class PopupFatal : public impl::PopupNotification<PopupFatal> {
     public:
         explicit PopupFatal(std::string message)
-        : PopupNotification("hex.builtin.common.fatal", std::move(message), []() {
+        : PopupNotification("hex.builtin.common.fatal", std::move(message), [this]() {
             ImHexApi::System::closeImHex();
             Popup::close();
         }) { }
