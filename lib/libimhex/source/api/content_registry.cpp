@@ -259,6 +259,18 @@ namespace hex {
             return functionName;
         }
 
+        pl::PatternLanguage& getRuntime() {
+            static PerProvider<pl::PatternLanguage> runtime;
+
+            return *runtime;
+        }
+
+        std::scoped_lock<std::mutex> getRuntimeLock() {
+            static std::mutex runtimeLock;
+
+            return std::scoped_lock(runtimeLock);
+        }
+
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
             runtime.reset();
 

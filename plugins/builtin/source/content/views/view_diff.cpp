@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
 
             const auto height = ImGui::GetContentRegionAvail().y;
 
-            if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 200_scaled))) {
+            if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 250_scaled))) {
                 ImGui::TableSetupColumn("hex.builtin.view.diff.provider_a"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
                 ImGui::TableHeadersRow();

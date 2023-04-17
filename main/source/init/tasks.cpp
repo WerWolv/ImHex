@@ -267,7 +267,7 @@ namespace hex::init {
         // This is a bit of a hack but necessary because when ImHex gets closed, all plugins are unloaded in order for
         // destructors to be called correctly. To prevent crashes when ImHex exits, we need to delete all shared data
 
-        EventManager::clear();
+        EventManager::post<EventImHexClosing>();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
@@ -334,6 +334,8 @@ namespace hex::init {
         ProjectFile::getProviderHandlers().clear();
 
         fs::setFileBrowserErrorCallback(nullptr);
+
+        EventManager::clear();
 
         return true;
     }

@@ -94,7 +94,7 @@ namespace hex {
          * @param token Token returned by subscribe
          */
         static void unsubscribe(const EventList::iterator &token) noexcept {
-            s_events.remove(*token);
+            s_events.erase(token);
         }
 
         /**
@@ -167,6 +167,7 @@ namespace hex {
     EVENT_DEF(EventPatternEditorChanged, const std::string&);
     EVENT_DEF(EventStoreContentDownloaded, const std::fs::path&);
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
+    EVENT_DEF(EventImHexClosing);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);

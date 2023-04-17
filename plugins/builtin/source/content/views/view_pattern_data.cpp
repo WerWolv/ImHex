@@ -5,8 +5,6 @@
 
 #include <pl/patterns/pattern.hpp>
 
-#include <content/helpers/provider_extra_data.hpp>
-
 namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
@@ -32,18 +30,19 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
-                auto &patternLanguage = ProviderExtraData::get(provider).patternLanguage;
+
+                auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
                 const auto &patterns = [&] -> const auto& {
-                    if (provider->isReadable() && patternLanguage.runtime != nullptr && patternLanguage.executionDone)
-                        return ProviderExtraData::get(provider).patternLanguage.runtime->getAllPatterns();
+                    if (provider->isReadable())
+                        return runtime.getAllPatterns();
                     else {
                         static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
                         return empty;
                     }
                 }();
 
-                if (!patternLanguage.executionDone)
+                if (runtime.isRunning())
                     this->m_patternDrawer.reset();
 
                 this->m_patternDrawer.draw(patterns);

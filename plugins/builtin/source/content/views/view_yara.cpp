@@ -6,8 +6,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
-#include "content/helpers/provider_extra_data.hpp"
-
 #include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_file_chooser.hpp>
 
@@ -46,7 +44,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "yara.json",
             .required = false,
-            .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
                 auto fileContent = tar.readString(basePath);
                 if (fileContent.empty())
                     return true;
@@ -60,8 +58,7 @@ namespace hex::plugin::builtin {
                 if (!rules.is_array())
                     return false;
 
-                auto &extraData = ProviderExtraData::get(provider).yara;
-                extraData.matches.clear();
+                this->m_matches.get(provider).clear();
 
                 for (auto &rule : rules) {
                     if (!rule.contains("name") || !rule.contains("path"))
@@ -73,18 +70,17 @@ namespace hex::plugin::builtin {
                     if (!name.is_string() || !path.is_string())
                         return false;
 
-                    extraData.rules.emplace_back(std::fs::path(name.get<std::string>()), std::fs::path(path.get<std::string>()));
+                    this->m_rules.get(provider).emplace_back(std::fs::path(name.get<std::string>()), std::fs::path(path.get<std::string>()));
                 }
 
                 return true;
             },
-            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
                 nlohmann::json data;
 
                 data["rules"] = nlohmann::json::array();
 
-                auto &extraData = ProviderExtraData::get(provider).yara;
-                for (auto &[name, path] : extraData.rules) {
+                for (auto &[name, path] : this->m_rules.get(provider)) {
                     data["rules"].push_back({
                         { "name", wolv::util::toUTF8String(name) },
                         { "path", wolv::util::toUTF8String(path) }
@@ -108,15 +104,10 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.yara.header.rules"_lang);
             ImGui::Separator();
 
-            auto &extraData = ProviderExtraData::getCurrent().yara;
-            auto &rules = extraData.rules;
-            auto &matches = extraData.matches;
-            auto &sortedMatches = extraData.sortedMatches;
-
             if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-                for (u32 i = 0; i < rules.size(); i++) {
+                for (u32 i = 0; i < this->m_rules->size(); i++) {
                     const bool selected = (this->m_selectedRule == i);
-                    if (ImGui::Selectable(wolv::util::toUTF8String(rules[i].first).c_str(), selected)) {
+                    if (ImGui::Selectable(wolv::util::toUTF8String((*this->m_rules)[i].first).c_str(), selected)) {
                         this->m_selectedRule = i;
                     }
                 }
@@ -137,15 +128,15 @@ namespace hex::plugin::builtin {
 
                 PopupFileChooser::open(paths, std::vector<nfdfilteritem_t>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
                     [&](const auto &path) {
-                        rules.push_back({ path.filename(), path });
+                        this->m_rules->push_back({ path.filename(), path });
                     });
             }
 
             ImGui::SameLine();
             if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                if (this->m_selectedRule < rules.size()) {
-                    rules.erase(rules.begin() + this->m_selectedRule);
-                    this->m_selectedRule = std::min(this->m_selectedRule, (u32)rules.size() - 1);
+                if (this->m_selectedRule < this->m_rules->size()) {
+                    this->m_rules->erase(this->m_rules->begin() + this->m_selectedRule);
+                    this->m_selectedRule = std::min(this->m_selectedRule, (u32)this->m_rules->size() - 1);
                 }
             }
 
@@ -176,13 +167,13 @@ namespace hex::plugin::builtin {
                 ImGui::TableHeadersRow();
 
                 auto sortSpecs = ImGui::TableGetSortSpecs();
-                if (!matches.empty() && (sortSpecs->SpecsDirty || sortedMatches.empty())) {
-                    sortedMatches.clear();
-                    std::transform(matches.begin(), matches.end(), std::back_inserter(sortedMatches), [](auto &match) {
+                if (!this->m_matches->empty() && (sortSpecs->SpecsDirty || this->m_sortedMatches->empty())) {
+                    this->m_sortedMatches->clear();
+                    std::transform(this->m_matches->begin(), this->m_matches->end(), std::back_inserter(*this->m_sortedMatches), [](auto &match) {
                         return &match;
                     });
 
-                    std::sort(sortedMatches.begin(), sortedMatches.end(), [&sortSpecs](ProviderExtraData::Data::Yara::YaraMatch *left, ProviderExtraData::Data::Yara::YaraMatch *right) -> bool {
+                    std::sort(this->m_sortedMatches->begin(), this->m_sortedMatches->end(), [&sortSpecs](YaraMatch *left, YaraMatch *right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
                             return left->identifier < right->identifier;
                         else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
@@ -196,18 +187,18 @@ namespace hex::plugin::builtin {
                     });
 
                     if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Descending)
-                        std::reverse(sortedMatches.begin(), sortedMatches.end());
+                        std::reverse(this->m_sortedMatches->begin(), this->m_sortedMatches->end());
 
                     sortSpecs->SpecsDirty = false;
                 }
 
                 if (!this->m_matcherTask.isRunning()) {
                     ImGuiListClipper clipper;
-                    clipper.Begin(sortedMatches.size());
+                    clipper.Begin(this->m_sortedMatches->size());
 
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *sortedMatches[i];
+                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *(*this->m_sortedMatches)[i];
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
                             ImGui::PushID(i);
@@ -260,14 +251,12 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::clearResult() {
-        auto &matches = ProviderExtraData::getCurrent().yara.matches;
-
-        for (const auto &match : matches) {
+        for (const auto &match : *this->m_matches) {
             ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
             ImHexApi::HexEditor::removeTooltip(match.tooltipId);
         }
 
-        matches.clear();
+        this->m_matches->clear();
         this->m_consoleMessages.clear();
     }
 
@@ -277,20 +266,16 @@ namespace hex::plugin::builtin {
         this->m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
             if (!ImHexApi::Provider::isValid()) return;
 
-            auto &extraData = ProviderExtraData::getCurrent().yara;
-            auto &rules = extraData.rules;
-            auto &matches = extraData.matches;
-
             struct ResultContext {
                 Task *task = nullptr;
-                std::vector<ProviderExtraData::Data::Yara::YaraMatch> newMatches;
+                std::vector<YaraMatch> newMatches;
                 std::vector<std::string> consoleMessages;
             };
 
             ResultContext resultContext;
             resultContext.task = &task;
 
-            for (const auto &[fileName, filePath] : rules) {
+            for (const auto &[fileName, filePath] : *this->m_rules) {
                 YR_COMPILER *compiler = nullptr;
                 yr_compiler_create(&compiler);
                 ON_SCOPE_EXIT {
@@ -321,7 +306,7 @@ namespace hex::plugin::builtin {
                     currFilePath.data()
                 );
 
-                wolv::io::File file(rules[this->m_selectedRule].second, wolv::io::File::Mode::Read);
+                wolv::io::File file((*this->m_rules)[this->m_selectedRule].second, wolv::io::File::Mode::Read);
                 if (!file.isValid()) return;
 
                 if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
@@ -437,22 +422,23 @@ namespace hex::plugin::builtin {
                         0);
 
             }
-            TaskManager::doLater([this, &matches, resultContext] {
-                for (const auto &match : matches) {
+            TaskManager::doLater([this, resultContext] {
+                for (const auto &match : *this->m_matches) {
                     ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
                     ImHexApi::HexEditor::removeTooltip(match.tooltipId);
                 }
 
                 this->m_consoleMessages = resultContext.consoleMessages;
 
-                std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(matches));
+                std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(*this->m_matches));
 
-                auto uniques = std::set(matches.begin(), matches.end(), [](const auto &l, const auto &r) {
+                auto uniques = std::set(this->m_matches->begin(), this->m_matches->end(), [](const auto &l, const auto &r) {
                     return std::tie(l.address, l.size, l.wholeDataMatch, l.identifier, l.variable) <
                            std::tie(r.address, r.size, r.wholeDataMatch, r.identifier, r.variable);
                 });
-                matches.clear();
-                std::move(uniques.begin(), uniques.end(), std::back_inserter(matches));
+
+                this->m_matches->clear();
+                std::move(uniques.begin(), uniques.end(), std::back_inserter(*this->m_matches));
 
                 constexpr static color_t YaraColor = 0x70B4771F;
                 for (auto &match : uniques) {

@@ -6,7 +6,6 @@
 #include <hex/helpers/concepts.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
-#include <content/helpers/provider_extra_data.hpp>
 #include <ui/hex_editor.hpp>
 
 namespace hex::plugin::builtin {
@@ -74,6 +73,9 @@ namespace hex::plugin::builtin {
 
         bool m_shouldOpenPopup = false;
         std::unique_ptr<Popup> m_currPopup;
+
+        PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;
+        PerProvider<float> m_scrollPosition;
     };
 
 }

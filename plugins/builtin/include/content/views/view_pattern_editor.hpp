@@ -1,4 +1,4 @@
-#pragma once
+ #pragma once
 
 #include <hex/ui/view.hpp>
 #include <hex/providers/provider.hpp>
@@ -7,7 +7,6 @@
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
 
-#include <content/helpers/provider_extra_data.hpp>
 #include <content/providers/memory_file_provider.hpp>
 
 #include <ui/hex_editor.hpp>
@@ -102,7 +101,32 @@ namespace hex::plugin::builtin {
         };
 
     private:
-        using PlData = ProviderExtraData::Data::PatternLanguage;
+        struct PatternVariable {
+            bool inVariable;
+            bool outVariable;
+
+            pl::core::Token::ValueType type;
+            pl::core::Token::Literal value;
+        };
+
+        enum class EnvVarType
+        {
+            Integer,
+            Float,
+            String,
+            Bool
+        };
+
+        struct EnvVar {
+            u64 id;
+            std::string name;
+            pl::core::Token::Literal value;
+            EnvVarType type;
+
+            bool operator==(const EnvVar &other) const {
+                return this->id == other.id;
+            }
+        };
 
         std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
 
@@ -130,10 +154,22 @@ namespace hex::plugin::builtin {
 
         ui::HexEditor m_sectionHexEditor;
 
+        PerProvider<std::string> m_sourceCode;
+        PerProvider<std::vector<std::pair<pl::core::LogConsole::Level, std::string>>> m_console;
+        PerProvider<bool> m_executionDone = true;
+
+        PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
+        PerProvider<std::vector<std::pair<pl::core::LogConsole::Level, std::string>>> m_lastEvaluationLog;
+        PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
+        PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
+        PerProvider<std::map<u64, pl::api::Section>> m_sections;
+
+        PerProvider<std::list<EnvVar>> m_envVarEntries;
+
     private:
         void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);
-        void drawEnvVars(ImVec2 size, std::list<PlData::EnvVar> &envVars);
-        void drawVariableSettings(ImVec2 size, std::map<std::string, PlData::PatternVariable> &patternVariables);
+        void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
+        void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
         void drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);

@@ -10,7 +10,7 @@ namespace hex::plugin::builtin {
     class PopupFileChooser : public Popup<PopupFileChooser> {
     public:
         PopupFileChooser(const std::vector<std::fs::path> &files, const std::vector<nfdfilteritem_t> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
-                : hex::Popup<PopupFileChooser>("hex.builtin.common.choose_file", false),
+                : hex::Popup<PopupFileChooser>("hex.builtin.common.choose_file"),
                   m_indices({ }), m_files(files),
                   m_openCallback(callback),
                   m_validExtensions(validExtensions), m_multiple(multiple) { }

@@ -15,14 +15,15 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        static bool importBookmarks(hex::prv::Provider *provider, const nlohmann::json &json);
-        static bool exportBookmarks(hex::prv::Provider *provider, nlohmann::json &json);
+        bool importBookmarks(hex::prv::Provider *provider, const nlohmann::json &json);
+        bool exportBookmarks(hex::prv::Provider *provider, nlohmann::json &json);
 
         void registerMenuItems();
     private:
         std::string m_currFilter;
 
         std::list<ImHexApi::Bookmarks::Entry>::iterator m_dragStartIterator;
+        PerProvider<std::list<ImHexApi::Bookmarks::Entry>> m_bookmarks;
     };
 
 }

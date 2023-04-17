@@ -263,6 +263,18 @@ namespace hex {
             }
 
             /**
+             * @brief Provides access to the current provider's pattern language runtime
+             * @return Runtime
+             */
+            pl::PatternLanguage& getRuntime();
+
+            /**
+             * @brief Provides access to the current provider's pattern language runtime's lock
+             * @return Lock
+             */
+            std::scoped_lock<std::mutex> getRuntimeLock();
+
+            /**
              * @brief Configures the pattern language runtime using ImHex's default settings
              * @param runtime The pattern language runtime to configure
              * @param provider The provider to use for data access
@@ -440,7 +452,7 @@ namespace hex {
                 add(impl::Entry {
                     unlocalizedCategory.c_str(),
                     unlocalizedName.c_str(),
-                    [=] {
+                    [=, ...args = std::forward<Args>(args)] mutable {
                         auto node = std::make_unique<T>(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
                         return node;

@@ -12,7 +12,6 @@
 #include <content/popups/popup_file_chooser.hpp>
 
 #include <imgui_internal.h>
-#include <nlohmann/json.hpp>
 
 #include <thread>
 
@@ -676,10 +675,8 @@ namespace hex::plugin::builtin {
         // Remove selection
         ShortcutManager::addShortcut(this, Keys::Escape, [this] {
             auto provider = ImHexApi::Provider::get();
-            auto &data = ProviderExtraData::get(provider).editor;
-
-            data.selectionStart.reset();
-            data.selectionEnd.reset();
+            this->m_selectionStart->reset();
+            this->m_selectionEnd->reset();
 
             EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), provider });
         });
@@ -849,10 +846,8 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             if (region == Region::Invalid()) {
-                auto &providerData = ProviderExtraData::get(provider).editor;
-
-                providerData.selectionStart.reset();
-                providerData.selectionEnd.reset();
+                this->m_selectionStart->reset();
+                this->m_selectionEnd->reset();
                 EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion({ Region::Invalid(), nullptr }));
 
                 return;
@@ -871,14 +866,12 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventProviderChanged>(this, [this](auto *oldProvider, auto *newProvider) {
             if (oldProvider != nullptr) {
-                auto &oldData = ProviderExtraData::get(oldProvider).editor;
-
                 auto selection = this->m_hexEditor.getSelection();
 
                 if (selection != Region::Invalid()) {
-                    oldData.selectionStart  = selection.getStartAddress();
-                    oldData.selectionEnd    = selection.getEndAddress();
-                    oldData.scrollPosition  = this->m_hexEditor.getScrollPosition();
+                    this->m_selectionStart.get(oldProvider)  = selection.getStartAddress();
+                    this->m_selectionEnd.get(oldProvider)    = selection.getEndAddress();
+                    this->m_scrollPosition.get(oldProvider)  = this->m_hexEditor.getScrollPosition();
                 }
             }
 
@@ -886,10 +879,8 @@ namespace hex::plugin::builtin {
             this->m_hexEditor.setScrollPosition(0);
 
             if (newProvider != nullptr) {
-                auto &newData = ProviderExtraData::get(newProvider).editor;
-
-                this->m_hexEditor.setSelectionUnchecked(newData.selectionStart, newData.selectionEnd);
-                this->m_hexEditor.setScrollPosition(newData.scrollPosition);
+                this->m_hexEditor.setSelectionUnchecked(this->m_selectionStart.get(newProvider), this->m_selectionEnd.get(newProvider));
+                this->m_hexEditor.setScrollPosition(this->m_scrollPosition.get(newProvider));
             }
 
             this->m_hexEditor.forceUpdateScrollPosition();

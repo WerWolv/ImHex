@@ -11,45 +11,338 @@
 #include <imnodes_internal.h>
 #include <nlohmann/json.hpp>
 
-#include <content/helpers/provider_extra_data.hpp>
-
 #include <wolv/io/file.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
+    class NodeCustomInput : public dp::Node {
+    public:
+        NodeCustomInput() : Node("hex.builtin.nodes.custom.input.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.input") }) { }
+        ~NodeCustomInput() override = default;
+
+        void drawNode() override {
+            ImGui::PushItemWidth(100_scaled);
+            if (ImGui::Combo("##type", &this->m_type, "Integer\0Float\0Buffer\0")) {
+                this->setAttributes({
+                                            { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
+                                    });
+            }
+
+            if (ImGui::InputText("##name", this->m_name)) {
+                this->setUnlocalizedTitle(this->m_name);
+            }
+
+            ImGui::PopItemWidth();
+        }
+
+        void setValue(auto value) { this->m_value = std::move(value); }
+
+        const std::string &getName() const { return this->m_name; }
+        dp::Attribute::Type getType() const {
+            switch (this->m_type) {
+                default:
+                case 0: return dp::Attribute::Type::Integer;
+                case 1: return dp::Attribute::Type::Float;
+                case 2: return dp::Attribute::Type::Buffer;
+            }
+        }
+
+        void process() override {
+            std::visit(wolv::util::overloaded {
+                    [this](i128 value) { this->setIntegerOnOutput(0, value); },
+                    [this](long double value) { this->setFloatOnOutput(0, value); },
+                    [this](const std::vector<u8> &value) { this->setBufferOnOutput(0, value); }
+            }, this->m_value);
+        }
+
+        void store(nlohmann::json &j) const override {
+            j = nlohmann::json::object();
+
+            j["name"] = this->m_name;
+            j["type"] = this->m_type;
+        }
+
+        void load(const nlohmann::json &j) override {
+            this->m_name = j["name"].get<std::string>();
+            this->m_type = j["type"];
+
+            this->setUnlocalizedTitle(this->m_name);
+            this->setAttributes({
+                                        { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
+                                });
+        }
+
+    private:
+        std::string m_name = LangEntry(this->getUnlocalizedName());
+        int m_type = 0;
+
+        std::variant<i128, long double, std::vector<u8>> m_value;
+    };
+
+    class NodeCustomOutput : public dp::Node {
+    public:
+        NodeCustomOutput() : Node("hex.builtin.nodes.custom.output.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        ~NodeCustomOutput() override = default;
+
+        void drawNode() override {
+            ImGui::PushItemWidth(100_scaled);
+            if (ImGui::Combo("##type", &this->m_type, "Integer\0Float\0Buffer\0")) {
+                this->setAttributes({
+                                            { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
+                                    });
+            }
+
+            if (ImGui::InputText("##name", this->m_name)) {
+                this->setUnlocalizedTitle(this->m_name);
+            }
+
+            ImGui::PopItemWidth();
+        }
+
+        const std::string &getName() const { return this->m_name; }
+        dp::Attribute::Type getType() const {
+            switch (this->m_type) {
+                case 0: return dp::Attribute::Type::Integer;
+                case 1: return dp::Attribute::Type::Float;
+                case 2: return dp::Attribute::Type::Buffer;
+                default: return dp::Attribute::Type::Integer;
+            }
+        }
+
+        void process() override {
+            switch (this->getType()) {
+                case dp::Attribute::Type::Integer: this->m_value = this->getIntegerOnInput(0); break;
+                case dp::Attribute::Type::Float:   this->m_value = this->getFloatOnInput(0); break;
+                case dp::Attribute::Type::Buffer:  this->m_value = this->getBufferOnInput(0); break;
+            }
+        }
+
+        const auto& getValue() const { return this->m_value; }
+
+        void store(nlohmann::json &j) const override {
+            j = nlohmann::json::object();
+
+            j["name"] = this->m_name;
+            j["type"] = this->m_type;
+        }
+
+        void load(const nlohmann::json &j) override {
+            this->m_name = j["name"].get<std::string>();
+            this->m_type = j["type"];
+
+            this->setUnlocalizedTitle(this->m_name);
+            this->setAttributes({
+                                        { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
+                                });
+        }
+
+    private:
+        std::string m_name = LangEntry(this->getUnlocalizedName());
+        int m_type = 0;
+
+        std::variant<i128, long double, std::vector<u8>> m_value;
+    };
+
+    class NodeCustom : public dp::Node {
+    public:
+        explicit NodeCustom(ViewDataProcessor *dataProcessor) : Node("hex.builtin.nodes.custom.custom.header", {}), m_dataProcessor(dataProcessor) { }
+        ~NodeCustom() override = default;
+
+        void drawNode() override {
+            if (this->m_requiresAttributeUpdate) {
+                this->m_requiresAttributeUpdate = false;
+                this->setAttributes(this->findAttributes());
+            }
+
+            ImGui::PushItemWidth(200_scaled);
+
+            bool editing = false;
+            if (this->m_editable) {
+                ImGui::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, this->m_name);
+                editing = ImGui::IsItemActive();
+
+                if (ImGui::Button("hex.builtin.nodes.custom.custom.edit"_lang, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing()))) {
+                    this->m_dataProcessor->getWorkspaceStack().push_back(&this->m_workspace);
+
+                    this->m_requiresAttributeUpdate = true;
+                }
+            } else {
+                this->setUnlocalizedTitle(this->m_name);
+
+                if (this->getAttributes().empty()) {
+                    ImGui::TextUnformatted("hex.builtin.nodes.custom.custom.edit_hint"_lang);
+                }
+            }
+
+            this->m_editable = ImGui::GetIO().KeyShift || editing;
+
+            ImGui::PopItemWidth();
+        }
+
+        void process() override {
+            auto indexFromId = [this](u32 id) -> std::optional<u32> {
+                const auto &attributes = this->getAttributes();
+                for (u32 i = 0; i < attributes.size(); i++)
+                    if (u32(attributes[i].getId()) == id)
+                        return i;
+                return std::nullopt;
+            };
+
+            auto prevContext = ImNodes::GetCurrentContext();
+            ImNodes::SetCurrentContext(this->m_workspace.context.get());
+            ON_SCOPE_EXIT { ImNodes::SetCurrentContext(prevContext); };
+
+            // Forward inputs to input nodes values
+            for (auto &attribute : this->getAttributes()) {
+                auto index = indexFromId(attribute.getId());
+                if (!index.has_value())
+                    continue;
+
+                if (auto input = this->findInput(attribute.getUnlocalizedName()); input != nullptr) {
+                    switch (attribute.getType()) {
+                        case dp::Attribute::Type::Integer: {
+                            const auto &value = this->getIntegerOnInput(*index);
+                            input->setValue(value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Float: {
+                            const auto &value = this->getFloatOnInput(*index);
+                            input->setValue(value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Buffer: {
+                            const auto &value = this->getBufferOnInput(*index);
+                            input->setValue(value);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Process all nodes in our workspace
+            for (auto &endNode : this->m_workspace.endNodes) {
+                endNode->resetOutputData();
+
+                for (auto &node : this->m_workspace.nodes)
+                    node->resetProcessedInputs();
+
+                endNode->process();
+            }
+
+            // Forward output node values to outputs
+            for (auto &attribute : this->getAttributes()) {
+                auto index = indexFromId(attribute.getId());
+                if (!index.has_value())
+                    continue;
+
+                if (auto output = this->findOutput(attribute.getUnlocalizedName()); output != nullptr) {
+                    switch (attribute.getType()) {
+                        case dp::Attribute::Type::Integer: {
+                            auto value = std::get<i128>(output->getValue());
+                            this->setIntegerOnOutput(*index, value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Float: {
+                            auto value = std::get<long double>(output->getValue());
+                            this->setFloatOnOutput(*index, value);
+                            break;
+                        }
+                        case dp::Attribute::Type::Buffer: {
+                            auto value = std::get<std::vector<u8>>(output->getValue());
+                            this->setBufferOnOutput(*index, value);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        void store(nlohmann::json &j) const override {
+            j = nlohmann::json::object();
+
+            j["nodes"] = this->m_dataProcessor->saveNodes(this->m_workspace);
+        }
+
+        void load(const nlohmann::json &j) override {
+            this->m_dataProcessor->loadNodes(this->m_workspace, j["nodes"]);
+
+            this->m_name = LangEntry(this->getUnlocalizedTitle()).get();
+            this->m_requiresAttributeUpdate = true;
+        }
+
+    private:
+        std::vector<dp::Attribute> findAttributes() {
+            std::vector<dp::Attribute> result;
+
+            for (auto &node : this->m_workspace.nodes) {
+                if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr)
+                    result.emplace_back(dp::Attribute::IOType::In, inputNode->getType(), inputNode->getName());
+                else if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr)
+                    result.emplace_back(dp::Attribute::IOType::Out, outputNode->getType(), outputNode->getName());
+            }
+
+            return result;
+        }
+
+        NodeCustomInput* findInput(const std::string &name) {
+            for (auto &node : this->m_workspace.nodes) {
+                if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr && inputNode->getName() == name)
+                    return inputNode;
+            }
+
+            return nullptr;
+        }
+
+        NodeCustomOutput* findOutput(const std::string &name) {
+            for (auto &node : this->m_workspace.nodes) {
+                if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr && outputNode->getName() == name)
+                    return outputNode;
+            }
+
+            return nullptr;
+        }
+
+    private:
+        std::string m_name = "hex.builtin.nodes.custom.custom.header"_lang;
+
+        bool m_editable = false;
+
+        bool m_requiresAttributeUpdate = false;
+        ViewDataProcessor *m_dataProcessor;
+        ViewDataProcessor::Workspace m_workspace;
+    };
+
     ViewDataProcessor::ViewDataProcessor() : View("hex.builtin.view.data_processor.name") {
+        ContentRegistry::DataProcessorNode::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom", this);
+        ContentRegistry::DataProcessorNode::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
+        ContentRegistry::DataProcessorNode::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
+
         ProjectFile::registerPerProviderHandler({
             .basePath = "data_processor.json",
             .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 auto save = tar.readString(basePath);
-                auto &data = ProviderExtraData::get(provider).dataProcessor;
 
-                ViewDataProcessor::loadNodes(data.mainWorkspace, save);
+                ViewDataProcessor::loadNodes(this->m_mainWorkspace.get(provider), save);
                 this->m_updateNodePositions = true;
 
                 return true;
             },
-            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                auto &data = ProviderExtraData::get(provider).dataProcessor;
-
-                tar.writeString(basePath, ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+                tar.writeString(basePath, ViewDataProcessor::saveNodes(this->m_mainWorkspace.get(provider)).dump(4));
 
                 return true;
             }
         });
 
-        EventManager::subscribe<EventProviderCreated>(this, [](const auto *provider) {
-            auto &data = ProviderExtraData::get(provider).dataProcessor;
-
-            data.mainWorkspace = { };
-            data.workspaceStack.push_back(&data.mainWorkspace);
+        EventManager::subscribe<EventProviderCreated>(this, [this](auto *provider) {
+            this->m_mainWorkspace.get(provider) = { };
+            this->m_workspaceStack.get(provider).push_back(&this->m_mainWorkspace.get(provider));
         });
 
-        EventManager::subscribe<EventProviderChanged>(this, [this](const auto &, const auto &) {
-            auto &data = ProviderExtraData::getCurrent().dataProcessor;
-
-            for (auto *workspace : data.workspaceStack) {
+        EventManager::subscribe<EventProviderChanged>(this, [this](const auto *, const auto *) {
+            for (auto *workspace : *this->m_workspaceStack) {
                 for (auto &node : workspace->nodes) {
                     node->setCurrentOverlay(nullptr);
                 }
@@ -60,48 +353,39 @@ namespace hex::plugin::builtin {
             this->m_updateNodePositions = true;
         });
 
-        EventManager::subscribe<EventDataChanged>(this, [] {
-            auto &workspace = *ProviderExtraData::getCurrent().dataProcessor.workspaceStack.back();
-
-            ViewDataProcessor::processNodes(workspace);
+        EventManager::subscribe<EventDataChanged>(this, [this] {
+            ViewDataProcessor::processNodes(*this->m_workspaceStack->back());
         });
 
         /* Import bookmarks */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, 4050, Shortcut::None, [this]{
-            auto &data = ProviderExtraData::getCurrent().dataProcessor;
-
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
                                     if (file.isValid()) {
-                                        ViewDataProcessor::loadNodes(data.mainWorkspace, file.readString());
+                                        ViewDataProcessor::loadNodes(*this->m_mainWorkspace, file.readString());
                                         this->m_updateNodePositions = true;
                                     }
                                 });
         }, ImHexApi::Provider::isValid);
 
         /* Export bookmarks */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, 8050, Shortcut::None, []{
-            auto &data = ProviderExtraData::getCurrent().dataProcessor;
-
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, 8050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
-                                [&](const std::fs::path &path) {
+                                [&, this](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Create);
                                     if (file.isValid())
-                                        file.writeString(ViewDataProcessor::saveNodes(data.mainWorkspace).dump(4));
+                                        file.writeString(ViewDataProcessor::saveNodes(*this->m_mainWorkspace).dump(4));
                                 });
-        }, []{
-            auto &data = ProviderExtraData::getCurrent().dataProcessor;
-            return !data.workspaceStack.empty() && !data.workspaceStack.back()->nodes.empty() && ImHexApi::Provider::isValid();
+        }, [this]{
+            return !this->m_workspaceStack->empty() && !this->m_workspaceStack->back()->nodes.empty() && ImHexApi::Provider::isValid();
         });
 
         ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid()) return false;
 
-            auto &data = ProviderExtraData::getCurrent().dataProcessor;
-
-            ViewDataProcessor::loadNodes(data.mainWorkspace, file.readString());
+            ViewDataProcessor::loadNodes(*this->m_mainWorkspace, file.readString());
             this->m_updateNodePositions = true;
 
             return true;
@@ -117,7 +401,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewDataProcessor::eraseLink(ProviderExtraData::Data::DataProcessor::Workspace &workspace, int id) {
+    void ViewDataProcessor::eraseLink(Workspace &workspace, int id) {
         auto link = std::find_if(workspace.links.begin(), workspace.links.end(), [&id](auto link) { return link.getId() == id; });
 
         if (link == workspace.links.end())
@@ -134,7 +418,7 @@ namespace hex::plugin::builtin {
         ImHexApi::Provider::markDirty();
     }
 
-    void ViewDataProcessor::eraseNodes(ProviderExtraData::Data::DataProcessor::Workspace &workspace, const std::vector<int> &ids) {
+    void ViewDataProcessor::eraseNodes(Workspace &workspace, const std::vector<int> &ids) {
         for (int id : ids) {
             auto node = std::find_if(workspace.nodes.begin(), workspace.nodes.end(),
             [&id](const auto &node) {
@@ -162,7 +446,7 @@ namespace hex::plugin::builtin {
         ImHexApi::Provider::markDirty();
     }
 
-    void ViewDataProcessor::processNodes(ProviderExtraData::Data::DataProcessor::Workspace &workspace) {
+    void ViewDataProcessor::processNodes(Workspace &workspace) {
         if (workspace.dataOverlays.size() != workspace.endNodes.size()) {
             for (auto overlay : workspace.dataOverlays)
                 ImHexApi::Provider::get()->deleteOverlay(overlay);
@@ -220,8 +504,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::drawContent() {
-        auto &data = ProviderExtraData::getCurrent().dataProcessor;
-        auto &workspace = *data.workspaceStack.back();
+        auto &workspace = *this->m_workspaceStack->back();
 
         bool popWorkspace = false;
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_processor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
@@ -360,6 +643,8 @@ namespace hex::plugin::builtin {
                 ImNodes::BeginNodeEditor();
 
                 for (auto &node : workspace.nodes) {
+                    ImNodes::SnapNodeToGrid(node->getId());
+
                     const bool hasError = workspace.currNodeError.has_value() && workspace.currNodeError->node == node.get();
 
                     if (hasError)
@@ -471,7 +756,7 @@ namespace hex::plugin::builtin {
                 if (workspace.nodes.empty())
                     ImGui::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
 
-                if (data.workspaceStack.size() > 1) {
+                if (this->m_workspaceStack->size() > 1) {
                     ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.2F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
                     if (ImGui::IconButton(ICON_VS_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
                         popWorkspace = true;
@@ -559,7 +844,7 @@ namespace hex::plugin::builtin {
         ImGui::End();
 
         if (popWorkspace) {
-            data.workspaceStack.pop_back();
+            this->m_workspaceStack->pop_back();
             this->m_updateNodePositions = true;
         }
     }

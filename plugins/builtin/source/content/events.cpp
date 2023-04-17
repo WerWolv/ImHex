@@ -8,8 +8,6 @@
 
 #include <imgui.h>
 
-#include <content/helpers/provider_extra_data.hpp>
-
 #include <content/providers/file_provider.hpp>
 
 #include <wolv/io/fs.hpp>
@@ -129,10 +127,6 @@ namespace hex::plugin::builtin {
 
                 EventManager::post<EventProviderOpened>(provider);
             }
-        });
-
-        EventManager::subscribe<EventProviderDeleted>([](hex::prv::Provider *provider) {
-            ProviderExtraData::erase(provider);
         });
 
         EventManager::subscribe<EventRegionSelected>([](const ImHexApi::HexEditor::ProviderRegion &region) {
