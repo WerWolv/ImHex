@@ -820,7 +820,7 @@
         "hex.builtin.view.theme_manager.save_theme": "",
         "hex.builtin.view.theme_manager.styles": "",
         "hex.builtin.view.tools.name": "ツール",
-        "hex.builtin.view.yara.error": "Yaraコンパイルエラー: ",
+        "hex.builtin.view.yara.error": "Yaraコンパイルエラー: {0}",
         "hex.builtin.view.yara.header.matches": "マッチ結果",
         "hex.builtin.view.yara.header.rules": "ルール",
         "hex.builtin.view.yara.match": "検出",

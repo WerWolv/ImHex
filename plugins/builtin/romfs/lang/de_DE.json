@@ -820,7 +820,7 @@
         "hex.builtin.view.theme_manager.save_theme": "",
         "hex.builtin.view.theme_manager.styles": "",
         "hex.builtin.view.tools.name": "Werkzeuge",
-        "hex.builtin.view.yara.error": "Yara Kompilerfehler: ",
+        "hex.builtin.view.yara.error": "Yara Kompilerfehler: {0}",
         "hex.builtin.view.yara.header.matches": "Treffer",
         "hex.builtin.view.yara.header.rules": "Regeln",
         "hex.builtin.view.yara.match": "Regeln anwenden",

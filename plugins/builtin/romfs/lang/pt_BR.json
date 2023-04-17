@@ -820,7 +820,7 @@
         "hex.builtin.view.theme_manager.save_theme": "",
         "hex.builtin.view.theme_manager.styles": "",
         "hex.builtin.view.tools.name": "Ferramentas",
-        "hex.builtin.view.yara.error": "Erro do compilador Yara: ",
+        "hex.builtin.view.yara.error": "Erro do compilador Yara: {0}",
         "hex.builtin.view.yara.header.matches": "Combinações",
         "hex.builtin.view.yara.header.rules": "Regras",
         "hex.builtin.view.yara.match": "Combinar Regras",

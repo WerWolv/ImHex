@@ -820,7 +820,7 @@
         "hex.builtin.view.theme_manager.save_theme": "",
         "hex.builtin.view.theme_manager.styles": "",
         "hex.builtin.view.tools.name": "Strumenti",
-        "hex.builtin.view.yara.error": "Errore compilazione Yara: ",
+        "hex.builtin.view.yara.error": "Errore compilazione Yara: {0}",
         "hex.builtin.view.yara.header.matches": "Abbinamenti",
         "hex.builtin.view.yara.header.rules": "Regola",
         "hex.builtin.view.yara.match": "Abbina Regole",

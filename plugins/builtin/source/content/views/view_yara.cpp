@@ -316,7 +316,7 @@ namespace hex::plugin::builtin {
                     TaskManager::doLater([this, errorMessage = wolv::util::trim(errorMessage)] {
                         this->clearResult();
 
-                        this->m_consoleMessages.push_back("Error: " + errorMessage);
+                        this->m_consoleMessages.push_back(hex::format("hex.builtin.view.yara.error"_lang, errorMessage));
                     });
 
                     return;
