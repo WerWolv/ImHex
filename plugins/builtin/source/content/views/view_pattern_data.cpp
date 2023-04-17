@@ -19,6 +19,10 @@ namespace hex::plugin::builtin {
         });
 
         this->m_patternDrawer.setSelectionCallback([](Region region){ ImHexApi::HexEditor::setSelection(region); });
+
+        EventManager::subscribe<EventPatternExecuted>([this](const auto&){
+            this->m_shouldReset = true;
+        });
     }
 
     ViewPatternData::~ViewPatternData() {
@@ -29,23 +33,19 @@ namespace hex::plugin::builtin {
     void ViewPatternData::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImHexApi::Provider::isValid()) {
-                auto provider = ImHexApi::Provider::get();
-
                 auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+                if (!runtime.arePatternsValid()) {
+                    this->m_patternDrawer.draw({});
+                } else {
+                    auto lock = ContentRegistry::PatternLanguage::getRuntimeLock();
 
-                const auto &patterns = [&] -> const auto& {
-                    if (provider->isReadable())
-                        return runtime.getAllPatterns();
-                    else {
-                        static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
-                        return empty;
+                    if (this->m_shouldReset) {
+                        this->m_patternDrawer.reset();
+                        this->m_shouldReset = false;
                     }
-                }();
 
-                if (runtime.isRunning())
-                    this->m_patternDrawer.reset();
-
-                this->m_patternDrawer.draw(patterns);
+                    this->m_patternDrawer.draw(runtime.getAllPatterns());
+                }
             }
         }
         ImGui::End();

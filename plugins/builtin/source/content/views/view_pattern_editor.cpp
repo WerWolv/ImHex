@@ -396,7 +396,7 @@ namespace hex::plugin::builtin {
                                 ImGui::Checkbox(label.c_str(), &value);
                                 variable.value = value;
                             } else if (variable.type == pl::core::Token::ValueType::Character) {
-                                std::array<char, 2> buffer;
+                                std::array<char, 2> buffer = { };
                                 ImGui::InputText(label.c_str(), buffer.data(), buffer.size());
                                 variable.value = buffer[0];
                             }
@@ -653,13 +653,12 @@ namespace hex::plugin::builtin {
         this->m_sectionWindowDrawer.clear();
 
         EventManager::post<EventHighlightingChanged>();
-        EventManager::post<EventPatternExecuted>(code);
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
+        auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+        ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, &runtime](auto &task) {
             auto lock = ContentRegistry::PatternLanguage::getRuntimeLock();
-
-            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-            ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
 
             task.setInterruptCallback([&runtime] { runtime.abort(); });
 
@@ -703,6 +702,10 @@ namespace hex::plugin::builtin {
             if (!this->m_lastEvaluationResult) {
                 *this->m_lastEvaluationError = runtime.getError();
             }
+
+            TaskManager::doLater([code = std::move(code)] {
+                EventManager::post<EventPatternExecuted>(code);
+            });
         });
     }
 

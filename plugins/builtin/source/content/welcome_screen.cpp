@@ -81,14 +81,14 @@ namespace hex::plugin::builtin {
 
                 wolv::io::fs::remove(s_safetyBackupPath);
 
-                Popup::close();
+                this->close();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
             if (ImGui::Button("hex.builtin.popup.safety_backup.delete"_lang, ImVec2(width / 3, 0))) {
                 wolv::io::fs::remove(s_safetyBackupPath);
 
-                Popup::close();
+                this->close();
             }
         }
     };
