@@ -215,7 +215,15 @@ namespace hex {
         setvbuf(stderr, nullptr, _IONBF, 0);
 
         // Attach to parent console if one exists
-        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+        bool result = AttachConsole(ATTACH_PARENT_PROCESS) == TRUE;
+
+        #if defined(DEBUG)
+            if (::GetLastError() == ERROR_INVALID_HANDLE) {
+                result = AllocConsole();
+            }
+        #endif
+
+        if (result) {
             // Redirect stdin and stdout to that new console
             freopen("CONIN$", "r", stdin);
             freopen("CONOUT$", "w", stdout);
@@ -229,12 +237,14 @@ namespace hex {
                 auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
                 if (hConsole != INVALID_HANDLE_VALUE) {
                     DWORD mode = 0;
-                    if (::GetConsoleMode(hConsole, &mode)) {
-                        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+                    if (::GetConsoleMode(hConsole, &mode) == TRUE) {
+                        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
                         ::SetConsoleMode(hConsole, mode);
                     }
                 }
             }
+        } else if (::GetLastError() == ERROR_INVALID_HANDLE) {
+            // The parent process is not a console process
         } else {
             log::redirectToFile();
         }
@@ -243,7 +253,7 @@ namespace hex {
         constexpr static auto UniqueMutexId = "ImHex/a477ea68-e334-4d07-a439-4f159c683763";
 
         HANDLE globalMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
-        if (!globalMutex) {
+        if (globalMutex == nullptr) {
             // If no ImHex instance is running, create a new global mutex
             globalMutex = CreateMutex(nullptr, FALSE, UniqueMutexId);
         } else {
@@ -260,7 +270,7 @@ namespace hex {
                     ::GetWindowText(hWnd, windowName.data(), windowName.size());
 
                     // Check if the window is visible and if it's an ImHex window
-                    if (::IsWindowVisible(hWnd) && length != 0) {
+                    if (::IsWindowVisible(hWnd) == TRUE && length != 0) {
                         if (windowName.starts_with("ImHex")) {
                             // Create the message
                             COPYDATASTRUCT message = {
