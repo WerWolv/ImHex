@@ -30,6 +30,7 @@ namespace hex::init {
 
     using namespace std::literals::string_literals;
 
+#if defined(HEX_UPDATE_CHECK)
     static bool checkForUpdates() {
         int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
 
@@ -69,6 +70,7 @@ namespace hex::init {
         }
         return true;
     }
+#endif
 
     bool setupEnvironment() {
         hex::log::debug("Using romfs: '{}'", romfs::name());
@@ -475,7 +477,9 @@ namespace hex::init {
             #endif
             { "Loading settings",        loadSettings,        false },
             { "Loading plugins",         loadPlugins,         false },
+#if defined(HEX_UPDATE_CHECK)
             { "Checking for updates",    checkForUpdates,     true  },
+#endif
             { "Loading fonts",           loadFonts,           true  },
         };
     }
