@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
 
     namespace {
 
-        void drawLinePlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void drawLinePlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static std::vector<float> values;
             auto dataPattern = arguments[0].toPattern();
 
@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawScatterPlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void drawScatterPlotVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static std::vector<float> xValues, yValues;
 
             auto xPattern = arguments[0].toPattern();
@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static ImGui::Texture texture;
             if (shouldReset) {
                 auto pattern  = arguments[0].toPattern();
@@ -96,7 +96,7 @@ namespace hex::plugin::builtin {
                 ImGui::Image(texture, texture.getSize());
         }
 
-        void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static ImGui::Texture texture;
             if (shouldReset) {
                 auto pattern  = arguments[0].toPattern();
@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
                 ImGui::Image(texture, texture.getSize());
         }
 
-        void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             struct Disassembly {
                 u64 address;
                 std::vector<u8> bytes;
@@ -167,7 +167,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             auto verticesPattern = arguments[0].toPattern();
             auto indicesPattern  = arguments[1].toPattern();
 
@@ -339,7 +339,7 @@ namespace hex::plugin::builtin {
 
         }
 
-        void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             auto wavePattern = arguments[0].toPattern();
             auto channels = arguments[1].toUnsigned();
             auto sampleRate = arguments[2].toUnsigned();
@@ -443,7 +443,7 @@ namespace hex::plugin::builtin {
                                      (waveData.size() / sampleRate) / 60, (waveData.size() / sampleRate) % 60);
         }
 
-        void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, pl::ptrn::Iteratable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+        void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             // variable used to store the result to avoid having to recalculate the result at each frame 
             static DiagramChunkBasedEntropyAnalysis analyzer;  
 

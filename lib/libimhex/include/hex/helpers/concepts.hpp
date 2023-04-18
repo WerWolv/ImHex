@@ -16,7 +16,7 @@ namespace hex {
     concept has_size = sizeof(T) == Size;
 
     template<typename T>
-    class Cloneable {
+    class ICloneable {
     public:
         [[nodiscard]] virtual std::unique_ptr<T> clone() const = 0;
     };

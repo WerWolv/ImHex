@@ -239,7 +239,7 @@ namespace hex {
 
             namespace impl {
 
-                using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, pl::ptrn::Iteratable&, bool, std::span<const pl::core::Token::Literal>)>;
+                using VisualizerFunctionCallback = std::function<void(pl::ptrn::Pattern&, pl::ptrn::IIterable&, bool, std::span<const pl::core::Token::Literal>)>;
 
                 struct FunctionDefinition {
                     pl::api::Namespace ns;

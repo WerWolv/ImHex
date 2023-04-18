@@ -144,7 +144,7 @@ namespace hex::plugin::builtin::ui {
         this->m_editingPatternOffset = 0x00;
     }
 
-    void PatternDrawer::drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset) {
+    void PatternDrawer::drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iteratable, bool reset) {
         auto visualizerName = arguments.front().toString(true);
 
         const auto &visualizers = ContentRegistry::PatternLanguage::impl::getVisualizers();
@@ -169,7 +169,7 @@ namespace hex::plugin::builtin::ui {
             ImGui::TextUnformatted(this->m_lastVisualizerError.c_str());
     }
 
-    void PatternDrawer::drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable) {
+    void PatternDrawer::drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable) {
         if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             if (ImGui::IconButton(ICON_VS_EYE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeight()))) {
@@ -316,7 +316,7 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "bitfield");
 
-            drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+            drawVisualizerButton(pattern, static_cast<pl::ptrn::IIterable&>(pattern));
             ImGui::TextFormatted("{}", pattern.getFormattedValue());
         }
 
@@ -553,7 +553,7 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
-                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+                drawVisualizerButton(pattern, static_cast<pl::ptrn::IIterable&>(pattern));
                 ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
 
@@ -606,7 +606,7 @@ namespace hex::plugin::builtin::ui {
                     ImGui::PopStyleVar();
                 }
             } else {
-                drawVisualizerButton(pattern, static_cast<pl::ptrn::Iteratable&>(pattern));
+                drawVisualizerButton(pattern, static_cast<pl::ptrn::IIterable&>(pattern));
                 ImGui::TextFormatted("{}", pattern.getFormattedValue());
             }
         }
@@ -666,7 +666,7 @@ namespace hex::plugin::builtin::ui {
         pattern.accept(*this);
     }
 
-    void PatternDrawer::drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined) {
+    void PatternDrawer::drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable, bool isInlined) {
         if (iteratable.getEntryCount() == 0)
             return;
 

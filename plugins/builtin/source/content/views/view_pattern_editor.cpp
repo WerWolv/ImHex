@@ -471,7 +471,7 @@ namespace hex::plugin::builtin {
 
                         const auto &patterns = [&, this] -> const auto& {
                             if (patternProvider->isReadable() && *this->m_executionDone)
-                                return runtime.getAllPatterns(id);
+                                return runtime.getPatterns(id);
                             else {
                                 static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
                                 return empty;

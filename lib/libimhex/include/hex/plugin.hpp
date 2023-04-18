@@ -6,6 +6,10 @@
 
 #include <hex.hpp>
 
+/**
+ * This macro is used to define all the required entry points for a plugin.
+ * Name, Author and Description will be displayed in the in the plugin list on the Welcome screen.
+ */
 #define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
 
 #define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                 \

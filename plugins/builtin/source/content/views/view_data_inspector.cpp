@@ -112,7 +112,7 @@ namespace hex::plugin::builtin {
 
                             if (!inspectorCode.empty()) {
                                 if (this->m_runtime.executeString(inspectorCode, {}, inVariables, true)) {
-                                    const auto &patterns = this->m_runtime.getAllPatterns();
+                                    const auto &patterns = this->m_runtime.getPatterns();
 
                                     for (const auto &pattern : patterns) {
                                         if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)

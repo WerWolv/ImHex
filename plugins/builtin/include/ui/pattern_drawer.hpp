@@ -49,12 +49,12 @@ namespace hex::plugin::builtin::ui {
         constexpr static auto ChunkSize = 512;
         constexpr static auto DisplayEndStep = 64;
 
-        void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable, bool isInlined);
+        void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
 
-        void drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::Iteratable &iteratable);
-        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::Iteratable &iteratable, bool reset);
+        void drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable);
+        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iteratable, bool reset);
 
         void createLeafNode(const pl::ptrn::Pattern& pattern);
         bool createTreeNode(const pl::ptrn::Pattern& pattern);

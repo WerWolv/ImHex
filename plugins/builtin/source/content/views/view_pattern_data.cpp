@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
                         this->m_shouldReset = false;
                     }
 
-                    this->m_patternDrawer.draw(runtime.getAllPatterns());
+                    this->m_patternDrawer.draw(runtime.getPatterns());
                 }
             }
         }
