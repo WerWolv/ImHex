@@ -56,15 +56,15 @@ namespace hex::plugin::builtin {
 
         }
 
-        void sendAck(wolv::util::Socket &socket) {
+        void sendAck(wolv::net::SocketClient &socket) {
             socket.writeString("+");
         }
 
-        void continueExecution(wolv::util::Socket &socket) {
+        void continueExecution(wolv::net::SocketClient &socket) {
             socket.writeString(createPacket("vCont;c"));
         }
 
-        std::vector<u8> readMemory(wolv::util::Socket &socket, u64 address, size_t size) {
+        std::vector<u8> readMemory(wolv::net::SocketClient &socket, u64 address, size_t size) {
             std::string packet = createPacket(hex::format("m{:X},{:X}", address, size));
 
             socket.writeString(packet);
@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
             return data;
         }
 
-        void writeMemory(wolv::util::Socket &socket, u64 address, const void *buffer, size_t size) {
+        void writeMemory(wolv::net::SocketClient &socket, u64 address, const void *buffer, size_t size) {
             std::vector<u8> bytes(size);
             std::memcpy(bytes.data(), buffer, size);
 
@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
             auto receivedPacket = socket.readString(6);
         }
 
-        bool enableNoAckMode(wolv::util::Socket &socket) {
+        bool enableNoAckMode(wolv::net::SocketClient &socket) {
             socket.writeString(createPacket("QStartNoAckMode"));
 
             auto ack = socket.readString(1);
@@ -245,6 +245,7 @@ namespace hex::plugin::builtin {
     }
 
     bool GDBProvider::open() {
+        this->m_socket = wolv::net::SocketClient(wolv::net::SocketClient::Type::TCP);
         this->m_socket.connect(this->m_ipAddress, this->m_port);
         if (!gdb::enableNoAckMode(this->m_socket)) {
             this->m_socket.disconnect();

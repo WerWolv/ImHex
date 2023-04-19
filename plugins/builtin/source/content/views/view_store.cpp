@@ -1,5 +1,6 @@
 #include "content/views/view_store.hpp"
-#include "hex/api/theme_manager.hpp"
+#include <hex/api/theme_manager.hpp>
+#include <hex/api_urls.hpp>
 
 #include <hex/api/content_registry.hpp>
 

@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <romfs/romfs.hpp>
 
+#include <hex/api_urls.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/theme_manager.hpp>

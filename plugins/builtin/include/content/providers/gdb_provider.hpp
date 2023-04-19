@@ -2,7 +2,7 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <wolv/utils/socket.hpp>
+#include <wolv/net/socket_client.hpp>
 
 #include <array>
 #include <mutex>
@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
         std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
 
     protected:
-        wolv::util::Socket m_socket;
+        wolv::net::SocketClient m_socket;
 
         std::string m_ipAddress;
         int m_port = 0;

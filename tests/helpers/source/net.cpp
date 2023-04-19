@@ -1,5 +1,6 @@
 #include <hex/test/tests.hpp>
 
+#include <hex/api_urls.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <wolv/io/file.hpp>
 #include <hex/helpers/fs.hpp>
