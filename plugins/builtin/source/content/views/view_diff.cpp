@@ -168,8 +168,8 @@ namespace hex::plugin::builtin {
                     }
 
                     if (providerA->getActualSize() != providerB->getActualSize()) {
-                        auto endA = providerA->getActualSize() - 1;
-                        auto endB = providerB->getActualSize() - 1;
+                        auto endA = providerA->getActualSize() + 1;
+                        auto endB = providerB->getActualSize() + 1;
 
                         if (endA > endB)
                             differences.push_back(Diff { Region{ endB, endA - endB }, ViewDiff::DifferenceType::Added });

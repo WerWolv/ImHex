@@ -20,7 +20,10 @@ namespace hex::prv {
     public:
         using BufferedReader::BufferedReader;
 
-        ProviderReader(Provider *provider, size_t bufferSize = 0x100000) : BufferedReader(provider, provider->getActualSize(), bufferSize) { }
+        ProviderReader(Provider *provider, size_t bufferSize = 0x100000) : BufferedReader(provider, provider->getActualSize(), bufferSize) {
+            this->setEndAddress(provider->getBaseAddress() + provider->getActualSize() - 1);
+            this->seek(provider->getBaseAddress());
+        }
     };
 
 }
