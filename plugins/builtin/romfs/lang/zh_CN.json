@@ -482,6 +482,7 @@
         "hex.builtin.tools.format.standard": "标准",
         "hex.builtin.tools.history": "历史",
         "hex.builtin.tools.ieee754": "IEEE 754 浮点数测试器",
+        "hex.builtin.tools.ieee754.clear": "清除",
         "hex.builtin.tools.ieee754.description": "IEEE754 是大多数现代 CPU 使用的表示浮点数的标准。\n\n此工具可视化浮点数的内部表示，并允许解码具有非标准数量的尾数或指数位的数字。",
         "hex.builtin.tools.ieee754.double_precision": "双精度浮点数",
         "hex.builtin.tools.ieee754.exponent": "指数",
