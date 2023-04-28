@@ -1,4 +1,4 @@
-# Maintainer: iTrooz_ <hey at itrooz dot fr>
+# Maintainer: iTrooz_ <aur at itrooz dot fr>
 # Contributor: Morten Linderud <foxboron@archlinux.org>
 
 pkgname=imhex-bin
