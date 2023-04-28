@@ -215,6 +215,7 @@ namespace hex::plugin::builtin {
         if (!file.isValid()) {
             this->m_writable = false;
             this->m_readable = false;
+            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, this->m_path.string(), ::strerror(errno)));
             return false;
         }
 
