@@ -225,7 +225,7 @@ namespace hex {
 
         }
 
-        /*
+        /**
          * Helper methods about the providers
          * NOTE: the "current provider" or "currently selected provider" refers to the currently selected provider in the UI;
          * the provider is user is actually editing.
