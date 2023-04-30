@@ -8,3 +8,4 @@ venv/
 *.mgc
 imgui.ini
 .DS_Store
+./CMakeUserPresets.json
