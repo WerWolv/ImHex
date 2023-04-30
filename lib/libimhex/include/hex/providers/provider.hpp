@@ -96,6 +96,13 @@ namespace hex::prv {
         [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataDescription() const = 0;
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
 
+        /**
+         * @brief opens this provider
+         * the return value of this function allows to ensure the provider is available,
+         * so calling Provider::isAvailable() just after a call to open() that returned true is dedundant.
+         * NOTE: This is not related to the EventProviderOpened event
+         * @return true if the provider was opened sucessfully, else false
+         */
         [[nodiscard]] virtual bool open() = 0;
         virtual void close() = 0;
 
