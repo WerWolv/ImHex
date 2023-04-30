@@ -147,16 +147,17 @@ namespace hex::prv {
 
         /**
          * @brief true if there is any data that needs to be saved
-        */
+         */
         bool m_dirty = false;
 
         /**
          * @brief control whetever to skip provider initialization
          * initialization may be asking the user for information related to the provider,
          * e.g. a process ID for the process memory provider
-         * this is used mainly when restoring a provider with already known initialization information (e.g. project loading)
+         * this is used mainly when restoring a provider with already known initialization information
+         * for example when lodaing a project or loading a provider from the "recent" lsit
          * 
-        */
+         */
         bool m_skipLoadInterface = false;
 
         std::string m_errorMessage;
