@@ -99,7 +99,8 @@ namespace hex::plugin::builtin {
             EventManager::post<EventHighlightingChanged>();
         });
 
-        EventManager::subscribe<EventProviderCreated>([](hex::prv::Provider *provider) {
+        // handles the provider initialization, and calls EventProviderOpened if successful
+        EventManager::subscribe<EventProviderCreated>([](hex::prv::Provider *provider) {    
             if (provider->shouldSkipLoadInterface())
                 return;
 

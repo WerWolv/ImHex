@@ -409,7 +409,10 @@ namespace hex::plugin::builtin {
         }
         ImGui::End();
     }
-
+    /**
+     * @brief draw some default background if there are no views avaialble in the current layout
+     * TODO add a button to load the default layout ?
+     */
     static void drawNoViewsBackground() {
         if (ImGui::Begin("ImHexDockSpace")) {
             static char title[256];
@@ -444,10 +447,16 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
+    /**
+     * @brief registers the event handlers related to the welcome screen
+    * should only be called once, at startup
+     */
     void createWelcomeScreen() {
         updateRecentProviders();
 
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
+
+        // sets a background when they are no views
         (void)EventManager::subscribe<EventFrameBegin>([]{
             if (ImHexApi::Provider::isValid() && !isAnyViewOpen())
                 drawNoViewsBackground();
@@ -496,15 +505,19 @@ namespace hex::plugin::builtin {
             }
         });
 
+        
+        // save every opened provider as a "recent" shortcut
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
+                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+                // the recent provier is saved to **every** "recent" directory
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
-                    auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())
                         continue;
 
                     {
+                        //----- why ProjectFile stuff
                         auto path = ProjectFile::getPath();
                         ProjectFile::clearPath();
 

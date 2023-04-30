@@ -163,8 +163,17 @@ namespace hex {
     EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);
+    /**
+     * @brief Called when the provider is created.
+     * This event is responsible for (optionally) initializing the provider and calling EventProviderOpened
+     */
     EVENT_DEF(EventProviderCreated, prv::Provider *);
     EVENT_DEF(EventProviderChanged, prv::Provider *, prv::Provider *);
+    /**
+     * @brief This event is called automatically once the (optional) initialization handled by EventProviderCreated has been done successfully.
+     * If no initialization (Provider::skipLoadInterface() has been set), this event should be called manually
+     * If skipLoadInterface failed, this event is not called
+     */
     EVENT_DEF(EventProviderOpened,  prv::Provider *);
     EVENT_DEF(EventProviderClosing, prv::Provider *, bool *);
     EVENT_DEF(EventProviderClosed,  prv::Provider *);
