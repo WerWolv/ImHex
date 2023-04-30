@@ -180,7 +180,7 @@ namespace hex::plugin::builtin {
             provider->loadSettings(recentProvider.data);
 
             if (!provider->open() || !provider->isAvailable()) {
-                PopupError::open("hex.builtin.popup.error.open"_lang);
+                PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 return;
             }
