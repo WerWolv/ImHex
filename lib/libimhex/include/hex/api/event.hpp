@@ -166,11 +166,13 @@ namespace hex {
     /**
      * @brief Called when the provider is created.
      * This event is responsible for (optionally) initializing the provider and calling EventProviderOpened
+     * (although the event can also be called manually without problem)
      */
     EVENT_DEF(EventProviderCreated, prv::Provider *);
     EVENT_DEF(EventProviderChanged, prv::Provider *, prv::Provider *);
     /**
-     * @brief This event is called automatically once the (optional) initialization handled by EventProviderCreated has been done successfully.
+     * @brief Called when a provider is opened
+     * this event is normally called immediately after EventProviderCreated successfully initialized the provider.
      * If no initialization (Provider::skipLoadInterface() has been set), this event should be called manually
      * If skipLoadInterface failed, this event is not called
      */
