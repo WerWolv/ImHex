@@ -517,7 +517,6 @@ namespace hex::plugin::builtin {
                         continue;
 
                     {
-                        //----- why ProjectFile stuff
                         auto path = ProjectFile::getPath();
                         ProjectFile::clearPath();
 
