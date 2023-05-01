@@ -585,7 +585,8 @@ namespace hex {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 
-                    popups.erase(std::find(popups.begin(), popups.end(), currPopup));
+                    if (auto it = std::find(popups.begin(), popups.end(), currPopup); it != popups.end())
+                        popups.erase(it);
                 }
             }
         }
