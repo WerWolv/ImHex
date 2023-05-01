@@ -432,7 +432,7 @@ namespace hex::plugin::builtin {
                     ));
 
                     ImGui::SetCursorPos(textPos);
-                    if(ImGui::CustomButton(loadDefaultText)){
+                    if(ImGui::DimmedButton(loadDefaultText)){
                         loadDefaultLayout();
                     }
                 }
