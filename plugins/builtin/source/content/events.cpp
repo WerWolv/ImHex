@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
                     return;
                 }
                 if (!provider->open()) {
-                    PopupError::open("hex.builtin.popup.error.open"_lang);
+                    PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
@@ -120,7 +120,7 @@ namespace hex::plugin::builtin {
                 EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
             else {
                 if (!provider->open() || !provider->isAvailable()) {
-                    PopupError::open("hex.builtin.popup.error.open"_lang);
+                    PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }

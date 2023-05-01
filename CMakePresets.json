@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "displayName": "Base",
+      "description": "Base configuration for all builds",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_C_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_CXX_COMPILER_LAUNCHER": "ccache",
+        "CMAKE_C_FLAGS": "-fuse-ld=lld",
+        "CMAKE_CXX_FLAGS": "-fuse-ld=lld",
+        "IMHEX_PATTERNS_PULL_MASTER": "ON",
+        "CMAKE_INSTALL_PREFIX": "./install",
+        "USE_SYSTEM_CURL": "ON"
+      }
+    },
+    {
+      "name": "x86_64",
+      "displayName": "x86_64 Build",
+      "description": "x86_64 build",
+      "inherits": [ "base" ]
+    }
+  ],
+  "buildPresets": [
+    {
+        "name": "x86_64",
+        "description": "x86_64 build",
+        "configurePreset": "x86_64",
+        "targets": [ "imhex_all" ]
+    }
+  ],
+  "testPresets": [
+
+  ]
+}
