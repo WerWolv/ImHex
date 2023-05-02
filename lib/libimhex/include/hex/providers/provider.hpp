@@ -162,7 +162,7 @@ namespace hex::prv {
          * initialization may be asking the user for information related to the provider,
          * e.g. a process ID for the process memory provider
          * this is used mainly when restoring a provider with already known initialization information
-         * for example when lodaing a project or loading a provider from the "recent" lsit
+         * for example when loading a project or loading a provider from the "recent" lsit
          * 
          */
         bool m_skipLoadInterface = false;
