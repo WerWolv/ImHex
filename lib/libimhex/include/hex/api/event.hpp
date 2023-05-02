@@ -9,12 +9,19 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/logger.hpp>
 
-#define EVENT_DEF(event_name, ...)                                                      \
+#include <wolv/types/type_name.hpp>
+
+#define EVENT_DEF_IMPL(event_name, should_log, ...)                                     \
     struct event_name final : public hex::impl::Event<__VA_ARGS__> {                    \
-        constexpr static auto id = [] { return hex::impl::EventId(); }();               \
+        constexpr static auto Id = [] { return hex::impl::EventId(); }();               \
+        constexpr static auto ShouldLog = (should_log);                                 \
         explicit event_name(Callback func) noexcept : Event(std::move(func)) { }        \
     }
+
+#define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, true, __VA_ARGS__)
+#define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, false, __VA_ARGS__)
 
 struct GLFWwindow;
 
@@ -75,7 +82,7 @@ namespace hex {
          */
         template<typename E>
         static EventList::iterator subscribe(typename E::Callback function) {
-            return s_events.insert(s_events.end(), std::make_pair(E::id, new E(function)));
+            return s_events.insert(s_events.end(), std::make_pair(E::Id, new E(function)));
         }
 
         /**
@@ -105,7 +112,7 @@ namespace hex {
         template<typename E>
         static void unsubscribe(void *token) noexcept {
             auto iter = std::find_if(s_tokenStore.begin(), s_tokenStore.end(), [&](auto &item) {
-                return item.first == token && item.second->first == E::id;
+                return item.first == token && item.second->first == E::Id;
             });
 
             if (iter != s_tokenStore.end()) {
@@ -123,9 +130,15 @@ namespace hex {
         template<typename E>
         static void post(auto &&...args) noexcept {
             for (const auto &[id, event] : s_events) {
-                if (id == E::id)
+                if (id == E::Id) {
                     (*static_cast<E *const>(event))(std::forward<decltype(args)>(args)...);
+                }
             }
+
+            #if defined (DEBUG)
+                if (E::ShouldLog)
+                    log::debug("Event posted: '{}'", wolv::type::getTypeName<E>());
+            #endif
         }
 
         /**
@@ -157,10 +170,7 @@ namespace hex {
     EVENT_DEF(EventProviderClosed,  prv::Provider *);
     EVENT_DEF(EventProviderDeleted, prv::Provider *);
     EVENT_DEF(EventProviderSaved,   prv::Provider *);
-    EVENT_DEF(EventFrameBegin);
-    EVENT_DEF(EventFrameEnd);
     EVENT_DEF(EventWindowInitialized);
-    EVENT_DEF(EventSetTaskBarIconState, u32, u32, u32);
     EVENT_DEF(EventBookmarkCreated, ImHexApi::Bookmarks::Entry&);
     EVENT_DEF(EventPatchCreated, u64, u8, u8);
     EVENT_DEF(EventPatternExecuted, const std::string&);
@@ -168,6 +178,10 @@ namespace hex {
     EVENT_DEF(EventStoreContentDownloaded, const std::fs::path&);
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
     EVENT_DEF(EventImHexClosing);
+
+    EVENT_DEF_NO_LOG(EventFrameBegin);
+    EVENT_DEF_NO_LOG(EventFrameEnd);
+    EVENT_DEF_NO_LOG(EventSetTaskBarIconState, u32, u32, u32);
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);
