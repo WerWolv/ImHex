@@ -411,7 +411,6 @@ namespace hex::plugin::builtin {
     }
     /**
      * @brief draw some default background if there are no views avaialble in the current layout
-     * TODO add a button to load the default layout ?
      */
     static void drawNoViewsBackground() {
         if (ImGui::Begin("ImHexDockSpace")) {
