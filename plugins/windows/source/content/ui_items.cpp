@@ -101,7 +101,7 @@ namespace hex::plugin::windows {
             }
 
             auto totalMem = memInfo.ullTotalPhys;
-            auto usedMem  = pmc.PrivateUsage;
+            auto usedMem  = pmc.WorkingSetSize;
 
             ImGui::TextFormatted(ICON_FA_MICROCHIP " {0} / {1}", hex::toByteString(usedMem), hex::toByteString(totalMem));
         });

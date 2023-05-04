@@ -900,10 +900,9 @@ namespace hex::plugin::builtin {
             .store = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
                 if (const auto &encoding = this->m_hexEditor.getCustomEncoding(); encoding.has_value()) {
                     tar.writeString(basePath, encoding->getTableContent());
-                    return true;
                 }
 
-                return false;
+                return true;
             }
         });
     }
