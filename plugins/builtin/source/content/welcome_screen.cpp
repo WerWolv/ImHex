@@ -410,7 +410,7 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
     /**
-     * @brief draw some default background if there are no views avaialble in the current layout
+     * @brief Draw some default background if there are no views avaialble in the current layout
      */
     static void drawNoViewsBackground() {
         if (ImGui::Begin("ImHexDockSpace")) {
@@ -447,7 +447,7 @@ namespace hex::plugin::builtin {
     }
 
     /**
-     * @brief registers the event handlers related to the welcome screen
+     * @brief Registers the event handlers related to the welcome screen
     * should only be called once, at startup
      */
     void createWelcomeScreen() {
@@ -455,7 +455,7 @@ namespace hex::plugin::builtin {
 
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
 
-        // sets a background when they are no views
+        // Sets a background when they are no views
         (void)EventManager::subscribe<EventFrameBegin>([]{
             if (ImHexApi::Provider::isValid() && !isAnyViewOpen())
                 drawNoViewsBackground();
@@ -505,11 +505,11 @@ namespace hex::plugin::builtin {
         });
 
         
-        // save every opened provider as a "recent" shortcut
+        // Save every opened provider as a "recent" shortcut
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
-                // the recent provider is saved to every "recent" directory
+                // The recent provider is saved to every "recent" directory
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())

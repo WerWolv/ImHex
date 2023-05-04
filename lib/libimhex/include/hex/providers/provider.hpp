@@ -97,7 +97,7 @@ namespace hex::prv {
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
 
         /**
-         * @brief opens this provider
+         * @brief Opens this provider
          * the return value of this function allows to ensure the provider is available,
          * so calling Provider::isAvailable() just after a call to open() that returned true is dedundant.
          * @note This is not related to the EventProviderOpened event
@@ -158,7 +158,7 @@ namespace hex::prv {
         bool m_dirty = false;
 
         /**
-         * @brief control whetever to skip provider initialization
+         * @brief Control whetever to skip provider initialization
          * initialization may be asking the user for information related to the provider,
          * e.g. a process ID for the process memory provider
          * this is used mainly when restoring a provider with already known initialization information
