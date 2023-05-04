@@ -100,7 +100,7 @@ namespace hex::prv {
          * @brief opens this provider
          * the return value of this function allows to ensure the provider is available,
          * so calling Provider::isAvailable() just after a call to open() that returned true is dedundant.
-         * NOTE: This is not related to the EventProviderOpened event
+         * @note This is not related to the EventProviderOpened event
          * @return true if the provider was opened sucessfully, else false
          */
         [[nodiscard]] virtual bool open() = 0;

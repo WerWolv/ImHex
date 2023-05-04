@@ -178,7 +178,7 @@ namespace hex {
      * If no initialization (Provider::skipLoadInterface() has been set), this event should be called manually
      * If skipLoadInterface failed, this event is not called
      * 
-     * NOTE: this is not related to Provider::open()
+     * @note this is not related to Provider::open()
      */
     EVENT_DEF(EventProviderOpened,  prv::Provider *);
     EVENT_DEF(EventProviderClosing, prv::Provider *, bool *);
