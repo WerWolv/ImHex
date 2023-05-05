@@ -97,7 +97,7 @@ namespace hex {
             std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
         #endif
         int ret = mtar_find(&this->m_ctx, fixedPath.c_str(), &header);
-        if(ret != 0){
+        if(ret != MTAR_ESUCCESS){
             log::debug("Failed to read vector from path {} in tarred file {}: {}",
                 path.string(), this->m_path.string(), mtar_strerror(ret));
             return {};
