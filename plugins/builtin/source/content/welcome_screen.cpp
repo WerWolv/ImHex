@@ -418,10 +418,23 @@ namespace hex::plugin::builtin {
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
                 if (ImGui::BeginChild("NoViewsBackground", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
                     auto imageSize = scaled(ImVec2(350, 350));
-                    auto pos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
+                    auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
 
-                    ImGui::SetCursorPos(pos);
+                    ImGui::SetCursorPos(imagePos);
                     ImGui::Image(s_backdropTexture, imageSize);
+
+                    auto loadDefaultText = "hex.builtin.layouts.none.restore_default"_lang;
+                    auto textSize = ImGui::CalcTextSize(loadDefaultText);
+
+                    auto textPos = scaled(ImVec2(
+                        (ImGui::GetContentRegionAvail().x - textSize.x) / 2,
+                        imagePos.y + imageSize.y
+                    ));
+
+                    ImGui::SetCursorPos(textPos);
+                    if (ImGui::DimmedButton(loadDefaultText)){
+                        loadDefaultLayout();
+                    }
                 }
                 ImGui::EndChild();
                 ImGui::PopStyleVar();

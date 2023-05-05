@@ -698,4 +698,19 @@ namespace ImGui {
         return pressed;
     }
 
+    bool DimmedButton(const char* label){
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButton));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_ButtonActive));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+
+        bool res = ImGui::Button(label);
+
+        ImGui::PopStyleColor(4);
+        ImGui::PopStyleVar(1);
+        
+        return res;
+    }
+
 }

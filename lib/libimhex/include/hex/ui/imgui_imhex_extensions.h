@@ -151,4 +151,6 @@ namespace ImGui {
 
     bool BitCheckbox(const char* label, bool* v);
 
+    bool DimmedButton(const char* label);
+
 }
