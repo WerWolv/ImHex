@@ -427,12 +427,12 @@ namespace hex::plugin::builtin {
                     auto textSize = ImGui::CalcTextSize(loadDefaultText);
 
                     auto textPos = scaled(ImVec2(
-                        (ImGui::GetContentRegionAvail().x-textSize.x)/2,
-                        imagePos.y+imageSize.y
+                        (ImGui::GetContentRegionAvail().x - textSize.x) / 2,
+                        imagePos.y + imageSize.y
                     ));
 
                     ImGui::SetCursorPos(textPos);
-                    if(ImGui::DimmedButton(loadDefaultText)){
+                    if (ImGui::DimmedButton(loadDefaultText)){
                         loadDefaultLayout();
                     }
                 }
