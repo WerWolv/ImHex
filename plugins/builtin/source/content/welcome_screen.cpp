@@ -535,6 +535,7 @@ namespace hex::plugin::builtin {
                 loadDefaultLayout();
         });
 
+#if defined(HEX_UPDATE_CHECK)
         EventManager::subscribe<EventWindowInitialized>([] {
             // documentation of the value above the setting definition
             auto showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
@@ -550,6 +551,7 @@ namespace hex::plugin::builtin {
                 );
             }
         });
+#endif
 
         // Clear project context if we go back to the welcome screen
         EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {

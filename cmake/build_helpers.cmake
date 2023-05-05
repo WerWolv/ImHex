@@ -9,7 +9,7 @@ if(IMHEX_STRIP_RELEASE)
     endif()
 endif()
 
-macro(addVersionDefines)
+macro(addDefines)
     if (NOT IMHEX_VERSION)
         message(FATAL_ERROR "IMHEX_VERSION is not defined")
     endif ()
@@ -71,6 +71,9 @@ macro(addVersionDefines)
 
     add_compile_definitions(IMHEX_VERSION="${IMHEX_VERSION_STRING}")
 
+    if (NOT IMHEX_DISABLE_UPDATE_CHECK)
+        add_compile_definitions(HEX_UPDATE_CHECK)
+    endif()
 endmacro()
 
 # Detect current OS / System
