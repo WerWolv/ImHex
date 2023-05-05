@@ -42,6 +42,7 @@ namespace hex {
 
     private:
         mtar_t m_ctx = { };
+        std::fs::path m_path;
 
         bool m_valid = false;
     };
