@@ -163,8 +163,23 @@ namespace hex {
     EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventOSThemeChanged);
+
+    /**
+     * @brief Called when the provider is created.
+     * This event is responsible for (optionally) initializing the provider and calling EventProviderOpened
+     * (although the event can also be called manually without problem)
+     */
     EVENT_DEF(EventProviderCreated, prv::Provider *);
     EVENT_DEF(EventProviderChanged, prv::Provider *, prv::Provider *);
+
+    /**
+     * @brief Called as a continuation of EventProviderCreated
+     * this event is normally called immediately after EventProviderCreated successfully initialized the provider.
+     * If no initialization (Provider::skipLoadInterface() has been set), this event should be called manually
+     * If skipLoadInterface failed, this event is not called
+     * 
+     * @note this is not related to Provider::open()
+     */
     EVENT_DEF(EventProviderOpened,  prv::Provider *);
     EVENT_DEF(EventProviderClosing, prv::Provider *, bool *);
     EVENT_DEF(EventProviderClosed,  prv::Provider *);
@@ -195,6 +210,10 @@ namespace hex {
     EVENT_DEF(RequestOpenFile, std::fs::path);
     EVENT_DEF(RequestChangeTheme, std::string);
     EVENT_DEF(RequestOpenPopup, std::string);
+
+    /**
+     * @brief Creates a provider from it's unlocalized name, and add it to the provider list
+    */
     EVENT_DEF(RequestCreateProvider, std::string, bool, hex::prv::Provider **);
     EVENT_DEF(RequestInitThemeHandlers);
 
