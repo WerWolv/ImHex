@@ -84,7 +84,23 @@ namespace hex::plugin::builtin {
                 else
                     EventManager::post<EventProviderOpened>(newProvider);
             } else if (name == "Open File") {
-                ImHexApi::Provider::createProvider("hex.builtin.provider.file");
+                fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
+                    if(path.extension() == ".hexproj"){
+                        if (!ProjectFile::load(path)) {
+                            PopupError::open("hex.builtin.popup.error.project.load"_lang);
+                        }
+                    }else{
+                        FileProvider* newProvider = reinterpret_cast<FileProvider*>(
+                            ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
+                        );
+                        newProvider->setPath(path);
+                        newProvider->open();
+                        if (newProvider != nullptr && !newProvider->open())
+                            hex::ImHexApi::Provider::remove(newProvider);
+                        else
+                            EventManager::post<EventProviderOpened>(newProvider);
+                    }
+                    });
             } else if (name == "Open Project") {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
