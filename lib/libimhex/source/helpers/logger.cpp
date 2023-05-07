@@ -24,7 +24,7 @@ namespace hex::log {
 
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs, true)) {
             wolv::io::fs::createDirectories(path);
-            g_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::now())), wolv::io::File::Mode::Create);
+            g_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))), wolv::io::File::Mode::Create);
             g_loggerFile.disableBuffering();
 
             if (g_loggerFile.isValid()) break;

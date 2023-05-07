@@ -401,7 +401,7 @@ namespace hex {
             }
 
             // Render main menu
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
             if (ImGui::BeginMainMenuBar()) {
 
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
@@ -585,7 +585,8 @@ namespace hex {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 
-                    popups.erase(std::find(popups.begin(), popups.end(), currPopup));
+                    if (auto it = std::find(popups.begin(), popups.end(), currPopup); it != popups.end())
+                        popups.erase(it);
                 }
             }
         }

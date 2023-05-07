@@ -109,22 +109,26 @@ namespace hex {
         bool result = true;
         for (const auto &handler : ProjectFile::getHandlers()) {
             try {
-                if (!handler.store(handler.basePath, tar))
+                if (!handler.store(handler.basePath, tar) && handler.required)
                     result = false;
             } catch (std::exception &e) {
                 log::info("{}", e.what());
-                result = false;
+
+                if (handler.required)
+                    result = false;
             }
         }
         for (const auto &provider : ImHexApi::Provider::getProviders()) {
             const auto basePath = std::fs::path(std::to_string(provider->getID()));
             for (const auto &handler: ProjectFile::getProviderHandlers()) {
                 try {
-                    if (!handler.store(provider, basePath / handler.basePath, tar))
+                    if (!handler.store(provider, basePath / handler.basePath, tar) && handler.required)
                         result = false;
                 } catch (std::exception &e) {
                     log::info("{}", e.what());
-                    result = false;
+
+                    if (handler.required)
+                        result = false;
                 }
             }
         }

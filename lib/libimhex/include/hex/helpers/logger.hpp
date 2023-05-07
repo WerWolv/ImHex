@@ -17,7 +17,7 @@ namespace hex::log {
     namespace {
 
         [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
-            const auto now = fmt::localtime(std::chrono::system_clock::now());
+            const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
             fmt::print(dest, "[{0:%H:%M:%S}] ", now);
 

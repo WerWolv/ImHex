@@ -17,7 +17,7 @@
 namespace hex::prv {
 
     /**
-     * @brief Represent the data source for a tab
+     * @brief Represent the data source for a tab in the UI
      */
     class Provider {
     public:
@@ -96,6 +96,13 @@ namespace hex::prv {
         [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataDescription() const = 0;
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
 
+        /**
+         * @brief Opens this provider
+         * the return value of this function allows to ensure the provider is available,
+         * so calling Provider::isAvailable() just after a call to open() that returned true is dedundant.
+         * @note This is not related to the EventProviderOpened event
+         * @return true if the provider was opened sucessfully, else false
+         */
         [[nodiscard]] virtual bool open() = 0;
         virtual void close() = 0;
 
@@ -145,7 +152,19 @@ namespace hex::prv {
 
         u32 m_id;
 
+        /**
+         * @brief true if there is any data that needs to be saved
+         */
         bool m_dirty = false;
+
+        /**
+         * @brief Control whetever to skip provider initialization
+         * initialization may be asking the user for information related to the provider,
+         * e.g. a process ID for the process memory provider
+         * this is used mainly when restoring a provider with already known initialization information
+         * for example when loading a project or loading a provider from the "recent" lsit
+         * 
+         */
         bool m_skipLoadInterface = false;
 
         std::string m_errorMessage;

@@ -29,8 +29,10 @@ namespace hex::magic {
         std::error_code error;
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
             for (const auto &entry : std::fs::recursive_directory_iterator(dir, error)) {
-                if (entry.is_regular_file() && ((sourceFiles && entry.path().extension().empty()) || (!sourceFiles && entry.path().extension() == ".mgc"))) {
-                    magicFiles += wolv::util::toUTF8String(wolv::io::fs::toShortPath(entry.path())) + MAGIC_PATH_SEPARATOR;
+                auto path = std::fs::absolute(entry.path());
+
+                if (entry.is_regular_file() && ((sourceFiles && path.extension().empty()) || (!sourceFiles && path.extension() == ".mgc"))) {
+                    magicFiles += wolv::util::toUTF8String(wolv::io::fs::toShortPath(path)) + MAGIC_PATH_SEPARATOR;
                 }
             }
         }

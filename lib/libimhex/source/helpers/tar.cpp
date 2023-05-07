@@ -1,6 +1,7 @@
 #include <hex/helpers/tar.hpp>
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -27,6 +28,7 @@ namespace hex {
         else
             error = MTAR_EFAILURE;
 
+        this->m_path = path;
         this->m_valid = (error == MTAR_ESUCCESS);
     }
 
@@ -36,6 +38,7 @@ namespace hex {
 
     Tar::Tar(hex::Tar &&other) noexcept {
         this->m_ctx = other.m_ctx;
+        this->m_path = other.m_path;
         this->m_valid = other.m_valid;
 
         other.m_ctx = { };
@@ -45,6 +48,8 @@ namespace hex {
     Tar &Tar::operator=(Tar &&other) noexcept {
         this->m_ctx = other.m_ctx;
         other.m_ctx = { };
+
+        this->m_path = other.m_path;
 
         this->m_valid = other.m_valid;
         other.m_valid = false;
@@ -91,8 +96,13 @@ namespace hex {
         #if defined(OS_WINDOWS)
             std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
         #endif
-        mtar_find(&this->m_ctx, fixedPath.c_str(), &header);
-
+        int ret = mtar_find(&this->m_ctx, fixedPath.c_str(), &header);
+        if(ret != MTAR_ESUCCESS){
+            log::debug("Failed to read vector from path {} in tarred file {}: {}",
+                path.string(), this->m_path.string(), mtar_strerror(ret));
+            return {};
+        }
+        
         std::vector<u8> result(header.size, 0x00);
         mtar_read_data(&this->m_ctx, result.data(), result.size());
 

@@ -132,6 +132,7 @@
         "hex.builtin.inspector.utf8": "UTF-8 code point",
         "hex.builtin.inspector.wide": "Wide Character",
         "hex.builtin.layouts.default": "Default",
+        "hex.builtin.layouts.none.restore_default": "Restore default layout",
         "hex.builtin.menu.edit": "Edit",
         "hex.builtin.menu.edit.bookmark.create": "Create bookmark",
         "hex.builtin.menu.edit.redo": "Redo",

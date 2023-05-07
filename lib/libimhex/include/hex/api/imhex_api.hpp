@@ -225,7 +225,11 @@ namespace hex {
 
         }
 
-        /* Functions to interact with the loaded data provider */
+        /**
+         * Helper methods about the providers
+         * @note the "current provider" or "currently selected provider" refers to the currently selected provider in the UI;
+         * the provider the user is actually editing.
+         */
         namespace Provider {
 
             namespace impl {
@@ -237,7 +241,7 @@ namespace hex {
 
             /**
              * @brief Gets the currently selected data provider
-             * @return The currently selected data provider
+             * @return The currently selected data provider, or nullptr is there is none
              */
             prv::Provider *get();
 
@@ -261,26 +265,26 @@ namespace hex {
 
 
             /**
-             * @brief Marks the currently selected data provider as dirty
+             * @brief Marks the **currently selected** data provider as dirty
              */
             void markDirty();
 
             /**
-             * @brief Marks the currently selected data provider as clean
+             * @brief Marks **all data providers** as clean
              */
             void resetDirty();
 
             /**
-             * @brief Checks whether the currently selected data provider is dirty
-             * @return Whether the currently selected data provider is dirty
+             * @brief Checks whether **any of the data providers** is dirty
+             * @return Whether any data provider is dirty
              */
             bool isDirty();
 
 
             /**
-             * @brief Adds a newly created provider to the list of providers
+             * @brief Adds a newly created provider to the list of providers, and mark it as the selected one.
              * @param provider The provider to add
-             * @param skipLoadInterface Whether to skip loading the provider's loading interface
+             * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
              */
             void add(prv::Provider *provider, bool skipLoadInterface = false);
 
@@ -302,9 +306,9 @@ namespace hex {
             void remove(prv::Provider *provider, bool noQuestions = false);
 
             /**
-             * @brief Creates a new provider using its unlocalized name
+             * @brief Creates a new provider using its unlocalized name and add it to the list of providers
              * @param unlocalizedName The unlocalized name of the provider to create
-             * @param skipLoadInterface Whether to skip loading the provider's loading interface
+             * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
              */
             prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface = false);
 

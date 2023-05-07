@@ -409,7 +409,9 @@ namespace hex::plugin::builtin {
         }
         ImGui::End();
     }
-
+    /**
+     * @brief Draw some default background if there are no views avaialble in the current layout
+     */
     static void drawNoViewsBackground() {
         if (ImGui::Begin("ImHexDockSpace")) {
             static char title[256];
@@ -418,10 +420,23 @@ namespace hex::plugin::builtin {
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
                 if (ImGui::BeginChild("NoViewsBackground", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
                     auto imageSize = scaled(ImVec2(350, 350));
-                    auto pos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
+                    auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
 
-                    ImGui::SetCursorPos(pos);
+                    ImGui::SetCursorPos(imagePos);
                     ImGui::Image(s_backdropTexture, imageSize);
+
+                    auto loadDefaultText = "hex.builtin.layouts.none.restore_default"_lang;
+                    auto textSize = ImGui::CalcTextSize(loadDefaultText);
+
+                    auto textPos = scaled(ImVec2(
+                        (ImGui::GetContentRegionAvail().x - textSize.x) / 2,
+                        imagePos.y + imageSize.y
+                    ));
+
+                    ImGui::SetCursorPos(textPos);
+                    if (ImGui::DimmedButton(loadDefaultText)){
+                        loadDefaultLayout();
+                    }
                 }
                 ImGui::EndChild();
                 ImGui::PopStyleVar();
@@ -431,10 +446,16 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
+    /**
+     * @brief Registers the event handlers related to the welcome screen
+    * should only be called once, at startup
+     */
     void createWelcomeScreen() {
         updateRecentProviders();
 
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
+
+        // Sets a background when they are no views
         (void)EventManager::subscribe<EventFrameBegin>([]{
             if (ImHexApi::Provider::isValid() && !isAnyViewOpen())
                 drawNoViewsBackground();
@@ -483,10 +504,13 @@ namespace hex::plugin::builtin {
             }
         });
 
+        
+        // Save every opened provider as a "recent" shortcut
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
+                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+                // The recent provider is saved to every "recent" directory
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
-                    auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())
                         continue;
@@ -511,6 +535,7 @@ namespace hex::plugin::builtin {
                 loadDefaultLayout();
         });
 
+#if defined(HEX_UPDATE_CHECK)
         EventManager::subscribe<EventWindowInitialized>([] {
             // documentation of the value above the setting definition
             auto showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
@@ -526,6 +551,7 @@ namespace hex::plugin::builtin {
                 );
             }
         });
+#endif
 
         // Clear project context if we go back to the welcome screen
         EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {

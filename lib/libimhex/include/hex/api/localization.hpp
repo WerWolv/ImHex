@@ -5,6 +5,8 @@
 #include <string>
 #include <string_view>
 
+#include <fmt/format.h>
+
 namespace hex {
 
     class LanguageDefinition {
@@ -57,3 +59,11 @@ namespace hex {
     }
 
 }
+
+template<>
+struct fmt::formatter<hex::LangEntry> : fmt::formatter<std::string_view> {
+    template<typename FormatContext>
+    auto format(const hex::LangEntry &entry, FormatContext &ctx) {
+        return fmt::formatter<std::string_view>::format(entry, ctx);
+    }
+};

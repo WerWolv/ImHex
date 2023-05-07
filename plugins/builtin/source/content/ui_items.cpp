@@ -51,6 +51,8 @@ namespace hex::plugin::builtin {
         #endif
 
         ContentRegistry::Interface::addFooterItem([] {
+            static bool shouldResetProgress = false;
+
             auto taskCount = TaskManager::getRunningTaskCount();
             if (taskCount > 0) {
                 const auto &tasks = TaskManager::getRunningTasks();
@@ -103,8 +105,13 @@ namespace hex::plugin::builtin {
                 if (ImGui::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                     frontTask->interrupt();
                 ImGui::PopStyleVar();
+
+                shouldResetProgress = true;
             } else {
-                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Reset, ImHexApi::System::TaskProgressType::Normal, 0);
+                if (shouldResetProgress) {
+                    ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Reset, ImHexApi::System::TaskProgressType::Normal, 0);
+                    shouldResetProgress = false;
+                }
             }
         });
     }

@@ -193,16 +193,12 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str())) {
-                ImGui::OpenPopup(View::toWindowName("hex.builtin.view.pattern_editor.dangerous_function.name").c_str());
-
+            if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
                 PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
                     [this] {
                         this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
-                        ImGui::CloseCurrentPopup();
                     }, [this] {
                         this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Deny;
-                        ImGui::CloseCurrentPopup();
                     }
                 );
 
