@@ -22,9 +22,8 @@ namespace hex::plugin::builtin {
             if (this->m_searchTask.isRunning())
                 return { };
 
-            auto provider = ImHexApi::Provider::get();
-
-            if (!this->m_occurrenceTree[provider].findOverlapping(address, address).empty())
+            std::vector<size_t> occurrences;
+            if (this->m_occurrenceTree->overlap(address, address, occurrences))
                 return HighlightColor();
             else
                 return std::nullopt;
@@ -36,10 +35,8 @@ namespace hex::plugin::builtin {
             if (this->m_searchTask.isRunning())
                 return;
 
-            auto provider = ImHexApi::Provider::get();
-
-            auto occurrences = this->m_occurrenceTree[provider].findOverlapping(address, address);
-            if (occurrences.empty())
+            std::vector<size_t> occurrences;
+            if (!this->m_occurrenceTree->overlap(address, address, occurrences))
                 return;
 
             ImGui::BeginTooltip();
@@ -51,7 +48,10 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     {
-                        const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value, 256);
+                        auto start = this->m_occurrenceTree->start(occurrence);
+                        auto end = this->m_occurrenceTree->end(occurrence) - 1;
+                        const auto &bytes = this->m_occurrenceTree->data(occurrence);
+                        const auto value = this->decodeValue(ImHexApi::Provider::get(), bytes, 256);
 
                         ImGui::ColorButton("##color", ImColor(HighlightColor()));
                         ImGui::SameLine(0, 10);
@@ -65,7 +65,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang);
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", occurrence.value.region.getStartAddress(), occurrence.value.region.getEndAddress());
+                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", start, end);
 
                                 auto demangledValue = llvm::demangle(value);
 
@@ -494,28 +494,27 @@ namespace hex::plugin::builtin {
             switch (settings.mode) {
                 using enum SearchSettings::Mode;
                 case Strings:
-                    this->m_foundOccurrences[provider] = searchStrings(task, provider, searchRegion, settings.strings);
+                    this->m_foundOccurrences.get(provider) = searchStrings(task, provider, searchRegion, settings.strings);
                     break;
                 case Sequence:
-                    this->m_foundOccurrences[provider] = searchSequence(task, provider, searchRegion, settings.bytes);
+                    this->m_foundOccurrences.get(provider) = searchSequence(task, provider, searchRegion, settings.bytes);
                     break;
                 case Regex:
-                    this->m_foundOccurrences[provider] = searchRegex(task, provider, searchRegion, settings.regex);
+                    this->m_foundOccurrences.get(provider) = searchRegex(task, provider, searchRegion, settings.regex);
                     break;
                 case BinaryPattern:
-                    this->m_foundOccurrences[provider] = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
+                    this->m_foundOccurrences.get(provider) = searchBinaryPattern(task, provider, searchRegion, settings.binaryPattern);
                     break;
                 case Value:
-                    this->m_foundOccurrences[provider] = searchValue(task, provider, searchRegion, settings.value);
+                    this->m_foundOccurrences.get(provider) = searchValue(task, provider, searchRegion, settings.value);
                     break;
             }
 
-            this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
+            this->m_sortedOccurrences.get(provider) = this->m_foundOccurrences.get(provider);
 
-            OccurrenceTree::interval_vector intervals;
-            for (const auto &occurrence : this->m_foundOccurrences[provider])
-                intervals.emplace_back(occurrence.region.getStartAddress(), occurrence.region.getEndAddress(), occurrence);
-            this->m_occurrenceTree[provider] = std::move(intervals);
+            for (const auto &occurrence : this->m_foundOccurrences.get(provider))
+                this->m_occurrenceTree->add(occurrence.region.getStartAddress(), occurrence.region.getEndAddress() + 1, occurrence);
+            this->m_occurrenceTree->index();
         });
     }
 
@@ -800,14 +799,14 @@ namespace hex::plugin::builtin {
                 ImGui::EndDisabled();
 
                 ImGui::SameLine();
-                ImGui::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundOccurrences[provider].size());
+                ImGui::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundOccurrences->size());
 
-                ImGui::BeginDisabled(this->m_foundOccurrences[provider].empty());
+                ImGui::BeginDisabled(this->m_foundOccurrences->empty());
                 {
                     if (ImGui::Button("hex.builtin.view.find.search.reset"_lang)) {
-                        this->m_foundOccurrences[provider].clear();
-                        this->m_sortedOccurrences[provider].clear();
-                        this->m_occurrenceTree[provider].clear();
+                        this->m_foundOccurrences->clear();
+                        this->m_sortedOccurrences->clear();
+                        *this->m_occurrenceTree = {};
                     }
                 }
                 ImGui::EndDisabled();
@@ -818,25 +817,25 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
             ImGui::NewLine();
 
-            auto &currOccurrences = this->m_sortedOccurrences[provider];
+            auto &currOccurrences = *this->m_sortedOccurrences;
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            auto prevFilterLength = this->m_currFilter[provider].length();
-            if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter[provider])) {
-                if (prevFilterLength > this->m_currFilter[provider].length())
-                    this->m_sortedOccurrences[provider] = this->m_foundOccurrences[provider];
+            auto prevFilterLength = this->m_currFilter->length();
+            if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, *this->m_currFilter)) {
+                if (prevFilterLength > this->m_currFilter->length())
+                    *this->m_sortedOccurrences = *this->m_foundOccurrences;
 
                 if (this->m_filterTask.isRunning())
                     this->m_filterTask.interrupt();
 
-                if (!this->m_currFilter[provider].empty()) {
+                if (!this->m_currFilter->empty()) {
                     this->m_filterTask = TaskManager::createTask("Filtering", currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
                         u64 progress = 0;
                         currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider, &task, &progress](const auto &region) {
                             task.update(progress);
                             progress += 1;
 
-                            return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter[provider]);
+                            return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter.get(provider));
                         }), currOccurrences.end());
                     });
                 }

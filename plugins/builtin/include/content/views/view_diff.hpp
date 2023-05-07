@@ -12,7 +12,7 @@
 
 #include "ui/hex_editor.hpp"
 
-#include <IntervalTree.h>
+#include <IITree.h>
 
 namespace hex::plugin::builtin {
 
