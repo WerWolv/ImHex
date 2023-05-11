@@ -22,7 +22,6 @@ namespace hex::plugin::builtin {
     void registerHashes();
     void registerProviders();
     void registerDataFormatters();
-    void registerLayouts();
     void registerMainMenuEntries();
     void createWelcomeScreen();
     void registerViews();
@@ -70,7 +69,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     addToolbarItems();
     addGlobalUIItems();
 
-    registerLayouts();
     registerMainMenuEntries();
 
     handleBorderlessWindowMode();

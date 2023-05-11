@@ -26,6 +26,7 @@ namespace hex {
 
         static void process();
         static void reload();
+        static void reset();
 
     private:
         LayoutManager() = default;

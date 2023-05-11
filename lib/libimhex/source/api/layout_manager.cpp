@@ -5,6 +5,8 @@
 
 #include <imgui.h>
 
+#include <fmt/format.h>
+
 namespace hex {
 
     std::optional<std::fs::path> LayoutManager::s_layoutPathToLoad;
@@ -70,6 +72,12 @@ namespace hex {
                 });
             }
         }
+    }
+
+    void LayoutManager::reset() {
+        s_layoutPathToLoad.reset();
+        s_layoutStringToLoad.reset();
+        s_layouts.clear();
     }
 
 }

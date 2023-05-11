@@ -3,21 +3,23 @@
 #include <imgui.h>
 #include <romfs/romfs.hpp>
 
+#include <hex/helpers/http_requests.hpp>
+#include <hex/helpers/fs.hpp>
+#include <hex/helpers/logger.hpp>
+
 #include <hex/api_urls.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/theme_manager.hpp>
-#include <hex/helpers/http_requests.hpp>
-#include <hex/helpers/fs.hpp>
-#include <hex/helpers/logger.hpp>
+#include <hex/api/plugin_manager.hpp>
+#include <hex/api/layout_manager.hpp>
+
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
 
 #include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
 #include <fonts/unifont_font.h>
-
-#include <hex/api/plugin_manager.hpp>
 
 #include <filesystem>
 
@@ -312,7 +314,6 @@ namespace hex::init {
         ContentRegistry::Interface::impl::getMenuItems().clear();
         ContentRegistry::Interface::impl::getSidebarItems().clear();
         ContentRegistry::Interface::impl::getTitleBarButtons().clear();
-        ContentRegistry::Interface::impl::getLayouts().clear();
 
         ShortcutManager::clearShortcuts();
 
@@ -323,6 +324,8 @@ namespace hex::init {
         ContentRegistry::DataFormatter::impl::getEntries().clear();
         ContentRegistry::FileHandler::impl::getEntries().clear();
         ContentRegistry::Hashes::impl::getHashes().clear();
+
+        LayoutManager::reset();
 
         ThemeManager::reset();
 

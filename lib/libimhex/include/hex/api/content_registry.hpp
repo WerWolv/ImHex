@@ -493,13 +493,7 @@ namespace hex {
                 using DrawCallback      = std::function<void()>;
                 using MenuCallback      = std::function<void()>;
                 using EnabledCallback   = std::function<bool()>;
-                using LayoutFunction    = std::function<void(u32)>;
                 using ClickCallback     = std::function<void()>;
-
-                struct Layout {
-                    std::string unlocalizedName;
-                    LayoutFunction callback;
-                };
 
                 struct MainMenuItem {
                     std::string unlocalizedName;
@@ -534,8 +528,6 @@ namespace hex {
                 std::vector<impl::DrawCallback> &getToolbarItems();
                 std::vector<impl::SidebarItem> &getSidebarItems();
                 std::vector<impl::TitleBarButton> &getTitleBarButtons();
-
-                std::vector<impl::Layout> &getLayouts();
 
             }
 
@@ -607,14 +599,6 @@ namespace hex {
              * @param function The function to call when the button is clicked
              */
             void addTitleBarButton(const std::string &icon, const std::string &unlocalizedTooltip, const impl::ClickCallback &function);
-
-
-            /**
-             * @brief Adds a new layout definition to the Layout menu
-             * @param unlocalizedName The unlocalized name of the layout
-             * @param function The function to call to setup the layout
-             */
-            void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function);
 
         }
 
