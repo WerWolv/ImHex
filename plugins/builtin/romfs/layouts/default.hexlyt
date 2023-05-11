@@ -1,0 +1,389 @@
+[Window][ImHexDockSpace]
+Pos=0,38
+Size=2560,1513
+Collapsed=0
+
+[Window][Debug##Default]
+Pos=162,46
+Size=400,400
+Collapsed=0
+
+[Window][Question]
+Pos=729,657
+Size=400,105
+Collapsed=0
+
+[Window][###hex.builtin.view.settings.name]
+Pos=259,200
+Size=700,400
+Collapsed=0
+
+[Window][###hex.builtin.view.hex_editor.name]
+Pos=0,76
+Size=1140,980
+Collapsed=0
+DockId=0x00000007,0
+
+[Window][###hex.builtin.view.data_inspector.name]
+Pos=1142,76
+Size=553,980
+Collapsed=0
+DockId=0x00000008,0
+
+[Window][###hex.builtin.view.pattern_data.name]
+Pos=0,1058
+Size=1695,445
+Collapsed=0
+DockId=0x00000006,0
+
+[Window][###hex.builtin.view.pattern_editor.name]
+Pos=1697,76
+Size=863,1427
+Collapsed=0
+DockId=0x00000004,0
+
+[Window][###hex.builtin.view.hashes.name]
+Pos=1697,76
+Size=863,1427
+Collapsed=0
+DockId=0x00000004,4
+
+[Window][###hex.builtin.view.find.name]
+Pos=1697,76
+Size=863,1427
+Collapsed=0
+DockId=0x00000004,3
+
+[Window][###hex.builtin.view.bookmarks.name]
+Pos=1697,76
+Size=863,1427
+Collapsed=0
+DockId=0x00000004,2
+
+[Window][Restore lost data]
+Pos=498,309
+Size=283,101
+Collapsed=0
+
+[Window][###hex.builtin.view.information.name]
+Pos=-1889,-120
+Size=510,420
+Collapsed=0
+
+[Window][Accept pattern]
+Pos=598,267
+Size=311,251
+Collapsed=0
+
+[Window][Error]
+Pos=413,296
+Size=400,100
+Collapsed=0
+
+[Window][Exit Application?]
+Pos=470,301
+Size=339,118
+Collapsed=0
+
+[Window][Close Provider?]
+ViewportPos=-327,0
+ViewportId=0x47432683
+Size=346,144
+Collapsed=0
+
+[Window][Choose file]
+Pos=-1500,152
+Size=516,458
+Collapsed=0
+
+[Window][###hex.builtin.view.yara.name]
+Pos=720,38
+Size=560,660
+Collapsed=0
+
+[Window][hex.builtin.popup.waiting_for_tasks.title]
+Pos=481,308
+Size=318,103
+Collapsed=0
+
+[Window][Waiting for Tasks]
+Pos=316,308
+Size=353,122
+Collapsed=0
+
+[Window][###hex.builtin.view.store.name]
+Pos=562,201
+Size=900,700
+Collapsed=0
+
+[Window][###hex.builtin.view.diff.name]
+Pos=1233,38
+Size=687,1021
+Collapsed=0
+
+[Window][###hex.builtin.view.provider_settings.name]
+Pos=822,38
+Size=637,720
+Collapsed=0
+
+[Window][###hex.builtin.view.provider_settings.load_popup]
+Pos=585,322
+Size=314,208
+Collapsed=0
+
+[Window][###hex.builtin.view.patches.name]
+Pos=-1889,-120
+Size=510,420
+Collapsed=0
+
+[Window][###hex.builtin.view.data_processor.name]
+Pos=1697,76
+Size=863,1427
+Collapsed=0
+DockId=0x00000004,1
+
+[Window][###hex.builtin.view.tools.name]
+ViewportPos=952,218
+ViewportId=0x9B385D8A
+Size=1306,1600
+Collapsed=0
+
+[Window][###hex.builtin.view.theme_manager.name]
+Pos=391,302
+Size=469,400
+Collapsed=0
+
+[Window][Section]
+ViewportPos=380,240
+ViewportId=0xE2CE4373
+Size=600,700
+Collapsed=0
+
+[Window][###hex.builtin.tools.invariant_multiplication]
+Pos=-1826,300
+Size=600,232
+Collapsed=0
+
+[Window][###hex.builtin.tools.regex_replacer]
+Pos=-2091,104
+Size=600,305
+Collapsed=0
+
+[Window][###hex.builtin.tools.calc]
+Pos=-1811,118
+Size=600,402
+Collapsed=0
+
+[Window][###hex.builtin.tools.permissions]
+Pos=423,296
+Size=600,220
+Collapsed=0
+
+[Window][ImPlot Demo]
+Pos=1647,388
+Size=600,741
+Collapsed=0
+
+[Window][Dear ImGui Debug Log]
+Pos=60,152
+Size=1166,312
+Collapsed=0
+
+[Window][Dear ImGui Stack Tool]
+Pos=60,152
+Size=707,208
+Collapsed=0
+
+[Window][Dear ImGui Metrics/Debugger]
+Pos=74,297
+Size=677,614
+Collapsed=0
+
+[Window][Dear ImGui Style Editor]
+ViewportPos=280,340
+ViewportId=0x6D551092
+Size=678,1804
+Collapsed=0
+
+[Window][Dear ImGui Demo]
+Pos=650,158
+Size=550,680
+Collapsed=0
+
+[Window][###hex.builtin.view.help.about.name]
+Pos=214,201
+Size=600,350
+Collapsed=0
+
+[Window][mal.malcore.popup.api_key]
+Pos=465,304
+Size=350,111
+Collapsed=0
+
+[Window][Malcore Analysis]
+Pos=592,38
+Size=688,660
+Collapsed=0
+
+[Window][Enter your Malcore API Key]
+Pos=2065,148
+Size=350,124
+Collapsed=0
+
+[Window][Malcore Upload]
+Pos=276,261
+Size=350,101
+Collapsed=0
+
+[Window][###hex.builtin.view.constants.name]
+Pos=419,-124
+Size=652,660
+Collapsed=0
+
+[Window][###hex.builtin.view.disassembler.name]
+Pos=1004,-204
+Size=1336,1320
+Collapsed=0
+
+[Window][Test]
+ViewportPos=-888,391
+ViewportId=0x784DD132
+Size=731,257
+Collapsed=0
+
+[Window][ABCD]
+Pos=60,60
+Size=52,54
+Collapsed=0
+
+[Window][Information]
+Pos=440,310
+Size=400,100
+Collapsed=0
+
+[Window][Fatal Error]
+Pos=440,310
+Size=400,100
+Collapsed=0
+
+[Window][hex.builtin.popup.update_store.name]
+Pos=440,285
+Size=400,150
+Collapsed=0
+
+[Window][hex.builtin.popup.docs_question.title]
+Pos=864,462
+Size=832,516
+Collapsed=0
+
+[Window][Documentation query]
+Pos=664,312
+Size=1232,816
+Collapsed=0
+
+[Window][hex.builtin.popup.save_layout.title]
+Pos=880,641
+Size=800,264
+Collapsed=0
+
+[Table][0x7EE28D79,6]
+Column 0  Weight=1.2067
+Column 1  Weight=0.7016
+Column 2  Weight=1.2516 Sort=0v
+Column 3  Weight=0.4715
+Column 4  Weight=0.8026
+Column 5  Weight=1.5659
+
+[Table][0x6A4694E4,3]
+RefScale=26
+Column 0  Sort=0v
+
+[Table][0x8A6C34FA,4]
+Column 0  Weight=1.0000
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+Column 3  Weight=1.0000 Sort=0^
+
+[Table][0x86997068,3]
+Column 0  Weight=1.0000 Sort=0v
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+
+[Table][0x6190819E,3]
+Column 0  Weight=0.7508
+Column 1  Weight=1.2447
+Column 2  Weight=1.0044
+
+[Table][0x204AA40F,6]
+Column 0  Weight=0.9981
+Column 1  Weight=0.5784
+Column 2  Weight=0.8393 Sort=0v
+Column 3  Weight=0.7259
+Column 4  Weight=0.7486
+Column 5  Weight=2.1096
+
+[Table][0x92C7E695,3]
+Column 0  Weight=1.0000
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+
+[Table][0xDB02BA59,4]
+Column 0  Weight=1.0000 Sort=0v
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+Column 3  Weight=1.0000
+
+[Table][0x22CDC436,4]
+Column 0  Weight=1.0000
+Column 1  Weight=1.0000
+Column 2  Weight=1.0000
+Column 3  Weight=1.0000
+
+[Docking][Data]
+DockSpace       ID=0x81A8BB71 Window=0xF9B0A590 Pos=161,350 Size=2560,1427 Split=X
+  DockNode      ID=0x00000001 Parent=0x81A8BB71 SizeRef=847,0 Split=Y
+    DockNode    ID=0x00000005 Parent=0x00000001 SizeRef=0,44 Split=X Selected=0x5708C63F
+      DockNode  ID=0x00000007 Parent=0x00000005 SizeRef=1140,701 Selected=0x5708C63F
+      DockNode  ID=0x00000008 Parent=0x00000005 SizeRef=553,701 Selected=0xFBA7A393
+    DockNode    ID=0x00000006 Parent=0x00000001 SizeRef=0,20 Selected=0x7AD1CDDD
+  DockNode      ID=0x00000002 Parent=0x81A8BB71 SizeRef=431,0 Split=X
+    DockNode    ID=0x00000003 Parent=0x00000002 SizeRef=12,0
+    DockNode    ID=0x00000004 Parent=0x00000002 SizeRef=52,0 Selected=0xCACA884B
+
+[ImHex][General]
+hex.builtin.view.bookmarks.name=1
+hex.builtin.view.command_palette.name=0
+hex.builtin.view.constants.name=0
+hex.builtin.view.data_inspector.name=1
+hex.builtin.view.data_processor.name=1
+hex.builtin.view.diff.name=0
+hex.builtin.view.disassembler.name=0
+hex.builtin.view.find.name=1
+hex.builtin.view.hashes.name=1
+hex.builtin.view.help.about.name=0
+hex.builtin.view.hex_editor.name=1
+hex.builtin.view.information.name=0
+hex.builtin.view.patches.name=0
+hex.builtin.view.pattern_data.name=1
+hex.builtin.view.pattern_editor.name=1
+hex.builtin.view.provider_settings.name=0
+hex.builtin.view.settings.name=0
+hex.builtin.view.store.name=0
+hex.builtin.view.theme_manager.name=0
+hex.builtin.view.tools.name=0
+hex.builtin.view.yara.name=0
+hex.windows.view.tty_console.name=0
+hex.builtin.tools.demangler=0
+hex.builtin.tools.ascii_table=0
+hex.builtin.tools.regex_replacer=0
+hex.builtin.tools.color=0
+hex.builtin.tools.calc=0
+hex.builtin.tools.base_converter=0
+hex.builtin.tools.byte_swapper=0
+hex.builtin.tools.permissions=0
+hex.builtin.tools.file_uploader=0
+hex.builtin.tools.wiki_explain=0
+hex.builtin.tools.file_tools=0
+hex.builtin.tools.ieee754=0
+hex.builtin.tools.invariant_multiplication=0
+

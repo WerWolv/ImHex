@@ -214,6 +214,9 @@ namespace hex::fs {
             case ImHexPath::Themes:
                 result = appendPath(getDataPaths(), "themes");
                 break;
+            case ImHexPath::Layouts:
+                result = appendPath(getDataPaths(), "layouts");
+                break;
         }
 
         if (!listNonExisting) {

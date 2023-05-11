@@ -4,6 +4,7 @@
 #include <hex/api/localization.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/theme_manager.hpp>
+#include <hex/api/layout_manager.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
@@ -192,20 +193,7 @@ namespace hex::plugin::builtin {
     }
 
     static void loadDefaultLayout() {
-        auto layouts = ContentRegistry::Interface::impl::getLayouts();
-        if (!layouts.empty()) {
-
-            for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
-                view->getWindowOpenState() = false;
-            }
-
-            auto dockId = ImHexApi::System::getMainDockSpaceId();
-
-            ImGui::DockBuilderRemoveNode(dockId);
-            ImGui::DockBuilderAddNode(dockId);
-            layouts.front().callback(dockId);
-            ImGui::DockBuilderFinish(dockId);
-        }
+        LayoutManager::loadString(std::string(romfs::get("layouts/default.hexlyt").string()));
     }
 
     static bool isAnyViewOpen() {

@@ -5,6 +5,7 @@
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/layout_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
@@ -690,6 +691,10 @@ namespace hex {
         glfwMakeContextCurrent(backup_current_context);
 
         glfwSwapBuffers(this->m_window);
+
+        // Process layout load requests
+        // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
+        LayoutManager::process();
     }
 
     void Window::initGLFW() {

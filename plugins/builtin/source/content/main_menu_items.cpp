@@ -6,15 +6,19 @@
 #include <hex/ui/view.hpp>
 #include <hex/api/keybinding.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/layout_manager.hpp>
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
 
-#include "content/global_actions.hpp"
+#include <content/global_actions.hpp>
 #include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_docs_question.hpp>
+#include <content/popups/popup_text_input.hpp>
 
 #include <wolv/io/file.hpp>
+
+#include <romfs/romfs.hpp>
 
 using namespace std::literals::string_literals;
 
@@ -432,21 +436,26 @@ namespace hex::plugin::builtin {
     }
 
     static void createLayoutMenu() {
+        LayoutManager::reload();
+
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.layout", 4000);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 1000, [] {
-            for (auto &[layoutName, func] : ContentRegistry::Interface::impl::getLayouts()) {
-                if (ImGui::MenuItem(LangEntry(layoutName), "", false, ImHexApi::Provider::isValid())) {
-                    auto dock = ImHexApi::System::getMainDockSpaceId();
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.layout", "hex.builtin.menu.layout.save" }, 1100, Shortcut::None, [] {
+            PopupTextInput::open("hex.builtin.popup.save_layout.title"_lang, "hex.builtin.popup.save_layout.desc"_lang, [](const std::string &name) {
+                LayoutManager::save(name);
+            });
+        }, ImHexApi::Provider::isValid);
 
-                    for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
-                        view->getWindowOpenState() = false;
-                    }
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.layout" }, 1200);
 
-                    ImGui::DockBuilderRemoveNode(dock);
-                    ImGui::DockBuilderAddNode(dock);
-                    func(dock);
-                    ImGui::DockBuilderFinish(dock);
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 2000, [] {
+            if (ImGui::MenuItem("hex.builtin.layouts.default"_lang, "", false, ImHexApi::Provider::isValid())) {
+                LayoutManager::loadString(std::string(romfs::get("layouts/default.hexlyt").string()));
+            }
+
+            for (auto &[name, path] : LayoutManager::getLayouts()) {
+                if (ImGui::MenuItem(name.c_str(), "", false, ImHexApi::Provider::isValid())) {
+                    LayoutManager::load(path);
                 }
             }
         });
