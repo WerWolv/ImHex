@@ -428,10 +428,10 @@ namespace hex::plugin::builtin {
                     auto loadDefaultText = "hex.builtin.layouts.none.restore_default"_lang;
                     auto textSize = ImGui::CalcTextSize(loadDefaultText);
 
-                    auto textPos = scaled(ImVec2(
+                    auto textPos = ImVec2(
                         (ImGui::GetContentRegionAvail().x - textSize.x) / 2,
                         imagePos.y + imageSize.y
-                    ));
+                    );
 
                     ImGui::SetCursorPos(textPos);
                     if (ImGui::DimmedButton(loadDefaultText)){
