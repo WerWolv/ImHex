@@ -2,7 +2,6 @@
 
 #include <cstring>
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/api/project_file_manager.hpp>
 
@@ -60,24 +59,28 @@ namespace hex::plugin::builtin {
         if (offset > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
-        auto &file = this->getFile();
-        file.seek(offset);
-        file.readBuffer(reinterpret_cast<u8*>(buffer), size);
+        /*auto currSize = std::fs::file_size(this->m_path);
+        if (this->m_fileSize != currSize) [[unlikely]] {
+            this->m_fileSize = currSize;
+            this->m_file.unmap();
+            this->m_file.map();
+        }*/
+
+        std::memcpy(buffer, this->m_file.getMapping() + offset, size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::scoped_lock lock(this->m_writeMutex);
-        wolv::io::File writeFile(this->m_path, wolv::io::File::Mode::Write);
-        if (!writeFile.isValid())
-            return;
-        
-        writeFile.seek(offset);
-        writeFile.writeBuffer(reinterpret_cast<const u8*>(buffer), size);
+        auto currSize = std::fs::file_size(this->m_path);
+        if (this->m_fileSize != currSize) [[unlikely]] {
+            this->m_fileSize = currSize;
+            this->m_file.unmap();
+            this->m_file.map();
+        }
 
-        this->invalidateFiles();
+        std::memcpy(this->m_file.getMapping() + offset, buffer, size);
     }
 
     void FileProvider::save() {
@@ -125,13 +128,6 @@ namespace hex::plugin::builtin {
         Provider::insert(offset, size);
     }
 
-    void FileProvider::invalidateFiles() {
-        for(auto & [threadId, file] : this->m_files){
-            file.close();
-        }
-        this->m_files.clear();
-    }
-
     void FileProvider::remove(u64 offset, size_t size) {
         auto oldSize = this->getActualSize();
         this->resize(oldSize + size);
@@ -156,7 +152,7 @@ namespace hex::plugin::builtin {
     }
 
     size_t FileProvider::getActualSize() const {
-        return this->m_sizeFile.getSize();
+        return this->m_fileSize;
     }
 
     std::string FileProvider::getName() const {
@@ -220,27 +216,16 @@ namespace hex::plugin::builtin {
         }
 
         this->m_fileStats = file.getFileInfo();
-        this->m_sizeFile  = file.clone();
+        this->m_file      = std::move(file);
 
-        this->m_files.emplace(std::this_thread::get_id(), std::move(file));
+        this->m_file.map();
+        this->m_fileSize = this->m_file.getSize();
 
         return true;
     }
 
     void FileProvider::close() {
 
-    }
-
-    wolv::io::File& FileProvider::getFile() {
-
-        auto threadId = std::this_thread::get_id();
-        if (!this->m_files.contains(threadId)) {
-            std::scoped_lock lock(this->m_fileAccessMutex);
-            if (!this->m_files.contains(threadId))
-                this->m_files.emplace(threadId, this->m_sizeFile.clone());
-        }
-
-        return this->m_files[threadId];
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {

@@ -12,8 +12,6 @@
 
 #include "ui/hex_editor.hpp"
 
-#include <IITree.h>
-
 namespace hex::plugin::builtin {
 
     class ViewDiff : public View {

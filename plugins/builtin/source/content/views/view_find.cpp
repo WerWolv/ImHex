@@ -22,8 +22,7 @@ namespace hex::plugin::builtin {
             if (this->m_searchTask.isRunning())
                 return { };
 
-            std::vector<size_t> occurrences;
-            if (this->m_occurrenceTree->overlap(address, address, occurrences))
+            if (!this->m_occurrenceTree->overlapping({ address, address }).empty())
                 return HighlightColor();
             else
                 return std::nullopt;
@@ -35,8 +34,8 @@ namespace hex::plugin::builtin {
             if (this->m_searchTask.isRunning())
                 return;
 
-            std::vector<size_t> occurrences;
-            if (!this->m_occurrenceTree->overlap(address, address, occurrences))
+            auto occurrences = this->m_occurrenceTree->overlapping({ address, address });
+            if (occurrences.empty())
                 return;
 
             ImGui::BeginTooltip();
@@ -48,10 +47,8 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     {
-                        auto start = this->m_occurrenceTree->start(occurrence);
-                        auto end = this->m_occurrenceTree->end(occurrence) - 1;
-                        const auto &bytes = this->m_occurrenceTree->data(occurrence);
-                        const auto value = this->decodeValue(ImHexApi::Provider::get(), bytes, 256);
+                        auto region = occurrence.value.region;
+                        const auto value = this->decodeValue(ImHexApi::Provider::get(), occurrence.value, 256);
 
                         ImGui::ColorButton("##color", ImColor(HighlightColor()));
                         ImGui::SameLine(0, 10);
@@ -65,7 +62,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang);
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", start, end);
+                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
 
                                 auto demangledValue = llvm::demangle(value);
 
@@ -513,8 +510,7 @@ namespace hex::plugin::builtin {
             this->m_sortedOccurrences.get(provider) = this->m_foundOccurrences.get(provider);
 
             for (const auto &occurrence : this->m_foundOccurrences.get(provider))
-                this->m_occurrenceTree->add(occurrence.region.getStartAddress(), occurrence.region.getEndAddress() + 1, occurrence);
-            this->m_occurrenceTree->index();
+                this->m_occurrenceTree->insert({ occurrence.region.getStartAddress(), occurrence.region.getEndAddress() }, occurrence);
         });
     }
 

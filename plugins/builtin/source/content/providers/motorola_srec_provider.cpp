@@ -182,12 +182,11 @@ namespace hex::plugin::builtin {
         u64 maxAddress = 0x00;
         for (auto &[address, bytes] : data) {
             auto endAddress = (address + bytes.size()) - 1;
-            this->m_data.add(address, endAddress, std::move(bytes));
+            this->m_data.emplace({ address, endAddress }, std::move(bytes));
 
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
         }
-        this->m_data.index();
 
         this->m_dataSize = maxAddress + 1;
         this->m_dataValid = true;

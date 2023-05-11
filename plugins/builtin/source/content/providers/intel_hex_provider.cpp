@@ -161,37 +161,25 @@ namespace hex::plugin::builtin {
     void IntelHexProvider::setBaseAddress(u64 address) {
         auto oldBase = this->getBaseAddress();
 
-        std::vector<size_t> indices;
-        this->m_data.overlap(oldBase, oldBase + this->getActualSize(), indices);
+        auto regions = this->m_data.overlapping({ oldBase, oldBase + this->getActualSize() });
 
-        IITree<u64, std::vector<u8>> intervals;
-        for (auto &index : indices) {
-            intervals.add(
-                    (this->m_data.start(index) - oldBase) + address,
-                    (this->m_data.end(index) - oldBase) + address,
-                    this->m_data.data(index)
-            );
+        decltype(this->m_data) newIntervals;
+        for (auto &[interval, data] : regions) {
+            newIntervals.insert({ interval.start - oldBase + address, interval.end - oldBase + address }, *data);
         }
-
-        this->m_data = std::move(intervals);
-        this->m_data.index();
+        this->m_data = newIntervals;
 
         Provider::setBaseAddress(address);
     }
 
     void IntelHexProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        std::vector<size_t> indices;
-        this->m_data.overlap(offset, (offset + size) - 1, indices);
+        auto intervals = this->m_data.overlapping({ offset, (offset + size) - 1 });
 
         std::memset(buffer, 0x00, size);
         auto bytes = reinterpret_cast<u8*>(buffer);
-        for (const auto &index : indices) {
-            auto start = this->m_data.start(index);
-            auto end   = this->m_data.end(index);
-            auto data  = this->m_data.data(index);
-
-            for (u32 i = std::max(start, offset); i <= end && (i - offset) < size; i++) {
-                bytes[i - offset] = data[i - start];
+        for (const auto &[interval, data] : intervals) {
+            for (u32 i = std::max(interval.start, offset); i <= interval.end && (i - offset) < size; i++) {
+                bytes[i - offset] = (*data)[i - interval.start];
             }
         }
     }
@@ -216,12 +204,11 @@ namespace hex::plugin::builtin {
         u64 maxAddress = 0x00;
         for (auto &[address, bytes] : data) {
             auto endAddress = (address + bytes.size()) - 1;
-            this->m_data.add(address, endAddress, std::move(bytes));
+            this->m_data.emplace({ address, endAddress }, std::move(bytes));
 
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
         }
-        this->m_data.index();
 
         this->m_dataSize = maxAddress + 1;
         this->m_dataValid = true;
@@ -265,22 +252,18 @@ namespace hex::plugin::builtin {
     }
 
     std::pair<Region, bool> IntelHexProvider::getRegionValidity(u64 address) const {
-        std::vector<size_t> indices;
-        this->m_data.overlap(address, address, indices);
-        if (indices.empty()) {
+        auto intervals = this->m_data.overlapping({ address, address });
+        if (intervals.empty()) {
             return Provider::getRegionValidity(address);
         }
 
-        auto closestIndex = indices.front();
-        for (const auto &index : indices) {
-            if (this->m_data.start(index) < this->m_data.start(closestIndex))
-                closestIndex = index;
+        decltype(this->m_data)::Interval closestInterval = { 0, 0 };
+        for (const auto &[interval, data] : intervals) {
+            if (interval.start < closestInterval.end)
+                closestInterval = interval;
         }
+        return { Region { closestInterval.start, (closestInterval.end - closestInterval.start) + 1}, true };
 
-        auto start = this->m_data.start(closestIndex);
-        auto end   = this->m_data.end(closestIndex);
-
-        return { Region { start, (end - start) + 1 }, true };
     }
 
     void IntelHexProvider::loadSettings(const nlohmann::json &settings) {

@@ -442,14 +442,12 @@ macro(addBundledLibraries)
     add_subdirectory(${EXTERN_LIBS_FOLDER}/microtar EXCLUDE_FROM_ALL)
     set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    add_subdirectory(${EXTERN_LIBS_FOLDER}/intervaltree EXCLUDE_FROM_ALL)
-    set_target_properties(intervaltree PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
     add_subdirectory(${EXTERN_LIBS_FOLDER}/libwolv EXCLUDE_FROM_ALL)
     set_property(TARGET libwolv-types PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET libwolv-utils PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET libwolv-io PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET libwolv-hash PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET libwolv-containers PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 
     set(XDGPP_INCLUDE_DIRS "${EXTERN_LIBS_FOLDER}/xdgpp")
