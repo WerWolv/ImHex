@@ -92,8 +92,8 @@ namespace hex {
                     rect = RECT {
                         .left   = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
                         .top    = static_cast<LONG>(client.top + windowInfo.cyWindowBorders),
-                        .right  = static_cast<LONG>(client.right - windowInfo.cyWindowBorders * 2),
-                        .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders * 2) + 1
+                        .right  = static_cast<LONG>(client.right - windowInfo.cyWindowBorders),
+                        .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders) + 1
                     };
                 } else {
                     rect = client;
