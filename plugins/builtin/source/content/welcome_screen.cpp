@@ -382,8 +382,8 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-        ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x, 0));
-        if (ImGui::Hyperlink("X")) {
+        ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x + ImGui::GetStyle().FramePadding.x, ImGui::GetStyle().FramePadding.y * 2 - 1));
+        if (ImGui::DimmedIconButton(ICON_VS_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
             auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.null");
             if (provider != nullptr)
                 if (provider->open())

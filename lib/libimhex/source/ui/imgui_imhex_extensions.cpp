@@ -14,6 +14,8 @@
 
 #include <hex/api/imhex_api.hpp>
 
+#include <fonts/codicons_font.h>
+
 namespace ImGui {
 
     Texture::Texture(const ImU8 *buffer, int size, int width, int height) {
@@ -263,6 +265,25 @@ namespace ImGui {
         return pressed;
     }
 
+    void HelpHover(const char *text) {
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue));
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
+
+        ImGui::Button(ICON_VS_INFO);
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+            ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(ImGui::GetTextLineHeight() * 75, FLT_MAX));
+            ImGui::BeginTooltip();
+            ImGui::TextFormattedWrapped("{}", text);
+            ImGui::EndTooltip();
+        }
+
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(4);
+    }
+
     void UnderlinedText(const char *label, ImColor color, const ImVec2 &size_arg) {
         ImGuiWindow *window = GetCurrentWindow();
 
@@ -500,7 +521,7 @@ namespace ImGui {
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered
                                                                                           : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
-        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
+        RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
         RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
@@ -709,7 +730,22 @@ namespace ImGui {
 
         ImGui::PopStyleColor(4);
         ImGui::PopStyleVar(1);
-        
+
+        return res;
+    }
+
+    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size_arg){
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButton));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_ButtonActive));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+
+        bool res = IconButton(symbol, color, size_arg);
+
+        ImGui::PopStyleColor(4);
+        ImGui::PopStyleVar(1);
+
         return res;
     }
 

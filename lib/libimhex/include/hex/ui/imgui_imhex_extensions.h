@@ -75,6 +75,8 @@ namespace ImGui {
     bool BulletHyperlink(const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
+    void HelpHover(const char *text);
+
     void UnderlinedText(const char *label, ImColor color = ImGui::GetStyleColorVec4(ImGuiCol_Text), const ImVec2 &size_arg = ImVec2(0, 0));
 
     void TextSpinner(const char *label);
@@ -152,5 +154,6 @@ namespace ImGui {
     bool BitCheckbox(const char* label, bool* v);
 
     bool DimmedButton(const char* label);
+    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
 
 }
