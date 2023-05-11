@@ -9,7 +9,7 @@
 #include <atomic>
 #include <vector>
 
-#include <IntervalTree.h>
+#include <wolv/container/interval_tree.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -94,11 +94,11 @@ namespace hex::plugin::builtin {
 
         } m_searchSettings, m_decodeSettings;
 
-        using OccurrenceTree = interval_tree::IntervalTree<u64, Occurrence>;
+        using OccurrenceTree = wolv::container::IntervalTree<Occurrence, u64, 0>;
 
-        std::map<prv::Provider*, std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
-        std::map<prv::Provider*, OccurrenceTree> m_occurrenceTree;
-        std::map<prv::Provider*, std::string> m_currFilter;
+        PerProvider<std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
+        PerProvider<OccurrenceTree> m_occurrenceTree;
+        PerProvider<std::string> m_currFilter;
 
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;

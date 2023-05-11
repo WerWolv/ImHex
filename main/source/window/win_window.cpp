@@ -87,13 +87,13 @@ namespace hex {
                 if (IsMaximized(hwnd)) {
                     WINDOWINFO windowInfo = { };
                     windowInfo.cbSize = sizeof(WINDOWINFO);
-
                     GetWindowInfo(hwnd, &windowInfo);
+
                     rect = RECT {
                         .left   = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
                         .top    = static_cast<LONG>(client.top + windowInfo.cyWindowBorders),
-                        .right  = static_cast<LONG>(client.right - windowInfo.cyWindowBorders),
-                        .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders) + 1
+                        .right  = static_cast<LONG>(client.right - windowInfo.cyWindowBorders * 2),
+                        .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders * 2) + 1
                     };
                 } else {
                     rect = client;
@@ -138,8 +138,8 @@ namespace hex {
                 POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
                 const POINT border {
-                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F),
-                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale() / 1.5F)
+                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getNativeScale()),
+                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getNativeScale())
                 };
 
                 RECT window;
@@ -164,7 +164,7 @@ namespace hex {
 
                 if (GImGui->HoveredWindow != nullptr &&
                     GImGui->HoveredWindow->Name != std::string("##MainMenuBar") &&
-                    GImGui->HoveredWindow->Name != std::string("ImHexDockSpace"))
+                    !std::string_view(GImGui->HoveredWindow->Name).starts_with("ImHexDockSpace"))
                     break;
 
                 switch (result) {

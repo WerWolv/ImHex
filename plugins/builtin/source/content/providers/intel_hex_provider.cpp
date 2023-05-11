@@ -161,26 +161,25 @@ namespace hex::plugin::builtin {
     void IntelHexProvider::setBaseAddress(u64 address) {
         auto oldBase = this->getBaseAddress();
 
-        auto intervals = this->m_data.findOverlapping(oldBase, oldBase + this->getActualSize());
+        auto regions = this->m_data.overlapping({ oldBase, oldBase + this->getActualSize() });
 
-        for (auto &interval : intervals) {
-            interval.start = (interval.start - oldBase) + address;
-            interval.stop  = (interval.stop  - oldBase) + address;
+        decltype(this->m_data) newIntervals;
+        for (auto &[interval, data] : regions) {
+            newIntervals.insert({ interval.start - oldBase + address, interval.end - oldBase + address }, *data);
         }
-
-        this->m_data = std::move(intervals);
+        this->m_data = newIntervals;
 
         Provider::setBaseAddress(address);
     }
 
     void IntelHexProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        auto intervals = this->m_data.findOverlapping(offset, (offset + size) - 1);
+        auto intervals = this->m_data.overlapping({ offset, (offset + size) - 1 });
 
         std::memset(buffer, 0x00, size);
         auto bytes = reinterpret_cast<u8*>(buffer);
-        for (const auto &interval : intervals) {
-            for (u32 i = std::max(interval.start, offset); i <= interval.stop && (i - offset) < size; i++) {
-                bytes[i - offset] =  interval.value[i - interval.start];
+        for (const auto &[interval, data] : intervals) {
+            for (u32 i = std::max(interval.start, offset); i <= interval.end && (i - offset) < size; i++) {
+                bytes[i - offset] = (*data)[i - interval.start];
             }
         }
     }
@@ -203,15 +202,14 @@ namespace hex::plugin::builtin {
             return false;
 
         u64 maxAddress = 0x00;
-        decltype(this->m_data)::interval_vector intervals;
         for (auto &[address, bytes] : data) {
             auto endAddress = (address + bytes.size()) - 1;
-            intervals.emplace_back(address, endAddress, std::move(bytes));
+            this->m_data.emplace({ address, endAddress }, std::move(bytes));
 
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
         }
-        this->m_data = std::move(intervals);
+
         this->m_dataSize = maxAddress + 1;
         this->m_dataValid = true;
 
@@ -254,17 +252,18 @@ namespace hex::plugin::builtin {
     }
 
     std::pair<Region, bool> IntelHexProvider::getRegionValidity(u64 address) const {
-        auto intervals = this->m_data.findOverlapping(address, address);
+        auto intervals = this->m_data.overlapping({ address, address });
         if (intervals.empty()) {
             return Provider::getRegionValidity(address);
         }
 
-        auto closestInterval = intervals.front();
-        for (const auto &interval : intervals) {
-            if (interval.start < closestInterval.start)
+        decltype(this->m_data)::Interval closestInterval = { 0, 0 };
+        for (const auto &[interval, data] : intervals) {
+            if (interval.start < closestInterval.end)
                 closestInterval = interval;
         }
-        return { Region { closestInterval.start, (closestInterval.stop - closestInterval.start) + 1}, true };
+        return { Region { closestInterval.start, (closestInterval.end - closestInterval.start) + 1}, true };
+
     }
 
     void IntelHexProvider::loadSettings(const nlohmann::json &settings) {

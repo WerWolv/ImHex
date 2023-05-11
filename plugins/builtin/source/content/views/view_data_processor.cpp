@@ -322,9 +322,9 @@ namespace hex::plugin::builtin {
             .basePath = "data_processor.json",
             .required = false,
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                auto save = tar.readString(basePath);
+                std::string save = tar.readString(basePath);
 
-                ViewDataProcessor::loadNodes(this->m_mainWorkspace.get(provider), save);
+                ViewDataProcessor::loadNodes(this->m_mainWorkspace.get(provider), nlohmann::json::parse(save));
                 this->m_updateNodePositions = true;
 
                 return true;

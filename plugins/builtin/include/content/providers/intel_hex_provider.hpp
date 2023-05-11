@@ -2,7 +2,7 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <IntervalTree.h>
+#include <wolv/container/interval_tree.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
     protected:
         bool m_dataValid = false;
         size_t m_dataSize = 0x00;
-        interval_tree::IntervalTree<u64, std::vector<u8>> m_data;
+        wolv::container::IntervalTree<std::vector<u8>, u64, 0> m_data;
 
         std::fs::path m_sourceFilePath;
     };

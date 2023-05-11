@@ -180,15 +180,14 @@ namespace hex::plugin::builtin {
             return false;
 
         u64 maxAddress = 0x00;
-        decltype(this->m_data)::interval_vector intervals;
         for (auto &[address, bytes] : data) {
             auto endAddress = (address + bytes.size()) - 1;
-            intervals.emplace_back(address, endAddress, std::move(bytes));
+            this->m_data.emplace({ address, endAddress }, std::move(bytes));
 
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
         }
-        this->m_data = std::move(intervals);
+
         this->m_dataSize = maxAddress + 1;
         this->m_dataValid = true;
 

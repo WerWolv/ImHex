@@ -29,11 +29,7 @@ namespace hex::plugin::builtin {
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        /**
-         * @brief closes the file streams used to read the file.
-         * Need to be called on file write, see https://github.com/WerWolv/ImHex/issues/988
-         */
-        void invalidateFiles();
+
         [[nodiscard]] size_t getActualSize() const override;
 
         void save() override;
@@ -60,20 +56,16 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
-    private:
-        wolv::io::File& getFile();
-
     protected:
         std::fs::path m_path;
+        wolv::io::File m_file;
+        size_t m_fileSize = 0;
 
-        wolv::io::File m_sizeFile;
-        std::map<std::thread::id, wolv::io::File> m_files;
+        std::atomic<u32> m_mapCounter = 0;
 
         std::optional<struct stat> m_fileStats;
 
         bool m_readable = false, m_writable = false;
-
-        std::mutex m_fileAccessMutex, m_writeMutex;
     };
 
 }

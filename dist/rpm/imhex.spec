@@ -4,7 +4,7 @@ Release:        0%{?dist}
 Summary:        A hex editor for reverse engineers and programmers
 
 License:        GPL-2.0-only AND Zlib AND MIT AND Apache-2.0
-# imhex is gplv2.  capstone is custom.  nativefiledialog is Zlib.  intervaltree is MIT
+# imhex is gplv2.  capstone is custom.  nativefiledialog is Zlib.
 # see license dir for full breakdown
 URL:            https://imhex.werwolv.net/
 # We need the archive with deps bundled
@@ -36,9 +36,6 @@ Provides:       bundled(imgui)
 Provides:       bundled(libromfs)
 Provides:       bundled(microtar)
 Provides:       bundled(libpl)
-# ImHex modified upstream intervaltree so we have to package it
-# https://github.com/ekg/intervaltree
-Provides:       bundled(intervaltree) = 0.1
 Provides:       bundled(xdgpp)
 
 # ftbfs on these arches.  armv7hl might compile when capstone 5.x
@@ -115,7 +112,6 @@ cp -a lib/external/nativefiledialog/LICENSE                       %{buildroot}%{
 cp -a lib/external/capstone/LICENSE.TXT                           %{buildroot}%{_datadir}/licenses/%{name}/capstone-LICENSE
 cp -a lib/external/capstone/suite/regress/LICENSE                 %{buildroot}%{_datadir}/licenses/%{name}/capstone-regress-LICENSE
 cp -a lib/external/microtar/LICENSE                               %{buildroot}%{_datadir}/licenses/%{name}/microtar-LICENSE
-cp -a lib/external/pattern_language/external/intervaltree/LICENSE %{buildroot}%{_datadir}/licenses/%{name}/pattern-language-intervaltree-LICENSE
 cp -a lib/external/xdgpp/LICENSE                                  %{buildroot}%{_datadir}/licenses/%{name}/xdgpp-LICENSE
 
 

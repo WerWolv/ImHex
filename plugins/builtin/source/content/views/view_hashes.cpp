@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
 
             auto selection = ImHexApi::HexEditor::getSelection();
 
-            if (ImGui::GetIO().KeyShift) {
+            if (selection.has_value() && ImGui::GetIO().KeyShift) {
                 auto &hashFunctions = this->m_hashFunctions.get(selection->getProvider());
                 if (!hashFunctions.empty() && selection.has_value() && selection->overlaps(Region { address, size })) {
                     ImGui::BeginTooltip();

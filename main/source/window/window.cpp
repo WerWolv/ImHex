@@ -530,17 +530,24 @@ namespace hex {
 
         // Draw popup stack
         {
+            static bool popupDisplaying = false;
+            static bool positionSet = false;
+            static bool sizeSet = false;
+
+            static std::unique_ptr<impl::PopupBase> currPopup;
+            static LangEntry name("");
+
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
-                static bool popupDisplaying = false;
-                static bool positionSet = false;
-                static bool sizeSet = false;
+                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
+                    currPopup = std::move(popups.back());
+                    name = LangEntry(currPopup->getUnlocalizedName());
 
-                auto &currPopup = popups.back();
-                const auto &name = LangEntry(currPopup->getUnlocalizedName());
-
-                if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
                     ImGui::OpenPopup(name);
+                    popups.pop_back();
+                }
+            }
 
+            if (currPopup != nullptr) {
                 bool open = true;
 
                 const auto &minSize = currPopup->getMinSize();
@@ -585,8 +592,7 @@ namespace hex {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 
-                    if (auto it = std::find(popups.begin(), popups.end(), currPopup); it != popups.end())
-                        popups.erase(it);
+                    currPopup = nullptr;
                 }
             }
         }
