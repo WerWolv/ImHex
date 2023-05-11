@@ -219,8 +219,9 @@ namespace hex {
     }
 
     void Window::loop() {
-        this->m_lastFrameTime = glfwGetTime();
         while (!glfwWindowShouldClose(this->m_window)) {
+            this->m_lastFrameTime = glfwGetTime();
+
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED)) {
                 // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
@@ -264,18 +265,23 @@ namespace hex {
             this->frame();
             this->frameEnd();
 
-            // Limit frame rate
-            const auto targetFps = ImHexApi::System::getTargetFPS();
-            if (targetFps < 15) {
-                glfwSwapInterval(1);
-            } else if (targetFps <= 200) {
-                glfwSwapInterval(0);
-                auto leftoverFrameTime = i64((this->m_lastFrameTime + 1 / targetFps - glfwGetTime()) * 1000);
-                if (leftoverFrameTime > 0)
-                    std::this_thread::sleep_for(std::chrono::milliseconds(leftoverFrameTime));
-            }
+            glfwSwapInterval(0);
 
-            this->m_lastFrameTime = glfwGetTime();
+            // Limit frame rate
+            // If the target FPS are below 15, use the monitor refresh rate, if it's above 200, don't limit the frame rate
+            const auto targetFPS = ImHexApi::System::getTargetFPS();
+            if (targetFPS < 15) {
+                glfwSwapInterval(1);
+            } else if (targetFPS > 200) {
+                glfwSwapInterval(0);
+            } else {
+                glfwSwapInterval(0);
+                const auto frameTime = glfwGetTime() - this->m_lastFrameTime;
+                const auto targetFrameTime = 1.0 / targetFPS;
+                if (frameTime < targetFrameTime) {
+                    glfwWaitEventsTimeout(targetFrameTime - frameTime);
+                }
+            }
         }
     }
 
