@@ -62,7 +62,7 @@ namespace hex {
                 this->m_data.emplace(provider, T());
             });
 
-            (void)EventManager::subscribe<EventProviderClosed>([this](prv::Provider *provider){
+            (void)EventManager::subscribe<EventProviderDeleted>([this](prv::Provider *provider){
                 this->m_data.erase(provider);
             });
 
