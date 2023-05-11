@@ -266,22 +266,26 @@ namespace ImGui {
     }
 
     void HelpHover(const char *text) {
+        const auto iconColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
+
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue));
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, ImGui::GetStyle().FramePadding.y));
 
+        ImGui::PushStyleColor(ImGuiCol_Text, iconColor);
         ImGui::Button(ICON_VS_INFO);
+        ImGui::PopStyleColor();
+
         if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            ImGui::SetNextWindowSizeConstraints(ImVec2(0, 0), ImVec2(ImGui::GetTextLineHeight() * 75, FLT_MAX));
+            ImGui::SetNextWindowSizeConstraints(ImVec2(ImGui::GetTextLineHeight() * 25, 0), ImVec2(ImGui::GetTextLineHeight() * 25, FLT_MAX));
             ImGui::BeginTooltip();
             ImGui::TextFormattedWrapped("{}", text);
             ImGui::EndTooltip();
         }
 
         ImGui::PopStyleVar();
-        ImGui::PopStyleColor(4);
+        ImGui::PopStyleColor(3);
     }
 
     void UnderlinedText(const char *label, ImColor color, const ImVec2 &size_arg) {
