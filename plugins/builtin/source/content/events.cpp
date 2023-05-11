@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
                             PopupError::open("hex.builtin.popup.error.project.load"_lang);
                         }
                     }else{
-                        FileProvider* newProvider = reinterpret_cast<FileProvider*>(
+                        FileProvider* newProvider = static_cast<FileProvider*>(
                             ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
                         );
                         newProvider->setPath(path);
