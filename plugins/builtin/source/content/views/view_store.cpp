@@ -29,9 +29,7 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
-
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.store.name" }, 2050, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, 1000, Shortcut::None, [&, this] {
             if (this->m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
             TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });

@@ -137,6 +137,7 @@
         "hex.builtin.menu.edit.bookmark.create": "Create bookmark",
         "hex.builtin.menu.edit.redo": "Redo",
         "hex.builtin.menu.edit.undo": "Undo",
+        "hex.builtin.menu.extras": "Extras",
         "hex.builtin.menu.file": "File",
         "hex.builtin.menu.file.bookmark.export": "Export bookmarks",
         "hex.builtin.menu.file.bookmark.import": "Import bookmarks",

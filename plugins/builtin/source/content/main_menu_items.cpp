@@ -13,7 +13,6 @@
 
 #include <content/global_actions.hpp>
 #include <content/popups/popup_notification.hpp>
-#include <content/popups/popup_docs_question.hpp>
 #include <content/popups/popup_text_input.hpp>
 
 #include <wolv/io/file.hpp>
@@ -461,19 +460,21 @@ namespace hex::plugin::builtin {
         });
     }
 
-    static void createHelpMenu() {
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.help", 5000);
-
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.menu.help.ask_for_help" }, 5000, CTRLCMD + SHIFT + Keys::D, [] {
-            PopupDocsQuestion::open();
-        });
+    static void createExtrasMenu() {
+        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.extras", 5000);
     }
+
+    static void createHelpMenu() {
+        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.help", 6000);
+    }
+
 
     void registerMainMenuEntries() {
         createFileMenu();
         createEditMenu();
         createViewMenu();
         createLayoutMenu();
+        createExtrasMenu();
         createHelpMenu();
 
         (void)EventManager::subscribe<EventFrameEnd>([] {

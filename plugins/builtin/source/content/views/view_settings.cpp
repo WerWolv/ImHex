@@ -19,9 +19,9 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.settings.name"_lang }, 4050, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name"_lang }, 4000, Shortcut::None, [&, this] {
             TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
             this->getWindowOpenState() = true;
         });

@@ -6,6 +6,8 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <content/popups/popup_docs_question.hpp>
+
 #include <romfs/romfs.hpp>
 
 namespace hex::plugin::builtin {
@@ -18,8 +20,14 @@ namespace hex::plugin::builtin {
             this->getWindowOpenState() = true;
         });
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 1050, Shortcut::None, [] {
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 3000, Shortcut::None, [] {
             hex::openWebpage("https://imhex.werwolv.net/docs");
+        });
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.menu.help.ask_for_help" }, 4000, CTRLCMD + SHIFT + Keys::D, [] {
+            PopupDocsQuestion::open();
         });
     }
 

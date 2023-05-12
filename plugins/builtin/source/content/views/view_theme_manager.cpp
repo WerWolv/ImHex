@@ -7,7 +7,7 @@
 namespace hex::plugin::builtin {
 
     ViewThemeManager::ViewThemeManager() : View("hex.builtin.view.theme_manager.name") {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.theme_manager.name" }, 3000, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.theme_manager.name" }, 2000, Shortcut::None, [&, this] {
             this->m_viewOpen = true;
             this->getWindowOpenState() = true;
         });
