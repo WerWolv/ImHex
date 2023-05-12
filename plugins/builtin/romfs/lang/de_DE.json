@@ -176,6 +176,7 @@
         "hex.builtin.menu.file.reload_provider": "Provider neu laden",
         "hex.builtin.menu.help": "Hilfe",
         "hex.builtin.menu.layout": "Layout",
+        "hex.builtin.menu.layout.save": "Layout speichern",
         "hex.builtin.menu.view": "Ansicht",
         "hex.builtin.menu.view.demo": "ImGui Demo anzeigen",
         "hex.builtin.menu.view.fps": "FPS anzeigen",
