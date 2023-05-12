@@ -1043,8 +1043,9 @@ namespace hex::plugin::builtin {
             auto selection = ImHexApi::HexEditor::getSelection();
             auto provider  = ImHexApi::Provider::get();
 
+            bool enabled = ImHexApi::HexEditor::isSelectionValid();
             for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::impl::getEntries()) {
-                if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
+                if (ImGui::MenuItem(LangEntry(unlocalizedName), nullptr, false, enabled)) {
                     ImGui::SetClipboardText(
                             callback(
                                     provider,
