@@ -265,10 +265,10 @@ namespace hex {
             return *runtime;
         }
 
-        std::scoped_lock<std::mutex> getRuntimeLock() {
+        std::mutex& getRuntimeLock() {
             static std::mutex runtimeLock;
 
-            return std::scoped_lock(runtimeLock);
+            return runtimeLock;
         }
 
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {

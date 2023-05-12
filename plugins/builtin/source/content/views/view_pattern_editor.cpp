@@ -141,36 +141,39 @@ namespace hex::plugin::builtin {
 
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-                auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-                if (runtime.isRunning()) {
-                    if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
-                        runtime.abort();
-                } else {
-                    if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
-                        this->m_triggerEvaluation = false;
-                        this->evaluatePattern(this->m_textEditor.GetText(), provider);
-                    }
-                }
-
-
-                ImGui::PopStyleVar();
-
-                ImGui::SameLine();
-                if (this->m_runningEvaluators > 0)
-                    ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
-                else {
-                    if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
-                        if (this->m_runAutomatically)
-                            this->m_hasUnevaluatedChanges = true;
+                {
+                    auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+                    auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+                    if (runtime.isRunning()) {
+                        if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
+                            runtime.abort();
+                    } else {
+                        if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
+                            this->m_triggerEvaluation = false;
+                            this->evaluatePattern(this->m_textEditor.GetText(), provider);
+                        }
                     }
 
-                    ImGui::SameLine();
-                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-                    ImGui::SameLine();
 
-                    ImGui::TextFormatted("{} / {}",
-                        runtime.getCreatedPatternCount(),
-                        runtime.getMaximumPatternCount());
+                    ImGui::PopStyleVar();
+
+                    ImGui::SameLine();
+                    if (this->m_runningEvaluators > 0)
+                        ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
+                    else {
+                        if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
+                            if (this->m_runAutomatically)
+                                this->m_hasUnevaluatedChanges = true;
+                        }
+
+                        ImGui::SameLine();
+                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                        ImGui::SameLine();
+
+                        ImGui::TextFormatted("{} / {}",
+                            runtime.getCreatedPatternCount(),
+                            runtime.getMaximumPatternCount());
+                    }
                 }
 
                 if (this->m_textEditor.IsTextChanged()) {
@@ -407,6 +410,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections) {
+        auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
         auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
         if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
@@ -640,6 +644,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code, prv::Provider *provider) {
+        auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
+
         this->m_runningEvaluators++;
         *this->m_executionDone = false;
 
@@ -650,11 +656,11 @@ namespace hex::plugin::builtin {
 
         EventManager::post<EventHighlightingChanged>();
 
-        auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-        ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
-        TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, &runtime](auto &task) {
-            auto lock = ContentRegistry::PatternLanguage::getRuntimeLock();
+            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+            ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
 
             task.setInterruptCallback([&runtime] { runtime.abort(); });
 
@@ -725,9 +731,6 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
-            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-            ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
-
             TaskManager::createBackgroundTask("Analyzing file content", [this, provider](auto &) {
                 if (!this->m_autoLoadPatterns)
                     return;
@@ -737,7 +740,7 @@ namespace hex::plugin::builtin {
                     *this->m_sourceCode = this->m_textEditor.GetText();
                 }
 
-                auto lock = ContentRegistry::PatternLanguage::getRuntimeLock();
+                auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
                 auto& runtime = ContentRegistry::PatternLanguage::getRuntime();
                 ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
 
@@ -939,6 +942,7 @@ namespace hex::plugin::builtin {
             if (this->m_runningEvaluators != 0)
                 return std::nullopt;
 
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             std::optional<ImColor> color;
@@ -958,6 +962,7 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             auto patterns = runtime.getPatternsAtAddress(address);

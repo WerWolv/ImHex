@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
                 if (!runtime.arePatternsValid()) {
                     this->m_patternDrawer.draw({});
                 } else {
-                    auto lock = ContentRegistry::PatternLanguage::getRuntimeLock();
+                    auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
                     if (this->m_shouldReset) {
                         this->m_patternDrawer.reset();

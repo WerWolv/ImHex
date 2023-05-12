@@ -272,7 +272,7 @@ namespace hex {
              * @brief Provides access to the current provider's pattern language runtime's lock
              * @return Lock
              */
-            std::scoped_lock<std::mutex> getRuntimeLock();
+            std::mutex& getRuntimeLock();
 
             /**
              * @brief Configures the pattern language runtime using ImHex's default settings
