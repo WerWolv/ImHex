@@ -776,6 +776,9 @@ namespace hex::plugin::builtin {
                             this->m_settingsValid = minValid && maxValid && minSize == maxSize;
                         }
 
+                        if (settings.inputMin.empty())
+                            this->m_settingsValid = false;
+
                         ImGui::EndTabItem();
                     }
 

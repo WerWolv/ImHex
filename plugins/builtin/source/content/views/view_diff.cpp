@@ -20,6 +20,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
             this->m_columns[0].provider = -1;
             this->m_columns[1].provider = -1;
+            this->m_diffs.clear();
         });
 
         auto compareFunction = [this](int otherIndex) {

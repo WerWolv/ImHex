@@ -9,7 +9,6 @@
 #include <content/providers/view_provider.hpp>
 
 #include <nlohmann/json.hpp>
-#include <cstring>
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>

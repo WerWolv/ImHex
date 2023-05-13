@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::NewLine();
-            ImGui::TextWrapped("%s", static_cast<const char *>("hex.builtin.view.hashes.hover_info"_lang));
+            ImGui::InfoTooltip("hex.builtin.view.hashes.hover_info"_lang);
         }
         ImGui::End();
     }
