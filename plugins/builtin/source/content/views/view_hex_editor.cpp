@@ -895,13 +895,21 @@ namespace hex::plugin::builtin {
             .basePath = "custom_encoding.tbl",
             .required = false,
             .load = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
-                this->m_hexEditor.setCustomEncoding(EncodingFile(hex::EncodingFile::Type::Thingy, tar.readString(basePath)));
+                if (!tar.contains(basePath))
+                    return true;
+
+                auto content = tar.readString(basePath);
+                if (!content.empty())
+                    this->m_hexEditor.setCustomEncoding(EncodingFile(hex::EncodingFile::Type::Thingy, content));
 
                 return true;
             },
             .store = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
                 if (const auto &encoding = this->m_hexEditor.getCustomEncoding(); encoding.has_value()) {
-                    tar.writeString(basePath, encoding->getTableContent());
+                    auto content = encoding->getTableContent();
+
+                    if (!content.empty())
+                        tar.writeString(basePath, encoding->getTableContent());
                 }
 
                 return true;
