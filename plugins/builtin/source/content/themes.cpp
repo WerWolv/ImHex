@@ -178,7 +178,11 @@ namespace hex::plugin::builtin {
                     { "toolbar-blue",           ImGuiCustomCol_ToolbarBlue          },
                     { "toolbar-purple",         ImGuiCustomCol_ToolbarPurple        },
                     { "toolbar-brown",          ImGuiCustomCol_ToolbarBrown         },
-                    { "highlight",              ImGuiCustomCol_Highlight            }
+                    { "highlight",              ImGuiCustomCol_Highlight            },
+                    { "IEEE-tool-sign",         ImGuiCustomCol_IEEEToolSign         },
+                    { "IEEE-tool-exp",          ImGuiCustomCol_IEEEToolExp          },
+                    { "IEEE-tool-mantissa",     ImGuiCustomCol_IEEEToolMantissa     }
+
                 };
 
                 ThemeManager::addThemeHandler("imhex", ImHexColorMap,

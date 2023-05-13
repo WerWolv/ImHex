@@ -369,6 +369,10 @@ namespace ImGui {
         colors[ImGuiCustomCol_ToolbarBrown]  = ImColor(219, 179, 119);
 
         colors[ImGuiCustomCol_Highlight] = ImColor(77, 198, 155);
+
+        colors[ImGuiCustomCol_IEEEToolSign] = ImColor(93, 93, 127);
+        colors[ImGuiCustomCol_IEEEToolExp]  = ImColor(93, 127,  93);
+        colors[ImGuiCustomCol_IEEEToolMantissa]  = ImColor(127, 93,  93);
     }
 
     void StyleCustomColorsLight() {
@@ -387,6 +391,10 @@ namespace ImGui {
         colors[ImGuiCustomCol_ToolbarBrown]  = ImColor(219, 179, 119);
 
         colors[ImGuiCustomCol_Highlight] = ImColor(41, 151, 112);
+
+        colors[ImGuiCustomCol_IEEEToolSign] = ImColor(187, 187, 255);
+        colors[ImGuiCustomCol_IEEEToolExp]  = ImColor(187, 255,  187);
+        colors[ImGuiCustomCol_IEEEToolMantissa]  = ImColor(255, 187,187);
     }
 
     void StyleCustomColorsClassic() {
@@ -405,6 +413,9 @@ namespace ImGui {
         colors[ImGuiCustomCol_ToolbarBrown]  = ImColor(219, 179, 119);
 
         colors[ImGuiCustomCol_Highlight] = ImColor(77, 198, 155);
+        colors[ImGuiCustomCol_IEEEToolSign] = ImColor(93, 93, 127);
+        colors[ImGuiCustomCol_IEEEToolExp]  = ImColor(93, 127,  93);
+        colors[ImGuiCustomCol_IEEEToolMantissa]  = ImColor(127, 93,  93);
     }
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name) {
