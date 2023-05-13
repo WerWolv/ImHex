@@ -35,15 +35,17 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImHexApi::Provider::isValid()) {
                 auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock()) || !runtime.arePatternsValid()) {
+                if (!runtime.arePatternsValid()) {
                     this->m_patternDrawer.draw({});
                 } else {
-                    if (this->m_shouldReset) {
-                        this->m_patternDrawer.reset();
-                        this->m_shouldReset = false;
-                    }
+                    if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                        if (this->m_shouldReset) {
+                            this->m_patternDrawer.reset();
+                            this->m_shouldReset = false;
+                        }
 
-                    this->m_patternDrawer.draw(runtime.getPatterns());
+                        this->m_patternDrawer.draw(runtime.getPatterns());
+                    }
                 }
             }
         }
