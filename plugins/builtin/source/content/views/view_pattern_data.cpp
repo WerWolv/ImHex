@@ -4,6 +4,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <pl/patterns/pattern.hpp>
+#include <wolv/utils/lock.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -34,11 +35,9 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImHexApi::Provider::isValid()) {
                 auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-                if (!runtime.arePatternsValid()) {
+                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock()) || !runtime.arePatternsValid()) {
                     this->m_patternDrawer.draw({});
                 } else {
-                    auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
-
                     if (this->m_shouldReset) {
                         this->m_patternDrawer.reset();
                         this->m_shouldReset = false;

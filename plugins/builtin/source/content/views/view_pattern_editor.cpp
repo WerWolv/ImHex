@@ -23,6 +23,7 @@
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/utils/lock.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -142,7 +143,6 @@ namespace hex::plugin::builtin {
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
                 {
-                    auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
                     auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                     if (runtime.isRunning()) {
                         if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
@@ -649,6 +649,7 @@ namespace hex::plugin::builtin {
         this->m_runningEvaluators++;
         *this->m_executionDone = false;
 
+
         this->m_textEditor.SetErrorMarkers({});
         this->m_console->clear();
 
@@ -705,7 +706,7 @@ namespace hex::plugin::builtin {
                 *this->m_lastEvaluationError = runtime.getError();
             }
 
-            TaskManager::doLater([code = std::move(code)] {
+            TaskManager::doLater([code] {
                 EventManager::post<EventPatternExecuted>(code);
             });
         });
@@ -942,18 +943,20 @@ namespace hex::plugin::builtin {
             if (this->m_runningEvaluators != 0)
                 return std::nullopt;
 
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             std::optional<ImColor> color;
-            for (const auto &pattern : runtime.getPatternsAtAddress(address)) {
-                if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
-                    continue;
 
-                if (color.has_value())
-                    color = ImAlphaBlendColors(*color, pattern->getColor());
-                else
-                    color = pattern->getColor();
+            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                for (const auto &pattern : runtime.getPatternsAtAddress(address)) {
+                    if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
+                        continue;
+
+                    if (color.has_value())
+                        color = ImAlphaBlendColors(*color, pattern->getColor());
+                    else
+                        color = pattern->getColor();
+                }
             }
 
             return color;
@@ -962,33 +965,34 @@ namespace hex::plugin::builtin {
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data, size);
 
-            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
-            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
-            auto patterns = runtime.getPatternsAtAddress(address);
-            if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden; })) {
-                ImGui::BeginTooltip();
+                auto patterns = runtime.getPatternsAtAddress(address);
+                if (!patterns.empty() && !std::all_of(patterns.begin(), patterns.end(), [](const auto &pattern) { return pattern->getVisibility() == pl::ptrn::Visibility::Hidden; })) {
+                    ImGui::BeginTooltip();
 
-                for (const auto &pattern : patterns) {
-                    if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
-                        continue;
+                    for (const auto &pattern : patterns) {
+                        if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
+                            continue;
 
-                    auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
-                    ImGui::PushID(pattern);
-                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
+                        auto tooltipColor = (pattern->getColor() & 0x00FF'FFFF) | 0x7000'0000;
+                        ImGui::PushID(pattern);
+                        if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
 
-                        this->drawPatternTooltip(pattern);
+                            this->drawPatternTooltip(pattern);
 
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
-                        ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
-                        ImGui::EndTable();
-                        ImGui::PopStyleColor(2);
+                            ImGui::PushStyleColor(ImGuiCol_TableRowBg, tooltipColor);
+                            ImGui::PushStyleColor(ImGuiCol_TableRowBgAlt, tooltipColor);
+                            ImGui::EndTable();
+                            ImGui::PopStyleColor(2);
+                        }
+                        ImGui::PopID();
                     }
-                    ImGui::PopID();
+                    ImGui::EndTooltip();
                 }
-                ImGui::EndTooltip();
             }
         });
 
