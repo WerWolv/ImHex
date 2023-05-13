@@ -173,6 +173,11 @@ namespace hex {
             bool isSelectionValid();
 
             /**
+             * @brief Clears the current selection in the Hex Editor
+             */
+            void clearSelection();
+
+            /**
              * @brief Gets the current selection in the Hex Editor
              * @return The current selection
              */

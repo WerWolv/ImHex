@@ -881,6 +881,8 @@ namespace hex::plugin::builtin {
             if (newProvider != nullptr) {
                 this->m_hexEditor.setSelectionUnchecked(this->m_selectionStart.get(newProvider), this->m_selectionEnd.get(newProvider));
                 this->m_hexEditor.setScrollPosition(this->m_scrollPosition.get(newProvider));
+            } else {
+                ImHexApi::HexEditor::clearSelection();
             }
 
             this->m_hexEditor.forceUpdateScrollPosition();
@@ -1043,8 +1045,9 @@ namespace hex::plugin::builtin {
             auto selection = ImHexApi::HexEditor::getSelection();
             auto provider  = ImHexApi::Provider::get();
 
+            bool enabled = ImHexApi::HexEditor::isSelectionValid();
             for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::impl::getEntries()) {
-                if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
+                if (ImGui::MenuItem(LangEntry(unlocalizedName), nullptr, false, enabled)) {
                     ImGui::SetClipboardText(
                             callback(
                                     provider,

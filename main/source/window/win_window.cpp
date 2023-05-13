@@ -92,8 +92,8 @@ namespace hex {
                     rect = RECT {
                         .left   = static_cast<LONG>(client.left + windowInfo.cyWindowBorders),
                         .top    = static_cast<LONG>(client.top + windowInfo.cyWindowBorders),
-                        .right  = static_cast<LONG>(client.right - windowInfo.cyWindowBorders * 2),
-                        .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders * 2) + 1
+                        .right  = static_cast<LONG>(client.right - windowInfo.cyWindowBorders),
+                        .bottom = static_cast<LONG>(client.bottom - windowInfo.cyWindowBorders) + 1
                     };
                 } else {
                     rect = client;
@@ -138,8 +138,8 @@ namespace hex {
                 POINT cursor = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
 
                 const POINT border {
-                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getNativeScale()),
-                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getNativeScale())
+                    static_cast<LONG>((::GetSystemMetrics(SM_CXFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale()),
+                    static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale())
                 };
 
                 RECT window;
@@ -159,12 +159,7 @@ namespace hex {
                     RegionTop * (cursor.y < (window.top + border.y)) |
                     RegionBottom * (cursor.y >= (window.bottom - border.y));
 
-                if (result != 0 && (ImGui::IsItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
-                    break;
-
-                if (GImGui->HoveredWindow != nullptr &&
-                    GImGui->HoveredWindow->Name != std::string("##MainMenuBar") &&
-                    !std::string_view(GImGui->HoveredWindow->Name).starts_with("ImHexDockSpace"))
+                if (result != 0 && (ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
                     break;
 
                 switch (result) {

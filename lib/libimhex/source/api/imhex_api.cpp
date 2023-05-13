@@ -177,6 +177,10 @@ namespace hex {
             return impl::s_currentSelection;
         }
 
+        void clearSelection() {
+            impl::s_currentSelection.reset();
+        }
+
         void setSelection(const Region &region, prv::Provider *provider) {
             setSelection(ProviderRegion { region, provider == nullptr ? Provider::get() : provider });
         }

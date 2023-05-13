@@ -1162,7 +1162,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            auto lock = ContentRegistry::PatternLanguage::getRuntimeLock();
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             const auto &outVars = runtime.getOutVariables();

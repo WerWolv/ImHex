@@ -40,6 +40,7 @@ namespace hex::fs {
         Themes,
         Libraries,
         Nodes,
+        Layouts,
 
         END
     };

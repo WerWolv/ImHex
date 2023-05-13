@@ -265,10 +265,10 @@ namespace hex {
             return *runtime;
         }
 
-        std::scoped_lock<std::mutex> getRuntimeLock() {
+        std::mutex& getRuntimeLock() {
             static std::mutex runtimeLock;
 
-            return std::scoped_lock(runtimeLock);
+            return runtimeLock;
         }
 
         void configureRuntime(pl::PatternLanguage &runtime, prv::Provider *provider) {
@@ -581,12 +581,6 @@ namespace hex {
             impl::getTitleBarButtons().push_back({ icon, unlocalizedTooltip, function });
         }
 
-        void addLayout(const std::string &unlocalizedName, const impl::LayoutFunction &function) {
-            log::debug("Added new layout: {}", unlocalizedName);
-
-            impl::getLayouts().push_back({ unlocalizedName, function });
-        }
-
         namespace impl {
 
             std::multimap<u32, impl::MainMenuItem> &getMainMenuItems() {
@@ -624,12 +618,6 @@ namespace hex {
                 static std::vector<impl::TitleBarButton> buttons;
 
                 return buttons;
-            }
-
-            std::vector<impl::Layout> &getLayouts() {
-                static std::vector<impl::Layout> layouts;
-
-                return layouts;
             }
 
         }
