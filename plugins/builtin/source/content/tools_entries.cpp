@@ -25,6 +25,7 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+#include <charconv>
 
 namespace hex::plugin::builtin {
 
@@ -1510,9 +1511,12 @@ namespace hex::plugin::builtin {
                 else
                     precision = std::ceil(1+(mantissaBitCount + 1) * logBaseTenOfTwo);
 
+                // For C++ from_chars is better than strtold.
+                // the main problem is that from_chars will not process special numbers
+                // like inf and nan, so we handle them manually
                 static std::string decimalFloatingPointNumberString;
-                // add q or s to the beginning of the string to indicate
-                // quiet or signaling NaN.
+                static std::string_view decimalStrView;
+                // use qnan for quiet NaN and snan for signaling NaN
                 if (numberKind == NumberKind::NaN) {
                     if (numberType == NumberType::QuietNaN)
                         decimalFloatingPointNumberString = fmt::format("qnan");
@@ -1524,48 +1528,58 @@ namespace hex::plugin::builtin {
                 auto style1 = ImGui::GetStyle();
                 inputFieldWidth = std::fmax(inputFieldWidth, ImGui::CalcTextSize(decimalFloatingPointNumberString.c_str()).x + 2 * style1.FramePadding.x);
                 ImGui::PushItemWidth(inputFieldWidth);
+                std::string specialNumbers[] = {"inf", "Inf", "INF", "nan", "Nan", "NAN", "qnan", "Qnan", "QNAN", "snan", "Snan", "SNAN"};
 
-                char *endp;
-                char firstLetter = 0;
                 // We allow any input in order to accept infinities and NaNs, all invalid entries
-                // are detected by strtold and set the result to zero.
+                // are detected by from_chars. You can also enter -0 or -inf.
+                std::from_chars_result res;
                 if (ImGui::InputText("##resultFloat", decimalFloatingPointNumberString, flags)) {
-
-                    if (decimalFloatingPointNumberString.starts_with('q') || decimalFloatingPointNumberString.starts_with('Q')
-                    || decimalFloatingPointNumberString.starts_with('s') ||  decimalFloatingPointNumberString.starts_with('S')
-                    ||                                                       decimalFloatingPointNumberString.starts_with('-')) {
-
-                        firstLetter = decimalFloatingPointNumberString[0] < 95 ? decimalFloatingPointNumberString[0] + 32 : decimalFloatingPointNumberString[0];
-                        resultFloat = std::strtold(decimalFloatingPointNumberString.c_str() + 1, &endp);
-
-                    } else
-                        resultFloat = std::strtold(decimalFloatingPointNumberString.c_str(), &endp);
-
-                    if (decimalFloatingPointNumberString.c_str() != endp && *endp == '\0' && (firstLetter == 0 || std::isnan(resultFloat))) {
+                    // Always obtain sign first.
+                    if (decimalFloatingPointNumberString[0] == '-') {
+                        signBits = 1; // and remove it from the string.
+                        decimalFloatingPointNumberString.erase(0, 1);
+                    } else //important to switch from - to +.
                         signBits = 0;
-                        if (resultFloat < 0.0 ) {
-                            signBits = 1;
-                            resultFloat = -resultFloat;
-                        } else if (firstLetter == '-') {
-                            signBits = 1;
+
+                    std::string inputType;
+                    bool matchFound = false;
+                    i32 i;// detect and use special numbers.
+                    for (i = 0; i < 12; i++) {
+                        if (decimalFloatingPointNumberString == specialNumbers[i]) {
+                            i32 specialNumberIndex = i / 3; // use lower case version
+                            inputType = specialNumbers[3 * specialNumberIndex];
+                            matchFound = true;
+                            break;
                         }
+                    }
 
-                        auto log2Result = std::log2(resultFloat);
+                    if (!matchFound)
+                        inputType = "regular";
 
-                        // 2^(bias+1)-2^(bias-prec) is the largest number that can be represented.
-                        // If the number entered is larger than this then the input is set to infinity.
-                        if (resultFloat > (std::pow(2.0L, exponentBias + 1) - std::pow(2.0L, exponentBias - mantissaBitCount)) || std::isinf(resultFloat)) {
+                    if (inputType == "regular") {
+                        decimalStrView = decimalFloatingPointNumberString;
+                        res = std::from_chars(decimalStrView.data(), decimalStrView.data() + decimalStrView.size(), resultFloat);
+                        if (res.ec != std::errc()) { // this is why we use from_chars
+                            inputType = "invalid";
+                        }
+                    } else if (inputType == "inf") {
+                        resultFloat = std::numeric_limits<long double>::infinity();
+                        resultFloat *= (signBits == 1 ? -1 : 1);
 
-                            resultFloat = std::numeric_limits<long double>::infinity();
-                            numberKind = NumberKind::Infinity;
-                            numberType = signBits == 1 ? NumberType::NegativeInfinity : NumberType::PositiveInfinity;
-                            exponentBits = (u128(1) << exponentBitCount) - 1;
-                            mantissaBits = 0;
+                    } else if (inputType == "nan")
+                        resultFloat = std::numeric_limits<long double>::quiet_NaN();
 
-                        } else if (-std::rint(log2Result) >  exponentBias + mantissaBitCount - 1 || resultFloat == 0.0) {
+                    else if (inputType == "qnan")
+                        resultFloat = std::numeric_limits<long double>::quiet_NaN();
 
-                            // 1/2^(bias-1+prec) is the smallest number that can be represented.
-                            // If the number entered is smaller than this then the input is set to zero.
+                    else if (inputType == "snan")
+                        resultFloat = std::numeric_limits<long double>::signaling_NaN();
+
+                    long double log2Result;
+
+                    if (inputType != "invalid") {
+                        // deal with zero first so we can use log2.
+                        if (resultFloat == 0.0) {
                             if (signBits == 1)
                                 resultFloat = -0.0;
                             else
@@ -1575,39 +1589,67 @@ namespace hex::plugin::builtin {
                             exponentBits = 0;
                             mantissaBits = 0;
 
-                        } else if (std::isnan(resultFloat)) { // if user types nan we assume it is a quiet nan.
-
-                            if (firstLetter == 's') {
-                                resultFloat = std::numeric_limits<long double>::signaling_NaN();
-                                numberType = NumberType::SignalingNaN;
-                            } else {
-                                resultFloat = std::numeric_limits<long double>::quiet_NaN();
-                                numberType = NumberType::QuietNaN;
-                            }
-                            numberKind = NumberKind::NaN;
-                            exponentBits = (u128(1) << exponentBitCount) - 1;
-                            if (numberType == NumberType::QuietNaN)
-                                mantissaBits =(u128(1) << (mantissaBitCount - 1));
-                            else
-                                mantissaBits = 1;
-
-                        } else if (static_cast<i64>(std::floor(log2Result)) + exponentBias <= 0) {
-
-                            numberKind = NumberKind::Denormal;
-                            numberType = NumberType::Regular;
-                            exponentBits = 0;
-                            auto mantissaExp = log2Result + exponentBias + mantissaBitCount - 1;
-                            mantissaBits = static_cast<i64>(std::round(std::pow(2.0L, mantissaExp)));
-
                         } else {
 
-                            numberType = NumberType::Regular;
-                            numberKind = NumberKind::Normal;
-                            i64 unBiasedExponent = static_cast<i64>(std::floor(log2Result));
-                            exponentBits =  unBiasedExponent + exponentBias;
-                            mantissaValue = resultFloat * std::pow(2.0L,-unBiasedExponent) - 1;
-                            mantissaBits = static_cast<i64>(std::round(static_cast<long double>(u128(1) << (mantissaBitCount )) * mantissaValue));
+                            log2Result = std::log2(resultFloat);
+                            // 2^(bias+1)-2^(bias-prec) is the largest number that can be represented.
+                            // If the number entered is larger than this then the input is set to infinity.
+                            if (resultFloat > (std::pow(2.0L, exponentBias + 1) - std::pow(2.0L, exponentBias - mantissaBitCount)) || inputType == "inf") {
 
+                                resultFloat = std::numeric_limits<long double>::infinity();
+                                numberKind = NumberKind::Infinity;
+                                numberType = signBits == 1 ? NumberType::NegativeInfinity : NumberType::PositiveInfinity;
+                                exponentBits = (u128(1) << exponentBitCount) - 1;
+                                mantissaBits = 0;
+
+                            } else if (-std::rint(log2Result) > exponentBias + mantissaBitCount - 1) {
+
+                                // 1/2^(bias-1+prec) is the smallest number that can be represented.
+                                // If the number entered is smaller than this then the input is set to zero.
+                                if (signBits == 1)
+                                    resultFloat = -0.0;
+                                else
+                                    resultFloat = 0.0;
+
+                                numberKind = NumberKind::Zero;
+                                numberType = NumberType::Regular;
+                                exponentBits = 0;
+                                mantissaBits = 0;
+
+                            } else if (inputType == "snan") {
+
+                                resultFloat = std::numeric_limits<long double>::signaling_NaN();
+                                numberType = NumberType::SignalingNaN;
+                                numberKind = NumberKind::NaN;
+                                exponentBits = (u128(1) << exponentBitCount) - 1;
+                                mantissaBits = 1;
+
+                            } else if (inputType == "qnan") {
+
+                                resultFloat = std::numeric_limits<long double>::quiet_NaN();
+                                numberType = NumberType::QuietNaN;
+                                numberKind = NumberKind::NaN;
+                                exponentBits = (u128(1) << exponentBitCount) - 1;
+                                mantissaBits = (u128(1) << (mantissaBitCount - 1));
+
+                            } else if (static_cast<i64>(std::floor(log2Result)) + exponentBias <= 0) {
+
+                                numberKind = NumberKind::Denormal;
+                                numberType = NumberType::Regular;
+                                exponentBits = 0;
+                                auto mantissaExp = log2Result + exponentBias + mantissaBitCount - 1;
+                                mantissaBits = static_cast<i64>(std::round(std::pow(2.0L, mantissaExp)));
+
+                            } else {
+
+                                numberType = NumberType::Regular;
+                                numberKind = NumberKind::Normal;
+                                i64 unBiasedExponent = static_cast<i64>(std::floor(log2Result));
+                                exponentBits = unBiasedExponent + exponentBias;
+                                mantissaValue = resultFloat * std::pow(2.0L, -unBiasedExponent) - 1;
+                                mantissaBits = static_cast<i64>(std::round( static_cast<long double>(u128(1) << (mantissaBitCount)) * mantissaValue));
+
+                            }
                         }
                         // Put the bits together.
                         value = (signBits << (totalBitCount)) | (exponentBits << (totalBitCount - exponentBitCount)) | mantissaBits;
