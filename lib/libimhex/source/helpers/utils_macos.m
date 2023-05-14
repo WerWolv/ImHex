@@ -9,9 +9,7 @@
     #include <string.h>
     #include <stdlib.h>
     #include <stdint.h>
-
-    #include <string>
-
+    
     #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
 
