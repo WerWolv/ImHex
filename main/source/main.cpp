@@ -7,6 +7,7 @@
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
 
+#include <hex/api/task.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #include <wolv/io/fs.hpp>

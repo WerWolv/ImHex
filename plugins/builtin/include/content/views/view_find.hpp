@@ -2,7 +2,7 @@
 
 #include <hex.hpp>
 
-#include <imgui.h>
+#include <hex/api/task.hpp>
 #include <hex/ui/view.hpp>
 #include <ui/widgets.hpp>
 
@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <wolv/container/interval_tree.hpp>
+#include <imgui.h>
 
 namespace hex::plugin::builtin {
 

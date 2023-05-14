@@ -13,6 +13,8 @@
     #include <hex/api/event.hpp>
 
     #include <string>
+
+    #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
 
     static std::string nsurl_to_string(NSURL* url) {
