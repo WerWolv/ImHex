@@ -10,8 +10,6 @@
     #include <stdlib.h>
     #include <stdint.h>
 
-    #include <hex/api/event.hpp>
-
     #include <string>
 
     #import <Cocoa/Cocoa.h>
