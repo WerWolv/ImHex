@@ -4,6 +4,7 @@
 #include <codecvt>
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/event.hpp>
 
 #include <hex/helpers/fmt.hpp>
 
@@ -499,6 +500,10 @@ namespace hex {
             return std::nullopt;
         else
             return value;
+    }
+
+    extern "C" void openFile(const char *path) {
+        hex::EventManager::post<RequestOpenFile>(path);
     }
 
 }

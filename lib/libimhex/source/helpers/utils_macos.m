@@ -17,20 +17,15 @@
     #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
 
-    static std::string nsurl_to_string(NSURL* url) {
-        NSString* urlString = [url absoluteString];
-        const char* utf8String = [urlString UTF8String];
+    void openFile(const char *path);
 
-        return std::string(utf8String);
-    }
-
-    extern "C" void openWebpageMacos(const char *url) {
+    void openWebpageMacos(const char *url) {
         CFURLRef urlRef = CFURLCreateWithBytes(NULL, (uint8_t*)(url), strlen(url), kCFStringEncodingASCII, NULL);
         LSOpenCFURLRef(urlRef, NULL);
         CFRelease(urlRef);
     }
 
-    extern "C" bool isMacosSystemDarkModeEnabled(void) {
+    bool isMacosSystemDarkModeEnabled(void) {
         NSString * appleInterfaceStyle = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
 
         if (appleInterfaceStyle && [appleInterfaceStyle length] > 0) {
@@ -40,7 +35,7 @@
         }
     }
 
-    extern "C" float getBackingScaleFactor(void) {
+    float getBackingScaleFactor(void) {
         return [[NSScreen mainScreen] backingScaleFactor];
     }
 
@@ -51,7 +46,10 @@
     @implementation HexDocument
 
     - (BOOL) readFromURL:(NSURL *)url ofType:(NSString *)typeName error:(NSError **)outError {
-        hex::EventManager::post<hex::RequestOpenFile>(nsurl_to_string(url));
+        NSString* urlString = [url absoluteString];
+        const char* utf8String = [urlString UTF8String];
+
+        openFile(utf8String);
 
         return YES;
     }
