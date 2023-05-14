@@ -536,6 +536,7 @@
         "hex.builtin.tools.permissions.absolute": "Notazione assoluta",
         "hex.builtin.tools.permissions.perm_bits": "Bit di autorizzazione",
         "hex.builtin.tools.permissions.setgid_error": "Il gruppo deve avere diritti di esecuzione per applicare il bit setgid!",
+        "hex.builtin.tools.permissions.setuid_error": "L'utente deve avere i diritti di esecuzione per applicare il bit setuid!",
         "hex.builtin.tools.permissions.sticky_error": "Altri devono avere i diritti di esecuzione per il bit appiccicoso da applicare!",
         "hex.builtin.tools.regex_replacer": "Sostituzione Regex",
         "hex.builtin.tools.regex_replacer.input": "Input",
