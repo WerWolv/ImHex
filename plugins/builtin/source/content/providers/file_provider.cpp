@@ -40,7 +40,7 @@ namespace hex::plugin::builtin {
 
         if (overlays) [[likely]] {
             for (const auto&[patchOffset, patchData] : getPatches()) {
-                if (patchOffset >= offset && patchOffset <= (offset + size))
+                if (patchOffset >= offset && patchOffset < (offset + size))
                     reinterpret_cast<u8 *>(buffer)[patchOffset - offset] = patchData;
             }
 
@@ -59,26 +59,12 @@ namespace hex::plugin::builtin {
         if (offset > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
-        /*auto currSize = std::fs::file_size(this->m_path);
-        if (this->m_fileSize != currSize) [[unlikely]] {
-            this->m_fileSize = currSize;
-            this->m_file.unmap();
-            this->m_file.map();
-        }*/
-
         std::memcpy(buffer, this->m_file.getMapping() + offset, size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
-
-        auto currSize = std::fs::file_size(this->m_path);
-        if (this->m_fileSize != currSize) [[unlikely]] {
-            this->m_fileSize = currSize;
-            this->m_file.unmap();
-            this->m_file.map();
-        }
 
         std::memcpy(this->m_file.getMapping() + offset, buffer, size);
     }
