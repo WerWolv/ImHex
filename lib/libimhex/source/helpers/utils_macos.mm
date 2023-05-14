@@ -10,15 +10,25 @@
     #include <stdlib.h>
     #include <stdint.h>
 
-    #import <Cocoa/Cocoa.h>
+    #include <hex/api/event.hpp>
 
-    void openWebpageMacos(const char *url) {
+    #include <string>
+    #import <Foundation/Foundation.h>
+
+    static std::string nsurl_to_string(NSURL* url) {
+        NSString* urlString = [url absoluteString];
+        const char* utf8String = [urlString UTF8String];
+
+        return std::string(utf8String);
+    }
+
+    extern "C" void openWebpageMacos(const char *url) {
         CFURLRef urlRef = CFURLCreateWithBytes(NULL, (uint8_t*)(url), strlen(url), kCFStringEncodingASCII, NULL);
         LSOpenCFURLRef(urlRef, NULL);
         CFRelease(urlRef);
     }
 
-    bool isMacosSystemDarkModeEnabled(void) {
+    extern "C" bool isMacosSystemDarkModeEnabled(void) {
         NSString * appleInterfaceStyle = [[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"];
 
         if (appleInterfaceStyle && [appleInterfaceStyle length] > 0) {
@@ -28,21 +38,19 @@
         }
     }
 
-    float getBackingScaleFactor(void) {
+    extern "C" float getBackingScaleFactor(void) {
         return [[NSScreen mainScreen] backingScaleFactor];
     }
 
     @interface HexDocument : NSDocument
 
-    @property (nonatomic, strong) NSData *fileData;
-
     @end
 
     @implementation HexDocument
 
-    - (BOOL)readFromData:(NSData *)data ofType:(NSString *)typeName error:(NSError **)outError {
-        // Set the file data to the given data
-        self.fileData = data;
+    - (BOOL) readFromURL:(NSURL *)url ofType:(NSString *)typeName error:(NSError **)outError {
+        hex::EventManager::post<hex::RequestOpenFile>(nsurl_to_string(url));
+
         return YES;
     }
 
