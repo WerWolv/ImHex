@@ -705,7 +705,11 @@ namespace hex {
 
     void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char *desc) {
-            log::error("GLFW Error [{}] : {}", error, desc);
+            try {
+                log::error("GLFW Error [{}] : {}", error, desc);
+            } catch (const std::system_error &) {
+                // Catch and ignore system error that might be thrown when too many errors are being logged to a file
+            }
         });
 
         if (!glfwInit()) {
