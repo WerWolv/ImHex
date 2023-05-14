@@ -10,9 +10,20 @@
 	<string>${MACOSX_BUNDLE_INFO_STRING}</string>
 	<key>CFBundleIconFile</key>
 	<string>${MACOSX_BUNDLE_ICON_FILE}</string>
-    <key>CFBundleTypeExtensions</key>
-    <array>
-        <string>*</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+	    <dict>
+            <key>CFBundleTypeExtensions</key>
+            <array>
+              <string>*</string>
+            </array>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>NSDocumentClass</key>
+            <string>NSDocument</string>
+            <key>CFBundleTypeName</key>
+            <string>All Files</string>
+        </dict>
     </array>
 	<key>CFBundleIdentifier</key>
 	<string>${MACOSX_BUNDLE_GUI_IDENTIFIER}</string>
