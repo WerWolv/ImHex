@@ -724,6 +724,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
             this->m_textEditor.SetText(code);
+            this->m_hasUnevaluatedChanges = true;
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {

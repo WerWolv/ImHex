@@ -7,6 +7,7 @@
 #include <hex/data_processor/node.hpp>
 
 #include <filesystem>
+#include <thread>
 
 #include <nlohmann/json.hpp>
 
@@ -783,6 +784,64 @@ namespace hex {
                 getHashes().push_back(hash);
             }
 
+        }
+
+    }
+
+    namespace ContentRegistry::BackgroundServices {
+
+        namespace impl {
+
+            std::vector<Service> &getServices() {
+                static std::vector<Service> services;
+
+                return services;
+            }
+
+            void stopServices() {
+                for (auto &service : getServices()) {
+                    service.thread.request_stop();
+                }
+
+                for (auto &service : getServices()) {
+                    service.thread.join();
+                }
+            }
+
+        }
+
+        void registerService(const std::string &unlocalizedName, const impl::Callback &callback) {
+            log::debug("Registered new background service: {}", unlocalizedName);
+
+            impl::getServices().push_back(impl::Service {
+                unlocalizedName,
+                std::jthread([callback](const std::stop_token &stopToken){
+                    while (!stopToken.stop_requested()) {
+                        callback();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                    }
+                })
+            });
+        }
+
+    }
+
+    namespace ContentRegistry::CommunicationInterface {
+
+        namespace impl {
+
+            std::map<std::string, NetworkCallback> &getNetworkEndpoints() {
+                static std::map<std::string, NetworkCallback> endpoints;
+
+                return endpoints;
+            }
+
+        }
+
+        void registerNetworkEndpoint(const std::string &endpoint, const impl::NetworkCallback &callback) {
+            log::debug("Registered new network endpoint: {}", endpoint);
+
+            impl::getNetworkEndpoints().insert({ endpoint, callback });
         }
 
     }

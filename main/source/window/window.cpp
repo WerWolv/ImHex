@@ -164,7 +164,9 @@ namespace hex {
             }
 
             this->m_windowTitle = title;
-            glfwSetWindowTitle(this->m_window, title.c_str());
+
+            if (this->m_window != nullptr)
+                glfwSetWindowTitle(this->m_window, title.c_str());
         });
 
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
@@ -1012,6 +1014,8 @@ namespace hex {
     void Window::exitGLFW() {
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
+
+        this->m_window = nullptr;
     }
 
     void Window::exitImGui() {
