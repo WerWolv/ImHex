@@ -70,6 +70,11 @@ int main(int argc, char **argv, char **envp) {
                 }
             }
 
+            // Open file that has been requested to be opened through other, OS-specific means
+            if (auto path = hex::getInitialFilePath(); path.has_value()) {
+                EventManager::post<RequestOpenFile>(path.value());
+            }
+
             // Render the main window
             window.loop();
         }

@@ -283,4 +283,6 @@ namespace hex {
         return string.substr(0, maxLength - 3) + "...";
     }
 
+    std::optional<std::fs::path> getInitialFilePath();
+
 }

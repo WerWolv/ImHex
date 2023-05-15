@@ -502,8 +502,13 @@ namespace hex {
             return value;
     }
 
+    static std::optional<std::fs::path> fileToOpen;
     extern "C" void openFile(const char *path) {
-        hex::EventManager::post<RequestOpenFile>(path);
+        fileToOpen = path;
+    }
+
+    std::optional<std::fs::path> getInitialFilePath() {
+        return fileToOpen;
     }
 
 }
