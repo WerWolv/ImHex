@@ -218,6 +218,12 @@ namespace hex::plugin::builtin::ui {
     void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
         static DataVisualizerAscii asciiVisualizer;
 
+        if (this->m_shouldUpdateEditingValue) {
+            this->m_shouldUpdateEditingValue = false;
+            this->m_editingBytes.resize(size);
+            std::memcpy(this->m_editingBytes.data(), data, size);
+        }
+
         if (this->m_editingAddress != address || this->m_editingCellType != cellType) {
             if (cellType == CellType::Hex)
                 this->m_currDataVisualizer->draw(address, data, size, this->m_upperCaseHex);
