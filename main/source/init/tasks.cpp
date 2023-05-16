@@ -443,22 +443,23 @@ namespace hex::init {
     }
 
     bool clearOldLogs() {
-        for(const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs, true)){
-            std::filesystem::directory_iterator dir_it(path);
+        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs, true)) {
             std::vector<std::filesystem::directory_entry> files;
 
-            for (auto& file : dir_it) files.push_back(file);
+            for (const auto& file : std::filesystem::directory_iterator(path))
+                files.push_back(file);
 
-            if(files.size()<=10)return true;
+            if (files.size() <= 10)
+                return true;
 
             std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
-                    return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
+                return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
             });
 
-            for(auto files_it = files.begin()+5; files_it!=files.end(); files_it++){
-                std::filesystem::remove((*files_it).path());
-            }
+            for (auto it = files.begin() + 10; it != files.end(); it++)
+                std::filesystem::remove(it->path());
         }
+
         return true;
     }
 
@@ -517,7 +518,7 @@ namespace hex::init {
             { "Saving settings...",         storeSettings,    false },
             { "Cleaning up shared data...", deleteSharedData, false },
             { "Unloading plugins...",       unloadPlugins,    false },
-            { "Clearing old logs",          clearOldLogs,     false },
+            { "Clearing old logs...",          clearOldLogs,     false },
         };
     }
 
