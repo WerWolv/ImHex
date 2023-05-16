@@ -28,13 +28,17 @@ namespace hex::plugin::builtin {
 
                    const auto &endpoints = ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints();
                    if (auto callback = endpoints.find(json["endpoint"].get<std::string>()); callback != endpoints.end()) {
+                       log::info("Network endpoint {} called with arguments '{}'", json["endpoint"].get<std::string>(), json.contains("data") ? json["data"].dump() : "");
+
                        auto responseData = callback->second(json.contains("data") ? json["data"] : nlohmann::json::object());
 
                        result["status"] = "success";
                        result["data"] = responseData;
+                   } else {
+                       throw std::runtime_error("Endpoint not found");
                    }
                 } catch (const std::exception &e) {
-                    log::error("Network interface service error: {}", e.what());
+                    log::warn("Network interface service error: {}", e.what());
 
                     result["status"] = "error";
                     result["data"]["error"] = e.what();
