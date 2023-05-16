@@ -12,6 +12,24 @@ namespace hex::plugin::builtin {
 
             return { };
         });
+
+        ContentRegistry::CommunicationInterface::registerNetworkEndpoint("imhex/capabilities", [](const nlohmann::json &) -> nlohmann::json {
+            nlohmann::json result;
+
+            result["build"] = {
+                { "version",    IMHEX_VERSION           },
+                { "commit",     GIT_COMMIT_HASH_LONG    },
+                { "branch",     GIT_BRANCH              },
+            };
+
+            std::vector<std::string> commands;
+            for (const auto&[command, callback] : ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints())
+                commands.emplace_back(command);
+
+            result["commands"] = commands;
+
+            return result;
+        });
     }
 
 }
