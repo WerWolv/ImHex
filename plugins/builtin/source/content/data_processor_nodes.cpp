@@ -59,8 +59,8 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_size   = j["size"];
-            this->m_buffer = j["data"].get<std::vector<u8>>();
+            this->m_size   = j.at("size");
+            this->m_buffer = j.at("data").get<std::vector<u8>>();
         }
 
     private:
@@ -89,7 +89,7 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_value = j["data"].get<std::string>();
+            this->m_value = j.at("data").get<std::string>();
         }
 
     private:
@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_value = j["data"];
+            this->m_value = j.at("data");
         }
 
     private:
@@ -145,7 +145,7 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_value = j["data"];
+            this->m_value = j.at("data");
         }
 
     private:
@@ -184,7 +184,8 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_color = ImVec4(j["data"]["r"], j["data"]["g"], j["data"]["b"], j["data"]["a"]);
+            const auto &color = j.at("data");
+            this->m_color = ImVec4(color.at("r"), color.at("g"), color.at("b"), color.at("a"));
         }
 
     private:

@@ -34,15 +34,15 @@ namespace hex::plugin::builtin {
                     auto fileData = wolv::io::File(file.path(), wolv::io::File::Mode::Read).readString();
                     auto content = nlohmann::json::parse(fileData);
 
-                    for (auto value : content["values"]) {
+                    for (auto value : content.at("values")) {
                         Constant constant;
-                        constant.category = content["name"].get<std::string>();
-                        constant.name     = value["name"].get<std::string>();
+                        constant.category = content.at("name").get<std::string>();
+                        constant.name     = value.at("name").get<std::string>();
                         if (value.contains("desc"))
-                            constant.description = value["desc"].get<std::string>();
-                        constant.value = value["value"].get<std::string>();
+                            constant.description = value.at("desc").get<std::string>();
+                        constant.value = value.at("value").get<std::string>();
 
-                        auto type = value["type"];
+                        auto type = value.at("type");
                         if (type == "int10")
                             constant.type = ConstantType::Int10;
                         else if (type == "int16be")

@@ -643,8 +643,8 @@ namespace hex::plugin::builtin {
                         auto json = nlohmann::json::parse(response.getData());
                         links.push_back({
                             wolv::util::toUTF8String(currFile.filename()),
-                            json["data"]["file"]["url"]["short"],
-                            json["data"]["file"]["metadata"]["size"]["readable"]
+                            json.at("data").at("file").at("url").at("short"),
+                            json.at("data").at("file").at("metadata").at("size").at("readable")
                         });
                     } catch (...) {
                         PopupError::open("hex.builtin.tools.file_uploader.invalid_response"_lang);
@@ -705,8 +705,8 @@ namespace hex::plugin::builtin {
 
                     auto json = nlohmann::json::parse(response.getData());
 
-                    resultTitle   = json["query"]["pages"][0]["title"].get<std::string>();
-                    resultExtract = json["query"]["pages"][0]["extract"].get<std::string>();
+                    resultTitle   = json.at("query").at("pages").at(0).at("title").get<std::string>();
+                    resultExtract = json.at("query").at("pages").at(0).at("extract").get<std::string>();
 
                     if (!extendedSearch && resultExtract.ends_with(':')) {
                         extendedSearch = true;

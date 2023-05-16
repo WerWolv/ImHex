@@ -149,8 +149,8 @@ namespace hex::plugin::builtin {
                 try {
                     auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
                     uniqueProviders.insert(RecentProvider {
-                        .displayName    = jsonData["displayName"],
-                        .type           = jsonData["type"],
+                        .displayName    = jsonData.at("displayName"),
+                        .type           = jsonData.at("type"),
                         .filePath       = path,
                         .data           = jsonData
                     });
@@ -592,7 +592,7 @@ namespace hex::plugin::builtin {
             auto days_since_epoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
             std::mt19937 random(days_since_epoch.count());
 
-            auto chosenCategory = tipsCategories[random()%tipsCategories.size()]["tips"];
+            auto chosenCategory = tipsCategories[random()%tipsCategories.size()].at("tips");
             auto chosenTip = chosenCategory[random()%chosenCategory.size()];
             s_tipOfTheDay = chosenTip.get<std::string>();
 

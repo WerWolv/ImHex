@@ -211,7 +211,7 @@ namespace hex::plugin::builtin {
         const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
 
         for (const auto &hash : json["hashes"]) {
-            if (!hash.contains("name") || !hash.contains("type"))
+            if (!hash.contains("name") || !hash.contains("type") || !hash.contains("settings"))
                 continue;
 
             for (const auto &newHash : hashes) {

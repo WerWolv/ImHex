@@ -35,13 +35,13 @@ namespace hex::plugin::builtin {
              .required = true,
              .load = [](const std::fs::path &basePath, Tar &tar) {
                  auto json = nlohmann::json::parse(tar.readString(basePath / "providers.json"));
-                 auto providerIds = json["providers"].get<std::vector<int>>();
+                 auto providerIds = json.at("providers").get<std::vector<int>>();
 
                  bool success = true;
                  for (const auto &id : providerIds) {
                      auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
 
-                     auto provider = ImHexApi::Provider::createProvider(providerSettings["type"].get<std::string>(), true);
+                     auto provider = ImHexApi::Provider::createProvider(providerSettings.at("type").get<std::string>(), true);
                      ON_SCOPE_EXIT {
                          if (!success) {
                              for (auto &task : TaskManager::getRunningTasks())
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
                      }
 
                      provider->setID(id);
-                     provider->loadSettings(providerSettings["settings"]);
+                     provider->loadSettings(providerSettings.at("settings"));
                      if (!provider->open() || !provider->isAvailable() || !provider->isReadable())
                          success = false;
                      else

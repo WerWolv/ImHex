@@ -27,10 +27,10 @@ namespace hex::plugin::builtin {
                    auto json = nlohmann::json::parse(data.begin(), data.end());
 
                    const auto &endpoints = ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints();
-                   if (auto callback = endpoints.find(json["endpoint"].get<std::string>()); callback != endpoints.end()) {
-                       log::info("Network endpoint {} called with arguments '{}'", json["endpoint"].get<std::string>(), json.contains("data") ? json["data"].dump() : "");
+                   if (auto callback = endpoints.find(json.at("endpoint").get<std::string>()); callback != endpoints.end()) {
+                       log::info("Network endpoint {} called with arguments '{}'", json.at("endpoint").get<std::string>(), json.contains("data") ? json.at("data").dump() : "");
 
-                       auto responseData = callback->second(json.contains("data") ? json["data"] : nlohmann::json::object());
+                       auto responseData = callback->second(json.contains("data") ? json.at("data") : nlohmann::json::object());
 
                        result["status"] = "success";
                        result["data"] = responseData;

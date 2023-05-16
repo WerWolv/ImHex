@@ -217,7 +217,7 @@ namespace hex::plugin::builtin {
     void FileProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        auto pathString = settings["path"].get<std::string>();
+        auto pathString = settings.at("path").get<std::string>();
         std::fs::path path = std::u8string(pathString.begin(), pathString.end());
 
         if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
