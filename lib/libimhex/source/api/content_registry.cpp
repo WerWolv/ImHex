@@ -804,7 +804,7 @@ namespace hex {
                 }
 
                 for (auto &service : getServices()) {
-                    service.thread.join();
+                    service.thread.detach();
                 }
             }
 
