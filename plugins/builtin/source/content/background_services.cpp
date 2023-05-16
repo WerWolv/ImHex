@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
                 std::this_thread::yield();
                 return;
             }
-            static wolv::net::SocketServer networkInterfaceServer(51337);
+            static wolv::net::SocketServer networkInterfaceServer(31337);
             networkInterfaceServer.accept([](auto, const std::vector<u8> &data) -> std::vector<u8> {
                 nlohmann::json result;
 
@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
 
                    const auto &endpoints = ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints();
                    if (auto callback = endpoints.find(json["endpoint"].get<std::string>()); callback != endpoints.end()) {
-                       auto responseData = callback->second(json["data"]);
+                       auto responseData = callback->second(json.contains("data") ? json["data"] : nlohmann::json::object());
 
                        result["status"] = "success";
                        result["data"] = responseData;
