@@ -801,6 +801,8 @@ namespace hex::plugin::builtin {
                     this->m_textEditor.SetText(wolv::util::trim(this->m_sourceCode.get(newProvider)));
                 else
                     this->m_textEditor.SetText("");
+            } else {
+                this->m_hasUnevaluatedChanges = true;
             }
         });
     }
