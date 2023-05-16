@@ -18,8 +18,12 @@ namespace hex::plugin::builtin {
 
             result["build"] = {
                 { "version",    IMHEX_VERSION           },
-                { "commit",     GIT_COMMIT_HASH_LONG    },
-                { "branch",     GIT_BRANCH              },
+                #if defined(GIT_COMMIT_HASH_LONG)
+                    { "commit",     GIT_COMMIT_HASH_LONG    },
+                #endif
+                #if defined(GIT_BRANCH)
+                    { "branch",     GIT_BRANCH              },
+                #endif
             };
 
             std::vector<std::string> commands;
