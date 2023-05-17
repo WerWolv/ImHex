@@ -3,6 +3,7 @@
 #include <hex/ui/view.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/task.hpp>
 
 #include <bit>
 #include <cstdio>

@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization.hpp>
+#include <hex/api/task.hpp>
 
 #include <hex/helpers/disassembler.hpp>
 #include <hex/helpers/utils.hpp>

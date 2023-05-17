@@ -64,8 +64,8 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_name = j["name"].get<std::string>();
-            this->m_type = j["type"];
+            this->m_name = j.at("name").get<std::string>();
+            this->m_type = j.at("type");
 
             this->setUnlocalizedTitle(this->m_name);
             this->setAttributes({
@@ -128,8 +128,8 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_name = j["name"].get<std::string>();
-            this->m_type = j["type"];
+            this->m_name = j.at("name").get<std::string>();
+            this->m_type = j.at("type");
 
             this->setUnlocalizedTitle(this->m_name);
             this->setAttributes({
@@ -265,7 +265,7 @@ namespace hex::plugin::builtin {
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_dataProcessor->loadNodes(this->m_workspace, j["nodes"]);
+            this->m_dataProcessor->loadNodes(this->m_workspace, j.at("nodes"));
 
             this->m_name = LangEntry(this->getUnlocalizedTitle()).get();
             this->m_requiresAttributeUpdate = true;
@@ -494,7 +494,7 @@ namespace hex::plugin::builtin {
                     try {
                         nlohmann::json nodeJson = nlohmann::json::parse(wolv::io::File(entry.path(), wolv::io::File::Mode::Read).readString());
 
-                        this->m_customNodes.push_back(CustomNode { LangEntry(nodeJson["name"]), nodeJson });
+                        this->m_customNodes.push_back(CustomNode { LangEntry(nodeJson.at("name")), nodeJson });
                     } catch (nlohmann::json::exception &e) {
                         continue;
                     }
@@ -906,7 +906,7 @@ namespace hex::plugin::builtin {
 
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
-                if (entry.name == node["type"].get<std::string>())
+                if (node.contains("name") && entry.name == node["type"].get<std::string>())
                     newNode = entry.creatorFunction();
             }
 

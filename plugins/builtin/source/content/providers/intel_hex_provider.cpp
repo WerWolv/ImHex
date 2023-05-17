@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
     void IntelHexProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        auto path = settings["path"].get<std::string>();
+        auto path = settings.at("path").get<std::string>();
         this->m_sourceFilePath = std::u8string(path.begin(), path.end());
     }
 

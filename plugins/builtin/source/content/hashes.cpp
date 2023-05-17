@@ -147,11 +147,11 @@ namespace hex::plugin::builtin {
 
         void load(const nlohmann::json &json) override {
             try {
-                this->m_polynomial      = json["polynomial"];
-                this->m_initialValue    = json["initialValue"];
-                this->m_xorOut          = json["xorOut"];
-                this->m_reflectIn       = json["reflectIn"];
-                this->m_reflectOut      = json["reflectOut"];
+                this->m_polynomial      = json.at("polynomial");
+                this->m_initialValue    = json.at("initialValue");
+                this->m_xorOut          = json.at("xorOut");
+                this->m_reflectIn       = json.at("reflectIn");
+                this->m_reflectOut      = json.at("reflectOut");
             } catch (std::exception&) { }
         }
 

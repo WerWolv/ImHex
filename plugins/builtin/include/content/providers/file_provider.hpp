@@ -61,8 +61,6 @@ namespace hex::plugin::builtin {
         wolv::io::File m_file;
         size_t m_fileSize = 0;
 
-        std::atomic<u32> m_mapCounter = 0;
-
         std::optional<struct stat> m_fileStats;
 
         bool m_readable = false, m_writable = false;

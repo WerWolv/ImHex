@@ -359,7 +359,7 @@ namespace hex::plugin::builtin {
     void DiskProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        auto path = settings["path"].get<std::string>();
+        auto path = settings.at("path").get<std::string>();
         this->setPath(std::u8string(path.begin(), path.end()));
         this->reloadDrives();
     }

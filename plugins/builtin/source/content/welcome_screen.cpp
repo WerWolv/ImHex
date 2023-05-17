@@ -149,8 +149,8 @@ namespace hex::plugin::builtin {
                 try {
                     auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
                     uniqueProviders.insert(RecentProvider {
-                        .displayName    = jsonData["displayName"],
-                        .type           = jsonData["type"],
+                        .displayName    = jsonData.at("displayName"),
+                        .type           = jsonData.at("type"),
                         .filePath       = path,
                         .data           = jsonData
                     });
@@ -386,7 +386,7 @@ namespace hex::plugin::builtin {
                 ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
                 if (ImGui::Begin(title)) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
-                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
+                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding)) {
                         drawWelcomeScreenContent();
                     }
                     ImGui::EndChild();
@@ -406,7 +406,7 @@ namespace hex::plugin::builtin {
             ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
             if (ImGui::Begin(title)) {
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
-                if (ImGui::BeginChild("NoViewsBackground", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollWithMouse)) {
+                if (ImGui::BeginChild("NoViewsBackground", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                     auto imageSize = scaled(ImVec2(350, 350));
                     auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
 
@@ -592,7 +592,7 @@ namespace hex::plugin::builtin {
             auto days_since_epoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
             std::mt19937 random(days_since_epoch.count());
 
-            auto chosenCategory = tipsCategories[random()%tipsCategories.size()]["tips"];
+            auto chosenCategory = tipsCategories[random()%tipsCategories.size()].at("tips");
             auto chosenTip = chosenCategory[random()%chosenCategory.size()];
             s_tipOfTheDay = chosenTip.get<std::string>();
 

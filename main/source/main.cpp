@@ -7,6 +7,7 @@
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
 
+#include <hex/api/task.hpp>
 #include <hex/api/project_file_manager.hpp>
 
 #include <wolv/io/fs.hpp>
@@ -67,6 +68,11 @@ int main(int argc, char **argv, char **envp) {
                     if (auto argument = ImHexApi::System::getProgramArgument(i); argument.has_value())
                         EventManager::post<RequestOpenFile>(argument.value());
                 }
+            }
+
+            // Open file that has been requested to be opened through other, OS-specific means
+            if (auto path = hex::getInitialFilePath(); path.has_value()) {
+                EventManager::post<RequestOpenFile>(path.value());
             }
 
             // Render the main window

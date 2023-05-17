@@ -325,9 +325,9 @@ namespace hex::plugin::builtin {
     void GDBProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        this->m_ipAddress = settings["ip"].get<std::string>();
-        this->m_port      = settings["port"].get<int>();
-        this->m_size      = settings["size"].get<size_t>();
+        this->m_ipAddress = settings.at("ip").get<std::string>();
+        this->m_port      = settings.at("port").get<int>();
+        this->m_size      = settings.at("size").get<size_t>();
     }
 
     nlohmann::json GDBProvider::storeSettings(nlohmann::json settings) const {

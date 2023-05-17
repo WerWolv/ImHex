@@ -6,7 +6,9 @@ project(builtin)
 add_library(${PROJECT_NAME} SHARED
         source/plugin_builtin.cpp
 
+        source/content/background_services.cpp
         source/content/command_palette_commands.cpp
+        source/content/communication_interface.cpp
         source/content/data_inspector.cpp
         source/content/pl_builtin_functions.cpp
         source/content/pl_pragmas.cpp

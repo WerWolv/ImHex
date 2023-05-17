@@ -10,7 +10,6 @@
 #include <map>
 
 #include <hex/helpers/concepts.hpp>
-#include <hex/api/task.hpp>
 #include <hex/api/keybinding.hpp>
 
 #include <wolv/io/fs.hpp>

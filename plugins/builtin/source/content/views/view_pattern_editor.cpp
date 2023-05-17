@@ -724,6 +724,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
             this->m_textEditor.SetText(code);
+            this->m_hasUnevaluatedChanges = true;
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
@@ -800,6 +801,8 @@ namespace hex::plugin::builtin {
                     this->m_textEditor.SetText(wolv::util::trim(this->m_sourceCode.get(newProvider)));
                 else
                     this->m_textEditor.SetText("");
+            } else {
+                this->m_hasUnevaluatedChanges = true;
             }
         });
     }
@@ -870,7 +873,10 @@ namespace hex::plugin::builtin {
 
                                                                             file.writeString(wolv::util::trim(this->m_textEditor.GetText()));
                                                                         });
-                                                }, ImHexApi::Provider::isValid);
+                                                }, [this] {
+                                                    return !wolv::util::trim(this->m_textEditor.GetText()).empty() && ImHexApi::Provider::isValid();
+                                                }
+        );
 
         constexpr static std::array<std::pair<const char *, size_t>, 21>  Types = {{
            { "u8", 1 }, { "u16", 2 }, { "u24", 3 }, { "u32", 4 }, { "u48", 6 }, { "u64", 8 }, { "u96", 12 }, { "u128", 16 },

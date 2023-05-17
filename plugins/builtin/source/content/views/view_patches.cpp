@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
             .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 auto json = nlohmann::json::parse(tar.readString(basePath));
-                provider->getPatches() = json["patches"].get<std::map<u64, u8>>();
+                provider->getPatches() = json.at("patches").get<std::map<u64, u8>>();
                 return true;
             },
             .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {

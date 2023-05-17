@@ -2,6 +2,7 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/api/event.hpp>
+#include <hex/api/task.hpp>
 #include <hex/providers/provider.hpp>
 
 #include <utility>

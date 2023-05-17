@@ -20,7 +20,7 @@
             <key>CFBundleTypeRole</key>
             <string>Editor</string>
             <key>NSDocumentClass</key>
-            <string>NSDocument</string>
+            <string>HexDocument</string>
             <key>CFBundleTypeName</key>
             <string>All Files</string>
         </dict>

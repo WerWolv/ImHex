@@ -164,7 +164,9 @@ namespace hex {
             }
 
             this->m_windowTitle = title;
-            glfwSetWindowTitle(this->m_window, title.c_str());
+
+            if (this->m_window != nullptr)
+                glfwSetWindowTitle(this->m_window, title.c_str());
         });
 
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
@@ -705,7 +707,11 @@ namespace hex {
 
     void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char *desc) {
-            log::error("GLFW Error [{}] : {}", error, desc);
+            try {
+                log::error("GLFW Error [{}] : {}", error, desc);
+            } catch (const std::system_error &) {
+                // Catch and ignore system error that might be thrown when too many errors are being logged to a file
+            }
         });
 
         if (!glfwInit()) {
@@ -1008,6 +1014,8 @@ namespace hex {
     void Window::exitGLFW() {
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
+
+        this->m_window = nullptr;
     }
 
     void Window::exitImGui() {
