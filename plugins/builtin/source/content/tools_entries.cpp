@@ -1319,7 +1319,7 @@ namespace hex::plugin::builtin {
                 // Result
                 ImGui::TableNextColumn();
 
-                u64 mask = hex::bitmask(totalBitCount+1);//((u128(1) << (totalBitCount + 1)) - 1);
+                u64 mask = hex::bitmask(totalBitCount+1);
                 std::string maskString = hex::format("0x{:X}  ", mask);
 
                 auto style = ImGui::GetStyle();
