@@ -1202,6 +1202,68 @@ namespace hex::plugin::builtin {
         std::string m_name;
     };
 
+    class NodeBufferByteSwap : public dp::Node {
+    public:
+        NodeBufferByteSwap() : Node("hex.builtin.nodes.buffer.byte_swap.header", {dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            auto data = this->getBufferOnInput(0);
+            std::reverse(data.begin(), data.end());
+            this->setBufferOnOutput(1, data);
+        }
+
+    };
+
+    class NodeBitwiseSwap : public dp::Node {
+    public:
+        NodeBitwiseSwap() : Node("hex.builtin.nodes.bitwise.swap.header", {dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+
+        void process() override {
+            // Table contains reversed nibble entries
+            static constexpr std::array<u8, 16> BitFlipLookup = {
+                    0x0, 0x8, 0x4, 0xC, 0x2, 0xA, 0x6, 0xE,
+                    0x1, 0x9, 0x5, 0xD, 0x3, 0xB, 0x7, 0xF, };
+            auto data = this->getBufferOnInput(0);
+
+            for(u8 &b : data)
+                b = BitFlipLookup[b & 0xf] << 4 | BitFlipLookup[b >> 4];
+
+            std::reverse(data.begin(), data.end());
+            this->setBufferOnOutput(1, data);
+        }
+
+    };
+
+    class NodeDisplayBits : public dp::Node {
+    public:
+        NodeDisplayBits() : Node("hex.builtin.nodes.display.bits.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
+
+        void drawNode() override {
+            ImGui::PushItemWidth(100_scaled);
+            ImGui::Text("%s", this->m_display.c_str());
+            ImGui::PopItemWidth();
+        }
+
+        void process() override {
+            const auto &buffer = this->getBufferOnInput(0);
+            // Display bits in groups of 4 bits
+            std::string display;
+            display.reserve(buffer.size() * 9 + 2); // 8 bits + 1 space at beginning + 1 space every 4 bits
+            for (const auto &byte : buffer) {
+                for (size_t i = 0; i < 8; i++) {
+                    if (i % 4 == 0) {
+                        display += ' ';
+                    }
+                    display += (byte & (1 << i)) != 0 ? '1' : '0';
+                }
+            }
+            this->m_display = wolv::util::trim(display);
+        }
+
+    private:
+        std::string m_display = "???";
+    };
+
     void registerDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeInteger>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.int");
         ContentRegistry::DataProcessorNode::add<NodeFloat>("hex.builtin.nodes.constants", "hex.builtin.nodes.constants.float");
@@ -1215,6 +1277,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeDisplayFloat>("hex.builtin.nodes.display", "hex.builtin.nodes.display.float");
         ContentRegistry::DataProcessorNode::add<NodeDisplayBuffer>("hex.builtin.nodes.display", "hex.builtin.nodes.display.buffer");
         ContentRegistry::DataProcessorNode::add<NodeDisplayString>("hex.builtin.nodes.display", "hex.builtin.nodes.display.string");
+        ContentRegistry::DataProcessorNode::add<NodeDisplayBits>("hex.builtin.nodes.display", "hex.builtin.nodes.display.bits");
 
         ContentRegistry::DataProcessorNode::add<NodeReadData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.read");
         ContentRegistry::DataProcessorNode::add<NodeWriteData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.write");
@@ -1242,6 +1305,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeBufferRepeat>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.repeat");
         ContentRegistry::DataProcessorNode::add<NodeBufferPatch>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.patch");
         ContentRegistry::DataProcessorNode::add<NodeBufferSize>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.size");
+        ContentRegistry::DataProcessorNode::add<NodeBufferByteSwap>("hex.builtin.nodes.buffer", "hex.builtin.nodes.buffer.byte_swap");
 
         ContentRegistry::DataProcessorNode::add<NodeIf>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.if");
         ContentRegistry::DataProcessorNode::add<NodeEquals>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.equals");
@@ -1256,6 +1320,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeBitwiseOR>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.or");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseXOR>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.xor");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseNOT>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.not");
+        ContentRegistry::DataProcessorNode::add<NodeBitwiseSwap>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.swap");
 
         ContentRegistry::DataProcessorNode::add<NodeDecodingBase64>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.base64");
         ContentRegistry::DataProcessorNode::add<NodeDecodingHex>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.hex");
