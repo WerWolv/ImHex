@@ -1207,9 +1207,9 @@ namespace hex::plugin::builtin {
         NodeBufferByteSwap() : Node("hex.builtin.nodes.buffer.byte_swap.header", {dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
 
         void process() override {
-            auto buffer = this->getBufferOnInput(0);
-            std::reverse(buffer.begin(), buffer.end());
-            this->setBufferOnOutput(1, buffer);
+            auto data = this->getBufferOnInput(0);
+            std::reverse(data.begin(), data.end());
+            this->setBufferOnOutput(1, data);
         }
 
     };
@@ -1219,16 +1219,17 @@ namespace hex::plugin::builtin {
         NodeBitwiseSwap() : Node("hex.builtin.nodes.bitwise.swap.header", {dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
 
         void process() override {
+            // Table contains reversed nibble entries
             static constexpr std::array<u8, 16> BitFlipLookup = {
-                    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
-                    0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf, }; // table contains reversed nibble entries
-            auto input = this->getBufferOnInput(0);
+                    0x0, 0x8, 0x4, 0xC, 0x2, 0xA, 0x6, 0xE,
+                    0x1, 0x9, 0x5, 0xD, 0x3, 0xB, 0x7, 0xF, };
+            auto data = this->getBufferOnInput(0);
 
-            for(u8 &b : input)
+            for(u8 &b : data)
                 b = BitFlipLookup[b & 0xf] << 4 | BitFlipLookup[b >> 4];
 
-            std::reverse(input.begin(), input.end());
-            this->setBufferOnOutput(1, input);
+            std::reverse(data.begin(), data.end());
+            this->setBufferOnOutput(1, data);
         }
 
     };
@@ -1244,15 +1245,16 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            auto buffer = this->getBufferOnInput(0);
-            // display bits in groups of 4 bits
+            const auto &buffer = this->getBufferOnInput(0);
+            // Display bits in groups of 4 bits
             std::string display;
+            display.reserve(buffer.size() * 9 + 2); // 8 bits + 1 space at beginning + 1 space every 4 bits
             for (const auto &byte : buffer) {
                 for (size_t i = 0; i < 8; i++) {
                     if (i % 4 == 0) {
-                        display += " ";
+                        display += ' ';
                     }
-                    display += (byte & (1 << i)) != 0 ? "1" : "0";
+                    display += (byte & (1 << i)) != 0 ? '1' : '0';
                 }
             }
             this->m_display = wolv::util::trim(display);
