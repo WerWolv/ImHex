@@ -9,6 +9,10 @@ if(IMHEX_STRIP_RELEASE)
     endif()
 endif()
 
+function(detect_std_expected)
+    try_compile(STD_EXPECTED_SUPPORTED ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_FUNCTION_LIST_DIR}/test_std_expected.cpp CXX_STANDARD_REQUIRED 23)
+endfunction()
+
 macro(addDefines)
     if (NOT IMHEX_VERSION)
         message(FATAL_ERROR "IMHEX_VERSION is not defined")
