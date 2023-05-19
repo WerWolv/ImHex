@@ -42,6 +42,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool hasFilePicker() const override { return true; }
         [[nodiscard]] bool handleFilePicker() override;
 
+        std::vector<std::pair<std::string, std::function<void()>>> getMenuEntries() override;
+
         void setPath(const std::fs::path &path);
 
         [[nodiscard]] bool open() override;

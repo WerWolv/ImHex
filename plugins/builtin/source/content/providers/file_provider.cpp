@@ -185,6 +185,19 @@ namespace hex::plugin::builtin {
         });
     }
 
+    std::vector<std::pair<std::string, std::function<void()>>> FileProvider::getMenuEntries(){
+        return {
+            {"Open folder", [path = this->m_path] {
+                fs::openFolderWithSelectionExternal(path);
+            }},
+            
+            {"Open file externally", [path = this->m_path] {
+                fs::openFileExternal(path);
+            }},
+            
+        };
+    }
+
     void FileProvider::setPath(const std::fs::path &path) {
         this->m_path = path;
     }

@@ -224,6 +224,20 @@ namespace hex::plugin::builtin {
                             ImHexApi::Provider::remove(providers[i]);
                             break;
                         }
+
+                        std::string popupID = std::string("ProviderMenu.")+std::to_string(tabProvider->getID());
+                        if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
+                            ImGui::OpenPopup(popupID.c_str());
+                        }
+
+                        if(ImGui::BeginPopup(popupID.c_str())){
+                            for(auto p : tabProvider->getMenuEntries()){
+                                if(ImGui::MenuItem(p.first.c_str())){
+                                    p.second();
+                                }
+                            }
+                            ImGui::EndPopup();
+                        }
                     }
                     ImGui::EndTabBar();
                 }
