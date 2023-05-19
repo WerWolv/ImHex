@@ -9,7 +9,6 @@
 #include <hex/api/localization.hpp>
 
 #include <hex/ui/view.hpp>
-#include <hex/providers/provider.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -18,17 +17,15 @@
 
 #include <llvm/Demangle/Demangle.h>
 #include <content/helpers/math_evaluator.hpp>
-#include <content/popups/popup_notification.hpp>
 
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-
+#include <content/popups/popup_notification.hpp>
 #include <nlohmann/json.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+#include <charconv>
 
 namespace hex::plugin::builtin {
 
@@ -1130,16 +1127,50 @@ namespace hex::plugin::builtin {
             }
         }
 
+        // Tool for converting between different number formats
+        // There are three places where input can be changed; the bit checkboxes, the hex input and the decimal input.
+        // The bit checkboxes and the hex input are directly related and can be converted between each other easily.
+        // The decimal input is a bit more complicated. IEEE 754 floating point numbers are represented as a sign bit,
+        // an exponent and a mantissa. For details see https://en.wikipedia.org/wiki/IEEE_754.
+        // Workflow is as follows:
+        // From the bit checkboxes determine the integer hex value. This is straightforward.
+        // From the hex value determine the binary floating point value by extracting the sign, exponent and mantissa.
+        // From the binary floating point value determine the decimal floating point value using third party library.
+        // From the decimal floating point we reconstruct the binary floating point value using internal hardware.
+        // If format is non-standard the reconstruction is done using properties of the format.
         void drawIEEE754Decoder() {
-            static u128 value = 0x00;
+
+            static u128 value = 0;
             static int exponentBitCount = 8, mantissaBitCount = 23;
+            long double exponentValue;
+            long double mantissaValue;
+            static long double resultFloat;
+            i64 exponentBias;
+            constexpr static auto flags = ImGuiInputTextFlags_EnterReturnsTrue;
+
+            enum class NumberKind {
+                Normal,
+                Zero,
+                Denormal,
+                Infinity,
+                NaN,
+            } numberKind;
+
+            enum class NumberType {
+                Regular,
+                SignalingNaN,
+                QuietNaN,
+                NegativeInfinity,
+                PositiveInfinity,
+            } numberType;
 
             const static auto BitCheckbox = [](u8 bit) {
                 bool checkbox = false;
-
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
                 checkbox = (value & (u128(1) << bit)) != 0;
                 ImGui::BitCheckbox("##checkbox", &checkbox);
                 value = (value & ~(u128(1) << bit)) | (u128(checkbox) << bit);
+                ImGui::PopStyleVar();
             };
 
             const static auto BitCheckboxes = [](u32 startBit, u32 count) {
@@ -1151,7 +1182,8 @@ namespace hex::plugin::builtin {
                 }
             };
 
-            const auto totalBitCount = 1 + exponentBitCount + mantissaBitCount;
+            ImVec4 textColor =  ImGui::GetStyleColorVec4(ImGuiCol_Text);
+            const auto totalBitCount = exponentBitCount + mantissaBitCount;
             const auto signBitPosition = totalBitCount - 0;
             const auto exponentBitPosition = totalBitCount - 1;
             const auto mantissaBitPosition = totalBitCount - 1 - exponentBitCount;
@@ -1160,178 +1192,584 @@ namespace hex::plugin::builtin {
                 return hex::extract(startBit, startBit - (count - 1), value);
             };
 
-            const auto signBits     = ExtractBits(signBitPosition, 1);
-            const auto exponentBits = ExtractBits(exponentBitPosition, exponentBitCount);
-            const auto mantissaBits = ExtractBits(mantissaBitPosition, mantissaBitCount);
+            const static auto DisplayBitLabels = [](u32 startBit, u32 count) {
+                // In this case we always label one box
+                if (count < 4) {
+                    std::string labelString = "xx";
+                    auto checkBoxWidth = ImGui::CalcTextSize(labelString.c_str()).x;
+                    auto centerBox = count == 3 || count == 2 ? 1 : 0;
 
+                    auto labelIndex = startBit - centerBox;
+                    labelString = fmt::format("{}", labelIndex);
+                    auto labelWidth = ImGui::CalcTextSize(labelString.c_str()).x;
+                    auto indentSize = checkBoxWidth * centerBox;
+                    auto centeredIndentSize = indentSize + checkBoxWidth / 2 - labelWidth / 2;
+
+                    // Fix for imgui reposition bug only happens if first checkbox has label
+                    if (centeredIndentSize == 0)
+                        centeredIndentSize -= 1;
+                    ImGui::Indent(centeredIndentSize);
+                    ImGui::TextUnformatted(labelString.c_str());
+                    ImGui::Unindent(centeredIndentSize);
+
+                } else {
+                    auto columnWidth = ImGui::GetColumnWidth();
+                    auto checkBoxWidth = columnWidth / count;
+
+                    auto labelIndex = startBit - startBit % 4;
+                    std::string labelString = fmt::format("{}", labelIndex);
+                    auto labelWidth = ImGui::CalcTextSize(labelString.c_str()).x;
+                    // indent size for checkbox
+                    auto indentSize = (startBit % 4) * checkBoxWidth;
+                    auto centeredIndentSize = indentSize + checkBoxWidth / 2 - labelWidth / 2;
+
+                    // Fix for imgui reposition bug only happens if first checkbox has label
+                    if (centeredIndentSize == 0)
+                        centeredIndentSize -= 1;
+                    ImGui::Indent(centeredIndentSize);
+                    ImGui::TextUnformatted(labelString.c_str());
+                    ImGui::Unindent(centeredIndentSize);
+
+                    auto boxesLeft = count - (startBit % 4);
+                    auto labelsLeft = boxesLeft / 4;
+                    // If we have a multiple of 4 boxes left the last label belongs to mantissa
+                    if (boxesLeft % 4 == 0)
+                        labelsLeft--;
+
+                    for (i64 i = 0; i < labelsLeft; i++) {
+                        ImGui::SameLine();
+
+                        labelIndex -= 4;
+                        labelString = fmt::format("{}", labelIndex);
+                        labelWidth = ImGui::CalcTextSize(labelString.c_str()).x;
+                        indentSize += 4 * checkBoxWidth;
+
+                        ImGui::Indent(indentSize + checkBoxWidth / 2 - labelWidth / 2);
+                        ImGui::TextFormatted("{}", labelIndex);
+                        ImGui::Unindent(indentSize + checkBoxWidth / 2 - labelWidth / 2);
+                    }
+                }
+            };
+
+            i64 signBits = ExtractBits(signBitPosition, 1);
+            i64 exponentBits = ExtractBits(exponentBitPosition, exponentBitCount);
+            i64 mantissaBits = ExtractBits(mantissaBitPosition, mantissaBitCount);
+
+            static i64 inputFieldWidth = 0;
             ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.ieee754.description"_lang);
             ImGui::NewLine();
 
-            if (ImGui::BeginTable("##outer", 4, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_ScrollX, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 4))) {
-                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.sign"_lang);
-                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.exponent"_lang);
-                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.mantissa"_lang);
+            static i64 displayMode = ContentRegistry::Settings::read("hex.builtin.tools.ieee754.settings", "display_mode", 0);
+            i64 displayModeTemp = displayMode;
+            ImGui::RadioButton("hex.builtin.tools.ieee754.settings.display_mode.detailed"_lang, reinterpret_cast<int *>(&displayMode), 0);
+            ImGui::SameLine();
 
+            ImGui::RadioButton("hex.builtin.tools.ieee754.settings.display_mode.simplified"_lang, reinterpret_cast<int *>(&displayMode), 1);
+            if (displayModeTemp != displayMode) {
+                ContentRegistry::Settings::write("hex.builtin.tools.ieee754.settings", "display_mode", displayMode);
+                displayModeTemp = displayMode;
+            }
+
+            auto tableFlags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible | ImGuiTableFlags_ScrollX;
+            if (ImGui::BeginTable("##outer", 8, tableFlags, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5.5 ))) {
+                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.result.title"_lang);
+                ImGui::TableSetupColumn("##equals");
+                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.sign"_lang);
+                ImGui::TableSetupColumn("##times");
+                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.exponent"_lang);
+                ImGui::TableSetupColumn("##times");
+                ImGui::TableSetupColumn("hex.builtin.tools.ieee754.mantissa"_lang);
                 ImGui::TableHeadersRow();
                 ImGui::TableNextRow();
 
+                // Row for bit labels. Due to font size constrains each bit cannot have its own label.
+                // Instead, we label each 4 bits and then use the bit position to determine the bit label.
+                // Result
+                ImGui::TableNextColumn();
+                // Equals
+                ImGui::TableNextColumn();
+                // Sign bit label is always shown
+                ImGui::TableNextColumn();
+
+                std::string labelString = fmt::format("{}",totalBitCount+1);
+                auto columnWidth = ImGui::GetColumnWidth();
+                auto checkBoxWidth = columnWidth - 20_scaled;
+                auto labelWidth = ImGui::CalcTextSize(labelString.c_str()).x;
+                auto indentSize = 20_scaled + checkBoxWidth /2 - labelWidth / 2;
+                ImGui::Indent(indentSize);
+                ImGui::TextUnformatted(labelString.c_str());
+                ImGui::Unindent(indentSize);
+
+                // Times
+                ImGui::TableNextColumn();
+                // Exponent
+                ImGui::TableNextColumn();
+
+                DisplayBitLabels(exponentBitPosition + 1, exponentBitCount);
+
+                // Times
+                ImGui::TableNextColumn();
+                // Mantissa
+                ImGui::TableNextColumn();
+
+                DisplayBitLabels(mantissaBitPosition + 1, mantissaBitCount);
+
+                ImGui::TableNextRow();
+                // Row for bit checkboxes
+                // Result
+                ImGui::TableNextColumn();
+
+                u64 mask = hex::bitmask(totalBitCount+1);
+                std::string maskString = hex::format("0x{:X}  ", mask);
+
+                auto style = ImGui::GetStyle();
+                inputFieldWidth = std::fmax(inputFieldWidth, ImGui::CalcTextSize(maskString.c_str()).x + style.FramePadding.x * 2.0f);
+                ImGui::PushItemWidth(inputFieldWidth);
+
+                u64 newValue = value & mask;
+                if (ImGui::InputHexadecimal("##hex", &newValue, flags))
+                    value = newValue;
+                ImGui::PopItemWidth();
+
+                // Equals
+                ImGui::TableNextColumn();
+                ImGui::Text("=");
+
                 // Sign
                 ImGui::TableNextColumn();
+
+                ImVec4 signColor = ImGui::GetCustomColorVec4(ImGuiCustomCol_IEEEToolSign);
+                ImVec4 expColor = ImGui::GetCustomColorVec4(ImGuiCustomCol_IEEEToolExp);
+                ImVec4 mantColor = ImGui::GetCustomColorVec4(ImGuiCustomCol_IEEEToolMantissa);
+                ImVec4 black = ImVec4(0.0, 0.0, 0.0, 1.0);
+
                 ImGui::Indent(20_scaled);
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, signColor);
+                ImGui::PushStyleColor(ImGuiCol_Border, black);
+
                 BitCheckboxes(signBitPosition, 1);
+
+                ImGui::PopStyleColor();
+                ImGui::PopStyleColor();
                 ImGui::Unindent(20_scaled);
 
+                // Times
+                ImGui::TableNextColumn();
                 // Exponent
                 ImGui::TableNextColumn();
+
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, expColor);
+                ImGui::PushStyleColor(ImGuiCol_Border, black);
+
                 BitCheckboxes(exponentBitPosition, exponentBitCount);
 
-                // Exponent
+                ImGui::PopStyleColor();
+                ImGui::PopStyleColor();
+
+                // Times
                 ImGui::TableNextColumn();
+                // Mantissa
+                ImGui::TableNextColumn();
+
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, mantColor);
+                ImGui::PushStyleColor(ImGuiCol_Border, black);
+
                 BitCheckboxes(mantissaBitPosition, mantissaBitCount);
 
-                ImGui::EndTable();
-            }
+                ImGui::PopStyleColor();
+                ImGui::PopStyleColor();
 
-            {
-                ImGui::SliderInt("hex.builtin.tools.ieee754.exponent_size"_lang, &exponentBitCount, 1, 128 - mantissaBitCount);
-                ImGui::SliderInt("hex.builtin.tools.ieee754.mantissa_size"_lang, &mantissaBitCount, 1, 128 - exponentBitCount);
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
 
-                ImGui::Separator();
+                exponentBias = (u128(1) << (exponentBitCount - 1)) - 1;
 
-                if (ImGui::Button("hex.builtin.tools.ieee754.half_precision"_lang))   { exponentBitCount = 5;  mantissaBitCount = 10; }
-                ImGui::SameLine();
-                if (ImGui::Button("hex.builtin.tools.ieee754.singe_precision"_lang)) { exponentBitCount = 8;  mantissaBitCount = 23; }
-                ImGui::SameLine();
-                if (ImGui::Button("hex.builtin.tools.ieee754.double_precision"_lang)) { exponentBitCount = 11; mantissaBitCount = 52; }
+                long double signValue = signBits == 0 ? 1.0 : -1.0;
 
-                ImGui::Separator();
-                ImGui::NewLine();
-            }
-
-            {
-                const auto exponentBias = (u128(1) << (exponentBitCount - 1)) - 1;
-
-                long double signValue = signBits == 0 ? 1 : -1;
-                long double exponentValue = exponentBits == 0 ? 0 : std::pow<long double>(2, i64(i128(exponentBits) - i128(exponentBias)));
-                long double mantissaValue = [mantissaBitPosition] {
-                    long double mantissa = 1.0;
-                    for (i32 bit = 0; bit < mantissaBitCount; bit++) {
-                        if (hex::extract(mantissaBitPosition - bit, mantissaBitPosition - bit, value) != 0)
-                            mantissa += 1.0 / static_cast<long double>(u128(1) << (bit + 1));
+                // Zero or denormal
+                if (exponentBits == 0) {
+                    // result doesn't fit in 128 bits
+                    if ((exponentBias - 1) > 128)
+                        exponentValue = std::pow(2.0L, static_cast<long double>(-exponentBias + 1));
+                    else {
+                        if (exponentBias == 0) {
+                            // exponent is zero
+                            if (mantissaBits == 0)
+                                exponentValue = 1.0;
+                            else
+                            // exponent is one
+                            exponentValue = 2.0;
+                        }
+                        else
+                            exponentValue = 1.0 / static_cast<long double>(u128(1) << (exponentBias - 1));
                     }
+                }
+                // Normal
+                else {
+                    // result doesn't fit in 128 bits
+                    if (std::abs(exponentBits - exponentBias) > 128)
+                        exponentValue = std::pow(2.0L, static_cast<long double>(exponentBits - exponentBias));
+                    //result fits in 128 bits
+                    else {
+                        // exponent is positive
+                        if (exponentBits > exponentBias)
+                            exponentValue = static_cast<long double>(u128(1) << (exponentBits - exponentBias));
+                        // exponent is negative
+                        else if (exponentBits < exponentBias)
+                            exponentValue = 1.0 / static_cast<long double>(u128(1) << (exponentBias - exponentBits));
+                        // exponent is zero
+                        else exponentValue = 1.0;
+                    }
+                }
 
-                    return mantissa;
-                }();
+                mantissaValue = static_cast<long double>(mantissaBits) / static_cast<long double>(u128(1) << (mantissaBitCount));
+                if (exponentBits != 0)
+                    mantissaValue += 1.0;
 
-                enum class NumberType {
-                    Regular,
-                    SignalingNaN,
-                    QuietNaN,
-                    NegativeInfinity,
-                    PositiveInfinity
-                } numberType = NumberType::Regular;
-
-                if (std::popcount(exponentBits) == exponentBitCount) {
+                // Check if all exponent bits are set.
+                if (std::popcount(static_cast<u64>(exponentBits)) == static_cast<i64>(exponentBitCount)) {
+                    // if fraction is zero number is infinity.
                     if (mantissaBits == 0) {
-                        if (signBits == 0)
+                        if (signBits == 0) {
+
                             numberType = NumberType::PositiveInfinity;
-                        else
+                            resultFloat = std::numeric_limits<long double>::infinity();
+
+                        } else {
+
                             numberType = NumberType::NegativeInfinity;
+                            resultFloat = -std::numeric_limits<long double>::infinity();
+
+                        }
+                        numberKind = NumberKind::Infinity;
+
+                    // otherwise number is NaN.
                     } else {
-                        if (mantissaBits & (u128(1) << (mantissaBitCount - 1)))
+                        if (mantissaBits & (u128(1) << (mantissaBitCount - 1))) {
+
                             numberType = NumberType::QuietNaN;
-                        else
+                            resultFloat = std::numeric_limits<long double>::quiet_NaN();
+
+                        } else {
+
                             numberType = NumberType::SignalingNaN;
+                            resultFloat = std::numeric_limits<long double>::signaling_NaN();
+
+                        }
+                        numberKind = NumberKind::NaN;
                     }
+                    // if all exponent bits are zero, but we have a non-zero fraction
+                    // then the number is denormal which are smaller than regular numbers
+                    // but not as precise.
+                } else if (exponentBits == 0 && mantissaBits != 0) {
+
+                    numberKind = NumberKind::Denormal;
+                    numberType = NumberType::Regular;
+                    resultFloat = signValue * exponentValue * mantissaValue;
+
+                } else {
+
+                    numberKind = NumberKind::Normal;
+                    numberType = NumberType::Regular;
+                    resultFloat = signValue * exponentValue *  mantissaValue;
+
                 }
 
+                i64 precision;
+                if (numberKind == NumberKind::Denormal)
+                    precision = std::ceil(1+mantissaBitCount * std::log10(2.0L));
+                else
+                    precision = std::ceil(1+(mantissaBitCount + 1) * std::log10(2.0L));
 
-                if (ImGui::BeginTable("##result", 5, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
-                    ImGui::TableSetupColumn("hex.builtin.tools.ieee754.type"_lang, ImGuiTableColumnFlags_IndentEnable);
-                    ImGui::TableSetupColumn("##padding", ImGuiTableColumnFlags_WidthFixed, 30_scaled);
-                    ImGui::TableSetupColumn("hex.builtin.tools.ieee754.formula"_lang);
-                    ImGui::TableSetupColumn("##equals");
-                    ImGui::TableSetupColumn("hex.builtin.tools.ieee754.result.title"_lang);
+                // For C++ from_chars is better than strtold.
+                // the main problem is that from_chars will not process special numbers
+                // like inf and nan, so we handle them manually
+                static std::string decimalFloatingPointNumberString;
+                static std::string_view decimalStrView;
+                // use qnan for quiet NaN and snan for signaling NaN
+                if (numberKind == NumberKind::NaN) {
+                    if (numberType == NumberType::QuietNaN)
+                        decimalFloatingPointNumberString = "qnan";
+                    else
+                        decimalFloatingPointNumberString = "snan";
+                } else
+                    decimalFloatingPointNumberString = fmt::format("{:.{}}", resultFloat, precision);
 
-                    ImGui::TableHeadersRow();
+                auto style1 = ImGui::GetStyle();
+                inputFieldWidth = std::fmax(inputFieldWidth, ImGui::CalcTextSize(decimalFloatingPointNumberString.c_str()).x + 2 * style1.FramePadding.x);
+                ImGui::PushItemWidth(inputFieldWidth);
+                enum class InputType { infinity, notANumber, quietNotANumber, signalingNotANumber, regular, invalid };
+                std::string specialNumbers[] = {"inf", "Inf", "INF", "nan", "Nan", "NAN", "qnan", "Qnan", "QNAN", "snan", "Snan", "SNAN"};
 
-                    ImGui::TableNextRow();
+                // We allow any input in order to accept infinities and NaNs, all invalid entries
+                // are detected by from_chars. You can also enter -0 or -inf.
+                std::from_chars_result res;
+                if (ImGui::InputText("##resultFloat", decimalFloatingPointNumberString, flags)) {
+                    // Always obtain sign first.
+                    if (decimalFloatingPointNumberString[0] == '-') {
+                        // and remove it from the string.
+                        signBits = 1;
+                        decimalFloatingPointNumberString.erase(0, 1);
+                    } else
+                        //important to switch from - to +.
+                        signBits = 0;
 
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.sign"_lang);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("(-1)^{0}", signBits);
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("=");
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0}", signValue);
-
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.exponent"_lang);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("2^({0} - {1})", exponentBits, exponentBias);
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("=");
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0:.8G}", exponentValue);
-
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.mantissa"_lang);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("1.0 + 0x{0:02X}", mantissaBits);
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("=");
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0:.8G}", mantissaValue);
-
-                    ImGui::TableNextRow();
-                    ImGui::TextUnformatted(" ");
-                    ImGui::Separator();
-                    ImGui::TableNextRow();
-
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.result.float"_lang);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0} * {1:.8G} * {2:.8G}", signValue, exponentValue, mantissaValue);
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("=");
-                    ImGui::TableNextColumn();
-                    switch (numberType) {
-                        using enum NumberType;
-                        case NumberType::Regular:
-                            ImGui::TextFormatted("{0:.8G}", signValue * exponentValue * mantissaValue);
+                    InputType inputType;
+                    bool matchFound = false;
+                    i32 i;
+                    // detect and use special numbers.
+                    for (i = 0; i < 12; i++) {
+                        if (decimalFloatingPointNumberString == specialNumbers[i]) {
+                            inputType = InputType(i/3);
+                            matchFound = true;
                             break;
-                        case NumberType::SignalingNaN:
-                            ImGui::TextUnformatted("Signaling NaN");
-                            break;
-                        case NumberType::QuietNaN:
-                            ImGui::TextUnformatted("Quiet NaN");
-                            break;
-                        case NumberType::NegativeInfinity:
-                            ImGui::TextUnformatted("-Inf");
-                            break;
-                        case NumberType::PositiveInfinity:
-                            ImGui::TextUnformatted("Inf");
-                            break;
+                        }
                     }
 
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.tools.ieee754.result.hex"_lang);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("=");
-                    ImGui::TableNextColumn();
-                    ImGui::TextFormatted("0x{0:02X}", value);
+                    if (!matchFound)
+                        inputType = InputType::regular;
 
-                    ImGui::EndTable();
+                    if (inputType == InputType::regular) {
+                        decimalStrView = decimalFloatingPointNumberString;
+                        res = std::from_chars(decimalStrView.data(), decimalStrView.data() + decimalStrView.size(), resultFloat);
+                        // this is why we use from_chars
+                        if (res.ec != std::errc()) {
+                            inputType = InputType::invalid;
+                        }
+                    } else if (inputType == InputType::infinity) {
+                        resultFloat = std::numeric_limits<long double>::infinity();
+                        resultFloat *= (signBits == 1 ? -1 : 1);
+
+                    } else if (inputType == InputType::notANumber)
+                        resultFloat = std::numeric_limits<long double>::quiet_NaN();
+
+                    else if (inputType == InputType::quietNotANumber)
+                        resultFloat = std::numeric_limits<long double>::quiet_NaN();
+
+                    else if (inputType == InputType::signalingNotANumber)
+                        resultFloat = std::numeric_limits<long double>::signaling_NaN();
+
+                    long double log2Result;
+
+                    if (inputType != InputType::invalid) {
+                        // deal with zero first so we can use log2.
+                        if (resultFloat == 0.0) {
+                            if (signBits == 1)
+                                resultFloat = -0.0;
+                            else
+                                resultFloat = 0.0;
+                            numberKind = NumberKind::Zero;
+                            numberType = NumberType::Regular;
+                            exponentBits = 0;
+                            mantissaBits = 0;
+
+                        } else {
+
+                            log2Result = std::log2(resultFloat);
+                            // 2^(bias+1)-2^(bias-prec) is the largest number that can be represented.
+                            // If the number entered is larger than this then the input is set to infinity.
+                            if (resultFloat > (std::pow(2.0L, exponentBias + 1) - std::pow(2.0L, exponentBias - mantissaBitCount)) || inputType == InputType::infinity ) {
+
+                                resultFloat = std::numeric_limits<long double>::infinity();
+                                numberKind = NumberKind::Infinity;
+                                numberType = signBits == 1 ? NumberType::NegativeInfinity : NumberType::PositiveInfinity;
+                                exponentBits = (u128(1) << exponentBitCount) - 1;
+                                mantissaBits = 0;
+
+                            } else if (-std::rint(log2Result) > exponentBias + mantissaBitCount - 1) {
+
+                                // 1/2^(bias-1+prec) is the smallest number that can be represented.
+                                // If the number entered is smaller than this then the input is set to zero.
+                                if (signBits == 1)
+                                    resultFloat = -0.0;
+                                else
+                                    resultFloat = 0.0;
+
+                                numberKind = NumberKind::Zero;
+                                numberType = NumberType::Regular;
+                                exponentBits = 0;
+                                mantissaBits = 0;
+
+                            } else if (inputType == InputType::signalingNotANumber) {
+
+                                resultFloat = std::numeric_limits<long double>::signaling_NaN();
+                                numberType = NumberType::SignalingNaN;
+                                numberKind = NumberKind::NaN;
+                                exponentBits = (u128(1) << exponentBitCount) - 1;
+                                mantissaBits = 1;
+
+                            } else if (inputType == InputType::quietNotANumber || inputType == InputType::notANumber ) {
+
+                                resultFloat = std::numeric_limits<long double>::quiet_NaN();
+                                numberType = NumberType::QuietNaN;
+                                numberKind = NumberKind::NaN;
+                                exponentBits = (u128(1) << exponentBitCount) - 1;
+                                mantissaBits = (u128(1) << (mantissaBitCount - 1));
+
+                            } else if (static_cast<i64>(std::floor(log2Result)) + exponentBias <= 0) {
+
+                                numberKind = NumberKind::Denormal;
+                                numberType = NumberType::Regular;
+                                exponentBits = 0;
+                                auto mantissaExp = log2Result + exponentBias + mantissaBitCount - 1;
+                                mantissaBits = static_cast<i64>(std::round(std::pow(2.0L, mantissaExp)));
+
+                            } else {
+
+                                numberType = NumberType::Regular;
+                                numberKind = NumberKind::Normal;
+                                i64 unBiasedExponent = static_cast<i64>(std::floor(log2Result));
+                                exponentBits = unBiasedExponent + exponentBias;
+                                mantissaValue = resultFloat * std::pow(2.0L, -unBiasedExponent) - 1;
+                                mantissaBits = static_cast<i64>(std::round( static_cast<long double>(u128(1) << (mantissaBitCount)) * mantissaValue));
+
+                            }
+                        }
+                        // Put the bits together.
+                        value = (signBits << (totalBitCount)) | (exponentBits << (totalBitCount - exponentBitCount)) | mantissaBits;
+                    }
                 }
+                ImGui::PopItemWidth();
+
+                if (displayMode == 0) {
+
+                    unsigned signColorU32 = ImGui::GetCustomColorU32(ImGuiCustomCol_IEEEToolSign);
+                    unsigned expColorU32 = ImGui::GetCustomColorU32(ImGuiCustomCol_IEEEToolExp);
+                    unsigned mantColorU32 = ImGui::GetCustomColorU32(ImGuiCustomCol_IEEEToolMantissa);
+
+                    ImGui::TableNextColumn();
+
+                    ImGui::Text("=");
+
+                    // Sign
+                    ImGui::TableNextColumn();
+
+                    // this has the effect of dimming the color of the numbers so user doesn't try
+                    // to interact with them.
+                    ImGui::BeginDisabled();
+                    ImGui::PushStyleColor(ImGuiCol_Text, textColor);
+
+                    ImGui::Indent(20_scaled);
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, signColorU32);
+                    if (signBits == 1)
+                        ImGui::Text("-1");
+                    else
+                        ImGui::Text("+1");
+                    ImGui::Unindent(20_scaled);
+
+                    //times
+                    ImGui::TableNextColumn();
+                    ImGui::Text("x");
+                    ImGui::TableNextColumn();
+
+                    // Exponent
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, expColorU32);
+
+                    ImGui::Indent(20_scaled);
+                    if (numberKind == NumberKind::NaN) {
+                        if (numberType == NumberType::QuietNaN) {
+                            ImGui::Text("qNaN");
+                        } else {
+                            ImGui::Text("sNaN");
+                        }
+                    } else if (numberKind == NumberKind::Infinity) {
+                        ImGui::Text("Inf");
+                    } else if (numberKind == NumberKind::Zero) {
+                        ImGui::Text("0");
+                    } else if (numberKind == NumberKind::Denormal) {
+                        ImGui::TextFormatted("2^{0}", 1 - exponentBias);
+                    } else {
+                        ImGui::TextFormatted("2^{0}", exponentBits - exponentBias);
+                    }
+                    ImGui::Unindent(20_scaled);
+
+                    //times
+                    ImGui::TableNextColumn();
+                    ImGui::Text("x");
+                    ImGui::TableNextColumn();
+
+                    // Mantissa
+                    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, mantColorU32);
+                    ImGui::Indent(20_scaled);
+                    ImGui::TextFormatted("{:.{}}", mantissaValue,precision);
+                    ImGui::Unindent(20_scaled);
+
+                    ImGui::PopStyleColor();
+                    ImGui::EndDisabled();
+                }
+
+                ImGui::EndTable();
+
             }
+            // we are done. The rest selects the format  if user interacts with the widgets.
+            // If precision and exponent match one of the IEEE 754 formats the format is highlighted
+            // and remains highlighted until user changes to a different format. Matching formats occur when
+            // the user clicks on one of the selections or if the slider values match the format in question.
+            // when a new format is selected it may have a smaller number of digits than
+            // the previous selection. Since the largest of the hexadecimal and the decimal
+            // representation widths sets both field widths to the same value we need to
+            // reset it here when a new choice is set.
+            if (ImGui::SliderInt("hex.builtin.tools.ieee754.exponent_size"_lang, &exponentBitCount, 1, 63 - mantissaBitCount))
+                inputFieldWidth = 0;
+            if (ImGui::SliderInt("hex.builtin.tools.ieee754.mantissa_size"_lang, &mantissaBitCount, 1, 63 - exponentBitCount))
+                inputFieldWidth = 0;
+            ImGui::Separator();
+
+            auto color = ImGui::GetColorU32(ImGuiCol_ButtonActive);
+
+            bool needsPop = false;
+            if (exponentBitCount == 5 && mantissaBitCount == 10) {
+                ImGui::PushStyleColor(ImGuiCol_Button, color);
+                needsPop = true;
+            }
+            if (ImGui::Button("hex.builtin.tools.ieee754.half_precision"_lang)) {
+                exponentBitCount = 5;
+                mantissaBitCount = 10;
+                inputFieldWidth = 0;
+            }
+            if (needsPop) ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+
+            needsPop = false;
+            if (exponentBitCount == 8 && mantissaBitCount == 23) {
+                ImGui::PushStyleColor(ImGuiCol_Button, color);
+                needsPop = true;
+            }
+            if (ImGui::Button("hex.builtin.tools.ieee754.single_precision"_lang)) {
+                exponentBitCount = 8;
+                mantissaBitCount = 23;
+                inputFieldWidth = 0;
+            }
+            if (needsPop) ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+
+            needsPop = false;
+            if (exponentBitCount == 11 && mantissaBitCount == 52) {
+                ImGui::PushStyleColor(ImGuiCol_Button, color);
+                needsPop = true;
+            }
+            if (ImGui::Button("hex.builtin.tools.ieee754.double_precision"_lang)) {
+                exponentBitCount = 11;
+                mantissaBitCount = 52;
+                inputFieldWidth = 0;
+            }
+            if (needsPop) ImGui::PopStyleColor();
+
+            ImGui::SameLine();
+
+            needsPop = false;
+            if (ImGui::Button("hex.builtin.tools.ieee754.clear"_lang))
+                //this will reset all interactive widgets to zero.
+                value = 0;
+
+            ImGui::Separator();
+
+            ImGui::NewLine();
+
         }
+
 
         void drawInvariantMultiplicationDecoder() {
             static u64 divisor = 1;

@@ -26,6 +26,10 @@ enum ImGuiCustomCol {
 
     ImGuiCustomCol_Highlight,
 
+    ImGuiCustomCol_IEEEToolSign,
+    ImGuiCustomCol_IEEEToolExp,
+    ImGuiCustomCol_IEEEToolMantissa,
+
     ImGuiCustomCol_COUNT
 };
 
