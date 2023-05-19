@@ -275,8 +275,7 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        auto a = recentProvider.getHash();
-                        std::string popupID = std::string("RecentProviderMenu.")+std::to_string(a);
+                        std::string popupID = std::string("RecentProviderMenu.")+std::to_string(recentProvider.getHash());
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup(popupID.c_str());
                         }
