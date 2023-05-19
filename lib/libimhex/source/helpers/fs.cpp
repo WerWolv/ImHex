@@ -3,6 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <xdg.hpp>
 
@@ -25,6 +26,62 @@ namespace hex::fs {
     static std::function<void(const std::string&)> s_fileBrowserErrorCallback;
     void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback) {
         s_fileBrowserErrorCallback = callback;
+    }
+
+    // with help from https://github.com/owncloud/client/blob/cba22aa34b3677406e0499aadd126ce1d94637a2/src/gui/openfilemanager.cpp
+    // For these 3 functions, the behaviour is undefined if the file/folder/selected file doesn't exist
+
+    void openFileExternal(std::fs::path filePath) {
+        #if defined(OS_WINDOWS)
+            hex::unused(
+                ShellExecute(nullptr, "open", filePath.string().c_str(), nullptr, nullptr, SW_SHOWNORMAL)
+            );
+        #elif defined(OS_MACOS)
+            hex::unused(system(
+                hex::format("open {}", filePath.string()).c_str()
+            ));
+        #elif defined(OS_LINUX)
+            hex::unused(system(
+                hex::format("xdg-open {}", filePath.string()).c_str()
+            ));
+        #endif
+    }
+
+    void openFolderExternal(std::fs::path dirPath) {
+        #if defined(OS_WINDOWS)
+            hex::unused(system(
+                hex::format("explorer.exe {}", dirPath.string()).c_str()
+            ));
+        #elif defined(OS_MACOS)
+            hex::unused(system(
+                hex::format("open {}", dirPath.string()).c_str()
+            ));
+        #elif defined(OS_LINUX)
+            hex::unused(system(
+                hex::format("xdg-open {}", dirPath.string()).c_str()
+            ));
+        #endif
+    }
+
+    void openFolderWithSelectionExternal(std::fs::path selectedFilePath) {
+        #if defined(OS_WINDOWS)
+            hex::unused(system(
+                hex::format(R"(explorer.exe /select,"{}")", selectedFilePath.string()).c_str()
+            ));
+        #elif defined(OS_MACOS)
+            hex::unused(system(
+                hex::format(
+                    R"(osascript -e 'tell application "Finder" to reveal POSIX file "{}"')",
+                    selectedFilePath.string()
+                ).c_str()
+            ));
+            system(R"(osascript -e 'tell application "Finder" to activate')");
+        #elif defined(OS_LINUX)
+            // TODO actually select the file
+            hex::unused(system(
+                hex::format("xdg-open {}", selectedFilePath.parent_path().string()).c_str()
+            ));
+        #endif
     }
 
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
