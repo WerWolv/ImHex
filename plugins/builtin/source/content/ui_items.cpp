@@ -230,9 +230,9 @@ namespace hex::plugin::builtin {
                             ImGui::OpenPopup(popupID.c_str());
                         }
 
-                        if(ImGui::BeginPopup(popupID.c_str())){
-                            for(auto p : tabProvider->getMenuEntries()){
-                                if(ImGui::MenuItem(p.first.c_str())){
+                        if (ImGui::BeginPopup(popupID.c_str())) {
+                            for (auto p : tabProvider->getMenuEntries()) {
+                                if (ImGui::MenuItem(p.first.c_str())) {
                                     p.second();
                                 }
                             }
