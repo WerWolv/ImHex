@@ -275,6 +275,7 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
+                        // Detect right click on recent provider
                         std::string popupID = std::string("RecentProviderMenu.")+std::to_string(recentProvider.getHash());
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup(popupID.c_str());
@@ -287,6 +288,7 @@ namespace hex::plugin::builtin {
                             ImGui::EndPopup();
                         }
 
+                        // handle deletion from vector and on disk
                         if (shouldRemove) {
                             wolv::io::fs::remove(recentProvider.filePath);
                             it = s_recentProviders.erase(it);
