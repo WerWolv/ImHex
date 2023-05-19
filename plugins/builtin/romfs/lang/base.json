@@ -352,6 +352,8 @@
   "hex.builtin.provider.file.modification",
   "hex.builtin.provider.file.path",
   "hex.builtin.provider.file.size",
+  "hex.builtin.provider.file.menu.open_file",
+  "hex.builtin.provider.file.menu.open_folder",
   "hex.builtin.provider.gdb",
   "hex.builtin.provider.gdb.ip",
   "hex.builtin.provider.gdb.name",

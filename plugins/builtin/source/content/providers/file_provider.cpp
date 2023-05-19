@@ -187,11 +187,11 @@ namespace hex::plugin::builtin {
 
     std::vector<std::pair<std::string, std::function<void()>>> FileProvider::getMenuEntries(){
         return {
-            {"Open folder", [path = this->m_path] {
+            {"hex.builtin.provider.file.menu.open_folder"_lang, [path = this->m_path] {
                 fs::openFolderWithSelectionExternal(path);
             }},
             
-            {"Open file externally", [path = this->m_path] {
+            {"hex.builtin.provider.file.menu.open_file"_lang, [path = this->m_path] {
                 fs::openFileExternal(path);
             }},
             
