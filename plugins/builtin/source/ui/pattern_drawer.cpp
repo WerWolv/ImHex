@@ -255,7 +255,10 @@ namespace hex::plugin::builtin::ui {
 
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
             this->m_selectionCallback(Region { pattern.getOffset(), pattern.getSize() });
-            this->resetEditing();
+
+            if (this->m_editingPattern != &pattern) {
+                this->resetEditing();
+            }
         }
 
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
@@ -313,7 +316,44 @@ namespace hex::plugin::builtin::ui {
         ImGui::TableNextColumn();
         ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
         ImGui::TableNextColumn();
-        drawValueColumn(pattern);
+
+        if (this->isEditingPattern(pattern)) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+            auto value = pattern.getValue();
+            auto valueString = pattern.toString();
+
+            if (pattern.getBitSize() == 1) {
+                bool boolValue = value.toBoolean();
+                if (ImGui::Checkbox("##boolean", &boolValue)) {
+                    pattern.setValue(boolValue);
+                }
+            } else if (std::holds_alternative<i128>(value)) {
+                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    MathEvaluator<i128> mathEvaluator;
+
+                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
+                        pattern.setValue(result.value());
+
+                    this->resetEditing();
+                }
+            } else if (std::holds_alternative<u128>(value)) {
+                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    MathEvaluator<u128> mathEvaluator;
+
+                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
+                        pattern.setValue(result.value());
+
+                    this->resetEditing();
+                }
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
+        } else {
+            drawValueColumn(pattern);
+        }
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternBitfieldArray& pattern) {
@@ -365,10 +405,9 @@ namespace hex::plugin::builtin::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            bool value = hex::get_or(pattern.getValue(), true) != 0;
-            if (ImGui::Checkbox(pattern.getFormattedValue().c_str(), &value)) {
+            bool value = pattern.getValue().toBoolean();
+            if (ImGui::Checkbox("##boolean", &value)) {
                 pattern.setValue(value);
-                this->resetEditing();
             }
 
             ImGui::PopItemWidth();
