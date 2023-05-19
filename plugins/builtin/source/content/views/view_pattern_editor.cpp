@@ -341,10 +341,13 @@ namespace hex::plugin::builtin {
                     {
                         if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                             bool isFirst = iter == envVars.begin();
+                            bool isLast  = std::next(iter) == envVars.end();
                             envVars.erase(iter);
 
                             if (isFirst)
                                 iter = envVars.begin();
+                            if (isLast)
+                                iter = std::prev(envVars.end());
                         }
                     }
                     ImGui::EndDisabled();
