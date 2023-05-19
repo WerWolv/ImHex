@@ -299,13 +299,13 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(mode);
                             }
                             break;
+                        case Architecture::WASM:
                         #endif
                         case Architecture::EVM:
                         case Architecture::TMS320C64X:
                         case Architecture::ARM64:
                         case Architecture::SYSZ:
                         case Architecture::XCORE:
-                        case Architecture::WASM:
                         case Architecture::MAX:
                             this->m_mode = cs_mode(0);
                             break;
