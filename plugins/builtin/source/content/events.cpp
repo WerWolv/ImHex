@@ -94,7 +94,7 @@ namespace hex::plugin::builtin {
                             ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
                         );
                         newProvider->setPath(path);
-                        newProvider->open();
+                        //newProvider->open();
                         if (newProvider != nullptr && !newProvider->open())
                             hex::ImHexApi::Provider::remove(newProvider);
                         else
