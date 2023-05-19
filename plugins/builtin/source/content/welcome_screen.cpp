@@ -53,6 +53,10 @@ namespace hex::plugin::builtin {
             return HashFunction()(*this) == HashFunction()(other);
         }
 
+        std::size_t getHash() const {
+            return HashFunction()(*this);
+        }
+
         struct HashFunction {
             std::size_t operator()(const RecentProvider& provider) const {
                 return
@@ -258,13 +262,37 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
                 if (!s_recentProvidersUpdating) {
-                    for (const auto &recentProvider : s_recentProviders) {
+                    auto it = s_recentProviders.begin();
+                    while(it != s_recentProviders.end()){
+                        const auto &recentProvider = *it;
+                        bool shouldRemove = false;
+
                         ImGui::PushID(&recentProvider);
                         ON_SCOPE_EXIT { ImGui::PopID(); };
 
                         if (ImGui::BulletHyperlink(recentProvider.displayName.c_str())) {
                             loadRecentProvider(recentProvider);
                             break;
+                        }
+
+                        auto a = recentProvider.getHash();
+                        std::string popupID = std::string("RecentProviderMenu.")+std::to_string(a);
+                        if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
+                            ImGui::OpenPopup(popupID.c_str());
+                        }
+
+                        if (ImGui::BeginPopup(popupID.c_str())) {
+                            if (ImGui::MenuItem("Remove")) {
+                                shouldRemove = true;
+                            }
+                            ImGui::EndPopup();
+                        }
+
+                        if (shouldRemove) {
+                            wolv::io::fs::remove(recentProvider.filePath);
+                            it = s_recentProviders.erase(it);
+                        } else {
+                            it++;
                         }
                     }
                 }
