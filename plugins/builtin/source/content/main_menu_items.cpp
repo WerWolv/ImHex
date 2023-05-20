@@ -35,6 +35,10 @@ namespace hex::plugin::builtin {
             return noRunningTasks() && ImHexApi::Provider::isValid();
         }
 
+        bool noRunningTaskAndWritableProvider() {
+            return noRunningTasks() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isWritable();
+        }
+
     }
 
     namespace {
@@ -340,7 +344,7 @@ namespace hex::plugin::builtin {
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.base64" }, 2050,
                                                     Shortcut::None,
                                                     importBase64,
-                                                    noRunningTasks);
+                                                    noRunningTaskAndWritableProvider);
 
             ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 2100);
 
@@ -348,19 +352,19 @@ namespace hex::plugin::builtin {
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, 2150,
                                                     Shortcut::None,
                                                     importIPSPatch,
-                                                    ImHexApi::Provider::isValid);
+                                                    noRunningTaskAndWritableProvider);
 
             /* IPS32 */
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips32"}, 2200,
                                                     Shortcut::None,
                                                     importIPS32Patch,
-                                                    ImHexApi::Provider::isValid);
+                                                    noRunningTaskAndWritableProvider);
 
             /* Modified File */
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.modified_file" }, 2300,
                                                     Shortcut::None,
                                                     importModifiedFile,
-                                                    [&] { return noRunningTaskAndValidProvider() && ImHexApi::Provider::get()->isWritable(); });
+                                                    noRunningTaskAndWritableProvider);
         }
 
         /* Export */
