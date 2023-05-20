@@ -215,7 +215,9 @@ namespace hex::plugin::builtin {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 3);
             ImGui::TableNextColumn();
 
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + std::min<double>(450_scaled, availableSpace.x / 2 - 50_scaled));
             ImGui::TextFormattedWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
+            ImGui::PopTextWrapPos();
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
             ImGui::TableNextColumn();
