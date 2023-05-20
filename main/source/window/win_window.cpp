@@ -32,7 +32,6 @@ namespace hex {
 
     static LONG_PTR g_oldWndProc;
     static float g_titleBarHeight;
-    static ImGuiMouseCursor g_mouseCursorIcon;
     static Microsoft::WRL::ComPtr<ITaskbarList4> g_taskbarList;
 
     // Custom Window procedure for receiving OS events
@@ -72,6 +71,8 @@ namespace hex {
     // Custom window procedure for borderless window
     static LRESULT borderlessWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
+            case WM_MOUSELAST:
+                break;
             case WM_NCACTIVATE:
             case WM_NCPAINT:
                 // Handle Windows Aero Snap
@@ -101,37 +102,6 @@ namespace hex {
 
                 return 0;
             }
-            case WM_SETCURSOR: {
-                // Handle mouse cursor icon
-                auto cursorPos = LOWORD(lParam);
-
-                switch (cursorPos) {
-                    case HTRIGHT:
-                    case HTLEFT:
-                        g_mouseCursorIcon = ImGuiMouseCursor_ResizeEW;
-                        break;
-                    case HTTOP:
-                    case HTBOTTOM:
-                        g_mouseCursorIcon = ImGuiMouseCursor_ResizeNS;
-                        break;
-                    case HTTOPLEFT:
-                    case HTBOTTOMRIGHT:
-                        g_mouseCursorIcon = ImGuiMouseCursor_ResizeNWSE;
-                        break;
-                    case HTTOPRIGHT:
-                    case HTBOTTOMLEFT:
-                        g_mouseCursorIcon = ImGuiMouseCursor_ResizeNESW;
-                        break;
-                    case HTCAPTION:
-                    case HTCLIENT:
-                        g_mouseCursorIcon = ImGuiMouseCursor_None;
-                        break;
-                    default:
-                        break;
-                }
-
-                return TRUE;
-            }
             case WM_NCHITTEST: {
                 // Handle window resizing and moving
 
@@ -159,8 +129,9 @@ namespace hex {
                     RegionTop * (cursor.y < (window.top + border.y)) |
                     RegionBottom * (cursor.y >= (window.bottom - border.y));
 
-                if (result != 0 && (ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
+                if (result != 0 && (ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId))) {
                     break;
+                }
 
                 switch (result) {
                     case RegionLeft:
@@ -371,45 +342,6 @@ namespace hex {
     void Window::endNativeWindowFrame() {
         if (!ImHexApi::System::isBorderlessWindowModeEnabled())
             return;
-
-        if (g_mouseCursorIcon != ImGuiMouseCursor_None) {
-            ImGui::SetMouseCursor(g_mouseCursorIcon);
-        }
-
-        // Translate ImGui mouse cursors to Win32 mouse cursors
-        switch (ImGui::GetMouseCursor()) {
-            case ImGuiMouseCursor_Arrow:
-                SetCursor(LoadCursor(nullptr, IDC_ARROW));
-                break;
-            case ImGuiMouseCursor_Hand:
-                SetCursor(LoadCursor(nullptr, IDC_HAND));
-                break;
-            case ImGuiMouseCursor_ResizeEW:
-                SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
-                break;
-            case ImGuiMouseCursor_ResizeNS:
-                SetCursor(LoadCursor(nullptr, IDC_SIZENS));
-                break;
-            case ImGuiMouseCursor_ResizeNWSE:
-                SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
-                break;
-            case ImGuiMouseCursor_ResizeNESW:
-                SetCursor(LoadCursor(nullptr, IDC_SIZENESW));
-                break;
-            case ImGuiMouseCursor_ResizeAll:
-                SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
-                break;
-            case ImGuiMouseCursor_NotAllowed:
-                SetCursor(LoadCursor(nullptr, IDC_NO));
-                break;
-            case ImGuiMouseCursor_TextInput:
-                SetCursor(LoadCursor(nullptr, IDC_IBEAM));
-                break;
-            default:
-            case ImGuiMouseCursor_None:
-                SetCursor(LoadCursor(nullptr, IDC_ARROW));
-                break;
-        }
     }
 
     void Window::drawTitleBar() {
