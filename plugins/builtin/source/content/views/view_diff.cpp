@@ -18,8 +18,11 @@ namespace hex::plugin::builtin {
     ViewDiff::ViewDiff() : View("hex.builtin.view.diff.name") {
 
         EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
-            this->m_columns[0].provider = -1;
-            this->m_columns[1].provider = -1;
+            for (u8 i = 0; i < 2; i++) {
+                this->m_columns[i].provider = -1;
+                this->m_columns[i].hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+            }
+
             this->m_diffs.clear();
         });
 
