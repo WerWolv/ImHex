@@ -34,15 +34,15 @@ namespace hex::fs {
     void openFileExternal(std::fs::path filePath) {
         #if defined(OS_WINDOWS)
             hex::unused(
-                ShellExecute(nullptr, "open", filePath.string().c_str(), nullptr, nullptr, SW_SHOWNORMAL)
+                ShellExecute(nullptr, "open", wolv::util::toUTF8String(filePath).c_str(), nullptr, nullptr, SW_SHOWNORMAL)
             );
         #elif defined(OS_MACOS)
             hex::unused(system(
-                hex::format("open {}", filePath.string()).c_str()
+                hex::format("open {}", wolv::util::toUTF8String(filePath)).c_str()
             ));
         #elif defined(OS_LINUX)
             hex::unused(system(
-                hex::format("xdg-open {}", filePath.string()).c_str()
+                hex::format("xdg-open {}", wolv::util::toUTF8String(filePath)).c_str()
             ));
         #endif
     }
@@ -50,15 +50,15 @@ namespace hex::fs {
     void openFolderExternal(std::fs::path dirPath) {
         #if defined(OS_WINDOWS)
             hex::unused(system(
-                hex::format("explorer.exe {}", dirPath.string()).c_str()
+                hex::format("explorer.exe {}", wolv::util::toUTF8String(dirPath)).c_str()
             ));
         #elif defined(OS_MACOS)
             hex::unused(system(
-                hex::format("open {}", dirPath.string()).c_str()
+                hex::format("open {}", wolv::util::toUTF8String(dirPath)).c_str()
             ));
         #elif defined(OS_LINUX)
             hex::unused(system(
-                hex::format("xdg-open {}", dirPath.string()).c_str()
+                hex::format("xdg-open {}", wolv::util::toUTF8String(dirPath)).c_str()
             ));
         #endif
     }
@@ -66,20 +66,20 @@ namespace hex::fs {
     void openFolderWithSelectionExternal(std::fs::path selectedFilePath) {
         #if defined(OS_WINDOWS)
             hex::unused(system(
-                hex::format(R"(explorer.exe /select,"{}")", selectedFilePath.string()).c_str()
+                hex::format(R"(explorer.exe /select,"{}")", wolv::util::toUTF8String(selectedFilePath)).c_str()
             ));
         #elif defined(OS_MACOS)
             hex::unused(system(
                 hex::format(
                     R"(osascript -e 'tell application "Finder" to reveal POSIX file "{}"')",
-                    selectedFilePath.string()
+                    wolv::util::toUTF8String(selectedFilePath)
                 ).c_str()
             ));
             system(R"(osascript -e 'tell application "Finder" to activate')");
         #elif defined(OS_LINUX)
             // TODO actually select the file
             hex::unused(system(
-                hex::format("xdg-open {}", selectedFilePath.parent_path().string()).c_str()
+                hex::format("xdg-open {}", wolv::util::toUTF8String(selectedFilePath)).c_str()
             ));
         #endif
     }
