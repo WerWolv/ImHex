@@ -750,14 +750,11 @@ static void ImGui_ImplGlfw_UpdateMouseCursor()
         else
         {
             // IMHEX PATCH BEGIN
-            if (!bd->BorderlessWindow) {
+            /*if (!bd->BorderlessWindow) {*/
                 // Show OS mouse cursor
                 // FIXME-PLATFORM: Unfocused windows seems to fail changing the mouse cursor with GLFW 3.2, but 3.3 works here.
                 #if defined(_WIN32)
                 switch (imgui_cursor) {
-                    case ImGuiMouseCursor_Arrow:
-                        SetCursor(LoadCursor(nullptr, IDC_ARROW));
-                        break;
                     case ImGuiMouseCursor_Hand:
                         SetCursor(LoadCursor(nullptr, IDC_HAND));
                         break;
@@ -782,16 +779,12 @@ static void ImGui_ImplGlfw_UpdateMouseCursor()
                     case ImGuiMouseCursor_TextInput:
                         SetCursor(LoadCursor(nullptr, IDC_IBEAM));
                         break;
-                    default:
-                    case ImGuiMouseCursor_None:
-                        SetCursor(LoadCursor(nullptr, IDC_ARROW));
-                        break;
                 }
                 #else
                     glfwSetCursor(window, bd->MouseCursors[imgui_cursor] ? bd->MouseCursors[imgui_cursor] : bd->MouseCursors[ImGuiMouseCursor_Arrow]);
                 #endif
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            }
+            /*}*/
             // IMHEX PATCH END
         }
     }
