@@ -61,21 +61,8 @@ namespace hex {
             T m_data;
         };
 
-        HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
-            AT_FIRST_TIME {
-                curl_global_init(CURL_GLOBAL_ALL);
-            };
-
-            AT_FINAL_CLEANUP {
-                curl_global_cleanup();
-            };
-
-            this->m_curl = curl_easy_init();
-        }
-
-        ~HttpRequest() {
-            curl_easy_cleanup(this->m_curl);
-        }
+        HttpRequest(std::string method, std::string url);
+        ~HttpRequest();
 
         HttpRequest(const HttpRequest&) = delete;
         HttpRequest& operator=(const HttpRequest&) = delete;

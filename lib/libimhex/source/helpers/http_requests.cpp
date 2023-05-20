@@ -5,6 +5,22 @@ namespace hex {
     std::string HttpRequest::s_caCertData;
     std::string HttpRequest::s_proxyUrl;
 
+    HttpRequest::HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
+        AT_FIRST_TIME {
+            curl_global_init(CURL_GLOBAL_ALL);
+        };
+
+        AT_FINAL_CLEANUP {
+            curl_global_cleanup();
+        };
+
+        this->m_curl = curl_easy_init();
+    }
+
+    HttpRequest::~HttpRequest() {
+        curl_easy_cleanup(this->m_curl);
+    }
+
     void HttpRequest::setDefaultConfig() {
         curl_easy_setopt(this->m_curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
         curl_easy_setopt(this->m_curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
