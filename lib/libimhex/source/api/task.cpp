@@ -192,7 +192,6 @@ namespace hex {
     }
 
     void TaskManager::runner(const std::stop_token &stopToken) {
-        std::mutex mutex;
         while (true) {
             std::shared_ptr<Task> task;
             {
