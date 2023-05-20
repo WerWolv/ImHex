@@ -225,7 +225,7 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        std::string popupID = std::string("ProviderMenu.")+std::to_string(tabProvider->getID());
+                        std::string popupID = std::string("ProviderMenu.") + std::to_string(tabProvider->getID());
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup(popupID.c_str());
                         }

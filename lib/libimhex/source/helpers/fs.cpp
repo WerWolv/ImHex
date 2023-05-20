@@ -28,10 +28,12 @@ namespace hex::fs {
         s_fileBrowserErrorCallback = callback;
     }
 
-    // with help from https://github.com/owncloud/client/blob/cba22aa34b3677406e0499aadd126ce1d94637a2/src/gui/openfilemanager.cpp
-    // For these 3 functions, the behaviour is undefined if the file/folder/selected file doesn't exist
+    // With help from https://github.com/owncloud/client/blob/cba22aa34b3677406e0499aadd126ce1d94637a2/src/gui/openfilemanager.cpp
 
-    void openFileExternal(std::fs::path filePath) {
+    void openFileExternal(const std::fs::path &filePath) {
+        if (!wolv::io::fs::exists(filePath))
+            return;
+
         #if defined(OS_WINDOWS)
             hex::unused(
                 ShellExecute(nullptr, "open", wolv::util::toUTF8String(filePath).c_str(), nullptr, nullptr, SW_SHOWNORMAL)
@@ -47,7 +49,10 @@ namespace hex::fs {
         #endif
     }
 
-    void openFolderExternal(std::fs::path dirPath) {
+    void openFolderExternal(const std::fs::path &dirPath) {
+        if (!wolv::io::fs::exists(dirPath))
+            return;
+
         #if defined(OS_WINDOWS)
             hex::unused(system(
                 hex::format("explorer.exe {}", wolv::util::toUTF8String(dirPath)).c_str()
@@ -63,7 +68,10 @@ namespace hex::fs {
         #endif
     }
 
-    void openFolderWithSelectionExternal(std::fs::path selectedFilePath) {
+    void openFolderWithSelectionExternal(const std::fs::path &selectedFilePath) {
+        if (!wolv::io::fs::exists(selectedFilePath))
+            return;
+
         #if defined(OS_WINDOWS)
             hex::unused(system(
                 hex::format(R"(explorer.exe /select,"{}")", wolv::util::toUTF8String(selectedFilePath)).c_str()

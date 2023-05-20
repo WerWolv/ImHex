@@ -119,7 +119,7 @@ namespace hex::prv {
         virtual bool handleFilePicker();
 
         virtual std::vector<std::pair<std::string, std::function<void()>>> getMenuEntries() {
-            return {};
+            return { };
         };
 
         [[nodiscard]] virtual bool hasLoadInterface() const;

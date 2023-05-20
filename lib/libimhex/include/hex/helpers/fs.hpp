@@ -23,9 +23,9 @@ namespace hex::fs {
     void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback);
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
 
-    void openFileExternal(std::fs::path filePath);
-    void openFolderExternal(std::fs::path dirPath);
-    void openFolderWithSelectionExternal(std::fs::path selectedFilePath);
+    void openFileExternal(const std::fs::path &filePath);
+    void openFolderExternal(const std::fs::path &dirPath);
+    void openFolderWithSelectionExternal(const std::fs::path &selectedFilePath);
 
     enum class ImHexPath : u32 {
         Patterns = 0,
