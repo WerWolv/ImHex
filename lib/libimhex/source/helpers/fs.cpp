@@ -77,9 +77,10 @@ namespace hex::fs {
             ));
             system(R"(osascript -e 'tell application "Finder" to activate')");
         #elif defined(OS_LINUX)
+            // fallback to only opening the folder for now
             // TODO actually select the file
             hex::unused(system(
-                hex::format("xdg-open {}", wolv::util::toUTF8String(selectedFilePath)).c_str()
+                hex::format("xdg-open {}", wolv::util::toUTF8String(selectedFilePath.parent_path())).c_str()
             ));
         #endif
     }
