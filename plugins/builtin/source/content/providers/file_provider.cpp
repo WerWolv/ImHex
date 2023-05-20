@@ -211,6 +211,8 @@ namespace hex::plugin::builtin {
         this->m_file.map();
         this->m_fileSize = this->m_file.getSize();
 
+        this->m_file.close();
+
         return true;
     }
 
