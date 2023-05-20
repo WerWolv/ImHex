@@ -214,7 +214,7 @@ namespace hex {
 
         #if defined(DEBUG)
             if (::GetLastError() == ERROR_INVALID_HANDLE) {
-                result = AllocConsole();
+                result = AllocConsole() == TRUE;
             }
         #endif
 
@@ -238,8 +238,6 @@ namespace hex {
                     }
                 }
             }
-        } else if (::GetLastError() == ERROR_INVALID_HANDLE) {
-            // The parent process is not a console process
         } else {
             log::redirectToFile();
         }
