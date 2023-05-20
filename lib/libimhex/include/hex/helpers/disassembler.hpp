@@ -20,9 +20,9 @@ namespace hex {
         TMS320C64X  = CS_ARCH_TMS320C64X,
         M680X       = CS_ARCH_M680X,
         EVM         = CS_ARCH_EVM,
-        WASM        = CS_ARCH_WASM,
 
         #if CS_API_MAJOR >= 5
+            WASM    = CS_ARCH_WASM,
             RISCV   = CS_ARCH_RISCV,
             MOS65XX = CS_ARCH_MOS65XX,
             BPF     = CS_ARCH_BPF,
@@ -57,9 +57,9 @@ namespace hex {
             names[CS_ARCH_TMS320C64X]   = "TMS320C64x";
             names[CS_ARCH_M680X]        = "M680X";
             names[CS_ARCH_EVM]          = "Ethereum Virtual Machine";
-            names[CS_ARCH_WASM]         = "WebAssembly";
 
             #if CS_API_MAJOR >= 5
+                names[CS_ARCH_WASM]     = "WebAssembly";
                 names[CS_ARCH_RISCV]    = "RISC-V";
                 names[CS_ARCH_MOS65XX]  = "MOS Technology 65xx";
                 names[CS_ARCH_BPF]      = "Berkeley Packet Filter";
