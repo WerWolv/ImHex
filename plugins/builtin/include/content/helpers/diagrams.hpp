@@ -295,13 +295,14 @@ namespace hex {
 
                 // Set the axis limit to [first block : last block]
                 ImPlot::SetupAxesLimits(
-                    this->m_startAddress / this->m_blockSize,
-                    this->m_endAddress / this->m_blockSize,
-                    -0.1F, 1.1F, ImGuiCond_Always
-                );
+                        this->m_xBlockEntropy.empty() ? 0 : this->m_xBlockEntropy.front(),
+                        this->m_xBlockEntropy.empty() ? 0 : this->m_xBlockEntropy.back(),
+                        -0.1F,
+                        1.1F,
+                        ImGuiCond_Always);
 
                 // Draw the plot
-                ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropy.data(), this->m_blockCount);
+                ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropy.data(), this->m_blockCount - 1);
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
                 // but just a set of bytes we won't be able to use the drag bar correctly.
@@ -383,7 +384,6 @@ namespace hex {
 
             // Reset and resize the array
             this->m_yBlockEntropy.clear();
-            this->m_yBlockEntropy.resize(((this->m_endAddress - this->m_startAddress) / this->m_chunkSize) + 1);
 
             this->m_byteCount = 0;
             this->m_blockCount = 0;
@@ -404,7 +404,7 @@ namespace hex {
                 this->m_byteCount++;
                 // Check if we processed one complete chunk, if so compute the entropy and start analysing the next chunk
                 if (((this->m_byteCount % this->m_chunkSize) == 0) || this->m_byteCount == (this->m_endAddress - this->m_startAddress)) [[unlikely]] {
-                    this->m_yBlockEntropy[this->m_blockCount] = calculateEntropy(this->m_blockValueCounts, this->m_chunkSize);
+                    this->m_yBlockEntropy.push_back(calculateEntropy(this->m_blockValueCounts, this->m_chunkSize));
 
                     this->m_blockCount += 1;
                     this->m_blockValueCounts = { 0 };
@@ -488,7 +488,6 @@ namespace hex {
 
             // Reset and resize the array
             this->m_yBlockEntropy.clear();
-            this->m_yBlockEntropy.resize(std::ceil((this->m_endAddress - this->m_startAddress) / this->m_chunkSize));
 
             this->m_byteCount = 0;
             this->m_blockCount = 0;
@@ -501,7 +500,7 @@ namespace hex {
                 this->m_byteCount++;
                 // Check if we processed one complete chunk, if so compute the entropy and start analysing the next chunk
                 if (((this->m_byteCount % this->m_chunkSize) == 0) || this->m_byteCount == bytes.size() * 8) [[unlikely]] {
-                    this->m_yBlockEntropy[this->m_blockCount] = calculateEntropy(this->m_blockValueCounts, this->m_chunkSize);
+                    this->m_yBlockEntropy.push_back(calculateEntropy(this->m_blockValueCounts, this->m_chunkSize));
 
                     this->m_blockCount += 1;
                     this->m_blockValueCounts = { 0 };
@@ -664,7 +663,12 @@ namespace hex {
             // Draw the result of the analysis
             if (!this->m_processing && ImPlot::BeginPlot("##byte_types", size, flags)) {
                 ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.common.percentage"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
-                ImPlot::SetupAxesLimits(this->m_startAddress / this->m_blockSize, this->m_endAddress / this->m_blockSize, -0.1F, 100.1F, ImGuiCond_Always);
+                ImPlot::SetupAxesLimits(
+                        this->m_xBlockTypeDistributions.empty() ? 0 : this->m_xBlockTypeDistributions.front(),
+                        this->m_xBlockTypeDistributions.empty() ? 0 : this->m_xBlockTypeDistributions.back(),
+                        -0.1F,
+                        100.1F,
+                        ImGuiCond_Always);
                 ImPlot::SetupLegend(ImPlotLocation_South, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
 
                 constexpr static std::array Names = { "iscntrl", "isprint", "isspace", "isblank", 
@@ -673,7 +677,7 @@ namespace hex {
                                                     };
 
                 for (u32 i = 0; i < Names.size(); i++) {
-                    ImPlot::PlotLine(Names[i], this->m_xBlockTypeDistributions.data(), this->m_yBlockTypeDistributions[i].data(), this->m_blockCount);
+                    ImPlot::PlotLine(Names[i], this->m_xBlockTypeDistributions.data(), this->m_yBlockTypeDistributions[i].data(), this->m_blockCount - 1);
                 }
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
@@ -753,8 +757,6 @@ namespace hex {
 
             // Reset and resize the array
             this->m_yBlockTypeDistributions.fill({});
-            for (auto &blockDistribution : this->m_yBlockTypeDistributions)
-                blockDistribution.resize(((this->m_endAddress - this->m_startAddress) / this->m_blockSize) + 1);
 
             // Set the diagram handle position to the start of the plot
             this->m_handlePosition = this->m_startAddress / double(this->m_blockSize);
@@ -772,7 +774,7 @@ namespace hex {
                 if (((this->m_byteCount % this->m_blockSize) == 0) || this->m_byteCount == (this->m_endAddress - this->m_startAddress)) [[unlikely]] {
                     auto typeDist = calculateTypeDistribution(this->m_blockValueCounts, this->m_blockSize);
                     for (size_t i = 0; i < typeDist.size(); i++)
-                        this->m_yBlockTypeDistributions[i][this->m_blockCount] = typeDist[i] * 100;
+                        this->m_yBlockTypeDistributions[i].push_back(typeDist[i] * 100);
 
                     this->m_blockCount += 1;
                     this->m_blockValueCounts = { 0 };
@@ -845,9 +847,6 @@ namespace hex {
             this->m_blockValueCounts = { 0 };
 
             this->m_yBlockTypeDistributions.fill({});
-            for (auto &blockDistribution : this->m_yBlockTypeDistributions)
-                blockDistribution.resize(((this->m_endAddress - this->m_startAddress) / this->m_blockSize) + 1);
-
             this->m_byteCount = 0;
             this->m_blockCount = 0;
 
@@ -859,7 +858,7 @@ namespace hex {
                 if (((this->m_byteCount % this->m_blockSize) == 0) || this->m_byteCount == (this->m_endAddress - this->m_startAddress)) [[unlikely]] {
                     auto typeDist = calculateTypeDistribution(this->m_blockValueCounts, this->m_blockSize);
                     for (size_t i = 0; i < typeDist.size(); i++)
-                        this->m_yBlockTypeDistributions[i][this->m_blockCount] = typeDist[i] * 100;
+                        this->m_yBlockTypeDistributions[i].push_back(typeDist[i] * 100);
 
                     this->m_blockCount += 1;
                     this->m_blockValueCounts = { 0 };
