@@ -58,7 +58,10 @@ namespace hex {
         }
 
         // Reset the signal handler to the default handler
-        std::signal(signalNumber, SIG_DFL);
+        std::signal(SIGSEGV, SIG_DFL);
+        std::signal(SIGILL,  SIG_DFL);
+        std::signal(SIGABRT, SIG_DFL);
+        std::signal(SIGFPE,  SIG_DFL);
 
         // Print stack trace
         for (const auto &stackFrame : stacktrace::getStackTrace()) {
@@ -193,15 +196,15 @@ namespace hex {
 
         // Register signal handlers
         {
-            #define HANDLE_SIGNAL(name) \
+            #define HANDLE_SIGNAL(name)             \
             std::signal(name, [](int signalNumber){ \
                 signalHandler(signalNumber, #name); \
-            });
+            })
 
-            HANDLE_SIGNAL(SIGSEGV)
-            HANDLE_SIGNAL(SIGILL)
-            HANDLE_SIGNAL(SIGABRT)
-            HANDLE_SIGNAL(SIGFPE)
+            HANDLE_SIGNAL(SIGSEGV);
+            HANDLE_SIGNAL(SIGILL);
+            HANDLE_SIGNAL(SIGABRT);
+            HANDLE_SIGNAL(SIGFPE);
 
             #undef HANDLE_SIGNAL
         }
