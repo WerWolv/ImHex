@@ -18,7 +18,12 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             ImGui::PushItemWidth(-1);
-            ImGui::SetKeyboardFocusHere();
+
+            if (this->m_justOpened) {
+                ImGui::SetKeyboardFocusHere();
+                this->m_justOpened = false;
+            }
+
             ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, this->m_input);
             ImGui::PopItemWidth();
 
@@ -57,6 +62,7 @@ namespace hex::plugin::builtin {
 
         std::string m_message;
         std::function<void(std::string)> m_function;
+        bool m_justOpened = true;
     };
 
 }

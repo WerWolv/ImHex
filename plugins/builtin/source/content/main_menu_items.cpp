@@ -456,9 +456,15 @@ namespace hex::plugin::builtin {
                 LayoutManager::loadString(std::string(romfs::get("layouts/default.hexlyt").string()));
             }
 
+            bool shift = ImGui::GetIO().KeyShift;
             for (auto &[name, path] : LayoutManager::getLayouts()) {
-                if (ImGui::MenuItem(name.c_str(), "", false, ImHexApi::Provider::isValid())) {
-                    LayoutManager::load(path);
+                if (ImGui::MenuItem(hex::format("{}{}", name, shift ? " [X]" : "").c_str(), "", false, ImHexApi::Provider::isValid())) {
+                    if (shift) {
+                        wolv::io::fs::remove(path);
+                        LayoutManager::reload();
+                    }
+                    else
+                        LayoutManager::load(path);
                 }
             }
         });
