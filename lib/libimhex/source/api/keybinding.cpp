@@ -12,7 +12,7 @@ namespace hex {
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const std::function<void()> &callback) {
-        view->m_shortcuts.insert({ shortcut, callback });
+        view->m_shortcuts.insert({ shortcut + CurrentView, callback });
     }
 
     static Shortcut getShortcut(bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
