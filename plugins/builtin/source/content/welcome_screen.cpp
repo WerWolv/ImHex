@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
         void drawContent() override {
             ImGui::TextUnformatted("hex.builtin.popup.safety_backup.desc"_lang);
             if (!this->m_logFilePath.empty()) {
-                ImGui::TextUnformatted("Log file: ");
+                ImGui::TextUnformatted("hex.builtin.popup.safety_backup.log_file"_lang);
                 if (ImGui::Hyperlink(this->m_logFilePath.filename().string().c_str())) {
                     fs::openFolderWithSelectionExternal(this->m_logFilePath);
                 }
