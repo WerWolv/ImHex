@@ -3,6 +3,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <xdg.hpp>
 
@@ -25,6 +26,71 @@ namespace hex::fs {
     static std::function<void(const std::string&)> s_fileBrowserErrorCallback;
     void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback) {
         s_fileBrowserErrorCallback = callback;
+    }
+
+    // With help from https://github.com/owncloud/client/blob/cba22aa34b3677406e0499aadd126ce1d94637a2/src/gui/openfilemanager.cpp
+
+    void openFileExternal(const std::fs::path &filePath) {
+        if (!wolv::io::fs::exists(filePath))
+            return;
+
+        #if defined(OS_WINDOWS)
+            hex::unused(
+                ShellExecute(nullptr, "open", wolv::util::toUTF8String(filePath).c_str(), nullptr, nullptr, SW_SHOWNORMAL)
+            );
+        #elif defined(OS_MACOS)
+            hex::unused(system(
+                hex::format("open {}", wolv::util::toUTF8String(filePath)).c_str()
+            ));
+        #elif defined(OS_LINUX)
+            hex::unused(system(
+                hex::format("xdg-open {}", wolv::util::toUTF8String(filePath)).c_str()
+            ));
+        #endif
+    }
+
+    void openFolderExternal(const std::fs::path &dirPath) {
+        if (!wolv::io::fs::exists(dirPath))
+            return;
+
+        #if defined(OS_WINDOWS)
+            hex::unused(system(
+                hex::format("explorer.exe {}", wolv::util::toUTF8String(dirPath)).c_str()
+            ));
+        #elif defined(OS_MACOS)
+            hex::unused(system(
+                hex::format("open {}", wolv::util::toUTF8String(dirPath)).c_str()
+            ));
+        #elif defined(OS_LINUX)
+            hex::unused(system(
+                hex::format("xdg-open {}", wolv::util::toUTF8String(dirPath)).c_str()
+            ));
+        #endif
+    }
+
+    void openFolderWithSelectionExternal(const std::fs::path &selectedFilePath) {
+        if (!wolv::io::fs::exists(selectedFilePath))
+            return;
+
+        #if defined(OS_WINDOWS)
+            hex::unused(system(
+                hex::format(R"(explorer.exe /select,"{}")", wolv::util::toUTF8String(selectedFilePath)).c_str()
+            ));
+        #elif defined(OS_MACOS)
+            hex::unused(system(
+                hex::format(
+                    R"(osascript -e 'tell application "Finder" to reveal POSIX file "{}"')",
+                    wolv::util::toUTF8String(selectedFilePath)
+                ).c_str()
+            ));
+            system(R"(osascript -e 'tell application "Finder" to activate')");
+        #elif defined(OS_LINUX)
+            // fallback to only opening the folder for now
+            // TODO actually select the file
+            hex::unused(system(
+                hex::format("xdg-open {}", wolv::util::toUTF8String(selectedFilePath.parent_path())).c_str()
+            ));
+        #endif
     }
 
     bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {

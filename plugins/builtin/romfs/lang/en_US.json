@@ -403,6 +403,8 @@
         "hex.builtin.provider.file.modification": "Last modification time",
         "hex.builtin.provider.file.path": "File path",
         "hex.builtin.provider.file.size": "Size",
+        "hex.builtin.provider.file.menu.open_file": "Open file externally",
+        "hex.builtin.provider.file.menu.open_folder": "Open containing folder",
         "hex.builtin.provider.gdb": "GDB Server Provider",
         "hex.builtin.provider.gdb.ip": "IP Address",
         "hex.builtin.provider.gdb.name": "GDB Server <{0}:{1}>",

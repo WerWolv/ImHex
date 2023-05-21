@@ -118,6 +118,10 @@ namespace hex::prv {
         [[nodiscard]] virtual bool hasFilePicker() const;
         virtual bool handleFilePicker();
 
+        virtual std::vector<std::pair<std::string, std::function<void()>>> getMenuEntries() {
+            return { };
+        };
+
         [[nodiscard]] virtual bool hasLoadInterface() const;
         [[nodiscard]] virtual bool hasInterface() const;
         virtual bool drawLoadInterface();
