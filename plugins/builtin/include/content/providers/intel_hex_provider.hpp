@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
     protected:
         bool m_dataValid = false;
         size_t m_dataSize = 0x00;
-        wolv::container::IntervalTree<std::vector<u8>, u64, 0> m_data;
+        wolv::container::IntervalTree<std::vector<u8>, u64> m_data;
 
         std::fs::path m_sourceFilePath;
     };

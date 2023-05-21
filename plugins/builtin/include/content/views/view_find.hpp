@@ -95,7 +95,7 @@ namespace hex::plugin::builtin {
 
         } m_searchSettings, m_decodeSettings;
 
-        using OccurrenceTree = wolv::container::IntervalTree<Occurrence, u64, 0>;
+        using OccurrenceTree = wolv::container::IntervalTree<Occurrence, u64>;
 
         PerProvider<std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
         PerProvider<OccurrenceTree> m_occurrenceTree;
