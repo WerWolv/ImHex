@@ -13,6 +13,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/magic.hpp>
+#include <hex/helpers/binary_pattern.hpp>
 
 #include <content/popups/popup_file_chooser.hpp>
 #include <content/popups/popup_question.hpp>
@@ -763,6 +764,64 @@ namespace hex::plugin::builtin {
                         return true;
                     }
                     return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
+                });
+
+                // Format: [ AA BB CC DD ] @ 0x12345678
+                runtime.addPragma("magic", [provider, &foundCorrectType](pl::PatternLanguage &, const std::string &value) -> bool {
+                    const auto pattern = [value = value] mutable -> std::optional<BinaryPattern> {
+                        value = wolv::util::trim(value);
+
+                        if (value.empty())
+                        return std::nullopt;
+
+                        if (!value.starts_with('['))
+                        return std::nullopt;
+
+                        value = value.substr(1);
+
+                        auto end = value.find(']');
+                        if (end == std::string::npos)
+                        return std::nullopt;
+
+                        value = value.substr(0, end - 1);
+                        value = wolv::util::trim(value);
+
+                        return BinaryPattern(value);
+                    }();
+
+                    const auto address = [value = value] mutable -> std::optional<u64> {
+                        value = wolv::util::trim(value);
+
+                        if (value.empty())
+                        return std::nullopt;
+
+                        auto start = value.find('@');
+                        if (start == std::string::npos)
+                        return std::nullopt;
+
+                        value = value.substr(start + 1);
+                        value = wolv::util::trim(value);
+
+                        size_t end = 0;
+                        auto result = std::stoull(value, &end, 0);
+                        if (end != value.length())
+                        return std::nullopt;
+
+                        return result;
+                    }();
+
+                    if (!address)
+                        return false;
+                    if (!pattern)
+                        return false;
+
+                    std::vector<u8> bytes(pattern->getSize());
+                    provider->read(*address, bytes.data(), bytes.size());
+
+                    if (pattern->matches(bytes))
+                        foundCorrectType = true;
+
+                    return true;
                 });
 
                 this->m_possiblePatternFiles.clear();

@@ -4,6 +4,7 @@
 
 #include <hex/api/task.hpp>
 #include <hex/ui/view.hpp>
+#include <hex/helpers/binary_pattern.hpp>
 #include <ui/widgets.hpp>
 
 #include <atomic>
@@ -76,7 +77,7 @@ namespace hex::plugin::builtin {
 
             struct BinaryPattern {
                 std::string input;
-                std::vector<ViewFind::BinaryPattern> pattern;
+                hex::BinaryPattern pattern;
                 u32 alignment = 1;
             } binaryPattern;
 

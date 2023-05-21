@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
             if (this->m_searchTask.isRunning())
                 return { };
 
-            if (!this->m_occurrenceTree->overlapping({ address, address }).empty())
+            if (!this->m_occurrenceTree->overlapping({ address, address + size }).empty())
                 return HighlightColor();
             else
                 return std::nullopt;
@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
             if (this->m_searchTask.isRunning())
                 return;
 
-            auto occurrences = this->m_occurrenceTree->overlapping({ address, address });
+            auto occurrences = this->m_occurrenceTree->overlapping({ address, address + size });
             if (occurrences.empty())
                 return;
 
@@ -91,62 +91,6 @@ namespace hex::plugin::builtin {
 
             ImGui::EndTooltip();
         });
-    }
-
-
-    std::vector<ViewFind::BinaryPattern> ViewFind::parseBinaryPatternString(std::string string) {
-        std::vector<BinaryPattern> result;
-
-        if (string.length() < 2)
-            return { };
-
-        bool inString = false;
-        while (string.length() > 0) {
-            BinaryPattern pattern = { 0, 0 };
-            if (string.starts_with("\"")) {
-                inString = !inString;
-                string = string.substr(1);
-                continue;
-            } else if (inString) {
-                pattern = { 0xFF, u8(string.front()) };
-                string = string.substr(1);
-            } else if (string.starts_with("??")) {
-                pattern = { 0x00, 0x00 };
-                string = string.substr(2);
-            } else if ((std::isxdigit(string.front()) || string.front() == '?') && string.length() >= 2) {
-                const auto hex = string.substr(0, 2);
-
-                for (const auto &c : hex) {
-                    pattern.mask  <<= 4;
-                    pattern.value <<= 4;
-
-                    if (std::isxdigit(c)) {
-                        pattern.mask |= 0x0F;
-
-                        if (auto hexValue = hex::hexCharToValue(c); hexValue.has_value())
-                            pattern.value |= hexValue.value();
-                        else
-                            return { };
-                    } else if (c != '?') {
-                        return { };
-                    }
-                }
-
-                string = string.substr(2);
-            } else if (std::isspace(string.front())) {
-                string = string.substr(1);
-                continue;
-            } else {
-                return { };
-            }
-
-            result.push_back(pattern);
-        }
-
-        if (inString)
-            return { };
-
-        return result;
     }
 
     template<typename Type, typename StorageType>
@@ -365,7 +309,7 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        const size_t patternSize = settings.pattern.size();
+        const size_t patternSize = settings.pattern.getSize();
 
         if (settings.alignment == 1) {
             u32 matchedBytes = 0;
@@ -373,9 +317,9 @@ namespace hex::plugin::builtin {
                 auto byte = *it;
 
                 task.update(it.getAddress());
-                if ((byte & settings.pattern[matchedBytes].mask) == settings.pattern[matchedBytes].value) {
+                if (settings.pattern.matchesByte(byte, matchedBytes)) {
                     matchedBytes++;
-                    if (matchedBytes == settings.pattern.size()) {
+                    if (matchedBytes == settings.pattern.getSize()) {
                         auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
                         results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
@@ -397,7 +341,7 @@ namespace hex::plugin::builtin {
 
                 bool match = true;
                 for (u32 i = 0; i < patternSize; i++) {
-                    if ((data[i] & settings.pattern[i].mask) != settings.pattern[i].value) {
+                    if (settings.pattern.matchesByte(data[i], i)) {
                         match = false;
                         break;
                     }
@@ -693,8 +637,8 @@ namespace hex::plugin::builtin {
                         constexpr static u32 min = 1, max = 0x1000;
                         ImGui::SliderScalar("hex.builtin.view.find.binary_pattern.alignment"_lang, ImGuiDataType_U32, &settings.alignment, &min, &max);
 
-                        settings.pattern = parseBinaryPatternString(settings.input);
-                        this->m_settingsValid = !settings.pattern.empty() && settings.alignment > 0;
+                        settings.pattern = hex::BinaryPattern(settings.input);
+                        this->m_settingsValid = settings.pattern.isValid() && settings.alignment > 0;
 
                         ImGui::EndTabItem();
                     }

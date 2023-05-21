@@ -1,6 +1,8 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/magic.hpp>
+#include <hex/helpers/binary_pattern.hpp>
+#include <optional>
 
 #include <pl/core/evaluator.hpp>
 
@@ -19,6 +21,10 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::PatternLanguage::addPragma("MIME", [](pl::PatternLanguage&, const std::string &value) {
             return magic::isValidMIMEType(value);
+        });
+
+        ContentRegistry::PatternLanguage::addPragma("magic", [](pl::PatternLanguage&, const std::string &) {
+            return true;
         });
     }
 
