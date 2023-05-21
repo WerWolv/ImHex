@@ -45,11 +45,34 @@ namespace hex {
 
     using namespace std::literals::chrono_literals;
 
+    static void saveCrashFile(){
+        nlohmann::json crashData{
+            {"logFile", hex::log::getFile().getPath()},
+            {"project", ProjectFile::getPath()},
+        };
+        
+        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+            wolv::io::File file(path / "crash.json", wolv::io::File::Mode::Write);
+            if(file.isValid()){
+                file.writeString(crashData.dump(4));
+                file.close();
+                log::info("Wrote crash.json file to {}", wolv::util::toUTF8String(file.getPath()));
+                return;
+            }
+        }
+        log::warn("Could not write crash.json file !");
+    }
+
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
         log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
+        // save crash.json file
+        saveCrashFile();
+
         // Trigger an event so that plugins can handle crashes
+        // It may affect things (like the project path),
+        // so we do this after saving the crash file    
         EventManager::post<EventAbnormalTermination>(signalNumber);
 
         // Detect if the crash was due to an uncaught exception
@@ -175,11 +198,11 @@ namespace hex {
         constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
 
         // Save a backup project when the application crashes
+        // We need to save the project no mater if it is dirty,
+        // because this save is responsible for telling us which files
+        // were opened in case there wasn't a project
         EventManager::subscribe<EventAbnormalTermination>(this, [this](int) {
             ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(this->m_imguiSettingsPath).c_str());
-
-            if (!ImHexApi::Provider::isDirty())
-                return;
 
             for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
                 if (ProjectFile::store(path / CrashBackupFileName))
@@ -219,6 +242,12 @@ namespace hex {
                         ex.what()
                 );
             }
+
+            // save crash.json file
+            saveCrashFile();
+
+            // send the event. It may affect things (like the project path),
+            // so we do this after saving the crash file
             EventManager::post<EventAbnormalTermination>(0);
         });
     }

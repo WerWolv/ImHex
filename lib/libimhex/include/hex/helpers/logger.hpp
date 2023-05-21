@@ -9,9 +9,12 @@
 #include <fmt/color.h>
 #include <fmt/chrono.h>
 
+#include <wolv/io/file.hpp>
+
 namespace hex::log {
 
     FILE *getDestination();
+    wolv::io::File& getFile();
     bool isRedirected();
 
     namespace {

@@ -15,6 +15,10 @@ namespace hex::log {
             return stdout;
     }
 
+    wolv::io::File& getFile() {
+        return g_loggerFile;
+    }
+
     bool isRedirected() {
         return g_loggerFile.isValid();
     }
