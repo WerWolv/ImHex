@@ -611,14 +611,14 @@ namespace hex::plugin::builtin {
                         if (hasBackupFile) {
                             ProjectFile::load(backupFilePath);
                             if (hasProject) {
-                                ProjectFile::setPath(std::fs::path(crashFileData["project"]));
+                                ProjectFile::setPath(crashFileData["project"].get<std::string>());
                             } else {
                                 ProjectFile::setPath("");
                             }
                             EventManager::post<RequestUpdateWindowTitle>();
                         }else{
                             if (hasProject) {
-                                ProjectFile::setPath(std::fs::path(crashFileData["project"]));
+                                ProjectFile::setPath(crashFileData["project"].get<std::string>());
                             }
                         }
                     },
