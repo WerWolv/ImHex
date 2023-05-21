@@ -13,7 +13,12 @@ namespace hex::plugin::builtin {
                 : hex::Popup<PopupFileChooser>("hex.builtin.common.choose_file"),
                   m_indices({ }), m_files(files),
                   m_openCallback(callback),
-                  m_validExtensions(validExtensions), m_multiple(multiple) { }
+                  m_validExtensions(validExtensions), m_multiple(multiple) {
+
+            std::sort(this->m_files.begin(), this->m_files.end(), [](const std::fs::path &a, const std::fs::path &b) {
+                return a.filename() < b.filename();
+            });
+        }
 
         void drawContent() override {
             bool doubleClicked = false;
