@@ -608,16 +608,16 @@ namespace hex::plugin::builtin {
                     crashFileData.value("logFile", ""),
                     // restore callback
                     [=]{
-                        if(hasBackupFile){
+                        if (hasBackupFile) {
                             ProjectFile::load(backupFilePath);
-                            if(hasProject){
+                            if (hasProject) {
                                 ProjectFile::setPath(std::fs::path(crashFileData["project"]));
-                            }else{
+                            } else {
                                 ProjectFile::setPath("");
                             }
                             EventManager::post<RequestUpdateWindowTitle>();
                         }else{
-                            if(hasProject){
+                            if (hasProject) {
                                 ProjectFile::setPath(std::fs::path(crashFileData["project"]));
                             }
                         }
@@ -633,7 +633,7 @@ namespace hex::plugin::builtin {
 
         // Tip of the day
         auto tipsData = romfs::get("tips.json");
-        if(!hasCrashed && tipsData.valid()){
+        if (!hasCrashed && tipsData.valid()) {
             auto tipsCategories = nlohmann::json::parse(tipsData.string());
 
             auto now = std::chrono::system_clock::now();

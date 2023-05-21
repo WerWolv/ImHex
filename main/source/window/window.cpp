@@ -53,7 +53,7 @@ namespace hex {
         
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             wolv::io::File file(path / "crash.json", wolv::io::File::Mode::Write);
-            if(file.isValid()){
+            if (file.isValid()) {
                 file.writeString(crashData.dump(4));
                 file.close();
                 log::info("Wrote crash.json file to {}", wolv::util::toUTF8String(file.getPath()));
