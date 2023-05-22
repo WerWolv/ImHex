@@ -384,10 +384,12 @@ namespace hex::plugin::builtin {
     static void drawWelcomeScreen() {
         if (ImGui::Begin("ImHexDockSpace")) {
             if (!ImHexApi::Provider::isValid()) {
-                static char title[256];
-                ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
-                if (ImGui::Begin(title)) {
+                static std::array<char, 256> title;
+                ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
+                if (ImGui::Begin(title.data())) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
+
+                    ImGui::SetNextWindowScroll(ImVec2(0.0F, -1.0F));
                     if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding)) {
                         drawWelcomeScreenContent();
                     }
