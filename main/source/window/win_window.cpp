@@ -37,6 +37,10 @@ namespace hex {
     static float g_titleBarHeight;
     static Microsoft::WRL::ComPtr<ITaskbarList4> g_taskbarList;
 
+    void nativeErrorMessage(std::string &message){
+        MessageBox(NULL, message, "Error", MB_ICONERROR | MB_OK);
+    }
+
     // Custom Window procedure for receiving OS events
     static LRESULT commonWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         switch (uMsg) {
