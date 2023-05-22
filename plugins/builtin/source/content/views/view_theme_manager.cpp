@@ -27,6 +27,7 @@ namespace hex::plugin::builtin {
                                               ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf))
                         {
                             handler.setFunction(colorId, color);
+                            EventManager::post<EventThemeChanged>();
                         }
                     }
                 }
@@ -42,10 +43,15 @@ namespace hex::plugin::builtin {
                     for (auto &[styleName, style] : handler.styleMap) {
                         auto &[value, min, max, needsScaling] = style;
 
-                        if (auto floatValue = std::get_if<float*>(&value); floatValue != nullptr)
-                            ImGui::SliderFloat(styleName.c_str(), *floatValue, min, max, "%.1f");
-                        else if (auto vecValue = std::get_if<ImVec2*>(&value); vecValue != nullptr)
-                            ImGui::SliderFloat2(styleName.c_str(), &(*vecValue)->x, min, max, "%.1f");
+                        if (auto floatValue = std::get_if<float*>(&value); floatValue != nullptr) {
+                            if (ImGui::SliderFloat(styleName.c_str(), *floatValue, min, max, "%.1f")) {
+                                EventManager::post<EventThemeChanged>();
+                            }
+                        } else if (auto vecValue = std::get_if<ImVec2*>(&value); vecValue != nullptr) {
+                            if (ImGui::SliderFloat2(styleName.c_str(), &(*vecValue)->x, min, max, "%.1f")) {
+                                EventManager::post<EventThemeChanged>();
+                            }
+                        }
                     }
                 }
             }

@@ -56,7 +56,7 @@
             "title-background": "#66668CCC",
             "title-background-active": "#66668CCC",
             "title-background-collapse": "#66668CCC",
-            "window-background": "#000000D8"
+            "window-background": "#000000FF"
         },
         "imhex": {
             "desc-button": "#282850FF",

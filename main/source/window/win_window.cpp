@@ -355,8 +355,8 @@ namespace hex {
 
                 const auto SetWindowCompositionAttribute = (SetWindowCompositionAttributeFunc)(void*)GetProcAddress(user32Dll, "SetWindowCompositionAttribute");
                 if (SetWindowCompositionAttribute != nullptr) {
-                    ACCENTPOLICY policy = { 3, 0, 0, 0 };
-                    WINCOMPATTRDATA data = { ImGui::GetCustomStyle().WindowBlur > 0.0F ? 19 : 0, &policy, sizeof(ACCENTPOLICY) };
+                    ACCENTPOLICY policy = { ImGui::GetCustomStyle().WindowBlur > 0.5F ? 3 : 0, 0, 0, 0 };
+                    WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) };
                     SetWindowCompositionAttribute(hwnd, &data);
                 }
                 FreeLibrary(user32Dll);

@@ -240,7 +240,7 @@ namespace hex::plugin::builtin {
             {
                 auto &style = ImGui::GetStyle();
                 const static ThemeManager::StyleMap ImGuiStyleMap = {
-                    { "alpha",                  { &style.Alpha,                0.001F, 1.0F,    false } },
+                    { "alpha",                  { &style.Alpha,                0.1F,   1.0F,    false } },
                     { "disabled-alpha",         { &style.DisabledAlpha,        0.0F,   1.0F,    false } },
                     { "window-padding",         { &style.WindowPadding,        0.0F,   20.0F,   true  } },
                     { "window-rounding",        { &style.WindowRounding,       0.0F,   12.0F,   true  } },
@@ -330,7 +330,7 @@ namespace hex::plugin::builtin {
             {
                 auto &style = ImGui::GetCustomStyle();
                 const static ThemeManager::StyleMap ImHexStyleMap = {
-                        { "window-blur",                  { &style.WindowBlur,               0.0F,    1.0F, true } },
+                        { "window-blur",    { &style.WindowBlur,    0.0F,   1.0F,   true } },
                 };
 
                 ThemeManager::addStyleHandler("imhex", ImHexStyleMap);
