@@ -482,10 +482,6 @@ jobs:
             mock_release: f37
             release_num: 37
             mock_config: fedora-37
-          - name: Fedora
-            mock_release: f36
-            release_num: 36
-            mock_config: fedora-36
           - name: RHEL-AlmaLinux
             mock_release: epel9
             release_num: 9
