@@ -921,6 +921,7 @@
         "hex.builtin.welcome.plugins.plugin": "Plugin",
         "hex.builtin.popup.safety_backup.delete": "No, Delete",
         "hex.builtin.popup.safety_backup.desc": "Oh no, ImHex crashed last time.\nDo you want to restore your past work?",
+        "hex.builtin.popup.safety_backup.log_file": "Log file: ",
         "hex.builtin.popup.safety_backup.restore": "Yes, Restore",
         "hex.builtin.popup.safety_backup.title": "Restore lost data",
         "hex.builtin.welcome.start.create_file": "Create New File",

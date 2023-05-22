@@ -842,6 +842,7 @@
   "hex.builtin.welcome.plugins.plugin",
   "hex.builtin.popup.safety_backup.delete",
   "hex.builtin.popup.safety_backup.desc",
+  "hex.builtin.popup.safety_backup.log_file",
   "hex.builtin.popup.safety_backup.restore",
   "hex.builtin.popup.safety_backup.title",
   "hex.builtin.welcome.start.create_file",
