@@ -123,7 +123,6 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndChild();
 
-            ImGui::NewLine();
 
             ImGui::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, this->m_newHashName);
             ImGui::SameLine();
@@ -135,7 +134,10 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndDisabled();
 
-            if (ImGui::BeginTable("##hashes", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 10))) {
+            ImGui::SameLine();
+            ImGui::HelpHover("hex.builtin.view.hashes.hover_info"_lang);
+
+            if (ImGui::BeginTable("##hashes", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.table.name"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.table.type"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
@@ -197,9 +199,6 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndTable();
             }
-
-            ImGui::NewLine();
-            ImGui::InfoTooltip("hex.builtin.view.hashes.hover_info"_lang);
         }
         ImGui::End();
     }
