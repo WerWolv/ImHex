@@ -1,3 +1,4 @@
+#include "window.hpp"
 #include "init/splash_window.hpp"
 
 #include <hex/api/imhex_api.hpp>
@@ -216,6 +217,7 @@ namespace hex::init {
         // Create the splash screen window
         this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
         if (this->m_window == nullptr) {
+            hex::nativeErrorMessage("Failed to create GLFW window. <TODO explain what happened and instructions on what to do>");
             log::fatal("Failed to create GLFW window!");
             exit(EXIT_FAILURE);
         }
