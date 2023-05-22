@@ -33,6 +33,12 @@ enum ImGuiCustomCol {
     ImGuiCustomCol_COUNT
 };
 
+enum ImGuiCustomStyle {
+    ImGuiCustomStyle_WindowBlur,
+
+    ImGuiCustomStyle_COUNT
+};
+
 namespace ImGui {
 
     class Texture {
@@ -106,10 +112,23 @@ namespace ImGui {
 
     struct ImHexCustomData {
         ImVec4 Colors[ImGuiCustomCol_COUNT];
+
+        struct Styles {
+            float WindowBlur = 0.0F;
+        } styles;
     };
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul = 1.0F);
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
+
+    inline ImHexCustomData::Styles& GetCustomStyle() {
+        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
+
+        return customData.styles;
+    }
+
+    float GetCustomStyleFloat(ImGuiCustomStyle idx);
+    ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx);
 
     void StyleCustomColorsDark();
     void StyleCustomColorsLight();
@@ -117,23 +136,23 @@ namespace ImGui {
 
     void SmallProgressBar(float fraction, float yOffset = 0.0F);
 
-    void TextFormatted(const std::string &fmt, auto &&...args) {
+    inline void TextFormatted(const std::string &fmt, auto &&...args) {
         ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedColored(ImColor color, const std::string &fmt, auto &&...args) {
+    inline void TextFormattedColored(ImColor color, const std::string &fmt, auto &&...args) {
         ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedDisabled(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedDisabled(const std::string &fmt, auto &&...args) {
         ImGui::TextDisabled("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedWrapped(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedWrapped(const std::string &fmt, auto &&...args) {
         ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
-    void TextFormattedCentered(const std::string &fmt, auto &&...args) {
+    inline void TextFormattedCentered(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
         auto availableSpace = ImGui::GetContentRegionAvail();
         auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);

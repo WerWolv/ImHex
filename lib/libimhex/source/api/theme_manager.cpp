@@ -1,5 +1,6 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/event.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
@@ -182,6 +183,8 @@ namespace hex {
         }
 
         s_currTheme = name;
+
+        EventManager::post<EventThemeChanged>();
     }
 
     const std::string &ThemeManager::getThemeImagePostfix() {

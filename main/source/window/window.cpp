@@ -692,7 +692,7 @@ namespace hex {
         int displayWidth, displayHeight;
         glfwGetFramebufferSize(this->m_window, &displayWidth, &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(0.00F, 0.00F, 0.00F, 1.00f);
+        glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -735,6 +735,7 @@ namespace hex {
 
         glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
         // Create window
@@ -904,10 +905,6 @@ namespace hex {
 
         ImGuiIO &io       = ImGui::GetIO();
         ImGuiStyle &style = ImGui::GetStyle();
-
-        // Configure window alpha and rounding to make them not stand out when detached
-        style.Alpha          = 1.0F;
-        style.WindowRounding = 0.0F;
 
         ImNodes::GetStyle().Flags = ImNodesStyleFlags_NodeOutline | ImNodesStyleFlags_GridLines;
 

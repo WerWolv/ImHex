@@ -333,6 +333,36 @@ namespace hex {
                 }
             });
         }
+
+        struct ACCENTPOLICY {
+            int na;
+            int nf;
+            int nc;
+            int nA;
+        };
+        struct WINCOMPATTRDATA {
+            int na;
+            PVOID pd;
+            ULONG ul;
+        };
+
+        EventManager::subscribe<EventThemeChanged>([this]{
+            auto hwnd = glfwGetWin32Window(this->m_window);
+
+            const HINSTANCE user32Dll = LoadLibraryA("user32.dll");
+            if (user32Dll != nullptr) {
+                using SetWindowCompositionAttributeFunc = BOOL(WINAPI*)(HWND, WINCOMPATTRDATA*);
+
+                const auto SetWindowCompositionAttribute = (SetWindowCompositionAttributeFunc)(void*)GetProcAddress(user32Dll, "SetWindowCompositionAttribute");
+                if (SetWindowCompositionAttribute != nullptr) {
+                    ACCENTPOLICY policy = { 3, 0, 0, 0 };
+                    WINCOMPATTRDATA data = { ImGui::GetCustomStyle().WindowBlur > 0.0F ? 19 : 0, &policy, sizeof(ACCENTPOLICY) };
+                    SetWindowCompositionAttribute(hwnd, &data);
+                }
+                FreeLibrary(user32Dll);
+            }
+        });
+
     }
 
     void Window::beginNativeWindowFrame() {

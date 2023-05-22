@@ -353,6 +353,24 @@ namespace ImGui {
         return c;
     }
 
+    float GetCustomStyleFloat(ImGuiCustomStyle idx) {
+        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
+
+        switch (idx) {
+            case ImGuiCustomStyle_WindowBlur:
+                return customData.styles.WindowBlur;
+            default:
+                return 0.0f;
+        }
+    }
+
+    ImVec2 GetCustomStyleVec2(ImGuiCustomStyle idx) {
+        switch (idx) {
+            default:
+                return { };
+        }
+    }
+
     void StyleCustomColorsDark() {
         auto &colors = static_cast<ImHexCustomData *>(GImGui->IO.UserData)->Colors;
 

@@ -326,6 +326,15 @@ namespace hex::plugin::builtin {
 
                 ThemeManager::addStyleHandler("imnodes", ImNodesStyleMap);
             }
+
+            {
+                auto &style = ImGui::GetCustomStyle();
+                const static ThemeManager::StyleMap ImHexStyleMap = {
+                        { "window-blur",                  { &style.WindowBlur,               0.0F,    1.0F, true } },
+                };
+
+                ThemeManager::addStyleHandler("imhex", ImHexStyleMap);
+            }
         });
     }
 
