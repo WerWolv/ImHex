@@ -28,6 +28,9 @@
   <a title="Documentation" href="https://imhex.werwolv.net/docs">
     <img alt="Documentation" src="https://img.shields.io/badge/Docs-Available-brightgreen?logo=gitbook&logoColor=%23FFFFFF&style=for-the-badge">
   </a>
+  <a title="Plugins" href="https://github.com/WerWolv/ImHex/blob/master/PLUGINS.md">
+    <img alt="Plugins" src="https://img.shields.io/badge/Plugins-Supported-brightgreen?logo=stackedit&logoColor=%23FFFFFF&style=for-the-badge">
+  </a>
 </p>
 
 ## Supporting
