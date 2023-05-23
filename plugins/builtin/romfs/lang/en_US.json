@@ -759,6 +759,7 @@
         "hex.builtin.view.hex_editor.menu.edit.resize": "Resize...",
         "hex.builtin.view.hex_editor.menu.edit.select_all": "Select all",
         "hex.builtin.view.hex_editor.menu.edit.set_base": "Set base address",
+        "hex.builtin.view.hex_editor.menu.edit.set_page_size": "Set page size",
         "hex.builtin.view.hex_editor.menu.file.goto": "Goto",
         "hex.builtin.view.hex_editor.menu.file.load_encoding_file": "Load custom encoding...",
         "hex.builtin.view.hex_editor.menu.file.save": "Save",

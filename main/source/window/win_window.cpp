@@ -30,6 +30,9 @@
 
 namespace hex {
 
+    template<typename T>
+    using WinUniquePtr = std::unique_ptr<std::remove_pointer_t<T>, BOOL(*)(T)>;
+
     static LONG_PTR g_oldWndProc;
     static float g_titleBarHeight;
     static Microsoft::WRL::ComPtr<ITaskbarList4> g_taskbarList;
@@ -349,17 +352,20 @@ namespace hex {
         EventManager::subscribe<EventThemeChanged>([this]{
             auto hwnd = glfwGetWin32Window(this->m_window);
 
-            const HINSTANCE user32Dll = LoadLibraryA("user32.dll");
+            const auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
             if (user32Dll != nullptr) {
                 using SetWindowCompositionAttributeFunc = BOOL(WINAPI*)(HWND, WINCOMPATTRDATA*);
 
-                const auto SetWindowCompositionAttribute = (SetWindowCompositionAttributeFunc)(void*)GetProcAddress(user32Dll, "SetWindowCompositionAttribute");
+                const auto SetWindowCompositionAttribute =
+                        (SetWindowCompositionAttributeFunc)
+                        (void*)
+                        GetProcAddress(user32Dll.get(), "SetWindowCompositionAttribute");
+
                 if (SetWindowCompositionAttribute != nullptr) {
                     ACCENTPOLICY policy = { ImGui::GetCustomStyle().WindowBlur > 0.5F ? 3 : 0, 0, 0, 0 };
                     WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) };
                     SetWindowCompositionAttribute(hwnd, &data);
                 }
-                FreeLibrary(user32Dll);
             }
         });
 

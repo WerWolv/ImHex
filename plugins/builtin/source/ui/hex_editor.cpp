@@ -693,7 +693,8 @@ namespace hex::plugin::builtin::ui {
                     // Page Address
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.hex_editor.region"_lang, this->m_provider->getCurrentPageAddress(), this->m_provider->getSize());
+                        auto pageAddress = this->m_provider->getCurrentPageAddress();
+                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.hex_editor.region"_lang, pageAddress, pageAddress + this->m_provider->getSize() - 1);
                     }
 
                     ImGui::TableNextRow();

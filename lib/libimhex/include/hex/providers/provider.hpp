@@ -21,7 +21,7 @@ namespace hex::prv {
      */
     class Provider {
     public:
-        constexpr static size_t PageSize = 0x1000'0000;
+        constexpr static size_t MaxPageSize = 0x1000'0000;
 
         Provider();
         virtual ~Provider();
@@ -81,6 +81,9 @@ namespace hex::prv {
         [[nodiscard]] Overlay *newOverlay();
         void deleteOverlay(Overlay *overlay);
         [[nodiscard]] const std::list<Overlay *> &getOverlays();
+
+        [[nodiscard]] size_t getPageSize() const;
+        void setPageSize(size_t pageSize);
 
         [[nodiscard]] u32 getPageCount() const;
         [[nodiscard]] u32 getCurrentPage() const;
@@ -172,6 +175,8 @@ namespace hex::prv {
         bool m_skipLoadInterface = false;
 
         std::string m_errorMessage;
+
+        size_t m_pageSize = MaxPageSize;
 
     private:
         static u32 s_idCounter;

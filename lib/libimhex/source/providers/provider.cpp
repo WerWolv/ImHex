@@ -156,8 +156,19 @@ namespace hex::prv {
     }
 
 
+    size_t Provider::getPageSize() const {
+        return this->m_pageSize;
+    }
+
+    void Provider::setPageSize(size_t pageSize) {
+        if (pageSize > MaxPageSize)
+            pageSize = MaxPageSize;
+
+        this->m_pageSize = pageSize;
+    }
+
     u32 Provider::getPageCount() const {
-        return (this->getActualSize() / PageSize) + (this->getActualSize() % PageSize != 0 ? 1 : 0);
+        return (this->getActualSize() / this->getPageSize()) + (this->getActualSize() % this->getPageSize() != 0 ? 1 : 0);
     }
 
     u32 Provider::getCurrentPage() const {
@@ -180,15 +191,15 @@ namespace hex::prv {
     }
 
     u64 Provider::getCurrentPageAddress() const {
-        return PageSize * this->getCurrentPage();
+        return this->getPageSize() * this->getCurrentPage();
     }
 
     size_t Provider::getSize() const {
-        return std::min(this->getActualSize() - PageSize * this->m_currPage, PageSize);
+        return std::min(this->getActualSize() - this->getPageSize() * this->m_currPage, this->getPageSize());
     }
 
     std::optional<u32> Provider::getPageOfAddress(u64 address) const {
-        u32 page = std::floor((address - this->getBaseAddress()) / double(PageSize));
+        u32 page = std::floor((address - this->getBaseAddress()) / double(this->getPageSize()));
 
         if (page >= this->getPageCount())
             return std::nullopt;
