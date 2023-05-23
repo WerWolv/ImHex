@@ -864,6 +864,8 @@ namespace hex {
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             hex::unused(mods);
 
+            if (key == GLFW_KEY_UNKNOWN) return;
+
             auto keyName = glfwGetKeyName(key, scancode);
             if (keyName != nullptr)
                 key = std::toupper(keyName[0]);

@@ -414,6 +414,10 @@ void ImGui_ImplGlfw_KeyCallback(GLFWwindow* window, int keycode, int scancode, i
     if (bd->PrevUserCallbackKey != NULL && window == bd->Window)
         bd->PrevUserCallbackKey(window, keycode, scancode, action, mods);
 
+    // IMHEX PATCH BEGIN
+    if (keycode == GLFW_KEY_UNKNOWN)
+        return;
+    // IMHEX PATCH END
     if (action != GLFW_PRESS && action != GLFW_RELEASE)
         return;
 

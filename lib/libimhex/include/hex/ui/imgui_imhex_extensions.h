@@ -30,6 +30,8 @@ enum ImGuiCustomCol {
     ImGuiCustomCol_IEEEToolExp,
     ImGuiCustomCol_IEEEToolMantissa,
 
+    ImGuiCustomCol_BlurBackground,
+
     ImGuiCustomCol_COUNT
 };
 
