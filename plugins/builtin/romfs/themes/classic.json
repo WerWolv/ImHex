@@ -59,6 +59,7 @@
             "window-background": "#000000FF"
         },
         "imhex": {
+            "blur-background": "#00000000",
             "desc-button": "#282850FF",
             "desc-button-active": "#505078FF",
             "desc-button-hovered": "#3C3C64FF",

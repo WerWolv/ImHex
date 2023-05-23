@@ -181,7 +181,8 @@ namespace hex::plugin::builtin {
                     { "highlight",              ImGuiCustomCol_Highlight            },
                     { "IEEE-tool-sign",         ImGuiCustomCol_IEEEToolSign         },
                     { "IEEE-tool-exp",          ImGuiCustomCol_IEEEToolExp          },
-                    { "IEEE-tool-mantissa",     ImGuiCustomCol_IEEEToolMantissa     }
+                    { "IEEE-tool-mantissa",     ImGuiCustomCol_IEEEToolMantissa     },
+                    { "blur-background",        ImGuiCustomCol_BlurBackground       }
 
                 };
 

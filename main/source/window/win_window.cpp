@@ -338,21 +338,21 @@ namespace hex {
         }
 
         struct ACCENTPOLICY {
-            int na;
-            int nf;
-            int nc;
-            int nA;
+            u32 accentState;
+            u32 accentFlags;
+            u32 gradientColor;
+            u32 animationId;
         };
         struct WINCOMPATTRDATA {
-            int na;
-            PVOID pd;
-            ULONG ul;
+            int attribute;
+            PVOID pData;
+            ULONG dataSize;
         };
 
         EventManager::subscribe<EventThemeChanged>([this]{
             auto hwnd = glfwGetWin32Window(this->m_window);
 
-            const auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
+            static auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
             if (user32Dll != nullptr) {
                 using SetWindowCompositionAttributeFunc = BOOL(WINAPI*)(HWND, WINCOMPATTRDATA*);
 
@@ -362,7 +362,7 @@ namespace hex {
                         GetProcAddress(user32Dll.get(), "SetWindowCompositionAttribute");
 
                 if (SetWindowCompositionAttribute != nullptr) {
-                    ACCENTPOLICY policy = { ImGui::GetCustomStyle().WindowBlur > 0.5F ? 3 : 0, 0, 0, 0 };
+                    ACCENTPOLICY policy = { ImGui::GetCustomStyle().WindowBlur > 0.5F ? 4U : 0U, 0, ImGui::GetCustomColorU32(ImGuiCustomCol_BlurBackground), 0 };
                     WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) };
                     SetWindowCompositionAttribute(hwnd, &data);
                 }
