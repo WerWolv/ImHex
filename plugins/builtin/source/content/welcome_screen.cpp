@@ -34,7 +34,7 @@
 
 namespace hex::plugin::builtin {
 
-    constexpr static auto MaxRecentProviders = 5;
+    constexpr static auto MaxRecentEntries = 5;
 
     static ImGui::Texture s_bannerTexture, s_backdropTexture;
 
@@ -42,14 +42,14 @@ namespace hex::plugin::builtin {
 
     static std::string s_tipOfTheDay;
 
-    struct RecentProvider {
+    struct RecentEntry {
         std::string displayName;
         std::string type;
         std::fs::path filePath;
 
         nlohmann::json data;
 
-        bool operator==(const RecentProvider &other) const {
+        bool operator==(const RecentEntry &other) const {
             return HashFunction()(*this) == HashFunction()(other);
         }
 
@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
         }
 
         struct HashFunction {
-            std::size_t operator()(const RecentProvider& provider) const {
+            std::size_t operator()(const RecentEntry& provider) const {
                 return
                     (std::hash<std::string>()(provider.displayName)) ^
                     (std::hash<std::string>()(provider.type) << 1);
@@ -129,18 +129,18 @@ namespace hex::plugin::builtin {
         }
     };
 
-    static std::atomic<bool> s_recentProvidersUpdating = false;
-    static std::list<RecentProvider> s_recentProviders;
+    static std::atomic<bool> s_recentEntriesUpdating = false;
+    static std::list<RecentEntry> s_recentEntries;
 
-    static void updateRecentProviders() {
+    static void updateRecentEntries() {
         TaskManager::createBackgroundTask("Updating recent files", [](auto&){
-            if (s_recentProvidersUpdating)
+            if (s_recentEntriesUpdating)
                 return;
 
-            s_recentProvidersUpdating = true;
-            ON_SCOPE_EXIT { s_recentProvidersUpdating = false; };
+            s_recentEntriesUpdating = true;
+            ON_SCOPE_EXIT { s_recentEntriesUpdating = false; };
 
-            s_recentProviders.clear();
+            s_recentEntries.clear();
 
             // Query all recent providers
             std::vector<std::fs::path> recentFilePaths;
@@ -156,12 +156,12 @@ namespace hex::plugin::builtin {
                 return std::fs::last_write_time(a) > std::fs::last_write_time(b);
             });
 
-            std::unordered_set<RecentProvider, RecentProvider::HashFunction> uniqueProviders;
-            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < MaxRecentProviders; i++) {
+            std::unordered_set<RecentEntry, RecentEntry::HashFunction> uniqueProviders;
+            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < MaxRecentEntries; i++) {
                 auto &path = recentFilePaths[i];
                 try {
                     auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
-                    uniqueProviders.insert(RecentProvider {
+                    uniqueProviders.insert(RecentEntry {
                         .displayName    = jsonData.at("displayName"),
                         .type           = jsonData.at("type"),
                         .filePath       = path,
@@ -184,19 +184,19 @@ namespace hex::plugin::builtin {
                     wolv::io::fs::remove(path);
             }
 
-            std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentProviders));
+            std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentEntries));
         });
     }
 
-    static void loadRecentProvider(const RecentProvider &recentProvider) {
-        if(recentProvider.type == "project"){
-            std::fs::path projectPath = recentProvider.data.at("path");
+    static void loadRecentEntry(const RecentEntry &recentEntry) {
+        if(recentEntry.type == "project"){
+            std::fs::path projectPath = recentEntry.data.at("path");
             ProjectFile::load(projectPath);
             return;
         }
-        auto *provider = ImHexApi::Provider::createProvider(recentProvider.type, true);
+        auto *provider = ImHexApi::Provider::createProvider(recentEntry.type, true);
         if (provider != nullptr) {
-            provider->loadSettings(recentProvider.data);
+            provider->loadSettings(recentEntry.data);
 
             if (!provider->open() || !provider->isAvailable()) {
                 PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
 
             EventManager::post<EventProviderOpened>(provider);
 
-            updateRecentProviders();
+            updateRecentEntries();
         }
     }
 
@@ -274,25 +274,25 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
             ImGui::TableNextColumn();
-            ImGui::UnderlinedText(s_recentProviders.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
+            ImGui::UnderlinedText(s_recentEntries.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
             {
-                if (!s_recentProvidersUpdating) {
-                    auto it = s_recentProviders.begin();
-                    while(it != s_recentProviders.end()){
-                        const auto &recentProvider = *it;
+                if (!s_recentEntriesUpdating) {
+                    auto it = s_recentEntries.begin();
+                    while(it != s_recentEntries.end()){
+                        const auto &recentEntry = *it;
                         bool shouldRemove = false;
 
-                        ImGui::PushID(&recentProvider);
+                        ImGui::PushID(&recentEntry);
                         ON_SCOPE_EXIT { ImGui::PopID(); };
 
-                        if (ImGui::BulletHyperlink(recentProvider.displayName.c_str())) {
-                            loadRecentProvider(recentProvider);
+                        if (ImGui::BulletHyperlink(recentEntry.displayName.c_str())) {
+                            loadRecentEntry(recentEntry);
                             break;
                         }
 
                         // Detect right click on recent provider
-                        std::string popupID = std::string("RecentProviderMenu.")+std::to_string(recentProvider.getHash());
+                        std::string popupID = std::string("RecentEntryMenu.")+std::to_string(recentEntry.getHash());
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup(popupID.c_str());
                         }
@@ -306,8 +306,8 @@ namespace hex::plugin::builtin {
 
                         // handle deletion from vector and on disk
                         if (shouldRemove) {
-                            wolv::io::fs::remove(recentProvider.filePath);
-                            it = s_recentProviders.erase(it);
+                            wolv::io::fs::remove(recentEntry.filePath);
+                            it = s_recentEntries.erase(it);
                         } else {
                             it++;
                         }
@@ -486,7 +486,7 @@ namespace hex::plugin::builtin {
     * should only be called once, at startup
      */
     void createWelcomeScreen() {
-        updateRecentProviders();
+        updateRecentEntries();
 
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
 
@@ -566,7 +566,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            updateRecentProviders();
+            updateRecentEntries();
         });
 
         // save opened projects as a "recent" shortcut
@@ -592,7 +592,7 @@ namespace hex::plugin::builtin {
                 }
             }
             
-            updateRecentProviders();
+            updateRecentEntries();
         });
 
         EventManager::subscribe<EventProviderCreated>([](auto) {
@@ -628,18 +628,18 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
-            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProvidersUpdating && !s_recentProviders.empty())) {
+            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration
-                auto recentProviders = s_recentProviders;
-                for (auto &recentProvider : recentProviders) {
-                    if (ImGui::MenuItem(recentProvider.displayName.c_str())) {
-                        loadRecentProvider(recentProvider);
+                auto recentEntries = s_recentEntries;
+                for (auto &recentEntry : recentEntries) {
+                    if (ImGui::MenuItem(recentEntry.displayName.c_str())) {
+                        loadRecentEntry(recentEntry);
                     }
                 }
 
                 ImGui::Separator();
                 if (ImGui::MenuItem("hex.builtin.menu.file.clear_recent"_lang)) {
-                    s_recentProviders.clear();
+                    s_recentEntries.clear();
 
                     // Remove all recent files
                     for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent))
