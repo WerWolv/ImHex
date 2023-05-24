@@ -110,7 +110,7 @@ namespace hex::plugin::builtin::recent {
                     uniqueProviders.insert(RecentEntry {
                         .displayName    = jsonData.at("displayName"),
                         .type           = jsonData.at("type"),
-                        .filePath       = path,
+                        .entryFilePath       = path,
                         .data           = jsonData
                     });
                 } catch (...) { }
@@ -120,7 +120,7 @@ namespace hex::plugin::builtin::recent {
             for (const auto &path : recentFilePaths) {
                 bool found = false;
                 for (const auto &provider : uniqueProviders) {
-                    if (path == provider.filePath) {
+                    if (path == provider.entryFilePath) {
                         found = true;
                         break;
                     }
@@ -192,7 +192,7 @@ namespace hex::plugin::builtin::recent {
 
                     // handle deletion from vector and on disk
                     if (shouldRemove) {
-                        wolv::io::fs::remove(recentEntry.filePath);
+                        wolv::io::fs::remove(recentEntry.entryFilePath);
                         it = s_recentEntries.erase(it);
                     } else {
                         it++;

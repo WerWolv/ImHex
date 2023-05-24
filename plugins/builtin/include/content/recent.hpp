@@ -29,7 +29,7 @@ namespace hex::plugin::builtin::recent {
         /**
          * @brief path of this entry file
          */
-        std::fs::path filePath;
+        std::fs::path entryFilePath;
 
         /**
          * @brief Entire json data of the recent entry (include the fields above)
