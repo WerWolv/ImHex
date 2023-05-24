@@ -86,6 +86,7 @@ namespace hex {
         }
 
         resetPath.release();
+        EventManager::post<EventProjectOpened>();
         EventManager::post<RequestUpdateWindowTitle>();
 
         return true;

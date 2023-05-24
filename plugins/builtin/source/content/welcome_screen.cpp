@@ -189,6 +189,11 @@ namespace hex::plugin::builtin {
     }
 
     static void loadRecentProvider(const RecentProvider &recentProvider) {
+        if(recentProvider.type == "project"){
+            std::fs::path projectPath = recentProvider.data.at("path");
+            ProjectFile::load(projectPath);
+            return;
+        }
         auto *provider = ImHexApi::Provider::createProvider(recentProvider.type, true);
         if (provider != nullptr) {
             provider->loadSettings(recentProvider.data);
@@ -539,6 +544,10 @@ namespace hex::plugin::builtin {
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+
+                // do not save to recents if the provider is part of a project
+                if(ProjectFile::hasPath())return;
+
                 // The recent provider is saved to every "recent" directory
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
@@ -557,6 +566,32 @@ namespace hex::plugin::builtin {
                 }
             }
 
+            updateRecentProviders();
+        });
+
+        // save opened projects as a "recent" shortcut
+        (void)EventManager::subscribe<EventProjectOpened>([] {
+             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
+                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
+
+                // The recent provider is saved to every "recent" directory
+                for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
+                    wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
+                    if (!recentFile.isValid())
+                        continue;
+
+                    std::string displayName = hex::format("[Project] {}", wolv::util::toUTF8String(ProjectFile::getPath().filename()));
+
+                    nlohmann::json recentEntry {
+                        {"type", "project"},
+                        {"displayName", displayName},
+                        {"path", ProjectFile::getPath()}
+                    };
+
+                    recentFile.writeString(recentEntry.dump(4));
+                }
+            }
+            
             updateRecentProviders();
         });
 
