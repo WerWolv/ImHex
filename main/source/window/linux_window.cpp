@@ -31,9 +31,9 @@ namespace hex {
         return false;
     }
 
-    void executeCmd(std::vector<std::string> strVector){
+    void executeCmd(std::vector<std::string> strVector) {
         std::vector<char*> cVector;
-        for(std::string& str : strVector) {
+        for (std::string& str : strVector) {
             cVector.push_back(const_cast<char*>(str.c_str()));
         }
         cVector.push_back(nullptr);
@@ -45,10 +45,10 @@ namespace hex {
         }
     }
 
-    void nativeErrorMessage(const std::string &message){
-        if(isFileInPath("zenity")){
+    void nativeErrorMessage(const std::string &message) {
+        if (isFileInPath("zenity")) {
             executeCmd({"zenity", "--error", "--text", message});
-        }else if(isFileInPath("notify-send")){
+        } else if(isFileInPath("notify-send")) {
             executeCmd({"notify-send", "-i", "script-error", "Error", message});
         } // hopefully one of these commands is installed
     }

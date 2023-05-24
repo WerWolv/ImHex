@@ -13,7 +13,7 @@
     #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
 
-    void errorMessageMacos(const char *cMessage){
+    void errorMessageMacos(const char *cMessage) {
         CFStringRef strMessage = CFStringCreateWithCString(NULL, cMessage, kCFStringEncodingUTF8);
         CFUserNotificationDisplayAlert(0, kCFUserNotificationStopAlertLevel, NULL, NULL, NULL, strMessage, NULL, NULL, NULL, NULL, NULL);
     }

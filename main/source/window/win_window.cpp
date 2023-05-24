@@ -37,7 +37,7 @@ namespace hex {
     static float g_titleBarHeight;
     static Microsoft::WRL::ComPtr<ITaskbarList4> g_taskbarList;
 
-    void nativeErrorMessage(const std::string &message){
+    void nativeErrorMessage(const std::string &message) {
         MessageBox(NULL, message, "Error", MB_ICONERROR | MB_OK);
     }
 
