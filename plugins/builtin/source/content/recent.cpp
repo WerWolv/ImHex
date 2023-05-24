@@ -21,7 +21,7 @@ namespace hex::plugin::builtin::recent {
     static std::atomic<bool> s_recentEntriesUpdating = false;
     static std::list<RecentEntry> s_recentEntries;
 
-    void registerEventHandlers(){
+    void registerEventHandlers() {
         // Save every opened provider as a "recent" shortcut
         (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
@@ -157,15 +157,15 @@ namespace hex::plugin::builtin::recent {
     }
 
 
-    void draw(){
-         ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
+    void draw() {
+        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
         ImGui::TableNextColumn();
         ImGui::UnderlinedText(s_recentEntries.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
         {
             if (!s_recentEntriesUpdating) {
                 auto it = s_recentEntries.begin();
-                while(it != s_recentEntries.end()){
+                while (it != s_recentEntries.end()) {
                     const auto &recentEntry = *it;
                     bool shouldRemove = false;
 
@@ -202,7 +202,7 @@ namespace hex::plugin::builtin::recent {
         }
     }
 
-    void drawFileMenuItem(){
+    void drawFileMenuItem() {
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
             if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration
