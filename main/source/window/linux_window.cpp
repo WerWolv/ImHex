@@ -20,6 +20,24 @@
 
 namespace hex {
 
+    bool isFileInPath(std::fs::path filename){
+        auto path_var = std::string(getenv("PATH"));
+        for(auto dir : std::views::split(path_var, ':')){
+            if(std::fs::exists(std::fs::path(std::string_view(dir)) / filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void nativeErrorMessage(const std::string &message){
+        if(isFileInPath("zenity")){
+            system(hex::format("zenity --error --text '{}'", message).c_str());
+        }else if(isFileInPath("notify-send")){
+            system(hex::format("notify-send -i script-error 'Error' '{}'", message).c_str());
+        } // hopefully one of these commands is installed
+    }
+
     void Window::initNative() {
         // Add plugin library folders to dll search path
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
