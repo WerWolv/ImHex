@@ -864,9 +864,9 @@ namespace hex::plugin::builtin::ui {
                 return left->getSizeForSorting() > right->getSizeForSorting();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getValue() < right->getValue();
+                return left->getValue().toString(true) < right->getValue().toString(true);
             else
-                return left->getValue() > right->getValue();
+                return left->getValue().toString(true) > right->getValue().toString(true);
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                 return left->getTypeName() < right->getTypeName();
