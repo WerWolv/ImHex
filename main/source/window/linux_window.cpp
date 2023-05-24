@@ -17,6 +17,7 @@
     #include <unistd.h>
 
     #include <imgui_impl_glfw.h>
+    #include <string.h>
 
 namespace hex {
 
@@ -30,11 +31,25 @@ namespace hex {
         return false;
     }
 
+    void executeCmd(std::vector<std::string> strVector){
+        std::vector<char*> cVector;
+        for(std::string& str : strVector) {
+            cVector.push_back(const_cast<char*>(str.c_str()));
+        }
+        cVector.push_back(nullptr);
+        
+        if (fork() == 0) {
+            execvp(cVector[0], &cVector[0]);
+            log::error("execvp() failed: {}", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    }
+
     void nativeErrorMessage(const std::string &message){
         if(isFileInPath("zenity")){
-            system(hex::format("zenity --error --text '{}'", message).c_str());
+            executeCmd({"zenity", "--error", "--text", message});
         }else if(isFileInPath("notify-send")){
-            system(hex::format("notify-send -i script-error 'Error' '{}'", message).c_str());
+            executeCmd({"notify-send", "-i", "script-error", "Error", message});
         } // hopefully one of these commands is installed
     }
 
