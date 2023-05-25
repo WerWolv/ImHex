@@ -573,7 +573,7 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags) {
 
             if (!this->m_processing && ImPlot::BeginPlot("##distribution", size, flags)) {
-                ImPlot::SetupAxes("hex.builtin.common.value"_lang, "hex.builtin.common.count"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale);
+                ImPlot::SetupAxes("hex.builtin.common.value"_lang, "hex.builtin.common.count"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                 ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
 
                 constexpr static auto x = [] {

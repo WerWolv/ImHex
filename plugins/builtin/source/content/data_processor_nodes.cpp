@@ -1123,7 +1123,7 @@ namespace hex::plugin::builtin {
 
         void drawPlot(const ImVec2 &viewSize) {
             if (ImPlot::BeginPlot("##distribution", viewSize, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect)) {
-                ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock | ImPlotAxisFlags_LogScale);
+                ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                 ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(this->m_counts.begin(), this->m_counts.end())) * 1.1F, ImGuiCond_Always);
 
                 static auto x = [] {
