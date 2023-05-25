@@ -29,6 +29,9 @@ namespace hex {
         void endNativeWindowFrame();
         void drawTitleBar();
 
+        void drawTitleBarBorderless();
+        void drawTitleBarBorder();
+
         void frameBegin();
         void frame();
         void frameEnd();

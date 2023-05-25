@@ -72,9 +72,6 @@ namespace hex {
     void Window::endNativeWindowFrame() {
     }
 
-    void Window::drawTitleBar() {
-    }
-
 }
 
 #endif

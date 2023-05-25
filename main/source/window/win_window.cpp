@@ -380,58 +380,6 @@ namespace hex {
             return;
     }
 
-    void Window::drawTitleBar() {
-        // In borderless window mode, we draw our own title bar
-
-        if (!ImHexApi::System::isBorderlessWindowModeEnabled()) return;
-
-        auto startX = ImGui::GetCursorPosX();
-
-        auto buttonSize = ImVec2(g_titleBarHeight * 1.5F, g_titleBarHeight - 1);
-
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
-
-        auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
-
-        // Draw custom title bar buttons
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
-        for (const auto &[icon, tooltip, callback] : titleBarButtons) {
-            if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
-                callback();
-            }
-            ImGui::InfoTooltip(LangEntry(tooltip));
-        }
-
-        // Draw minimize, restore and maximize buttons
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
-        if (ImGui::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
-            glfwIconifyWindow(this->m_window);
-        if (glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED)) {
-            if (ImGui::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
-                glfwRestoreWindow(this->m_window);
-        } else {
-            if (ImGui::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
-                glfwMaximizeWindow(this->m_window);
-        }
-
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
-
-        // Draw close button
-        if (ImGui::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
-            ImHexApi::System::closeImHex();
-        }
-
-        ImGui::PopStyleColor(5);
-        ImGui::PopStyleVar();
-
-        ImGui::SetCursorPosX(std::max(startX, (ImGui::GetWindowWidth() - ImGui::CalcTextSize(this->m_windowTitle.c_str()).x) / 2));
-        ImGui::TextUnformatted(this->m_windowTitle.c_str());
-    }
-
 }
 
 #endif
