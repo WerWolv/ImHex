@@ -18,6 +18,7 @@
 
     #include <imgui_impl_glfw.h>
     #include <string.h>
+    #include <ranges>
 
 namespace hex {
 
