@@ -272,8 +272,6 @@ namespace hex {
 
         bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
 
-        ImGui_ImplGlfw_SetBorderlessWindowMode(borderlessWindowMode);
-
         // Set up the correct window procedure based on the borderless window mode state
         if (borderlessWindowMode) {
             g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)borderlessWindowProc);
