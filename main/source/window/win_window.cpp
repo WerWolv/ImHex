@@ -38,7 +38,7 @@ namespace hex {
     static Microsoft::WRL::ComPtr<ITaskbarList4> g_taskbarList;
 
     void nativeErrorMessage(const std::string &message) {
-        MessageBox(NULL, message, "Error", MB_ICONERROR | MB_OK);
+        MessageBox(NULL, message.c_str(), "Error", MB_ICONERROR | MB_OK);
     }
 
     // Custom Window procedure for receiving OS events
