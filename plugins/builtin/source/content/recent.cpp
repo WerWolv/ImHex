@@ -136,7 +136,7 @@ namespace hex::plugin::builtin::recent {
 
     void loadRecentEntry(const RecentEntry &recentEntry) {
         if(recentEntry.type == "project"){
-            std::fs::path projectPath = recentEntry.data.at("path");
+            std::fs::path projectPath = recentEntry.data["path"].get<std::string>();
             ProjectFile::load(projectPath);
             return;
         }
