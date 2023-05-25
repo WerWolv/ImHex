@@ -47,8 +47,8 @@ namespace hex {
 
     static void saveCrashFile(){
         nlohmann::json crashData{
-            {"logFile", hex::log::getFile().getPath()},
-            {"project", ProjectFile::getPath()},
+            {"logFile", wolv::util::toUTF8String(hex::log::getFile().getPath())},
+            {"project", wolv::util::toUTF8String(ProjectFile::getPath())},
         };
         
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
