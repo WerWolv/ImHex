@@ -18,8 +18,6 @@ add_library(imgui OBJECT
         source/imgui_tables.cpp
         source/imgui_widgets.cpp
 
-        source/cimgui.cpp
-
         source/TextEditor.cpp
 
         source/imnodes.cpp
