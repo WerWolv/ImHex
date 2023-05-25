@@ -152,6 +152,8 @@ namespace hex {
         this->exitGLFW();
     }
 
+    static std::terminate_handler originalHandler;
+
     void Window::registerEventHandlers() {
         // Initialize default theme
         EventManager::post<RequestChangeTheme>("Dark");
@@ -232,7 +234,7 @@ namespace hex {
             #undef HANDLE_SIGNAL
         }
 
-        std::set_terminate([]{
+        originalHandler = std::set_terminate([]{
             try {
                 std::rethrow_exception(std::current_exception());
             } catch (std::exception &ex) {
@@ -243,12 +245,11 @@ namespace hex {
                 );
             }
 
-            // save crash.json file
-            saveCrashFile();
+            // the handler should eventually release a signal, which will be caught and used to handle the crash
+            originalHandler();
 
-            // send the event. It may affect things (like the project path),
-            // so we do this after saving the crash file
-            EventManager::post<EventAbnormalTermination>(0);
+            log::error("Should not happen: original std::set_terminate handler returned. Terminating manually");
+            exit(EXIT_FAILURE);
         });
     }
 
