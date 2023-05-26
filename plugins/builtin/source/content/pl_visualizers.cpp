@@ -210,21 +210,23 @@ namespace hex::plugin::builtin {
 
                 normals.clear();
                 normals.resize(vertices.size());
-                for (u32 i = 9; i < normals.size(); i += 9) {
-                    auto v1 = gl::Vector<float, 3>({ vertices[i - 9], vertices[i - 8], vertices[i - 7] });
-                    auto v2 = gl::Vector<float, 3>({ vertices[i - 6], vertices[i - 5], vertices[i - 4] });
-                    auto v3 = gl::Vector<float, 3>({ vertices[i - 3], vertices[i - 2], vertices[i - 1] });
+
+                for (u32 i = 0; i < normals.size(); i += 9) {
+
+                    auto v1 = gl::Vector<float, 3>({ vertices[i]    , vertices[i + 1], vertices[i + 2] });
+                    auto v2 = gl::Vector<float, 3>({ vertices[i + 3], vertices[i + 4], vertices[i + 5] });
+                    auto v3 = gl::Vector<float, 3>({ vertices[i + 6], vertices[i + 7], vertices[i + 8] });
 
                     auto normal = ((v2 - v1).cross(v3 - v1)).normalize();
-                    normals[i - 9] = normal[0];
-                    normals[i - 8] = normal[1];
-                    normals[i - 7] = normal[2];
-                    normals[i - 6] = normal[0];
-                    normals[i - 5] = normal[1];
-                    normals[i - 4] = normal[2];
-                    normals[i - 3] = normal[0];
-                    normals[i - 2] = normal[1];
-                    normals[i - 1] = normal[2];
+                    normals[i] = normal[0];
+                    normals[i + 1] = normal[1];
+                    normals[i + 2] = normal[2];
+                    normals[i + 3] = normal[0];
+                    normals[i + 4] = normal[1];
+                    normals[i + 5] = normal[2];
+                    normals[i + 6] = normal[0];
+                    normals[i + 7] = normal[1];
+                    normals[i + 8] = normal[2];
                 }
 
                 shader = gl::Shader(romfs::get("shaders/default/vertex.glsl").string(), romfs::get("shaders/default/fragment.glsl").string());
