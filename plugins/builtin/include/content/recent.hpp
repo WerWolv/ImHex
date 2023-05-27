@@ -1,8 +1,8 @@
 #pragma once
 
-#include<string>
-#include<atomic>
-#include<list>
+#include <string>
+#include <atomic>
+#include <list>
 
 #include <nlohmann/json.hpp>
 
