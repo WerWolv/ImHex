@@ -13,6 +13,7 @@
 
 #include <content/recent.hpp>
 #include <content/popups/popup_notification.hpp>
+#include <fonts/codicons_font.h>
 
 namespace hex::plugin::builtin::recent {
 
@@ -172,7 +173,13 @@ namespace hex::plugin::builtin::recent {
                     ImGui::PushID(&recentEntry);
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
-                    if (ImGui::BulletHyperlink(recentEntry.displayName.c_str())) {
+                    const char* icon;
+                    if (recentEntry.type == "project") {
+                        icon = ICON_VS_PROJECT;
+                    } else {
+                        icon = ICON_VS_FILE_BINARY;
+                    }
+                    if (ImGui::BulletHyperlink(hex::format("{} {}", icon, recentEntry.displayName).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }
