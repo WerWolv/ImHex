@@ -33,7 +33,12 @@ using namespace std::literals::chrono_literals;
 
 namespace hex::init {
 
-    static std::pair<int, const char*> lastGlfwError;
+    struct GlfwError {
+        int errorCode = 0;
+        std::string desc;
+    };
+
+    GlfwError lastGlfwError;
 
     WindowSplash::WindowSplash() : m_window(nullptr) {
         this->initGLFW();
@@ -189,9 +194,10 @@ namespace hex::init {
     }
 
     void WindowSplash::initGLFW() {
-        glfwSetErrorCallback([](int error, const char *desc) {
-            lastGlfwError = {error, desc};
-            log::error("GLFW Error [{}] : {}", error, desc);
+        glfwSetErrorCallback([](int errorCode, const char *desc) {
+            lastGlfwError.errorCode = errorCode;
+            lastGlfwError.desc = std::string(desc);
+            log::error("GLFW Error [{}] : {}", errorCode, desc);
         });
 
         if (!glfwInit()) {
@@ -225,7 +231,7 @@ namespace hex::init {
                 "You may not have a renderer available.\n"
                 "The most common cause of this is using a virtual machine\n"
                 "You may want to try an artifact ending with 'NoGPU'\n"
-                , lastGlfwError.first, lastGlfwError.second));
+                , lastGlfwError.errorCode, lastGlfwError.desc));
             log::fatal("Failed to create GLFW window!");
             exit(EXIT_FAILURE);
         }
