@@ -67,7 +67,6 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     hex::ContentRegistry::Views::add<ViewTTYConsole>();
 
     addFooterItems();
-    addTitleBarButtons();
     registerSettings();
     registerProviders();
 

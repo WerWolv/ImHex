@@ -32,6 +32,7 @@ namespace hex::plugin::builtin {
     void registerNetworkEndpoints();
 
     void addFooterItems();
+    void addTitleBarButtons();
     void addToolbarItems();
     void addGlobalUIItems();
 
@@ -70,6 +71,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerNetworkEndpoints();
 
     addFooterItems();
+    addTitleBarButtons();
     addToolbarItems();
     addGlobalUIItems();
 

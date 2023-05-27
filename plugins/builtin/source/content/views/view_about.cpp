@@ -148,7 +148,7 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("Type");
             ImGui::TableSetupColumn("Paths");
 
-            constexpr static std::array<std::pair<const char *, fs::ImHexPath>, u32(fs::ImHexPath::END)> PathTypes = {
+            constexpr static std::array<std::pair<const char *, fs::ImHexPath>, u32(fs::ImHexPath::END)-1> PathTypes = {
                 {
                     { "Patterns", fs::ImHexPath::Patterns },
                     { "Patterns Includes", fs::ImHexPath::PatternsInclude },

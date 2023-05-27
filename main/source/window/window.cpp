@@ -47,8 +47,8 @@ namespace hex {
 
     static void saveCrashFile(){
         nlohmann::json crashData{
-            {"logFile", hex::log::getFile().getPath()},
-            {"project", ProjectFile::getPath()},
+            {"logFile", wolv::util::toUTF8String(hex::log::getFile().getPath())},
+            {"project", wolv::util::toUTF8String(ProjectFile::getPath())},
         };
         
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
@@ -152,6 +152,8 @@ namespace hex {
         this->exitGLFW();
     }
 
+    static std::terminate_handler originalHandler;
+
     void Window::registerEventHandlers() {
         // Initialize default theme
         EventManager::post<RequestChangeTheme>("Dark");
@@ -232,7 +234,7 @@ namespace hex {
             #undef HANDLE_SIGNAL
         }
 
-        std::set_terminate([]{
+        originalHandler = std::set_terminate([]{
             try {
                 std::rethrow_exception(std::current_exception());
             } catch (std::exception &ex) {
@@ -243,12 +245,11 @@ namespace hex {
                 );
             }
 
-            // save crash.json file
-            saveCrashFile();
+            // the handler should eventually release a signal, which will be caught and used to handle the crash
+            originalHandler();
 
-            // send the event. It may affect things (like the project path),
-            // so we do this after saving the crash file
-            EventManager::post<EventAbnormalTermination>(0);
+            log::error("Should not happen: original std::set_terminate handler returned. Terminating manually");
+            exit(EXIT_FAILURE);
         });
     }
 
@@ -337,6 +338,88 @@ namespace hex {
                 createNestedMenu({ menuItems.begin() + 1, menuItems.end() }, shortcut, callback, enabledCallback);
                 ImGui::EndMenu();
             }
+        }
+    }
+
+    void Window::drawTitleBarBorderless() {
+        auto startX = ImGui::GetCursorPosX();
+        auto titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+        auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
+
+        // custom titlebar buttons implementation for borderless window mode
+        auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
+
+        // Draw custom title bar buttons
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
+        for (const auto &[icon, tooltip, callback] : titleBarButtons) {
+            if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
+                callback();
+            }
+            ImGui::InfoTooltip(LangEntry(tooltip));
+        }
+
+        // Draw minimize, restore and maximize buttons
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
+        if (ImGui::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
+            glfwIconifyWindow(this->m_window);
+        if (glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED)) {
+            if (ImGui::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
+                glfwRestoreWindow(this->m_window);
+        } else {
+            if (ImGui::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
+                glfwMaximizeWindow(this->m_window);
+        }
+        
+
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
+
+        // Draw close button
+        if (ImGui::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
+            ImHexApi::System::closeImHex();
+        }
+
+        ImGui::PopStyleColor(5);
+        ImGui::PopStyleVar();
+
+        ImGui::SetCursorPosX(std::max(startX, (ImGui::GetWindowWidth() - ImGui::CalcTextSize(this->m_windowTitle.c_str()).x) / 2));
+        ImGui::TextUnformatted(this->m_windowTitle.c_str());
+    }
+    
+    void Window::drawTitleBarBorder() {
+        auto titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+        auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
+
+        auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
+
+        // Draw custom title bar buttons
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (titleBarButtons.size()+0.5));
+        for (const auto &[icon, tooltip, callback] : titleBarButtons) {
+            if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
+                callback();
+            }
+            ImGui::InfoTooltip(LangEntry(tooltip));
+        }
+
+        ImGui::PopStyleColor(3);
+        ImGui::PopStyleVar();
+    }
+
+    void Window::drawTitleBar() {
+        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+            drawTitleBarBorderless();
+        } else {
+            drawTitleBarBorder();
         }
     }
 
@@ -863,6 +946,8 @@ namespace hex {
         // Register key press callback
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             hex::unused(mods);
+
+            if (key == GLFW_KEY_UNKNOWN) return;
 
             auto keyName = glfwGetKeyName(key, scancode);
             if (keyName != nullptr)
