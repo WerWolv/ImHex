@@ -23,8 +23,13 @@
 namespace hex {
 
     bool isFileInPath(const std::fs::path &filename){
-        auto path_var = std::string(getenv("PATH"));
-        for(auto dir : std::views::split(path_var, ':')){
+        auto optPathVar = hex::getEnvironmentVariable("PATH");
+        if (!optPathVar.has_value()) {
+            log::error("Could not find variable named PATH");
+            return false;
+        }
+
+        for(auto dir : std::views::split(optPathVar.value(), ':')){
             if(std::fs::exists(std::fs::path(std::string_view(dir)) / filename)) {
                 return true;
             }
