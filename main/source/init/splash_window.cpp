@@ -230,7 +230,7 @@ namespace hex::init {
                 "Failed to create GLFW window: [{}] {}.\n"
                 "You may not have a renderer available.\n"
                 "The most common cause of this is using a virtual machine\n"
-                "You may want to try an artifact ending with 'NoGPU'\n"
+                "You may want to try a release artifact ending with 'NoGPU'"
                 , lastGlfwError.errorCode, lastGlfwError.desc));
             exit(EXIT_FAILURE);
         }
