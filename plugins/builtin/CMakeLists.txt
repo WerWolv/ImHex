@@ -27,6 +27,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/hashes.cpp
         source/content/global_actions.cpp
         source/content/themes.cpp
+        source/content/recent.cpp
 
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp

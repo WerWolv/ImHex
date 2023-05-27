@@ -195,6 +195,11 @@ namespace hex {
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
     EVENT_DEF(EventImHexClosing);
 
+    /**
+     * @brief Called when a project has been loaded
+     */
+    EVENT_DEF(EventProjectOpened);
+
     EVENT_DEF_NO_LOG(EventFrameBegin);
     EVENT_DEF_NO_LOG(EventFrameEnd);
     EVENT_DEF_NO_LOG(EventSetTaskBarIconState, u32, u32, u32);
