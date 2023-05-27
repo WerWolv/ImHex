@@ -45,61 +45,24 @@ namespace hex {
 
     using namespace std::literals::chrono_literals;
 
-    static void saveCrashFile(){
-        nlohmann::json crashData{
-            {"logFile", wolv::util::toUTF8String(hex::log::getFile().getPath())},
-            {"project", wolv::util::toUTF8String(ProjectFile::getPath())},
-        };
-        
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-            wolv::io::File file(path / "crash.json", wolv::io::File::Mode::Write);
-            if (file.isValid()) {
-                file.writeString(crashData.dump(4));
-                file.close();
-                log::info("Wrote crash.json file to {}", wolv::util::toUTF8String(file.getPath()));
-                return;
+    static std::fs::path s_imguiSettingsPath;
+
+    /**
+     * @brief returns the path to load/save imgui settings to, or an empty path if no location was found
+     */
+    std::fs::path getImGuiSettingsPath(){
+        if(s_imguiSettingsPath.empty()){
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                if (std::fs::exists(dir)) {
+                    auto imguiSettingsPath = dir / "interface.ini";
+                    if(fs::isPathWritable(imguiSettingsPath)) {
+                        s_imguiSettingsPath = imguiSettingsPath;
+                        break;
+                    }
+                }
             }
         }
-        log::warn("Could not write crash.json file !");
-    }
-
-    // Custom signal handler to print various information and a stacktrace when the application crashes
-    static void signalHandler(int signalNumber, const std::string &signalName) {
-        log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
-
-        // save crash.json file
-        saveCrashFile();
-
-        // Trigger an event so that plugins can handle crashes
-        // It may affect things (like the project path),
-        // so we do this after saving the crash file    
-        EventManager::post<EventAbnormalTermination>(signalNumber);
-
-        // Detect if the crash was due to an uncaught exception
-        if (std::uncaught_exceptions() > 0) {
-            log::fatal("Uncaught exception thrown!");
-        }
-
-        // Reset the signal handler to the default handler
-        std::signal(SIGSEGV, SIG_DFL);
-        std::signal(SIGILL,  SIG_DFL);
-        std::signal(SIGABRT, SIG_DFL);
-        std::signal(SIGFPE,  SIG_DFL);
-
-        // Print stack trace
-        for (const auto &stackFrame : stacktrace::getStackTrace()) {
-            if (stackFrame.line == 0)
-                log::fatal("  {}", stackFrame.function);
-            else
-                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
-        }
-    
-        // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
-        #if defined(DEBUG)
-            assert(!"Debug build, triggering breakpoint");
-        #else
-            std::raise(signalNumber);
-        #endif
+        return s_imguiSettingsPath;
     }
 
     Window::Window() {
@@ -152,8 +115,6 @@ namespace hex {
         this->exitGLFW();
     }
 
-    static std::terminate_handler originalHandler;
-
     void Window::registerEventHandlers() {
         // Initialize default theme
         EventManager::post<RequestChangeTheme>("Dark");
@@ -197,59 +158,11 @@ namespace hex {
                 glfwSetWindowTitle(this->m_window, title.c_str());
         });
 
-        constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
-
-        // Save a backup project when the application crashes
-        // We need to save the project no mater if it is dirty,
-        // because this save is responsible for telling us which files
-        // were opened in case there wasn't a project
-        EventManager::subscribe<EventAbnormalTermination>(this, [this](int) {
-            ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(this->m_imguiSettingsPath).c_str());
-
-            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (ProjectFile::store(path / CrashBackupFileName))
-                    break;
-            }
-        });
-
         // Handle opening popups
         EventManager::subscribe<RequestOpenPopup>(this, [this](auto name) {
             std::scoped_lock lock(this->m_popupMutex);
 
             this->m_popupsToOpen.push_back(name);
-        });
-
-        // Register signal handlers
-        {
-            #define HANDLE_SIGNAL(name)             \
-            std::signal(name, [](int signalNumber){ \
-                signalHandler(signalNumber, #name); \
-            })
-
-            HANDLE_SIGNAL(SIGSEGV);
-            HANDLE_SIGNAL(SIGILL);
-            HANDLE_SIGNAL(SIGABRT);
-            HANDLE_SIGNAL(SIGFPE);
-
-            #undef HANDLE_SIGNAL
-        }
-
-        originalHandler = std::set_terminate([]{
-            try {
-                std::rethrow_exception(std::current_exception());
-            } catch (std::exception &ex) {
-                log::fatal(
-                        "Program terminated with uncaught exception: {}()::what() -> {}",
-                        llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr),
-                        ex.what()
-                );
-            }
-
-            // the handler should eventually release a signal, which will be caught and used to handle the crash
-            originalHandler();
-
-            log::error("Should not happen: original std::set_terminate handler returned. Terminating manually");
-            exit(EXIT_FAILURE);
         });
     }
 
@@ -1099,16 +1012,12 @@ namespace hex {
             handler.UserData   = this;
             ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (std::fs::exists(dir) && fs::isPathWritable(dir)) {
-                    this->m_imguiSettingsPath = dir / "interface.ini";
-                    io.IniFilename            = nullptr;
-                    break;
-                }
-            }
+            auto imguiSettingsPath = getImGuiSettingsPath();
 
-            if (!this->m_imguiSettingsPath.empty() && wolv::io::fs::exists(this->m_imguiSettingsPath))
-                ImGui::LoadIniSettingsFromDisk(wolv::util::toUTF8String(this->m_imguiSettingsPath).c_str());
+            if (!imguiSettingsPath.empty() && wolv::io::fs::exists(imguiSettingsPath)) {
+                io.IniFilename = nullptr;
+                ImGui::LoadIniSettingsFromDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
+            }
         }
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
