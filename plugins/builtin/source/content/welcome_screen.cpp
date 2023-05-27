@@ -26,6 +26,7 @@
 
 #include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_question.hpp>
+#include <content/recent.hpp>
 
 #include <string>
 #include <list>
@@ -34,38 +35,11 @@
 
 namespace hex::plugin::builtin {
 
-    constexpr static auto MaxRecentProviders = 5;
-
     static ImGui::Texture s_bannerTexture, s_backdropTexture;
 
     static std::fs::path s_safetyBackupPath;
 
     static std::string s_tipOfTheDay;
-
-    struct RecentProvider {
-        std::string displayName;
-        std::string type;
-        std::fs::path filePath;
-
-        nlohmann::json data;
-
-        bool operator==(const RecentProvider &other) const {
-            return HashFunction()(*this) == HashFunction()(other);
-        }
-
-        std::size_t getHash() const {
-            return HashFunction()(*this);
-        }
-
-        struct HashFunction {
-            std::size_t operator()(const RecentProvider& provider) const {
-                return
-                    (std::hash<std::string>()(provider.displayName)) ^
-                    (std::hash<std::string>()(provider.type) << 1);
-            }
-        };
-
-    };
 
     class PopupRestoreBackup : public Popup<PopupRestoreBackup> {
     private:
@@ -129,82 +103,6 @@ namespace hex::plugin::builtin {
         }
     };
 
-    static std::atomic<bool> s_recentProvidersUpdating = false;
-    static std::list<RecentProvider> s_recentProviders;
-
-    static void updateRecentProviders() {
-        TaskManager::createBackgroundTask("Updating recent files", [](auto&){
-            if (s_recentProvidersUpdating)
-                return;
-
-            s_recentProvidersUpdating = true;
-            ON_SCOPE_EXIT { s_recentProvidersUpdating = false; };
-
-            s_recentProviders.clear();
-
-            // Query all recent providers
-            std::vector<std::fs::path> recentFilePaths;
-            for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
-                for (const auto &entry : std::fs::directory_iterator(folder)) {
-                    if (entry.is_regular_file())
-                        recentFilePaths.push_back(entry.path());
-                }
-            }
-
-            // Sort recent provider files by last modified time
-            std::sort(recentFilePaths.begin(), recentFilePaths.end(), [](const auto &a, const auto &b) {
-                return std::fs::last_write_time(a) > std::fs::last_write_time(b);
-            });
-
-            std::unordered_set<RecentProvider, RecentProvider::HashFunction> uniqueProviders;
-            for (u32 i = 0; i < recentFilePaths.size() && uniqueProviders.size() < MaxRecentProviders; i++) {
-                auto &path = recentFilePaths[i];
-                try {
-                    auto jsonData = nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString());
-                    uniqueProviders.insert(RecentProvider {
-                        .displayName    = jsonData.at("displayName"),
-                        .type           = jsonData.at("type"),
-                        .filePath       = path,
-                        .data           = jsonData
-                    });
-                } catch (...) { }
-            }
-
-            // Delete all recent provider files that are not in the list
-            for (const auto &path : recentFilePaths) {
-                bool found = false;
-                for (const auto &provider : uniqueProviders) {
-                    if (path == provider.filePath) {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    wolv::io::fs::remove(path);
-            }
-
-            std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentProviders));
-        });
-    }
-
-    static void loadRecentProvider(const RecentProvider &recentProvider) {
-        auto *provider = ImHexApi::Provider::createProvider(recentProvider.type, true);
-        if (provider != nullptr) {
-            provider->loadSettings(recentProvider.data);
-
-            if (!provider->open() || !provider->isAvailable()) {
-                PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
-                TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
-                return;
-            }
-
-            EventManager::post<EventProviderOpened>(provider);
-
-            updateRecentProviders();
-        }
-    }
-
     static void loadDefaultLayout() {
         LayoutManager::loadString(std::string(romfs::get("layouts/default.hexlyt").string()));
     }
@@ -267,48 +165,8 @@ namespace hex::plugin::builtin {
                 ImGui::EndPopup();
             }
 
-            ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
-            ImGui::TableNextColumn();
-            ImGui::UnderlinedText(s_recentProviders.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-            {
-                if (!s_recentProvidersUpdating) {
-                    auto it = s_recentProviders.begin();
-                    while(it != s_recentProviders.end()){
-                        const auto &recentProvider = *it;
-                        bool shouldRemove = false;
-
-                        ImGui::PushID(&recentProvider);
-                        ON_SCOPE_EXIT { ImGui::PopID(); };
-
-                        if (ImGui::BulletHyperlink(recentProvider.displayName.c_str())) {
-                            loadRecentProvider(recentProvider);
-                            break;
-                        }
-
-                        // Detect right click on recent provider
-                        std::string popupID = std::string("RecentProviderMenu.")+std::to_string(recentProvider.getHash());
-                        if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
-                            ImGui::OpenPopup(popupID.c_str());
-                        }
-
-                        if (ImGui::BeginPopup(popupID.c_str())) {
-                            if (ImGui::MenuItem("Remove")) {
-                                shouldRemove = true;
-                            }
-                            ImGui::EndPopup();
-                        }
-
-                        // handle deletion from vector and on disk
-                        if (shouldRemove) {
-                            wolv::io::fs::remove(recentProvider.filePath);
-                            it = s_recentProviders.erase(it);
-                        } else {
-                            it++;
-                        }
-                    }
-                }
-            }
+            // draw recent entries
+            recent::draw();
 
             if (ImHexApi::System::getInitArguments().contains("update-available")) {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
@@ -481,7 +339,8 @@ namespace hex::plugin::builtin {
     * should only be called once, at startup
      */
     void createWelcomeScreen() {
-        updateRecentProviders();
+        recent::registerEventHandlers();
+        recent::updateRecentEntries();
 
         (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
 
@@ -534,32 +393,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-        
-        // Save every opened provider as a "recent" shortcut
-        (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
-            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
-                auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
-                // The recent provider is saved to every "recent" directory
-                for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
-                    wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
-                    if (!recentFile.isValid())
-                        continue;
-
-                    {
-                        auto path = ProjectFile::getPath();
-                        ProjectFile::clearPath();
-
-                        if (auto settings = provider->storeSettings(); !settings.is_null())
-                            recentFile.writeString(settings.dump(4));
-
-                        ProjectFile::setPath(path);
-                    }
-                }
-            }
-
-            updateRecentProviders();
-        });
-
         EventManager::subscribe<EventProviderCreated>([](auto) {
             if (!isAnyViewOpen())
                 loadDefaultLayout();
@@ -592,29 +425,8 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
-            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !s_recentProvidersUpdating && !s_recentProviders.empty())) {
-                // Copy to avoid changing list while iteration
-                auto recentProviders = s_recentProviders;
-                for (auto &recentProvider : recentProviders) {
-                    if (ImGui::MenuItem(recentProvider.displayName.c_str())) {
-                        loadRecentProvider(recentProvider);
-                    }
-                }
 
-                ImGui::Separator();
-                if (ImGui::MenuItem("hex.builtin.menu.file.clear_recent"_lang)) {
-                    s_recentProviders.clear();
-
-                    // Remove all recent files
-                    for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent))
-                        for (const auto &entry : std::fs::directory_iterator(recentPath))
-                            std::fs::remove(entry.path());
-                }
-
-                ImGui::EndMenu();
-            }
-        });
+        recent::drawFileMenuItem();
 
         // Check for crash backup
         constexpr static auto CrashFileName = "crash.json";
