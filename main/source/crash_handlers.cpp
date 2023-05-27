@@ -18,13 +18,20 @@
 namespace hex::crash {
 
     constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
+    constexpr static auto Signals = {SIGSEGV, SIGILL, SIGABRT,SIGFPE};
 
     static std::terminate_handler originalHandler;
-    static bool s_shouldSaveCrashFile = false;
-
     
-    static void saveCrashFile(){
-        if(!s_shouldSaveCrashFile)return;
+    static void sendNativeMessage(const std::string& message){
+        hex::nativeErrorMessage(hex::format("ImHex crashed during its loading.\nError: {}", message));
+    }
+
+    // function that decides what should happen on a crash
+    // (either sending a message or saving a crash file, depending on when the crash occured)
+    static std::function<void(const std::string&)> crashCallback = sendNativeMessage;
+
+    static void saveCrashFile(const std::string& message){
+        hex::unused(message);
 
         nlohmann::json crashData{
             {"logFile", wolv::util::toUTF8String(hex::log::getFile().getPath())},
@@ -43,12 +50,13 @@ namespace hex::crash {
         log::warn("Could not write crash.json file !");
     }
 
+
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
         log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
-        // save crash.json file
-        saveCrashFile();
+        // trigger the crash callback
+        crashCallback(hex::format("Received signal '{}' ({})", signalName, signalNumber));
 
         // Trigger an event so that plugins can handle crashes
         // It may affect things (like the project path),
@@ -61,10 +69,7 @@ namespace hex::crash {
         }
 
         // Reset the signal handler to the default handler
-        std::signal(SIGSEGV, SIG_DFL);
-        std::signal(SIGILL,  SIG_DFL);
-        std::signal(SIGABRT, SIG_DFL);
-        std::signal(SIGFPE,  SIG_DFL);
+        for(auto signal : Signals) std::signal(signal, SIG_DFL);
 
         // Print stack trace
         for (const auto &stackFrame : stacktrace::getStackTrace()) {
@@ -104,18 +109,26 @@ namespace hex::crash {
             try {
                 std::rethrow_exception(std::current_exception());
             } catch (std::exception &ex) {
-                log::fatal(
-                        "Program terminated with uncaught exception: {}()::what() -> {}",
-                        llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr),
-                        ex.what()
+                std::string exceptionStr = hex::format("{}()::what() -> {}",
+                    llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what()
                 );
+                log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
+
+                // handle crash callback
+                crashCallback(hex::format("Uncaught exception: {}", exceptionStr));
+
+                // reset signal handlers prior to calling the original handler, because it may raise a signal
+                for(auto signal : Signals) std::signal(signal, SIG_DFL);
+
+                // call the original handler of C++ std
+                originalHandler();
+
+                log::error("Should not happen: original std::set_terminate handler returned. Terminating manually");
+                exit(EXIT_FAILURE);
             }
-
-            // the handler should eventually release a signal, which will be caught and used to handle the crash
-            originalHandler();
-
-            log::error("Should not happen: original std::set_terminate handler returned. Terminating manually");
+            log::error("Should not happen: catch block should be executed and terminate the program. Terminating manually");
             exit(EXIT_FAILURE);
+
         });
 
         // Save a backup project when the application crashes
@@ -134,7 +147,7 @@ namespace hex::crash {
         });
 
         EventManager::subscribe<EventImHexStartupFinished>([]{
-            s_shouldSaveCrashFile = true;
+            crashCallback = saveCrashFile;
         });
     }
 }
