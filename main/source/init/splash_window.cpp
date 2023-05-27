@@ -232,7 +232,6 @@ namespace hex::init {
                 "The most common cause of this is using a virtual machine\n"
                 "You may want to try an artifact ending with 'NoGPU'\n"
                 , lastGlfwError.errorCode, lastGlfwError.desc));
-            log::fatal("Failed to create GLFW window!");
             exit(EXIT_FAILURE);
         }
 

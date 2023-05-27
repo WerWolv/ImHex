@@ -52,6 +52,7 @@ namespace hex {
     }
 
     void nativeErrorMessage(const std::string &message) {
+        log::fatal(message);
         if (isFileInPath("zenity")) {
             executeCmd({"zenity", "--error", "--text", message});
         } else if(isFileInPath("notify-send")) {
