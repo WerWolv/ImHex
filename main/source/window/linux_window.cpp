@@ -22,7 +22,7 @@
 
 namespace hex {
 
-    bool isFileInPath(std::fs::path filename){
+    bool isFileInPath(const std::fs::path &filename){
         auto path_var = std::string(getenv("PATH"));
         for(auto dir : std::views::split(path_var, ':')){
             if(std::fs::exists(std::fs::path(std::string_view(dir)) / filename)) {
@@ -32,15 +32,15 @@ namespace hex {
         return false;
     }
 
-    void executeCmd(std::vector<std::string> strVector) {
-        std::vector<char*> cVector;
-        for (std::string& str : strVector) {
-            cVector.push_back(const_cast<char*>(str.c_str()));
+    void executeCmd(const std::vector<std::string> &argsVector) {
+        std::vector<char*> cArgsVector;
+        for (const auto &str : argsVector) {
+            cArgsVector.push_back(const_cast<char*>(str.c_str()));
         }
-        cVector.push_back(nullptr);
+        cArgsVector.push_back(nullptr);
         
         if (fork() == 0) {
-            execvp(cVector[0], &cVector[0]);
+            execvp(cArgsVector[0], &cArgsVector[0]);
             log::error("execvp() failed: {}", strerror(errno));
             exit(EXIT_FAILURE);
         }
