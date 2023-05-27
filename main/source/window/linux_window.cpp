@@ -22,15 +22,15 @@
 
 namespace hex {
 
-    bool isFileInPath(const std::fs::path &filename){
+    bool isFileInPath(const std::fs::path &filename) {
         auto optPathVar = hex::getEnvironmentVariable("PATH");
         if (!optPathVar.has_value()) {
             log::error("Could not find variable named PATH");
             return false;
         }
 
-        for(auto dir : std::views::split(optPathVar.value(), ':')){
-            if(std::fs::exists(std::fs::path(std::string_view(dir)) / filename)) {
+        for (auto dir : std::views::split(optPathVar.value(), ':')) {
+            if (std::fs::exists(std::fs::path(std::string_view(dir)) / filename)) {
                 return true;
             }
         }
