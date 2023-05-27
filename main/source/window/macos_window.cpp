@@ -17,6 +17,11 @@
 
 namespace hex {
 
+    void nativeErrorMessage(const std::string &message) {
+        log::fatal(message);
+        errorMessageMacos(message.c_str());
+    }
+
     void Window::initNative() {
         // Add plugin library folders to dll search path
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {

@@ -14,6 +14,8 @@ struct ImGuiSettingsHandler;
 
 namespace hex {
 
+    void nativeErrorMessage(const std::string &message);
+
     class Window {
     public:
         Window();

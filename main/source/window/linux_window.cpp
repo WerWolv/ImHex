@@ -17,8 +17,48 @@
     #include <unistd.h>
 
     #include <imgui_impl_glfw.h>
+    #include <string.h>
+    #include <ranges>
 
 namespace hex {
+
+    bool isFileInPath(const std::fs::path &filename) {
+        auto optPathVar = hex::getEnvironmentVariable("PATH");
+        if (!optPathVar.has_value()) {
+            log::error("Could not find variable named PATH");
+            return false;
+        }
+
+        for (auto dir : std::views::split(optPathVar.value(), ':')) {
+            if (std::fs::exists(std::fs::path(std::string_view(dir)) / filename)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void executeCmd(const std::vector<std::string> &argsVector) {
+        std::vector<char*> cArgsVector;
+        for (const auto &str : argsVector) {
+            cArgsVector.push_back(const_cast<char*>(str.c_str()));
+        }
+        cArgsVector.push_back(nullptr);
+        
+        if (fork() == 0) {
+            execvp(cArgsVector[0], &cArgsVector[0]);
+            log::error("execvp() failed: {}", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    void nativeErrorMessage(const std::string &message) {
+        log::fatal(message);
+        if (isFileInPath("zenity")) {
+            executeCmd({"zenity", "--error", "--text", message});
+        } else if(isFileInPath("notify-send")) {
+            executeCmd({"notify-send", "-i", "script-error", "Error", message});
+        } // hopefully one of these commands is installed
+    }
 
     void Window::initNative() {
         // Add plugin library folders to dll search path

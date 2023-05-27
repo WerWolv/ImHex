@@ -1,3 +1,4 @@
+#include "window.hpp"
 #include "init/splash_window.hpp"
 
 #include <hex/api/imhex_api.hpp>
@@ -31,6 +32,13 @@
 using namespace std::literals::chrono_literals;
 
 namespace hex::init {
+
+    struct GlfwError {
+        int errorCode = 0;
+        std::string desc;
+    };
+
+    GlfwError lastGlfwError;
 
     WindowSplash::WindowSplash() : m_window(nullptr) {
         this->initGLFW();
@@ -186,8 +194,10 @@ namespace hex::init {
     }
 
     void WindowSplash::initGLFW() {
-        glfwSetErrorCallback([](int error, const char *desc) {
-            log::error("GLFW Error [{}] : {}", error, desc);
+        glfwSetErrorCallback([](int errorCode, const char *desc) {
+            lastGlfwError.errorCode = errorCode;
+            lastGlfwError.desc = std::string(desc);
+            log::error("GLFW Error [{}] : {}", errorCode, desc);
         });
 
         if (!glfwInit()) {
@@ -216,7 +226,12 @@ namespace hex::init {
         // Create the splash screen window
         this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
         if (this->m_window == nullptr) {
-            log::fatal("Failed to create GLFW window!");
+            hex::nativeErrorMessage(hex::format(
+                "Failed to create GLFW window: [{}] {}.\n"
+                "You may not have a renderer available.\n"
+                "The most common cause of this is using a virtual machine\n"
+                "You may want to try a release artifact ending with 'NoGPU'"
+                , lastGlfwError.errorCode, lastGlfwError.desc));
             exit(EXIT_FAILURE);
         }
 
