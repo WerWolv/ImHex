@@ -34,7 +34,8 @@ add_library(imgui OBJECT
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 target_compile_options(imgui PRIVATE -Wno-stringop-overflow)
 
-target_compile_definitions(imgui PUBLIC IMGUI_DEFINE_MATH_OPERATORS=ON)
+# ImGui config
+target_compile_definitions(imgui PUBLIC IMGUI_DEFINE_MATH_OPERATORS=ON) # Use ImGui math operators for ImVec2
 
 target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
 target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
