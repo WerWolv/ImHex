@@ -6,7 +6,6 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/encoding_file.hpp>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>

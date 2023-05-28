@@ -8,7 +8,6 @@
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
 #include <hex/helpers/logger.hpp>

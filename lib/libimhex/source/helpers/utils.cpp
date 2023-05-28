@@ -10,7 +10,6 @@
 #include <hex/helpers/crypto.hpp>
 
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 
 #if defined(OS_WINDOWS)

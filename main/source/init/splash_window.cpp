@@ -12,7 +12,6 @@
 #include <romfs/romfs.hpp>
 
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <imgui_impl_glfw.h>
