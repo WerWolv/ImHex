@@ -50,17 +50,6 @@ namespace hex {
      * @brief returns the path to load/save imgui settings to, or an empty path if no location was found
      */
     std::fs::path getImGuiSettingsPath() {
-        if (s_imguiSettingsPath.empty()) {
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (std::fs::exists(dir)) {
-                    auto imguiSettingsPath = dir / "interface.ini";
-                    if (fs::isPathWritable(imguiSettingsPath)) {
-                        s_imguiSettingsPath = imguiSettingsPath;
-                        break;
-                    }
-                }
-            }
-        }
         return s_imguiSettingsPath;
     }
 
@@ -1011,11 +1000,19 @@ namespace hex {
             handler.UserData   = this;
             ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
-            auto imguiSettingsPath = getImGuiSettingsPath();
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                if (std::fs::exists(dir)) {
+                    auto imguiSettingsPath = dir / "interface.ini";
+                    if (fs::isPathWritable(imguiSettingsPath)) {
+                        s_imguiSettingsPath = imguiSettingsPath;
+                        break;
+                    }
+                }
+            }
 
-            if (!imguiSettingsPath.empty() && wolv::io::fs::exists(imguiSettingsPath)) {
+            if (!s_imguiSettingsPath.empty() && wolv::io::fs::exists(s_imguiSettingsPath)) {
                 io.IniFilename = nullptr;
-                ImGui::LoadIniSettingsFromDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
+                ImGui::LoadIniSettingsFromDisk(wolv::util::toUTF8String(s_imguiSettingsPath).c_str());
             }
         }
 
