@@ -439,8 +439,15 @@ namespace hex::plugin::builtin {
                 
                 log::info("Found crash.json file at {}", wolv::util::toUTF8String(crashFilePath));
                 wolv::io::File crashFile(crashFilePath, wolv::io::File::Mode::Read);
-                auto crashFileData = nlohmann::json::parse(crashFile.readString());
-                crashFile.close();
+                nlohmann::json crashFileData;
+                try {
+                    crashFileData = nlohmann::json::parse(crashFile.readString());
+                } catch (nlohmann::json::exception &e) {
+                    log::error("Failed to parse crash.json file: {}", e.what());
+                    crashFile.remove();
+                    continue;
+                }
+
                 bool hasProject = !crashFileData.value("project", "").empty();
 
                 auto backupFilePath = path / BackupFileName;
