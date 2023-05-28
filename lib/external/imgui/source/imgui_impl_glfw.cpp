@@ -887,7 +887,14 @@ static void ImGui_ImplGlfw_UpdateMonitors()
     ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     int monitors_count = 0;
     GLFWmonitor** glfw_monitors = glfwGetMonitors(&monitors_count);
-    platform_io.Monitors.resize(0);
+    
+    // IMHEX PATCH BEGIN
+    // REASON: Prevent occasional crash when having ImHex open and connecting to the computer over RDP
+    // NOTE: Untested with this ImGui version 
+    if (monitors_count > 0)
+        platform_io.Monitors.resize(0);
+    // IMHEX PATCH END
+    
     bd->WantUpdateMonitors = false;
     for (int n = 0; n < monitors_count; n++)
     {
