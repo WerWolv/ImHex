@@ -1000,7 +1000,7 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
 
     if (mHandleKeyboardInputs) {
         HandleKeyboardInputs();
-        ImGui::PushAllowKeyboardFocus(true);
+        ImGui::PushTabStop(true);
     }
 
     if (mHandleMouseInputs)
@@ -1010,7 +1010,7 @@ void TextEditor::Render(const char *aTitle, const ImVec2 &aSize, bool aBorder) {
     Render();
 
     if (mHandleKeyboardInputs)
-        ImGui::PopAllowKeyboardFocus();
+        ImGui::PopTabStop();
 
     if (!mIgnoreImGuiChild)
         ImGui::EndChild();
