@@ -22,7 +22,7 @@ namespace hex::crash {
 
     static std::terminate_handler originalHandler;
     
-    static void sendNativeMessage(const std::string& message){
+    static void sendNativeMessage(const std::string& message) {
         hex::nativeErrorMessage(hex::format("ImHex crashed during its loading.\nError: {}", message));
     }
 
@@ -30,7 +30,7 @@ namespace hex::crash {
     // (either sending a message or saving a crash file, depending on when the crash occured)
     static std::function<void(const std::string&)> crashCallback = sendNativeMessage;
 
-    static void saveCrashFile(const std::string& message){
+    static void saveCrashFile(const std::string& message) {
         hex::unused(message);
 
         nlohmann::json crashData{
@@ -88,7 +88,7 @@ namespace hex::crash {
     }
 
     // setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
-    void setupCrashHandlers(){
+    void setupCrashHandlers() {
          // Register signal handlers
         {
             #define HANDLE_SIGNAL(name)             \
@@ -104,7 +104,6 @@ namespace hex::crash {
             #undef HANDLE_SIGNAL
         }
 
-        // register uncaught exception handlers
         originalHandler = std::set_terminate([]{
             try {
                 std::rethrow_exception(std::current_exception());
@@ -137,7 +136,7 @@ namespace hex::crash {
         // were opened in case there wasn't a project
         EventManager::subscribe<EventAbnormalTermination>([](int) {
             auto imguiSettingsPath = hex::getImGuiSettingsPath();
-            if(!imguiSettingsPath.empty())
+            if (!imguiSettingsPath.empty())
                 ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
 
             for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
