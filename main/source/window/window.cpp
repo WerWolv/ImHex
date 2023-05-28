@@ -1001,12 +1001,9 @@ namespace hex {
             ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (std::fs::exists(dir)) {
-                    auto imguiSettingsPath = dir / "interface.ini";
-                    if (fs::isPathWritable(imguiSettingsPath)) {
-                        s_imguiSettingsPath = imguiSettingsPath;
-                        break;
-                    }
+                if (std::fs::exists(dir) && (fs::isPathWritable(dir))) {
+                    s_imguiSettingsPath = dir / "interface.ini";
+                    break;
                 }
             }
 
@@ -1040,7 +1037,7 @@ namespace hex {
     void Window::exitImGui() {
         delete static_cast<ImGui::ImHexCustomData *>(ImGui::GetIO().UserData);
 
-        ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(this->m_imguiSettingsPath).c_str());
+        ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(s_imguiSettingsPath).c_str());
 
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
