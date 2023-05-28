@@ -86,10 +86,15 @@
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>   // for glfwGetWin32Window()
 #endif
-#ifdef __APPLE__
-#define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
-#endif
+// IMHEX PATCH BEGIN
+// REASON: including this file means either including either ObjC (not supported by gcc)
+// or code with a non-standard C++ extension (Blocks)
+// Furthermore, we can't compile this file/ImGui with clang++ because the C++ ABI is not the same with clang and gcc
+//#ifdef __APPLE__
+//#define GLFW_EXPOSE_NATIVE_COCOA
+//#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
+// #endif
+// IMHEX PATCH END
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -656,8 +661,11 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     main_viewport->PlatformHandle = (void*)bd->Window;
 #ifdef _WIN32
     main_viewport->PlatformHandleRaw = glfwGetWin32Window(bd->Window);
-#elif defined(__APPLE__)
-    main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->Window);
+// IMHEX PATCH BEGIN
+// REASON: The patch with #include <GLFW/glfw3native.h>
+// #elif defined(__APPLE__)
+//     main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->Window);
+// IMHEX PATCH END
 #else
     IM_UNUSED(main_viewport);
 #endif
@@ -1023,8 +1031,11 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
     viewport->PlatformHandle = (void*)vd->Window;
 #ifdef _WIN32
     viewport->PlatformHandleRaw = glfwGetWin32Window(vd->Window);
-#elif defined(__APPLE__)
-    viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(vd->Window);
+// IMHEX PATCH BEGIN
+// REASON: The patch with #include <GLFW/glfw3native.h>
+// #elif defined(__APPLE__)
+//     viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(vd->Window);
+// IMHEX PATCH END
 #endif
     glfwSetWindowPos(vd->Window, (int)viewport->Pos.x, (int)viewport->Pos.y);
 
