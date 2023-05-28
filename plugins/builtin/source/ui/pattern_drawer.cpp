@@ -114,10 +114,16 @@ namespace hex::plugin::builtin::ui {
         }
 
         void drawOffsetColumn(const pl::ptrn::Pattern& pattern) {
-            if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
-                drawOffsetColumnForBitfieldMember(*bitfieldMember);
-            else
-                ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
+            if (pattern.isPatternLocal()) {
+                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+            } else {
+                if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
+                    drawOffsetColumnForBitfieldMember(*bitfieldMember);
+                else {
+                    ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
+                }
+            }
+
             ImGui::TableNextColumn();
         }
 
