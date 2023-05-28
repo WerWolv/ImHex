@@ -68,7 +68,7 @@ namespace hex::plugin::builtin::recent {
                     nlohmann::json recentEntry {
                         {"type", "project"},
                         {"displayName", displayName},
-                        {"path", ProjectFile::getPath()}
+                        {"path", wolv::util::toUTF8String(ProjectFile::getPath())}
                     };
 
                     recentFile.writeString(recentEntry.dump(4));
