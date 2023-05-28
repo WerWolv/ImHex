@@ -37,6 +37,9 @@ namespace hex {
     void ShortcutManager::process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
         Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
 
+        if (ImGui::GetIO().WantTextInput)
+            return;
+
         if (currentView->m_shortcuts.contains(pressedShortcut))
             currentView->m_shortcuts[pressedShortcut]();
     }

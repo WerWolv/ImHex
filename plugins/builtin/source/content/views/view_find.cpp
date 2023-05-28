@@ -91,6 +91,16 @@ namespace hex::plugin::builtin {
 
             ImGui::EndTooltip();
         });
+
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A, [this] {
+            if (this->m_filterTask.isRunning())
+                return;
+            if (this->m_searchTask.isRunning())
+                return;
+
+            for (auto &occurrence : *this->m_sortedOccurrences)
+                occurrence.selected = true;
+        });
     }
 
     template<typename Type, typename StorageType>
@@ -223,8 +233,8 @@ namespace hex::plugin::builtin {
                 countedCharacters++;
             if (!validChar || startAddress + countedCharacters == endAddress) {
                 if (countedCharacters >= size_t(settings.minLength)) {
-                    if (!(settings.nullTermination && byte != 0x00)) {
-                        results.push_back(Occurrence { Region { startAddress, countedCharacters }, decodeType, endian });
+                    if (!settings.nullTermination || byte == 0x00) {
+                        results.push_back(Occurrence { Region { startAddress, countedCharacters }, decodeType, endian, false });
                     }
                 }
 
@@ -261,7 +271,7 @@ namespace hex::plugin::builtin {
 
             auto address = occurrence.getAddress();
             reader.seek(address + 1);
-            results.push_back(Occurrence{ Region { address, bytes.size() }, Occurrence::DecodeType::Binary, std::endian::native });
+            results.push_back(Occurrence{ Region { address, bytes.size() }, Occurrence::DecodeType::Binary, std::endian::native, false });
             progress = address - searchRegion.getStartAddress();
         }
 
@@ -322,7 +332,7 @@ namespace hex::plugin::builtin {
                     if (matchedBytes == settings.pattern.getSize()) {
                         auto occurrenceAddress = it.getAddress() - (patternSize - 1);
 
-                        results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
+                        results.push_back(Occurrence { Region { occurrenceAddress, patternSize }, Occurrence::DecodeType::Binary, std::endian::native, false });
                         it.setAddress(occurrenceAddress);
                         matchedBytes = 0;
                     }
@@ -348,7 +358,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (match)
-                    results.push_back(Occurrence { Region { address, patternSize }, Occurrence::DecodeType::Binary, std::endian::native });
+                    results.push_back(Occurrence { Region { address, patternSize }, Occurrence::DecodeType::Binary, std::endian::native, false });
             }
         }
 
@@ -419,7 +429,7 @@ namespace hex::plugin::builtin {
                     }
                 }();
 
-                results.push_back(Occurrence { Region { address, size }, decodeType, settings.endian });
+                results.push_back(Occurrence { Region { address, size }, decodeType, settings.endian, false });
             }
         }
 
@@ -507,9 +517,11 @@ namespace hex::plugin::builtin {
         return result;
     }
 
-    static void drawContextMenu(const std::string &value) {
+    void ViewFind::drawContextMenu(Occurrence &target, const std::string &value) {
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
             ImGui::OpenPopup("FindContextMenu");
+            target.selected = true;
+            this->m_replaceBuffer.clear();
         }
 
         if (ImGui::BeginPopup("FindContextMenu")) {
@@ -517,6 +529,53 @@ namespace hex::plugin::builtin {
                 ImGui::SetClipboardText(value.c_str());
             if (ImGui::MenuItem("hex.builtin.view.find.context.copy_demangle"_lang))
                 ImGui::SetClipboardText(llvm::demangle(value).c_str());
+            if (ImGui::BeginMenu("hex.builtin.view.find.context.replace"_lang)) {
+                if (ImGui::BeginTabBar("##replace_tabs")) {
+                    if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.hex"_lang)) {
+                        ImGui::InputTextIcon("##replace_input", ICON_VS_SYMBOL_NAMESPACE, this->m_replaceBuffer);
+
+                        ImGui::BeginDisabled(this->m_replaceBuffer.empty());
+                        if (ImGui::Button("hex.builtin.view.find.context.replace"_lang)) {
+                            for (const auto &occurrence : *this->m_sortedOccurrences) {
+                                if (occurrence.selected) {
+                                    auto bytes = decodeByteString(this->m_replaceBuffer);
+
+                                    size_t size = std::min<size_t>(occurrence.region.size, bytes.size());
+
+                                    auto provider = ImHexApi::Provider::get();
+                                    provider->write(occurrence.region.getStartAddress(), bytes.data(), size);
+                                }
+                            }
+                        }
+                        ImGui::EndDisabled();
+
+                        ImGui::EndTabItem();
+                    }
+
+                    if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.ascii"_lang)) {
+                        ImGui::InputTextIcon("##replace_input", ICON_VS_SYMBOL_KEY, this->m_replaceBuffer);
+
+                        ImGui::BeginDisabled(this->m_replaceBuffer.empty());
+                        if (ImGui::Button("hex.builtin.view.find.context.replace"_lang)) {
+                            for (const auto &occurrence : *this->m_sortedOccurrences) {
+                                if (occurrence.selected) {
+                                    size_t size = std::min<size_t>(occurrence.region.size, this->m_replaceBuffer.size());
+
+                                    auto provider = ImHexApi::Provider::get();
+                                    provider->write(occurrence.region.getStartAddress(), this->m_replaceBuffer.data(), size);
+                                }
+                            }
+                        }
+                        ImGui::EndDisabled();
+
+                        ImGui::EndTabItem();
+                    }
+
+                    ImGui::EndTabBar();
+                }
+
+                ImGui::EndMenu();
+            }
 
             ImGui::EndPopup();
         }
@@ -840,9 +899,17 @@ namespace hex::plugin::builtin {
                         auto value = this->decodeValue(provider, foundItem, 256);
                         ImGui::TextFormatted("{}", value);
                         ImGui::SameLine();
-                        if (ImGui::Selectable("##line", false, ImGuiSelectableFlags_SpanAllColumns))
-                            ImHexApi::HexEditor::setSelection(foundItem.region.getStartAddress(), foundItem.region.getSize());
-                        drawContextMenu(value);
+                        if (ImGui::Selectable("##line", foundItem.selected, ImGuiSelectableFlags_SpanAllColumns)) {
+                            if (ImGui::GetIO().KeyCtrl) {
+                                foundItem.selected = !foundItem.selected;
+                            } else {
+                                for (auto &occurrence : *this->m_sortedOccurrences)
+                                    occurrence.selected = false;
+                                foundItem.selected = true;
+                                ImHexApi::HexEditor::setSelection(foundItem.region.getStartAddress(), foundItem.region.getSize());
+                            }
+                        }
+                        drawContextMenu(foundItem, value);
 
                         ImGui::PopID();
                     }

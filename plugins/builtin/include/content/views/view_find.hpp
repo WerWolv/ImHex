@@ -28,6 +28,7 @@ namespace hex::plugin::builtin {
             Region region;
             enum class DecodeType { ASCII, Binary, UTF16, Unsigned, Signed, Float, Double } decodeType;
             std::endian endian = std::endian::native;
+            bool selected;
         };
 
         struct BinaryPattern {
@@ -104,6 +105,7 @@ namespace hex::plugin::builtin {
 
         TaskHolder m_searchTask, m_filterTask;
         bool m_settingsValid = false;
+        std::string m_replaceBuffer;
 
     private:
         static std::vector<Occurrence> searchStrings(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Strings &settings);
@@ -111,6 +113,8 @@ namespace hex::plugin::builtin {
         static std::vector<Occurrence> searchRegex(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Regex &settings);
         static std::vector<Occurrence> searchBinaryPattern(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::BinaryPattern &settings);
         static std::vector<Occurrence> searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings);
+
+        void drawContextMenu(Occurrence &target, const std::string &value);
 
         static std::vector<BinaryPattern> parseBinaryPatternString(std::string string);
         static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValueInput(const std::string &input, SearchSettings::Value::Type type);
