@@ -4,7 +4,6 @@
 #include <hex/helpers/logger.hpp>
 
 #include <algorithm>
-#include <ranges>
 
 namespace hex {
 

@@ -654,30 +654,7 @@ namespace hex::plugin::builtin {
     static void pasteBytes(const Region &selection, bool selectionCheck) {
         auto provider = ImHexApi::Provider::get();
 
-        std::string clipboard = ImGui::GetClipboardText();
-        if (clipboard.empty())
-            return;
-
-        // Remove common hex prefixes and commas
-        hex::replaceStrings(clipboard, "0x", "");
-        hex::replaceStrings(clipboard, "0X", "");
-        hex::replaceStrings(clipboard, ",", "");
-
-        // Check for non-hex characters
-        bool isValidHexString = std::find_if(clipboard.begin(), clipboard.end(), [](char c) {
-            return !std::isxdigit(c) && !std::isspace(c);
-        }) == clipboard.end();
-
-        if (!isValidHexString) return;
-
-        // Remove all whitespace
-        clipboard.erase(std::remove_if(clipboard.begin(), clipboard.end(), [](char c) { return std::isspace(c); }), clipboard.end());
-
-        // Only paste whole bytes
-        if (clipboard.length() % 2 != 0) return;
-
-        // Convert hex string to bytes
-        std::vector<u8> buffer = crypt::decode16(clipboard);
+        auto buffer = parseHexString(ImGui::GetClipboardText());
 
         if (!selectionCheck) {
             if (selection.getStartAddress() + buffer.size() >= provider->getActualSize())

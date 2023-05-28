@@ -157,7 +157,7 @@ namespace hex::plugin::builtin {
         std::memcpy(&value, bytes.data(), bytes.size());
 
         if (std::signed_integral<T>)
-            hex::signExtend(bytes.size() * 8, value);
+            value = hex::signExtend(bytes.size() * 8, value);
 
         return hex::format("{}", value);
     }
@@ -536,13 +536,12 @@ namespace hex::plugin::builtin {
 
                         ImGui::BeginDisabled(this->m_replaceBuffer.empty());
                         if (ImGui::Button("hex.builtin.view.find.context.replace"_lang)) {
+                            auto provider = ImHexApi::Provider::get();
+                            auto bytes = parseHexString(this->m_replaceBuffer);
+
                             for (const auto &occurrence : *this->m_sortedOccurrences) {
                                 if (occurrence.selected) {
-                                    auto bytes = decodeByteString(this->m_replaceBuffer);
-
                                     size_t size = std::min<size_t>(occurrence.region.size, bytes.size());
-
-                                    auto provider = ImHexApi::Provider::get();
                                     provider->write(occurrence.region.getStartAddress(), bytes.data(), size);
                                 }
                             }
@@ -557,12 +556,13 @@ namespace hex::plugin::builtin {
 
                         ImGui::BeginDisabled(this->m_replaceBuffer.empty());
                         if (ImGui::Button("hex.builtin.view.find.context.replace"_lang)) {
+                            auto provider = ImHexApi::Provider::get();
+                            auto bytes = decodeByteString(this->m_replaceBuffer);
+
                             for (const auto &occurrence : *this->m_sortedOccurrences) {
                                 if (occurrence.selected) {
-                                    size_t size = std::min<size_t>(occurrence.region.size, this->m_replaceBuffer.size());
-
-                                    auto provider = ImHexApi::Provider::get();
-                                    provider->write(occurrence.region.getStartAddress(), this->m_replaceBuffer.data(), size);
+                                    size_t size = std::min<size_t>(occurrence.region.size, bytes.size());
+                                    provider->write(occurrence.region.getStartAddress(), bytes.data(), size);
                                 }
                             }
                         }

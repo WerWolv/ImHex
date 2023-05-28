@@ -7,6 +7,7 @@
 #include <hex/api/event.hpp>
 
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/crypto.hpp>
 
 #include <imgui.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
@@ -65,6 +66,34 @@ namespace hex {
             return { data + index };
         } else
             return { data + index + 1 };
+    }
+
+    std::vector<u8> parseHexString(std::string string) {
+        if (string.empty())
+            return { };
+
+        // Remove common hex prefixes and commas
+        string = hex::replaceStrings(string, "0x", "");
+        string = hex::replaceStrings(string, "0X", "");
+        string = hex::replaceStrings(string, ",", "");
+
+        // Check for non-hex characters
+        bool isValidHexString = std::find_if(string.begin(), string.end(), [](char c) {
+            return !std::isxdigit(c) && !std::isspace(c);
+        }) == string.end();
+
+        if (!isValidHexString)
+            return { };
+
+        // Remove all whitespace
+        string.erase(std::remove_if(string.begin(), string.end(), [](char c) { return std::isspace(c); }), string.end());
+
+        // Only parse whole bytes
+        if (string.length() % 2 != 0)
+            return { };
+
+        // Convert hex string to bytes
+        return crypt::decode16(string);
     }
 
     std::optional<u8> parseBinaryString(const std::string &string) {

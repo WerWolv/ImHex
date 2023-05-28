@@ -24,7 +24,7 @@ struct ImVec2;
 namespace hex {
 
     template<typename T>
-    std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
+    [[nodiscard]] std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
         size_t stride = std::max(1.0, double(data.size()) / count);
 
         std::vector<T> result;
@@ -37,12 +37,12 @@ namespace hex {
         return result;
     }
 
-    float operator""_scaled(long double value);
-    float operator""_scaled(unsigned long long value);
-    ImVec2 scaled(const ImVec2 &vector);
+    [[nodiscard]] float operator""_scaled(long double value);
+    [[nodiscard]] float operator""_scaled(unsigned long long value);
+    [[nodiscard]] ImVec2 scaled(const ImVec2 &vector);
 
     template<typename T>
-    std::vector<T> operator|(const std::vector<T> &lhs, const std::vector<T> &rhs) {
+    [[nodiscard]] std::vector<T> operator|(const std::vector<T> &lhs, const std::vector<T> &rhs) {
         std::vector<T> result;
 
         std::copy(lhs.begin(), lhs.end(), std::back_inserter(result));
@@ -51,18 +51,19 @@ namespace hex {
         return result;
     }
 
-    std::string to_string(u128 value);
-    std::string to_string(i128 value);
+    [[nodiscard]] std::string to_string(u128 value);
+    [[nodiscard]] std::string to_string(i128 value);
 
-    std::optional<u8> parseBinaryString(const std::string &string);
-    std::string toByteString(u64 bytes);
-    std::string makePrintable(u8 c);
+    [[nodiscard]] std::vector<u8> parseHexString(std::string string);
+    [[nodiscard]] std::optional<u8> parseBinaryString(const std::string &string);
+    [[nodiscard]] std::string toByteString(u64 bytes);
+    [[nodiscard]] std::string makePrintable(u8 c);
 
     void runCommand(const std::string &command);
     void openWebpage(std::string url);
 
-    std::string encodeByteString(const std::vector<u8> &bytes);
-    std::vector<u8> decodeByteString(const std::string &string);
+    [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
+    [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);
 
     [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const std::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);
@@ -88,13 +89,13 @@ namespace hex {
         return (value & mask) >> to;
     }
 
-    constexpr inline i128 signExtend(size_t numBits, i128 value) {
+    [[nodiscard]] constexpr inline i128 signExtend(size_t numBits, i128 value) {
         i128 mask = 1ULL << (numBits - 1);
         return (value ^ mask) - mask;
     }
 
     template<std::integral T>
-    constexpr inline T swapBitOrder(size_t numBits, T value) {
+    [[nodiscard]] constexpr inline T swapBitOrder(size_t numBits, T value) {
         T result = 0x00;
 
         for (size_t bit = 0; bit < numBits; bit++) {
@@ -105,7 +106,7 @@ namespace hex {
         return result;
     }
 
-    constexpr inline size_t strnlen(const char *s, size_t n) {
+    [[nodiscard]] constexpr inline size_t strnlen(const char *s, size_t n) {
         size_t i = 0;
         while (i < n && s[i] != '\x00') i++;
 
@@ -130,7 +131,7 @@ namespace hex {
     using SizeType = typename SizeTypeImpl<Size>::Type;
 
     template<typename T>
-    constexpr T changeEndianess(const T &value, size_t size, std::endian endian) {
+    [[nodiscard]] constexpr T changeEndianess(const T &value, size_t size, std::endian endian) {
         if (endian == std::endian::native)
             return value;
 
@@ -150,7 +151,7 @@ namespace hex {
     }
 
     template<typename T>
-    constexpr T changeEndianess(const T &value, std::endian endian) {
+    [[nodiscard]] constexpr T changeEndianess(const T &value, std::endian endian) {
         return changeEndianess(value, sizeof(value), endian);
     }
 
@@ -159,12 +160,12 @@ namespace hex {
     }
 
     template<class T>
-    constexpr T bit_width(T x) noexcept {
+    [[nodiscard]] constexpr T bit_width(T x) noexcept {
         return std::numeric_limits<T>::digits - std::countl_zero(x);
     }
 
     template<typename T>
-    constexpr T bit_ceil(T x) noexcept {
+    [[nodiscard]] constexpr T bit_ceil(T x) noexcept {
         if (x <= 1u)
             return T(1);
 
@@ -172,7 +173,7 @@ namespace hex {
     }
 
     template<std::integral T, std::integral U>
-    auto powi(T base, U exp) {
+    [[nodiscard]] auto powi(T base, U exp) {
         using ResultType = decltype(T{} * U{});
 
         if (exp < 0)
@@ -198,20 +199,20 @@ namespace hex {
     }
 
     template<typename T, typename... Args>
-    std::vector<T> moveToVector(T &&first, Args &&...rest) {
+    [[nodiscard]] std::vector<T> moveToVector(T &&first, Args &&...rest) {
         std::vector<T> result;
         moveToVector(result, T(std::move(first)), std::move(rest)...);
 
         return result;
     }
 
-    std::vector<std::string> splitString(const std::string &string, const std::string &delimiter);
-    std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter = "");
-    std::string replaceStrings(std::string string, const std::string &search, const std::string &replace);
+    [[nodiscard]] std::vector<std::string> splitString(const std::string &string, const std::string &delimiter);
+    [[nodiscard]] std::string combineStrings(const std::vector<std::string> &strings, const std::string &delimiter = "");
+    [[nodiscard]] std::string replaceStrings(std::string string, const std::string &search, const std::string &replace);
 
-    std::string toEngineeringString(double value);
+    [[nodiscard]] std::string toEngineeringString(double value);
 
-    inline std::vector<u8> parseByteString(const std::string &string) {
+    [[nodiscard]] inline std::vector<u8> parseByteString(const std::string &string) {
         auto byteString = std::string(string);
         byteString.erase(std::remove(byteString.begin(), byteString.end(), ' '), byteString.end());
 
@@ -228,7 +229,7 @@ namespace hex {
         return result;
     }
 
-    inline std::string toBinaryString(std::unsigned_integral auto number) {
+    [[nodiscard]] inline std::string toBinaryString(std::unsigned_integral auto number) {
         if (number == 0) return "0";
 
         std::string result;
@@ -238,15 +239,15 @@ namespace hex {
         return result;
     }
 
-    float float16ToFloat32(u16 float16);
+    [[nodiscard]] float float16ToFloat32(u16 float16);
 
-    inline bool equalsIgnoreCase(const std::string &left, const std::string &right) {
+    [[nodiscard]] inline bool equalsIgnoreCase(const std::string &left, const std::string &right) {
         return std::equal(left.begin(), left.end(), right.begin(), right.end(), [](char a, char b) {
             return tolower(a) == tolower(b);
         });
     }
 
-    inline bool containsIgnoreCase(const std::string &a, const std::string &b) {
+    [[nodiscard]] inline bool containsIgnoreCase(const std::string &a, const std::string &b) {
         auto iter = std::search(a.begin(), a.end(), b.begin(), b.end(), [](char ch1, char ch2) {
             return std::toupper(ch1) == std::toupper(ch2);
         });
@@ -255,7 +256,7 @@ namespace hex {
     }
 
     template<typename T, typename... VariantTypes>
-    T get_or(const std::variant<VariantTypes...> &variant, T alt) {
+    [[nodiscard]] T get_or(const std::variant<VariantTypes...> &variant, T alt) {
         const T *value = std::get_if<T>(&variant);
         if (value == nullptr)
             return alt;
@@ -264,25 +265,25 @@ namespace hex {
     }
 
     template<std::integral T>
-    T alignTo(T value, T alignment) {
+    [[nodiscard]] T alignTo(T value, T alignment) {
         T remainder = value % alignment;
 
         return remainder != 0 ? value + (alignment - remainder) : value;
     }
 
-    std::optional<u8> hexCharToValue(char c);
+    [[nodiscard]] std::optional<u8> hexCharToValue(char c);
 
-    bool isProcessElevated();
+    [[nodiscard]] bool isProcessElevated();
 
-    std::optional<std::string> getEnvironmentVariable(const std::string &env);
+    [[nodiscard]] std::optional<std::string> getEnvironmentVariable(const std::string &env);
 
-    inline std::string limitStringLength(const std::string &string, size_t maxLength) {
+    [[nodiscard]] inline std::string limitStringLength(const std::string &string, size_t maxLength) {
         if (string.length() <= maxLength)
             return string;
 
         return string.substr(0, maxLength - 3) + "...";
     }
 
-    std::optional<std::fs::path> getInitialFilePath();
+    [[nodiscard]] std::optional<std::fs::path> getInitialFilePath();
 
 }
