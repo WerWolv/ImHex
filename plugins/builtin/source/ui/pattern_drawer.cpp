@@ -203,8 +203,12 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable) {
         if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            auto shouldReset = false;
             if (ImGui::IconButton(ICON_VS_EYE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(ImGui::GetTextLineHeightWithSpacing(), ImGui::GetTextLineHeight()))) {
+                auto oldPattern = this->m_currVisualizedPattern;
                 this->m_currVisualizedPattern = &pattern;
+                if(this->m_currVisualizedPattern != oldPattern)
+                    shouldReset = true;
                 this->m_lastVisualizerError.clear();
 
                 ImGui::OpenPopup("Visualizer");
@@ -215,7 +219,7 @@ namespace hex::plugin::builtin::ui {
 
             if (ImGui::BeginPopup("Visualizer")) {
                 if (this->m_currVisualizedPattern == &pattern) {
-                    drawVisualizer(arguments, pattern, iteratable, !this->m_visualizedPatterns.contains(&pattern));
+                    drawVisualizer(arguments, pattern, iteratable, !this->m_visualizedPatterns.contains(&pattern) || shouldReset);
                     this->m_visualizedPatterns.insert(&pattern);
                 }
 
