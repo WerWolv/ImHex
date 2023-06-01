@@ -2,6 +2,7 @@ project(main)
 
 add_executable(main ${APPLICATION_TYPE}
     source/main.cpp
+    source/crash_handlers.cpp
 
     source/window/window.cpp
     source/window/win_window.cpp
