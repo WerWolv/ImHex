@@ -12,7 +12,7 @@ add_library(imgui OBJECT
         source/imgui.cpp
         source/imgui_demo.cpp
         source/imgui_draw.cpp
-        source/imgui_freetype.cpp
+        include/misc/freetype/imgui_freetype.cpp # TODO move source and includes in the same directory
         source/imgui_impl_glfw.cpp
         source/imgui_impl_opengl3.cpp
         source/imgui_tables.cpp
