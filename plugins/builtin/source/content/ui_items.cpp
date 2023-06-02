@@ -239,10 +239,39 @@ namespace hex::plugin::builtin {
 
                         bool open = true;
                         ImGui::PushID(tabProvider);
-                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, tabProvider->isDirty() ? ImGuiTabItemFlags_UnsavedDocument : ImGuiTabItemFlags_None)) {
+                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, ImGuiTabItemFlags_NoTooltip | (tabProvider->isDirty() ? ImGuiTabItemFlags_UnsavedDocument : ImGuiTabItemFlags_None))) {
                             ImHexApi::Provider::setCurrentProvider(i);
                             ImGui::EndTabItem();
                         }
+
+                        if (ImGui::IsItemHovered()) {
+                            ImGui::BeginTooltip();
+
+                            ImGui::TextFormatted("{}", tabProvider->getName().c_str());
+
+                            if (ImGui::GetIO().KeyShift) {
+                                ImGui::Separator();
+
+                                if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
+                                    ImGui::TableSetupColumn("type");
+                                    ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+
+                                    ImGui::TableNextRow();
+
+                                    for (auto &[name, value] : provider->getDataDescription()) {
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextFormatted("{}", name);
+                                        ImGui::TableNextColumn();
+                                        ImGui::TextFormattedWrapped("{}", value);
+                                    }
+
+                                    ImGui::EndTable();
+                                }
+                            }
+
+                            ImGui::EndTooltip();
+                        }
+
                         ImGui::PopID();
 
                         if (!open) {
