@@ -21,7 +21,7 @@ namespace hex {
 
         PerProvider(T data) : m_data({ { ImHexApi::Provider::get(), std::move(data) } }) { this->onCreate(); }
 
-        ~PerProvider() = default;
+        ~PerProvider() { this->onDestroy(); }
 
         T* operator->() {
             return &this->get();
@@ -58,17 +58,23 @@ namespace hex {
 
     private:
         void onCreate() {
-            (void)EventManager::subscribe<EventProviderOpened>([this](prv::Provider *provider) {
+            EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
                 this->m_data.emplace(provider, T());
             });
 
-            (void)EventManager::subscribe<EventProviderDeleted>([this](prv::Provider *provider){
+            EventManager::subscribe<EventProviderDeleted>(this, [this](prv::Provider *provider){
                 this->m_data.erase(provider);
             });
 
-            EventManager::subscribe<EventImHexClosing>([this] {
+            EventManager::subscribe<EventImHexClosing>(this, [this] {
                 this->m_data.clear();
             });
+        }
+
+        void onDestroy() {
+            EventManager::unsubscribe<EventProviderOpened>(this);
+            EventManager::unsubscribe<EventProviderDeleted>(this);
+            EventManager::unsubscribe<EventImHexClosing>(this);
         }
 
     private:
