@@ -480,7 +480,7 @@ namespace hex::plugin::builtin {
                 editor.setProvider(dataProvider.get());
             }
 
-            if (ImGui::BeginChild("##editor", scaled(ImVec2(600, 400)))) {
+            if (ImGui::BeginChild("##editor", scaled(ImVec2(600, 400)), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                 editor.draw();
 
                 ImGui::EndChild();

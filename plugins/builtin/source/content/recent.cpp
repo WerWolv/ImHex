@@ -18,6 +18,7 @@
 namespace hex::plugin::builtin::recent {
 
     constexpr static auto MaxRecentEntries = 5;
+    constexpr static auto BackupFileName = "crash_backup.hexproj";
 
     static std::atomic<bool> s_recentEntriesUpdating = false;
     static std::list<RecentEntry> s_recentEntries;
@@ -57,13 +58,17 @@ namespace hex::plugin::builtin::recent {
              if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
+                auto projectFileName = ProjectFile::getPath().filename();
+                if (projectFileName == BackupFileName)
+                    return;
+
                 // The recent provider is saved to every "recent" directory
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);
                     if (!recentFile.isValid())
                         continue;
 
-                    std::string displayName = hex::format("[Project] {}", wolv::util::toUTF8String(ProjectFile::getPath().filename()));
+                    std::string displayName = hex::format("[{}] {}", "hex.builtin.common.project"_lang, wolv::util::toUTF8String(projectFileName));
 
                     nlohmann::json recentEntry {
                         {"type", "project"},
