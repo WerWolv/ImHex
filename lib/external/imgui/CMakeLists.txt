@@ -34,7 +34,7 @@ add_library(imgui OBJECT
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 target_compile_options(imgui PRIVATE -Wno-stringop-overflow)
 
-# ImGui config
+# ImGui config (check imconfig.h for more information about these definitions)
 target_compile_definitions(imgui PUBLIC IMGUI_DEFINE_MATH_OPERATORS=ON) # Use ImGui math operators for ImVec2
 target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS=ON) # disable obsolete functions
 target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_KEYIO=ON) # disable obsolete functions
