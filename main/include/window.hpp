@@ -61,7 +61,7 @@ namespace hex {
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
 
-        bool m_mouseButtonDown = false;
+        bool m_buttonDown = false;
 
         bool m_hadEvent = false;
         bool m_frameRateTemporarilyUnlocked = false;

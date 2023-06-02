@@ -170,7 +170,7 @@ namespace hex {
                     bool frameRateUnlocked =
                             ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ||
                             TaskManager::getRunningTaskCount() > 0 ||
-                            this->m_mouseButtonDown ||
+                            this->m_buttonDown ||
                             this->m_hadEvent ||
                             !this->m_pressedKeys.empty();
 
@@ -830,9 +830,9 @@ namespace hex {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
             if (action == GLFW_PRESS)
-                win->m_mouseButtonDown = true;
+                win->m_buttonDown = true;
             else if (action == GLFW_RELEASE)
-                win->m_mouseButtonDown = false;
+                win->m_buttonDown = false;
             win->processEvent();
         });
 
@@ -848,17 +848,24 @@ namespace hex {
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             hex::unused(mods);
 
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+
+            if (action == GLFW_RELEASE) {
+                win->m_buttonDown = false;
+            } else {
+                win->m_buttonDown = true;
+            }
+
             if (key == GLFW_KEY_UNKNOWN) return;
 
             auto keyName = glfwGetKeyName(key, scancode);
             if (keyName != nullptr)
                 key = std::toupper(keyName[0]);
 
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-
             if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                 win->m_pressedKeys.push_back(key);
             }
+
             win->processEvent();
         });
 
