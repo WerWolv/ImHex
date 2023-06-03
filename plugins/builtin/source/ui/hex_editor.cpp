@@ -349,7 +349,7 @@ namespace hex::plugin::builtin::ui {
             for (i32 i = 0; i < ImGui::TableGetColumnCount(); i++) {
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(ImGui::TableGetColumnName(i));
-                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + CharacterSize.y / 2);
+                ImGui::Dummy(ImVec2(0, CharacterSize.y / 2));
             }
 
             ImGui::TableNextRow();

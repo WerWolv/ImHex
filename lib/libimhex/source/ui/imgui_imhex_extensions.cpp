@@ -1,7 +1,6 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <imgui.h>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui_internal.h>
 #undef IMGUI_DEFINE_MATH_OPERATORS
 

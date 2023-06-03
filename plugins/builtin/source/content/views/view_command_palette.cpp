@@ -68,8 +68,8 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), false, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened)) {
                 for (const auto &[displayResult, matchedCommand, callback] : this->m_lastResults) {;
-                    ImGui::PushAllowKeyboardFocus(true);
-                    ON_SCOPE_EXIT { ImGui::PopAllowKeyboardFocus(); };
+                    ImGui::PushTabStop(true);
+                    ON_SCOPE_EXIT { ImGui::PopTabStop(); };
 
                     if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_DontClosePopups)) {
                         callback(matchedCommand);

@@ -232,7 +232,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
                             this->m_byteTypesDistribution.draw(
                                     ImVec2(-1, 0), 
-                                    ImPlotFlags_NoChild | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_AntiAliased,
+                                    ImPlotFlags_NoChild | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
                                     true
                             );
 
@@ -240,7 +240,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
                             this->m_chunkBasedEntropy.draw(
                                 ImVec2(-1, 0), 
-                                ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_AntiAliased,
+                                ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly,
                                 true
                             );
 
