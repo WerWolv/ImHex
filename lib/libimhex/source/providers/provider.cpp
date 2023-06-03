@@ -21,8 +21,9 @@ namespace hex::prv {
     }
 
     Provider::~Provider() {
-        for (auto &overlay : this->m_overlays)
-            this->deleteOverlay(overlay);
+        for (auto overlay : this->m_overlays)
+            delete overlay;
+        this->m_overlays.clear();
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
@@ -147,7 +148,7 @@ namespace hex::prv {
     }
 
     void Provider::deleteOverlay(Overlay *overlay) {
-        this->m_overlays.erase(std::find(this->m_overlays.begin(), this->m_overlays.end(), overlay));
+        this->m_overlays.remove(overlay);
         delete overlay;
     }
 
