@@ -62,6 +62,11 @@ namespace hex::prv {
                 file.writeBuffer(buffer.data(), bufferSize);
             }
 
+            for (auto &[patchAddress, patch] : getPatches()) {
+                file.seek(patchAddress - this->getBaseAddress());
+                file.writeBuffer(&patch, 1);
+            }
+
             EventManager::post<EventProviderSaved>(this);
         }
     }
@@ -130,12 +135,12 @@ namespace hex::prv {
     }
 
     void Provider::applyPatches() {
+        if (!this->isWritable())
+            return;
+
         for (auto &[patchAddress, patch] : getPatches()) {
             this->writeRaw(patchAddress - this->getBaseAddress(), &patch, 1);
         }
-
-        if (!this->isWritable())
-            return;
 
         this->markDirty();
 

@@ -116,7 +116,6 @@ namespace hex::plugin::builtin {
 
     void FileProvider::remove(u64 offset, size_t size) {
         auto oldSize = this->getActualSize();
-        this->resize(oldSize + size);
 
         std::vector<u8> buffer(0x1000);
 
@@ -230,7 +229,7 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::close() {
-
+        this->m_file.unmap();
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
