@@ -34,13 +34,7 @@ add_library(imgui OBJECT
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 target_compile_options(imgui PRIVATE -Wno-stringop-overflow)
 
-# ImGui config (check imconfig.h for more information about these definitions)
-target_compile_definitions(imgui PUBLIC IMGUI_DEFINE_MATH_OPERATORS=ON) # Use ImGui math operators for ImVec2
-target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS=ON) # disable obsolete functions
-target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_KEYIO=ON) # disable obsolete functions
-target_compile_definitions(imgui PUBLIC IMGUI_ENABLE_FREETYPE=ON)
-target_compile_definitions(imgui PUBLIC "ImDrawIdx=unsigned int") # Use 32-bit vertex indices
-target_compile_definitions(imgui PUBLIC IMGUI_DEBUG_TOOL_ITEM_PICKER_EX=ON)
+target_compile_definitions(imgui PUBLIC IMGUI_USER_CONFIG="myconfig.h")
 
 target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
 target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
