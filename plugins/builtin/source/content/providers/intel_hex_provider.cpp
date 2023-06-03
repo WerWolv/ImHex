@@ -259,7 +259,7 @@ namespace hex::plugin::builtin {
 
         decltype(this->m_data)::Interval closestInterval = { 0, 0 };
         for (const auto &[interval, data] : intervals) {
-            if (interval.start < closestInterval.end)
+            if (interval.start <= closestInterval.end)
                 closestInterval = interval;
         }
         return { Region { closestInterval.start, (closestInterval.end - closestInterval.start) + 1}, true };
