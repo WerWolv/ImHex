@@ -333,7 +333,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.project", "hex.builtin.menu.file.project.save_as" }, 1500,
                                                 ALT + SHIFT + Keys::S,
-                                                saveProjectAs, [&] { return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isWritable(); });
+                                                saveProjectAs, noRunningTaskAndValidProvider);
 
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 2000);
