@@ -249,7 +249,8 @@ namespace hex::plugin::builtin {
 
                             ImGui::TextFormatted("{}", tabProvider->getName().c_str());
 
-                            if (ImGui::GetIO().KeyShift) {
+                            const auto &description = provider->getDataDescription();
+                            if (ImGui::GetIO().KeyShift && !description.empty()) {
                                 ImGui::Separator();
 
                                 if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
@@ -258,7 +259,7 @@ namespace hex::plugin::builtin {
 
                                     ImGui::TableNextRow();
 
-                                    for (auto &[name, value] : provider->getDataDescription()) {
+                                    for (auto &[name, value] : description) {
                                         ImGui::TableNextColumn();
                                         ImGui::TextFormatted("{}", name);
                                         ImGui::TableNextColumn();
