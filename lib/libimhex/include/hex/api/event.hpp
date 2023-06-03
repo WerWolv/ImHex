@@ -155,6 +155,12 @@ namespace hex {
     };
 
     /* Default Events */
+    
+    /**
+     * @brief Called when Imhex finished startup, and will enter the main window rendering loop
+     */
+    EVENT_DEF(EventImHexStartupFinished);
+
     EVENT_DEF(EventFileLoaded, std::fs::path);
     EVENT_DEF(EventDataChanged);
     EVENT_DEF(EventHighlightingChanged);

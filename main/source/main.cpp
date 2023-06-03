@@ -3,8 +3,10 @@
 #include <hex/helpers/logger.hpp>
 
 #include "window.hpp"
+#include "crash_handlers.hpp"
 
 #include "init/splash_window.hpp"
+#include "init/tasks.hpp"
 #include "init/tasks.hpp"
 
 #include <hex/api/task.hpp>
@@ -15,6 +17,7 @@
 
 int main(int argc, char **argv, char **envp) {
     using namespace hex;
+    hex::crash::setupCrashHandlers();
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
 
     // Check if ImHex is installed in portable mode
@@ -79,6 +82,8 @@ int main(int argc, char **argv, char **envp) {
             }
 
             // Render the main window
+
+            EventManager::post<EventImHexStartupFinished>();
             window.loop();
         }
 

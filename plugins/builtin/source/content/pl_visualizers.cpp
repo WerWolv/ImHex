@@ -22,6 +22,9 @@
 #include <numeric>
 
 #include <content/helpers/diagrams.hpp>
+#include <ui/hex_editor.hpp>
+
+#include <content/providers/memory_file_provider.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -446,18 +449,41 @@ namespace hex::plugin::builtin {
         }
 
         void drawChunkBasedEntropyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-            // variable used to store the result to avoid having to recalculate the result at each frame 
-            static DiagramChunkBasedEntropyAnalysis analyzer;  
+            // variable used to store the result to avoid having to recalculate the result at each frame
+            static DiagramChunkBasedEntropyAnalysis analyzer;
 
-            // compute data    
+            // compute data
             if (shouldReset) {
                 auto pattern   = arguments[0].toPattern();
                 auto chunkSize = arguments[1].toUnsigned();
-                analyzer.process(pattern->getBytes(), chunkSize); 
+                analyzer.process(pattern->getBytes(), chunkSize);
             }
-            
+
             // show results
-            analyzer.draw(ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly); 
+            analyzer.draw(ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly);
+        }
+
+        void drawHexVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
+            static ui::HexEditor editor;
+            static std::unique_ptr<MemoryFileProvider> dataProvider;
+
+            if (shouldReset) {
+                auto pattern = arguments[0].toPattern();
+                auto data = pattern->getBytes();
+
+                dataProvider = std::make_unique<MemoryFileProvider>();
+                dataProvider->resize(data.size());
+                dataProvider->writeRaw(0x00, data.data(), data.size());
+                dataProvider->setReadOnly(true);
+
+                editor.setProvider(dataProvider.get());
+            }
+
+            if (ImGui::BeginChild("##editor", scaled(ImVec2(600, 400)), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                editor.draw();
+
+                ImGui::EndChild();
+            }
         }
 
     }
@@ -471,6 +497,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguage::addVisualizer("3d", draw3DVisualizer, 2);
         ContentRegistry::PatternLanguage::addVisualizer("sound", drawSoundVisualizer, 3);
         ContentRegistry::PatternLanguage::addVisualizer("chunk_entropy", drawChunkBasedEntropyVisualizer, 2);
+        ContentRegistry::PatternLanguage::addVisualizer("hex_viewer", drawHexVisualizer, 1);
     }
 
 }

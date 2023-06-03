@@ -14,6 +14,8 @@ struct ImGuiSettingsHandler;
 
 namespace hex {
 
+    std::fs::path getImGuiSettingsPath();
+
     void nativeErrorMessage(const std::string &message);
 
     class Window {
@@ -59,9 +61,7 @@ namespace hex {
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
 
-        std::fs::path m_imguiSettingsPath;
-
-        bool m_mouseButtonDown = false;
+        bool m_buttonDown = false;
 
         bool m_hadEvent = false;
         bool m_frameRateTemporarilyUnlocked = false;

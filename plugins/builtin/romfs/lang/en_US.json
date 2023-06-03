@@ -49,6 +49,7 @@
         "hex.builtin.common.open": "Open",
         "hex.builtin.common.percentage": "Percentage",
         "hex.builtin.common.processing": "Processing",
+        "hex.builtin.common.project": "Project",
         "hex.builtin.common.question": "Question",
         "hex.builtin.common.range": "Range",
         "hex.builtin.common.range.entire_data": "Entire Data",
