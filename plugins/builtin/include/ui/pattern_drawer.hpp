@@ -49,21 +49,22 @@ namespace hex::plugin::builtin::ui {
         constexpr static auto ChunkSize = 512;
         constexpr static auto DisplayEndStep = 64;
 
-        void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable, bool isInlined);
+        void drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iterable, bool isInlined);
         u64& getDisplayEnd(const pl::ptrn::Pattern& pattern);
         void makeSelectable(const pl::ptrn::Pattern &pattern);
 
-        void drawVisualizerButton(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable);
-        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iteratable, bool reset);
+        void drawValueColumn(pl::ptrn::Pattern& pattern);
+        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset);
+        void drawFavoriteColumn(const pl::ptrn::Pattern& pattern);
 
-        void createLeafNode(const pl::ptrn::Pattern& pattern);
-        bool createTreeNode(const pl::ptrn::Pattern& pattern);
+        bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);
         void createDefaultEntry(pl::ptrn::Pattern &pattern);
         void closeTreeNode(bool inlined);
 
         bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
         void resetEditing();
-        bool matchesFilter(const std::vector<std::string> &filterPath);
+        bool matchesFilter(const std::vector<std::string> &filterPath, bool fullMatch);
+        void traversePatternTree(pl::ptrn::Pattern &pattern, const std::function<void(pl::ptrn::Pattern&)> &callback);
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
@@ -80,7 +81,11 @@ namespace hex::plugin::builtin::ui {
 
         std::string m_filterText;
         std::vector<std::string> m_filter;
-        std::vector<pl::ptrn::Pattern*> m_currPatternPath;
+        std::vector<std::string> m_currPatternPath;
+        std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
+        bool m_showFavoriteStars = false;
+        bool m_favoritesUpdated = false;
+
         std::function<void(Region)> m_selectionCallback = [](Region) { };
     };
 }
