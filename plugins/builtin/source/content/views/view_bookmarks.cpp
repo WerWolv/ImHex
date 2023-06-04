@@ -177,8 +177,8 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
             auto provider = ImHexApi::Provider::get();
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, this->m_currFilter);
+            ImGui::PushItemWidth(-1);
+            ImGui::InputTextIcon("##filter", ICON_VS_FILTER, this->m_currFilter);
             ImGui::PopItemWidth();
 
             ImGui::NewLine();

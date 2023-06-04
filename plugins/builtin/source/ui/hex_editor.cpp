@@ -434,7 +434,7 @@ namespace hex::plugin::builtin::ui {
                                 }
 
                                 if (y == u64(clipper.DisplayStart))
-                                    cellSize.y -= (ImGui::GetStyle().CellPadding.y + 1);
+                                    cellSize.y -= (ImGui::GetStyle().CellPadding.y);
 
                                 backgroundColor = applySelectionColor(byteAddress, backgroundColor);
 

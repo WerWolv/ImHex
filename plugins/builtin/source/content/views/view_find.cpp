@@ -821,9 +821,9 @@ namespace hex::plugin::builtin {
 
             auto &currOccurrences = *this->m_sortedOccurrences;
 
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::PushItemWidth(-1);
             auto prevFilterLength = this->m_currFilter->length();
-            if (ImGui::InputTextWithHint("##filter", "hex.builtin.common.filter"_lang, *this->m_currFilter)) {
+            if (ImGui::InputTextIcon("##filter", ICON_VS_FILTER, *this->m_currFilter)) {
                 if (prevFilterLength > this->m_currFilter->length())
                     *this->m_sortedOccurrences = *this->m_foundOccurrences;
 

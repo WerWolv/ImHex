@@ -211,12 +211,12 @@ namespace hex::plugin::builtin::ui {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
             if (this->m_favorites.contains(this->m_currPatternPath)) {
-                if (ImGui::DimmedIconButton(ICON_FA_STAR, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram))) {
+                if (ImGui::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram))) {
                     this->m_favorites.erase(this->m_currPatternPath);
                 }
             }
             else {
-                if (ImGui::DimmedIconButton(ICON_FA_STAR, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled))) {
+                if (ImGui::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled))) {
                     this->m_favorites.insert({ this->m_currPatternPath, pattern.clone() });
                 }
             }
@@ -253,12 +253,13 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
-        auto value = pattern.getFormattedValue();
+        const auto value = pattern.getFormattedValue();
 
+        const auto width = ImGui::GetColumnWidth();
         if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
-            if (ImGui::Button(hex::format("{}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()))) {
+            if (ImGui::Button(hex::format("{}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 this->m_currVisualizedPattern = &pattern;
                 this->m_lastVisualizerError.clear();
 
@@ -281,7 +282,7 @@ namespace hex::plugin::builtin::ui {
         }
 
         if (ImGui::IsItemHovered()) {
-            if (ImGui::CalcTextSize(value.c_str()).x > ImGui::GetColumnWidth()) {
+            if (ImGui::CalcTextSize(value.c_str()).x > width) {
                 ImGui::BeginTooltip();
                 ImGui::TextFormatted("{}", value);
                 ImGui::EndTooltip();
