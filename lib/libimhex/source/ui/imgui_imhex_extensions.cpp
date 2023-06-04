@@ -645,7 +645,7 @@ namespace ImGui {
 
         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
 
-        bool value_changed = ImGui::InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth() - frame_size.x, label_size.y + style.FramePadding.y * 2.0f), ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
+        bool value_changed = ImGui::InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0f), ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);

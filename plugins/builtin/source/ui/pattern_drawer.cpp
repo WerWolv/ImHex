@@ -164,6 +164,28 @@ namespace hex::plugin::builtin::ui {
             }
         }
 
+        std::vector<std::string> parseRValueFilter(const std::string &filter) {
+            std::vector<std::string> result;
+
+            if (!filter.empty()) {
+                result.emplace_back();
+                for (char c : filter) {
+                    if (c == '.')
+                        result.emplace_back();
+                    else if (c == '[') {
+                        result.emplace_back();
+                        result.back() += c;
+                    } else if (c == ']') {
+                        result.back() += c;
+                        result.emplace_back();
+                    } else
+                        result.back() += c;
+                }
+            }
+
+            return result;
+        }
+
     }
 
     bool PatternDrawer::isEditingPattern(const pl::ptrn::Pattern& pattern) const {
@@ -173,6 +195,20 @@ namespace hex::plugin::builtin::ui {
     void PatternDrawer::resetEditing() {
         this->m_editingPattern = nullptr;
         this->m_editingPatternOffset = 0x00;
+    }
+
+    bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath) {
+        if (this->m_currPatternPath.size() <= filterPath.size()) {
+            for (ssize_t i = this->m_currPatternPath.size() - 1; i >= 0; i--) {
+                const auto &filter = filterPath[i];
+
+                if (this->m_currPatternPath[i]->getVariableName() != filter && !filter.empty() && filter != "*") {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     void PatternDrawer::drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iteratable, bool reset) {
@@ -732,7 +768,11 @@ namespace hex::plugin::builtin::ui {
         if (pattern.getVisibility() == pl::ptrn::Visibility::Hidden)
             return;
 
-        pattern.accept(*this);
+        this->m_currPatternPath.push_back(&pattern);
+        ON_SCOPE_EXIT { this->m_currPatternPath.pop_back(); };
+
+        if (matchesFilter(this->m_filter))
+            pattern.accept(*this);
     }
 
     void PatternDrawer::drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iteratable, bool isInlined) {
@@ -932,6 +972,12 @@ namespace hex::plugin::builtin::ui {
             this->resetEditing();
         }
 
+        ImGui::PushItemWidth(-1);
+        if (ImGui::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
+            this->m_filter = parseRValueFilter(this->m_filterText);
+        }
+        ImGui::PopItemWidth();
+
         if (beginPatternTable(patterns, this->m_sortedPatterns, height)) {
             ImGui::TableHeadersRow();
 
@@ -955,5 +1001,6 @@ namespace hex::plugin::builtin::ui {
         this->m_currVisualizedPattern = nullptr;
         this->m_sortedPatterns.clear();
         this->m_lastVisualizerError.clear();
+        this->m_currPatternPath.clear();
     }
 }

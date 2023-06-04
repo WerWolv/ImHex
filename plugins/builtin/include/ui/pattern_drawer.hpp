@@ -63,6 +63,7 @@ namespace hex::plugin::builtin::ui {
 
         bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
         void resetEditing();
+        bool matchesFilter(const std::vector<std::string> &filterPath);
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
@@ -77,6 +78,9 @@ namespace hex::plugin::builtin::ui {
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
         std::string m_lastVisualizerError;
 
+        std::string m_filterText;
+        std::vector<std::string> m_filter;
+        std::vector<pl::ptrn::Pattern*> m_currPatternPath;
         std::function<void(Region)> m_selectionCallback = [](Region) { };
     };
 }
