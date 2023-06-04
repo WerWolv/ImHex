@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
             else
                 return hex::format("{} View", this->m_provider->getName());
         }
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override {
+        [[nodiscard]] std::vector<Description> getDataDescription() const override {
             if (this->m_provider == nullptr)
                 return { };
 

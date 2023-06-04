@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
         void save() override;
 
         [[nodiscard]] std::string getName() const override { return LangEntry("hex.builtin.provider.mem_file.unsaved"); }
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override { return { }; }
+        [[nodiscard]] std::vector<Description> getDataDescription() const override { return { }; }
 
         [[nodiscard]] std::string getTypeName() const override {
             return "hex.builtin.provider.mem_file";

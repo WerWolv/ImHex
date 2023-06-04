@@ -21,6 +21,16 @@ namespace hex::prv {
      */
     class Provider {
     public:
+        struct Description {
+            std::string name;
+            std::string value;
+        };
+
+        struct MenuEntry {
+            std::string name;
+            std::function<void()> callback;
+        };
+
         constexpr static size_t MaxPageSize = 0x1000'0000;
 
         Provider();
@@ -96,7 +106,7 @@ namespace hex::prv {
         [[nodiscard]] virtual std::optional<u32> getPageOfAddress(u64 address) const;
 
         [[nodiscard]] virtual std::string getName() const                                                 = 0;
-        [[nodiscard]] virtual std::vector<std::pair<std::string, std::string>> getDataDescription() const = 0;
+        [[nodiscard]] virtual std::vector<Description> getDataDescription() const = 0;
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
 
         /**
@@ -121,7 +131,7 @@ namespace hex::prv {
         [[nodiscard]] virtual bool hasFilePicker() const;
         virtual bool handleFilePicker();
 
-        virtual std::vector<std::pair<std::string, std::function<void()>>> getMenuEntries() {
+        virtual std::vector<MenuEntry> getMenuEntries() {
             return { };
         };
 

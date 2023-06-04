@@ -50,7 +50,6 @@ namespace hex::plugin::builtin {
                     // Attach the newly created window to the cursor, so it gets dragged around
                     GImGui->MovingWindow = ImGui::GetCurrentWindow();
                     GImGui->ActiveId = GImGui->MovingWindow->MoveId;
-                    ImGui::DockContextQueueUndockWindow(GImGui, GImGui->MovingWindow);
                 }
             }
             ImGui::End();

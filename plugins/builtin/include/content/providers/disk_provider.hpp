@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
         void close() override;
 
         [[nodiscard]] std::string getName() const override;
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override;
+        [[nodiscard]] std::vector<Description> getDataDescription() const override;
 
         [[nodiscard]] bool hasLoadInterface() const override { return true; }
         bool drawLoadInterface() override;

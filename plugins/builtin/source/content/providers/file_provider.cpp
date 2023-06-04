@@ -144,8 +144,8 @@ namespace hex::plugin::builtin {
         return wolv::util::toUTF8String(this->m_path.filename());
     }
 
-    std::vector<std::pair<std::string, std::string>> FileProvider::getDataDescription() const {
-        std::vector<std::pair<std::string, std::string>> result;
+    std::vector<FileProvider::Description> FileProvider::getDataDescription() const {
+        std::vector<Description> result;
 
         result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(this->m_path));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
@@ -184,7 +184,7 @@ namespace hex::plugin::builtin {
         });
     }
 
-    std::vector<std::pair<std::string, std::function<void()>>> FileProvider::getMenuEntries(){
+    std::vector<FileProvider::MenuEntry> FileProvider::getMenuEntries(){
         return {
             {"hex.builtin.provider.file.menu.open_folder"_lang, [path = this->m_path] {
                 fs::openFolderWithSelectionExternal(path);

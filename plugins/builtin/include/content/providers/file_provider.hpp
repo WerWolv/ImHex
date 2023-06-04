@@ -36,13 +36,13 @@ namespace hex::plugin::builtin {
         void saveAs(const std::fs::path &path) override;
 
         [[nodiscard]] std::string getName() const override;
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override;
+        [[nodiscard]] std::vector<Description> getDataDescription() const override;
         std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument) override;
 
         [[nodiscard]] bool hasFilePicker() const override { return true; }
         [[nodiscard]] bool handleFilePicker() override;
 
-        std::vector<std::pair<std::string, std::function<void()>>> getMenuEntries() override;
+        std::vector<MenuEntry> getMenuEntries() override;
 
         void setPath(const std::fs::path &path);
 

@@ -270,7 +270,7 @@ namespace hex::plugin::builtin {
         return wolv::util::toUTF8String(this->m_path);
     }
 
-    std::vector<std::pair<std::string, std::string>> DiskProvider::getDataDescription() const {
+    std::vector<DiskProvider::Description> DiskProvider::getDataDescription() const {
         return {
             { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(this->m_path)       },
             { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(this->m_diskSize)    },

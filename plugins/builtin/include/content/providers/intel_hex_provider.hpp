@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
         void close() override;
 
         [[nodiscard]] std::string getName() const override;
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override { return { }; }
+        [[nodiscard]] std::vector<Description> getDataDescription() const override;
 
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;

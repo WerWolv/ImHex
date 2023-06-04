@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
         void save() override;
 
         [[nodiscard]] std::string getName() const override;
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override;
+        [[nodiscard]] std::vector<Description> getDataDescription() const override;
 
         [[nodiscard]] bool open() override;
         void close() override;

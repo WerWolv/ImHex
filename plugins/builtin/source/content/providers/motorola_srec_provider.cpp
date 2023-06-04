@@ -202,6 +202,16 @@ namespace hex::plugin::builtin {
         return hex::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
+
+    [[nodiscard]] std::vector<MotorolaSRECProvider::Description> MotorolaSRECProvider::getDataDescription() const {
+        std::vector<Description> result;
+
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(this->m_sourceFilePath));
+        result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
+
+        return result;
+    }
+
     bool MotorolaSRECProvider::handleFilePicker() {
         auto picked = fs::openFileBrowser(fs::DialogMode::Open, {
                 { "Motorola SREC File", "s19" },

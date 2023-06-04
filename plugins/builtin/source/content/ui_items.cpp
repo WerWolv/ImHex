@@ -286,9 +286,9 @@ namespace hex::plugin::builtin {
                         }
 
                         if (ImGui::BeginPopup(popupID.c_str())) {
-                            for (auto p : tabProvider->getMenuEntries()) {
-                                if (ImGui::MenuItem(p.first.c_str())) {
-                                    p.second();
+                            for (const auto &menuEntry : tabProvider->getMenuEntries()) {
+                                if (ImGui::MenuItem(menuEntry.name.c_str())) {
+                                    menuEntry.callback();
                                 }
                             }
                             ImGui::EndPopup();

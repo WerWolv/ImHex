@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
         return hex::format("hex.builtin.provider.gdb.name"_lang, address, port);
     }
 
-    std::vector<std::pair<std::string, std::string>> GDBProvider::getDataDescription() const {
+    std::vector<GDBProvider::Description> GDBProvider::getDataDescription() const {
         return {
             {"hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", this->m_ipAddress, this->m_port)},
         };

@@ -224,6 +224,15 @@ namespace hex::plugin::builtin {
         return hex::format("hex.builtin.provider.intel_hex.name"_lang, wolv::util::toUTF8String(this->m_sourceFilePath.filename()));
     }
 
+    [[nodiscard]] std::vector<IntelHexProvider::Description> IntelHexProvider::getDataDescription() const {
+        std::vector<Description> result;
+
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(this->m_sourceFilePath));
+        result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
+
+        return result;
+    }
+
     bool IntelHexProvider::handleFilePicker() {
         auto picked = fs::openFileBrowser(fs::DialogMode::Open, {
                 { "Intel Hex File", "hex" },

@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] size_t getActualSize() const override { return 0x00; }
 
         [[nodiscard]] std::string getName() const override { return "None"; }
-        [[nodiscard]] std::vector<std::pair<std::string, std::string>> getDataDescription() const override { return { }; }
+        [[nodiscard]] std::vector<Description> getDataDescription() const override { return { }; }
 
         void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
