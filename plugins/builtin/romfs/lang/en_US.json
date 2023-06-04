@@ -361,6 +361,7 @@
         "hex.builtin.nodes.visualizer.layered_dist.header": "Layered Distribution",
         "hex.builtin.pattern_drawer.color": "Color",
         "hex.builtin.pattern_drawer.double_click": "Double-click to see more items",
+        "hex.builtin.pattern_drawer.favorites": "Favorites",
         "hex.builtin.pattern_drawer.local": "Local",
         "hex.builtin.pattern_drawer.offset": "Offset",
         "hex.builtin.pattern_drawer.size": "Size",

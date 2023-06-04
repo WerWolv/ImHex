@@ -1039,7 +1039,7 @@ namespace hex::plugin::builtin::ui {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
                 ImGui::PushID(1);
-                if (ImGui::TreeNodeEx("Favorites", ImGuiTreeNodeFlags_SpanFullWidth)) {
+                if (ImGui::TreeNodeEx("hex.builtin.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
                     for (auto &[path, pattern] : this->m_favorites) {
                         ImGui::PushID(pattern->getDisplayName().c_str());
                         this->draw(*pattern);
