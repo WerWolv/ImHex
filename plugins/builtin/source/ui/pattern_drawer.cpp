@@ -167,11 +167,9 @@ namespace hex::plugin::builtin::ui {
                     else if (c == '[') {
                         result.emplace_back();
                         result.back() += c;
-                    } else if (c == ']') {
+                    } else {
                         result.back() += c;
-                        result.emplace_back();
-                    } else
-                        result.back() += c;
+                    }
                 }
             }
 
