@@ -177,9 +177,11 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
                 for (auto &path : fs::getDefaultPaths(type, true)){
-                    if(wolv::io::fs::isDirectory(path)){
-                        ImGui::TextUnformatted(wolv::util::toUTF8String(path).c_str());
-                    }else{
+                    if (wolv::io::fs::isDirectory(path)){
+                        if (ImGui::Hyperlink(wolv::util::toUTF8String(path).c_str())) {
+                            fs::openFolderExternal(path);
+                        }
+                    } else {
                         ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path).c_str());
                     }
                 }
