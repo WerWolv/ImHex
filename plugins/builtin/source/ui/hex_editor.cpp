@@ -555,9 +555,11 @@ namespace hex::plugin::builtin::ui {
                                             this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
                                         }
 
-                                        auto startPos = ImGui::GetCursorPosX();
+                                        auto startPos = ImGui::GetCursorPos();
                                         ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
-                                        ImGui::SetCursorPosX(startPos + cellSize.x);
+                                        ImGui::SetCursorPosX(startPos.x + cellSize.x);
+                                        ImGui::SameLine(0, 0);
+                                        ImGui::Dummy({ 0, 0 });
 
                                         this->handleSelection(address, data.advance, &bytes[address % this->m_bytesPerRow], cellHovered);
                                     }
@@ -787,9 +789,11 @@ namespace hex::plugin::builtin::ui {
                             pushed = true;
                         }
 
+                        ImGui::BeginDisabled(!this->m_currCustomEncoding.has_value());
                         if (ImGui::DimmedIconButton(ICON_VS_WHITESPACE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                             this->m_showCustomEncoding = !this->m_showCustomEncoding;
                         }
+                        ImGui::EndDisabled();
 
                         if (pushed)
                             ImGui::PopStyleColor();
