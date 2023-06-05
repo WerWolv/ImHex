@@ -105,6 +105,8 @@ namespace hex::plugin::builtin {
 
     class PopupSelect : public ViewHexEditor::Popup {
     public:
+        
+        PopupSelect(u64 address, size_t size): m_region({address, size}) {}
 
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.select"_lang);
@@ -1017,7 +1019,8 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.select" }, 1650,
                                                 CTRLCMD + SHIFT + Keys::A,
                                                 [this] {
-                                                    this->openPopup<PopupSelect>();
+                                                    auto selection = ImHexApi::HexEditor::getSelection();
+                                                    this->openPopup<PopupSelect>(selection->getStartAddress(), selection->getSize());
                                                 },
                                                 ImHexApi::Provider::isValid);
 
