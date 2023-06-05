@@ -71,6 +71,8 @@ namespace hex::plugin::builtin::ui {
     /* Hex Editor */
 
     HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
+        this->m_currDataVisualizer = ContentRegistry::HexEditor::impl::getVisualizers()["hex.builtin.visualizer.hexadecimal.8bit"];
+
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             {
                 this->m_bytesPerRow = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", 16);
