@@ -220,6 +220,7 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
             ImGuiListClipper clipper;
 
+            std::scoped_lock lock(this->m_logMutex);
             clipper.Begin(console.size());
 
             while (clipper.Step())
@@ -512,8 +513,6 @@ namespace hex::plugin::builtin {
         }
 
         if (!this->m_lastEvaluationProcessed) {
-            *this->m_console = this->m_lastEvaluationLog;
-
             if (!this->m_lastEvaluationResult) {
                 if (this->m_lastEvaluationError->has_value()) {
                     TextEditor::ErrorMarkers errorMarkers = {
@@ -689,8 +688,12 @@ namespace hex::plugin::builtin {
                 return this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;
             });
 
+            runtime.setLogCallback([this](auto level, auto message) {
+                std::scoped_lock lock(this->m_logMutex);
+                this->m_console->emplace_back(level, message);
+            });
+
             ON_SCOPE_EXIT {
-                *this->m_lastEvaluationLog     = runtime.getConsoleLog();
                 *this->m_lastEvaluationOutVars = runtime.getOutVariables();
                 *this->m_sections              = runtime.getSections();
 
@@ -698,7 +701,8 @@ namespace hex::plugin::builtin {
 
                 this->m_lastEvaluationProcessed = false;
 
-                this->m_lastEvaluationLog->emplace_back(
+                std::scoped_lock lock(this->m_logMutex);
+                this->m_console->emplace_back(
                    pl::core::LogConsole::Level::Info,
                    hex::format("Evaluation took {}", runtime.getLastRunningTime())
                 );

@@ -155,8 +155,9 @@ namespace hex::plugin::builtin {
         PerProvider<std::vector<std::pair<pl::core::LogConsole::Level, std::string>>> m_console;
         PerProvider<bool> m_executionDone = true;
 
+        std::mutex m_logMutex;
+
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
-        PerProvider<std::vector<std::pair<pl::core::LogConsole::Level, std::string>>> m_lastEvaluationLog;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
