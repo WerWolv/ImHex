@@ -253,7 +253,7 @@ namespace hex::plugin::builtin {
                             if (ImGui::GetIO().KeyShift && !description.empty()) {
                                 ImGui::Separator();
 
-                                if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
+                                if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
                                     ImGui::TableSetupColumn("type");
                                     ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
