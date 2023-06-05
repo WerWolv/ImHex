@@ -95,7 +95,7 @@ namespace ImGui {
     void Header(const char *label, bool firstEntry = false);
     void HeaderColored(const char *label, ImColor color, bool firstEntry);
 
-    void InfoTooltip(const char *text);
+    bool InfoTooltip(const char *text = "");
 
     bool TitleBarButton(const char *label, ImVec2 size_arg);
     bool ToolBarButton(const char *symbol, ImVec4 color);

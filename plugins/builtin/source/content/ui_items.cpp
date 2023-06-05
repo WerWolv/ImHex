@@ -244,7 +244,7 @@ namespace hex::plugin::builtin {
                             ImGui::EndTabItem();
                         }
 
-                        if (ImGui::IsItemHovered()) {
+                        if (ImGui::InfoTooltip()) {
                             ImGui::BeginTooltip();
 
                             ImGui::TextFormatted("{}", tabProvider->getName().c_str());

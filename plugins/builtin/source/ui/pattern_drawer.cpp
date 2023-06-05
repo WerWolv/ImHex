@@ -89,12 +89,8 @@ namespace hex::plugin::builtin::ui {
 
                 ImGui::TextFormatted("{}", name);
 
-                if (ImGui::IsItemHovered()) {
-                    if (ImGui::CalcTextSize(name.c_str()).x > ImGui::GetColumnWidth()) {
-                        ImGui::BeginTooltip();
-                        ImGui::TextFormatted(name);
-                        ImGui::EndTooltip();
-                    }
+                if (ImGui::CalcTextSize(name.c_str()).x > ImGui::GetColumnWidth()) {
+                    ImGui::InfoTooltip(name.c_str());
                 }
 
             });
@@ -147,12 +143,8 @@ namespace hex::plugin::builtin::ui {
         }
 
         void drawCommentTooltip(const pl::ptrn::Pattern &pattern) {
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem)) {
-                if (auto comment = pattern.getComment(); !comment.empty()) {
-                    ImGui::BeginTooltip();
-                    ImGui::TextUnformatted(pattern.getComment().c_str());
-                    ImGui::EndTooltip();
-                }
+            if (auto comment = pattern.getComment(); !comment.empty()) {
+                ImGui::InfoTooltip(comment.c_str());
             }
         }
 
@@ -281,12 +273,8 @@ namespace hex::plugin::builtin::ui {
             ImGui::TextFormatted("{}", value);
         }
 
-        if (ImGui::IsItemHovered()) {
-            if (ImGui::CalcTextSize(value.c_str()).x > width) {
-                ImGui::BeginTooltip();
-                ImGui::TextFormatted("{}", value);
-                ImGui::EndTooltip();
-            }
+        if (ImGui::CalcTextSize(value.c_str()).x > width) {
+            ImGui::InfoTooltip(value.c_str());
         }
     }
 
@@ -1001,15 +989,40 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height) {
+        const auto treeStyleButton = [this](auto icon, TreeStyle style, const char *tooltip) {
+            bool pushed = false;
+
+            if (this->m_treeStyle == style) {
+                ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                pushed = true;
+            }
+
+            if (ImGui::DimmedIconButton(icon, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                this->m_treeStyle = style;
+
+            if (pushed)
+                ImGui::PopStyleColor();
+
+            ImGui::InfoTooltip(tooltip);
+        };
+
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered()) {
             this->resetEditing();
         }
 
-        ImGui::PushItemWidth(-1);
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 5.5);
         if (ImGui::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
             this->m_filter = parseRValueFilter(this->m_filterText);
         }
         ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+
+        treeStyleButton(ICON_VS_SYMBOL_KEYWORD, TreeStyle::Default,         "hex.builtin.pattern_drawer.tree_style.tree"_lang);
+        ImGui::SameLine(0, 0);
+        treeStyleButton(ICON_VS_LIST_TREE,      TreeStyle::AutoExpanded,    "hex.builtin.pattern_drawer.tree_style.auto_expanded"_lang);
+        ImGui::SameLine(0, 0);
+        treeStyleButton(ICON_VS_LIST_FLAT,      TreeStyle::Flattened,       "hex.builtin.pattern_drawer.tree_style.flattened"_lang);
 
         if (!this->m_favoritesUpdated) {
             this->m_favoritesUpdated = true;

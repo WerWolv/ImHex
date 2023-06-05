@@ -694,8 +694,10 @@ namespace hex {
 
             class DataVisualizer {
             public:
-                DataVisualizer(u16 bytesPerCell, u16 maxCharsPerCell)
-                    : m_bytesPerCell(bytesPerCell), m_maxCharsPerCell(maxCharsPerCell) {}
+                DataVisualizer(std::string unlocalizedName, u16 bytesPerCell, u16 maxCharsPerCell)
+                    : m_unlocalizedName(std::move(unlocalizedName)),
+                      m_bytesPerCell(bytesPerCell),
+                      m_maxCharsPerCell(maxCharsPerCell) { }
 
                 virtual ~DataVisualizer() = default;
 
@@ -705,12 +707,16 @@ namespace hex {
                 [[nodiscard]] u16 getBytesPerCell() const { return this->m_bytesPerCell; }
                 [[nodiscard]] u16 getMaxCharsPerCell() const { return this->m_maxCharsPerCell; }
 
+                [[nodiscard]] const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
+
             protected:
                 const static int TextInputFlags;
 
                 bool drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const;
                 bool drawDefaultTextEditingTextBox(u64 address, std::string &data, ImGuiInputTextFlags flags) const;
+
             private:
+                std::string m_unlocalizedName;
                 u16 m_bytesPerCell;
                 u16 m_maxCharsPerCell;
             };
@@ -730,8 +736,9 @@ namespace hex {
              * @param args The arguments to pass to the constructor of the data visualizer
              */
             template<std::derived_from<DataVisualizer> T, typename... Args>
-            void addDataVisualizer(const std::string &unlocalizedName, Args &&...args) {
-                return impl::addDataVisualizer(unlocalizedName, new T(std::forward<Args>(args)...));
+            void addDataVisualizer(Args &&...args) {
+                auto visualizer = new T(std::forward<Args>(args)...);
+                return impl::addDataVisualizer(visualizer->getUnlocalizedName(), visualizer);
             }
 
         }

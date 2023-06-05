@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
     template<std::integral T>
     class DataVisualizerHexadecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerHexadecimal() : DataVisualizer(ByteCount, CharCount) { }
+        DataVisualizerHexadecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
@@ -76,7 +76,7 @@ namespace hex::plugin::builtin {
 
     class DataVisualizerHexii : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerHexii() : DataVisualizer(ByteCount, CharCount) { }
+        DataVisualizerHexii() : DataVisualizer("hex.builtin.visualizer.hexii", ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
@@ -130,7 +130,7 @@ namespace hex::plugin::builtin {
     template<std::integral T>
     class DataVisualizerDecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerDecimal() : DataVisualizer(ByteCount, CharCount) { }
+        DataVisualizerDecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address, upperCase);
@@ -171,7 +171,7 @@ namespace hex::plugin::builtin {
     template<typename T>
     class DataVisualizerFloatingPoint : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerFloatingPoint() : DataVisualizer(ByteCount, CharCount) { }
+        DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
@@ -210,7 +210,7 @@ namespace hex::plugin::builtin {
     template<>
     class DataVisualizerFloatingPoint<Float16> : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerFloatingPoint() : DataVisualizer(ByteCount, CharCount) { }
+        DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
@@ -245,7 +245,7 @@ namespace hex::plugin::builtin {
 
     class DataVisualizerRGBA8 : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerRGBA8() : DataVisualizer(4, 2) { }
+        DataVisualizerRGBA8() : DataVisualizer("hex.builtin.visualizer.rgba8", 4, 2) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address, upperCase);
@@ -285,7 +285,7 @@ namespace hex::plugin::builtin {
 
     class DataVisualizerBinary : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerBinary() : DataVisualizer(1, 8) { }
+        DataVisualizerBinary() : DataVisualizer("hex.builtin.visualizer.binary", 1, 8) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool) override {
             hex::unused(address);
@@ -335,10 +335,10 @@ namespace hex::plugin::builtin {
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<float>>("hex.builtin.visualizer.floating_point.32bit");
         ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerFloatingPoint<double>>("hex.builtin.visualizer.floating_point.64bit");
 
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerRGBA8>("hex.builtin.visualizer.rgba8");
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexii>("hex.builtin.visualizer.hexii");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerRGBA8>();
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerHexii>();
 
-        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerBinary>("hex.builtin.visualizer.binary");
+        ContentRegistry::HexEditor::addDataVisualizer<DataVisualizerBinary>();
     }
 
 }

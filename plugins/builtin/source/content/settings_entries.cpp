@@ -264,23 +264,6 @@ namespace hex::plugin::builtin {
             return false;
         }, true);
 
-        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0, [](auto name, nlohmann::json &setting) {
-            static int selection = static_cast<int>(setting);
-
-            const char *style[] = {
-                    "hex.builtin.setting.interface.pattern_tree_style.tree"_lang,
-                    "hex.builtin.setting.interface.pattern_tree_style.auto_expanded"_lang,
-                    "hex.builtin.setting.interface.pattern_tree_style.flattened"_lang,
-            };
-
-            if (ImGui::Combo(name.data(), &selection, style, IM_ARRAYSIZE(style))) {
-                setting = selection;
-                return true;
-            }
-
-            return false;
-        });
-
         ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080, [](auto name, nlohmann::json &setting) {
             static auto color = static_cast<color_t>(setting);
 
@@ -315,71 +298,6 @@ namespace hex::plugin::builtin {
             }
 
             return false;
-        });
-
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii", 1, [](auto name, nlohmann::json &setting) {
-            static bool ascii = static_cast<int>(setting);
-
-            if (ImGui::Checkbox(name.data(), &ascii)) {
-                setting = static_cast<int>(ascii);
-                return true;
-            }
-
-            return false;
-        });
-
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding", 1, [](auto name, nlohmann::json &setting) {
-            static bool advancedDecoding = static_cast<int>(setting);
-
-            if (ImGui::Checkbox(name.data(), &advancedDecoding)) {
-                setting = static_cast<int>(advancedDecoding);
-                return true;
-            }
-
-            return false;
-        });
-
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros", 1, [](auto name, nlohmann::json &setting) {
-            static bool greyZeros = static_cast<int>(setting);
-
-            if (ImGui::Checkbox(name.data(), &greyZeros)) {
-                setting = static_cast<int>(greyZeros);
-                return true;
-            }
-
-            return false;
-        });
-
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex", 1, [](auto name, nlohmann::json &setting) {
-            static bool upperCaseHex = static_cast<int>(setting);
-
-            if (ImGui::Checkbox(name.data(), &upperCaseHex)) {
-                setting = static_cast<int>(upperCaseHex);
-                return true;
-            }
-
-            return false;
-        });
-
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer", "hex.builtin.visualizer.hexadecimal.8bit", [](auto name, nlohmann::json &setting) {
-            auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
-
-            auto selectedVisualizer = setting;
-
-            bool result = false;
-            if (ImGui::BeginCombo(name.data(), LangEntry(selectedVisualizer))) {
-
-                for (const auto &[unlocalizedName, visualizer] : visualizers) {
-                    if (ImGui::Selectable(LangEntry(unlocalizedName))) {
-                        setting = unlocalizedName;
-                        result  = true;
-                    }
-                }
-
-                ImGui::EndCombo();
-            }
-
-            return result;
         });
 
         ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", 0, [](auto name, nlohmann::json &setting) {

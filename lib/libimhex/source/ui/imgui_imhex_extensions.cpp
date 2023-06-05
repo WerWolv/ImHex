@@ -319,23 +319,30 @@ namespace ImGui {
         ImGui::Separator();
     }
 
-    void InfoTooltip(const char *text) {
+    bool InfoTooltip(const char *text) {
         static double lastMoveTime;
         static ImGuiID lastHoveredID;
 
         double currTime   = ImGui::GetTime();
         ImGuiID hoveredID = ImGui::GetHoveredID();
 
+        bool result = false;
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
-            BeginTooltip();
-            TextUnformatted(text);
-            EndTooltip();
+            if (!std::string_view(text).empty()) {
+                BeginTooltip();
+                TextUnformatted(text);
+                EndTooltip();
+            }
+
+            result = true;
         }
 
         if (hoveredID != lastHoveredID) {
             lastMoveTime = currTime;
         }
         lastHoveredID = hoveredID;
+
+        return result;
     }
 
     ImU32 GetCustomColorU32(ImGuiCustomCol idx, float alpha_mul) {

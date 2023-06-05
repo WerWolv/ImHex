@@ -13,7 +13,7 @@ namespace hex::plugin::builtin::ui {
 
     class DataVisualizerAscii : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerAscii() : DataVisualizer(1, 1) { }
+        DataVisualizerAscii() : DataVisualizer("ASCII", 1, 1) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address, upperCase);
@@ -71,44 +71,12 @@ namespace hex::plugin::builtin::ui {
     /* Hex Editor */
 
     HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
-        this->m_currDataVisualizer = ContentRegistry::HexEditor::impl::getVisualizers()["hex.builtin.visualizer.hexadecimal.8bit"];
-
-        this->m_grayZeroHighlighter = ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 address, const u8 *data, size_t size, bool hasColor) -> std::optional<color_t> {
-            hex::unused(address);
-
-            if (hasColor)
-                return std::nullopt;
-
-            if (!this->m_grayOutZero)
-                return std::nullopt;
-
-            for (u32 i = 0; i < size; i++)
-                if (data[i] != 0x00)
-                    return std::nullopt;
-
-            return ImGui::GetColorU32(ImGuiCol_TextDisabled);
-        });
-
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             {
                 this->m_bytesPerRow = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", 16);
                 this->m_encodingLineStartAddresses.clear();
             }
 
-            {
-                auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
-                auto selectedVisualizer = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.visualizer", "hex.builtin.visualizer.hexadecimal.8bit");
-
-                if (visualizers.contains(selectedVisualizer))
-                    this->m_currDataVisualizer = visualizers[selectedVisualizer];
-                else
-                    this->m_currDataVisualizer = visualizers["hex.builtin.visualizer.hexadecimal.8bit"];
-            }
-
-            this->m_showAscii = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.ascii", 1);
-            this->m_showCustomEncoding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.advanced_decoding", 1);
-            this->m_grayOutZero = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.grey_zeros", 1);
-            this->m_upperCaseHex = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.uppercase_hex", 1);
             this->m_selectionColor = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080);
             this->m_syncScrolling = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", 0);
             this->m_byteCellPadding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0);
@@ -117,7 +85,6 @@ namespace hex::plugin::builtin::ui {
     }
 
     HexEditor::~HexEditor() {
-        ImHexApi::HexEditor::removeForegroundHighlightingProvider(this->m_grayZeroHighlighter);
         EventManager::unsubscribe<EventSettingsChanged>(this);
     }
 
@@ -393,8 +360,21 @@ namespace hex::plugin::builtin::ui {
 
                                 // Query cell colors
                                 if (x < std::ceil(float(validBytes) / bytesPerCell)) {
-                                    const auto foregroundColor = this->m_foregroundColorCallback(byteAddress, &bytes[x * cellBytes], cellBytes);
-                                    const auto backgroundColor = this->m_backgroundColorCallback(byteAddress, &bytes[x * cellBytes], cellBytes);
+                                    auto foregroundColor = this->m_foregroundColorCallback(byteAddress, &bytes[x * cellBytes], cellBytes);
+                                    auto backgroundColor = this->m_backgroundColorCallback(byteAddress, &bytes[x * cellBytes], cellBytes);
+
+                                    if (this->m_grayOutZero && !foregroundColor.has_value()) {
+                                        bool allZero = true;
+                                        for (u64 i = 0; i < cellBytes; i++) {
+                                            if (bytes[x * cellBytes + i] != 0x00) {
+                                                allZero = false;
+                                                break;
+                                            }
+                                        }
+
+                                        if (allZero)
+                                            foregroundColor = ImGui::GetColorU32(ImGuiCol_TextDisabled);
+                                    }
 
                                     cellColors.emplace_back(
                                             foregroundColor,
@@ -728,6 +708,115 @@ namespace hex::plugin::builtin::ui {
                         );
                     }
 
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 2_scaled);
+
+                    // Upper/lower case hex
+                    {
+                        bool pushed = false;
+
+                        if (this->m_upperCaseHex) {
+                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                            pushed = true;
+                        }
+
+                        if (ImGui::DimmedIconButton(ICON_VS_CASE_SENSITIVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                            this->m_upperCaseHex = !this->m_upperCaseHex;
+                        }
+
+                        if (pushed)
+                            ImGui::PopStyleColor();
+
+                        ImGui::InfoTooltip("hex.builtin.hex_editor.uppercase_hex"_lang);
+                    }
+
+                    ImGui::SameLine();
+
+                    // Grayed out zeros
+                    {
+                        bool pushed = false;
+
+                        if (this->m_grayOutZero) {
+                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                            pushed = true;
+                        }
+
+                        if (ImGui::DimmedIconButton(ICON_VS_LIGHTBULB, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                            this->m_grayOutZero = !this->m_grayOutZero;
+                            EventManager::post<EventHighlightingChanged>();
+                        }
+
+                        if (pushed)
+                            ImGui::PopStyleColor();
+
+                        ImGui::InfoTooltip("hex.builtin.hex_editor.gray_out_zero"_lang);
+                    }
+
+                    ImGui::SameLine();
+
+                    // ASCII view
+                    {
+                        bool pushed = false;
+
+                        if (this->m_showAscii) {
+                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                            pushed = true;
+                        }
+
+                        if (ImGui::DimmedIconButton(ICON_VS_SYMBOL_KEY, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                            this->m_showAscii = !this->m_showAscii;
+                        }
+
+                        if (pushed)
+                            ImGui::PopStyleColor();
+
+                        ImGui::InfoTooltip("hex.builtin.hex_editor.ascii_view"_lang);
+                    }
+
+                    ImGui::SameLine(0, 1_scaled);
+
+                    // Custom encoding view
+                    {
+                        bool pushed = false;
+
+                        if (this->m_showCustomEncoding) {
+                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+                            pushed = true;
+                        }
+
+                        if (ImGui::DimmedIconButton(ICON_VS_WHITESPACE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                            this->m_showCustomEncoding = !this->m_showCustomEncoding;
+                        }
+
+                        if (pushed)
+                            ImGui::PopStyleColor();
+
+                        ImGui::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
+                    }
+
+                    ImGui::TableNextColumn();
+
+                    // Visualizer
+                    {
+                        auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
+
+                        ImGui::TextFormatted("{}: ", "hex.builtin.hex_editor.visualizer"_lang);
+                        ImGui::SameLine(0, 0);
+                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                        if (ImGui::BeginCombo("##visualizer", LangEntry(this->m_currDataVisualizer->getUnlocalizedName()))) {
+
+                            for (const auto &[unlocalizedName, visualizer] : visualizers) {
+                                if (ImGui::Selectable(LangEntry(unlocalizedName))) {
+                                    this->m_currDataVisualizer = visualizer;
+                                }
+                            }
+
+                            ImGui::EndCombo();
+                        }
+                        ImGui::PopItemWidth();
+                    }
+
                     ImGui::EndTable();
                 }
             }
@@ -760,7 +849,7 @@ namespace hex::plugin::builtin::ui {
     void HexEditor::draw(float height) {
         const auto width = ImGui::GetContentRegionAvail().x;
 
-        const auto FooterSize = ImVec2(width, ImGui::GetTextLineHeightWithSpacing() * 2.3F);
+        const auto FooterSize = ImVec2(width, ImGui::GetTextLineHeightWithSpacing() * 3.6F);
         const auto TableSize  = ImVec2(width, height - FooterSize.y);
 
         this->drawEditor(TableSize);
