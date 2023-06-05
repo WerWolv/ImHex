@@ -988,7 +988,7 @@ namespace hex::plugin::builtin::ui {
         }
     }
 
-    void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height) {
+    void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime, float height) {
         const auto treeStyleButton = [this](auto icon, TreeStyle style, const char *tooltip) {
             bool pushed = false;
 
@@ -1010,7 +1010,7 @@ namespace hex::plugin::builtin::ui {
             this->resetEditing();
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 5.5);
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 7.5);
         if (ImGui::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
             this->m_filter = parseRValueFilter(this->m_filterText);
         }
@@ -1023,6 +1023,37 @@ namespace hex::plugin::builtin::ui {
         treeStyleButton(ICON_VS_LIST_TREE,      TreeStyle::AutoExpanded,    "hex.builtin.pattern_drawer.tree_style.auto_expanded"_lang);
         ImGui::SameLine(0, 0);
         treeStyleButton(ICON_VS_LIST_FLAT,      TreeStyle::Flattened,       "hex.builtin.pattern_drawer.tree_style.flattened"_lang);
+
+        ImGui::SameLine(0, 15_scaled);
+
+        const auto startPos = ImGui::GetCursorPos();
+
+        ImGui::BeginDisabled(runtime == nullptr);
+        if (ImGui::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            ImGui::OpenPopup("ExportPatterns");
+        }
+        ImGui::EndDisabled();
+
+        ImGui::InfoTooltip("hex.builtin.pattern_drawer.export"_lang);
+
+        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
+        if (ImGui::BeginPopup("ExportPatterns")) {
+            for (const auto &formatter : this->m_formatters) {
+                const auto &name = formatter->getName();
+                const auto &extension = formatter->getFileExtension();
+
+                if (ImGui::MenuItem(name.c_str())) {
+
+                    fs::openFileBrowser(fs::DialogMode::Save, { { name.c_str(), extension.c_str() } }, [&](const std::fs::path &path) {
+                        auto result = formatter->format(*runtime);
+
+                        wolv::io::File output(path, wolv::io::File::Mode::Create);
+                        output.writeVector(result);
+                    });
+                }
+            }
+            ImGui::EndPopup();
+        }
 
         if (!this->m_favoritesUpdated) {
             this->m_favoritesUpdated = true;

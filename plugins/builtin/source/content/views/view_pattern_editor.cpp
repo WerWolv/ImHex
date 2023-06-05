@@ -484,7 +484,7 @@ namespace hex::plugin::builtin {
                         }();
 
                         if (*this->m_executionDone)
-                            patternDrawer.draw(patterns, 150_scaled);
+                            patternDrawer.draw(patterns, &runtime, 150_scaled);
                     };
                 }
 

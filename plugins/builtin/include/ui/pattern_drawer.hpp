@@ -2,15 +2,20 @@
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
+
+#include <pl/formatters.hpp>
+
 #include <hex/providers/provider.hpp>
 
 namespace hex::plugin::builtin::ui {
 
     class PatternDrawer : public pl::PatternVisitor {
     public:
-        PatternDrawer() = default;
+        PatternDrawer() {
+            this->m_formatters = pl::gen::fmt::createFormatters();
+        }
 
-        void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, float height = 0.0F);
+        void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
 
         enum class TreeStyle {
             Default         = 0,
@@ -87,5 +92,7 @@ namespace hex::plugin::builtin::ui {
         bool m_favoritesUpdated = false;
 
         std::function<void(Region)> m_selectionCallback = [](Region) { };
+
+        pl::gen::fmt::FormatterArray m_formatters;
     };
 }
