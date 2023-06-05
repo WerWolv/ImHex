@@ -16,6 +16,7 @@ namespace hex::plugin::builtin {
         ~ViewTools() override = default;
 
         void drawContent() override;
+        void drawAlwaysVisible() override;
 
     private:
         std::vector<ContentRegistry::Tools::impl::Entry>::iterator m_dragStartIterator;

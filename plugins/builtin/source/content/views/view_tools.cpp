@@ -5,7 +5,9 @@
 
 namespace hex::plugin::builtin {
 
-    ViewTools::ViewTools() : View("hex.builtin.view.tools.name") { }
+    ViewTools::ViewTools() : View("hex.builtin.view.tools.name") {
+        this->m_dragStartIterator = ContentRegistry::Tools::impl::getEntries().end();
+    }
 
     void ViewTools::drawContent() {
         auto &tools = ContentRegistry::Tools::impl::getEntries();
@@ -34,6 +36,10 @@ namespace hex::plugin::builtin {
             }
         }
         ImGui::End();
+    }
+
+    void ViewTools::drawAlwaysVisible() {
+        auto &tools = ContentRegistry::Tools::impl::getEntries();
 
         for (auto iter = tools.begin(); iter != tools.end(); iter++) {
             auto &[name, function, detached] = *iter;
