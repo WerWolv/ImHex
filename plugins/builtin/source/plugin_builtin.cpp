@@ -30,6 +30,7 @@ namespace hex::plugin::builtin {
     void registerThemes();
     void registerBackgroundServices();
     void registerNetworkEndpoints();
+    void registerFileHandlers();
 
     void addFooterItems();
     void addTitleBarButtons();
@@ -69,6 +70,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerThemes();
     registerBackgroundServices();
     registerNetworkEndpoints();
+    registerFileHandlers();
 
     addFooterItems();
     addTitleBarButtons();
