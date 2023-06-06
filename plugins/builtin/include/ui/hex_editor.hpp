@@ -193,7 +193,6 @@ namespace hex::plugin::builtin::ui {
 
         u16 m_bytesPerRow = 16;
         ContentRegistry::HexEditor::DataVisualizer *m_currDataVisualizer;
-        u32 m_grayZeroHighlighter = 0;
         char m_unknownDataCharacter = '?';
 
         bool m_shouldJumpToSelection = false;
