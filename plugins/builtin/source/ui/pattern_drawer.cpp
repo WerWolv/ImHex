@@ -83,20 +83,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
         }
 
-        void drawNameColumn(const pl::ptrn::Pattern& pattern) {
-            highlightWhenSelected(pattern, [&]{
-                auto name = pattern.getDisplayName();
-
-                ImGui::TextFormatted("{}", name);
-
-                if (ImGui::CalcTextSize(name.c_str()).x > ImGui::GetColumnWidth()) {
-                    ImGui::InfoTooltip(name.c_str());
-                }
-
-            });
-            ImGui::TableNextColumn();
-        }
-
         void drawColorColumn(const pl::ptrn::Pattern& pattern) {
             if (pattern.getVisibility() == pl::ptrn::Visibility::Visible)
                 ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
@@ -364,12 +350,12 @@ namespace hex::plugin::builtin::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternBitfieldField& pattern) {
         ImGui::TableNextRow();
-        createTreeNode(pattern, true);
         ImGui::TableNextColumn();
+        createTreeNode(pattern, true);
+        ImGui::SameLine(0, 0);
         makeSelectable(pattern);
         drawCommentTooltip(pattern);
-        ImGui::SameLine();
-        drawNameColumn(pattern);
+        ImGui::TableNextColumn();
         drawColorColumn(pattern);
         drawOffsetColumnForBitfieldMember(pattern);
         ImGui::TableNextColumn();
@@ -502,12 +488,12 @@ namespace hex::plugin::builtin::ui {
 
     void PatternDrawer::visit(pl::ptrn::PatternEnum& pattern) {
         ImGui::TableNextRow();
+        ImGui::TableNextColumn();
         createTreeNode(pattern, true);
+        ImGui::SameLine(0, 0);
+        makeSelectable(pattern);
         drawCommentTooltip(pattern);
         ImGui::TableNextColumn();
-        makeSelectable(pattern);
-        ImGui::SameLine();
-        drawNameColumn(pattern);
         drawColorColumn(pattern);
         drawOffsetColumn(pattern);
         drawSizeColumn(pattern);
@@ -833,6 +819,7 @@ namespace hex::plugin::builtin::ui {
                 auto &displayEnd = this->getDisplayEnd(pattern);
                 if (chunkCount > displayEnd) {
                     ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
 
                     ImGui::Selectable(hex::format("... ({})", "hex.builtin.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);

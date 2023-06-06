@@ -174,7 +174,11 @@ namespace hex {
 
 
     void TaskManager::init() {
-        for (u32 i = 0; i < std::thread::hardware_concurrency(); i++)
+        const auto threadCount = std::thread::hardware_concurrency();
+
+        log::debug("Initializing task manager thread pool with {} workers.", threadCount);
+
+        for (u32 i = 0; i < threadCount; i++)
             TaskManager::s_workers.emplace_back(TaskManager::runner);
     }
 
@@ -207,6 +211,7 @@ namespace hex {
 
             try {
                 task->m_function(*task);
+                log::debug("Finished task {}", task->m_unlocalizedName);
             } catch (const Task::TaskInterruptor &) {
                 task->interruption();
             } catch (const std::exception &e) {
@@ -222,6 +227,7 @@ namespace hex {
     }
 
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, std::function<void(Task &)> function) {
+        log::debug("Creating task {}", name);
         std::unique_lock lock(s_queueMutex);
         auto task = std::make_shared<Task>(std::move(name), maxValue, false, std::move(function));
         s_tasks.emplace_back(task);
@@ -233,6 +239,7 @@ namespace hex {
     }
 
     TaskHolder TaskManager::createBackgroundTask(std::string name, std::function<void(Task &)> function) {
+        log::debug("Creating background task {}", name);
         std::unique_lock lock(s_queueMutex);
 
         auto task = std::make_shared<Task>(std::move(name), 0, true, std::move(function));

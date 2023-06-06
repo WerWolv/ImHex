@@ -518,7 +518,7 @@ namespace hex::init {
             { "Saving settings...",         storeSettings,    false },
             { "Cleaning up shared data...", deleteSharedData, false },
             { "Unloading plugins...",       unloadPlugins,    false },
-            { "Clearing old logs...",          clearOldLogs,     false },
+            { "Clearing old logs...",       clearOldLogs,     false },
         };
     }
 
