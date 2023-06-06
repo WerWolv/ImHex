@@ -109,7 +109,12 @@ namespace hex::crash {
                 std::rethrow_exception(std::current_exception());
             } catch (std::exception &ex) {
                 std::string exceptionStr = hex::format("{}()::what() -> {}",
-                    llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what()
+#if LLVM_VERSION_MAJOR < 17
+                    llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr),
+#else
+                    llvm::itaniumDemangle(typeid(ex).name()),
+#endif
+                    ex.what()
                 );
                 log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
 

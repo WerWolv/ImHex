@@ -15,6 +15,16 @@ add_executable(main ${APPLICATION_TYPE}
     ${IMHEX_ICON}
 )
 
+if(LLVM_VERSION_MAJOR)
+    message(STATUS "Adding LLVM_VERSION_MAJOR=${LLVM_VERSION_MAJOR} to source/crash_handlers.cpp for llvm::itaniumDemangle")
+    set_property(
+        SOURCE source/crash_handlers.cpp
+        APPEND
+        PROPERTY COMPILE_DEFINITIONS
+        "LLVM_VERSION_MAJOR=${LLVM_VERSION_MAJOR}"
+    )
+endif()
+
 target_include_directories(main PUBLIC include)
 setupCompilerWarnings(main)
 
