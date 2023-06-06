@@ -852,6 +852,7 @@ namespace hex::plugin::builtin::ui {
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
 
                         chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
                             return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", this->m_treeStyle == TreeStyle::Flattened ? pattern.getDisplayName().c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
