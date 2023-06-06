@@ -228,6 +228,40 @@ namespace hex::plugin::builtin::ui {
         }
     }
 
+    void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
+        const auto value = pattern.getFormattedValue();
+
+        const auto width = ImGui::GetColumnWidth();
+        if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
+            if (ImGui::Button(hex::format("{}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
+                this->m_currVisualizedPattern = &pattern;
+                this->m_lastVisualizerError.clear();
+
+                ImGui::OpenPopup("Visualizer");
+            }
+            ImGui::PopStyleVar(2);
+
+            ImGui::SameLine();
+
+            if (ImGui::BeginPopup("Visualizer")) {
+                if (this->m_currVisualizedPattern == &pattern) {
+                    drawVisualizer(arguments, pattern, dynamic_cast<pl::ptrn::IIterable&>(pattern), !this->m_visualizedPatterns.contains(&pattern));
+                    this->m_visualizedPatterns.insert(&pattern);
+                }
+
+                ImGui::EndPopup();
+            }
+        } else {
+            ImGui::TextFormatted("{}", value);
+        }
+
+        if (ImGui::CalcTextSize(value.c_str()).x > width) {
+            ImGui::InfoTooltip(value.c_str());
+        }
+    }
+
 
     void PatternDrawer::createLeafNode(const pl::ptrn::Pattern& pattern) {
         ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_Leaf |
