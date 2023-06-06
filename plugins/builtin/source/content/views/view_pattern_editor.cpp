@@ -104,6 +104,7 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<EventProviderOpened>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
+        EventManager::unsubscribe<EventProviderClosed>(this);
     }
 
     void ViewPatternEditor::drawContent() {
@@ -776,16 +777,16 @@ namespace hex::plugin::builtin {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
-                        return std::nullopt;
+                            return std::nullopt;
 
                         if (!value.starts_with('['))
-                        return std::nullopt;
+                            return std::nullopt;
 
                         value = value.substr(1);
 
                         auto end = value.find(']');
                         if (end == std::string::npos)
-                        return std::nullopt;
+                            return std::nullopt;
 
                         value = value.substr(0, end - 1);
                         value = wolv::util::trim(value);
@@ -797,11 +798,11 @@ namespace hex::plugin::builtin {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
-                        return std::nullopt;
+                            return std::nullopt;
 
                         auto start = value.find('@');
                         if (start == std::string::npos)
-                        return std::nullopt;
+                            return std::nullopt;
 
                         value = value.substr(start + 1);
                         value = wolv::util::trim(value);
@@ -809,7 +810,7 @@ namespace hex::plugin::builtin {
                         size_t end = 0;
                         auto result = std::stoull(value, &end, 0);
                         if (end != value.length())
-                        return std::nullopt;
+                            return std::nullopt;
 
                         return result;
                     }();
@@ -869,6 +870,12 @@ namespace hex::plugin::builtin {
                     this->m_textEditor.SetText("");
             } else {
                 this->m_hasUnevaluatedChanges = true;
+            }
+        });
+
+        EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
+            if (this->m_syncPatternSourceCode && ImHexApi::Provider::getProviders().empty()) {
+                this->m_textEditor.SetText("");
             }
         });
     }
