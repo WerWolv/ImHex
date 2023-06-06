@@ -51,13 +51,12 @@ namespace hex::plugin::builtin {
             auto dataPattern = arguments[0].toPattern();
 
             if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
 
                 if (shouldReset) {
                     values.clear();
                     values = sampleData(patternToArray<float>(dataPattern), ImPlot::GetPlotSize().x * 4);
                 }
-
-                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
 
                 ImPlot::PlotLine("##line", values.data(), values.size());
 
@@ -72,14 +71,13 @@ namespace hex::plugin::builtin {
             auto yPattern = arguments[1].toPattern();
 
             if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
 
                 if (shouldReset) {
                     xValues.clear(); yValues.clear();
                     xValues = sampleData(patternToArray<float>(xPattern), ImPlot::GetPlotSize().x * 4);
                     yValues = sampleData(patternToArray<float>(yPattern), ImPlot::GetPlotSize().x * 4);
                 }
-
-                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
 
                 ImPlot::PlotScatter("##scatter", xValues.data(), yValues.data(), xValues.size());
 
