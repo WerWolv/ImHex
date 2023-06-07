@@ -196,13 +196,14 @@ namespace hex {
             });
         }
         template<typename T = std::string>
-        std::future<Result<T>> uploadFile(std::vector<u8> data, const std::string &mimeName = "filename") {
-            return std::async(std::launch::async, [this, data = std::move(data), mimeName]{
+        std::future<Result<T>> uploadFile(std::vector<u8> data, const std::string &mimeName = "filename", const std::fs::path &fileName = "data.bin") {
+            return std::async(std::launch::async, [this, data = std::move(data), mimeName, fileName]{
                 curl_mime *mime     = curl_mime_init(this->m_curl);
                 curl_mimepart *part = curl_mime_addpart(mime);
 
                 curl_mime_data(part, reinterpret_cast<const char *>(data.data()), data.size());
-                curl_mime_filename(part, "data.bin");
+                auto fileNameStr = wolv::util::toUTF8String(fileName.filename());
+                curl_mime_filename(part, fileNameStr.c_str());
                 curl_mime_name(part, mimeName.c_str());
 
                 curl_easy_setopt(this->m_curl, CURLOPT_MIMEPOST, mime);

@@ -900,7 +900,7 @@
         "hex.builtin.visualizer.hexadecimal.8bit": "Hexadecimal (8 bits)",
         "hex.builtin.visualizer.hexii": "HexII",
         "hex.builtin.visualizer.rgba8": "RGBA8 Color",
-        "hex.builtin.welcome.check_for_updates_text": "",
+        "hex.builtin.welcome.server_contact_text": "",
         "hex.builtin.welcome.customize.settings.desc": "Mudar preferencias do ImHex",
         "hex.builtin.welcome.customize.settings.title": "Configurações",
         "hex.builtin.welcome.header.customize": "Customizar",

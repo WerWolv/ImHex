@@ -401,12 +401,12 @@ namespace hex::plugin::builtin {
 #if defined(HEX_UPDATE_CHECK)
         EventManager::subscribe<EventWindowInitialized>([] {
             // documentation of the value above the setting definition
-            auto showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
-            if (showCheckForUpdates == 2) {
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 0);
-                PopupQuestion::open("hex.builtin.welcome.check_for_updates_text"_lang,
+            auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
+            if (allowServerContact == 2) {
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
+                PopupQuestion::open("hex.builtin.welcome.server_contact_text"_lang,
                     [] {
-                        ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 1);
+                        ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
                     },
                     [] {
 

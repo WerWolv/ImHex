@@ -4,6 +4,9 @@
 #include <hex/api/event.hpp>
 #include <hex/api/task.hpp>
 #include <hex/providers/provider.hpp>
+#include <hex/helpers/fmt.hpp>
+
+#include <wolv/io/file.hpp>
 
 #include <utility>
 #include <unistd.h>
@@ -516,6 +519,71 @@ namespace hex {
         bool isPortableVersion() {
             return impl::s_portableVersion;
         }
+
+        std::string getOSName() {
+            #if defined(OS_WINDOWS)
+                return "Windows";
+            #elif defined(OS_LINUX)
+                return "Linux";
+            #elif defined(OS_MACOS)
+                return "macOS";
+            #else
+                return "Unknown";
+            #endif
+        }
+
+        std::string getOSVersion() {
+            #if defined(OS_WINDOWS)
+                OSVERSIONINFOA info;
+                info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+                ::GetVersionExA(&info);
+
+                return hex::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
+            #elif defined(OS_LINUX) || defined(OS_MACOS)
+                struct utsname details;
+
+                if (uname(&details) != 0) {
+                    return "Unknown";
+                }
+
+                return std::string(details.release) + " " + std::string(details.version);
+            #else
+                return "Unknown";
+            #endif
+        }
+
+        std::string getArchitecture() {
+            #if defined(OS_WINDOWS)
+                SYSTEM_INFO info;
+                ::GetNativeSystemInfo(&info);
+
+                switch (info.wProcessorArchitecture) {
+                    case PROCESSOR_ARCHITECTURE_AMD64:
+                        return "x86_64";
+                    case PROCESSOR_ARCHITECTURE_ARM:
+                        return "ARM";
+                    case PROCESSOR_ARCHITECTURE_ARM64:
+                        return "ARM64";
+                    case PROCESSOR_ARCHITECTURE_IA64:
+                        return "IA64";
+                    case PROCESSOR_ARCHITECTURE_INTEL:
+                        return "x86";
+                    default:
+                        return "Unknown";
+                }
+            #elif defined(OS_LINUX) || defined(OS_MACOS)
+                struct utsname details;
+
+                if (uname(&details) != 0) {
+                    return "Unknown";
+                }
+
+                return std::string(details.machine);
+            #else
+                return "Unknown";
+            #endif
+        }
+
     }
 
 }

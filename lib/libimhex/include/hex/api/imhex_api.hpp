@@ -506,6 +506,12 @@ namespace hex {
              * @return Whether ImHex is running in portable mode
              */
             bool isPortableVersion();
+
+            std::string getOSName();
+
+            std::string getOSVersion();
+
+            std::string getArchitecture();
         }
 
     }

@@ -900,7 +900,7 @@
         "hex.builtin.visualizer.hexadecimal.8bit": "",
         "hex.builtin.visualizer.hexii": "",
         "hex.builtin.visualizer.rgba8": "",
-        "hex.builtin.welcome.check_for_updates_text": "",
+        "hex.builtin.welcome.server_contact_text": "",
         "hex.builtin.welcome.customize.settings.desc": "Cambia le preferenze di ImHex",
         "hex.builtin.welcome.customize.settings.title": "Impostazioni",
         "hex.builtin.welcome.header.customize": "Personalizza",
