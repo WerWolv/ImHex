@@ -205,6 +205,11 @@ namespace hex::plugin::builtin {
         this->m_readable = true;
         this->m_writable = true;
 
+        if (!std::fs::exists(this->m_path)) {
+            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, this->m_path.string(), ::strerror(ENOENT)));
+            return false;
+        }
+
         wolv::io::File file(this->m_path, wolv::io::File::Mode::Write);
         if (!file.isValid()) {
             this->m_writable = false;
