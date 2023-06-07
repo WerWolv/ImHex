@@ -9,6 +9,7 @@ pacman -S $@ --needed \
   mbedtls   \
   freetype2 \
   dbus      \
+  ccache    \
   xdg-desktop-portal \
   curl      \
   fmt       \
