@@ -34,10 +34,10 @@ namespace hex::init {
 
 #if defined(HEX_UPDATE_CHECK)
     static bool checkForUpdates() {
-        int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
+        int checkForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
 
         // Check if we should check for updates
-        if (showCheckForUpdates == 1){
+        if (checkForUpdates == 1){
             HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
             request.setTimeout(2000);
 

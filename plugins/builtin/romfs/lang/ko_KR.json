@@ -899,7 +899,7 @@
         "hex.builtin.visualizer.hexadecimal.8bit": "16진수 (8 비트)",
         "hex.builtin.visualizer.hexii": "HexII",
         "hex.builtin.visualizer.rgba8": "RGBA8 색상",
-        "hex.builtin.welcome.check_for_updates_text": "",
+        "hex.builtin.welcome.server_contact_text": "",
         "hex.builtin.welcome.customize.settings.desc": "ImHex의 설정을 변경합니다",
         "hex.builtin.welcome.customize.settings.title": "설정",
         "hex.builtin.welcome.header.customize": "커스터마이즈",
