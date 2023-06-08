@@ -26,8 +26,8 @@ namespace hex::crash {
         hex::nativeErrorMessage(hex::format("ImHex crashed during its loading.\nError: {}", message));
     }
 
-    // function that decides what should happen on a crash
-    // (either sending a message or saving a crash file, depending on when the crash occured)
+    // Function that decides what should happen on a crash
+    // (either sending a message or saving a crash file, depending on when the crash occurred)
     static std::function<void(const std::string&)> crashCallback = sendNativeMessage;
 
     static void saveCrashFile(const std::string& message) {
@@ -55,7 +55,7 @@ namespace hex::crash {
     static void signalHandler(int signalNumber, const std::string &signalName) {
         log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
-        // trigger the crash callback
+        // Trigger the crash callback
         crashCallback(hex::format("Received signal '{}' ({})", signalName, signalNumber));
 
         // Trigger an event so that plugins can handle crashes
@@ -87,7 +87,7 @@ namespace hex::crash {
         #endif
     }
 
-    // setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
+    // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
     void setupCrashHandlers() {
          // Register signal handlers
         {
@@ -113,21 +113,21 @@ namespace hex::crash {
                 );
                 log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
 
-                // handle crash callback
+                // Handle crash callback
                 crashCallback(hex::format("Uncaught exception: {}", exceptionStr));
 
-                // reset signal handlers prior to calling the original handler, because it may raise a signal
+                // Reset signal handlers prior to calling the original handler, because it may raise a signal
                 for(auto signal : Signals) std::signal(signal, SIG_DFL);
 
-                // call the original handler of C++ std
-                originalHandler();
+                // Restore the original handler of C++ std
+                std::set_terminate(originalHandler);
 
-                log::error("Should not happen: original std::set_terminate handler returned. Terminating manually");
-                exit(EXIT_FAILURE);
+                #if defined(DEBUG)
+                    assert(!"Debug build, triggering breakpoint");
+                #else
+                    std::terminate();
+                #endif
             }
-            log::error("Should not happen: catch block should be executed and terminate the program. Terminating manually");
-            exit(EXIT_FAILURE);
-
         });
 
         // Save a backup project when the application crashes
