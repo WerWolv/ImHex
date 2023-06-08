@@ -19,6 +19,8 @@
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
     #include <shellapi.h>
+#else
+    #include <sys/utsname.h>
 #endif
 
 namespace hex {
