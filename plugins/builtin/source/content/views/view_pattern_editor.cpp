@@ -101,7 +101,6 @@ namespace hex::plugin::builtin {
     ViewPatternEditor::~ViewPatternEditor() {
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventProviderOpened>(this);
         EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
         EventManager::unsubscribe<EventProviderClosed>(this);
@@ -533,6 +532,123 @@ namespace hex::plugin::builtin {
             this->m_lastEvaluationProcessed = true;
             *this->m_executionDone = true;
         }
+
+        if (this->m_shouldAnalyze) {
+            this->m_shouldAnalyze = false;
+
+            TaskManager::createBackgroundTask("Analyzing file content", [this, provider](auto &) {
+                if (!this->m_autoLoadPatterns)
+                    return;
+
+                // Copy over current pattern source code to the new provider
+                if (!this->m_syncPatternSourceCode) {
+                    *this->m_sourceCode = this->m_textEditor.GetText();
+                }
+
+                pl::PatternLanguage runtime;
+                ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+
+                auto mimeType = magic::getMIMEType(provider);
+
+                bool foundCorrectType = false;
+                runtime.addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
+                    hex::unused(runtime);
+
+                    if (!magic::isValidMIMEType(value))
+                        return false;
+
+                    if (value == mimeType) {
+                        foundCorrectType = true;
+                        return true;
+                    }
+                    return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
+                });
+
+                // Format: [ AA BB CC DD ] @ 0x12345678
+                runtime.addPragma("magic", [provider, &foundCorrectType](pl::PatternLanguage &, const std::string &value) -> bool {
+                    const auto pattern = [value = value] mutable -> std::optional<BinaryPattern> {
+                        value = wolv::util::trim(value);
+
+                        if (value.empty())
+                        return std::nullopt;
+
+                        if (!value.starts_with('['))
+                        return std::nullopt;
+
+                        value = value.substr(1);
+
+                        auto end = value.find(']');
+                        if (end == std::string::npos)
+                        return std::nullopt;
+
+                        value = value.substr(0, end - 1);
+                        value = wolv::util::trim(value);
+
+                        return BinaryPattern(value);
+                }();
+
+                    const auto address = [value = value] mutable -> std::optional<u64> {
+                        value = wolv::util::trim(value);
+
+                        if (value.empty())
+                        return std::nullopt;
+
+                        auto start = value.find('@');
+                        if (start == std::string::npos)
+                        return std::nullopt;
+
+                        value = value.substr(start + 1);
+                        value = wolv::util::trim(value);
+
+                        size_t end = 0;
+                        auto result = std::stoull(value, &end, 0);
+                        if (end != value.length())
+                        return std::nullopt;
+
+                        return result;
+                }();
+
+                    if (!address)
+                        return false;
+                    if (!pattern)
+                        return false;
+
+                    std::vector<u8> bytes(pattern->getSize());
+                    provider->read(*address, bytes.data(), bytes.size());
+
+                    if (pattern->matches(bytes))
+                        foundCorrectType = true;
+
+                    return true;
+                });
+
+                this->m_possiblePatternFiles.get(provider).clear();
+
+                std::error_code errorCode;
+                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                    for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
+                        foundCorrectType = false;
+                        if (!entry.is_regular_file())
+                            continue;
+
+                        wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
+                        if (!file.isValid())
+                            continue;
+
+                        runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
+
+                        if (foundCorrectType)
+                            this->m_possiblePatternFiles.get(provider).push_back(entry.path());
+
+                        runtime.reset();
+                    }
+                }
+
+                if (!this->m_possiblePatternFiles.get(provider).empty()) {
+                    PopupAcceptPattern::open(this);
+                }
+            });
+        }
     }
 
 
@@ -742,120 +858,7 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
-            TaskManager::createBackgroundTask("Analyzing file content", [this, provider](auto &) {
-                if (!this->m_autoLoadPatterns)
-                    return;
-
-                // Copy over current pattern source code to the new provider
-                if (!this->m_syncPatternSourceCode) {
-                    *this->m_sourceCode = this->m_textEditor.GetText();
-                }
-
-                auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
-                auto& runtime = ContentRegistry::PatternLanguage::getRuntime();
-                ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
-
-                auto mimeType = magic::getMIMEType(provider);
-
-                bool foundCorrectType = false;
-                runtime.addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
-                    hex::unused(runtime);
-
-                    if (!magic::isValidMIMEType(value))
-                        return false;
-
-                    if (value == mimeType) {
-                        foundCorrectType = true;
-                        return true;
-                    }
-                    return !std::all_of(value.begin(), value.end(), isspace) && !value.ends_with('\n') && !value.ends_with('\r');
-                });
-
-                // Format: [ AA BB CC DD ] @ 0x12345678
-                runtime.addPragma("magic", [provider, &foundCorrectType](pl::PatternLanguage &, const std::string &value) -> bool {
-                    const auto pattern = [value = value] mutable -> std::optional<BinaryPattern> {
-                        value = wolv::util::trim(value);
-
-                        if (value.empty())
-                            return std::nullopt;
-
-                        if (!value.starts_with('['))
-                            return std::nullopt;
-
-                        value = value.substr(1);
-
-                        auto end = value.find(']');
-                        if (end == std::string::npos)
-                            return std::nullopt;
-
-                        value = value.substr(0, end - 1);
-                        value = wolv::util::trim(value);
-
-                        return BinaryPattern(value);
-                    }();
-
-                    const auto address = [value = value] mutable -> std::optional<u64> {
-                        value = wolv::util::trim(value);
-
-                        if (value.empty())
-                            return std::nullopt;
-
-                        auto start = value.find('@');
-                        if (start == std::string::npos)
-                            return std::nullopt;
-
-                        value = value.substr(start + 1);
-                        value = wolv::util::trim(value);
-
-                        size_t end = 0;
-                        auto result = std::stoull(value, &end, 0);
-                        if (end != value.length())
-                            return std::nullopt;
-
-                        return result;
-                    }();
-
-                    if (!address)
-                        return false;
-                    if (!pattern)
-                        return false;
-
-                    std::vector<u8> bytes(pattern->getSize());
-                    provider->read(*address, bytes.data(), bytes.size());
-
-                    if (pattern->matches(bytes))
-                        foundCorrectType = true;
-
-                    return true;
-                });
-
-                this->m_possiblePatternFiles.clear();
-
-                std::error_code errorCode;
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
-                    for (auto &entry : std::fs::recursive_directory_iterator(dir, errorCode)) {
-                        foundCorrectType = false;
-                        if (!entry.is_regular_file())
-                            continue;
-
-                        wolv::io::File file(entry.path(), wolv::io::File::Mode::Read);
-                        if (!file.isValid())
-                            continue;
-
-                        runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
-
-                        if (foundCorrectType)
-                            this->m_possiblePatternFiles.push_back(entry.path());
-
-                        runtime.reset();
-                    }
-                }
-
-                if (!this->m_possiblePatternFiles.empty()) {
-                    PopupAcceptPattern::open(this);
-                }
-            });
-
+            this->m_shouldAnalyze.get(provider) = true;
             this->m_envVarEntries->push_back({ 0, "", 0, EnvVarType::Integer });
         });
 

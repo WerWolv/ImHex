@@ -623,12 +623,12 @@ namespace hex {
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, bool skipLoadInterface, hex::prv::Provider **provider) {
+                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, bool skipLoadInterface, bool selectProvider, hex::prv::Provider **provider) {
                     if (name != expectedName) return;
 
                     prv::Provider *newProvider = new T();
 
-                    hex::ImHexApi::Provider::add(newProvider, skipLoadInterface);
+                    hex::ImHexApi::Provider::add(newProvider, skipLoadInterface, selectProvider);
 
                     if (provider != nullptr)
                         *provider = newProvider;

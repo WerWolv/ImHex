@@ -226,7 +226,7 @@ namespace hex {
     /**
      * @brief Creates a provider from it's unlocalized name, and add it to the provider list
     */
-    EVENT_DEF(RequestCreateProvider, std::string, bool, hex::prv::Provider **);
+    EVENT_DEF(RequestCreateProvider, std::string, bool, bool, hex::prv::Provider **);
     EVENT_DEF(RequestInitThemeHandlers);
 
     EVENT_DEF(RequestOpenInfoPopup, const std::string);

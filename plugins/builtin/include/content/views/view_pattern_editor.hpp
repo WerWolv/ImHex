@@ -51,20 +51,20 @@ namespace hex::plugin::builtin {
                 ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
                 std::vector<std::string> entries;
-                entries.resize(this->m_view->m_possiblePatternFiles.size());
+                entries.resize(this->m_view->m_possiblePatternFiles.get(provider).size());
 
                 for (u32 i = 0; i < entries.size(); i++) {
-                    entries[i] = wolv::util::toUTF8String(this->m_view->m_possiblePatternFiles[i].filename());
+                    entries[i] = wolv::util::toUTF8String(this->m_view->m_possiblePatternFiles.get(provider)[i].filename());
                 }
 
                 if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
                     u32 index = 0;
-                    for (auto &path : this->m_view->m_possiblePatternFiles) {
+                    for (auto &path : this->m_view->m_possiblePatternFiles.get(provider)) {
                         if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
                             this->m_selectedPatternFile = index;
 
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_selectedPatternFile], provider);
+                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles.get(provider)[this->m_selectedPatternFile], provider);
 
                         ImGui::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
@@ -79,7 +79,7 @@ namespace hex::plugin::builtin {
 
                 confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
                         [this, provider] {
-                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles[this->m_selectedPatternFile], provider);
+                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles.get(provider)[this->m_selectedPatternFile], provider);
                             this->close();
                         },
                         [this] {
@@ -127,7 +127,7 @@ namespace hex::plugin::builtin {
 
         std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
 
-        std::vector<std::fs::path> m_possiblePatternFiles;
+        PerProvider<std::vector<std::fs::path>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;
         bool m_triggerEvaluation  = false;
 
@@ -163,6 +163,8 @@ namespace hex::plugin::builtin {
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
 
         PerProvider<std::list<EnvVar>> m_envVarEntries;
+
+        PerProvider<bool> m_shouldAnalyze;
 
     private:
         void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);

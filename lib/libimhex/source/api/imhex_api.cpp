@@ -269,7 +269,7 @@ namespace hex {
             });
         }
 
-        void add(prv::Provider *provider, bool skipLoadInterface) {
+        void add(prv::Provider *provider, bool skipLoadInterface, bool select) {
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
@@ -279,7 +279,8 @@ namespace hex {
             s_providers.push_back(provider);
             EventManager::post<EventProviderCreated>(provider);
 
-            setCurrentProvider(s_providers.size() - 1);
+            if (select || s_providers.size() == 1)
+                setCurrentProvider(s_providers.size() - 1);
         }
 
         void remove(prv::Provider *provider, bool noQuestions) {
@@ -318,9 +319,9 @@ namespace hex {
             });
         }
 
-        prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface) {
+        prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface, bool select) {
             prv::Provider* result = nullptr;
-            EventManager::post<RequestCreateProvider>(unlocalizedName, skipLoadInterface, &result);
+            EventManager::post<RequestCreateProvider>(unlocalizedName, skipLoadInterface, select, &result);
 
             return result;
         }

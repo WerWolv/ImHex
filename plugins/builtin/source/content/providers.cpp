@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
                  for (const auto &id : providerIds) {
                      auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
 
-                     auto provider = ImHexApi::Provider::createProvider(providerSettings.at("type").get<std::string>(), true);
+                     auto provider = ImHexApi::Provider::createProvider(providerSettings.at("type").get<std::string>(), true, false);
                      ON_SCOPE_EXIT {
                          if (!success) {
                              for (auto &task : TaskManager::getRunningTasks())

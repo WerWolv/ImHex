@@ -39,6 +39,14 @@ namespace hex {
             return this->m_data[provider];
         }
 
+        void set(const T &data, prv::Provider *provider = ImHexApi::Provider::get()) {
+            this->m_data[provider] = data;
+        }
+
+        void set(T &&data, prv::Provider *provider = ImHexApi::Provider::get()) {
+            this->m_data[provider] = std::move(data);
+        }
+
         T& operator*() {
             return this->get();
         }
@@ -47,8 +55,13 @@ namespace hex {
             return this->get();
         }
 
-        PerProvider& operator=(T data) {
-            this->m_data = std::move(data);
+        PerProvider& operator=(const T &data) {
+            this->set(data);
+            return *this;
+        }
+
+        PerProvider& operator=(T &&data) {
+            this->set(std::move(data));
             return *this;
         }
 

@@ -289,8 +289,9 @@ namespace hex {
              * @brief Adds a newly created provider to the list of providers, and mark it as the selected one.
              * @param provider The provider to add
              * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
+             * @param select Whether to select the provider after adding it
              */
-            void add(prv::Provider *provider, bool skipLoadInterface = false);
+            void add(prv::Provider *provider, bool skipLoadInterface = false, bool select = true);
 
             /**
              * @brief Creates a new provider and adds it to the list of providers
@@ -314,7 +315,7 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the provider to create
              * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
              */
-            prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface = false);
+            prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface = false, bool select = true);
 
         }
 
