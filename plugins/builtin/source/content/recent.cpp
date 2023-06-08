@@ -168,6 +168,8 @@ namespace hex::plugin::builtin::recent {
         ImGui::TableNextColumn();
         ImGui::UnderlinedText(s_recentEntries.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
+        ImGui::Dummy({0, 0});
+        ImGui::SameLine(0, 0);
         {
             if (!s_recentEntriesUpdating) {
                 auto it = s_recentEntries.begin();
