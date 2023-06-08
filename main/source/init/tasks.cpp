@@ -227,9 +227,11 @@ namespace hex::init {
         cfg.MergeMode = true;
 
         // Add font awesome and codicons icons to font atlas
+        cfg.GlyphOffset = ImVec2(0, 3);
         fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange);
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange);
 
+        cfg.GlyphOffset = ImVec2(0, 0);
         // Add unifont if unicode support is enabled
         if (loadUnicode)
             fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, ranges.Data);

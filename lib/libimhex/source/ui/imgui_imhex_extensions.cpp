@@ -477,7 +477,7 @@ namespace ImGui {
                                                                                           : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, label, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, label, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         // Automatically close popups
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
@@ -518,7 +518,7 @@ namespace ImGui {
                                                                                                  : ImGuiCol_MenuBarBg);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -561,7 +561,7 @@ namespace ImGui {
                                                                                           : ImGuiCol_Button);
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
-        RenderTextClipped(bb.Min + style.FramePadding * ImVec2(1, 2), bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
+        RenderTextClipped(bb.Min + style.FramePadding, bb.Max - style.FramePadding, symbol, nullptr, &label_size, style.ButtonTextAlign, &bb);
 
         PopStyleColor();
 
@@ -661,7 +661,7 @@ namespace ImGui {
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
         RenderFrame(frame_bb.Min, frame_bb.Min + icon_frame_size, GetColorU32(ImGuiCol_TableBorderStrong), true, style.FrameRounding);
-        RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y * 2), icon);
+        RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), icon);
 
         return value_changed;
     }
