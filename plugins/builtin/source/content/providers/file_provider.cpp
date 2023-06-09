@@ -85,6 +85,8 @@ namespace hex::plugin::builtin {
         this->close();
 
         {
+            m_file.unmap();
+            
             wolv::io::File file(this->m_path, wolv::io::File::Mode::Write);
 
             file.setSize(newSize);
