@@ -324,7 +324,7 @@ namespace hex {
 
             namespace impl {
 
-                void setMainWindowPosition(u32 x, u32 y);
+                void setMainWindowPosition(i32 x, i32 y);
                 void setMainWindowSize(u32 width, u32 height);
                 void setMainDockSpaceId(ImGuiID id);
 

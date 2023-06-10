@@ -334,7 +334,7 @@ namespace hex {
 
             static ImVec2 s_mainWindowPos;
             static ImVec2 s_mainWindowSize;
-            void setMainWindowPosition(u32 x, u32 y) {
+            void setMainWindowPosition(i32 x, i32 y) {
                 s_mainWindowPos = ImVec2(x, y);
             }
 
