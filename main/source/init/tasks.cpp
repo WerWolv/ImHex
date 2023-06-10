@@ -227,7 +227,7 @@ namespace hex::init {
         cfg.MergeMode = true;
 
         // Add font awesome and codicons icons to font atlas
-        cfg.GlyphOffset = ImVec2(0, 3);
+        cfg.GlyphOffset = ImVec2(0, 3_scaled);
         fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange);
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange);
 
@@ -275,6 +275,8 @@ namespace hex::init {
         // destructors to be called correctly. To prevent crashes when ImHex exits, we need to delete all shared data
 
         EventManager::post<EventImHexClosing>();
+
+        EventManager::clear();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
@@ -347,8 +349,6 @@ namespace hex::init {
         ProjectFile::getProviderHandlers().clear();
 
         fs::setFileBrowserErrorCallback(nullptr);
-
-        EventManager::clear();
 
         return true;
     }

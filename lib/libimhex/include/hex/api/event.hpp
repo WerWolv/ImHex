@@ -13,15 +13,15 @@
 
 #include <wolv/types/type_name.hpp>
 
-#define EVENT_DEF_IMPL(event_name, should_log, ...)                                     \
-    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                    \
-        constexpr static auto Id = [] { return hex::impl::EventId(); }();               \
-        constexpr static auto ShouldLog = (should_log);                                 \
-        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }        \
+#define EVENT_DEF_IMPL(event_name, event_name_string, should_log, ...)                      \
+    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                        \
+        constexpr static auto Id = [] { return hex::impl::EventId(event_name_string); }();  \
+        constexpr static auto ShouldLog = (should_log);                                     \
+        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }            \
     }
 
-#define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, true, __VA_ARGS__)
-#define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, false, __VA_ARGS__)
+#define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, #event_name, true, __VA_ARGS__)
+#define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, #event_name, false, __VA_ARGS__)
 
 struct GLFWwindow;
 
@@ -31,9 +31,9 @@ namespace hex {
 
         class EventId {
         public:
-            explicit constexpr EventId(const char *func = __builtin_FUNCTION(), u32 line = __builtin_LINE()) {
-                this->m_hash = line ^ 987654321;
-                for (auto c : std::string_view(func)) {
+            explicit constexpr EventId(const char *eventName) {
+                this->m_hash = 0x811C'9DC5;
+                for (auto c : std::string_view(eventName)) {
                     this->m_hash = (this->m_hash >> 5) | (this->m_hash << 27);
                     this->m_hash ^= c;
                 }
