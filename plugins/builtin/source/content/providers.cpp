@@ -71,7 +71,6 @@ namespace hex::plugin::builtin {
                      provider->setID(id);
                      provider->loadSettings(providerSettings.at("settings"));
                      if (!provider->open() || !provider->isAvailable() || !provider->isReadable()) {
-                        ImHexApi::Provider::remove(provider);
                         providerWarnings[provider] = provider->getErrorMessage();
                      } else
                          EventManager::post<EventProviderOpened>(provider);
@@ -79,6 +78,7 @@ namespace hex::plugin::builtin {
 
                  std::string warningMsg;
                 for(const auto &warning : providerWarnings){
+                    ImHexApi::Provider::remove(warning.first);
                     warningMsg.append(
                         hex::format("\n - {} : {}", warning.first->getName(), warning.second));
                 }
