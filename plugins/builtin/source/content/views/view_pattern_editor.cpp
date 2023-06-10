@@ -171,9 +171,15 @@ namespace hex::plugin::builtin {
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
 
-                        ImGui::TextFormatted("{} / {}",
-                            runtime.getCreatedPatternCount(),
-                            runtime.getMaximumPatternCount());
+                        if (auto max = runtime.getMaximumPatternCount(); max >= std::numeric_limits<u32>::max()) {
+                            ImGui::TextFormatted("{} / {}",
+                                                 runtime.getCreatedPatternCount(),
+                                                 ICON_FA_INFINITY);
+                        } else {
+                            ImGui::TextFormatted("{} / {}",
+                                                 runtime.getCreatedPatternCount(),
+                                                 runtime.getMaximumPatternCount());
+                        }
                     }
                 }
 
