@@ -1,3 +1,5 @@
+#pragma once
+
 #include <hex/ui/popup.hpp>
 
 #include <hex/api/localization.hpp>
@@ -49,6 +51,14 @@ namespace hex::plugin::builtin {
     public:
         explicit PopupInfo(std::string message)
         : PopupNotification("hex.builtin.common.info", std::move(message), [this]() {
+            Popup::close();
+        }) { }
+    };
+
+    class PopupWarning : public impl::PopupNotification<PopupWarning> {
+    public:
+        explicit PopupWarning(std::string message)
+        : PopupNotification("hex.builtin.common.warning", std::move(message), [this]() {
             Popup::close();
         }) { }
     };
