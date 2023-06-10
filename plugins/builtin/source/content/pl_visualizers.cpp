@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
 
                 if (shouldReset) {
                     values.clear();
-                    values = sampleData(patternToArray<float>(dataPattern), ImPlot::GetPlotSize().x * 4);
+                    values = sampleData(patternToArray<float>(dataPattern.get()), ImPlot::GetPlotSize().x * 4);
                 }
 
                 ImPlot::PlotLine("##line", values.data(), values.size());
@@ -75,8 +75,8 @@ namespace hex::plugin::builtin {
 
                 if (shouldReset) {
                     xValues.clear(); yValues.clear();
-                    xValues = sampleData(patternToArray<float>(xPattern), ImPlot::GetPlotSize().x * 4);
-                    yValues = sampleData(patternToArray<float>(yPattern), ImPlot::GetPlotSize().x * 4);
+                    xValues = sampleData(patternToArray<float>(xPattern.get()), ImPlot::GetPlotSize().x * 4);
+                    yValues = sampleData(patternToArray<float>(yPattern.get()), ImPlot::GetPlotSize().x * 4);
                 }
 
                 ImPlot::PlotScatter("##scatter", xValues.data(), yValues.data(), xValues.size());
@@ -206,8 +206,8 @@ namespace hex::plugin::builtin {
             }
 
             if (shouldReset) {
-                vertices = patternToArray<float>(verticesPattern);
-                indices  = patternToArray<u32>(indicesPattern);
+                vertices = patternToArray<float>(verticesPattern.get());
+                indices  = patternToArray<u32>(indicesPattern.get());
 
                 normals.clear();
                 normals.resize(vertices.size());
@@ -360,7 +360,7 @@ namespace hex::plugin::builtin {
 
                 resetTask = TaskManager::createTask("Visualizing...", TaskManager::NoProgress, [=](Task &) {
                     ma_device_stop(&audioDevice);
-                    waveData = patternToArray<i16>(wavePattern);
+                    waveData = patternToArray<i16>(wavePattern.get());
                     sampledData = sampleData(waveData, 300_scaled * 4);
                     index = 0;
 
