@@ -39,7 +39,7 @@ namespace hex::crash {
         };
         
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-            wolv::io::File file(path / "crash.json", wolv::io::File::Mode::Write);
+            wolv::io::File file(path / "crash.json", wolv::io::File::Mode::Create);
             if (file.isValid()) {
                 file.writeString(crashData.dump(4));
                 file.close();
