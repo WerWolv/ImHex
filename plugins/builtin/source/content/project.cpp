@@ -1,6 +1,7 @@
 #include <filesystem>
 
 #include <wolv/utils/guards.hpp>
+#include <wolv/utils/string.hpp>
 
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/localization.hpp>
@@ -22,21 +23,39 @@ namespace hex::plugin::builtin {
             ProjectFile::setPath(originalPath);
         };
 
-        if (!wolv::io::fs::exists(filePath) || !wolv::io::fs::isRegularFile(filePath))
+        if (!wolv::io::fs::exists(filePath) || !wolv::io::fs::isRegularFile(filePath)) {
+            showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+                hex::format("hex.builtin.popup.error.project.load.file_not_found"_lang,
+                    wolv::util::toUTF8String(filePath)
+            )));
             return false;
+        }
 
         Tar tar(filePath, Tar::Mode::Read);
-        if (!tar.isValid())
+        if (!tar.isValid()) {
+            // TODO: make tar return an actual error string
+            showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+                hex::format("hex.builtin.popup.error.project.load.invalid_tar"_lang
+            )));
             return false;
+        }
 
-        if (!tar.contains(MetadataPath))
+        if (!tar.contains(MetadataPath)) {
+            showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+                hex::format("hex.builtin.popup.error.project.load.invalid_magic"_lang)
+            ));
             return false;
+        }
 
         {
             const auto metadataContent = tar.readVector(MetadataPath);
 
-            if (!std::string(metadataContent.begin(), metadataContent.end()).starts_with(MetadataHeaderMagic))
+            if (!std::string(metadataContent.begin(), metadataContent.end()).starts_with(MetadataHeaderMagic)) {
+                showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+                    hex::format("hex.builtin.popup.error.project.load.invalid_magic"_lang)
+                ));
                 return false;
+            }
         }
 
         auto providers = auto(ImHexApi::Provider::getProviders());
@@ -66,6 +85,7 @@ namespace hex::plugin::builtin {
         for (const auto &provider : ImHexApi::Provider::getProviders()) {
             const auto basePath = std::fs::path(std::to_string(provider->getID()));
             for (const auto &handler: ProjectFile::getProviderHandlers()) {
+                // handlers are supposed to show the error/warning popup to the user themselves, so we don't show one here
                 try {
                     if (!handler.load(provider, basePath / handler.basePath, tar))
                         result = false;
