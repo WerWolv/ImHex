@@ -55,13 +55,13 @@ namespace hex::crash {
     static void signalHandler(int signalNumber, const std::string &signalName) {
         log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
-        // Trigger an event so that plugins can handle crashes
-        // It may affect things (like the project path),
-        // so we do this after saving the crash file    
-        EventManager::post<EventAbnormalTermination>(signalNumber);
-
         // Trigger the crash callback
         crashCallback(hex::format("Received signal '{}' ({})", signalName, signalNumber));
+
+        // Trigger an event so that plugins can handle crashes
+        // It may affect things (like the project path),
+        // so we do this after saving the crash file
+        EventManager::post<EventAbnormalTermination>(signalNumber);
 
         // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
