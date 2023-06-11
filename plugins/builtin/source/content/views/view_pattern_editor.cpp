@@ -137,6 +137,10 @@ namespace hex::plugin::builtin {
                         this->drawSectionSelector(settingsSize, *this->m_sections);
                         ImGui::EndTabItem();
                     }
+                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
+                        this->drawDebugger(settingsSize);
+                        ImGui::EndTabItem();
+                    }
 
                     ImGui::EndTabBar();
                 }
@@ -421,7 +425,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections) {
-        auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
         auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
         if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
@@ -432,73 +435,128 @@ namespace hex::plugin::builtin {
 
             ImGui::TableHeadersRow();
 
-            for (auto &[id, section] : sections) {
-                ImGui::PushID(id);
+            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                for (auto &[id, section] : sections) {
+                    ImGui::PushID(id);
 
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
 
-                ImGui::TextUnformatted(section.name.c_str());
-                ImGui::TableNextColumn();
-                ImGui::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
-                ImGui::TableNextColumn();
-                if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    auto dataProvider = std::make_unique<MemoryFileProvider>();
-                    dataProvider->resize(section.data.size());
-                    dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
-                    dataProvider->setReadOnly(true);
+                    ImGui::TextUnformatted(section.name.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
+                    ImGui::TableNextColumn();
+                    if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        auto dataProvider = std::make_unique<MemoryFileProvider>();
+                        dataProvider->resize(section.data.size());
+                        dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
+                        dataProvider->setReadOnly(true);
 
-                    auto hexEditor = auto(this->m_sectionHexEditor);
+                        auto hexEditor = auto(this->m_sectionHexEditor);
 
-                    hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
-                        if (this->m_runningEvaluators != 0)
-                            return std::nullopt;
-                        if (!ImHexApi::Provider::isValid())
-                            return std::nullopt;
+                        hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
+                            if (this->m_runningEvaluators != 0)
+                                return std::nullopt;
+                            if (!ImHexApi::Provider::isValid())
+                                return std::nullopt;
 
-                        std::optional<ImColor> color;
-                        for (const auto &pattern : runtime.getPatternsAtAddress(address, id)) {
-                            if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
-                                continue;
+                            std::optional<ImColor> color;
+                            for (const auto &pattern : runtime.getPatternsAtAddress(address, id)) {
+                                if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
+                                    continue;
 
-                            if (color.has_value())
-                                color = ImAlphaBlendColors(*color, pattern->getColor());
-                            else
-                                color = pattern->getColor();
-                        }
+                                if (color.has_value())
+                                    color = ImAlphaBlendColors(*color, pattern->getColor());
+                                else
+                                    color = pattern->getColor();
+                            }
 
-                        return color;
-                    });
-
-                    auto patternProvider = ImHexApi::Provider::get();
-
-
-                    this->m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider = std::move(dataProvider), hexEditor, patternDrawer = ui::PatternDrawer(), &runtime] mutable {
-                        hexEditor.setProvider(dataProvider.get());
-                        hexEditor.draw(480_scaled);
-                        patternDrawer.setSelectionCallback([&](const auto &region) {
-                            hexEditor.setSelection(region);
+                            return color;
                         });
 
-                        const auto &patterns = [&, this] -> const auto& {
-                            if (patternProvider->isReadable() && *this->m_executionDone)
-                                return runtime.getPatterns(id);
-                            else {
-                                static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
-                                return empty;
-                            }
-                        }();
+                        auto patternProvider = ImHexApi::Provider::get();
 
-                        if (*this->m_executionDone)
-                            patternDrawer.draw(patterns, &runtime, 150_scaled);
-                    };
+
+                        this->m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider = std::move(dataProvider), hexEditor, patternDrawer = ui::PatternDrawer(), &runtime] mutable {
+                            hexEditor.setProvider(dataProvider.get());
+                            hexEditor.draw(480_scaled);
+                            patternDrawer.setSelectionCallback([&](const auto &region) {
+                                hexEditor.setSelection(region);
+                            });
+
+                            const auto &patterns = [&, this] -> const auto& {
+                                if (patternProvider->isReadable() && *this->m_executionDone)
+                                    return runtime.getPatterns(id);
+                                else {
+                                    static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
+                                    return empty;
+                                }
+                            }();
+
+                            if (*this->m_executionDone)
+                                patternDrawer.draw(patterns, &runtime, 150_scaled);
+                        };
+                    }
+
+                    ImGui::PopID();
                 }
-
-                ImGui::PopID();
             }
 
             ImGui::EndTable();
         }
+    }
+
+    void ViewPatternEditor::drawDebugger(ImVec2 size) {
+        auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+        auto &evaluator = runtime.getInternals().evaluator;
+
+        if (ImGui::BeginChild("##debugger", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+            const auto &breakpoints = evaluator->getBreakpoints();
+            auto line = this->m_textEditor.GetCursorPosition().mLine + 1;
+
+            if (!breakpoints.contains(line)) {
+                if (ImGui::IconButton(ICON_VS_DEBUG_BREAKPOINT, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                    evaluator->addBreakpoint(line);
+                    this->m_textEditor.SetBreakpoints(breakpoints);
+                }
+                ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.add_tooltip"_lang);
+            } else {
+                if (ImGui::IconButton(ICON_VS_DEBUG_BREAKPOINT_UNVERIFIED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                    evaluator->removeBreakpoint(line);
+                    this->m_textEditor.SetBreakpoints(breakpoints);
+                }
+                ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
+            }
+
+            ImGui::SameLine(0, 20_scaled);
+
+            if (*this->m_breakpointHit) {
+                auto pauseLine = evaluator->getPauseLine();
+
+                if (ImGui::IconButton(ICON_VS_DEBUG_CONTINUE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                    *this->m_breakpointHit = false;
+                }
+                ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.continue"_lang);
+
+                if (pauseLine.has_value()) {
+                    ImGui::SameLine();
+                    ImGui::TextFormatted("hex.builtin.view.pattern_editor.debugger.halted_line"_lang, pauseLine.value());
+                }
+
+                auto &variables = *evaluator->getScope(0).scope;
+
+                if (this->m_resetDebuggerVariables) {
+                    this->m_debuggerDrawer->reset();
+                    this->m_resetDebuggerVariables = false;
+
+                    if (pauseLine.has_value())
+                        this->m_textEditor.SetCursorPosition({ int(pauseLine.value() - 1), 0 });
+                }
+
+                this->m_debuggerDrawer->draw(variables, &runtime, size.y - ImGui::GetTextLineHeightWithSpacing() * 4);
+            }
+        }
+        ImGui::EndChild();
     }
 
     void ViewPatternEditor::drawAlwaysVisible() {
@@ -576,16 +634,16 @@ namespace hex::plugin::builtin {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
-                        return std::nullopt;
+                            return std::nullopt;
 
                         if (!value.starts_with('['))
-                        return std::nullopt;
+                            return std::nullopt;
 
                         value = value.substr(1);
 
                         auto end = value.find(']');
                         if (end == std::string::npos)
-                        return std::nullopt;
+                            return std::nullopt;
 
                         value = value.substr(0, end - 1);
                         value = wolv::util::trim(value);
@@ -597,11 +655,11 @@ namespace hex::plugin::builtin {
                         value = wolv::util::trim(value);
 
                         if (value.empty())
-                        return std::nullopt;
+                            return std::nullopt;
 
                         auto start = value.find('@');
                         if (start == std::string::npos)
-                        return std::nullopt;
+                            return std::nullopt;
 
                         value = value.substr(start + 1);
                         value = wolv::util::trim(value);
@@ -609,7 +667,7 @@ namespace hex::plugin::builtin {
                         size_t end = 0;
                         auto result = std::stoull(value, &end, 0);
                         if (end != value.length())
-                        return std::nullopt;
+                            return std::nullopt;
 
                         return result;
                 }();
@@ -788,6 +846,13 @@ namespace hex::plugin::builtin {
 
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
+            runtime.getInternals().evaluator->setBreakpointHitCallback([this]{
+                *this->m_breakpointHit = true;
+                this->m_resetDebuggerVariables = true;
+                while (*this->m_breakpointHit) {
+                    std::this_thread::yield();
+                }
+            });
 
             task.setInterruptCallback([&runtime] { runtime.abort(); });
 
@@ -1112,6 +1177,22 @@ namespace hex::plugin::builtin {
                 tar.writeString(basePath, wolv::util::trim(sourceCode));
                 return true;
             }
+        });
+
+        ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, [this] {
+            auto line = this->m_textEditor.GetCursorPosition().mLine + 1;
+            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+
+            auto &evaluator = runtime.getInternals().evaluator;
+            auto &breakpoints = evaluator->getBreakpoints();
+
+            if (breakpoints.contains(line)) {
+                evaluator->removeBreakpoint(line);
+            } else {
+                evaluator->addBreakpoint(line);
+            }
+
+            this->m_textEditor.SetBreakpoints(breakpoints);
         });
     }
 

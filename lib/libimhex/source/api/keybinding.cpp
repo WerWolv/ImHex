@@ -37,18 +37,23 @@ namespace hex {
     void ShortcutManager::process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
         Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
 
-        if (ImGui::GetIO().WantTextInput)
-            return;
-
-        if (currentView->m_shortcuts.contains(pressedShortcut))
-            currentView->m_shortcuts[pressedShortcut]();
+        if (currentView->m_shortcuts.contains(pressedShortcut + AllowWhileTyping)) {
+            currentView->m_shortcuts[pressedShortcut + AllowWhileTyping]();
+        } else if (currentView->m_shortcuts.contains(pressedShortcut)) {
+            if (!ImGui::GetIO().WantTextInput)
+                currentView->m_shortcuts[pressedShortcut]();
+        }
     }
 
     void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
         Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, keyCode);
 
-        if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut))
-            ShortcutManager::s_globalShortcuts[pressedShortcut]();
+        if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut + AllowWhileTyping)) {
+            ShortcutManager::s_globalShortcuts[pressedShortcut + AllowWhileTyping]();
+        } else if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut)) {
+            if (!ImGui::GetIO().WantTextInput)
+                ShortcutManager::s_globalShortcuts[pressedShortcut]();
+        }
     }
 
     void ShortcutManager::clearShortcuts() {

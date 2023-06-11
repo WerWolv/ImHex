@@ -823,13 +823,7 @@ void TextEditor::Render() {
                 drawList->AddRectFilled(vstart, vend, mPalette[(int)PaletteIndex::Selection]);
             }
 
-            // Draw breakpoints
             auto start = ImVec2(lineStartScreenPos.x + scrollX, lineStartScreenPos.y);
-
-            if (mBreakpoints.count(lineNo + 1) != 0) {
-                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
-                drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::Breakpoint]);
-            }
 
             // Draw error markers
             auto errorIt = mErrorMarkers.find(lineNo + 1);
@@ -855,6 +849,15 @@ void TextEditor::Render() {
 
             auto lineNoWidth = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x;
             drawList->AddText(ImVec2(lineStartScreenPos.x + mTextStart - lineNoWidth, lineStartScreenPos.y), mPalette[(int)PaletteIndex::LineNumber], buf);
+
+            // Draw breakpoints
+            if (mBreakpoints.count(lineNo + 1) != 0) {
+                auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
+                drawList->AddRectFilled(start + ImVec2(mTextStart, 0), end, mPalette[(int)PaletteIndex::Breakpoint]);
+
+                drawList->AddCircleFilled(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Breakpoint]);
+                drawList->AddCircle(start + ImVec2(0, mCharAdvance.y) / 2, mCharAdvance.y / 3, mPalette[(int)PaletteIndex::Default]);
+            }
 
             if (mState.mCursorPosition.mLine == lineNo) {
                 auto focused = ImGui::IsWindowFocused();

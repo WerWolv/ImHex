@@ -131,7 +131,7 @@
         },
         "text-editor": {
             "background": "#000080FF",
-            "breakpoint": "#0080FF80",
+            "breakpoint": "#FF200080",
             "char-literal": "#008080FF",
             "comment": "#808080FF",
             "current-line-edge": "#00000040",

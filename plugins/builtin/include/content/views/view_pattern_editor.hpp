@@ -165,12 +165,17 @@ namespace hex::plugin::builtin {
         PerProvider<std::list<EnvVar>> m_envVarEntries;
 
         PerProvider<bool> m_shouldAnalyze;
+        PerProvider<bool> m_breakpointHit;
+        PerProvider<int> m_temporaryBreakpointLine;
+        PerProvider<ui::PatternDrawer> m_debuggerDrawer;
+        std::atomic<bool> m_resetDebuggerVariables;
 
     private:
         void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
         void drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections);
+        void drawDebugger(ImVec2 size);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
