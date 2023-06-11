@@ -111,11 +111,32 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
 
             if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
+                static float height = 0;
+                static bool dragging = false;
 
-                auto textEditorSize = ImGui::GetContentRegionAvail();
-                textEditorSize.y *= 3.75 / 5.0;
+                auto availableSize = ImGui::GetContentRegionAvail();
+                auto textEditorSize = availableSize;
+                textEditorSize.y *= 3.5 / 5.0;
                 textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
+                textEditorSize.y += height;
+
+                if (availableSize.y > 1)
+                    textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3);
+
                 this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
+
+                ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
+                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 1)) {
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+                        dragging = true;
+                } else {
+                    dragging = false;
+                }
+
+                if (dragging) {
+                    height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).y;
+                    ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+                }
 
                 auto settingsSize = ImGui::GetContentRegionAvail();
                 settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
