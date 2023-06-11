@@ -60,6 +60,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/views/view_theme_manager.cpp
 
         source/content/helpers/math_evaluator.cpp
+        source/content/helpers/notification.cpp
 
         source/ui/hex_editor.cpp
         source/ui/pattern_drawer.cpp
