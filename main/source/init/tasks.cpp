@@ -445,7 +445,7 @@ namespace hex::init {
     }
 
     bool clearOldLogs() {
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs, true)) {
+        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs)) {
             std::vector<std::filesystem::directory_entry> files;
 
             for (const auto& file : std::filesystem::directory_iterator(path))
