@@ -171,8 +171,13 @@ namespace hex::plugin::builtin {
                 {
                     auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                     if (runtime.isRunning()) {
-                        if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
-                            runtime.abort();
+                        if (this->m_breakpointHit) {
+                            if (ImGui::IconButton(ICON_VS_DEBUG_CONTINUE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow)))
+                                this->m_breakpointHit = false;
+                        } else {
+                            if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
+                                runtime.abort();
+                        }
                     } else {
                         if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
                             this->m_triggerEvaluation = false;
@@ -184,9 +189,13 @@ namespace hex::plugin::builtin {
                     ImGui::PopStyleVar();
 
                     ImGui::SameLine();
-                    if (this->m_runningEvaluators > 0)
-                        ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
-                    else {
+                    if (this->m_runningEvaluators > 0) {
+                        if (this->m_breakpointHit) {
+                            ImGui::TextFormatted("hex.builtin.view.pattern_editor.breakpoint_hit"_lang, runtime.getInternals().evaluator->getPauseLine().value_or(0));
+                        } else {
+                            ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
+                        }
+                    } else {
                         if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
                             if (this->m_runAutomatically)
                                 this->m_hasUnevaluatedChanges = true;
@@ -549,27 +558,14 @@ namespace hex::plugin::builtin {
                 ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
             }
 
-            ImGui::SameLine(0, 20_scaled);
-
             if (*this->m_breakpointHit) {
-                auto pauseLine = evaluator->getPauseLine();
-
-                if (ImGui::IconButton(ICON_VS_DEBUG_CONTINUE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
-                    *this->m_breakpointHit = false;
-                }
-                ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.continue"_lang);
-
-                if (pauseLine.has_value()) {
-                    ImGui::SameLine();
-                    ImGui::TextFormatted("hex.builtin.view.pattern_editor.debugger.halted_line"_lang, pauseLine.value());
-                }
-
                 auto &variables = *evaluator->getScope(0).scope;
 
                 if (this->m_resetDebuggerVariables) {
                     this->m_debuggerDrawer->reset();
                     this->m_resetDebuggerVariables = false;
 
+                    auto pauseLine = evaluator->getPauseLine();
                     if (pauseLine.has_value())
                         this->m_textEditor.SetCursorPosition({ int(pauseLine.value() - 1), 0 });
                 }

@@ -166,7 +166,6 @@ namespace hex::plugin::builtin {
 
         PerProvider<bool> m_shouldAnalyze;
         PerProvider<bool> m_breakpointHit;
-        PerProvider<int> m_temporaryBreakpointLine;
         PerProvider<ui::PatternDrawer> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
 
