@@ -35,7 +35,8 @@ namespace hex::plugin::builtin {
         if (!tar.isValid()) {
             // TODO: make tar return an actual error string
             showError(hex::format("hex.builtin.popup.error.project.load"_lang,
-                hex::format("hex.builtin.popup.error.project.load.invalid_tar"_lang
+                hex::format("hex.builtin.popup.error.project.load.invalid_tar"_lang,
+                    tar.getOpenErrorString()
             )));
             return false;
         }
