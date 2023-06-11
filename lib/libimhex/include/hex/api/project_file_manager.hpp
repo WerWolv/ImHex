@@ -12,15 +12,21 @@
 #include <hex/helpers/concepts.hpp>
 #include <hex/helpers/tar.hpp>
 
+/**
+ * @brief Project file manager
+ *
+ * The project file manager is used to load and store project files. It is used by all features of ImHex
+ * that want to store any data to a Project File.
+ *
+ */
 namespace hex {
 
-    /**
-     * @brief Project file manager
-     *
-     * The project file manager is used to load and store project files. It is used by all features of ImHex
-     * that want to store any data to a Project File.
-     *
-     */
+    
+    void setProjectFunctions(
+            const std::function<bool(const std::fs::path&)> &loadFun,
+            const std::function<bool(std::optional<std::fs::path>)> &storeFun
+    );
+
     class ProjectFile {
     public:
         struct Handler {
