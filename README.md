@@ -168,6 +168,9 @@ All dependencies that aren't bundled, can be installed using the dependency inst
 
 For more information, check out the [Compiling](/dist/compiling) guide.
 
+## Contributing
+See [Contributing](/CONTRIBUTING.md)
+
 ## Plugin development
 
 To develop plugins for ImHex, use one of the following two templates projects to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
