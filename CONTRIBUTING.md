@@ -1,8 +1,29 @@
-# Hacking guide
+# Contribution guide
 
 ## Introduction
 
 This document is a guide for developers who want to contribute to ImHex in any way. It contains information about the codebase, the build process and the general workflow.
+
+## Making Changes
+
+### Adding new features
+
+If you'd like to add new features, the best way to start is by joining our Discord and telling us about your idea. We can then discuss the best way to implement it and how it should be integrated into ImHex or if it should be done in a separate plugin.
+
+There are standalone plugin templates that use ImHex as a submodule. You can find them here:
+- https://github.com/WerWolv/ImHex-Cpp-Plugin-Template
+- https://github.com/WerWolv/ImHex-Rust-Plugin-Template
+
+### Adding a new language
+
+If you'd like to support a new language in ImHex, the best way is by using the `dist/langtool.py` tool. It will create the necessary file for you and help you fill them out.
+First, run the tool with `python3 dist/langtool.py create plugins/builtin/romfs/lang <iso_code>` where `<iso_code>` is the ISO 639-1 code of your language. This will create a new file in the language directory.
+Afterwards follow the prompts of the program to populate the entire file. Once you're done, rerun cmake and rebuild ImHex. Your language should now be available in the settings.
+
+### Updating an existing language
+
+If you'd like to add missing keys to an existing language, you can also use the `dist/langtool.py` tool. Run it with `python3 dist/langtool.py translate plugins/builtin/romfs/lang <iso_code>` where `<iso_code>` is the ISO 639-1 code of the language.
+This will one by one list all the missing translation keys that are present in the default translation file, and you can fill them in with the correct translation for your language.
 
 ## Codebase
 
@@ -45,23 +66,3 @@ I personally use CLion for development since it makes configuring and building t
 ### macOS
 - Install all dependencies using brew and the `dist/Brewfile` script.
 
-## Making Changes
-
-### Adding new features to ImHex
-
-If you'd like to add new features, the best way to start is by joining our Discord and telling us about your idea. We can then discuss the best way to implement it and how it should be integrated into ImHex or if it should be done in a separate plugin.
-
-There are standalone plugin templates that use ImHex as a submodule. You can find them here:
-- https://github.com/WerWolv/ImHex-Cpp-Plugin-Template
-- https://github.com/WerWolv/ImHex-Rust-Plugin-Template
-
-### Adding a new language
-
-If you'd like to support a new language in ImHex, the best way is by using the `dist/langtool.py` tool. It will create the necessary file for you and help you fill them out.
-First, run the tool with `python3 dist/langtool.py create plugins/builtin/romfs/lang <iso_code>` where `<iso_code>` is the ISO 639-1 code of your language. This will create a new file in the language directory.
-Afterwards follow the prompts of the program to populate the entire file. Once you're done, rerun cmake and rebuild ImHex. Your language should now be available in the settings.
-
-### Updating an existing language
-
-If you'd like to add missing keys to an existing language, you can also use the `dist/langtool.py` tool. Run it with `python3 dist/langtool.py translate plugins/builtin/romfs/lang <iso_code>` where `<iso_code>` is the ISO 639-1 code of the language.
-This will one by one list all the missing translation keys that are present in the default translation file, and you can fill them in with the correct translation for your language.
