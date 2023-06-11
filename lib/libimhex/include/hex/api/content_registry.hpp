@@ -749,6 +749,7 @@ namespace hex {
             class Hash {
             public:
                 explicit Hash(std::string unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
+                virtual ~Hash() = default;
 
                 class Function {
                 public:
@@ -804,9 +805,9 @@ namespace hex {
 
             namespace impl {
 
-                std::vector<Hash*> &getHashes();
+                std::vector<std::unique_ptr<Hash>> &getHashes();
 
-                void add(Hash* hash);
+                void add(std::unique_ptr<Hash> &&hash);
             }
 
 
@@ -817,7 +818,7 @@ namespace hex {
              */
             template<typename T, typename ... Args>
             void add(Args && ... args) {
-                impl::add(new T(std::forward<Args>(args)...));
+                impl::add(std::make_unique<T>(std::forward<Args>(args)...));
             }
 
         }

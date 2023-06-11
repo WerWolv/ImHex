@@ -774,14 +774,14 @@ namespace hex {
 
         namespace impl {
 
-            std::vector<Hash *> &getHashes() {
-                static std::vector<Hash *> hashes;
+            std::vector<std::unique_ptr<Hash>> &getHashes() {
+                static std::vector<std::unique_ptr<Hash>> hashes;
 
                 return hashes;
             }
 
-            void add(Hash *hash) {
-                getHashes().push_back(hash);
+            void add(std::unique_ptr<Hash> &&hash) {
+                getHashes().emplace_back(std::move(hash));
             }
 
         }

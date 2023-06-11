@@ -91,15 +91,15 @@ namespace hex::plugin::builtin {
         const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
 
         if (this->m_selectedHash == nullptr && !hashes.empty()) {
-            this->m_selectedHash = hashes.front();
+            this->m_selectedHash = hashes.front().get();
         }
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.hashes.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? LangEntry(this->m_selectedHash->getUnlocalizedName()) : "")) {
 
-                for (const auto hash : hashes) {
-                    if (ImGui::Selectable(LangEntry(hash->getUnlocalizedName()), this->m_selectedHash == hash)) {
-                        this->m_selectedHash = hash;
+                for (const auto &hash : hashes) {
+                    if (ImGui::Selectable(LangEntry(hash->getUnlocalizedName()), this->m_selectedHash == hash.get())) {
+                        this->m_selectedHash = hash.get();
                         this->m_newHashName.clear();
                     }
                 }

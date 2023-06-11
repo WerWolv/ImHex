@@ -72,7 +72,7 @@ namespace hex {
      */
     class EventManager {
     public:
-        using EventList = std::list<std::pair<impl::EventId, impl::EventBase *>>;
+        using EventList = std::list<std::pair<impl::EventId, std::unique_ptr<impl::EventBase>>>;
 
         /**
          * @brief Subscribes to an event
@@ -82,7 +82,7 @@ namespace hex {
          */
         template<typename E>
         static EventList::iterator subscribe(typename E::Callback function) {
-            return s_events.insert(s_events.end(), std::make_pair(E::Id, new E(function)));
+            return s_events.insert(s_events.end(), std::make_pair(E::Id, std::make_unique<E>(function)));
         }
 
         /**
@@ -131,7 +131,7 @@ namespace hex {
         static void post(auto &&...args) noexcept {
             for (const auto &[id, event] : s_events) {
                 if (id == E::Id) {
-                    (*static_cast<E *const>(event))(std::forward<decltype(args)>(args)...);
+                    (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
                 }
             }
 
