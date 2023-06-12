@@ -36,6 +36,9 @@ namespace hex::log {
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
             auto dest = getDestination();
 
+            static std::mutex loggerMutex;
+            std::scoped_lock lock(loggerMutex);
+
             printPrefix(dest, ts, level);
             fmt::print(dest, fmt::runtime(fmt), args...);
             fmt::print(dest, "\n");

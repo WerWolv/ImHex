@@ -540,7 +540,7 @@ namespace hex::plugin::builtin {
         auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
         auto &evaluator = runtime.getInternals().evaluator;
 
-        if (ImGui::BeginChild("##debugger", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
+        if (ImGui::BeginChild("##debugger", size, true)) {
             const auto &breakpoints = evaluator->getBreakpoints();
             auto line = this->m_textEditor.GetCursorPosition().mLine + 1;
 
