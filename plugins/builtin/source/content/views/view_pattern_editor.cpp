@@ -126,15 +126,18 @@ namespace hex::plugin::builtin {
                 this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
                 ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
-                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 1)) {
-                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_RectOnly))
+                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
+                    if (ImGui::IsItemHovered())
                         dragging = true;
                 } else {
                     dragging = false;
                 }
-
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+                }
+                
                 if (dragging) {
-                    height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left).y;
+                    height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).y;
                     ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
                 }
 
