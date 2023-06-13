@@ -30,7 +30,6 @@ project(imhex
 
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
-detectBadClone()
 verifyCompiler()
 
 # List plugin names here. Project name must match folder name
@@ -46,6 +45,7 @@ addDefines()
 configurePackingResources()
 setUninstallTarget()
 addBundledLibraries()
+detectBadClone()
 
 # Add ImHex sources
 add_subdirectory(lib/libimhex)
