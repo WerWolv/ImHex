@@ -497,6 +497,7 @@ macro(addBundledLibraries)
     set_property(TARGET libwolv-net PROPERTY POSITION_INDEPENDENT_CODE ON)
 
     set(XDGPP_INCLUDE_DIRS "${EXTERN_LIBS_FOLDER}/xdgpp")
+    #list(APPEND badCloneExclusions "xdgpp")
     set(CURL_USE_MBEDTLS ON)
     set(BUILD_CURL_EXE OFF)
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
