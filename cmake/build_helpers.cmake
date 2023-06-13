@@ -472,6 +472,10 @@ function(initDependencySourceChoice varName name)
     endif()
 endfunction()
 
+#[[
+list(APPEND badCloneExclusions "libromfs")
+list(APPEND badCloneExclusions "libwolv")
+#]]
 
 macro(addBundledLibraries)
     set(EXTERN_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
