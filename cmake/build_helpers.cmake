@@ -581,6 +581,7 @@ macro(addBundledLibraries)
 
     add_subdirectory(${EXTERN_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     set_target_properties(libpl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    #list(APPEND badCloneExclusions "pattern_language")
 
     find_package(mbedTLS 2.26.0 REQUIRED)
 
