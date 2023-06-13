@@ -139,7 +139,7 @@ namespace hex::plugin::builtin {
 
         bool m_hasUnevaluatedChanges = false;
 
-        TextEditor m_textEditor;
+        TextEditor m_textEditor, m_consoleEditor;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
@@ -152,7 +152,7 @@ namespace hex::plugin::builtin {
         ui::HexEditor m_sectionHexEditor;
 
         PerProvider<std::string> m_sourceCode;
-        PerProvider<std::vector<std::pair<pl::core::LogConsole::Level, std::string>>> m_console;
+        PerProvider<std::vector<std::string>> m_console;
         PerProvider<bool> m_executionDone = true;
 
         std::mutex m_logMutex;
@@ -170,7 +170,7 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_resetDebuggerVariables;
 
     private:
-        void drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console);
+        void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
         void drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections);

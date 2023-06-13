@@ -212,6 +212,9 @@ public:
 	bool IsTextChanged() const { return mTextChanged; }
 	bool IsCursorPositionChanged() const { return mCursorPositionChanged; }
 
+    void SetShowCursor(bool aValue) { mShowCursor = aValue; }
+    void SetShowLineNumbers(bool aValue) { mShowLineNumbers = aValue; }
+
 	bool IsColorizerEnabled() const { return mColorizerEnabled; }
 	void SetColorizerEnable(bool aValue);
 
@@ -386,6 +389,8 @@ private:
 	uint64_t mStartTime;
 
 	float mLastClick;
+    bool mShowCursor;
+    bool mShowLineNumbers;
 };
 
 bool TokenizeCStyleString(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end);

@@ -83,6 +83,41 @@ namespace hex::plugin::builtin {
 
             initialized = true;
         }
+
+        return langDef;
+    }
+
+    static const TextEditor::LanguageDefinition &ConsoleLog() {
+        static bool initialized = false;
+        static TextEditor::LanguageDefinition langDef;
+        if (!initialized) {
+            langDef.mTokenize = [](const char *inBegin, const char *inEnd, const char *&outBegin, const char *&outEnd, TextEditor::PaletteIndex &paletteIndex) -> bool {
+                if (std::string_view(inBegin).starts_with("D: "))
+                    paletteIndex = TextEditor::PaletteIndex::Comment;
+                else if (std::string_view(inBegin).starts_with("I: "))
+                    paletteIndex = TextEditor::PaletteIndex::Default;
+                else if (std::string_view(inBegin).starts_with("W: "))
+                    paletteIndex = TextEditor::PaletteIndex::Preprocessor;
+                else if (std::string_view(inBegin).starts_with("E: "))
+                    paletteIndex = TextEditor::PaletteIndex::ErrorMarker;
+                else
+                    paletteIndex = TextEditor::PaletteIndex::Max;
+
+                outBegin = inBegin;
+                outEnd = inEnd;
+
+                return true;
+            };
+
+            langDef.mName = "Console Log";
+            langDef.mCaseSensitive   = false;
+            langDef.mAutoIndentation = false;
+            langDef.mCommentStart = "\x01";
+            langDef.mCommentEnd = "\x01";
+            langDef.mSingleLineComment = "\x01";
+
+            initialized = true;
+        }
         return langDef;
     }
 
@@ -93,6 +128,12 @@ namespace hex::plugin::builtin {
         this->m_textEditor.SetLanguageDefinition(PatternLanguage());
         this->m_textEditor.SetShowWhitespaces(false);
 
+        this->m_consoleEditor.SetLanguageDefinition(ConsoleLog());
+        this->m_consoleEditor.SetShowWhitespaces(false);
+        this->m_consoleEditor.SetReadOnly(true);
+        this->m_consoleEditor.SetShowCursor(false);
+        this->m_consoleEditor.SetShowLineNumbers(false);
+
         this->registerEvents();
         this->registerMenuItems();
         this->registerHandlers();
@@ -101,7 +142,6 @@ namespace hex::plugin::builtin {
     ViewPatternEditor::~ViewPatternEditor() {
         EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
         EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<RequestChangeTheme>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
         EventManager::unsubscribe<EventProviderClosed>(this);
     }
@@ -135,7 +175,7 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
                 }
-                
+
                 if (dragging) {
                     height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).y;
                     ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
@@ -146,7 +186,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::BeginTabBar("##settings")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
-                        this->drawConsole(settingsSize, *this->m_console);
+                        this->drawConsole(settingsSize);
                         ImGui::EndTabItem();
                     }
                     if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.env_vars"_lang)) {
@@ -257,47 +297,9 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
-    void ViewPatternEditor::drawConsole(ImVec2 size, const std::vector<std::pair<pl::core::LogConsole::Level, std::string>> &console) {
-        const auto &palette = TextEditor::GetPalette();
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, palette[u32(TextEditor::PaletteIndex::Background)]);
-        if (ImGui::BeginChild("##console", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
-            ImGuiListClipper clipper;
-
-            std::scoped_lock lock(this->m_logMutex);
-            clipper.Begin(console.size());
-
-            while (clipper.Step())
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    auto [level, message] = console[i];
-                    std::replace_if(message.begin(), message.end(), [](char c) { return c == 0x00; }, ' ');
-
-                    switch (level) {
-                        using enum pl::core::LogConsole::Level;
-
-                        case Debug:
-                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Comment)]);
-                            break;
-                        case Info:
-                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Default)]);
-                            break;
-                        case Warning:
-                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::Preprocessor)]);
-                            break;
-                        case Error:
-                            ImGui::PushStyleColor(ImGuiCol_Text, palette[u32(TextEditor::PaletteIndex::ErrorMarker)]);
-                            break;
-                        default:
-                            continue;
-                    }
-
-                    if (ImGui::Selectable(hex::format("{}##ConsoleLine", message).c_str()))
-                        ImGui::SetClipboardText(message.c_str());
-
-                    ImGui::PopStyleColor();
-                }
-        }
-        ImGui::EndChild();
-        ImGui::PopStyleColor(1);
+    void ViewPatternEditor::drawConsole(ImVec2 size) {
+        this->m_consoleEditor.Render("##console", size, true);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
 
     void ViewPatternEditor::drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars) {
@@ -898,7 +900,21 @@ namespace hex::plugin::builtin {
 
             runtime.setLogCallback([this](auto level, auto message) {
                 std::scoped_lock lock(this->m_logMutex);
-                this->m_console->emplace_back(level, message);
+
+                for (auto line : wolv::util::splitString(message, "\n")) {
+                    switch (level) {
+                        using enum pl::core::LogConsole::Level;
+
+                        case Debug:     line = hex::format("D: {}", line); break;
+                        case Info:      line = hex::format("I: {}", line); break;
+                        case Warning:   line = hex::format("W: {}", line); break;
+                        case Error:     line = hex::format("E: {}", line); break;
+                    }
+
+                    this->m_console->emplace_back(line);
+                }
+
+                this->m_consoleEditor.SetTextLines(this->m_console.get());
             });
 
             ON_SCOPE_EXIT {
@@ -911,9 +927,9 @@ namespace hex::plugin::builtin {
 
                 std::scoped_lock lock(this->m_logMutex);
                 this->m_console->emplace_back(
-                   pl::core::LogConsole::Level::Info,
-                   hex::format("Evaluation took {}", runtime.getLastRunningTime())
+                   hex::format("I: Evaluation took {}", runtime.getLastRunningTime())
                 );
+                this->m_consoleEditor.SetTextLines(this->m_console.get());
             };
 
 
@@ -958,8 +974,10 @@ namespace hex::plugin::builtin {
                 if (oldProvider != nullptr)
                     this->m_sourceCode.get(oldProvider) = this->m_textEditor.GetText();
 
-                if (newProvider != nullptr)
+                if (newProvider != nullptr) {
+                    this->m_consoleEditor.SetTextLines(this->m_console.get(newProvider));
                     this->m_textEditor.SetText(wolv::util::trim(this->m_sourceCode.get(newProvider)));
+                }
                 else
                     this->m_textEditor.SetText("");
             } else {
