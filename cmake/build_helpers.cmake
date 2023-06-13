@@ -487,6 +487,7 @@ macro(addBundledLibraries)
 
     add_subdirectory(${EXTERN_LIBS_FOLDER}/microtar EXCLUDE_FROM_ALL)
     set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    #list(APPEND badCloneExclusions "microtar")
 
     add_subdirectory(${EXTERN_LIBS_FOLDER}/libwolv EXCLUDE_FROM_ALL)
     set_property(TARGET libwolv-types PROPERTY POSITION_INDEPENDENT_CODE ON)
