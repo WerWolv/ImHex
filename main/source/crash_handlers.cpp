@@ -31,7 +31,7 @@ namespace hex::crash {
     static std::function<void(const std::string&)> crashCallback = sendNativeMessage;
 
     static void saveCrashFile(const std::string& message) {
-        hex::unused(message);
+        log::fatal(message);
 
         nlohmann::json crashData{
             {"logFile", wolv::util::toUTF8String(hex::log::getFile().getPath())},
@@ -108,9 +108,7 @@ namespace hex::crash {
             try {
                 std::rethrow_exception(std::current_exception());
             } catch (std::exception &ex) {
-                std::string exceptionStr = hex::format("{}()::what() -> {}",
-                    llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what()
-                );
+                std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
                 log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
 
                 EventManager::post<EventAbnormalTermination>(0);
