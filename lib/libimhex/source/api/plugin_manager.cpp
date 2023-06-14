@@ -14,7 +14,7 @@ namespace hex {
         #if defined(OS_WINDOWS)
             this->m_handle = LoadLibraryW(path.c_str());
 
-            if (this->m_handle == nullptr) {
+            if (this->m_handle == INVALID_HANDLE_VALUE || this->m_handle == nullptr) {
                 log::error("LoadLibraryW failed: {}!", std::system_category().message(::GetLastError()));
                 return;
             }
@@ -74,8 +74,12 @@ namespace hex {
 
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != IMHEX_VERSION) {
-            log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(this->m_path.filename()), requestedVersion);
-            return false;
+            if (requestedVersion.empty()) {
+                log::warn("Plugin '{}' did not specify a compatible version, assuming it is compatible with the current version of ImHex.", wolv::util::toUTF8String(this->m_path.filename()));
+            } else {
+                log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(this->m_path.filename()), requestedVersion);
+                return false;
+            }
         }
 
         if (this->m_initializePluginFunction != nullptr) {
