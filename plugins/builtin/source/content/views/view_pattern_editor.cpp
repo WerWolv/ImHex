@@ -298,6 +298,14 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
+        {
+            std::scoped_lock lock(this->m_logMutex);
+
+            if (this->m_consoleEditor.GetTotalLines() == 1 || size_t(this->m_consoleEditor.GetTotalLines()) != this->m_console->size()) {
+                this->m_consoleEditor.SetTextLines(*this->m_console);
+            }
+        }
+
         this->m_consoleEditor.Render("##console", size, true);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y + 1_scaled);
     }
@@ -913,8 +921,6 @@ namespace hex::plugin::builtin {
 
                     this->m_console->emplace_back(line);
                 }
-
-                this->m_consoleEditor.SetTextLines(this->m_console.get());
             });
 
             ON_SCOPE_EXIT {
@@ -929,7 +935,6 @@ namespace hex::plugin::builtin {
                 this->m_console->emplace_back(
                    hex::format("I: Evaluation took {}", runtime.getLastRunningTime())
                 );
-                this->m_consoleEditor.SetTextLines(this->m_console.get());
             };
 
 
