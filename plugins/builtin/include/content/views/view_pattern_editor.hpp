@@ -140,6 +140,7 @@ namespace hex::plugin::builtin {
         bool m_hasUnevaluatedChanges = false;
 
         TextEditor m_textEditor, m_consoleEditor;
+        std::atomic<bool> m_consoleNeedsUpdate = false;
 
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;

@@ -2046,11 +2046,11 @@ void TextEditor::ColorizeInternal() {
                         auto &startStr       = mLanguageDefinition.mCommentStart;
                         auto &singleStartStr = mLanguageDefinition.mSingleLineComment;
 
-                        if (singleStartStr.size() > 0 &&
+                        if (!singleStartStr.empty() &&
                             currentIndex + singleStartStr.size() <= line.size() &&
                             equals(singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
                             withinSingleLineComment = true;
-                        } else if (!withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
+                        } else if (!startStr.empty() && !withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
                                    equals(startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
                             commentStartLine  = currentLine;
                             commentStartIndex = currentIndex;

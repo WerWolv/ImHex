@@ -112,9 +112,9 @@ namespace hex::plugin::builtin {
             langDef.mName = "Console Log";
             langDef.mCaseSensitive   = false;
             langDef.mAutoIndentation = false;
-            langDef.mCommentStart = "\x01";
-            langDef.mCommentEnd = "\x01";
-            langDef.mSingleLineComment = "\x01";
+            langDef.mCommentStart = "";
+            langDef.mCommentEnd = "";
+            langDef.mSingleLineComment = "";
 
             initialized = true;
         }
@@ -298,12 +298,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
-        {
+        if (this->m_consoleNeedsUpdate) {
             std::scoped_lock lock(this->m_logMutex);
 
-            if (this->m_consoleEditor.GetTotalLines() == 1 || size_t(this->m_consoleEditor.GetTotalLines()) != this->m_console->size()) {
-                this->m_consoleEditor.SetTextLines(*this->m_console);
-            }
+            this->m_consoleEditor.SetTextLines(*this->m_console);
         }
 
         this->m_consoleEditor.Render("##console", size, true);
@@ -866,6 +864,7 @@ namespace hex::plugin::builtin {
 
         this->m_textEditor.SetErrorMarkers({});
         this->m_console->clear();
+        this->m_consoleNeedsUpdate = true;
 
         this->m_sectionWindowDrawer.clear();
 
@@ -920,6 +919,7 @@ namespace hex::plugin::builtin {
                     }
 
                     this->m_console->emplace_back(line);
+                    this->m_consoleNeedsUpdate = true;
                 }
             });
 
@@ -935,6 +935,7 @@ namespace hex::plugin::builtin {
                 this->m_console->emplace_back(
                    hex::format("I: Evaluation took {}", runtime.getLastRunningTime())
                 );
+                this->m_consoleNeedsUpdate = true;
             };
 
 
