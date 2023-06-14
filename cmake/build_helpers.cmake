@@ -15,11 +15,6 @@ macro(addDefines)
     endif ()
 
     if (DEFINED GIT_COMMIT_HASH_LONG AND DEFINED GIT_COMMIT_HASH_SHORT AND DEFINED GIT_COMMIT_BRANCH)
-        add_compile_definitions(
-                GIT_COMMIT_HASH_LONG="${GIT_COMMIT_HASH_LONG}"
-                GIT_COMMIT_HASH_SHORT="${GIT_COMMIT_HASH_SHORT}"
-                GIT_BRANCH="${GIT_COMMIT_BRANCH}"
-        )
     else()
         # Get the current working branch
         execute_process(
@@ -46,13 +41,6 @@ macro(addDefines)
                 OUTPUT_STRIP_TRAILING_WHITESPACE
                 RESULT_VARIABLE RESULT_HASH_LONG
         )
-
-        if (RESULT_BRANCH EQUAL 0 AND RESULT_HASH_LONG EQUAL 0 AND RESULT_HASH_SHORT EQUAL 0)
-            add_compile_definitions(
-                    GIT_COMMIT_HASH_SHORT="${GIT_COMMIT_HASH_SHORT}"
-                    GIT_COMMIT_HASH_LONG="${GIT_COMMIT_HASH_LONG}"
-                    GIT_BRANCH="${GIT_BRANCH}")
-        endif ()
     endif ()
 
     set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR} -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH} ")
@@ -78,6 +66,16 @@ macro(addDefines)
         add_compile_definitions(HEX_UPDATE_CHECK)
     endif()
 endmacro()
+
+function(addVersionMacrodefsToSources)
+    foreach(p GIT_BRANCH="${GIT_BRANCH}" GIT_COMMIT_HASH_LONG="${GIT_COMMIT_HASH_LONG}" GIT_COMMIT_HASH_SHORT="${GIT_COMMIT_HASH_SHORT}")
+        set_property(
+            SOURCE ${ARGN}
+            APPEND
+            PROPERTY COMPILE_DEFINITIONS "${p}"
+        )
+    endforeach()
+endfunction()
 
 # Detect current OS / System
 macro(detectOS)

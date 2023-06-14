@@ -65,6 +65,8 @@ add_library(${PROJECT_NAME} SHARED
         source/ui/pattern_drawer.cpp
 )
 
+addVersionMacrodefsToSources(source/content/communication_interface.cpp source/content/views/view_about.cpp)
+
 # Add additional include directories here #
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 

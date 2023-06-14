@@ -15,6 +15,8 @@ add_executable(main ${APPLICATION_TYPE}
     ${IMHEX_ICON}
 )
 
+addVersionMacrodefsToSources(source/main.cpp source/init/splash_window.cpp)
+
 target_include_directories(main PUBLIC include)
 setupCompilerWarnings(main)
 
