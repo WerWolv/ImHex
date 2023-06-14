@@ -15,7 +15,7 @@ namespace hex {
         #if defined(OS_WINDOWS)
             this->m_handle = LoadLibraryW(path.c_str());
 
-            if (this->m_handle == nullptr) {
+            if (this->m_handle == INVALID_HANDLE_VALUE || this->m_handle == nullptr) {
                 log::error("LoadLibraryW failed: {}!", std::system_category().message(::GetLastError()));
                 return;
             }

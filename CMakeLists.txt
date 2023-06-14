@@ -40,6 +40,7 @@ verifyCompiler()
 set(PLUGINS
     builtin
     windows
+    managed_plugin_loader
 )
 
 # Add various defines
