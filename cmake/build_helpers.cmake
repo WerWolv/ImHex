@@ -14,11 +14,11 @@ macro(addDefines)
         message(FATAL_ERROR "IMHEX_VERSION is not defined")
     endif ()
 
-    if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_HASH_SHORT AND DEFINED IMHEX_COMMIT_BRANCH)
+    if (DEFINED GIT_COMMIT_HASH_LONG AND DEFINED GIT_COMMIT_HASH_SHORT AND DEFINED GIT_COMMIT_BRANCH)
         add_compile_definitions(
-                GIT_COMMIT_HASH_LONG="${IMHEX_COMMIT_HASH_LONG}"
-                IMHEX_COMMIT_HASH_SHORT="${IMHEX_COMMIT_HASH_SHORT}"
-                GIT_BRANCH="${IMHEX_COMMIT_BRANCH}"
+                GIT_COMMIT_HASH_LONG="${GIT_COMMIT_HASH_LONG}"
+                GIT_COMMIT_HASH_SHORT="${GIT_COMMIT_HASH_SHORT}"
+                GIT_BRANCH="${GIT_COMMIT_BRANCH}"
         )
     else()
         # Get the current working branch
