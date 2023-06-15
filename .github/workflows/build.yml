@@ -60,6 +60,11 @@ jobs:
           libbacktrace:p
           ninja:p
 
+    - name: ⬇️ Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
+
     - name: 📜 Set version variable
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
@@ -163,6 +168,11 @@ jobs:
       if: ${{! matrix.custom_glfw}}
       run: |
         brew install glfw
+
+    - name: ⬇️ Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
 
     - name: 🧰 Checkout glfw
       if: ${{matrix.custom_glfw}}
@@ -269,6 +279,11 @@ jobs:
         run: |
           apt update
           bash dist/get_deps_debian.sh
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
 
       # Ubuntu cmake build
       - name: 🛠️ Build
