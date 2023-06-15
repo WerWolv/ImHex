@@ -12,10 +12,18 @@ if (UNIX)
     endif()
 endif()
 
-set(DOTNET_EXEC dotnet)
+if (NOT DOTNET_EXECUTABLE)
+    set(DOTNET_EXECUTABLE dotnet)
+endif ()
+
 set(CORECLR_VERSION "7.0")
 
 execute_process(COMMAND ${DOTNET_EXEC} "--list-runtimes" OUTPUT_VARIABLE CORECLR_LIST_RUNTIMES_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
+if (CORECLR_LIST_RUNTIMES_OUTPUT STREQUAL "")
+    message(STATUS "[.Net]: Unable to find any .Net runtimes")
+    return()
+endif ()
+
 message(STATUS "[.Net]: CORECLR_LIST_RUNTIMES_OUTPUT = ${CORECLR_LIST_RUNTIMES_OUTPUT}")
 set(_ALL_RUNTIMES ${CORECLR_LIST_RUNTIMES_OUTPUT})
 string(REPLACE "\n" ";" _ALL_RUNTIMES_LIST ${_ALL_RUNTIMES})

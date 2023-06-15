@@ -4,8 +4,10 @@
 
 #if defined(OS_WINDOWS)
     #include <Windows.h>
+    #define STRING(str) L##str
 #else
     #include <dlfcn.h>
+    #define STRING(str) str
 #endif
 
 #include <array>
@@ -81,8 +83,8 @@ namespace hex::plugin::loader {
 
             hostfxr_handle ctx = nullptr;
 
-            auto pathString = path.wstring();
-            std::array<const wchar_t *, 1> args = { pathString.data() };
+            auto pathString = path.native();
+            std::array<const char_t *, 1> args = { pathString.data() };
 
             u32 result = hostfxr_initialize_for_dotnet_command_line(1, args.data(), nullptr, &ctx);
             ON_SCOPE_EXIT {
@@ -128,11 +130,11 @@ namespace hex::plugin::loader {
                 auto loadAssembly = getLoadAssemblyFunction(std::fs::absolute(file.path()));
 
                 const auto &assemblyPath = file.path();
-                const auto &assemblyName = assemblyPath.filename().replace_extension().wstring();
-                std::wstring dotnetType = assemblyName + L".EntryPoint," + assemblyName;
+                const auto &assemblyName = assemblyPath.filename().replace_extension().native();
+                auto dotnetType = assemblyName + STRING(".EntryPoint,") + assemblyName;
 
-                const char_t *dotnetTypeMethod = L"Main";
-                auto assemblyPathStr = assemblyPath.wstring();
+                const char_t *dotnetTypeMethod = STRING("Main");
+                const auto &assemblyPathStr = assemblyPath.native();
 
                 component_entry_point_fn entryPoint = nullptr;
                 u32 result = loadAssembly(
