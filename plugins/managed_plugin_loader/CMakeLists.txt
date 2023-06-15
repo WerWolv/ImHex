@@ -13,7 +13,10 @@ add_library(${PROJECT_NAME} SHARED
 
 add_library(nethost SHARED IMPORTED)
 target_include_directories(nethost INTERFACE ${CoreClrEmbed_INCLUDE_DIRS})
-set_target_properties(nethost PROPERTIES IMPORTED_IMPLIB ${CoreClrEmbed_SHARED_LIBRARY})
+set_target_properties(nethost
+        PROPERTIES
+        IMPORTED_IMPLIB ${CoreClrEmbed_SHARED_LIBRARY}
+        IMPORTED_LOCATION ${CoreClrEmbed_SHARED_LIBRARY})
 
 # Add additional include directories here #
 target_include_directories(${PROJECT_NAME} PRIVATE include)

@@ -305,6 +305,7 @@ jobs:
             -DIMHEX_COMMIT_BRANCH="${{ env.COMMIT_BRANCH }}"          \
             -DIMHEX_ENABLE_LTO=ON                                     \
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
+            -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
             ..
           DESTDIR=DebDir ninja install 
 
@@ -358,6 +359,11 @@ jobs:
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
           sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
 
       - name: 📜 Set version variable
         run: |
@@ -426,6 +432,11 @@ jobs:
       - name: ⬇️ Install ImHex dependencies
         run: |
           dist/get_deps_archlinux.sh --noconfirm
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -550,6 +561,11 @@ jobs:
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg         \
           ccache
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.5
