@@ -31,63 +31,63 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<ViewProvider>(false);
 
         ProjectFile::registerHandler({
-             .basePath = "providers",
-             .required = true,
-             .load = [](const std::fs::path &basePath, Tar &tar) {
-                 auto json = nlohmann::json::parse(tar.readString(basePath / "providers.json"));
-                 auto providerIds = json.at("providers").get<std::vector<int>>();
+            .basePath = "providers",
+            .required = true,
+            .load = [](const std::fs::path &basePath, Tar &tar) {
+                auto json = nlohmann::json::parse(tar.readString(basePath / "providers.json"));
+                auto providerIds = json.at("providers").get<std::vector<int>>();
 
-                 bool success = true;
-                 for (const auto &id : providerIds) {
-                     auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
+                bool success = true;
+                for (const auto &id : providerIds) {
+                    auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
 
-                     auto provider = ImHexApi::Provider::createProvider(providerSettings.at("type").get<std::string>(), true, false);
-                     ON_SCOPE_EXIT {
-                         if (!success) {
-                             for (auto &task : TaskManager::getRunningTasks())
-                                 task->interrupt();
+                    auto provider = ImHexApi::Provider::createProvider(providerSettings.at("type").get<std::string>(), true, false);
+                    ON_SCOPE_EXIT {
+                        if (!success) {
+                            for (auto &task : TaskManager::getRunningTasks())
+                                task->interrupt();
 
-                             TaskManager::runWhenTasksFinished([]{
-                                 for (auto provider : ImHexApi::Provider::getProviders())
+                            TaskManager::runWhenTasksFinished([]{
+                                for (auto provider : ImHexApi::Provider::getProviders())
                                     ImHexApi::Provider::remove(provider, true);
-                             });
-                         }
-                     };
+                            });
+                        }
+                    };
 
-                     if (provider == nullptr) {
-                         success = false;
-                         continue;
-                     }
+                    if (provider == nullptr) {
+                        success = false;
+                        continue;
+                    }
 
-                     provider->setID(id);
-                     provider->loadSettings(providerSettings.at("settings"));
-                     if (!provider->open() || !provider->isAvailable() || !provider->isReadable())
-                         success = false;
-                     else
-                         EventManager::post<EventProviderOpened>(provider);
-                 }
+                    provider->setID(id);
+                    provider->loadSettings(providerSettings.at("settings"));
+                    if (!provider->open() || !provider->isAvailable() || !provider->isReadable())
+                        success = false;
+                    else
+                        EventManager::post<EventProviderOpened>(provider);
+                }
 
-                 return success;
-             },
-             .store = [](const std::fs::path &basePath, Tar &tar) {
-                 std::vector<int> providerIds;
-                 for (const auto &provider : ImHexApi::Provider::getProviders()) {
-                     auto id = provider->getID();
-                     providerIds.push_back(id);
+                return success;
+            },
+            .store = [](const std::fs::path &basePath, Tar &tar) {
+                std::vector<int> providerIds;
+                for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                    auto id = provider->getID();
+                    providerIds.push_back(id);
 
-                     nlohmann::json json;
-                     json["type"] = provider->getTypeName();
-                     json["settings"] = provider->storeSettings();
+                    nlohmann::json json;
+                    json["type"] = provider->getTypeName();
+                    json["settings"] = provider->storeSettings();
 
-                     tar.writeString(basePath / hex::format("{}.json", id), json.dump(4));
-                 }
+                    tar.writeString(basePath / hex::format("{}.json", id), json.dump(4));
+                }
 
-                 tar.writeString(basePath / "providers.json",
+                tar.writeString(basePath / "providers.json",
                     nlohmann::json({ { "providers", providerIds } }).dump(4)
-                 );
+                );
 
-                 return true;
-             }
+                return true;
+            }
         });
     }
 
