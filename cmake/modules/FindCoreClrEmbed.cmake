@@ -18,7 +18,7 @@ endif ()
 
 set(CORECLR_VERSION "7.0")
 
-execute_process(COMMAND ${DOTNET_EXEC} "--list-runtimes" OUTPUT_VARIABLE CORECLR_LIST_RUNTIMES_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${DOTNET_EXECUTABLE} "--list-runtimes" OUTPUT_VARIABLE CORECLR_LIST_RUNTIMES_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
 if (CORECLR_LIST_RUNTIMES_OUTPUT STREQUAL "")
     message(STATUS "[.Net]: Unable to find any .Net runtimes")
     return()
@@ -69,7 +69,7 @@ if (_CORECLR_HOST_ARCH_PATH)
     endif()
 endif()
 
-set(CORECLR_HOST_BASE_PATH ${CORECLR_RUNTIME_ROOT_PATH}/packs/Microsoft.NETCore.App.Host.${CORECLR_ARCH}/${CORECLR_RUNTIME_VERSION_FULL})
+set(CORECLR_HOST_BASE_PATH "${CORECLR_RUNTIME_ROOT_PATH}/packs/Microsoft.NETCore.App.Host.${CORECLR_ARCH}/${CORECLR_RUNTIME_VERSION_FULL}")
 message(STATUS "[CoreClrEmbed] searching runtime path '${CORECLR_HOST_BASE_PATH}'")
 file(GLOB _CORECLR_FOUND_PATH ${CORECLR_HOST_BASE_PATH})
 message(STATUS "[CoreClrEmbed] _CORECLR_FOUND_PATH = ${_CORECLR_FOUND_PATH}")
@@ -91,6 +91,7 @@ message(STATUS "[CoreClrEmbed] CoreClrEmbed_INCLUDE_DIR = ${CoreClrEmbed_INCLUDE
 
 if (CoreClrEmbed_INCLUDE_DIR AND CoreClrEmbed_LIBRARY)
     set(CoreClrEmbed_FOUND TRUE)
-    set(CoreClrEmbed_LIBRARIES ${CoreClrEmbed_LIBRARY} )
-    set(CoreClrEmbed_INCLUDE_DIRS ${CoreClrEmbed_INCLUDE_DIR})
+    set(CoreClrEmbed_LIBRARIES "${CoreClrEmbed_LIBRARY}")
+    set(CoreClrEmbed_SHARED_LIBRARIES "${CoreClrEmbed_SHARED_LIBRARY}")
+    set(CoreClrEmbed_INCLUDE_DIRS "${CoreClrEmbed_INCLUDE_DIR}")
 endif()
