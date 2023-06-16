@@ -1,5 +1,6 @@
 #include <hex/plugin.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/api/task.hpp>
 
 #include <loaders/dotnet/dotnet_loader.hpp>
 
@@ -48,8 +49,11 @@ IMHEX_PLUGIN_SETUP("Managed Plugin Loader", "WerWolv", "Plugin loader for C# plu
         for (const auto &plugin : plugins) {
             auto &[name, entryPoint] = *plugin;
 
-            if (ImGui::MenuItem(name.c_str()))
-                entryPoint();
+            if (ImGui::MenuItem(name.c_str())) {
+                TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint = std::move(entryPoint)](auto&) {
+                    entryPoint();
+                });
+            }
         }
     });
 }

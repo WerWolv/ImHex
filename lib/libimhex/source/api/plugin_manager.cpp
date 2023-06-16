@@ -83,7 +83,11 @@ namespace hex {
         }
 
         if (this->m_initializePluginFunction != nullptr) {
-            this->m_initializePluginFunction();
+            try {
+                this->m_initializePluginFunction();
+            } catch (const std::exception &e) {
+                log::error("Plugin '{}' threw an exception on init: {}", e.what());
+            }
         } else {
             return false;
         }
