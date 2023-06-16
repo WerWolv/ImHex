@@ -302,6 +302,7 @@ namespace hex::plugin::builtin {
             std::scoped_lock lock(this->m_logMutex);
 
             this->m_consoleEditor.SetTextLines(*this->m_console);
+            this->m_consoleNeedsUpdate = false;
         }
 
         this->m_consoleEditor.Render("##console", size, true);
