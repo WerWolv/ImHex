@@ -1,9 +1,15 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include <vector>
 
 namespace hex::plugin::loader {
+
+    struct Plugin {
+        std::string name;
+        std::function<void()> entryPoint;
+    };
 
     class PluginLoader {
     public:
@@ -12,16 +18,16 @@ namespace hex::plugin::loader {
 
         virtual bool loadAll() = 0;
 
-        void addEntryPoint(std::function<void()> entryPoint) {
-            m_entryPoints.push_back(entryPoint);
+        void addPlugin(std::string name, std::function<void()> entryPoint) {
+            m_plugins.emplace_back(std::move(name), std::move(entryPoint));
         }
 
-        const auto& getPluginEntryPoints() const {
-            return m_entryPoints;
+        const auto& getPlugins() const {
+            return m_plugins;
         }
 
     private:
-        std::vector<std::function<void()>> m_entryPoints;
+        std::vector<Plugin> m_plugins;
     };
 
 }
