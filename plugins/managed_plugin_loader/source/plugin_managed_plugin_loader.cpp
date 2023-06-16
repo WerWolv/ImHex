@@ -1,4 +1,5 @@
 #include <hex/plugin.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <loaders/dotnet/dotnet_loader.hpp>
 
@@ -6,32 +7,34 @@
 #include <romfs/romfs.hpp>
 
 using namespace hex;
+using namespace hex::plugin::loader;
 
 using PluginLoaders = std::tuple<
-    plugin::loader::DotNetLoader
+    DotNetLoader
 >;
 
 namespace {
 
-    void callPluginEntryPoints(auto &loader) {
-        for (const auto &entryPoint : loader.getPluginEntryPoints()) {
-            entryPoint();
-        }
-    }
-
-    void loadPlugin(auto &loader) {
+    void loadPlugin(std::vector<const Plugin*> &plugins, auto &loader) {
         loader.loadAll();
-        callPluginEntryPoints(loader);
+
+        for (auto &plugin : loader.getPlugins())
+            plugins.emplace_back(&plugin);
     }
 
-    void loadAllPlugins() {
-        std::apply([](auto&&... args) {
+    std::vector<const Plugin*> loadAllPlugins() {
+        static PluginLoaders loaders;
+        std::vector<const Plugin*> plugins;
+
+        std::apply([&plugins](auto&&... args) {
             try {
-                (loadPlugin(args), ...);
+                (loadPlugin(plugins, args), ...);
             } catch (const std::exception &exception) {
                 log::error("Failed to load plugin: {}", exception.what());
             }
-        }, PluginLoaders{});
+        }, loaders);
+
+        return plugins;
     }
 
 }
@@ -39,5 +42,14 @@ namespace {
 IMHEX_PLUGIN_SETUP("Managed Plugin Loader", "WerWolv", "Plugin loader for C# plugins") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
 
-    loadAllPlugins();
+    static auto plugins = loadAllPlugins();
+
+    hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras", "Run Script..." }, 5000, [] {
+        for (const auto &plugin : plugins) {
+            auto &[name, entryPoint] = *plugin;
+
+            if (ImGui::MenuItem(name.c_str()))
+                entryPoint();
+        }
+    });
 }

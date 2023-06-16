@@ -28,7 +28,11 @@ if (CoreClrEmbed_FOUND)
 
     target_link_directories(${PROJECT_NAME} PRIVATE ${CoreClrEmbed_FOLDER})
     target_compile_definitions(${PROJECT_NAME} PRIVATE DOTNET_PLUGINS=1)
-    target_sources(${PROJECT_NAME} PRIVATE source/loaders/dotnet/dotnet_loader.cpp)
+    target_sources(${PROJECT_NAME} PRIVATE
+            source/loaders/dotnet/dotnet_loader.cpp
+
+            source/script_api/v1/mem.cpp
+    )
 
     set(EXTRA_BUNDLE_LIBRARY_PATHS "${CoreClrEmbed_FOLDER}" PARENT_SCOPE)
 

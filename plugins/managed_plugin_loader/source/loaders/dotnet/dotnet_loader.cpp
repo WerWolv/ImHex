@@ -123,38 +123,45 @@ namespace hex::plugin::loader {
             if (!wolv::io::fs::exists(dotnetPath))
                 continue;
 
-            for (const auto& file : std::fs::directory_iterator(dotnetPath)) {
-                if (file.path().extension() != ".dll")
+            for (const auto& folder : std::fs::directory_iterator(dotnetPath)) {
+                if (!std::fs::is_directory(folder))
                     continue;
 
-                auto loadAssembly = getLoadAssemblyFunction(std::fs::absolute(file.path()));
+                for (const auto& file : std::fs::directory_iterator(folder)) {
+                    if (file.path().filename() != "Main.dll")
+                        continue;
 
-                const auto &assemblyPath = file.path();
-                const auto &assemblyName = assemblyPath.filename().replace_extension().native();
-                auto dotnetType = assemblyName + STRING(".EntryPoint,") + assemblyName;
+                    auto loadAssembly = getLoadAssemblyFunction(std::fs::absolute(file.path()));
 
-                const char_t *dotnetTypeMethod = STRING("Main");
-                const auto &assemblyPathStr = assemblyPath.native();
+                    const auto &assemblyPath = file.path();
+                    auto dotnetType = STRING("ImHex.EntryPoint, Main");
 
-                component_entry_point_fn entryPoint = nullptr;
-                u32 result = loadAssembly(
-                    assemblyPathStr.c_str(),
-                    dotnetType.c_str(),
-                    dotnetTypeMethod,
-                    nullptr,
-                    nullptr,
-                    (void**)&entryPoint
-                );
+                    const char_t *dotnetTypeMethod = STRING("ScriptMain");
+                    const auto &assemblyPathStr = assemblyPath.native();
 
-                if (result != 0 || entryPoint == nullptr) {
-                    log::error("Failed to load assembly '{}'", file.path().filename().string());
-                    continue;
+                    component_entry_point_fn entryPoint = nullptr;
+                    u32 result = loadAssembly(
+                        assemblyPathStr.c_str(),
+                        dotnetType,
+                        dotnetTypeMethod,
+                        UNMANAGEDCALLERSONLY_METHOD,
+                        nullptr,
+                        (void**)&entryPoint
+                    );
+
+                    if (result != 0 || entryPoint == nullptr) {
+                        log::error("Failed to load assembly '{}'", file.path().filename().string());
+                        continue;
+                    }
+
+                    this->addPlugin(
+                        folder.path().stem().string(),
+                        [entryPoint]{
+                            u8 param = 0;
+                            entryPoint(&param, 1);
+                        }
+                    );
                 }
-
-                this->addEntryPoint([entryPoint]{
-                    u8 param = 0;
-                    entryPoint(&param, 1);
-                });
             }
         }
 
