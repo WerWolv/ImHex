@@ -13,4 +13,5 @@ pacman -S $@ --needed \
   curl      \
   fmt       \
   yara      \
-  nlohmann-json
+  nlohmann-json \
+  ninja

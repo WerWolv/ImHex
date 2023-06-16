@@ -10,22 +10,31 @@ find_package(CoreClrEmbed)
 add_library(${PROJECT_NAME} SHARED
         source/plugin_managed_plugin_loader.cpp
 )
-
-add_library(nethost SHARED IMPORTED)
-target_include_directories(nethost INTERFACE ${CoreClrEmbed_INCLUDE_DIRS})
-set_target_properties(nethost
-        PROPERTIES
-        IMPORTED_IMPLIB ${CoreClrEmbed_SHARED_LIBRARY}
-        IMPORTED_LOCATION ${CoreClrEmbed_SHARED_LIBRARY})
-
 # Add additional include directories here #
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 # Add additional libraries here #
 target_link_libraries(${PROJECT_NAME} PRIVATE libimhex ${FMT_LIBRARIES} nethost)
 
 if (CoreClrEmbed_FOUND)
+    add_library(nethost SHARED IMPORTED)
+    target_include_directories(nethost INTERFACE "${CoreClrEmbed_INCLUDE_DIRS}")
+    get_filename_component(CoreClrEmbed_FOLDER ${CoreClrEmbed_SHARED_LIBRARIES} DIRECTORY)
+    set_target_properties(nethost
+            PROPERTIES
+            IMPORTED_IMPLIB     ${CoreClrEmbed_SHARED_LIBRARIES}
+            IMPORTED_LOCATION   ${CoreClrEmbed_LIBRARIES}
+            BUILD_RPATH         ${CoreClrEmbed_FOLDER}
+            INSTALL_RPATH       ${CoreClrEmbed_FOLDER})
+
+    target_link_directories(${PROJECT_NAME} PRIVATE ${CoreClrEmbed_FOLDER})
     target_compile_definitions(${PROJECT_NAME} PRIVATE DOTNET_PLUGINS=1)
     target_sources(${PROJECT_NAME} PRIVATE source/loaders/dotnet/dotnet_loader.cpp)
+
+    set(EXTRA_BUNDLE_LIBRARY_PATHS "${CoreClrEmbed_FOLDER}" PARENT_SCOPE)
+
+    if (APPLE)
+        install(FILES ${CoreClrEmbed_LIBRARIES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    endif ()
 endif ()
 
 
