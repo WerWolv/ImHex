@@ -27,6 +27,7 @@
 
 #include <wolv/io/fs.hpp>
 #include <wolv/io/file.hpp>
+#include <wolv/hash/uuid.hpp>
 
 namespace hex::init {
 
@@ -68,6 +69,37 @@ namespace hex::init {
             // Check if the latest release is different from the current version
             if (latestVersion != currVersion)
                 ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
+
+            // Check if there is a telemetry uuid
+            std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.uuid", "");
+            if(uuid.empty()) {
+                // Generate a new uuid
+                uuid = wolv::hash::generateUUID();
+                // Save
+                ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.general.uuid", uuid);
+            }
+
+            // Read crash amount
+            int crashCount = ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.crash_count", 0);
+
+            // Make telemetry request
+            nlohmann::json telemetry = {
+                    {"uuid", uuid},
+                    {"version", IMHEX_VERSION},
+                    {"os", fmt::format("{}/{}/{}", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture()) },
+                    {"crash_count", crashCount}
+            };
+
+            HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);
+            telemetryRequest.setTimeout(2000);
+
+            telemetryRequest.setBody(telemetry.dump());
+            telemetryRequest.addHeader("Content-Type", "application/json");
+
+            // Execute request
+            response = telemetryRequest.execute().get();
+            if (response.getStatusCode() != 200)
+                return false;
 
         }
         return true;
