@@ -26,6 +26,7 @@
 
 #include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_question.hpp>
+#include <content/popups/popup_telemetry_request.hpp>
 #include <content/recent.hpp>
 
 #include <string>
@@ -404,14 +405,7 @@ namespace hex::plugin::builtin {
             auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
             if (allowServerContact == 2) {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
-                PopupQuestion::open("hex.builtin.welcome.server_contact_text"_lang,
-                    [] {
-                        ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
-                    },
-                    [] {
-
-                    }
-                );
+                PopupTelemetryRequest::open();
             }
         });
 #endif
