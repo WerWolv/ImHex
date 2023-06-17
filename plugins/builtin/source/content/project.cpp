@@ -33,7 +33,6 @@ namespace hex::plugin::builtin {
 
         Tar tar(filePath, Tar::Mode::Read);
         if (!tar.isValid()) {
-            // TODO: make tar return an actual error string
             showError(hex::format("hex.builtin.popup.error.project.load"_lang,
                 hex::format("hex.builtin.popup.error.project.load.invalid_tar"_lang,
                     tar.getOpenErrorString()
