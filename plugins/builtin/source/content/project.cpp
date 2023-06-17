@@ -160,6 +160,6 @@ namespace hex::plugin::builtin {
     }
 
     void registerProjectHandlers() {
-        hex::setProjectFunctions(load, store);    
+        hex::ProjectFile::setProjectFunctions(load, store);    
     }
 }

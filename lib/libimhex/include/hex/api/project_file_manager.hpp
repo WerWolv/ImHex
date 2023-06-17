@@ -21,12 +21,6 @@
  */
 namespace hex {
 
-    
-    void setProjectFunctions(
-            const std::function<bool(const std::fs::path&)> &loadFun,
-            const std::function<bool(std::optional<std::fs::path>)> &storeFun
-    );
-
     class ProjectFile {
     public:
         struct Handler {
@@ -44,6 +38,17 @@ namespace hex {
             bool required;          //< If true, ImHex will display an error if this handler fails to load or store data
             Function load, store;   //< Functions to load and store data
         };
+
+        /**
+         * @brief Set implementations for loading and restoring a project
+         *
+         * @param loadFun function to use to load a project in ImHex
+         * @param storeFun function to use to store a project to disk
+         */
+        static void setProjectFunctions(
+            const std::function<bool(const std::fs::path&)> &loadFun,
+            const std::function<bool(std::optional<std::fs::path>)> &storeFun
+        );
 
         /**
          * @brief Load a project file
@@ -124,6 +129,9 @@ namespace hex {
 
     private:
         ProjectFile() = default;
+
+        static std::function<bool(const std::fs::path&)> s_loadProjectFunction;
+        static std::function<bool(std::optional<std::fs::path>)> s_storeProjectFunction;
 
         static std::fs::path s_currProjectPath;
         static std::vector<Handler> s_handlers;
