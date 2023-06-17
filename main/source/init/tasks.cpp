@@ -76,7 +76,7 @@ namespace hex::init {
                 // Generate a new uuid
                 uuid = wolv::hash::generateUUID();
                 // Save
-                ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.general.uuid", uuid);
+                ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.uuid", uuid);
             }
 
             // Read crash amount
