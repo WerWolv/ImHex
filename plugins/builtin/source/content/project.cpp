@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
         for (const auto &provider : ImHexApi::Provider::getProviders()) {
             const auto basePath = std::fs::path(std::to_string(provider->getID()));
             for (const auto &handler: ProjectFile::getProviderHandlers()) {
-                // handlers are supposed to show the error/warning popup to the user themselves, so we don't show one here
+                // Handlers are supposed to show the error/warning popup to the user themselves, so we don't show one here
                 try {
                     if (!handler.load(provider, basePath / handler.basePath, tar))
                         result = false;
