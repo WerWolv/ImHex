@@ -63,7 +63,6 @@ namespace hex::plugin::builtin {
             ImHexApi::Provider::remove(provider);
         }
 
-        // TODO there is a bug here with the var result ?
         bool result = true;
         for (const auto &handler : ProjectFile::getHandlers()) {
             // handlers are supposed to show the error/warning popup to the user themselves, so we don't show one here 
