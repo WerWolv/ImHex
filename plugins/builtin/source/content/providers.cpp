@@ -76,7 +76,7 @@ namespace hex::plugin::builtin {
                          EventManager::post<EventProviderOpened>(provider);
                  }
 
-                 std::string warningMsg;
+                std::string warningMsg;
                 for(const auto &warning : providerWarnings){
                     ImHexApi::Provider::remove(warning.first);
                     warningMsg.append(
