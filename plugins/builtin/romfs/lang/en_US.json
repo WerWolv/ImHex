@@ -910,7 +910,6 @@
         "hex.builtin.welcome.server_contact.data_collected.uuid": "UUID",
         "hex.builtin.welcome.server_contact.data_collected.version": "ImHex Version",
         "hex.builtin.welcome.server_contact.data_collected.os": "Operating System",
-        "hex.builtin.welcome.server_contact.data_collected.crash_count": "Crash Count",
         "hex.builtin.welcome.customize.settings.desc": "Change preferences of ImHex",
         "hex.builtin.welcome.customize.settings.title": "Settings",
         "hex.builtin.welcome.header.customize": "Customize",

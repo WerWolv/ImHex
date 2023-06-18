@@ -79,15 +79,11 @@ namespace hex::init {
                 ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.uuid", uuid);
             }
 
-            // Read crash amount
-            int crashCount = ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.crash_count", 0);
-
             // Make telemetry request
             nlohmann::json telemetry = {
-                    {"uuid", uuid},
-                    {"version", IMHEX_VERSION},
-                    {"os", fmt::format("{}/{}/{}", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture()) },
-                    {"crash_count", crashCount}
+                {"uuid", uuid},
+                {"version", IMHEX_VERSION},
+                {"os", fmt::format("{}/{}/{}", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture()) }
             };
 
             HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);

@@ -447,10 +447,6 @@ namespace hex::plugin::builtin {
                 auto backupFilePath = path / BackupFileName;
                 bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
 
-                // increase the counter
-                ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.crash_count",
-                                                 ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.crash_count", 0) + 1);
-                
                 PopupRestoreBackup::open(
                     // path of log file
                     crashFileData.value("logFile", ""),

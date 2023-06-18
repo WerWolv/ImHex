@@ -21,9 +21,6 @@ namespace hex::plugin::builtin {
                 // Save
                 ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.uuid", this->m_uuid);
             }
-
-            // Read crash amount
-            this->m_crashCount = ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.crash_count", 0);
         }
 
         void drawContent() override {
@@ -57,12 +54,6 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.os"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TextWrapped("%s/%s/%s", ImHexApi::System::getOSName().c_str(), ImHexApi::System::getOSVersion().c_str(), ImHexApi::System::getArchitecture().c_str());
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.crash_count"_lang);
-                    ImGui::TableNextColumn();
-                    ImGui::Text("%d", this->m_crashCount);
 
                     ImGui::EndTable();
                 }
