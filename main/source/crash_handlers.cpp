@@ -109,7 +109,7 @@ namespace hex::crash {
                 log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
         }
 
-        uploadCrashLog(hex::log::getFile().getPath());
+        uploadCrashLog(hex::log::impl::getFile().getPath());
     
         // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
         #if defined(DEBUG)

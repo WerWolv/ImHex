@@ -27,12 +27,11 @@ namespace hex::plugin::builtin {
             static std::string message = "hex.builtin.welcome.server_contact_text"_lang;
             ImGui::TextFormattedWrapped("{}", message.c_str());
             ImGui::NewLine();
-            ImGui::Separator();
 
             if(ImGui::CollapsingHeader("hex.builtin.welcome.server_contact.data_collected_title"_lang)) {
                 if(ImGui::BeginTable("hex.builtin.welcome.server_contact.data_collected_table"_lang, 2,
                                      ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoHostExtendY,
-                                     ImVec2(500_scaled, 100_scaled))) {
+                                     ImVec2(ImGui::GetContentRegionAvail().x, 80_scaled))) {
                     ImGui::TableSetupColumn("hex.builtin.welcome.server_contact.data_collected_table.key"_lang);
                     ImGui::TableSetupColumn("hex.builtin.welcome.server_contact.data_collected_table.value"_lang, ImGuiTableColumnFlags_WidthStretch);
                     ImGui::TableHeadersRow();
@@ -59,6 +58,8 @@ namespace hex::plugin::builtin {
                 }
             }
 
+            ImGui::NewLine();
+
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.builtin.common.yes"_lang, ImVec2(width / 3, 0))) {
@@ -79,16 +80,15 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] ImVec2 getMinSize() const override {
-            return scaled({ 400, 100 });
+            return scaled({ 500, 100 });
         }
 
         [[nodiscard]] ImVec2 getMaxSize() const override {
-            return scaled({ 600, 300 });
+            return scaled({ 500, 300 });
         }
 
     private:
         std::string m_uuid;
-        int m_crashCount;
     };
 
 }
