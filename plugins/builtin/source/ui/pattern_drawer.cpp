@@ -91,25 +91,43 @@ namespace hex::plugin::builtin::ui {
         }
 
         inline void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
-            auto bitOffset = pattern.getBitOffsetForDisplay();
-            if (pattern.getBitSize() <= 1)
-                ImGui::TextFormatted("bit {0}", bitOffset);
-            else
-                ImGui::TextFormatted("bits {0} - {1}", bitOffset, bitOffset + pattern.getBitSize() - 1);
+            if (pattern.isPatternLocal()) {
+                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGui::TableNextColumn();
+                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGui::TableNextColumn();
+            } else {
+                ImGui::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
+                ImGui::TableNextColumn();
+                ImGui::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset() + pattern.getSize(), pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
+                ImGui::TableNextColumn();
+            }
         }
 
         void drawOffsetColumn(const pl::ptrn::Pattern& pattern) {
-            if (pattern.isPatternLocal()) {
-                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
-            } else {
-                if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
-                    drawOffsetColumnForBitfieldMember(*bitfieldMember);
-                else if (pattern.getSize() > 0) {
-                    ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", pattern.getOffset(), pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
+            if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
+                drawOffsetColumnForBitfieldMember(*bitfieldMember);
+            else {
+                if (pattern.isPatternLocal()) {
+                    ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                } else {
+                    if (pattern.getSize() > 0) {
+                        ImGui::TextFormatted("0x{0:08X}", pattern.getOffset());
+                    }
                 }
-            }
 
-            ImGui::TableNextColumn();
+                ImGui::TableNextColumn();
+
+                if (pattern.isPatternLocal()) {
+                    ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                } else {
+                    if (pattern.getSize() > 0) {
+                        ImGui::TextFormatted("0x{0:08X}", pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
+                    }
+                }
+
+                ImGui::TableNextColumn();
+            }
         }
 
         inline void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
@@ -358,7 +376,6 @@ namespace hex::plugin::builtin::ui {
         ImGui::TableNextColumn();
         drawColorColumn(pattern);
         drawOffsetColumnForBitfieldMember(pattern);
-        ImGui::TableNextColumn();
         drawSizeColumnForBitfieldMember(pattern);
         ImGui::TableNextColumn();
         ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
@@ -901,11 +918,16 @@ namespace hex::plugin::builtin::ui {
                 return left->getDisplayName() < right->getDisplayName();
             else
                 return left->getDisplayName() > right->getDisplayName();
-        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("start")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                 return left->getOffsetForSorting() < right->getOffsetForSorting();
             else
                 return left->getOffsetForSorting() > right->getOffsetForSorting();
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("end")) {
+            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                return left->getOffsetForSorting() + left->getSize() < right->getOffsetForSorting() + right->getSize();
+            else
+                return left->getOffsetForSorting() + left->getSize() > right->getOffsetForSorting() + right->getSize();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                 return left->getSizeForSorting() < right->getSizeForSorting();
@@ -932,12 +954,13 @@ namespace hex::plugin::builtin::ui {
     }
 
     static bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) {
-        if (ImGui::BeginTable("##Patterntable", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
+        if (ImGui::BeginTable("##Patterntable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("##favorite",                               ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentDisable, ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.var_name"_lang, ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.color"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
-            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.offset"_lang,   ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("offset"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.start"_lang,    ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
+            ImGui::TableSetupColumn("hex.builtin.pattern_drawer.end"_lang,      ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("end"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.size"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.type"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
             ImGui::TableSetupColumn("hex.builtin.pattern_drawer.value"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));

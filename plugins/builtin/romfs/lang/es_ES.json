@@ -367,7 +367,6 @@
         "hex.builtin.pattern_drawer.double_click": "Haga doble clic para ver más elementos",
         "hex.builtin.pattern_drawer.favorites": "",
         "hex.builtin.pattern_drawer.local": "",
-        "hex.builtin.pattern_drawer.offset": "Offset",
         "hex.builtin.pattern_drawer.size": "Tamaño",
         "hex.builtin.pattern_drawer.tree_style.auto_expanded": "Árbol Automáticamente Expandido",
         "hex.builtin.pattern_drawer.tree_style.flattened": "Allanado",

@@ -367,7 +367,6 @@
         "hex.builtin.pattern_drawer.double_click": "双击查看更多",
         "hex.builtin.pattern_drawer.favorites": "",
         "hex.builtin.pattern_drawer.local": "",
-        "hex.builtin.pattern_drawer.offset": "偏移",
         "hex.builtin.pattern_drawer.size": "大小",
         "hex.builtin.pattern_drawer.tree_style.auto_expanded": "自动展开树",
         "hex.builtin.pattern_drawer.tree_style.flattened": "扁平化",
