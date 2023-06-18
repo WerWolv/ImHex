@@ -69,6 +69,9 @@ namespace hex {
     }
 
     bool Plugin::initializePlugin() const {
+        if (this->m_handle == nullptr)
+            return false;
+
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != IMHEX_VERSION) {
             log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(this->m_path.filename()), requestedVersion);
