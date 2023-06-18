@@ -880,7 +880,7 @@ namespace hex::plugin::builtin {
                 *this->m_breakpointHit = true;
                 this->m_resetDebuggerVariables = true;
                 while (*this->m_breakpointHit) {
-                    std::this_thread::yield();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
             });
 
@@ -900,7 +900,7 @@ namespace hex::plugin::builtin {
                 this->m_dangerousFunctionCalled = true;
 
                 while (this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Ask) {
-                    std::this_thread::yield();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
 
                 return this->m_dangerousFunctionsAllowed == DangerousFunctionPerms::Allow;

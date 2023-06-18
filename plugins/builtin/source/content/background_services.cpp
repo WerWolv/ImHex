@@ -16,9 +16,10 @@ namespace hex::plugin::builtin {
 
         void handleNetworkInterfaceService() {
             if (!networkInterfaceServiceEnabled) {
-                std::this_thread::yield();
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 return;
             }
+
             static wolv::net::SocketServer networkInterfaceServer(31337);
             networkInterfaceServer.accept([](auto, const std::vector<u8> &data) -> std::vector<u8> {
                 nlohmann::json result;
