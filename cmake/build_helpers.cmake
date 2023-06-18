@@ -411,17 +411,18 @@ function(downloadImHexPatternsFiles dest)
 
 endfunction()
 
-macro(setupCompilerWarnings target)
+macro(setupCompilerFlags target)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
         set(IMHEX_COMMON_FLAGS "-Wall -Wextra -Wpedantic -Werror")
         set(IMHEX_C_FLAGS "${IMHEX_COMMON_FLAGS} -Wno-array-bounds")
+        set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
         if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
             set(IMHEX_C_FLAGS "${IMHEX_C_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow -Wno-dangling-reference")
         endif()
     endif()
 
     set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_CXX_FLAGS}   ${IMHEX_C_FLAGS}")
     set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${IMHEX_COMMON_FLAGS}")
 endmacro()
 

@@ -16,7 +16,7 @@ add_executable(main ${APPLICATION_TYPE}
 )
 
 target_include_directories(main PUBLIC include)
-setupCompilerWarnings(main)
+setupCompilerFlags(main)
 
 set(LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/romfs)
 set(LIBROMFS_PROJECT_NAME imhex)
