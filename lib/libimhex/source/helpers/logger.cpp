@@ -4,34 +4,35 @@
 
 #include <wolv/io/file.hpp>
 
-namespace hex::log {
+namespace hex::log::impl {
 
-    static wolv::io::File g_loggerFile;
+    static wolv::io::File s_loggerFile;
+    std::mutex s_loggerMutex;
 
     FILE *getDestination() {
-        if (g_loggerFile.isValid())
-            return g_loggerFile.getHandle();
+        if (s_loggerFile.isValid())
+            return s_loggerFile.getHandle();
         else
             return stdout;
     }
 
     wolv::io::File& getFile() {
-        return g_loggerFile;
+        return s_loggerFile;
     }
 
     bool isRedirected() {
-        return g_loggerFile.isValid();
+        return s_loggerFile.isValid();
     }
 
     void redirectToFile() {
-        if (g_loggerFile.isValid()) return;
+        if (s_loggerFile.isValid()) return;
 
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs, true)) {
             wolv::io::fs::createDirectories(path);
-            g_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))), wolv::io::File::Mode::Create);
-            g_loggerFile.disableBuffering();
+            s_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))), wolv::io::File::Mode::Create);
+            s_loggerFile.disableBuffering();
 
-            if (g_loggerFile.isValid()) break;
+            if (s_loggerFile.isValid()) break;
         }
     }
 

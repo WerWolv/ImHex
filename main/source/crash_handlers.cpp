@@ -34,7 +34,7 @@ namespace hex::crash {
         log::fatal(message);
 
         nlohmann::json crashData{
-            {"logFile", wolv::util::toUTF8String(hex::log::getFile().getPath())},
+            {"logFile", wolv::util::toUTF8String(hex::log::impl::getFile().getPath())},
             {"project", wolv::util::toUTF8String(ProjectFile::getPath())},
         };
         
@@ -83,7 +83,7 @@ namespace hex::crash {
         #if defined(DEBUG)
             assert(!"Debug build, triggering breakpoint");
         #else
-            std::raise(signalNumber);
+            std::exit(signalNumber);
         #endif
     }
 
@@ -125,7 +125,7 @@ namespace hex::crash {
                 #if defined(DEBUG)
                     assert(!"Debug build, triggering breakpoint");
                 #else
-                    std::terminate();
+                    std::exit(100);
                 #endif
             }
         });

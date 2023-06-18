@@ -218,7 +218,7 @@ namespace hex {
                 }
             }
         } else {
-            log::redirectToFile();
+            log::impl::redirectToFile();
         }
 
         // Open new files in already existing ImHex instance

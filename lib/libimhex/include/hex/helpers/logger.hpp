@@ -13,9 +13,16 @@
 
 namespace hex::log {
 
-    FILE *getDestination();
-    wolv::io::File& getFile();
-    bool isRedirected();
+    namespace impl {
+
+        FILE *getDestination();
+        wolv::io::File& getFile();
+        bool isRedirected();
+        [[maybe_unused]] void redirectToFile();
+
+        extern std::mutex s_loggerMutex;
+
+    }
 
     namespace {
 
@@ -24,7 +31,7 @@ namespace hex::log {
 
             fmt::print(dest, "[{0:%H:%M:%S}] ", now);
 
-            if (isRedirected())
+            if (impl::isRedirected())
                 fmt::print(dest, "{0} ", level);
             else
                 fmt::print(dest, ts, "{0} ", level);
@@ -34,11 +41,9 @@ namespace hex::log {
 
         template<typename... T>
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
-            auto dest = getDestination();
+            std::scoped_lock lock(impl::s_loggerMutex);
 
-            static std::mutex loggerMutex;
-            std::scoped_lock lock(loggerMutex);
-
+            auto dest = impl::getDestination();
             printPrefix(dest, ts, level);
             fmt::print(dest, fmt::runtime(fmt), args...);
             fmt::print(dest, "\n");
@@ -69,7 +74,5 @@ namespace hex::log {
     [[maybe_unused]] void fatal(const std::string &fmt, auto &&...args) {
         hex::log::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
-
-    [[maybe_unused]] void redirectToFile();
 
 }
