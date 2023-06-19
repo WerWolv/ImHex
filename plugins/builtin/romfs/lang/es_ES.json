@@ -441,7 +441,7 @@
         "hex.builtin.setting.font.font_size.tooltip": "El tamaño de la fuente de letra puede únicamente ajustarse cuando arriba se ha seleccionado una fuente personalizada.\n\nEsto se debe a que ImHex usa una fuente de mapa de bits pixel-perfect por defecto. Escalarla por un factor no entero sólamente causará que se vuelva borrosa.",
         "hex.builtin.setting.general": "General",
         "hex.builtin.setting.general.auto_load_patterns": "Cargar automáticamente patterns soportados",
-        "hex.builtin.setting.general.check_for_updates": "",
+        "hex.builtin.setting.general.server_contact": "",
         "hex.builtin.setting.general.enable_unicode": "Cargar todos los caracteres unicode",
         "hex.builtin.setting.general.network_interface": "",
         "hex.builtin.setting.general.save_recent_providers": "Guardar proveedores recientemente utilizados",

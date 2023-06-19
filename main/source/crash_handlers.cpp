@@ -1,15 +1,14 @@
 #include <hex/api/project_file_manager.hpp>
-#include <hex/api_urls.hpp>
+#include <hex/api/task.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/stacktrace.hpp>
-#include <hex/helpers/http_requests.hpp>
 
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
 
-#include "window.hpp"
+#include <window.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -58,31 +57,11 @@ namespace hex::crash {
         log::warn("Could not write crash.json file !");
     }
 
-    static void uploadCrashLog(const std::fs::path &path) {
-        wolv::io::File logFile(path, wolv::io::File::Mode::Read);
-        if (!logFile.isValid())
-            return;
-
-        // Read current log file data
-        auto data = logFile.readString();
-
-        // Anonymize the log file
-        {
-            for (u32 pathType = 0; pathType < u32(fs::ImHexPath::END); pathType++) {
-                for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(pathType))) {
-                    auto parent = wolv::util::toUTF8String(folder.parent_path());
-                    data = wolv::util::replaceStrings(data, parent, "<*****>");
-                }
-            }
-        }
-
-        HttpRequest request("POST", ImHexApiURL + std::string("/crash_upload"));
-        request.uploadFile(std::vector<u8>(data.begin(), data.end()), "file", path.filename()).wait();
-    }
-
-
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
+        // Reset the signal handler to the default handler
+        for(auto signal : Signals) std::signal(signal, SIG_DFL);
+
         log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
         // Trigger the crash callback
@@ -98,8 +77,6 @@ namespace hex::crash {
             log::fatal("Uncaught exception thrown!");
         }
 
-        // Reset the signal handler to the default handler
-        for(auto signal : Signals) std::signal(signal, SIG_DFL);
 
         // Print stack trace
         for (const auto &stackFrame : stacktrace::getStackTrace()) {
@@ -109,8 +86,6 @@ namespace hex::crash {
                 log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
         }
 
-        uploadCrashLog(hex::log::impl::getFile().getPath());
-    
         // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
         #if defined(DEBUG)
             assert(!"Debug build, triggering breakpoint");

@@ -189,15 +189,15 @@ namespace hex {
         setvbuf(stderr, nullptr, _IONBF, 0);
 
         // Attach to parent console if one exists
-        bool result = AttachConsole(ATTACH_PARENT_PROCESS) == TRUE;
+        //bool result = AttachConsole(ATTACH_PARENT_PROCESS) == TRUE;
 
-        #if defined(DEBUG)
+        /*#if defined(DEBUG)
             if (::GetLastError() == ERROR_INVALID_HANDLE) {
                 result = AllocConsole() == TRUE;
             }
-        #endif
+        #endif*/
 
-        if (result) {
+        /*if (result) {
             // Redirect stdin and stdout to that new console
             freopen("CONIN$", "r", stdin);
             freopen("CONOUT$", "w", stdout);
@@ -217,7 +217,7 @@ namespace hex {
                     }
                 }
             }
-        } else {
+        } else*/ {
             log::impl::redirectToFile();
         }
 
@@ -295,8 +295,9 @@ namespace hex {
                     log::fatal("Exception raised: 0x{:08X}", exception->ExceptionRecord->ExceptionCode);
                     if (exception->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION) {
                         log::fatal("Heap corruption detected!");
-                        std::raise(SIGABRT);
                     }
+
+                    std::raise(SIGABRT);
                 }
 
                 return EXCEPTION_CONTINUE_SEARCH;

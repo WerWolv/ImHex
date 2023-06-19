@@ -1,10 +1,12 @@
 #include <hex.hpp>
+#include <hex/helpers/http_requests.hpp>
 #include <hex/api/event.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/layout_manager.hpp>
+#include <hex/api_urls.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
@@ -47,20 +49,27 @@ namespace hex::plugin::builtin {
         std::fs::path m_logFilePath;
         std::function<void()> m_restoreCallback;
         std::function<void()> m_deleteCallback;
+        bool m_reportError = true;
     public:
-        PopupRestoreBackup(std::fs::path logFilePath, std::function<void()> restoreCallback, std::function<void()> deleteCallback)
+        PopupRestoreBackup(const std::fs::path &logFilePath, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
                 : Popup("hex.builtin.popup.safety_backup.title"),
                 m_logFilePath(logFilePath),
                 m_restoreCallback(restoreCallback),
-                m_deleteCallback(deleteCallback) { }
+                m_deleteCallback(deleteCallback) {
+
+            this->m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.upload_crash_logs", 1);
+        }
 
         void drawContent() override {
             ImGui::TextUnformatted("hex.builtin.popup.safety_backup.desc"_lang);
             if (!this->m_logFilePath.empty()) {
+                ImGui::NewLine();
                 ImGui::TextUnformatted("hex.builtin.popup.safety_backup.log_file"_lang);
                 if (ImGui::Hyperlink(this->m_logFilePath.filename().string().c_str())) {
                     fs::openFolderWithSelectionExternal(this->m_logFilePath);
                 }
+
+                ImGui::Checkbox("Report Error", &this->m_reportError);
                 ImGui::NewLine();
             }
         
@@ -69,6 +78,31 @@ namespace hex::plugin::builtin {
             if (ImGui::Button("hex.builtin.popup.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
                 this->m_restoreCallback();
                 this->m_deleteCallback();
+
+                if (this->m_reportError) {
+                    wolv::io::File logFile(this->m_logFilePath, wolv::io::File::Mode::Read);
+                    if (logFile.isValid()) {
+                        // Read current log file data
+                        auto data = logFile.readString();
+
+                        // Anonymize the log file
+                        {
+                            for (u32 pathType = 0; pathType < u32(fs::ImHexPath::END); pathType++) {
+                                for (auto &folder : fs::getDefaultPaths(static_cast<fs::ImHexPath>(pathType))) {
+                                    auto parent = wolv::util::toUTF8String(folder.parent_path());
+                                    data = wolv::util::replaceStrings(data, parent, "<*****>");
+                                }
+                            }
+                        }
+
+                        TaskManager::createBackgroundTask("Upload Crash report", [path = this->m_logFilePath, data](auto&){
+                            HttpRequest request("POST", ImHexApiURL + std::string("/crash_upload"));
+                            request.uploadFile(std::vector<u8>(data.begin(), data.end()), "file", path.filename()).wait();
+                        });
+                    }
+                }
+
+                ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.upload_crash_logs", i64(this->m_reportError));
 
                 this->close();
             }

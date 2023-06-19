@@ -441,7 +441,7 @@
         "hex.builtin.setting.font.font_size.tooltip": "",
         "hex.builtin.setting.general": "일반",
         "hex.builtin.setting.general.auto_load_patterns": "지원하는 패턴 자동으로 로드",
-        "hex.builtin.setting.general.check_for_updates": "",
+        "hex.builtin.setting.general.server_contact": "",
         "hex.builtin.setting.general.enable_unicode": "",
         "hex.builtin.setting.general.network_interface": "",
         "hex.builtin.setting.general.save_recent_providers": "",

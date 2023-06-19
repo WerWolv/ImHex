@@ -60,11 +60,14 @@ int main(int argc, char **argv, char **envp) {
         log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
 
         // Clean up everything after the main window is closed
-        ON_SCOPE_EXIT {
+        auto exitHandler = [](auto){
             for (const auto &[name, task, async] : init::getExitTasks())
                 task();
             TaskManager::exit();
         };
+
+        ON_SCOPE_EXIT { exitHandler(0); };
+        EventManager::subscribe<EventAbnormalTermination>(exitHandler);
 
         // Main window
         {

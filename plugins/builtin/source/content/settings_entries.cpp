@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
         2 - default value - ask the user if he wants to check for updates. This value should only be encountered on the first startup.
         */
 #if defined(HEX_UPDATE_CHECK)
-        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2, [](auto name, nlohmann::json &setting) {
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2, [](auto name, nlohmann::json &setting) {
             static bool enabled = static_cast<int>(setting) == 1;
 
             if (ImGui::Checkbox(name.data(), &enabled)) {
