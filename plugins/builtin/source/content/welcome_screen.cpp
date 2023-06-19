@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
                     fs::openFolderWithSelectionExternal(this->m_logFilePath);
                 }
 
-                ImGui::Checkbox("Report Error", &this->m_reportError);
+                ImGui::Checkbox("hex.builtin.popup.safety_backup.report_error"_lang, &this->m_reportError);
                 ImGui::NewLine();
             }
         
