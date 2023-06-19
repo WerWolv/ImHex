@@ -906,7 +906,7 @@
         "hex.builtin.visualizer.hexadecimal.8bit": "Hexadecimal (8 bits)",
         "hex.builtin.visualizer.hexii": "HexII",
         "hex.builtin.visualizer.rgba8": "RGBA8 Color",
-        "hex.builtin.welcome.server_contact_text": "Do you want to allow the communication with ImHex's Servers?\n\n\nThis allows performing automatic update checks and uploads of very limited usage statistics, all of which are listed below.\n\nAlternatively you can also choose to only submit crash logs which help immensely with identifying and fixing bugs you might experience.\n\nAll information is processed by our own Servers and is not given out to third-parties.\n\nYou can change these choices at any time in the settings.",
+        "hex.builtin.welcome.server_contact_text": "Do you want to allow the communication with ImHex's Servers?\n\n\nThis allows performing automatic update checks and uploads of very limited usage statistics, all of which are listed below.\n\nAlternatively you can also choose to only submit crash logs which help immensely with identifying and fixing bugs you might experience.\n\nAll information is processed by our own Servers and is not given out to any third-parties.\n\n\nYou can change these choices at any time in the settings.",
         "hex.builtin.welcome.server_contact.data_collected_table.key": "Type",
         "hex.builtin.welcome.server_contact.data_collected_table.value": "Value",
         "hex.builtin.welcome.server_contact.data_collected_title": "Data that will be shared",
