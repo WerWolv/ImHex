@@ -73,10 +73,6 @@ macro(addDefines)
     endif ()
 
     add_compile_definitions(IMHEX_VERSION="${IMHEX_VERSION_STRING}")
-
-    if (NOT IMHEX_DISABLE_UPDATE_CHECK)
-        add_compile_definitions(HEX_UPDATE_CHECK)
-    endif()
 endmacro()
 
 # Detect current OS / System

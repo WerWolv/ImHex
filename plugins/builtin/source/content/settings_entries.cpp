@@ -40,24 +40,6 @@ namespace hex::plugin::builtin {
 
         /* General */
 
-        /* Values of this setting :
-        0 - do not check for updates on startup
-        1 - check for updates on startup
-        2 - default value - ask the user if he wants to check for updates. This value should only be encountered on the first startup.
-        */
-#if defined(HEX_UPDATE_CHECK)
-        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2, [](auto name, nlohmann::json &setting) {
-            static bool enabled = static_cast<int>(setting) == 1;
-
-            if (ImGui::Checkbox(name.data(), &enabled)) {
-                setting = static_cast<int>(enabled);
-                return true;
-            }
-
-            return false;
-        });
-#endif
-
         ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1, [](auto name, nlohmann::json &setting) {
             static bool enabled = static_cast<int>(setting);
 
@@ -115,6 +97,34 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", 0, [](auto name, nlohmann::json &setting) {
             static bool enabled = static_cast<int>(setting);
+
+            if (ImGui::Checkbox(name.data(), &enabled)) {
+                setting = static_cast<int>(enabled);
+                return true;
+            }
+
+            return false;
+        });
+
+        /*
+            Values of this setting :
+            0 - do not check for updates on startup
+            1 - check for updates on startup
+            2 - default value - ask the user if he wants to check for updates. This value should only be encountered on the first startup.
+        */
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2, [](auto name, nlohmann::json &setting) {
+            static bool enabled = static_cast<int>(setting) == 1;
+
+            if (ImGui::Checkbox(name.data(), &enabled)) {
+                setting = static_cast<int>(enabled);
+                return true;
+            }
+
+            return false;
+        });
+
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1, [](auto name, nlohmann::json &setting) {
+            static bool enabled = static_cast<int>(setting) == 1;
 
             if (ImGui::Checkbox(name.data(), &enabled)) {
                 setting = static_cast<int>(enabled);

@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
                 m_restoreCallback(restoreCallback),
                 m_deleteCallback(deleteCallback) {
 
-            this->m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.upload_crash_logs", 1);
+            this->m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
         }
 
         void drawContent() override {
@@ -65,6 +65,7 @@ namespace hex::plugin::builtin {
             if (!this->m_logFilePath.empty()) {
                 ImGui::NewLine();
                 ImGui::TextUnformatted("hex.builtin.popup.safety_backup.log_file"_lang);
+                ImGui::SameLine(0, 2_scaled);
                 if (ImGui::Hyperlink(this->m_logFilePath.filename().string().c_str())) {
                     fs::openFolderWithSelectionExternal(this->m_logFilePath);
                 }
@@ -102,7 +103,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.upload_crash_logs", i64(this->m_reportError));
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", i64(this->m_reportError));
 
                 this->close();
             }
@@ -433,7 +434,6 @@ namespace hex::plugin::builtin {
                 loadDefaultLayout();
         });
 
-#if defined(HEX_UPDATE_CHECK)
         EventManager::subscribe<EventWindowInitialized>([] {
             // documentation of the value above the setting definition
             auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
@@ -442,7 +442,6 @@ namespace hex::plugin::builtin {
                 PopupTelemetryRequest::open();
             }
         });
-#endif
 
         // Clear project context if we go back to the welcome screen
         EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {

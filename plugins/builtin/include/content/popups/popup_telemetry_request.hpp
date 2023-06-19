@@ -14,12 +14,12 @@ namespace hex::plugin::builtin {
         PopupTelemetryRequest()
                 : hex::Popup<PopupTelemetryRequest>("hex.builtin.common.question", false) {
             // Check if there is a telemetry uuid
-            this->m_uuid = ContentRegistry::Settings::read("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.uuid", "");
+            this->m_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
             if(this->m_uuid.empty()) {
                 // Generate a new uuid
                 this->m_uuid = wolv::hash::generateUUID();
                 // Save
-                ContentRegistry::Settings::write("hex.builtin.setting.telemetry", "hex.builtin.setting.telemetry.uuid", this->m_uuid);
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", this->m_uuid);
             }
         }
 
@@ -60,15 +60,26 @@ namespace hex::plugin::builtin {
 
             ImGui::NewLine();
 
-            auto width = ImGui::GetWindowWidth();
-            ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.builtin.common.yes"_lang, ImVec2(width / 3, 0))) {
+            const auto width = ImGui::GetWindowWidth();
+            const auto buttonSize = ImVec2(width / 3 - ImGui::GetStyle().FramePadding.x * 3, 0);
+            const auto buttonPos = [&](u8 index) { return ImGui::GetStyle().FramePadding.x + (buttonSize.x + ImGui::GetStyle().FramePadding.x * 3) * index; };
+
+            ImGui::SetCursorPosX(buttonPos(0));
+            if (ImGui::Button("hex.builtin.common.allow"_lang, buttonSize)) {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
                 this->close();
             }
             ImGui::SameLine();
-            ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0))) {
+            ImGui::SetCursorPosX(buttonPos(1));
+            if (ImGui::Button("hex.builtin.welcome.server_contact.crash_logs_only"_lang, buttonSize)) {
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
+                this->close();
+            }
+            ImGui::SameLine();
+            ImGui::SetCursorPosX(buttonPos(2));
+            if (ImGui::Button("hex.builtin.common.deny"_lang, buttonSize)) {
                 this->close();
             }
 
@@ -84,7 +95,7 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] ImVec2 getMaxSize() const override {
-            return scaled({ 500, 300 });
+            return scaled({ 500, 400 });
         }
 
     private:
