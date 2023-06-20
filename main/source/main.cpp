@@ -67,7 +67,6 @@ int main(int argc, char **argv, char **envp) {
         };
 
         ON_SCOPE_EXIT { exitHandler(0); };
-        EventManager::subscribe<EventAbnormalTermination>(exitHandler);
 
         // Main window
         {

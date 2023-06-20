@@ -57,6 +57,15 @@ namespace hex::crash {
         log::warn("Could not write crash.json file !");
     }
 
+    static void printStackTrace() {
+        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+            if (stackFrame.line == 0)
+                log::fatal("  {}", stackFrame.function);
+            else
+                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
+        }
+    }
+
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
         // Reset the signal handler to the default handler
@@ -67,6 +76,8 @@ namespace hex::crash {
         // Trigger the crash callback
         crashCallback(hex::format("Received signal '{}' ({})", signalName, signalNumber));
 
+        printStackTrace();
+
         // Trigger an event so that plugins can handle crashes
         // It may affect things (like the project path),
         // so we do this after saving the crash file
@@ -75,15 +86,6 @@ namespace hex::crash {
         // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
             log::fatal("Uncaught exception thrown!");
-        }
-
-
-        // Print stack trace
-        for (const auto &stackFrame : stacktrace::getStackTrace()) {
-            if (stackFrame.line == 0)
-                log::fatal("  {}", stackFrame.function);
-            else
-                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
         }
 
         // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
@@ -122,6 +124,8 @@ namespace hex::crash {
 
                 // Handle crash callback
                 crashCallback(hex::format("Uncaught exception: {}", exceptionStr));
+
+                printStackTrace();
 
                 // Reset signal handlers prior to calling the original handler, because it may raise a signal
                 for(auto signal : Signals) std::signal(signal, SIG_DFL);
