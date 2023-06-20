@@ -20,11 +20,10 @@ set(CORECLR_VERSION "7.0")
 
 execute_process(COMMAND ${DOTNET_EXECUTABLE} "--list-runtimes" OUTPUT_VARIABLE CORECLR_LIST_RUNTIMES_OUTPUT OUTPUT_STRIP_TRAILING_WHITESPACE)
 if (CORECLR_LIST_RUNTIMES_OUTPUT STREQUAL "")
-    message(STATUS "[.Net]: Unable to find any .Net runtimes")
+    message(STATUS "Unable to find any .NET runtimes")
     return()
 endif ()
 
-message(STATUS "[.Net]: CORECLR_LIST_RUNTIMES_OUTPUT = ${CORECLR_LIST_RUNTIMES_OUTPUT}")
 set(_ALL_RUNTIMES ${CORECLR_LIST_RUNTIMES_OUTPUT})
 string(REPLACE "\n" ";" _ALL_RUNTIMES_LIST ${_ALL_RUNTIMES})
 
@@ -39,7 +38,7 @@ foreach(X ${_ALL_RUNTIMES_LIST})
             set(CORECLR_RUNTIME_VERSION ${_RUNTIME_VERSION})
             set(CORECLR_RUNTIME_VERSION_FULL ${CORECLR_VERSION}.${CMAKE_MATCH_3})
             set(CORECLR_RUNTIME_ROOT_PATH ${CMAKE_MATCH_4})
-            message(STATUS "[.Net]: Found matching runtime version '${CORECLR_RUNTIME_VERSION_FULL}' path='${CORECLR_RUNTIME_ROOT_PATH}'")
+            message(STATUS "Found matching .NET runtime version '${CORECLR_RUNTIME_VERSION_FULL}' path='${CORECLR_RUNTIME_ROOT_PATH}'")
         endif()
     endif()
 endforeach()
@@ -49,30 +48,18 @@ if (CORECLR_RUNTIME_ROOT_PATH)
 endif()
 set(CoreClrEmbed_ROOT_PATH "${CORECLR_RUNTIME_ROOT_PATH}")
 
-message(STATUS "[.Net]: CORECLR_RUNTIME_VERSION = '${CORECLR_RUNTIME_VERSION}'")
-message(STATUS "[.Net]: CORECLR_RUNTIME_VERSION_FULL = '${CORECLR_RUNTIME_VERSION_FULL}'")
-message(STATUS "[.Net]: CORECLR_RUNTIME_ROOT_PATH = '${CORECLR_RUNTIME_ROOT_PATH}'")
-
-message(STATUS "[.Net]: CORECLR_SUBARCH = '${CORECLR_SUBARCH}'")
-
 
 file(GLOB _CORECLR_HOST_ARCH_PATH "${CORECLR_RUNTIME_ROOT_PATH}/packs/Microsoft.NETCore.App.Host.*-${CORECLR_SUBARCH}")
-message(STATUS "[CoreClrEmbed] _CORECLR_HOST_ARCH_PATH = '${_CORECLR_HOST_ARCH_PATH}'")
 if (_CORECLR_HOST_ARCH_PATH)
     get_filename_component(_CORECLR_HOST_ARCH_FILENAME ${_CORECLR_HOST_ARCH_PATH} NAME)
-    message(STATUS "[CoreClrEmbed] _CORECLR_HOST_ARCH_FILENAME = '${_CORECLR_HOST_ARCH_FILENAME}'")
     string(REPLACE "Microsoft.NETCore.App.Host." "" _CORECLR_COMPUTED_ARCH "${_CORECLR_HOST_ARCH_FILENAME}")
-    message(STATUS "[CoreClrEmbed] _CORECLR_COMPUTED_ARCH = '${_CORECLR_COMPUTED_ARCH}'")
     if (_CORECLR_COMPUTED_ARCH)
         set(CORECLR_ARCH "${_CORECLR_COMPUTED_ARCH}")
-        message(STATUS "[CoreClrEmbed] Set CORECLR_ARCH to '${_CORECLR_COMPUTED_ARCH}'")
     endif()
 endif()
 
 set(CORECLR_HOST_BASE_PATH "${CORECLR_RUNTIME_ROOT_PATH}/packs/Microsoft.NETCore.App.Host.${CORECLR_ARCH}/${CORECLR_RUNTIME_VERSION_FULL}")
-message(STATUS "[CoreClrEmbed] searching runtime path '${CORECLR_HOST_BASE_PATH}'")
 file(GLOB _CORECLR_FOUND_PATH ${CORECLR_HOST_BASE_PATH})
-message(STATUS "[CoreClrEmbed] _CORECLR_FOUND_PATH = ${_CORECLR_FOUND_PATH}")
 if (_CORECLR_FOUND_PATH)
     set(CORECLR_NETHOST_ROOT "${_CORECLR_FOUND_PATH}/runtimes/${CORECLR_ARCH}/native")
 endif()
@@ -85,9 +72,6 @@ find_path(CoreClrEmbed_INCLUDE_DIR nethost.h PATHS
 )
 find_file(CoreClrEmbed_SHARED_LIBRARY nethost.dll nethost.so libnethost.so nethost.dylib libnethost.dylib PATHS
     ${CORECLR_NETHOST_ROOT})
-
-message(STATUS "[CoreClrEmbed] CoreClrEmbed_LIBRARY = ${CoreClrEmbed_LIBRARY}")
-message(STATUS "[CoreClrEmbed] CoreClrEmbed_INCLUDE_DIR = ${CoreClrEmbed_INCLUDE_DIR}")
 
 if (CoreClrEmbed_INCLUDE_DIR AND CoreClrEmbed_LIBRARY)
     set(CoreClrEmbed_FOUND TRUE)
