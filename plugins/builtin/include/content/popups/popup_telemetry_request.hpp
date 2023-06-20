@@ -30,10 +30,12 @@ namespace hex::plugin::builtin {
 
             if(ImGui::CollapsingHeader("hex.builtin.welcome.server_contact.data_collected_title"_lang)) {
                 if(ImGui::BeginTable("hex.builtin.welcome.server_contact.data_collected_table"_lang, 2,
-                                     ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoHostExtendY,
-                                     ImVec2(ImGui::GetContentRegionAvail().x, 80_scaled))) {
+                                     ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_NoHostExtendY,
+                                     ImVec2(ImGui::GetContentRegionAvail().x, 100_scaled))) {
                     ImGui::TableSetupColumn("hex.builtin.welcome.server_contact.data_collected_table.key"_lang);
                     ImGui::TableSetupColumn("hex.builtin.welcome.server_contact.data_collected_table.value"_lang, ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupScrollFreeze(0, 1);
+
                     ImGui::TableHeadersRow();
 
                     ImGui::TableNextRow();
@@ -46,21 +48,21 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.version"_lang);
                     ImGui::TableNextColumn();
-                        ImGui::TextFormatted("{}/{}@{}/{}",
-                                             IMHEX_VERSION,
-                                             #if defined (GIT_COMMIT_HASH_LONG) && defined (GIT_BRANCH)
-                                                GIT_COMMIT_HASH_LONG, GIT_BRANCH,
-                                             #else
-                                                "??", "??",
-                                             #endif
-                                             ImHexApi::System::isPortableVersion() ? "Portable" : "Installed"
-                         );
+                    ImGui::TextFormattedWrapped("{}\n{}@{}\n{}",
+                                                IMHEX_VERSION,
+                                                #if defined (GIT_COMMIT_HASH_LONG) && defined (GIT_BRANCH)
+                                                   GIT_COMMIT_HASH_LONG, GIT_BRANCH,
+                                                #else
+                                                   "??", "??",
+                                                #endif
+                                                ImHexApi::System::isPortableVersion() ? "Portable" : "Installed"
+                     );
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.os"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormattedWrapped("{}/{}/{}/{}",
+                    ImGui::TextFormattedWrapped("{}\n{}\n{}\n{}",
                                                 ImHexApi::System::getOSName(),
                                                 ImHexApi::System::getOSVersion(),
                                                 ImHexApi::System::getArchitecture(),
@@ -107,7 +109,7 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] ImVec2 getMaxSize() const override {
-            return scaled({ 500, 400 });
+            return scaled({ 500, 450 });
         }
 
     private:
