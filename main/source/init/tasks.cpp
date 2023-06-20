@@ -80,9 +80,9 @@ namespace hex::init {
 
             // Make telemetry request
             nlohmann::json telemetry = {
-                {"uuid", uuid},
-                {"version", IMHEX_VERSION},
-                {"os", fmt::format("{}/{}/{}", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture()) }
+                { "uuid", uuid },
+                { "version", fmt::format("{}/{}", IMHEX_VERSION, ImHexApi::System::isPortableVersion() ? "Portable" : "Installed") },
+                { "os", fmt::format("{}/{}/{}/{}", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture(), ImHexApi::System::getGPUVendor()) }
             };
 
             HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);
