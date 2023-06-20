@@ -32,6 +32,7 @@ if (CoreClrEmbed_FOUND)
             source/loaders/dotnet/dotnet_loader.cpp
 
             source/script_api/v1/mem.cpp
+            source/script_api/v1/bookmarks.cpp
     )
 
     set(EXTRA_BUNDLE_LIBRARY_PATHS "${CoreClrEmbed_FOLDER}" PARENT_SCOPE)

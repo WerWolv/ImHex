@@ -24,3 +24,21 @@ SCRIPT_API(void writeMemory, u64 address, size_t size, void *buffer) {
 
     provider->write(address, buffer, size);
 }
+
+SCRIPT_API(bool getSelection, u64 *start, u64 *end) {
+    if (start == nullptr || end == nullptr)
+        return false;
+
+    if (!hex::ImHexApi::Provider::isValid())
+        return false;
+
+    if (!hex::ImHexApi::HexEditor::isSelectionValid())
+        return false;
+
+    auto selection = hex::ImHexApi::HexEditor::getSelection();
+
+    *start = selection->getStartAddress();
+    *end = selection->getEndAddress();
+
+    return true;
+}
