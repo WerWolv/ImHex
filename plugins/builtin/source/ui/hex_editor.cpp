@@ -122,35 +122,13 @@ namespace hex::plugin::builtin::ui {
         ImColor color;
     };
 
-    static CustomEncodingData queryCustomEncodingData(prv::Provider *provider, const EncodingFile &encodingFile, std::vector<u64> &lineStartAddresses, u32 bytesPerRow, u64 address) {
+    static CustomEncodingData queryCustomEncodingData(prv::Provider *provider, const EncodingFile &encodingFile, u64 address) {
         const auto longestSequence = encodingFile.getLongestSequence();
 
         if (longestSequence == 0)
             return { ".", 1, 0xFFFF8000 };
 
-        if (lineStartAddresses.empty() || lineStartAddresses.size() <= address / bytesPerRow) {
-            auto prevSize = lineStartAddresses.size();
-            auto newSize = address / bytesPerRow + 1;
-            lineStartAddresses.reserve(newSize);
-
-            std::vector<u8> buffer;
-            for (auto i = prevSize; i < newSize; i++) {
-                u32 offset = 0;
-                while (offset < bytesPerRow) {
-                    size_t readSize   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
-                    buffer.resize(readSize);
-                    provider->read(address, buffer.data(), readSize);
-
-                    offset += encodingFile.getEncodingLengthFor(buffer);
-                }
-
-                lineStartAddresses.push_back(offset % bytesPerRow);
-            }
-        }
-
-        address += lineStartAddresses[address / bytesPerRow];
-
-        size_t size   = std::min<size_t>(longestSequence, provider->getActualSize() - address);
+        size_t size = std::min<size_t>(longestSequence, provider->getActualSize() - address);
 
         std::vector<u8> buffer(size);
         provider->read(address, buffer.data(), size);
@@ -517,15 +495,27 @@ namespace hex::plugin::builtin::ui {
                         // Draw Custom encoding column
                         if (this->m_showCustomEncoding && this->m_currCustomEncoding.has_value()) {
                             std::vector<std::pair<u64, CustomEncodingData>> encodingData;
-                            u32 offset = 0;
-                            do {
-                                const u64 address = y * this->m_bytesPerRow + offset + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
-                                auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, this->m_encodingLineStartAddresses, this->m_bytesPerRow, address);
-                                offset += std::max<size_t>(1, result.advance);
+                            if (this->m_encodingLineStartAddresses.empty()) {
+                                this->m_encodingLineStartAddresses.push_back(0);
+                            }
 
-                                encodingData.emplace_back(address, result);
-                            } while (offset < this->m_bytesPerRow);
+                            if (this->m_encodingLineStartAddresses[y] >= this->m_bytesPerRow) {
+                                encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed)));
+                                this->m_encodingLineStartAddresses.push_back(0);
+                            } else {
+                                u32 offset = this->m_encodingLineStartAddresses[y];
+                                do {
+                                    const u64 address = y * this->m_bytesPerRow + offset + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
+
+                                    auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, address);
+
+                                    offset += result.advance;
+                                    encodingData.emplace_back(address, result);
+                                } while (offset < this->m_bytesPerRow);
+
+                                this->m_encodingLineStartAddresses.push_back(offset - this->m_bytesPerRow);
+                            }
 
                             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
                             ImGui::PushID(y);
