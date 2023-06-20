@@ -607,7 +607,7 @@ function(generatePDBs)
                 COMMAND_EXPAND_LISTS)
 
         target_sources(imhex_all PRIVATE ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb)
-        install(FILES ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb DESTINATION ${CMAKE_INSTALL_PREFIX})
+        install(FILES ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb DESTINATION ".")
     endforeach ()
 
 
