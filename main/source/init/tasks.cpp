@@ -81,8 +81,18 @@ namespace hex::init {
             // Make telemetry request
             nlohmann::json telemetry = {
                 { "uuid", uuid },
-                { "version", fmt::format("{}/{}", IMHEX_VERSION, ImHexApi::System::isPortableVersion() ? "Portable" : "Installed") },
-                { "os", fmt::format("{}/{}/{}/{}", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture(), ImHexApi::System::getGPUVendor()) }
+                { "format_version", "1" },
+                { "imhex_version", IMHEX_VERSION },
+                #if defined(GIT_COMMIT_HASH_LONG) && defined(GIT_BRANCH)
+                    { "imhex_commit", fmt::format("{}@{}", GIT_COMMIT_HASH_LONG, GIT_BRANCH) },
+                #else
+                    { "imhex_commit", "??@??" },
+                #endif
+                { "install_type", ImHexApi::System::isPortableVersion() ? "Portable" : "Installed" },
+                { "os", ImHexApi::System::getOSName() },
+                { "os_version", ImHexApi::System::getOSVersion() },
+                { "arch", ImHexApi::System::getArchitecture() },
+                { "gpu_vendor", ImHexApi::System::getGPUVendor() }
             };
 
             HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);

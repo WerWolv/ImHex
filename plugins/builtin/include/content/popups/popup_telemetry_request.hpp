@@ -46,13 +46,25 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.version"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted(IMHEX_VERSION);
+                        ImGui::TextFormatted("{}/{}@{}/{}",
+                                             IMHEX_VERSION,
+                                             #if defined (GIT_COMMIT_HASH_LONG) && defined (GIT_BRANCH)
+                                                GIT_COMMIT_HASH_LONG, GIT_BRANCH,
+                                             #else
+                                                "??", "??",
+                                             #endif
+                                             ImHexApi::System::isPortableVersion() ? "Portable" : "Installed"
+                         );
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.os"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextWrapped("%s/%s/%s", ImHexApi::System::getOSName().c_str(), ImHexApi::System::getOSVersion().c_str(), ImHexApi::System::getArchitecture().c_str());
+                    ImGui::TextFormattedWrapped("{}/{}/{}/{}",
+                                                ImHexApi::System::getOSName(),
+                                                ImHexApi::System::getOSVersion(),
+                                                ImHexApi::System::getArchitecture(),
+                                                ImHexApi::System::getGPUVendor());
 
                     ImGui::EndTable();
                 }
