@@ -1,5 +1,6 @@
 #include <hex/helpers/stacktrace.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #if defined(OS_WINDOWS)
 
@@ -24,8 +25,8 @@
             context.ContextFlags = CONTEXT_FULL;
             RtlCaptureContext(&context);
 
-            SymSetOptions(SYMOPT_UNDNAME | SYMOPT_LOAD_LINES);
-            SymInitialize(process, nullptr, true);
+            SymSetOptions(SYMOPT_CASE_INSENSITIVE | SYMOPT_UNDNAME | SYMOPT_LOAD_LINES | SYMOPT_LOAD_ANYTHING);
+            SymInitialize(process, nullptr, TRUE);
 
             DWORD image;
             STACKFRAME64 stackFrame;
@@ -47,27 +48,32 @@
                         SymFunctionTableAccess64, SymGetModuleBase64, nullptr))
                     break;
 
+                if (stackFrame.AddrReturn.Offset == stackFrame.AddrPC.Offset)
+                    break;
+
                 char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
                 auto symbol = (PSYMBOL_INFO)buffer;
                 symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
                 symbol->MaxNameLen = MAX_SYM_NAME;
 
                 DWORD64 displacementSymbol = 0;
-                const char* symbolName;
-                if (SymFromAddr(process, stackFrame.AddrPC.Offset, &displacementSymbol, symbol)) {
-                    symbolName = symbol->Name;
+                std::string symbolName;
+                if (SymFromAddr(process, stackFrame.AddrPC.Offset, &displacementSymbol, symbol) == TRUE) {
+                    symbolName = hex::format("{} (0x{:X})", symbol->Name, symbol->Address);
                 } else {
                     symbolName = "??";
                 }
+
+                SymSetOptions(SYMOPT_LOAD_LINES);
 
                 IMAGEHLP_LINE64 line;
                 line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
                 DWORD displacementLine = 0;
                 u32 lineNumber;
-                const char* fileName;
+                std::string fileName;
 
-                if (SymGetLineFromAddr64(process, stackFrame.AddrPC.Offset, &displacementLine, &line)) {
+                if (SymGetLineFromAddr64(process, stackFrame.AddrPC.Offset, &displacementLine, &line) == TRUE) {
                     lineNumber = line.LineNumber;
                     fileName = line.FileName;
                 } else {

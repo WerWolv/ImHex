@@ -27,17 +27,17 @@
 
 #include <wolv/io/fs.hpp>
 #include <wolv/io/file.hpp>
+#include <wolv/hash/uuid.hpp>
 
 namespace hex::init {
 
     using namespace std::literals::string_literals;
 
-#if defined(HEX_UPDATE_CHECK)
     static bool checkForUpdates() {
-        int showCheckForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.check_for_updates", 2);
+        int checkForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
 
         // Check if we should check for updates
-        if (showCheckForUpdates == 1){
+        if (checkForUpdates == 1){
             HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
             request.setTimeout(2000);
 
@@ -69,10 +69,36 @@ namespace hex::init {
             if (latestVersion != currVersion)
                 ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
+            // Check if there is a telemetry uuid
+            std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
+            if(uuid.empty()) {
+                // Generate a new uuid
+                uuid = wolv::hash::generateUUID();
+                // Save
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
+            }
+
+            // Make telemetry request
+            nlohmann::json telemetry = {
+                {"uuid", uuid},
+                {"version", IMHEX_VERSION},
+                {"os", fmt::format("{}/{}/{}", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture()) }
+            };
+
+            HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);
+            telemetryRequest.setTimeout(2000);
+
+            telemetryRequest.setBody(telemetry.dump());
+            telemetryRequest.addHeader("Content-Type", "application/json");
+
+            // Execute request
+            response = telemetryRequest.execute().get();
+            if (response.getStatusCode() != 200)
+                return false;
+
         }
         return true;
     }
-#endif
 
     bool setupEnvironment() {
         hex::log::debug("Using romfs: '{}'", romfs::name());
@@ -508,9 +534,7 @@ namespace hex::init {
             #endif
             { "Loading settings",        loadSettings,        false },
             { "Loading plugins",         loadPlugins,         false },
-#if defined(HEX_UPDATE_CHECK)
             { "Checking for updates",    checkForUpdates,     true  },
-#endif
             { "Loading fonts",           loadFonts,           true  },
         };
     }

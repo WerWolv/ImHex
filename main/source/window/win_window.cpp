@@ -295,7 +295,6 @@ namespace hex {
                     log::fatal("Exception raised: 0x{:08X}", exception->ExceptionRecord->ExceptionCode);
                     if (exception->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION) {
                         log::fatal("Heap corruption detected!");
-                        std::raise(SIGABRT);
                     }
                 }
 

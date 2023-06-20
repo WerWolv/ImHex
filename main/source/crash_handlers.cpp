@@ -1,4 +1,6 @@
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/task.hpp>
+
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/stacktrace.hpp>
@@ -6,7 +8,7 @@
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
 
-#include "window.hpp"
+#include <window.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -14,6 +16,10 @@
 
 #include <exception>
 #include <csignal>
+
+#if defined (OS_MACOS)
+    #include <sys/utsname.h>
+#endif
 
 namespace hex::crash {
 
@@ -44,19 +50,33 @@ namespace hex::crash {
                 file.writeString(crashData.dump(4));
                 file.close();
                 log::info("Wrote crash.json file to {}", wolv::util::toUTF8String(file.getPath()));
+
                 return;
             }
         }
         log::warn("Could not write crash.json file !");
     }
 
+    static void printStackTrace() {
+        for (const auto &stackFrame : stacktrace::getStackTrace()) {
+            if (stackFrame.line == 0)
+                log::fatal("  {}", stackFrame.function);
+            else
+                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
+        }
+    }
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
+        // Reset the signal handler to the default handler
+        for(auto signal : Signals) std::signal(signal, SIG_DFL);
+
         log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
 
         // Trigger the crash callback
         crashCallback(hex::format("Received signal '{}' ({})", signalName, signalNumber));
+
+        printStackTrace();
 
         // Trigger an event so that plugins can handle crashes
         // It may affect things (like the project path),
@@ -68,17 +88,6 @@ namespace hex::crash {
             log::fatal("Uncaught exception thrown!");
         }
 
-        // Reset the signal handler to the default handler
-        for(auto signal : Signals) std::signal(signal, SIG_DFL);
-
-        // Print stack trace
-        for (const auto &stackFrame : stacktrace::getStackTrace()) {
-            if (stackFrame.line == 0)
-                log::fatal("  {}", stackFrame.function);
-            else
-                log::fatal("  ({}:{}) | {}",  stackFrame.file, stackFrame.line, stackFrame.function);
-        }
-    
         // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
         #if defined(DEBUG)
             assert(!"Debug build, triggering breakpoint");
@@ -115,6 +124,8 @@ namespace hex::crash {
 
                 // Handle crash callback
                 crashCallback(hex::format("Uncaught exception: {}", exceptionStr));
+
+                printStackTrace();
 
                 // Reset signal handlers prior to calling the original handler, because it may raise a signal
                 for(auto signal : Signals) std::signal(signal, SIG_DFL);

@@ -73,10 +73,6 @@ macro(addDefines)
     endif ()
 
     add_compile_definitions(IMHEX_VERSION="${IMHEX_VERSION_STRING}")
-
-    if (NOT IMHEX_DISABLE_UPDATE_CHECK)
-        add_compile_definitions(HEX_UPDATE_CHECK)
-    endif()
 endmacro()
 
 # Detect current OS / System
@@ -237,11 +233,8 @@ macro(createPackage)
             POST_EXCLUDE_REGEXES ".*system32/.*\\.dll"
         )
 
-        if(_u_deps)
-            message(WARNING "There were unresolved dependencies for binary: \"${_u_deps}\"!")
-        endif()
         if(_c_deps_FILENAMES)
-            message(WARNING "There were conflicting dependencies for library: \"${_c_deps}\"!")
+            message(WARNING "Conflicting dependencies for library: \"${_c_deps}\"!")
         endif()
 
         foreach(_file ${_r_deps})
@@ -580,3 +573,42 @@ macro(addBundledLibraries)
         endif ()
     endif ()
 endmacro()
+
+function(generatePDBs)
+    if (NOT WIN32)
+        return()
+    endif ()
+
+    include(FetchContent)
+    FetchContent_Declare(
+            cv2pdb
+            URL "https://github.com/rainers/cv2pdb/releases/download/v0.52/cv2pdb-0.52.zip"
+            DOWNLOAD_EXTRACT_TIMESTAMP ON
+    )
+    FetchContent_Populate(cv2pdb)
+
+    set(PDBS_TO_GENERATE main libimhex ${PLUGINS})
+    add_custom_target(pdbs)
+    foreach (PDB ${PDBS_TO_GENERATE})
+        if (PDB STREQUAL "main")
+            set(GENERATED_PDB imhex)
+        else ()
+            set(GENERATED_PDB ${PDB})
+        endif ()
+
+        add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb
+                WORKING_DIRECTORY ${cv2pdb_SOURCE_DIR}
+                COMMAND
+                (${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
+                ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
+                $<TARGET_FILE:${PDB}>
+                ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb) || (exit 0)
+                DEPENDS $<TARGET_FILE:${PDB}>
+                COMMAND_EXPAND_LISTS)
+
+        target_sources(imhex_all PRIVATE ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb)
+        install(FILES ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb DESTINATION ".")
+    endforeach ()
+
+
+endfunction()

@@ -39,9 +39,9 @@ int main(int argc, char **argv, char **envp) {
         {
             Window::initNative();
 
-            hex::log::info("Welcome to ImHex {}!", IMHEX_VERSION);
+            log::info("Welcome to ImHex {}!", IMHEX_VERSION);
             #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH_SHORT)
-                hex::log::info("Compiled using commit {}@{}", GIT_BRANCH, GIT_COMMIT_HASH_SHORT);
+                log::info("Compiled using commit {}@{}", GIT_BRANCH, GIT_COMMIT_HASH_SHORT);
             #endif
 
             init::WindowSplash splashWindow;
@@ -56,12 +56,17 @@ int main(int argc, char **argv, char **envp) {
                 ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
         }
 
+        log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
+        log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
+
         // Clean up everything after the main window is closed
-        ON_SCOPE_EXIT {
+        auto exitHandler = [](auto){
             for (const auto &[name, task, async] : init::getExitTasks())
                 task();
             TaskManager::exit();
         };
+
+        ON_SCOPE_EXIT { exitHandler(0); };
 
         // Main window
         {
