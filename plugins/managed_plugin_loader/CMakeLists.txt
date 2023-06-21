@@ -26,6 +26,8 @@ if (CoreClrEmbed_FOUND)
             BUILD_RPATH         ${CoreClrEmbed_FOLDER}
             INSTALL_RPATH       ${CoreClrEmbed_FOLDER})
 
+    install(FILES ${CoreClrEmbed_SHARED_LIBRARIES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
     target_link_directories(${PROJECT_NAME} PRIVATE ${CoreClrEmbed_FOLDER})
     target_compile_definitions(${PROJECT_NAME} PRIVATE DOTNET_PLUGINS=1)
     target_sources(${PROJECT_NAME} PRIVATE
