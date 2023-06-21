@@ -5,6 +5,13 @@
 
 #include <algorithm>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+    #include <processthreadsapi.h>
+#else
+    #include <pthread.h>
+#endif
+
 namespace hex {
 
     std::mutex TaskManager::s_deferredCallsMutex, TaskManager::s_tasksFinishedMutex;
@@ -16,6 +23,30 @@ namespace hex {
     std::mutex TaskManager::s_queueMutex;
     std::condition_variable TaskManager::s_jobCondVar;
     std::vector<std::jthread> TaskManager::s_workers;
+
+    static void setThreadName(const std::string &name) {
+        #if defined(OS_WINDOWS)
+            typedef struct tagTHREADNAME_INFO {
+                DWORD dwType;
+                LPCSTR szName;
+                DWORD dwThreadID;
+                DWORD dwFlags;
+            } THREADNAME_INFO;
+
+            THREADNAME_INFO info;
+            info.dwType = 0x1000;
+            info.szName = name.c_str();
+            info.dwThreadID = ::GetCurrentThreadId();
+            info.dwFlags = 0;
+
+            const DWORD MS_VC_EXCEPTION = 0x406D1388;
+            RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+        #elif defined(OS_LINUX)
+            pthread_setname_np(pthread_self(), name.c_str());
+        #elif defined(OS_MACOS)
+            pthread_setname_np(name.c_str());
+        #endif
+    }
 
     Task::Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
     : m_unlocalizedName(std::move(unlocalizedName)), m_currValue(0), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
@@ -210,6 +241,7 @@ namespace hex {
             }
 
             try {
+                setThreadName(LangEntry(task->m_unlocalizedName));
                 task->m_function(*task);
                 log::debug("Finished task {}", task->m_unlocalizedName);
             } catch (const Task::TaskInterruptor &) {
