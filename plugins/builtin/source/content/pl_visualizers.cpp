@@ -468,9 +468,16 @@ namespace hex::plugin::builtin {
 
             if (shouldReset) {
                 auto pattern = arguments[0].toPattern();
-                auto data = pattern->getBytes();
+                std::vector<u8> data;
 
                 dataProvider = std::make_unique<MemoryFileProvider>();
+                try {
+                    data = pattern->getBytes();
+                } catch (const std::exception &e) {
+                    dataProvider->resize(0);
+                    throw;
+                }
+
                 dataProvider->resize(data.size());
                 dataProvider->writeRaw(0x00, data.data(), data.size());
                 dataProvider->setReadOnly(true);
