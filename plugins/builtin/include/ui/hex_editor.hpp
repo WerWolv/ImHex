@@ -192,7 +192,7 @@ namespace hex::plugin::builtin::ui {
         float m_scrollPosition = 0;
 
         u16 m_bytesPerRow = 16;
-        ContentRegistry::HexEditor::DataVisualizer *m_currDataVisualizer;
+        std::shared_ptr<ContentRegistry::HexEditor::DataVisualizer> m_currDataVisualizer;
         char m_unknownDataCharacter = '?';
 
         bool m_shouldJumpToSelection = false;

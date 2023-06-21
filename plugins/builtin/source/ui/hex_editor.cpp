@@ -1,6 +1,5 @@
 #include <ui/hex_editor.hpp>
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization.hpp>
 
@@ -71,7 +70,7 @@ namespace hex::plugin::builtin::ui {
     /* Hex Editor */
 
     HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
-        this->m_currDataVisualizer = ContentRegistry::HexEditor::impl::getVisualizers()["hex.builtin.visualizer.hexadecimal.8bit"];
+        this->m_currDataVisualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit");
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             {
@@ -802,8 +801,8 @@ namespace hex::plugin::builtin::ui {
                         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                         if (ImGui::BeginCombo("##visualizer", LangEntry(this->m_currDataVisualizer->getUnlocalizedName()))) {
 
-                            for (const auto &[unlocalizedName, visualizer] : visualizers) {
-                                if (ImGui::Selectable(LangEntry(unlocalizedName))) {
+                            for (const auto &visualizer : visualizers) {
+                                if (ImGui::Selectable(LangEntry(visualizer->getUnlocalizedName()))) {
                                     this->m_currDataVisualizer = visualizer;
                                 }
                             }

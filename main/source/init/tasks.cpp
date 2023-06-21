@@ -364,6 +364,7 @@ namespace hex::init {
         ContentRegistry::DataFormatter::impl::getEntries().clear();
         ContentRegistry::FileHandler::impl::getEntries().clear();
         ContentRegistry::Hashes::impl::getHashes().clear();
+        ContentRegistry::HexEditor::impl::getVisualizers().clear();
 
         ContentRegistry::BackgroundServices::impl::stopServices();
         ContentRegistry::BackgroundServices::impl::getServices().clear();
@@ -374,12 +375,6 @@ namespace hex::init {
 
         ThemeManager::reset();
 
-        {
-            auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
-            for (auto &[name, visualizer] : visualizers)
-                delete visualizer;
-            visualizers.clear();
-        }
 
         ProjectFile::getHandlers().clear();
         ProjectFile::getProviderHandlers().clear();

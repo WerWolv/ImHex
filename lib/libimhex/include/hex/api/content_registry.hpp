@@ -723,9 +723,9 @@ namespace hex {
 
             namespace impl {
 
-                void addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer);
+                void addDataVisualizer(std::shared_ptr<DataVisualizer> &&visualizer);
 
-                std::map<std::string, DataVisualizer*> &getVisualizers();
+                std::vector<std::shared_ptr<DataVisualizer>> &getVisualizers();
 
             }
 
@@ -737,9 +737,15 @@ namespace hex {
              */
             template<std::derived_from<DataVisualizer> T, typename... Args>
             void addDataVisualizer(Args &&...args) {
-                auto visualizer = new T(std::forward<Args>(args)...);
-                return impl::addDataVisualizer(visualizer->getUnlocalizedName(), visualizer);
+                return impl::addDataVisualizer(std::make_shared<T>(std::forward<Args>(args)...));
             }
+
+            /**
+             * @brief Gets a data visualizer by its unlocalized nameb
+             * @param unlocalizedName Unlocalized name of the data visualizer
+             * @return The data visualizer, or nullptr if it doesn't exist
+             */
+            std::shared_ptr<DataVisualizer> getVisualizerByName(const std::string &unlocalizedName);
 
         }
 

@@ -754,17 +754,26 @@ namespace hex {
 
         namespace impl {
 
-            void addDataVisualizer(const std::string &unlocalizedName, DataVisualizer *visualizer) {
-                getVisualizers().insert({ unlocalizedName, visualizer });
+            void addDataVisualizer(std::shared_ptr<DataVisualizer> &&visualizer) {
+                getVisualizers().emplace_back(std::move(visualizer));
 
             }
 
-            std::map<std::string, DataVisualizer*> &getVisualizers() {
-                static std::map<std::string, DataVisualizer*> visualizers;
+            std::vector<std::shared_ptr<DataVisualizer>> &getVisualizers() {
+                static std::vector<std::shared_ptr<DataVisualizer>> visualizers;
 
                 return visualizers;
             }
 
+        }
+
+        std::shared_ptr<DataVisualizer> getVisualizerByName(const std::string &unlocalizedName) {
+            for (const auto &visualizer : impl::getVisualizers()) {
+                if (visualizer->getUnlocalizedName() == unlocalizedName)
+                    return visualizer;
+            }
+
+            return nullptr;
         }
 
 
