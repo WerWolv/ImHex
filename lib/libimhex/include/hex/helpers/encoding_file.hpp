@@ -20,9 +20,14 @@ namespace hex {
             Thingy
         };
 
-        EncodingFile() = default;
+        EncodingFile();
+        EncodingFile(const EncodingFile &other);
+        EncodingFile(EncodingFile &&other);
         EncodingFile(Type type, const std::fs::path &path);
         EncodingFile(Type type, const std::string &path);
+
+        EncodingFile& operator=(const EncodingFile &other);
+        EncodingFile& operator=(EncodingFile &&other);
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
         [[nodiscard]] size_t getEncodingLengthFor(std::span<u8> buffer) const;
@@ -38,7 +43,7 @@ namespace hex {
         bool m_valid = false;
 
         std::string m_tableContent;
-        std::map<size_t, std::map<std::vector<u8>, std::string>> m_mapping;
+        std::unique_ptr<std::map<size_t, std::map<std::vector<u8>, std::string>>> m_mapping;
         size_t m_longestSequence = 0;
     };
 

@@ -499,65 +499,67 @@ namespace hex::plugin::builtin::ui {
                                 this->m_encodingLineStartAddresses.push_back(0);
                             }
 
-                            if (this->m_encodingLineStartAddresses[y] >= this->m_bytesPerRow) {
-                                encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed)));
-                                this->m_encodingLineStartAddresses.push_back(0);
-                            } else {
-                                u32 offset = this->m_encodingLineStartAddresses[y];
-                                do {
-                                    const u64 address = y * this->m_bytesPerRow + offset + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
+                            if (y < this->m_encodingLineStartAddresses.size()) {
+                                if (this->m_encodingLineStartAddresses[y] >= this->m_bytesPerRow) {
+                                    encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed)));
+                                    this->m_encodingLineStartAddresses.push_back(0);
+                                } else {
+                                    u32 offset = this->m_encodingLineStartAddresses[y];
+                                    do {
+                                        const u64 address = y * this->m_bytesPerRow + offset + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress();
 
-                                    auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, address);
+                                        auto result = queryCustomEncodingData(this->m_provider, *this->m_currCustomEncoding, address);
 
-                                    offset += result.advance;
-                                    encodingData.emplace_back(address, result);
-                                } while (offset < this->m_bytesPerRow);
+                                        offset += result.advance;
+                                        encodingData.emplace_back(address, result);
+                                    } while (offset < this->m_bytesPerRow);
 
-                                this->m_encodingLineStartAddresses.push_back(offset - this->m_bytesPerRow);
-                            }
-
-                            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
-                            ImGui::PushID(y);
-                            if (ImGui::BeginTable("##encoding_cell", encodingData.size(), ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible)) {
-                                ImGui::TableNextRow();
-
-                                for (const auto &[address, data] : encodingData) {
-                                    ImGui::TableNextColumn();
-
-                                    const auto cellStartPos = getCellPosition();
-                                    const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(this->m_characterCellPadding * 1_scaled, CharacterSize.y);
-                                    const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
-
-                                    const auto x = address % this->m_bytesPerRow;
-                                    if (x < validBytes && isCurrRegionValid(address)) {
-                                        auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
-
-                                        backgroundColor = applySelectionColor(address, backgroundColor);
-
-                                        // Draw highlights and selection
-                                        if (backgroundColor.has_value()) {
-                                            auto drawList = ImGui::GetWindowDrawList();
-
-                                            // Draw background color
-                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
-
-                                            this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
-                                        }
-
-                                        auto startPos = ImGui::GetCursorPos();
-                                        ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
-                                        ImGui::SetCursorPosX(startPos.x + cellSize.x);
-                                        ImGui::SameLine(0, 0);
-                                        ImGui::Dummy({ 0, 0 });
-
-                                        this->handleSelection(address, data.advance, &bytes[address % this->m_bytesPerRow], cellHovered);
-                                    }
+                                    this->m_encodingLineStartAddresses.push_back(offset - this->m_bytesPerRow);
                                 }
 
-                                ImGui::EndTable();
+                                ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
+                                ImGui::PushID(y);
+                                if (ImGui::BeginTable("##encoding_cell", encodingData.size(), ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible)) {
+                                    ImGui::TableNextRow();
+
+                                    for (const auto &[address, data] : encodingData) {
+                                        ImGui::TableNextColumn();
+
+                                        const auto cellStartPos = getCellPosition();
+                                        const auto cellSize = ImGui::CalcTextSize(data.displayValue.c_str()) * ImVec2(1, 0) + ImVec2(this->m_characterCellPadding * 1_scaled, CharacterSize.y);
+                                        const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, true);
+
+                                        const auto x = address % this->m_bytesPerRow;
+                                        if (x < validBytes && isCurrRegionValid(address)) {
+                                            auto [foregroundColor, backgroundColor] = cellColors[x / bytesPerCell];
+
+                                            backgroundColor = applySelectionColor(address, backgroundColor);
+
+                                            // Draw highlights and selection
+                                            if (backgroundColor.has_value()) {
+                                                auto drawList = ImGui::GetWindowDrawList();
+
+                                                // Draw background color
+                                                drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
+
+                                                this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
+                                            }
+
+                                            auto startPos = ImGui::GetCursorPos();
+                                            ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
+                                            ImGui::SetCursorPosX(startPos.x + cellSize.x);
+                                            ImGui::SameLine(0, 0);
+                                            ImGui::Dummy({ 0, 0 });
+
+                                            this->handleSelection(address, data.advance, &bytes[address % this->m_bytesPerRow], cellHovered);
+                                        }
+                                    }
+
+                                    ImGui::EndTable();
+                                }
+                                ImGui::PopStyleVar();
+                                ImGui::PopID();
                             }
-                            ImGui::PopStyleVar();
-                            ImGui::PopID();
                         }
 
                         // Scroll to the cursor if it's either at the top or bottom edge of the screen
