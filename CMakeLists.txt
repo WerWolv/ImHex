@@ -10,6 +10,7 @@ option(IMHEX_PATTERNS_PULL_MASTER "Download latest files from master branch of t
 option(IMHEX_IGNORE_BAD_COMPILER "Allow compiling with an unsupported compiler" OFF)
 option(IMHEX_USE_GTK_FILE_PICKER "Use GTK file picker instead of xdg-desktop-portals" OFF)
 option(IMHEX_DISABLE_STACKTRACE "Disables support for printing stack traces" OFF)
+option(IMHEX_BUNDLE_DOTNET "Bundle .NET runtime" ON)
 option(IMHEX_ENABLE_LTO "Enables Link Time Optimizations if possible" OFF)
 option(IMHEX_USE_DEFAULT_BUILD_SETTINGS "Use default build settings" OFF)
 option(IMHEX_STRICT_WARNINGS "Enable most available warnings and treat them as errors" ON)
