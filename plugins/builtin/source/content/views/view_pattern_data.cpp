@@ -36,6 +36,7 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isValid()) {
                 auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                 if (!runtime.arePatternsValid()) {
+                    this->m_patternDrawer.reset();
                     this->m_patternDrawer.draw({});
                 } else {
                     if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {

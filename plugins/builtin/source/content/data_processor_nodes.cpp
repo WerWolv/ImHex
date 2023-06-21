@@ -1165,28 +1165,25 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
+            auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
-            if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                const auto &outVars = runtime.getOutVariables();
-
-                if (outVars.contains(this->m_name)) {
-                    std::visit(wolv::util::overloaded {
-                        [](const std::string &) {},
-                        [](pl::ptrn::Pattern *) {},
-                        [this](auto &&value) {
-                            std::vector<u8> buffer(std::min<size_t>(sizeof(value), 8));
-                            std::memcpy(buffer.data(), &value, buffer.size());
-
-                            this->setBufferOnOutput(0, buffer);
-                        }
-                    }, outVars.at(this->m_name));
-                } else {
-                    throwNodeError(hex::format("Out variable '{}' has not been defined!", this->m_name));
-                }
-            }
             const auto &outVars = runtime.getOutVariables();
 
+            if (outVars.contains(this->m_name)) {
+                std::visit(wolv::util::overloaded {
+                    [](const std::string &) {},
+                    [](pl::ptrn::Pattern *) {},
+                    [this](auto &&value) {
+                        std::vector<u8> buffer(std::min<size_t>(sizeof(value), 8));
+                        std::memcpy(buffer.data(), &value, buffer.size());
+
+                        this->setBufferOnOutput(0, buffer);
+                    }
+                }, outVars.at(this->m_name));
+            } else {
+                throwNodeError(hex::format("Out variable '{}' has not been defined!", this->m_name));
+            }
         }
 
         void store(nlohmann::json &j) const override {
