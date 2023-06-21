@@ -1057,11 +1057,16 @@ namespace hex::plugin::builtin::ui {
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportPatterns")) {
             for (const auto &formatter : this->m_formatters) {
-                const auto &name = formatter->getName();
+                const auto name = [&]{
+                    auto name = formatter->getName();
+                    std::transform(name.begin(), name.end(), name.begin(), [](char c){ return char(std::toupper(c)); });
+
+                    return name;
+                }();
+
                 const auto &extension = formatter->getFileExtension();
 
                 if (ImGui::MenuItem(name.c_str())) {
-
                     fs::openFileBrowser(fs::DialogMode::Save, { { name.c_str(), extension.c_str() } }, [&](const std::fs::path &path) {
                         auto result = formatter->format(*runtime);
 
