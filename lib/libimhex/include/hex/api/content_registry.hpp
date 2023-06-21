@@ -741,7 +741,7 @@ namespace hex {
             }
 
             /**
-             * @brief Gets a data visualizer by its unlocalized nameb
+             * @brief Gets a data visualizer by its unlocalized name
              * @param unlocalizedName Unlocalized name of the data visualizer
              * @return The data visualizer, or nullptr if it doesn't exist
              */
