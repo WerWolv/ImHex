@@ -26,6 +26,12 @@ namespace hex {
 
         void close();
 
+        /**
+         * @brief get the error string explaining the error that occured when opening the file.
+         * This error is a combination of the tar error and the native file open error
+         */
+        std::string getOpenErrorString();
+
         [[nodiscard]] std::vector<u8> readVector(const std::fs::path &path);
         [[nodiscard]] std::string readString(const std::fs::path &path);
 
@@ -45,6 +51,10 @@ namespace hex {
         std::fs::path m_path;
 
         bool m_valid = false;
+        
+        // these will be updated when the constructor is called
+        int m_tarOpenErrno = MTAR_ESUCCESS;
+        int m_fileOpenErrno = 0;
     };
 
 }

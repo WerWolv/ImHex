@@ -2,6 +2,7 @@
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -10,7 +11,7 @@ namespace hex {
     using namespace hex::literals;
 
     Tar::Tar(const std::fs::path &path, Mode mode) {
-        int error = MTAR_ESUCCESS;
+        int tar_error = MTAR_ESUCCESS;
 
         // Explicitly create file so a short path gets generated
         if (mode == Mode::Create) {
@@ -20,16 +21,23 @@ namespace hex {
 
         auto shortPath = wolv::io::fs::toShortPath(path);
         if (mode == Tar::Mode::Read)
-            error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "r");
+            tar_error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "r");
         else if (mode == Tar::Mode::Write)
-            error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "a");
+            tar_error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "a");
         else if (mode == Tar::Mode::Create)
-            error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "w");
+            tar_error = mtar_open(&this->m_ctx, shortPath.string().c_str(), "w");
         else
-            error = MTAR_EFAILURE;
+            tar_error = MTAR_EFAILURE;
 
         this->m_path = path;
-        this->m_valid = (error == MTAR_ESUCCESS);
+        this->m_valid = (tar_error == MTAR_ESUCCESS);
+
+        if (!this->m_valid) {
+            this->m_tarOpenErrno = tar_error;
+            
+            // hopefully this errno corresponds to the file open call in mtar_open
+            this->m_fileOpenErrno = errno;
+        }
     }
 
     Tar::~Tar() {
@@ -40,6 +48,8 @@ namespace hex {
         this->m_ctx = other.m_ctx;
         this->m_path = other.m_path;
         this->m_valid = other.m_valid;
+        this->m_tarOpenErrno = other.m_tarOpenErrno;
+        this->m_fileOpenErrno = other.m_fileOpenErrno;
 
         other.m_ctx = { };
         other.m_valid = false;
@@ -54,6 +64,8 @@ namespace hex {
         this->m_valid = other.m_valid;
         other.m_valid = false;
 
+        this->m_tarOpenErrno = other.m_tarOpenErrno;
+        this->m_fileOpenErrno = other.m_fileOpenErrno;
         return *this;
     }
 
@@ -77,6 +89,10 @@ namespace hex {
     bool Tar::contains(const std::fs::path &path) {
         mtar_header_t header;
         return mtar_find(&this->m_ctx, path.string().c_str(), &header) == MTAR_ESUCCESS;
+    }
+
+    std::string Tar::getOpenErrorString(){
+        return hex::format("{}: {}", mtar_strerror(this->m_tarOpenErrno), std::strerror(this->m_fileOpenErrno));
     }
 
     void Tar::close() {
