@@ -601,13 +601,12 @@ function(generatePDBs)
                 COMMAND
                 (${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
                 ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
-                $<TARGET_FILE:${PDB}>
-                ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb) || (exit 0)
+                $<TARGET_FILE:${PDB}>) || (exit 0)
                 DEPENDS $<TARGET_FILE:${PDB}>
                 COMMAND_EXPAND_LISTS)
 
         target_sources(imhex_all PRIVATE ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb)
-        install(FILES ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb DESTINATION ".")
+        install(FILES $<TARGET_FILE_DIR:${PDB}>/${GENERATED_PDB}.pdb DESTINATION ".")
     endforeach ()
 
 

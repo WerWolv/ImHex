@@ -1,5 +1,4 @@
 #include <hex/helpers/stacktrace.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #if defined(OS_WINDOWS)
@@ -41,25 +40,24 @@
             stackFrame.AddrStack.Mode = AddrModeFlat;
 
             while (true) {
-
-                if (!StackWalk64(
+                if (StackWalk64(
                         image, process, thread,
                         &stackFrame, &context, nullptr,
-                        SymFunctionTableAccess64, SymGetModuleBase64, nullptr))
+                        SymFunctionTableAccess64, SymGetModuleBase64, nullptr) == FALSE)
                     break;
 
                 if (stackFrame.AddrReturn.Offset == stackFrame.AddrPC.Offset)
                     break;
 
-                char buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
-                auto symbol = (PSYMBOL_INFO)buffer;
+                std::array<char, sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)> buffer = {};
+                auto symbol = (PSYMBOL_INFO)buffer.data();
                 symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
                 symbol->MaxNameLen = MAX_SYM_NAME;
 
                 DWORD64 displacementSymbol = 0;
-                std::string symbolName;
+                const char *symbolName;
                 if (SymFromAddr(process, stackFrame.AddrPC.Offset, &displacementSymbol, symbol) == TRUE) {
-                    symbolName = hex::format("{} (0x{:X})", symbol->Name, symbol->Address);
+                    symbolName = symbol->Name;
                 } else {
                     symbolName = "??";
                 }
@@ -70,9 +68,9 @@
                 line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
 
                 DWORD displacementLine = 0;
-                u32 lineNumber;
-                std::string fileName;
 
+                u32 lineNumber;
+                const char *fileName;
                 if (SymGetLineFromAddr64(process, stackFrame.AddrPC.Offset, &displacementLine, &line) == TRUE) {
                     lineNumber = line.LineNumber;
                     fileName = line.FileName;
@@ -90,7 +88,6 @@
                     demangledName = symbolName;
 
                 stackTrace.push_back(StackFrame { fileName, demangledName, lineNumber });
-
             }
 
             SymCleanup(process);
