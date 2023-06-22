@@ -302,7 +302,13 @@ namespace hex::init {
     }
 
     bool loadFonts() {
-        return loadFontsImpl(ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true));
+        // Check if unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
+        // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
+        bool shouldLoadUnicode =
+                ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true) &&
+                ImHexApi::System::getGPUVendor() != "VMware, Inc.";
+
+        return loadFontsImpl(shouldLoadUnicode);
     }
 
     bool deleteSharedData() {
