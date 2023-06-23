@@ -590,10 +590,12 @@ function(generatePDBs)
     set(PDBS_TO_GENERATE main libimhex ${PLUGINS})
     add_custom_target(pdbs)
     foreach (PDB ${PDBS_TO_GENERATE})
-        if (PDB STREQUAL "main")
-            set(GENERATED_PDB imhex)
+        if (PDB STREQUAL "libimhex")
+            set(GENERATED_PDB libimhex.dll)
+        elseif (PDB STREQUAL "main")
+            set(GENERATED_PDB imhex.exe)
         else ()
-            set(GENERATED_PDB ${PDB})
+            set(GENERATED_PDB plugins/${PDB}.hexplug)
         endif ()
 
         add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb
@@ -606,7 +608,8 @@ function(generatePDBs)
                 DEPENDS $<TARGET_FILE:${PDB}>
                 COMMAND_EXPAND_LISTS)
 
-        target_sources(imhex_all PRIVATE $<TARGET_FILE:${PDB}>.pdb)
+        add_custom_target(${PDB}_pdb DEPENDS ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb)
+        add_dependencies(imhex_all ${PDB}_pdb)
         install(FILES $<TARGET_FILE:${PDB}>.pdb DESTINATION ".")
     endforeach ()
 
