@@ -384,6 +384,7 @@ namespace hex::init {
 
         ProjectFile::getHandlers().clear();
         ProjectFile::getProviderHandlers().clear();
+        ProjectFile::setProjectFunctions(nullptr, nullptr);
 
         fs::setFileBrowserErrorCallback(nullptr);
 
