@@ -30,6 +30,9 @@ namespace hex::plugin::builtin {
             for (auto &file : std::fs::directory_iterator(path, error)) {
                 if (!file.is_regular_file()) continue;
 
+                if (file.path().extension() != ".json") continue;
+                if (file.path().filename().u8string().starts_with('_')) continue;
+
                 try {
                     auto fileData = wolv::io::File(file.path(), wolv::io::File::Mode::Read).readString();
                     auto content = nlohmann::json::parse(fileData);
