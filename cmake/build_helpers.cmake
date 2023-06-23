@@ -601,7 +601,8 @@ function(generatePDBs)
                 COMMAND
                 (${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
                 ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
-                $<TARGET_FILE:${PDB}>) || (exit 0)
+                $<TARGET_FILE:${PDB}>
+                $<TARGET_FILE:${PDB}>.stripped) || (exit 0)
                 DEPENDS $<TARGET_FILE:${PDB}>
                 COMMAND_EXPAND_LISTS)
 
