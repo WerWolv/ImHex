@@ -169,6 +169,7 @@ namespace hex::plugin::builtin {
         PerProvider<bool> m_breakpointHit;
         PerProvider<ui::PatternDrawer> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
+        int m_debuggerScopeIndex = 0;
 
     private:
         void drawConsole(ImVec2 size);

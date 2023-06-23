@@ -570,8 +570,35 @@ namespace hex::plugin::builtin {
                 ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
             }
 
+            ImGui::SameLine();
+
             if (*this->m_breakpointHit) {
-                auto &variables = *evaluator->getScope(0).scope;
+                auto displayValue = [&](const auto &parent, size_t index) {
+                    return hex::format("{0} {1} [{2}]",
+                                        "hex.builtin.view.pattern_editor.debugger.scope"_lang,
+                                        evaluator->getScopeCount() - index - 1,
+                                        parent == nullptr ?
+                                        "hex.builtin.view.pattern_editor.debugger.scope.global"_lang :
+                                        hex::format("0x{0:08X}", parent->getOffset())
+                    );
+                };
+
+                if (evaluator->getScopeCount() > 0) {
+                    ImGui::SetNextItemWidth(-1);
+                    auto &currScope = evaluator->getScope(-this->m_debuggerScopeIndex);
+                    if (ImGui::BeginCombo("##scope", displayValue(currScope.parent, this->m_debuggerScopeIndex).c_str())) {
+                        for (size_t i = 0; i < evaluator->getScopeCount(); i++) {
+                            auto &scope = evaluator->getScope(-i);
+
+                            if (ImGui::Selectable(displayValue(scope.parent, i).c_str(), i == size_t(this->m_debuggerScopeIndex))) {
+                                this->m_debuggerScopeIndex = i;
+                                this->m_resetDebuggerVariables = true;
+                            }
+                        }
+
+                        ImGui::EndCombo();
+                    }
+                }
 
                 if (this->m_resetDebuggerVariables) {
                     this->m_debuggerDrawer->reset();
@@ -582,7 +609,8 @@ namespace hex::plugin::builtin {
                         this->m_textEditor.SetCursorPosition({ int(pauseLine.value() - 1), 0 });
                 }
 
-                this->m_debuggerDrawer->draw(variables, &runtime, size.y - ImGui::GetTextLineHeightWithSpacing() * 4);
+                auto &currScope = evaluator->getScope(-this->m_debuggerScopeIndex);
+                this->m_debuggerDrawer->draw(*currScope.scope, &runtime, size.y - ImGui::GetTextLineHeightWithSpacing() * 4);
             }
         }
         ImGui::EndChild();
@@ -877,6 +905,7 @@ namespace hex::plugin::builtin {
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             ContentRegistry::PatternLanguage::configureRuntime(runtime, provider);
             runtime.getInternals().evaluator->setBreakpointHitCallback([this]{
+                this->m_debuggerScopeIndex = 0;
                 *this->m_breakpointHit = true;
                 this->m_resetDebuggerVariables = true;
                 while (*this->m_breakpointHit) {
@@ -884,7 +913,10 @@ namespace hex::plugin::builtin {
                 }
             });
 
-            task.setInterruptCallback([&runtime] { runtime.abort(); });
+            task.setInterruptCallback([this, &runtime] {
+                this->m_breakpointHit = false;
+                runtime.abort();
+            });
 
             std::map<std::string, pl::core::Token::Literal> envVars;
             for (const auto &[id, name, value, type] : *this->m_envVarEntries)

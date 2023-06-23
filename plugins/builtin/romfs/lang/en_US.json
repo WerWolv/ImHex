@@ -835,6 +835,8 @@
         "hex.builtin.view.pattern_editor.debugger.add_tooltip": "Add breakpoint",
         "hex.builtin.view.pattern_editor.debugger.continue": "Continue",
         "hex.builtin.view.pattern_editor.debugger.remove_tooltip": "Remove breakpoint",
+        "hex.builtin.view.pattern_editor.debugger.scope": "Scope",
+        "hex.builtin.view.pattern_editor.debugger.scope.global": "Global Scope",
         "hex.builtin.view.pattern_editor.env_vars": "Environment Variables",
         "hex.builtin.view.pattern_editor.evaluating": "Evaluating...",
         "hex.builtin.view.pattern_editor.menu.edit.place_pattern": "Place pattern...",
