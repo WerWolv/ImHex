@@ -183,17 +183,17 @@ namespace hex::plugin::builtin::ui {
         this->m_editingPatternOffset = 0x00;
     }
 
-    bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, bool fullMatch) {
+    bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) {
         if (fullMatch) {
-            if (this->m_currPatternPath.size() != filterPath.size())
+            if (patternPath.size() != filterPath.size())
                 return false;
         }
 
-        if (this->m_currPatternPath.size() <= filterPath.size()) {
-            for (ssize_t i = this->m_currPatternPath.size() - 1; i >= 0; i--) {
+        if (patternPath.size() <= filterPath.size()) {
+            for (ssize_t i = patternPath.size() - 1; i >= 0; i--) {
                 const auto &filter = filterPath[i];
 
-                if (this->m_currPatternPath[i] != filter && !filter.empty() && filter != "*") {
+                if (patternPath[i] != filter && !filter.empty() && filter != "*") {
                     return false;
                 }
             }
@@ -790,7 +790,7 @@ namespace hex::plugin::builtin::ui {
         this->m_currPatternPath.push_back(pattern.getVariableName());
         ON_SCOPE_EXIT { this->m_currPatternPath.pop_back(); };
 
-        if (matchesFilter(this->m_filter, false))
+        if (matchesFilter(this->m_filter, this->m_currPatternPath, false))
             pattern.accept(*this);
     }
 
@@ -994,14 +994,14 @@ namespace hex::plugin::builtin::ui {
         return false;
     }
 
-    void PatternDrawer::traversePatternTree(pl::ptrn::Pattern &pattern, const std::function<void(pl::ptrn::Pattern&)> &callback) {
-        this->m_currPatternPath.push_back(pattern.getVariableName());
-        ON_SCOPE_EXIT { this->m_currPatternPath.pop_back(); };
+    void PatternDrawer::traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback) {
+        patternPath.push_back(pattern.getVariableName());
+        ON_SCOPE_EXIT { patternPath.pop_back(); };
 
         callback(pattern);
         if (auto iterable = dynamic_cast<pl::ptrn::IIterable*>(&pattern); iterable != nullptr) {
             iterable->forEachEntry(0, iterable->getEntryCount(), [&](u64, pl::ptrn::Pattern *entry) {
-                traversePatternTree(*entry, callback);
+                traversePatternTree(*entry, patternPath, callback);
             });
         }
     }
@@ -1081,22 +1081,39 @@ namespace hex::plugin::builtin::ui {
         if (!this->m_favoritesUpdated) {
             this->m_favoritesUpdated = true;
 
-            for (auto &pattern : patterns) {
-                traversePatternTree(*pattern, [this](pl::ptrn::Pattern &pattern){
-                    for (auto &[path, favoritePattern] : this->m_favorites) {
-                        if (this->matchesFilter(path, true)) {
-                            favoritePattern = pattern.clone();
-                            break;
-                        }
+            if (!this->m_favorites.empty() && !patterns.empty() && !this->m_favoritesUpdateTask.isRunning()) {
+                this->m_favoritesUpdateTask = TaskManager::createTask("hex.builtin.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
+                    size_t updatedFavorites = 0;
+                    for (auto &pattern : patterns) {
+                        if (updatedFavorites == this->m_favorites.size())
+                            task.interrupt();
+                        task.update();
+
+                        std::vector<std::string> patternPath;
+                        traversePatternTree(*pattern, patternPath, [&, this](pl::ptrn::Pattern &pattern) {
+                            for (auto &[path, favoritePattern] : this->m_favorites) {
+                                if (updatedFavorites == this->m_favorites.size())
+                                    task.interrupt();
+                                task.update();
+
+                                if (this->matchesFilter(patternPath, path, true)) {
+                                    favoritePattern = pattern.clone();
+                                    updatedFavorites += 1;
+
+                                    break;
+                                }
+                            }
+                        });
                     }
+
+                    std::erase_if(this->m_favorites, [](const auto &entry) {
+                        const auto &[path, favoritePattern] = entry;
+
+                        return favoritePattern == nullptr;
+                    });
                 });
             }
 
-            std::erase_if(this->m_favorites, [](const auto &entry) {
-                const auto &[path, favoritePattern] = entry;
-
-                return favoritePattern == nullptr;
-            });
         }
 
         if (beginPatternTable(patterns, this->m_sortedPatterns, height)) {
@@ -1108,10 +1125,20 @@ namespace hex::plugin::builtin::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushID(1);
                 if (ImGui::TreeNodeEx("hex.builtin.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
-                    for (auto &[path, pattern] : this->m_favorites) {
-                        ImGui::PushID(pattern->getDisplayName().c_str());
-                        this->draw(*pattern);
-                        ImGui::PopID();
+                    if (!this->m_favoritesUpdateTask.isRunning()) {
+                        for (auto &[path, pattern] : this->m_favorites) {
+                            if (pattern == nullptr)
+                                continue;
+
+                            ImGui::PushID(pattern->getDisplayName().c_str());
+                            this->draw(*pattern);
+                            ImGui::PopID();
+                        }
+                    } else {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TextSpinner("hex.builtin.pattern_drawer.updating"_lang);
                     }
 
                     ImGui::TreePop();

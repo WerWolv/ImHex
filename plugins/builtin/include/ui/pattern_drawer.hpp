@@ -1,5 +1,7 @@
 #pragma once
 
+#include <hex/api/task.hpp>
+
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
 
@@ -68,8 +70,8 @@ namespace hex::plugin::builtin::ui {
 
         bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
         void resetEditing();
-        bool matchesFilter(const std::vector<std::string> &filterPath, bool fullMatch);
-        void traversePatternTree(pl::ptrn::Pattern &pattern, const std::function<void(pl::ptrn::Pattern&)> &callback);
+        bool matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch);
+        void traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback);
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
@@ -90,6 +92,7 @@ namespace hex::plugin::builtin::ui {
         std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
         bool m_showFavoriteStars = false;
         bool m_favoritesUpdated = false;
+        TaskHolder m_favoritesUpdateTask;
 
         std::function<void(Region)> m_selectionCallback = [](Region) { };
 
