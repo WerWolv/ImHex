@@ -515,8 +515,8 @@ namespace hex {
             if (!this->m_yBlockEntropy.empty())
                 this->m_yBlockEntropy.push_back(this->m_yBlockEntropy.back());
 
-            size_t stride = std::max(1.0, double(
-                std::ceil((this->m_endAddress - this->m_startAddress) / this->m_blockSize) / this->m_yBlockEntropy.size()));
+            double stride = std::max(1.0, double(
+                double(std::ceil((this->m_endAddress - this->m_startAddress)) / this->m_blockSize) / this->m_yBlockEntropy.size()));
 
             this->m_blockCount = this->m_yBlockEntropy.size() - 1;
 
@@ -880,7 +880,7 @@ namespace hex {
                     this->m_yBlockTypeDistributions[i].push_back(this->m_yBlockTypeDistributions[i].back());
             }
 
-            size_t stride = std::max(1.0, double(this->m_blockCount / this->m_yBlockTypeDistributions[0].size()));
+            double stride = std::max(1.0, double(this->m_blockCount) / this->m_yBlockTypeDistributions[0].size());
             this->m_blockCount = this->m_yBlockTypeDistributions[0].size() - 1;
 
             // The m_xBlockTypeDistributions attribute is used to specify the position of entropy 
@@ -888,7 +888,7 @@ namespace hex {
             this->m_xBlockTypeDistributions.clear();
             this->m_xBlockTypeDistributions.resize(this->m_blockCount);
             for (u64 i = 0; i < this->m_blockCount; ++i)
-                this->m_xBlockTypeDistributions[i] = ((this->m_startAddress / this->m_blockSize) + stride * i) * this->m_blockSize;
+                this->m_xBlockTypeDistributions[i] = this->m_startAddress + (stride * i * this->m_blockSize);
             this->m_xBlockTypeDistributions.push_back(this->m_endAddress);
         }
 
