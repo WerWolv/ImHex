@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Change this to the name of your plugin #
-project(managed_plugin_loader)
+project(script_loader)
 
 # Add your source files here #
 
 find_package(CoreClrEmbed)
 
 add_library(${PROJECT_NAME} SHARED
-        source/plugin_managed_plugin_loader.cpp
+        source/plugin_script_loader.cpp
 )
 # Add additional include directories here #
 target_include_directories(${PROJECT_NAME} PRIVATE include)
@@ -33,6 +33,7 @@ if (CoreClrEmbed_FOUND)
 
             source/script_api/v1/mem.cpp
             source/script_api/v1/bookmarks.cpp
+            source/script_api/v1/ui.cpp
     )
 
     set(EXTRA_BUNDLE_LIBRARY_PATHS "${CoreClrEmbed_FOLDER}" PARENT_SCOPE)

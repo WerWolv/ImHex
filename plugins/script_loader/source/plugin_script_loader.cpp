@@ -40,20 +40,21 @@ namespace {
 
 }
 
-IMHEX_PLUGIN_SETUP("Managed Plugin Loader", "WerWolv", "Plugin loader for C# plugins") {
+IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
 
     static auto plugins = loadAllPlugins();
 
+    static TaskHolder task;
     hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras", "Run Script..." }, 5000, [] {
         for (const auto &plugin : plugins) {
             auto &[name, entryPoint] = *plugin;
 
             if (ImGui::MenuItem(name.c_str())) {
-                TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint = std::move(entryPoint)](auto&) {
+                task = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint = std::move(entryPoint)](auto&) {
                     entryPoint();
                 });
             }
         }
-    });
+    }, []{ return !task.isRunning(); });
 }
