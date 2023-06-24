@@ -94,12 +94,6 @@ namespace hex::plugin::builtin {
 
                 ui::regionSelectionPicker(&this->m_codeRegion, provider, &this->m_range);
 
-
-                if (ImGui::IsItemEdited()) {
-                    // Force execution of Region Selection Event
-                    ImHexApi::HexEditor::setSelection(0, 0);
-                }
-
                 ImGui::Header("hex.builtin.common.settings"_lang);
 
                 if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames.data(), Disassembler::getArchitectureSupportedCount()))
