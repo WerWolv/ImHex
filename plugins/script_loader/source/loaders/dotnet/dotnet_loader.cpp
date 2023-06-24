@@ -50,7 +50,7 @@ namespace hex::plugin::loader {
             }
         #endif
 
-        hostfxr_initialize_for_dotnet_command_line_fn hostfxr_initialize_for_dotnet_command_line = nullptr;
+        hostfxr_initialize_for_runtime_config_fn hostfxr_initialize_for_runtime_config  = nullptr;
         hostfxr_get_runtime_delegate_fn hostfxr_get_runtime_delegate = nullptr;
         hostfxr_close_fn hostfxr_close = nullptr;
 
@@ -63,8 +63,8 @@ namespace hex::plugin::loader {
 
             void *hostfxrLibrary = loadLibrary(buffer.data());
             {
-                hostfxr_initialize_for_dotnet_command_line
-                        = getExport<hostfxr_initialize_for_dotnet_command_line_fn>(hostfxrLibrary, "hostfxr_initialize_for_dotnet_command_line");
+                hostfxr_initialize_for_runtime_config
+                        = getExport<hostfxr_initialize_for_runtime_config_fn>(hostfxrLibrary, "hostfxr_initialize_for_runtime_config");
                 hostfxr_get_runtime_delegate
                         = getExport<hostfxr_get_runtime_delegate_fn>(hostfxrLibrary, "hostfxr_get_runtime_delegate");
                 hostfxr_close
@@ -73,7 +73,7 @@ namespace hex::plugin::loader {
             }
 
             return
-                hostfxr_initialize_for_dotnet_command_line != nullptr &&
+                hostfxr_initialize_for_runtime_config != nullptr &&
                 hostfxr_get_runtime_delegate != nullptr &&
                 hostfxr_close != nullptr;
         }
@@ -83,15 +83,12 @@ namespace hex::plugin::loader {
 
             hostfxr_handle ctx = nullptr;
 
-            auto pathString = path.native();
-            std::array<const char_t *, 1> args = { pathString.data() };
-
-            u32 result = hostfxr_initialize_for_dotnet_command_line(1, args.data(), nullptr, &ctx);
+            u32 result = hostfxr_initialize_for_runtime_config(path.c_str(), nullptr, &ctx);
             ON_SCOPE_EXIT {
                 hostfxr_close(ctx);
             };
 
-            if (result != 0 || ctx == nullptr) {
+            if (result > 2 || ctx == nullptr) {
                 throw std::runtime_error(hex::format("Failed to initialize command line {:X}", result));
             }
 
@@ -118,8 +115,8 @@ namespace hex::plugin::loader {
     }
 
     bool DotNetLoader::loadAll() {
-        for (const auto& path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Plugins)) {
-            auto dotnetPath = path / "managed" / "dotnet";
+        for (const auto& path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Scripts)) {
+            auto dotnetPath = path / "custom";
             if (!wolv::io::fs::exists(dotnetPath))
                 continue;
 
@@ -131,7 +128,7 @@ namespace hex::plugin::loader {
                     if (file.path().filename() != "Main.dll")
                         continue;
 
-                    auto loadAssembly = getLoadAssemblyFunction(std::fs::absolute(file.path()));
+                    auto loadAssembly = getLoadAssemblyFunction(std::fs::absolute(file.path()).parent_path() / "Main.runtimeconfig.json");
 
                     const auto &assemblyPath = file.path();
                     auto dotnetType = STRING("ImHex.EntryPoint, Main");
@@ -141,12 +138,12 @@ namespace hex::plugin::loader {
 
                     component_entry_point_fn entryPoint = nullptr;
                     u32 result = loadAssembly(
-                        assemblyPathStr.c_str(),
-                        dotnetType,
-                        dotnetTypeMethod,
-                        UNMANAGEDCALLERSONLY_METHOD,
-                        nullptr,
-                        (void**)&entryPoint
+                            assemblyPathStr.c_str(),
+                            dotnetType,
+                            dotnetTypeMethod,
+                            UNMANAGEDCALLERSONLY_METHOD,
+                            nullptr,
+                            (void**)&entryPoint
                     );
 
                     if (result != 0 || entryPoint == nullptr) {
@@ -156,7 +153,7 @@ namespace hex::plugin::loader {
 
                     this->addPlugin(
                         folder.path().stem().string(),
-                        [entryPoint]{
+                        [entryPoint] {
                             u8 param = 0;
                             entryPoint(&param, 1);
                         }
