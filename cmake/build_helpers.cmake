@@ -575,7 +575,7 @@ macro(addBundledLibraries)
 endmacro()
 
 function(generatePDBs)
-    if (NOT WIN32)
+    if (NOT WIN32 OR CMAKE_BUILD_TYPE STREQUAL "Debug")
         return()
     endif ()
 
