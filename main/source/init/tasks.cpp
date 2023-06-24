@@ -269,8 +269,7 @@ namespace hex::init {
 
         cfg.GlyphOffset = ImVec2(0, 0);
         // Add unifont if unicode support is enabled
-        if (loadUnicode)
-            fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, ranges.Data);
+        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, ranges.Data);
 
         // Try to build the font atlas
         if (!fonts->Build()) {
