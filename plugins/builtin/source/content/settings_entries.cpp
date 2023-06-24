@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", 1, [](auto name, nlohmann::json &setting) {
+        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.load_all_unicode_chars", 0, [](auto name, nlohmann::json &setting) {
             static bool enabled = static_cast<int>(setting);
 
             if (ImGui::Checkbox(name.data(), &enabled)) {

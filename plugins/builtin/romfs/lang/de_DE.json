@@ -444,7 +444,7 @@
         "hex.builtin.setting.general": "Allgemein",
         "hex.builtin.setting.general.auto_load_patterns": "Automatisches Laden unterstützter Pattern",
         "hex.builtin.setting.general.server_contact": "Update checks und Statistiken zulassen",
-        "hex.builtin.setting.general.enable_unicode": "Alle Unicode Zeichen laden",
+        "hex.builtin.setting.general.load_all_unicode_chars": "Alle Unicode Zeichen laden",
         "hex.builtin.setting.general.network_interface": "",
         "hex.builtin.setting.general.save_recent_providers": "",
         "hex.builtin.setting.general.show_tips": "Tipps beim Start anzeigen",

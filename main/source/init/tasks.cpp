@@ -205,13 +205,13 @@ namespace hex::init {
         // Setup basic font configuration
         auto fonts       = IM_NEW(ImFontAtlas)();
         ImFontConfig cfg = {};
-        cfg.OversampleH = cfg.OversampleV = 2, cfg.PixelSnapH = true;
+        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
         cfg.SizePixels = fontSize;
 
         fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
 
         // Configure font glyph ranges that should be loaded from the default font and unifont
-        ImVector<ImWchar> ranges;
+        static ImVector<ImWchar> ranges;
         {
             ImFontGlyphRangesBuilder glyphRangesBuilder;
 
@@ -241,12 +241,12 @@ namespace hex::init {
         }
 
         // Glyph range for font awesome icons
-        ImWchar fontAwesomeRange[] = {
+        static ImWchar fontAwesomeRange[] = {
                 ICON_MIN_FA, ICON_MAX_FA, 0
         };
 
         // Glyph range for codicons icons
-        ImWchar codiconsRange[] = {
+        static ImWchar codiconsRange[] = {
                 ICON_MIN_VS, ICON_MAX_VS, 0
         };
 
@@ -284,7 +284,7 @@ namespace hex::init {
                 IM_DELETE(fonts);
 
                 // Disable unicode support in settings
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", false);
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.load_all_unicode_chars", false);
 
                 // Try to load the font atlas again
                 return loadFontsImpl(false);
@@ -305,7 +305,7 @@ namespace hex::init {
         // Check if unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
         // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
         bool shouldLoadUnicode =
-                ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.enable_unicode", true) &&
+                ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.load_all_unicode_chars", false) &&
                 ImHexApi::System::getGPUVendor() != "VMware, Inc.";
 
         return loadFontsImpl(shouldLoadUnicode);
