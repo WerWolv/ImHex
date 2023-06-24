@@ -301,7 +301,7 @@ namespace hex {
                         ImGuiCond_Always);
 
                 // Draw the plot
-                ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropy.data(), this->m_blockCount - 1);
+                ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropy.data(), this->m_xBlockEntropy.size());
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
                 // but just a set of bytes we won't be able to use the drag bar correctly.
@@ -313,11 +313,11 @@ namespace hex {
                         // Clamp the value between the start/end of the region to analyze
                         this->m_handlePosition = std::clamp<double>(
                                 this->m_handlePosition,
-                                std::ceil(this->m_startAddress / double(this->m_blockSize)),
-                                std::floor(this->m_endAddress / double(this->m_blockSize)));
+                                this->m_startAddress,
+                                this->m_endAddress);
 
                         // Compute the position inside hex editor 
-                        u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
+                        u64 address = u64(std::max<double>(this->m_handlePosition, 0)) + this->m_baseAddress;
                         address     = std::min<u64>(address, this->m_baseAddress + this->m_fileSize - 1);
                         ImHexApi::HexEditor::setSelection(address, 1);
                     }
@@ -344,7 +344,7 @@ namespace hex {
             this->processImpl(bytes);
 
             // Set the diagram handle position to the start of the plot
-            this->m_handlePosition = this->m_startAddress / double(this->m_blockSize);
+            this->m_handlePosition = this->m_startAddress;
 
             this->m_processing = false;
         }
@@ -363,7 +363,7 @@ namespace hex {
             this->processImpl(buffer);
 
             // Set the diagram handle position to the start of the plot
-            this->m_handlePosition = this->m_startAddress / double(this->m_blockSize);
+            this->m_handlePosition = this->m_startAddress;
 
             this->m_processing = false;
         }
@@ -388,7 +388,7 @@ namespace hex {
             this->m_blockCount = 0;
 
             // Set the diagram handle position to the start of the plot
-            this->m_handlePosition = this->m_startAddress / double(this->m_blockSize);
+            this->m_handlePosition = this->m_startAddress;
         }
 
         // Process one byte at the time
@@ -477,7 +477,7 @@ namespace hex {
         } 
 
         void setHandlePosition(u64 filePosition) {
-            this->m_handlePosition = filePosition / double(this->m_blockSize);
+            this->m_handlePosition = filePosition;
         }
 
     private: 
@@ -510,20 +510,23 @@ namespace hex {
 
         void processFinalize() {
             // Only save at most m_sampleSize elements of the result
-            this->m_yBlockEntropy = sampleData(this->m_yBlockEntropy, std::min<size_t>(this->m_blockCount, this->m_sampleSize));
+            this->m_yBlockEntropy = sampleData(this->m_yBlockEntropy, std::min<size_t>(this->m_blockCount + 1, this->m_sampleSize));
+
+            if (!this->m_yBlockEntropy.empty())
+                this->m_yBlockEntropy.push_back(this->m_yBlockEntropy.back());
 
             size_t stride = std::max(1.0, double(
                 std::ceil((this->m_endAddress - this->m_startAddress) / this->m_blockSize) / this->m_yBlockEntropy.size()));
 
-            this->m_blockCount = this->m_yBlockEntropy.size();
+            this->m_blockCount = this->m_yBlockEntropy.size() - 1;
 
             // The m_xBlockEntropy attribute is used to specify the position of entropy values 
             // in the plot when the Y axis doesn't start at 0
             this->m_xBlockEntropy.clear();
             this->m_xBlockEntropy.resize(this->m_blockCount);
             for (u64 i = 0; i < this->m_blockCount; ++i)
-                this->m_xBlockEntropy[i] = (this->m_startAddress / this->m_blockSize) + stride*i;
-            --this->m_blockCount;
+                this->m_xBlockEntropy[i] = ((this->m_startAddress / this->m_blockSize) + stride * i) * this->m_blockSize;
+            this->m_xBlockEntropy.push_back(this->m_endAddress);
         }
 
     private:
@@ -677,7 +680,7 @@ namespace hex {
                                                     };
 
                 for (u32 i = 0; i < Names.size(); i++) {
-                    ImPlot::PlotLine(Names[i], this->m_xBlockTypeDistributions.data(), this->m_yBlockTypeDistributions[i].data(), this->m_blockCount - 1);
+                    ImPlot::PlotLine(Names[i], this->m_xBlockTypeDistributions.data(), this->m_yBlockTypeDistributions[i].data(), this->m_xBlockTypeDistributions.size());
                 }
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
@@ -690,11 +693,11 @@ namespace hex {
                         // Clamp the value between the start/end of the region to analyze
                         this->m_handlePosition = std::clamp<double>(
                                 this->m_handlePosition,
-                                std::ceil(this->m_startAddress / double(this->m_blockSize)),
-                                std::floor(this->m_endAddress / double(this->m_blockSize)));
+                                this->m_startAddress,
+                                this->m_endAddress);
 
                         // Compute the position inside hex editor 
-                        u64 address = u64(std::max<double>(this->m_handlePosition  * this->m_blockSize, 0)) + this->m_baseAddress; 
+                        u64 address = u64(std::max<double>(this->m_handlePosition, 0)) + this->m_baseAddress;
                         address     = std::min<u64>(address, this->m_baseAddress + this->m_fileSize - 1);
                         ImHexApi::HexEditor::setSelection(address, 1);
                     }
@@ -719,7 +722,7 @@ namespace hex {
             this->processImpl(bytes);
 
             // Set the diagram handle position to the start of the plot
-            this->m_handlePosition = this->m_startAddress / double(this->m_blockSize);
+            this->m_handlePosition = this->m_startAddress;
 
             this->m_processing = false;
         }
@@ -736,7 +739,7 @@ namespace hex {
             this->processImpl(buffer);
 
             // Set the diagram handle position to the start of the plot
-            this->m_handlePosition = this->m_startAddress / double(this->m_blockSize);
+            this->m_handlePosition = this->m_startAddress;
 
             this->m_processing = false;
         }
@@ -759,7 +762,7 @@ namespace hex {
             this->m_yBlockTypeDistributions.fill({});
 
             // Set the diagram handle position to the start of the plot
-            this->m_handlePosition = this->m_startAddress / double(this->m_blockSize);
+            this->m_handlePosition = this->m_startAddress;
         }
 
         // Process one byte at the time
@@ -796,7 +799,7 @@ namespace hex {
         }
 
         void setHandlePosition(u64 filePosition) {
-            this->m_handlePosition = filePosition / double(this->m_blockSize);
+            this->m_handlePosition = filePosition;
         }
 
     private:
@@ -870,19 +873,23 @@ namespace hex {
 
         void processFinalize() {
             // Only save at most m_sampleSize elements of the result
-            for (size_t i = 0; i < this->m_yBlockTypeDistributions.size(); ++i)
-                this->m_yBlockTypeDistributions[i] = sampleData(this->m_yBlockTypeDistributions[i], std::min<size_t>(this->m_blockCount, this->m_sampleSize));
+            for (size_t i = 0; i < this->m_yBlockTypeDistributions.size(); ++i) {
+                this->m_yBlockTypeDistributions[i] = sampleData(this->m_yBlockTypeDistributions[i], std::min<size_t>(this->m_blockCount + 1, this->m_sampleSize));
+
+                if (!this->m_yBlockTypeDistributions[i].empty())
+                    this->m_yBlockTypeDistributions[i].push_back(this->m_yBlockTypeDistributions[i].back());
+            }
 
             size_t stride = std::max(1.0, double(this->m_blockCount / this->m_yBlockTypeDistributions[0].size()));
-            this->m_blockCount = this->m_yBlockTypeDistributions[0].size();
+            this->m_blockCount = this->m_yBlockTypeDistributions[0].size() - 1;
 
             // The m_xBlockTypeDistributions attribute is used to specify the position of entropy 
             // values in the plot when the Y axis doesn't start at 0
             this->m_xBlockTypeDistributions.clear();
             this->m_xBlockTypeDistributions.resize(this->m_blockCount);
             for (u64 i = 0; i < this->m_blockCount; ++i)
-                this->m_xBlockTypeDistributions[i] = (this->m_startAddress / this->m_blockSize) + stride*i;
-            --this->m_blockCount;
+                this->m_xBlockTypeDistributions[i] = ((this->m_startAddress / this->m_blockSize) + stride * i) * this->m_blockSize;
+            this->m_xBlockTypeDistributions.push_back(this->m_endAddress);
         }
 
     private:
