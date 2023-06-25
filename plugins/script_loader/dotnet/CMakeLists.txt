@@ -3,7 +3,7 @@ project(dotnet_assemblies)
 function(add_dotnet_assembly name)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/../../${name}.dll
-        COMMAND dotnet build ${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.csproj --nologo -c Release -o ${CMAKE_CURRENT_BINARY_DIR}/../..
+        COMMAND ${DOTNET_EXECUTABLE} build ${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.csproj --nologo -c Release -o ${CMAKE_CURRENT_BINARY_DIR}/../..
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.csproj
         COMMENT "Building ${name}.dll"
     )
