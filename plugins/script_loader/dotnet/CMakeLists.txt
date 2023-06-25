@@ -9,8 +9,8 @@ function(add_dotnet_assembly name)
     )
     add_custom_target(${name} ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/../../${name}.dll)
     install(FILES
-                ${CMAKE_CURRENT_BINARY_DIR}/${name}.dll
-                ${CMAKE_CURRENT_BINARY_DIR}/${name}.runtimeconfig.json
+                ${CMAKE_CURRENT_BINARY_DIR}/../../${name}.dll
+                ${CMAKE_CURRENT_BINARY_DIR}/../../${name}.runtimeconfig.json
             DESTINATION
                 ${PLUGINS_INSTALL_LOCATION}
     )
