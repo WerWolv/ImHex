@@ -19,6 +19,7 @@
 #include <hex/helpers/fs.hpp>
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/utils/string.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -112,53 +113,62 @@ namespace hex::plugin::loader {
                 throw std::runtime_error("Failed to load hostfxr");
             }
         };
+
+        for (const auto& path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Plugins)) {
+            auto assemblyLoader = path / "AssemblyLoader.dll";
+            if (!wolv::io::fs::exists(assemblyLoader))
+                continue;
+
+            auto loadAssembly = getLoadAssemblyFunction(std::fs::absolute(path) / "AssemblyLoader.runtimeconfig.json");
+
+            auto dotnetType = STRING("ImHex.EntryPoint, AssemblyLoader");
+
+            const char_t *dotnetTypeMethod = STRING("ExecuteScript");
+            const auto &assemblyPathStr = assemblyLoader.native();
+
+            component_entry_point_fn entryPoint = nullptr;
+            u32 result = loadAssembly(
+                    assemblyPathStr.c_str(),
+                    dotnetType,
+                    dotnetTypeMethod,
+                    nullptr,
+                    nullptr,
+                    (void**)&entryPoint
+            );
+
+            if (result != 0 || entryPoint == nullptr) {
+                log::error("Failed to load assembly loader '{}'", assemblyLoader.string());
+                continue;
+            }
+
+            this->m_loadAssembly = [entryPoint](const std::fs::path &path) -> bool {
+                auto string = wolv::util::toUTF8String(path);
+                auto result = entryPoint(string.data(), string.size());
+
+                return result == 0;
+            };
+        };
     }
 
     bool DotNetLoader::loadAll() {
-        for (const auto& path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Scripts)) {
-            auto dotnetPath = path / "custom";
-            if (!wolv::io::fs::exists(dotnetPath))
+        this->clearPlugins();
+
+        for (const auto &imhexPath : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Scripts)) {
+            auto directoryPath = imhexPath / "custom" / "dotnet";
+            if (!std::fs::exists(directoryPath))
                 continue;
 
-            for (const auto& folder : std::fs::directory_iterator(dotnetPath)) {
-                if (!std::fs::is_directory(folder))
+            for (const auto &entry : std::fs::directory_iterator(directoryPath)) {
+                if (!entry.is_regular_file())
                     continue;
 
-                for (const auto& file : std::fs::directory_iterator(folder)) {
-                    if (file.path().filename() != "Main.dll")
-                        continue;
+                const auto &scriptPath = entry.path();
+                if (!std::fs::exists(scriptPath))
+                    continue;
 
-                    auto loadAssembly = getLoadAssemblyFunction(std::fs::absolute(file.path()).parent_path() / "Main.runtimeconfig.json");
-
-                    const auto &assemblyPath = file.path();
-                    auto dotnetType = STRING("ImHex.EntryPoint, Main");
-
-                    const char_t *dotnetTypeMethod = STRING("ScriptMain");
-                    const auto &assemblyPathStr = assemblyPath.native();
-
-                    component_entry_point_fn entryPoint = nullptr;
-                    u32 result = loadAssembly(
-                            assemblyPathStr.c_str(),
-                            dotnetType,
-                            dotnetTypeMethod,
-                            UNMANAGEDCALLERSONLY_METHOD,
-                            nullptr,
-                            (void**)&entryPoint
-                    );
-
-                    if (result != 0 || entryPoint == nullptr) {
-                        log::error("Failed to load assembly '{}'", file.path().filename().string());
-                        continue;
-                    }
-
-                    this->addPlugin(
-                        folder.path().stem().string(),
-                        [entryPoint] {
-                            u8 param = 0;
-                            entryPoint(&param, 1);
-                        }
-                    );
-                }
+                this->addPlugin(scriptPath.stem().string(), [this, scriptPath] {
+                    this->m_loadAssembly(scriptPath);
+                });
             }
         }
 
