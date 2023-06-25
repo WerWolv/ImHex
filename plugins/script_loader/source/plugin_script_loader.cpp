@@ -48,10 +48,10 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     static TaskHolder task;
     hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras", "Run Script..." }, 5000, [] {
         for (const auto &plugin : plugins) {
-            auto &[name, entryPoint] = *plugin;
+            const auto &[name, entryPoint] = *plugin;
 
             if (ImGui::MenuItem(name.c_str())) {
-                task = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint = std::move(entryPoint)](auto&) {
+                task = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
                     entryPoint();
                 });
             }

@@ -2,6 +2,10 @@
 
 #include <loaders/loader.hpp>
 
+#include <wolv/io/fs.hpp>
+
+#include <functional>
+
 namespace hex::plugin::loader {
 
     class DotNetLoader : public PluginLoader {
@@ -10,6 +14,9 @@ namespace hex::plugin::loader {
         ~DotNetLoader() override = default;
 
         bool loadAll() override;
+
+    private:
+        std::function<bool(const std::fs::path&)> m_loadAssembly;
     };
 
 }

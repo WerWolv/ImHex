@@ -41,6 +41,10 @@ if (CoreClrEmbed_FOUND)
     if (IMHEX_BUNDLE_DOTNET)
         install(FILES ${CoreClrEmbed_LIBRARIES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
     endif ()
+
+    add_subdirectory(dotnet)
+    add_dependencies(${PROJECT_NAME} AssemblyLoader)
+
 endif ()
 
 

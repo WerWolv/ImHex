@@ -26,6 +26,11 @@ namespace hex::plugin::loader {
             return m_plugins;
         }
 
+    protected:
+        void clearPlugins() {
+            m_plugins.clear();
+        }
+
     private:
         std::vector<Plugin> m_plugins;
     };
