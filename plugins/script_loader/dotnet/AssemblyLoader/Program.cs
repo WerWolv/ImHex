@@ -24,11 +24,11 @@ namespace ImHex
 
         private static bool ExecuteScript(string path)
         {
-            AssemblyLoadContext context = new("ScriptDomain", true);
+            AssemblyLoadContext? context = new("ScriptDomain_" + Path.GetFileNameWithoutExtension(path), true);
 
             try
             {
-                var assembly = context.LoadFromAssemblyPath(path);
+                var assembly = context.LoadFromStream(new MemoryStream(File.ReadAllBytes(path)));
 
                 var entryPointType = assembly.GetType("Script");
                 if (entryPointType == null)
@@ -54,6 +54,13 @@ namespace ImHex
             finally
             {
                 context.Unload();
+                context = null;
+
+                for (int i = 0; i < 10; i++)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                }
             }
 
             return true;
