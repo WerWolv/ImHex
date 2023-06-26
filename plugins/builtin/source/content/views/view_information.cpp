@@ -240,7 +240,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
                             this->m_chunkBasedEntropy.draw(
                                 ImVec2(-1, 0), 
-                                ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly,
+                                ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
                                 true
                             );
 
@@ -271,12 +271,28 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{:.5f} @ 0x{:02X}", this->m_highestBlockEntropy, this->m_highestBlockEntropyAddress);
+                            ImGui::TextFormatted("{:.5f} @", this->m_highestBlockEntropy);
+                            ImGui::SameLine();
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                            if (ImGui::Button(hex::format("0x{:06X}", this->m_highestBlockEntropyAddress).c_str())) {
+                                ImHexApi::HexEditor::setSelection(this->m_highestBlockEntropyAddress, this->m_inputChunkSize);
+                            }
+                            ImGui::PopStyleColor();
+                            ImGui::PopStyleVar();
 
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.lowest_entropy"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{:.5f} @ 0x{:02X}", this->m_lowestBlockEntropy, this->m_lowestBlockEntropyAddress);
+                            ImGui::TextFormatted("{:.5f} @", this->m_lowestBlockEntropy);
+                            ImGui::SameLine();
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                            if (ImGui::Button(hex::format("0x{:06X}", this->m_lowestBlockEntropyAddress).c_str())) {
+                                ImHexApi::HexEditor::setSelection(this->m_lowestBlockEntropyAddress, this->m_inputChunkSize);
+                            }
+                            ImGui::PopStyleColor();
+                            ImGui::PopStyleVar();
 
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);

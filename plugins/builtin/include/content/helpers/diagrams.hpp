@@ -17,6 +17,11 @@ namespace hex {
 
     namespace {
 
+        int IntegerAxisFormatter(double value, char* buffer, int size, void *userData) {
+            u64 integer = static_cast<u64>(value);
+            return snprintf(buffer, size, static_cast<const char*>(userData), integer);
+        }
+
         std::vector<u8> getSampleSelection(prv::Provider *provider, u64 address, size_t size, size_t sampleSize) {
             const size_t sequenceCount = std::ceil(std::sqrt(sampleSize));
 
@@ -290,7 +295,11 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags, bool updateHandle = false) {
 
             if (!this->m_processing && ImPlot::BeginPlot("##ChunkBasedAnalysis", size, flags)) {
-                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang,
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
+                ImPlot::SetupAxisFormat(ImAxis_X1, IntegerAxisFormatter, (void*)"0x%04llX");
+                ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
                 // Set the axis limit to [first block : last block]
                 ImPlot::SetupAxesLimits(
@@ -453,16 +462,16 @@ namespace hex {
         // Return the highest entropy value among all of the blocks
         double getLowestEntropyBlockValue() {
             double result = 0.0f;
-            if (!this->m_yBlockEntropy.empty())
-                result = *std::min_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end());
+            if (this->m_yBlockEntropy.size() > 1)
+                result = *std::min_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end() - 1);
             return result;
         }
 
         // Return the highest entropy value among all of the blocks
         u64 getLowestEntropyBlockAddress() {
             u64 address = 0x00;
-            if (!this->m_yBlockEntropy.empty())
-                address = (std::min_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end()) - this->m_yBlockEntropy.begin()) * this->m_blockSize;
+            if (this->m_yBlockEntropy.size() > 1)
+                address = (std::min_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end() - 1) - this->m_yBlockEntropy.begin()) * this->m_blockSize;
             return address;
         }
 
@@ -575,9 +584,14 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags) {
 
             if (!this->m_processing && ImPlot::BeginPlot("##distribution", size, flags)) {
-                ImPlot::SetupAxes("hex.builtin.common.value"_lang, "hex.builtin.common.count"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+                ImPlot::SetupAxes("hex.builtin.common.value"_lang, "hex.builtin.common.count"_lang,
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
+                ImPlot::SetupAxesLimits(-1, 256, 1, double(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
+                ImPlot::SetupAxisFormat(ImAxis_X1, IntegerAxisFormatter, (void*)"0x%02llX");
+                ImPlot::SetupAxisTicks(ImAxis_X1, 0, 255, 17);
+                ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
                 constexpr static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
@@ -585,7 +599,7 @@ namespace hex {
                     return result;
                 }();
 
-                ImPlot::PlotBars<ImU64>("##bytes", x.data(), this->m_valueCounts.data(), x.size(), 1.0);
+                ImPlot::PlotBars<ImU64>("##bytes", x.data(), this->m_valueCounts.data(), x.size(), 1);
                 ImPlot::EndPlot();
             }
         }
@@ -665,7 +679,9 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags, bool updateHandle = false) {
             // Draw the result of the analysis
             if (!this->m_processing && ImPlot::BeginPlot("##byte_types", size, flags)) {
-                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.common.percentage"_lang, ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
+                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.common.percentage"_lang,
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
+                                  ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxesLimits(
                         this->m_xBlockTypeDistributions.empty() ? 0 : this->m_xBlockTypeDistributions.front(),
                         this->m_xBlockTypeDistributions.empty() ? 0 : this->m_xBlockTypeDistributions.back(),
@@ -673,6 +689,8 @@ namespace hex {
                         100.1F,
                         ImGuiCond_Always);
                 ImPlot::SetupLegend(ImPlotLocation_South, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
+                ImPlot::SetupAxisFormat(ImAxis_X1, IntegerAxisFormatter, (void*)"0x%04llX");
+                ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
                 constexpr static std::array Names = { "iscntrl", "isprint", "isspace", "isblank", 
                                                       "isgraph", "ispunct", "isalnum", "isalpha", 
