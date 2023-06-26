@@ -318,6 +318,16 @@ function(JOIN OUTPUT GLUE)
     set(${OUTPUT} "${_TMP_RESULT}" PARENT_SCOPE)
 endfunction()
 
+macro(configureCMake)
+endmacro()
+
+function(message ${ARGN})
+    # Supress any NOTICE messages
+    if (ARGC GREATER 1)
+        _message(${ARGN})
+    endif()
+endfunction()
+
 macro(setDefaultBuiltTypeIfUnset)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Using Release build type as it was left unset" FORCE)
@@ -437,7 +447,7 @@ macro(addBundledLibraries)
 
     set(EXTERN_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
 
-    set(BUILD_SHARED_LIBS OFF)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries")
     add_subdirectory(${EXTERN_LIBS_FOLDER}/imgui)
     set_target_properties(imgui PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
