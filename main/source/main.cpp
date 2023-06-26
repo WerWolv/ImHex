@@ -39,10 +39,8 @@ int main(int argc, char **argv, char **envp) {
         {
             Window::initNative();
 
-            log::info("Welcome to ImHex {}!", IMHEX_VERSION);
-            #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH_SHORT)
-                log::info("Compiled using commit {}@{}", GIT_BRANCH, GIT_COMMIT_HASH_SHORT);
-            #endif
+            log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
+            log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
 
             init::WindowSplash splashWindow;
 

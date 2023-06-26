@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
         }
 
         {
-            const auto metadataContent = hex::format("{}\n{}", MetadataHeaderMagic, IMHEX_VERSION);
+            const auto metadataContent = hex::format("{}\n{}", MetadataHeaderMagic, ImHexApi::System::getImHexVersion());
             tar.writeString(MetadataPath, metadataContent);
         }
 

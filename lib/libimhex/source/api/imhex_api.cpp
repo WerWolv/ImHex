@@ -586,6 +586,39 @@ namespace hex {
             #endif
         }
 
+        std::string getImHexVersion() {
+            #if defined IMHEX_VERSION
+                return IMHEX_VERSION;
+            #else
+                return "Unknown";
+            #endif
+        }
+
+        std::string getCommitHash(bool longHash) {
+            if (longHash) {
+                #if defined GIT_COMMIT_HASH_LONG
+                    return GIT_COMMIT_HASH_LONG;
+                #else
+                    return "Unknown";
+                #endif
+            }
+            else {
+                #if defined GIT_COMMIT_HASH_SHORT
+                    return GIT_COMMIT_HASH_SHORT;
+                #else
+                    return "Unknown";
+                #endif
+            }
+        }
+
+        std::string getCommitBranch() {
+            #if defined GIT_BRANCH
+                return GIT_BRANCH;
+            #else
+                return "Unknown";
+            #endif
+        }
+
     }
 
 }

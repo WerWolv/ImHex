@@ -1,4 +1,5 @@
 #include <hex/api/plugin_manager.hpp>
+#include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
@@ -73,9 +74,13 @@ namespace hex {
             return false;
 
         const auto requestedVersion = getCompatibleVersion();
-        if (requestedVersion != IMHEX_VERSION) {
-            log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(this->m_path.filename()), requestedVersion);
-            return false;
+        if (requestedVersion != ImHexApi::System::getImHexVersion()) {
+            if (requestedVersion.empty()) {
+                log::warn("Plugin '{}' did not specify a compatible version, assuming it is compatible with the current version of ImHex.", wolv::util::toUTF8String(this->m_path.filename()));
+            } else {
+                log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(this->m_path.filename()), requestedVersion);
+                return false;
+            }
         }
 
         if (this->m_initializePluginFunction != nullptr) {

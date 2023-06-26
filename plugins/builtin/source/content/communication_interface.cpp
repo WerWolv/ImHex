@@ -17,15 +17,9 @@ namespace hex::plugin::builtin {
             nlohmann::json result;
 
             result["build"] = {
-                { "version", IMHEX_VERSION },
-
-                #if defined(GIT_COMMIT_HASH_LONG)
-                    { "commit", GIT_COMMIT_HASH_LONG },
-                #endif
-
-                #if defined(GIT_BRANCH)
-                    { "branch", GIT_BRANCH },
-                #endif
+                { "version", ImHexApi::System::getImHexVersion()   },
+                { "commit",  ImHexApi::System::getCommitHash(true) },
+                { "branch",  ImHexApi::System::getCommitBranch()   }
             };
 
             std::vector<std::string> commands;

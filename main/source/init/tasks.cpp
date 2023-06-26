@@ -39,7 +39,7 @@ namespace hex::init {
         // Check if we should check for updates
         if (checkForUpdates == 1){
             HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
-            request.setTimeout(2000);
+            request.setTimeout(500);
 
             // Query the GitHub API for the latest release version
             auto response = request.execute().get();
@@ -58,7 +58,7 @@ namespace hex::init {
                 return false;
 
             // Convert the current version string to a format that can be compared to the latest release
-            auto versionString = std::string(IMHEX_VERSION);
+            auto versionString = ImHexApi::System::getImHexVersion();
             size_t versionLength = std::min(versionString.find_first_of('-'), versionString.length());
             auto currVersion   = "v" + versionString.substr(0, versionLength);
 
@@ -78,34 +78,29 @@ namespace hex::init {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
             }
 
-            // Make telemetry request
-            nlohmann::json telemetry = {
-                { "uuid", uuid },
-                { "format_version", "1" },
-                { "imhex_version", IMHEX_VERSION },
-                #if defined(GIT_COMMIT_HASH_LONG) && defined(GIT_BRANCH)
-                    { "imhex_commit", fmt::format("{}@{}", GIT_COMMIT_HASH_LONG, GIT_BRANCH) },
-                #else
-                    { "imhex_commit", "??@??" },
-                #endif
-                { "install_type", ImHexApi::System::isPortableVersion() ? "Portable" : "Installed" },
-                { "os", ImHexApi::System::getOSName() },
-                { "os_version", ImHexApi::System::getOSVersion() },
-                { "arch", ImHexApi::System::getArchitecture() },
-                { "gpu_vendor", ImHexApi::System::getGPUVendor() }
-            };
+            TaskManager::createBackgroundTask("Sending statistics...", [uuid, versionString](auto&) {
+                // Make telemetry request
+                nlohmann::json telemetry = {
+                        { "uuid", uuid },
+                        { "format_version", "1" },
+                        { "imhex_version", versionString },
+                        { "imhex_commit", fmt::format("{}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()) },
+                        { "install_type", ImHexApi::System::isPortableVersion() ? "Portable" : "Installed" },
+                        { "os", ImHexApi::System::getOSName() },
+                        { "os_version", ImHexApi::System::getOSVersion() },
+                        { "arch", ImHexApi::System::getArchitecture() },
+                        { "gpu_vendor", ImHexApi::System::getGPUVendor() }
+                };
 
-            HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);
-            telemetryRequest.setTimeout(2000);
+                HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);
+                telemetryRequest.setTimeout(500);
 
-            telemetryRequest.setBody(telemetry.dump());
-            telemetryRequest.addHeader("Content-Type", "application/json");
+                telemetryRequest.setBody(telemetry.dump());
+                telemetryRequest.addHeader("Content-Type", "application/json");
 
-            // Execute request
-            response = telemetryRequest.execute().get();
-            if (response.getStatusCode() != 200)
-                return false;
-
+                // Execute request
+                telemetryRequest.execute();
+            });
         }
         return true;
     }

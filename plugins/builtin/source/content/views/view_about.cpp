@@ -60,13 +60,11 @@ namespace hex::plugin::builtin {
             ImGui::Image(this->m_logoTexture, scaled({ 64, 64 }));
             ImGui::TableNextColumn();
 
-            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, IMHEX_VERSION);
+            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
 
-            #if defined(GIT_BRANCH) && defined(GIT_COMMIT_HASH_SHORT) && defined(GIT_COMMIT_HASH_LONG)
-                ImGui::SameLine();
-                if (ImGui::Hyperlink(hex::format("{0}@{1}", GIT_BRANCH, GIT_COMMIT_HASH_SHORT).c_str()))
-                    hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" GIT_COMMIT_HASH_LONG);
-            #endif
+            ImGui::SameLine();
+            if (ImGui::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
+                hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
 
             ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
 

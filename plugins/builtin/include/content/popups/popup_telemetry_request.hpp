@@ -49,12 +49,9 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.version"_lang);
                     ImGui::TableNextColumn();
                     ImGui::TextFormattedWrapped("{}\n{}@{}\n{}",
-                                                IMHEX_VERSION,
-                                                #if defined (GIT_COMMIT_HASH_LONG) && defined (GIT_BRANCH)
-                                                   GIT_COMMIT_HASH_LONG, GIT_BRANCH,
-                                                #else
-                                                   "??", "??",
-                                                #endif
+                                                ImHexApi::System::getImHexVersion(),
+                                                ImHexApi::System::getCommitHash(true),
+                                                ImHexApi::System::getCommitBranch(),
                                                 ImHexApi::System::isPortableVersion() ? "Portable" : "Installed"
                      );
 

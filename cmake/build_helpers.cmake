@@ -14,47 +14,6 @@ macro(addDefines)
         message(FATAL_ERROR "IMHEX_VERSION is not defined")
     endif ()
 
-    if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_HASH_SHORT AND DEFINED IMHEX_COMMIT_BRANCH)
-        add_compile_definitions(
-                GIT_COMMIT_HASH_LONG="${IMHEX_COMMIT_HASH_LONG}"
-                GIT_COMMIT_HASH_SHORT="${IMHEX_COMMIT_HASH_SHORT}"
-                GIT_BRANCH="${IMHEX_COMMIT_BRANCH}"
-        )
-    else()
-        # Get the current working branch
-        execute_process(
-                COMMAND git rev-parse --abbrev-ref HEAD
-                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                OUTPUT_VARIABLE GIT_BRANCH
-                OUTPUT_STRIP_TRAILING_WHITESPACE
-                RESULT_VARIABLE RESULT_BRANCH
-        )
-
-        # Get the latest abbreviated commit hash of the working branch
-        execute_process(
-                COMMAND git log -1 --format=%h --abbrev=7
-                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                OUTPUT_VARIABLE GIT_COMMIT_HASH_SHORT
-                OUTPUT_STRIP_TRAILING_WHITESPACE
-                RESULT_VARIABLE RESULT_HASH_SHORT
-        )
-
-        execute_process(
-                COMMAND git log -1 --format=%H
-                WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-                OUTPUT_VARIABLE GIT_COMMIT_HASH_LONG
-                OUTPUT_STRIP_TRAILING_WHITESPACE
-                RESULT_VARIABLE RESULT_HASH_LONG
-        )
-
-        if (RESULT_BRANCH EQUAL 0 AND RESULT_HASH_LONG EQUAL 0 AND RESULT_HASH_SHORT EQUAL 0)
-            add_compile_definitions(
-                    GIT_COMMIT_HASH_SHORT="${GIT_COMMIT_HASH_SHORT}"
-                    GIT_COMMIT_HASH_LONG="${GIT_COMMIT_HASH_LONG}"
-                    GIT_BRANCH="${GIT_BRANCH}")
-        endif ()
-    endif ()
-
     set(CMAKE_RC_FLAGS "${CMAKE_RC_FLAGS} -DPROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR} -DPROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR} -DPROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH} ")
 
     set(IMHEX_VERSION_STRING ${IMHEX_VERSION})
@@ -71,9 +30,15 @@ macro(addDefines)
         set(IMHEX_VERSION_STRING ${IMHEX_VERSION_STRING}-MinSizeRel)
         add_compile_definitions(NDEBUG)
     endif ()
-
-    add_compile_definitions(IMHEX_VERSION="${IMHEX_VERSION_STRING}")
 endmacro()
+
+function(addDefineToSource SOURCE DEFINE)
+    set_property(
+            SOURCE ${SOURCE}
+            APPEND
+            PROPERTY COMPILE_DEFINITIONS "${DEFINE}"
+    )
+endfunction()
 
 # Detect current OS / System
 macro(detectOS)
@@ -164,7 +129,7 @@ macro(configurePackingResources)
             set(MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/resources/dist/macos/Info.plist.in")
             set(MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
             set(MACOSX_BUNDLE_GUI_IDENTIFIER "net.WerWolv.ImHex")
-            set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}-${GIT_COMMIT_HASH_SHORT}")
+            set(MACOSX_BUNDLE_LONG_VERSION_STRING "${PROJECT_VERSION}-${IMHEX_COMMIT_HASH_SHORT}")
             set(MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 
             string(TIMESTAMP CURR_YEAR "%Y")

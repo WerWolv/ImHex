@@ -71,3 +71,44 @@ endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
 target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} libpl libpl-gen ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
+
+
+if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_HASH_SHORT AND DEFINED IMHEX_COMMIT_BRANCH)
+    set(GIT_COMMIT_HASH_LONG "${IMHEX_COMMIT_HASH_LONG}")
+    set(GIT_COMMIT_HASH_SHORT "${IMHEX_COMMIT_HASH_SHORT}")
+    set(GIT_BRANCH "${IMHEX_COMMIT_BRANCH}")
+else()
+    # Get the current working branch
+    execute_process(
+            COMMAND git rev-parse --abbrev-ref HEAD
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_BRANCH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE RESULT_BRANCH
+    )
+
+    # Get the latest abbreviated commit hash of the working branch
+    execute_process(
+            COMMAND git log -1 --format=%h --abbrev=7
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_COMMIT_HASH_SHORT
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE RESULT_HASH_SHORT
+    )
+
+    execute_process(
+            COMMAND git log -1 --format=%H
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            OUTPUT_VARIABLE GIT_COMMIT_HASH_LONG
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE RESULT_HASH_LONG
+    )
+endif ()
+
+if ((NOT GIT_COMMIT_HASH_SHORT STREQUAL "") AND (NOT GIT_COMMIT_HASH_LONG STREQUAL "") AND (NOT GIT_BRANCH STREQUAL ""))
+    addDefineToSource(source/api/imhex_api.cpp "GIT_COMMIT_HASH_SHORT=\"${GIT_COMMIT_HASH_SHORT}\"")
+    addDefineToSource(source/api/imhex_api.cpp "GIT_COMMIT_HASH_LONG=\"${GIT_COMMIT_HASH_LONG}\"")
+    addDefineToSource(source/api/imhex_api.cpp "GIT_BRANCH=\"${GIT_BRANCH}\"")
+endif ()
+
+addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")

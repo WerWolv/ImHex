@@ -507,11 +507,42 @@ namespace hex {
              */
             bool isPortableVersion();
 
+            /**
+             * @brief Gets the current Operating System name
+             * @return Operating System name
+             */
             std::string getOSName();
 
+            /**
+             * @brief Gets the current Operating System version
+             * @return Operating System version
+             */
             std::string getOSVersion();
 
+            /**
+             * @brief Gets the current CPU architecture
+             * @return CPU architecture
+             */
             std::string getArchitecture();
+
+            /**
+             * @brief Gets the current ImHex version
+             * @return ImHex version
+             */
+            std::string getImHexVersion();
+
+            /**
+             * @brief Gets the current git commit hash
+             * @param longHash Whether to return the full hash or the shortened version
+             * @return Git commit hash
+             */
+            std::string getCommitHash(bool longHash = false);
+
+            /**
+             * @brief Gets the current git commit branch
+             * @return Git commit branch
+             */
+            std::string getCommitBranch();
         }
 
     }
