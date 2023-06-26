@@ -639,7 +639,7 @@ namespace hex::plugin::builtin::ui {
 
     void HexEditor::drawFooter(const ImVec2 &size) {
         if (this->m_provider != nullptr && this->m_provider->isReadable()) {
-            const auto pageCount = this->m_provider->getPageCount();
+            const auto pageCount = std::max<u32>(1, this->m_provider->getPageCount());
             constexpr static u32 MinPage = 1;
 
             const auto windowEndPos = ImGui::GetWindowPos() + size - ImGui::GetStyle().WindowPadding;
