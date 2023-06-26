@@ -1,6 +1,7 @@
 #include <hex/plugin.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task.hpp>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 #include <loaders/dotnet/dotnet_loader.hpp>
 
@@ -45,16 +46,39 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
 
     static auto plugins = loadAllPlugins();
 
-    static TaskHolder task;
-    hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras", "Run Script..." }, 5000, [] {
-        for (const auto &plugin : plugins) {
-            const auto &[name, entryPoint] = *plugin;
+    static TaskHolder runnerTask, updaterTask;
 
-            if (ImGui::MenuItem(name.c_str())) {
-                task = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
-                    entryPoint();
-                });
+    static bool menuJustOpened = true;
+    hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
+        if (ImGui::BeginMenu("Run Script...")) {
+            if (menuJustOpened) {
+                menuJustOpened = false;
+                if (!updaterTask.isRunning()) {
+                    updaterTask = TaskManager::createBackgroundTask("Updating...", [] (auto&) {
+                        plugins = loadAllPlugins();
+                    });
+                }
             }
+
+            if (updaterTask.isRunning()) {
+                ImGui::TextSpinner("Updating...");
+            }
+
+            for (const auto &plugin : plugins) {
+                const auto &[name, entryPoint] = *plugin;
+
+                if (ImGui::MenuItem(name.c_str())) {
+                    runnerTask = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
+                        entryPoint();
+                    });
+                }
+            }
+            
+            ImGui::EndMenu();
+        } else {
+            menuJustOpened = true;
         }
-    }, []{ return !task.isRunning(); });
+    }, [] {
+        return !task.isRunning();
+    });
 }
