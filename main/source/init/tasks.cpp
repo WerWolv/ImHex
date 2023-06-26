@@ -539,7 +539,7 @@ namespace hex::init {
             { "Migrate config to .config", migrateConfig,     false },
             #endif
             { "Loading settings",        loadSettings,        false },
-            { "Loading plugins",         loadPlugins,         false },
+            { "Loading plugins",         loadPlugins,         true  },
             { "Checking for updates",    checkForUpdates,     true  },
             { "Loading fonts",           loadFonts,           true  },
         };
