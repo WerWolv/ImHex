@@ -934,13 +934,7 @@ namespace hex {
         io.FontGlobalScale = 1.0F;
 
         if (glfwGetPrimaryMonitor() != nullptr) {
-            #if defined (OS_LINUX)
-                constexpr static auto MultiWindowSupportEnabledDefault = 0;
-            #else
-                constexpr static auto MultiWindowSupportEnabledDefault = 1;
-            #endif
-
-            bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault) != 0;
+            bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", 0) != 0;
 
             if (multiWindowEnabled)
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;

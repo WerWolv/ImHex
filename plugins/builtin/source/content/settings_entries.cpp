@@ -263,7 +263,13 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", 1, [](auto name, nlohmann::json &setting) {
+        #if defined (OS_LINUX)
+            constexpr static auto MultiWindowSupportEnabledDefault = 0;
+        #else
+            constexpr static auto MultiWindowSupportEnabledDefault = 1;
+        #endif
+
+        ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault, [](auto name, nlohmann::json &setting) {
             static bool enabled = static_cast<int>(setting);
 
             if (ImGui::Checkbox(name.data(), &enabled)) {
