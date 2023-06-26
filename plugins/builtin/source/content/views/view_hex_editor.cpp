@@ -574,6 +574,7 @@ namespace hex::plugin::builtin {
 
     ViewHexEditor::~ViewHexEditor() {
         EventManager::unsubscribe<EventProviderChanged>(this);
+        EventManager::unsubscribe<EventProviderOpened>(this);
     }
 
     void ViewHexEditor::drawPopup() {
@@ -917,6 +918,10 @@ namespace hex::plugin::builtin {
             }
         });
 
+        EventManager::subscribe<EventProviderOpened>(this, [](auto *) {
+           ImHexApi::HexEditor::clearSelection();
+        });
+
         ProjectFile::registerPerProviderHandler({
             .basePath = "custom_encoding.tbl",
             .required = false,
@@ -1097,7 +1102,7 @@ namespace hex::plugin::builtin {
         /* Paste */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste" }, 1450, CurrentView + CTRLCMD + Keys::V,
                                                 [] {
-                                                    pasteBytes(*ImHexApi::HexEditor::getSelection(), true);
+                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), true);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
@@ -1105,7 +1110,7 @@ namespace hex::plugin::builtin {
         /* Paste All */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.paste_all" }, 1500, CurrentView + CTRLCMD + SHIFT + Keys::V,
                                                 [] {
-                                                    pasteBytes(*ImHexApi::HexEditor::getSelection(), false);
+                                                    pasteBytes(ImHexApi::HexEditor::getSelection().value_or( ImHexApi::HexEditor::ProviderRegion(Region { 0, 0 }, ImHexApi::Provider::get())), false);
                                                 },
                                                 ImHexApi::HexEditor::isSelectionValid,
                                                 this);
