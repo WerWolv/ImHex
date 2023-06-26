@@ -84,7 +84,7 @@ namespace hex::init {
                         { "uuid", uuid },
                         { "format_version", "1" },
                         { "imhex_version", versionString },
-                        { "imhex_commit", fmt::format("{}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()) },
+                        { "imhex_commit", fmt::format("{}@{}", ImHexApi::System::getCommitHash(true), ImHexApi::System::getCommitBranch()) },
                         { "install_type", ImHexApi::System::isPortableVersion() ? "Portable" : "Installed" },
                         { "os", ImHexApi::System::getOSName() },
                         { "os_version", ImHexApi::System::getOSVersion() },
