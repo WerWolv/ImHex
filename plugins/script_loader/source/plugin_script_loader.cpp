@@ -1,12 +1,15 @@
 #include <hex/plugin.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task.hpp>
+#include <hex/api/localization.hpp>
+
+#include <hex/helpers/logger.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <loaders/dotnet/dotnet_loader.hpp>
 
-#include <hex/helpers/logger.hpp>
 #include <romfs/romfs.hpp>
+#include <nlohmann/json.hpp>
 
 using namespace hex;
 using namespace hex::plugin::loader;
@@ -43,6 +46,8 @@ namespace {
 
 IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
+    for (auto &path : romfs::list("lang"))
+        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
     static auto plugins = loadAllPlugins();
 
@@ -50,18 +55,20 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
 
     static bool menuJustOpened = true;
     hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
-        if (ImGui::BeginMenu("Run Script...")) {
+        if (ImGui::BeginMenu("hex.script_loader.menu.run_script"_lang)) {
             if (menuJustOpened) {
                 menuJustOpened = false;
                 if (!updaterTask.isRunning()) {
-                    updaterTask = TaskManager::createBackgroundTask("Updating...", [] (auto&) {
+                    updaterTask = TaskManager::createBackgroundTask("Updating Scripts...", [] (auto&) {
                         plugins = loadAllPlugins();
                     });
                 }
             }
 
             if (updaterTask.isRunning()) {
-                ImGui::TextSpinner("Updating...");
+                ImGui::TextSpinner("hex.script_loader.menu.loading"_lang);
+            } else if (plugins.empty()) {
+                ImGui::Text("hex.script_loader.menu.no_scripts"_lang);
             }
 
             for (const auto &plugin : plugins) {
@@ -79,6 +86,6 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
             menuJustOpened = true;
         }
     }, [] {
-        return !task.isRunning();
+        return !runnerTask.isRunning();
     });
 }
