@@ -18,8 +18,6 @@
         "hex.windows.provider.process_memory.utils.inject_dll": "",
         "hex.windows.provider.process_memory.utils.inject_dll.failure": "",
         "hex.windows.provider.process_memory.utils.inject_dll.success": "",
-        "hex.windows.title_bar_button.debug_build": "除錯組建",
-        "hex.windows.title_bar_button.feedback": "意見回饋",
         "hex.windows.view.tty_console.auto_scroll": "自動捲動",
         "hex.windows.view.tty_console.baud": "鮑率",
         "hex.windows.view.tty_console.clear": "清除",

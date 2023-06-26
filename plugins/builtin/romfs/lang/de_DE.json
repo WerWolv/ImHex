@@ -476,6 +476,8 @@
         "hex.builtin.setting.proxy.enable": "Proxy aktivieren",
         "hex.builtin.setting.proxy.url": "Proxy URL",
         "hex.builtin.setting.proxy.url.tooltip": "http(s):// oder socks5:// (z.B, http://127.0.0.1:1080)",
+        "hex.builtin.title_bar_button.debug_build": "Debug build",
+        "hex.builtin.title_bar_button.feedback": "Feedback hinterlassen",
         "hex.builtin.tools.ascii_table": "ASCII Tabelle",
         "hex.builtin.tools.ascii_table.octal": "Oktal anzeigen",
         "hex.builtin.tools.base_converter": "Basiskonverter",

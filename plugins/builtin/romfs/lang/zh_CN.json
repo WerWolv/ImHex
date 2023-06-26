@@ -474,6 +474,8 @@
         "hex.builtin.setting.proxy.enable": "启用代理",
         "hex.builtin.setting.proxy.url": "代理 URL",
         "hex.builtin.setting.proxy.url.tooltip": "http(s):// 或 socks5://（如 http://127.0.0.1:1080）",
+        "hex.builtin.title_bar_button.debug_build": "调试构建",
+        "hex.builtin.title_bar_button.feedback": "反馈",
         "hex.builtin.tools.ascii_table": "ASCII 表",
         "hex.builtin.tools.ascii_table.octal": "显示八进制",
         "hex.builtin.tools.base_converter": "基本进制转换",

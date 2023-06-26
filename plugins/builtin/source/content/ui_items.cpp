@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
 
     void addTitleBarButtons() {
 #if defined(DEBUG)
-        ContentRegistry::Interface::addTitleBarButton(ICON_VS_DEBUG, "hex.windows.title_bar_button.debug_build", []{
+        ContentRegistry::Interface::addTitleBarButton(ICON_VS_DEBUG, "hex.builtin.title_bar_button.debug_build", []{
             if (ImGui::GetIO().KeyCtrl) {
                 // Explicitly trigger a segfault by writing to an invalid memory location
                 // Used for debugging crashes
@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
         });
 #endif
 
-        ContentRegistry::Interface::addTitleBarButton(ICON_VS_SMILEY, "hex.windows.title_bar_button.feedback", []{
+        ContentRegistry::Interface::addTitleBarButton(ICON_VS_SMILEY, "hex.builtin.title_bar_button.feedback", []{
             hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/feedback");
         });
 

@@ -18,8 +18,6 @@
         "hex.windows.provider.process_memory.utils.inject_dll": "",
         "hex.windows.provider.process_memory.utils.inject_dll.failure": "",
         "hex.windows.provider.process_memory.utils.inject_dll.success": "",
-        "hex.windows.title_bar_button.debug_build": "디버그 빌드",
-        "hex.windows.title_bar_button.feedback": "피드백 남기기",
         "hex.windows.view.tty_console.auto_scroll": "자동 스크롤",
         "hex.windows.view.tty_console.baud": "Baud rate",
         "hex.windows.view.tty_console.clear": "지우기",

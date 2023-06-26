@@ -18,8 +18,6 @@
         "hex.windows.provider.process_memory.utils.inject_dll": "注入DLL",
         "hex.windows.provider.process_memory.utils.inject_dll.failure": "无法注入DLL '{0}'！",
         "hex.windows.provider.process_memory.utils.inject_dll.success": "成功注入DLL '{0}'！",
-        "hex.windows.title_bar_button.debug_build": "调试构建",
-        "hex.windows.title_bar_button.feedback": "反馈",
         "hex.windows.view.tty_console.auto_scroll": "自动滚动",
         "hex.windows.view.tty_console.baud": "波特率",
         "hex.windows.view.tty_console.clear": "清除",

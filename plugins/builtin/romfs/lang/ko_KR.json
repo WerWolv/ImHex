@@ -474,6 +474,8 @@
         "hex.builtin.setting.proxy.enable": "Proxy 활성화",
         "hex.builtin.setting.proxy.url": "Proxy 경로",
         "hex.builtin.setting.proxy.url.tooltip": "http(s):// 혹은 socks5:// (예., http://127.0.0.1:1080)",
+        "hex.builtin.title_bar_button.debug_build": "디버그 빌드",
+        "hex.builtin.title_bar_button.feedback": "피드백 남기기",
         "hex.builtin.tools.ascii_table": "ASCII 테이블",
         "hex.builtin.tools.ascii_table.octal": "8진수 표시",
         "hex.builtin.tools.base_converter": "진수 변환기",

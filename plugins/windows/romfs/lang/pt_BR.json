@@ -18,8 +18,6 @@
         "hex.windows.provider.process_memory.utils.inject_dll": "",
         "hex.windows.provider.process_memory.utils.inject_dll.failure": "",
         "hex.windows.provider.process_memory.utils.inject_dll.success": "",
-        "hex.windows.title_bar_button.debug_build": "Compilação de depuração",
-        "hex.windows.title_bar_button.feedback": "Deixar Feedback",
         "hex.windows.view.tty_console.auto_scroll": "Auto rolagem",
         "hex.windows.view.tty_console.baud": "Baud rate",
         "hex.windows.view.tty_console.clear": "Limpar",

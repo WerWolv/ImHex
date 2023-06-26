@@ -474,6 +474,8 @@
         "hex.builtin.setting.proxy.enable": "",
         "hex.builtin.setting.proxy.url": "",
         "hex.builtin.setting.proxy.url.tooltip": "",
+        "hex.builtin.title_bar_button.debug_build": "Compilação de depuração",
+        "hex.builtin.title_bar_button.feedback": "Deixar Feedback",
         "hex.builtin.tools.ascii_table": "ASCII table",
         "hex.builtin.tools.ascii_table.octal": "Mostrar octal",
         "hex.builtin.tools.base_converter": "Base converter",
