@@ -412,7 +412,7 @@ macro(addBundledLibraries)
 
     set(EXTERN_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
 
-    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries")
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "Build shared libraries")
     add_subdirectory(${EXTERN_LIBS_FOLDER}/imgui)
     set_target_properties(imgui PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

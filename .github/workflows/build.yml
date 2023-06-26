@@ -570,8 +570,6 @@ jobs:
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
-        env:
-          QA_RPATHS: 18
         run: |
           fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
 
