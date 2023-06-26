@@ -46,32 +46,34 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
 
     static auto plugins = loadAllPlugins();
 
-    static TaskHolder task;
-    static TaskHolder updaterTask;
+    static TaskHolder runnerTask, updaterTask;
 
     static bool menuJustOpened = true;
     hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
         if (ImGui::BeginMenu("Run Script...")) {
             if (menuJustOpened) {
                 menuJustOpened = false;
-                if(!updaterTask.isRunning()) {
-                    updaterTask = TaskManager::createTask("Updating...", TaskManager::NoProgress, [] (auto&) {
+                if (!updaterTask.isRunning()) {
+                    updaterTask = TaskManager::createBackgroundTask("Updating...", [] (auto&) {
                         plugins = loadAllPlugins();
                     });
                 }
             }
-            if(updaterTask.isRunning()) {
+
+            if (updaterTask.isRunning()) {
                 ImGui::TextSpinner("Updating...");
             }
+
             for (const auto &plugin : plugins) {
                 const auto &[name, entryPoint] = *plugin;
 
                 if (ImGui::MenuItem(name.c_str())) {
-                    task = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
+                    runnerTask = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {
                         entryPoint();
                     });
                 }
             }
+            
             ImGui::EndMenu();
         } else {
             menuJustOpened = true;
