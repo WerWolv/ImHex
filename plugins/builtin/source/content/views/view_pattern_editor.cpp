@@ -952,7 +952,7 @@ namespace hex::plugin::builtin {
                     }
 
                     this->m_console->emplace_back(line);
-                    this->m_consoleNeedsUpdate = true;
+                    //this->m_consoleNeedsUpdate = true;
                 }
             });
 
