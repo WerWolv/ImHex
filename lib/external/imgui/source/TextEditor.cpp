@@ -990,7 +990,6 @@ void TextEditor::Render() {
 
     if (mScrollToCursor) {
         EnsureCursorVisible();
-        ImGui::SetWindowFocus();
         mScrollToCursor = false;
     }
 }
