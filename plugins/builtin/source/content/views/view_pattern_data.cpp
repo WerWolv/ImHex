@@ -20,10 +20,6 @@ namespace hex::plugin::builtin {
         });
 
         this->m_patternDrawer.setSelectionCallback([](Region region){ ImHexApi::HexEditor::setSelection(region); });
-
-        EventManager::subscribe<EventPatternExecuted>([this](const auto&){
-            this->m_shouldReset = true;
-        });
     }
 
     ViewPatternData::~ViewPatternData() {
@@ -36,11 +32,14 @@ namespace hex::plugin::builtin {
             if (ImHexApi::Provider::isValid()) {
                 auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                 if (!runtime.arePatternsValid()) {
+                    this->m_shouldReset = true;
                     this->m_patternDrawer.reset();
                     this->m_patternDrawer.draw({});
                 } else {
                     if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                        if (this->m_shouldReset) {
+                        auto runId = runtime.getRunId();
+                        if (this->m_shouldReset || this->m_lastRunId != runId) {
+                            this->m_lastRunId = runId;
                             this->m_patternDrawer.reset();
                             this->m_shouldReset = false;
                         }

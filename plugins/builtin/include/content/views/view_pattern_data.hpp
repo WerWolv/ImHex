@@ -21,6 +21,7 @@ namespace hex::plugin::builtin {
     private:
         ui::PatternDrawer m_patternDrawer;
         bool m_shouldReset = false;
+        u64 m_lastRunId = 0;
     };
 
 }
