@@ -8,6 +8,7 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/utils_linux.hpp>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -313,14 +314,12 @@ namespace hex {
     void runCommand(const std::string &command) {
 
         #if defined(OS_WINDOWS)
-            auto result = system(hex::format("start {0}", command).c_str());
+            hex::unused(system(hex::format("start {0}", command).c_str()));
         #elif defined(OS_MACOS)
-            auto result = system(hex::format("open {0}", command).c_str());
+            hex::unused(system(hex::format("open {0}", command).c_str()));
         #elif defined(OS_LINUX)
-            auto result = system(hex::format("xdg-open {0}", command).c_str());
+            executeCmd({"xdg-open", command});
         #endif
-
-        hex::unused(result);
     }
 
     void openWebpage(std::string url) {
@@ -332,8 +331,7 @@ namespace hex {
         #elif defined(OS_MACOS)
             openWebpageMacos(url.c_str());
         #elif defined(OS_LINUX)
-            auto result = system(hex::format("xdg-open {0}", url).c_str());
-            hex::unused(result);
+            executeCmd({"xdg-open", url});
         #else
             #warning "Unknown OS, can't open webpages"
         #endif

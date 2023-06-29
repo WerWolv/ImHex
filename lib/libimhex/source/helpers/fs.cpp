@@ -4,6 +4,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/utils_linux.hpp>
 
 #include <xdg.hpp>
 
@@ -43,9 +44,7 @@ namespace hex::fs {
                 hex::format("open {}", wolv::util::toUTF8String(filePath)).c_str()
             ));
         #elif defined(OS_LINUX)
-            hex::unused(system(
-                hex::format("xdg-open {}", wolv::util::toUTF8String(filePath)).c_str()
-            ));
+            executeCmd({"xdg-open", wolv::util::toUTF8String(filePath)});
         #endif
     }
 
@@ -62,9 +61,7 @@ namespace hex::fs {
                 hex::format("open {}", wolv::util::toUTF8String(dirPath)).c_str()
             ));
         #elif defined(OS_LINUX)
-            hex::unused(system(
-                hex::format("xdg-open {}", wolv::util::toUTF8String(dirPath)).c_str()
-            ));
+            executeCmd({"xdg-open", wolv::util::toUTF8String(dirPath)});
         #endif
     }
 
@@ -87,9 +84,7 @@ namespace hex::fs {
         #elif defined(OS_LINUX)
             // fallback to only opening the folder for now
             // TODO actually select the file
-            hex::unused(system(
-                hex::format("xdg-open {}", wolv::util::toUTF8String(selectedFilePath.parent_path())).c_str()
-            ));
+            executeCmd({"xdg-open", wolv::util::toUTF8String(selectedFilePath.parent_path())});
         #endif
     }
 
