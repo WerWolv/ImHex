@@ -270,8 +270,8 @@ jobs:
 
       - name: ⬇️ Install dependencies
         run: |
-          sudo apt update
-          sudo bash dist/get_deps_debian.sh
+          apt update
+          bash dist/get_deps_debian.sh
 
       # Ubuntu cmake build
       - name: 🛠️ Build
