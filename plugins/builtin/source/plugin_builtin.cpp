@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
 }
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
-    { "help", [](const std::vector<std::string>&) {
+    { "help", "Print help about this command", [](const std::vector<std::string>&) {
         printf(
             "ImHex - A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.\n"
             "\n"
@@ -59,12 +59,13 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
 
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                printf("\t--%s\n", subCommand.commandKey.c_str());
+                printf("\t--%s\t\t%s\n", subCommand.commandKey.c_str(), subCommand.commandDesc.c_str());
             }
         }
         exit(EXIT_SUCCESS);
     }},
-    { "open", [](const std::vector<std::string> &args) {
+    { "open", "Open files passed as argument. This is the default subcommand is none is entered",
+        [](const std::vector<std::string> &args) {
         bool doubleDashFound = false;
         for (auto &arg : args) {
             if (arg == "--" && !doubleDashFound) {
