@@ -325,6 +325,8 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions().clear();
         ImHexApi::HexEditor::impl::getTooltips().clear();
         ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
+        ImHexApi::System::getAdditionalFolderPaths().clear();
+        ImHexApi::System::getCustomFontPath().clear();
 
         ContentRegistry::Settings::impl::getEntries().clear();
         ContentRegistry::Settings::impl::getSettingsData().clear();
@@ -374,7 +376,6 @@ namespace hex::init {
         LayoutManager::reset();
 
         ThemeManager::reset();
-
 
         ProjectFile::getHandlers().clear();
         ProjectFile::getProviderHandlers().clear();

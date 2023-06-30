@@ -460,7 +460,7 @@ namespace hex {
              * @brief Gets the current custom font path
              * @return The current custom font path
              */
-            const std::filesystem::path &getCustomFontPath();
+            std::filesystem::path &getCustomFontPath();
 
             /**
              * @brief Gets the current font size
@@ -486,7 +486,7 @@ namespace hex {
              * @brief Gets the currently set additional folder paths
              * @return The currently set additional folder paths
              */
-            const std::vector<std::filesystem::path> &getAdditionalFolderPaths();
+            std::vector<std::filesystem::path> &getAdditionalFolderPaths();
 
             /**
              * @brief Sets the additional folder paths

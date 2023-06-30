@@ -480,7 +480,7 @@ namespace hex {
             return initArgs;
         }
 
-        const std::fs::path &getCustomFontPath() {
+        std::fs::path &getCustomFontPath() {
             return impl::s_customFontPath;
         }
 
@@ -504,13 +504,13 @@ namespace hex {
         }
 
 
-        static std::vector<std::fs::path> s_additionalFolderPaths;
-        const std::vector<std::fs::path> &getAdditionalFolderPaths() {
-            return s_additionalFolderPaths;
+        std::vector<std::fs::path> &getAdditionalFolderPaths() {
+            static std::vector<std::fs::path> additionalFolderPaths;
+            return additionalFolderPaths;
         }
 
         void setAdditionalFolderPaths(const std::vector<std::fs::path> &paths) {
-            s_additionalFolderPaths = paths;
+            getAdditionalFolderPaths() = paths;
         }
 
 
