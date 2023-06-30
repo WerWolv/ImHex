@@ -114,6 +114,9 @@ namespace hex::crash {
         }
 
         originalHandler = std::set_terminate([]{
+            // Restore the original handler of C++ std
+            std::set_terminate(originalHandler);
+
             try {
                 std::rethrow_exception(std::current_exception());
             } catch (std::exception &ex) {
@@ -129,9 +132,6 @@ namespace hex::crash {
 
                 // Reset signal handlers prior to calling the original handler, because it may raise a signal
                 for(auto signal : Signals) std::signal(signal, SIG_DFL);
-
-                // Restore the original handler of C++ std
-                std::set_terminate(originalHandler);
 
                 #if defined(DEBUG)
                     assert(!"Debug build, triggering breakpoint");
