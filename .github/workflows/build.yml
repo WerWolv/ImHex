@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  BUILD_TYPE: Release
+  BUILD_TYPE: RelWithDebInfo
 
 jobs:
 
@@ -71,7 +71,7 @@ jobs:
         cd build
 
         cmake -G "MinGW Makefiles"                      \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
           -DCREATE_PACKAGE=ON                           \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
@@ -206,7 +206,7 @@ jobs:
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         MACOSX_DEPLOYMENT_TARGET="10.10"                                                            \
         cmake                                                                                       \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                                                            \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
@@ -279,7 +279,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc-12 CXX=g++-12 cmake                      \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
             -DCMAKE_INSTALL_PREFIX="/usr"                 \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
@@ -352,7 +352,7 @@ jobs:
           mkdir -p build-appimage
           cd build-appimage
           CC=gcc-12 CXX=g++-12 cmake                      \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
             -DCMAKE_INSTALL_PREFIX="/usr"                 \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
@@ -430,7 +430,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc CXX=g++ cmake                          \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="/usr"                 \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
