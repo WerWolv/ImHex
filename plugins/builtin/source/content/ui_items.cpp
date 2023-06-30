@@ -250,23 +250,27 @@ namespace hex::plugin::builtin {
                             ImGui::TextFormatted("{}", tabProvider->getName().c_str());
 
                             const auto &description = provider->getDataDescription();
-                            if (ImGui::GetIO().KeyShift && !description.empty()) {
+                            if (!description.empty()) {
                                 ImGui::Separator();
+                                if (ImGui::GetIO().KeyShift && !description.empty()) {
 
-                                if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
-                                    ImGui::TableSetupColumn("type");
-                                    ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+                                    if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible, ImVec2(400_scaled, 0))) {
+                                        ImGui::TableSetupColumn("type");
+                                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
-                                    ImGui::TableNextRow();
+                                        ImGui::TableNextRow();
 
-                                    for (auto &[name, value] : description) {
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextFormatted("{}", name);
-                                        ImGui::TableNextColumn();
-                                        ImGui::TextFormattedWrapped("{}", value);
+                                        for (auto &[name, value] : description) {
+                                            ImGui::TableNextColumn();
+                                            ImGui::TextFormatted("{}", name);
+                                            ImGui::TableNextColumn();
+                                            ImGui::TextFormattedWrapped("{}", value);
+                                        }
+
+                                        ImGui::EndTable();
                                     }
-
-                                    ImGui::EndTable();
+                                } else {
+                                    ImGui::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
                                 }
                             }
 

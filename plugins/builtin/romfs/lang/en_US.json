@@ -411,6 +411,7 @@
         "hex.builtin.popup.save_layout.title": "Save Layout",
         "hex.builtin.popup.save_layout.desc": "Enter a name under which to save the current layout.",
         "hex.builtin.popup.waiting_for_tasks.desc": "There are still tasks running in the background.\nImHex will close after they are finished.",
+        "hex.builtin.provider.tooltip.show_more": "Hold SHIFT for more information",
         "hex.builtin.provider.error.open": "Failed to open provider: {}",
         "hex.builtin.provider.disk": "Raw Disk Provider",
         "hex.builtin.provider.disk.disk_size": "Disk Size",
