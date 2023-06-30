@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  BUILD_TYPE: Release
+  BUILD_TYPE: RelWithDebInfo
 
 jobs:
 
@@ -71,7 +71,7 @@ jobs:
         cd build
 
         cmake -G "MinGW Makefiles"                      \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
           -DCREATE_PACKAGE=ON                           \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
@@ -206,7 +206,7 @@ jobs:
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         MACOSX_DEPLOYMENT_TARGET="10.10"                                                            \
         cmake                                                                                       \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                                                            \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
@@ -230,9 +230,24 @@ jobs:
 
   # Ubuntu build
   ubuntu:
-    runs-on: ubuntu-22.04
-    name: 🐧 Ubuntu 22.04
+    strategy:
+      matrix:
+        include:
+          - name: Ubuntu
+            release_num: 22.04
+          - name: Ubuntu
+            release_num: 23.04
+
+    name: 🐧 Ubuntu ${{ matrix.release_num }}
+    runs-on: ubuntu-latest
+
+    container:
+      image: "ubuntu:${{ matrix.release_num }}"
+      options: --privileged
+
     steps:
+      - name: ⬇️ Install git
+        run: apt update && apt install -y git
 
       - name: 🧰 Checkout
         uses: actions/checkout@v3
@@ -255,24 +270,27 @@ jobs:
 
       - name: ⬇️ Install dependencies
         run: |
-          sudo apt update
-          sudo bash dist/get_deps_debian.sh
+          apt update
+          bash dist/get_deps_debian.sh
 
       # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
+          echo COMMIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+          echo COMMIT_SHA_LONG=$(git rev-parse HEAD) >> $GITHUB_ENV
+          echo COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $GITHUB_ENV
           mkdir -p build
           cd build
-          CC=gcc-12 CXX=g++-12 cmake                      \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
-            -DCMAKE_INSTALL_PREFIX="/usr"                 \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-            -DIMHEX_PATTERNS_PULL_MASTER=ON               \
-            -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
-            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
-            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON       \
+          CC=gcc-12 CXX=g++-12 cmake                                \
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                  \
+            -DCMAKE_INSTALL_PREFIX="/usr"                           \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache                      \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                    \
+            -DIMHEX_PATTERNS_PULL_MASTER=ON                         \
+            -DIMHEX_COMMIT_HASH_SHORT="${{env.COMMIT_SHA_SHORT}}"   \
+            -DIMHEX_COMMIT_HASH_LONG="${{env.COMMIT_SHA_LONG}}"     \
+            -DIMHEX_COMMIT_BRANCH="${{env.COMMIT_BRANCH}}"          \
+            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON                 \
             ..
           make -j 4 install DESTDIR=DebDir
 
@@ -337,7 +355,7 @@ jobs:
           mkdir -p build-appimage
           cd build-appimage
           CC=gcc-12 CXX=g++-12 cmake                      \
-            -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
             -DCMAKE_INSTALL_PREFIX="/usr"                 \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
@@ -415,7 +433,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc CXX=g++ cmake                          \
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE                \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="/usr"                 \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
