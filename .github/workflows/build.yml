@@ -230,8 +230,21 @@ jobs:
 
   # Ubuntu build
   ubuntu:
-    runs-on: ubuntu-22.04
-    name: 🐧 Ubuntu 22.04
+    strategy:
+      matrix:
+        include:
+          - name: Ubuntu
+            release_num: 22.04
+          - name: Ubuntu
+            release_num: 23.04
+
+    name: 🐧 Ubuntu ${{ matrix.release_num }}
+    runs-on: ubuntu-latest
+
+    container:
+      image: "ubuntu:${{ matrix.release_num }}"
+      options: --privileged
+
     steps:
 
       - name: 🧰 Checkout
