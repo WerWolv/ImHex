@@ -506,66 +506,6 @@ namespace hex::plugin::builtin {
             false);
     }
 
-
-    static void loadInterfaceScalingSetting() {
-        float interfaceScaling = 1.0F;
-        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-            default:
-            case 0:
-                interfaceScaling = ImHexApi::System::getNativeScale();
-                break;
-            case 1:
-                interfaceScaling = 0.5F;
-                break;
-            case 2:
-                interfaceScaling = 1.0F;
-                break;
-            case 3:
-                interfaceScaling = 1.5F;
-                break;
-            case 4:
-                interfaceScaling = 2.0F;
-                break;
-            case 5:
-                interfaceScaling = 3.0F;
-                break;
-            case 6:
-                interfaceScaling = 4.0F;
-                break;
-        }
-
-        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
-    }
-
-    static void loadFontSettings() {
-        std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
-        if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile))
-            fontFile.clear();
-
-        // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
-        if (fontFile.empty()) {
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
-                auto path = dir / "font.ttf";
-                if (wolv::io::fs::exists(path)) {
-                    log::info("Loading custom front from {}", wolv::util::toUTF8String(path));
-
-                    fontFile = path;
-                    break;
-                }
-            }
-        }
-
-        ImHexApi::System::impl::setCustomFontPath(fontFile);
-
-        // If a custom font has been loaded now, also load the font size
-        float fontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
-        if (!fontFile.empty()) {
-            fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
-        }
-
-        ImHexApi::System::impl::setFontSize(fontSize);
-    }
-
     static void loadThemeSettings() {
         auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
 
@@ -585,8 +525,6 @@ namespace hex::plugin::builtin {
     }
 
     void loadSettings() {
-        loadInterfaceScalingSetting();
-        loadFontSettings();
         loadThemeSettings();
         loadFoldersSettings();
     }

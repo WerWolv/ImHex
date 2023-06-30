@@ -193,6 +193,36 @@ namespace hex::init {
     }
 
     static bool loadFontsImpl(bool loadUnicode) {
+        // Load font related settings
+        {
+            std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
+            if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile))
+                fontFile.clear();
+
+            // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
+            if (fontFile.empty()) {
+                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
+                    auto path = dir / "font.ttf";
+                    if (wolv::io::fs::exists(path)) {
+                        log::info("Loading custom front from {}", wolv::util::toUTF8String(path));
+
+                        fontFile = path;
+                        break;
+                    }
+                }
+            }
+
+            ImHexApi::System::impl::setCustomFontPath(fontFile);
+
+            // If a custom font has been loaded now, also load the font size
+            float fontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
+            if (!fontFile.empty()) {
+                fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
+            }
+
+            ImHexApi::System::impl::setFontSize(fontSize);
+        }
+
         float fontSize = ImHexApi::System::getFontSize();
 
         const auto &fontFile = ImHexApi::System::getCustomFontPath();
@@ -522,6 +552,38 @@ namespace hex::init {
         return true;
     }
 
+    bool configureUIScale() {
+        float interfaceScaling;
+        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
+            default:
+            case 0:
+                interfaceScaling = ImHexApi::System::getNativeScale();
+                break;
+            case 1:
+                interfaceScaling = 0.5F;
+                break;
+            case 2:
+                interfaceScaling = 1.0F;
+                break;
+            case 3:
+                interfaceScaling = 1.5F;
+                break;
+            case 4:
+                interfaceScaling = 2.0F;
+                break;
+            case 5:
+                interfaceScaling = 3.0F;
+                break;
+            case 6:
+                interfaceScaling = 4.0F;
+                break;
+        }
+
+        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
+
+        return true;
+    }
+
     bool storeSettings() {
         try {
             ContentRegistry::Settings::impl::store();
@@ -540,6 +602,7 @@ namespace hex::init {
             { "Migrate config to .config", migrateConfig,     false },
             #endif
             { "Loading settings",        loadSettings,        false },
+            { "Configuring UI scale",    configureUIScale,    false },
             { "Loading plugins",         loadPlugins,         true  },
             { "Checking for updates",    checkForUpdates,     true  },
             { "Loading fonts",           loadFonts,           true  },
