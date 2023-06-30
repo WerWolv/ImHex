@@ -1,10 +1,13 @@
 #include <hex/plugin.hpp>
 
+#include <hex/api/event.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
+
+using namespace hex;
 
 namespace hex::plugin::builtin {
 
@@ -41,7 +44,30 @@ namespace hex::plugin::builtin {
 
     void handleBorderlessWindowMode();
 
+    void handleSubCommands();
+
 }
+
+IMHEX_PLUGIN_SUBCOMMANDS() {
+    { "help", [](const std::vector<std::string>&) {
+        printf( "Some big help text of ImHex\n"
+                "Second line\n"
+        );
+        exit(EXIT_SUCCESS);
+    }},
+    { "open", [](const std::vector<std::string> &args) {
+        bool doubleDashFound = false;
+        for (auto &arg : args) {
+            if (arg == "--" && !doubleDashFound) {
+                doubleDashFound = true;
+            } else {
+                EventManager::subscribe<EventImHexStartupFinished>([arg]() {
+                    EventManager::post<RequestOpenFile>(arg);
+                });
+            }
+        }
+    }}
+};
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 

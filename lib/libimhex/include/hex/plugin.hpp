@@ -1,9 +1,12 @@
 #pragma once
 
+#include <string>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
 #include <hex.hpp>
+#include <hex/api/plugin_manager.hpp>
 
 /**
  * This macro is used to define all the required entry points for a plugin.
@@ -21,3 +24,8 @@
         GImGui = ctx;                                                                                      \
     }                                                                                                      \
     extern "C" [[gnu::visibility("default")]] void initializePlugin()
+
+#define IMHEX_PLUGIN_SUBCOMMANDS() IMHEX_PLUGIN_SUBCOMMANDS_IMPL()
+
+#define IMHEX_PLUGIN_SUBCOMMANDS_IMPL()                                                                    \
+    [[gnu::visibility("default")]] std::vector<hex::SubCommand> subCommands

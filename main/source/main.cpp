@@ -10,14 +10,32 @@
 
 #include <hex/api/task.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/plugin_manager.hpp>
+#include <hex/helpers/fs.hpp>
+#include "hex/subcommands/sub_commands.hpp"
 
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
 
+using namespace hex;
+
+void initPlugins(){
+    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+        PluginManager::load(dir);
+    }
+}
+
 int main(int argc, char **argv, char **envp) {
-    using namespace hex;
     hex::crash::setupCrashHandlers();
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
+
+    std::vector<std::string> args;
+    for(int i=1;i<argc;i++){
+        args.emplace_back(argv[i]);
+    }
+
+    initPlugins();
+    init::processArguments(args);
 
     // Check if ImHex is installed in portable mode
     {
@@ -69,14 +87,6 @@ int main(int argc, char **argv, char **envp) {
         // Main window
         {
             Window window;
-            if (argc == 1)
-                ;    // No arguments provided
-            else if (argc >= 2) {
-                for (auto i = 1; i < argc; i++) {
-                    if (auto argument = ImHexApi::System::getProgramArgument(i); argument.has_value())
-                        EventManager::post<RequestOpenFile>(argument.value());
-                }
-            }
 
             // Open file that has been requested to be opened through other, OS-specific means
             if (auto path = hex::getInitialFilePath(); path.has_value()) {

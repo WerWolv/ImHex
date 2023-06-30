@@ -17,6 +17,11 @@ struct ImGuiContext;
 
 namespace hex {
 
+    struct SubCommand{
+        std::string commandKey;
+        std::function<void(const std::vector<std::string>&)> callback;
+    };
+
     class Plugin {
     public:
         explicit Plugin(const std::fs::path &path);
@@ -35,6 +40,8 @@ namespace hex {
         [[nodiscard]] const std::fs::path &getPath() const;
 
         [[nodiscard]] bool isLoaded() const;
+
+        [[nodiscard]] std::vector<SubCommand> getSubCommands() const;
 
     private:
         using InitializePluginFunc     = void (*)();

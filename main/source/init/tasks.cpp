@@ -418,11 +418,6 @@ namespace hex::init {
     }
 
     bool loadPlugins() {
-        // Load plugins
-        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
-            PluginManager::load(dir);
-        }
-
         // Get loaded plugins
         auto &plugins = PluginManager::getPlugins();
 

@@ -141,6 +141,14 @@ namespace hex {
         return this->m_initialized;
     }
 
+    std::vector<SubCommand> Plugin::getSubCommands() const {
+        auto addr = dlsym(this->m_handle, "subCommands");
+        if(addr==0)return { };
+        
+        auto subCommands = *reinterpret_cast<std::vector<SubCommand>*>(addr);
+        return subCommands;
+    }
+
 
     void *Plugin::getPluginFunction(const std::string &symbol) {
         #if defined(OS_WINDOWS)
