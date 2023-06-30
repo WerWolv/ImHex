@@ -192,44 +192,22 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US", [](auto name, nlohmann::json &setting) {
             auto &languages = LangEntry::getSupportedLanguages();
+            if (!languages.contains(setting.get<std::string>()))
+                setting = "en-US";
 
-            static int selection = [&]() -> int {
-                u16 index = 0;
+            bool changed = false;
+            if (ImGui::BeginCombo(name.data(), languages.at(setting.get<std::string>()).c_str())) {
                 for (auto &[languageCode, languageName] : languages) {
-                    if (setting.get<std::string>() == languageCode)
-                        return index;
-                    index++;
-                }
-
-                return 0;
-            }();
-
-            static auto languageNames = [&]() {
-                std::vector<const char *> result;
-                result.reserve(languages.size());
-
-                for (auto &[languageCode, languageName] : languages)
-                    result.push_back(languageName.c_str());
-
-                return result;
-            }();
-
-
-            if (ImGui::Combo(name.data(), &selection, languageNames.data(), languageNames.size())) {
-
-                u16 index = 0;
-                for (auto &[languageCode, languageName] : languages) {
-                    if (selection == index) {
+                    if (ImGui::Selectable(languageName.c_str(), setting == languageCode)) {
                         setting = languageCode;
-                        break;
+                        changed = true;
                     }
-                    index++;
                 }
 
-                return true;
+                ImGui::EndCombo();
             }
 
-            return false;
+            return changed;
         });
 
         ContentRegistry::Settings::add("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en", [](auto name, nlohmann::json &setting) {
