@@ -66,22 +66,24 @@ namespace hex::crash {
         }
     }
 
+    void handleCrash(const std::string &msg, int signalNumber) {
+        crashCallback(msg);
+
+        printStackTrace();
+        
+        // Trigger an event so that plugins can handle crashes
+        // It may affect things (like the project path),
+        // so we do this after saving the crash file
+        EventManager::post<EventAbnormalTermination>(signalNumber);
+    }
+
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
         // Reset the signal handler to the default handler
         for(auto signal : Signals) std::signal(signal, SIG_DFL);
 
-        log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
-
-        // Trigger the crash callback
-        crashCallback(hex::format("Received signal '{}' ({})", signalName, signalNumber));
-
-        printStackTrace();
-
-        // Trigger an event so that plugins can handle crashes
-        // It may affect things (like the project path),
-        // so we do this after saving the crash file
-        EventManager::post<EventAbnormalTermination>(signalNumber);
+        // Actually handle the crash
+        handleCrash(hex::format("Received signal '{}' ({})", signalName, signalNumber), signalNumber);
 
         // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
@@ -123,12 +125,8 @@ namespace hex::crash {
                 std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
                 log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
 
-                EventManager::post<EventAbnormalTermination>(0);
-
-                // Handle crash callback
-                crashCallback(hex::format("Uncaught exception: {}", exceptionStr));
-
-                printStackTrace();
+                // Actually handle the crash
+                handleCrash(hex::format("Uncaught exception: {}", exceptionStr), 0);
 
                 // Reset signal handlers prior to calling the original handler, because it may raise a signal
                 for(auto signal : Signals) std::signal(signal, SIG_DFL);
