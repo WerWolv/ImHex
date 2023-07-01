@@ -52,6 +52,7 @@ namespace hex {
         using GetCompatibleVersionFunc = const char *(*)();
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using IsBuiltinPluginFunc      = bool (*)();
+        using SubCommandsVar           = std::vector<SubCommand>*;
 
         #if defined(OS_WINDOWS)
             HMODULE m_handle = nullptr;
@@ -69,14 +70,15 @@ namespace hex {
         GetCompatibleVersionFunc m_getCompatibleVersionFunction = nullptr;
         SetImGuiContextFunc m_setImGuiContextFunction           = nullptr;
         IsBuiltinPluginFunc m_isBuiltinPluginFunction           = nullptr;
+        SubCommandsVar m_subCommandsVar                         = nullptr;
 
         template<typename T>
-        [[nodiscard]] auto getPluginFunction(const std::string &symbol) {
-            return reinterpret_cast<T>(this->getPluginFunction(symbol));
+        [[nodiscard]] auto getPluginSymbol(const std::string &symbol) {
+            return reinterpret_cast<T>(this->getPluginSymbol(symbol));
         }
 
     private:
-        [[nodiscard]] void *getPluginFunction(const std::string &symbol);
+        [[nodiscard]] void *getPluginSymbol(const std::string &symbol);
     };
 
     class PluginManager {

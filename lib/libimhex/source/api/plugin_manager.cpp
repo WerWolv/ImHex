@@ -28,13 +28,14 @@ namespace hex {
             }
         #endif
 
-        this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
-        this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
-        this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
-        this->m_getPluginDescriptionFunction = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
-        this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
-        this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
-        this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
+        this->m_initializePluginFunction     = getPluginSymbol<InitializePluginFunc>("initializePlugin");
+        this->m_getPluginNameFunction        = getPluginSymbol<GetPluginNameFunc>("getPluginName");
+        this->m_getPluginAuthorFunction      = getPluginSymbol<GetPluginAuthorFunc>("getPluginAuthor");
+        this->m_getPluginDescriptionFunction = getPluginSymbol<GetPluginDescriptionFunc>("getPluginDescription");
+        this->m_getCompatibleVersionFunction = getPluginSymbol<GetCompatibleVersionFunc>("getCompatibleVersion");
+        this->m_setImGuiContextFunction      = getPluginSymbol<SetImGuiContextFunc>("setImGuiContext");
+        this->m_isBuiltinPluginFunction      = getPluginSymbol<IsBuiltinPluginFunc>("isBuiltinPlugin");
+        this->m_subCommandsVar               = getPluginSymbol<SubCommandsVar>("subCommands");
     }
 
     Plugin::Plugin(Plugin &&other) noexcept {
@@ -142,15 +143,14 @@ namespace hex {
     }
 
     std::vector<SubCommand> Plugin::getSubCommands() const {
-        auto addr = dlsym(this->m_handle, "subCommands");
-        if(addr==0)return { };
-        
-        auto subCommands = *reinterpret_cast<std::vector<SubCommand>*>(addr);
-        return subCommands;
+        if (this->m_subCommandsVar != nullptr)
+            return *this->m_subCommandsVar;
+        else
+            return { };
     }
 
 
-    void *Plugin::getPluginFunction(const std::string &symbol) {
+    void *Plugin::getPluginSymbol(const std::string &symbol) {
         #if defined(OS_WINDOWS)
             return reinterpret_cast<void *>(GetProcAddress(this->m_handle, symbol.c_str()));
         #else
