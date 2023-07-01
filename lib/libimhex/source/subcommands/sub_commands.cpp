@@ -44,7 +44,9 @@ namespace hex::init {
 
             if (arg == "--othercmd") {
                 // save command to run
-                subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+                if (currentSubCommand) {
+                    subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+                }
 
                 currentSubCommand = { };
                 currentSubCommandArgs = { };
@@ -65,7 +67,9 @@ namespace hex::init {
         }
 
         // save last command to run
-        subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+        if (currentSubCommand) {
+            subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+        }
 
         // run the subcommands
         for (auto& subCommandPair : subCommands) {
