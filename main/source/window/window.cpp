@@ -426,6 +426,7 @@ namespace hex {
 
             // Render main menu
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
+            ImGui::SetNextWindowScroll(ImVec2(0, 0));
             if (ImGui::BeginMainMenuBar()) {
 
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
