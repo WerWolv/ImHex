@@ -17,7 +17,7 @@ namespace hex::init {
         return { };
     }
 
-    void processArguments(const std::vector<std::string> &args){
+    void processArguments(const std::vector<std::string> &args) {
         if (args.empty()) return;
 
         std::vector<std::pair<SubCommand, std::vector<std::string>>> subCommands;
@@ -39,7 +39,7 @@ namespace hex::init {
         std::vector<std::string> currentSubCommandArgs;
 
         // compute all subcommands to run
-        while(argsIter != args.end()) {
+        while (argsIter != args.end()) {
             const std::string &arg = *argsIter;
 
             if (arg == "--othercmd") {
