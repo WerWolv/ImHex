@@ -115,29 +115,32 @@ namespace hex::crash {
             #undef HANDLE_SIGNAL
         }
 
-        originalHandler = std::set_terminate([]{
-            // reset crash handlers so we can't have a recursion if this code crashes
-            resetCrashHandlers();
+        // reset uncaught C++ exception handler
+        {
+            originalHandler = std::set_terminate([]{
+                // reset crash handlers so we can't have a recursion if this code crashes
+                resetCrashHandlers();
 
-            try {
-                std::rethrow_exception(std::current_exception());
-            } catch (std::exception &ex) {
-                std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
-                log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
+                try {
+                    std::rethrow_exception(std::current_exception());
+                } catch (std::exception &ex) {
+                    std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
+                    log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
 
-                // Actually handle the crash
-                handleCrash(hex::format("Uncaught exception: {}", exceptionStr), 0);
+                    // Actually handle the crash
+                    handleCrash(hex::format("Uncaught exception: {}", exceptionStr), 0);
 
-                // Reset signal handlers prior to calling the original handler, because it may raise a signal
-                for(auto signal : Signals) std::signal(signal, SIG_DFL);
+                    // Reset signal handlers prior to calling the original handler, because it may raise a signal
+                    for(auto signal : Signals) std::signal(signal, SIG_DFL);
 
-                #if defined(DEBUG)
-                    assert(!"Debug build, triggering breakpoint");
-                #else
-                    std::exit(100);
-                #endif
-            }
-        });
+                    #if defined(DEBUG)
+                        assert(!"Debug build, triggering breakpoint");
+                    #else
+                        std::exit(100);
+                    #endif
+                }
+            });
+        }
 
         // Save a backup project when the application crashes
         // We need to save the project no mater if it is dirty,
@@ -157,6 +160,7 @@ namespace hex::crash {
             });
         });
 
+        // change the crash callback when ImHex has finished startup
         EventManager::subscribe<EventImHexStartupFinished>([]{
             crashCallback = saveCrashFile;
         });
