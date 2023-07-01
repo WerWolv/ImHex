@@ -27,6 +27,8 @@ namespace hex::crash {
     constexpr static auto Signals = {SIGSEGV, SIGILL, SIGABRT,SIGFPE};
 
     static std::terminate_handler originalHandler;
+
+    void resetCrashHandlers();
     
     static void sendNativeMessage(const std::string& message) {
         hex::nativeErrorMessage(hex::format("ImHex crashed during its loading.\nError: {}", message));
@@ -77,8 +79,8 @@ namespace hex::crash {
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
-        // Reset the signal handler to the default handler
-        for(auto signal : Signals) std::signal(signal, SIG_DFL);
+        // reset crash handlers so we can't have a recursion if this code crashes
+        resetCrashHandlers();
 
         // Actually handle the crash
         handleCrash(hex::format("Received signal '{}' ({})", signalName, signalNumber), signalNumber);
@@ -114,8 +116,8 @@ namespace hex::crash {
         }
 
         originalHandler = std::set_terminate([]{
-            // Restore the original handler of C++ std
-            std::set_terminate(originalHandler);
+            // reset crash handlers so we can't have a recursion if this code crashes
+            resetCrashHandlers();
 
             try {
                 std::rethrow_exception(std::current_exception());
@@ -158,5 +160,11 @@ namespace hex::crash {
         EventManager::subscribe<EventImHexStartupFinished>([]{
             crashCallback = saveCrashFile;
         });
+    }
+
+    void resetCrashHandlers() {
+        std::set_terminate(originalHandler);
+
+        for(auto signal : Signals) std::signal(signal, SIG_DFL);
     }
 }
