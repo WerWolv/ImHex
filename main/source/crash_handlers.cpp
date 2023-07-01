@@ -27,6 +27,8 @@ namespace hex::crash {
     constexpr static auto Signals = {SIGSEGV, SIGILL, SIGABRT,SIGFPE};
 
     static std::terminate_handler originalHandler;
+
+    void resetCrashHandlers();
     
     static void sendNativeMessage(const std::string& message) {
         hex::nativeErrorMessage(hex::format("ImHex crashed during its loading.\nError: {}", message));
@@ -66,22 +68,22 @@ namespace hex::crash {
         }
     }
 
-    // Custom signal handler to print various information and a stacktrace when the application crashes
-    static void signalHandler(int signalNumber, const std::string &signalName) {
-        // Reset the signal handler to the default handler
-        for(auto signal : Signals) std::signal(signal, SIG_DFL);
-
-        log::fatal("Terminating with signal '{}' ({})", signalName, signalNumber);
-
-        // Trigger the crash callback
-        crashCallback(hex::format("Received signal '{}' ({})", signalName, signalNumber));
+    void handleCrash(const std::string &msg, int signalNumber) {
+        crashCallback(msg);
 
         printStackTrace();
-
+        
         // Trigger an event so that plugins can handle crashes
-        // It may affect things (like the project path),
-        // so we do this after saving the crash file
         EventManager::post<EventAbnormalTermination>(signalNumber);
+    }
+
+    // Custom signal handler to print various information and a stacktrace when the application crashes
+    static void signalHandler(int signalNumber, const std::string &signalName) {
+        // reset crash handlers so we can't have a recursion if this code crashes
+        resetCrashHandlers();
+
+        // Actually handle the crash
+        handleCrash(hex::format("Received signal '{}' ({})", signalName, signalNumber), signalNumber);
 
         // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
@@ -113,51 +115,60 @@ namespace hex::crash {
             #undef HANDLE_SIGNAL
         }
 
-        originalHandler = std::set_terminate([]{
-            try {
-                std::rethrow_exception(std::current_exception());
-            } catch (std::exception &ex) {
-                std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
-                log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
+        // reset uncaught C++ exception handler
+        {
+            originalHandler = std::set_terminate([]{
+                // reset crash handlers so we can't have a recursion if this code crashes
+                resetCrashHandlers();
 
-                EventManager::post<EventAbnormalTermination>(0);
+                try {
+                    std::rethrow_exception(std::current_exception());
+                } catch (std::exception &ex) {
+                    std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
+                    log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
 
-                // Handle crash callback
-                crashCallback(hex::format("Uncaught exception: {}", exceptionStr));
+                    // Actually handle the crash
+                    handleCrash(hex::format("Uncaught exception: {}", exceptionStr), 0);
 
-                printStackTrace();
+                    // Reset signal handlers prior to calling the original handler, because it may raise a signal
+                    for (auto signal : Signals) std::signal(signal, SIG_DFL);
 
-                // Reset signal handlers prior to calling the original handler, because it may raise a signal
-                for(auto signal : Signals) std::signal(signal, SIG_DFL);
-
-                // Restore the original handler of C++ std
-                std::set_terminate(originalHandler);
-
-                #if defined(DEBUG)
-                    assert(!"Debug build, triggering breakpoint");
-                #else
-                    std::exit(100);
-                #endif
-            }
-        });
+                    #if defined(DEBUG)
+                        assert(!"Debug build, triggering breakpoint");
+                    #else
+                        std::exit(100);
+                    #endif
+                }
+            });
+        }
 
         // Save a backup project when the application crashes
         // We need to save the project no mater if it is dirty,
         // because this save is responsible for telling us which files
         // were opened in case there wasn't a project
-        EventManager::subscribe<EventAbnormalTermination>([](int) {
-            auto imguiSettingsPath = hex::getImGuiSettingsPath();
-            if (!imguiSettingsPath.empty())
-                ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
+        // Only do it when ImHex has finished its loading
+        EventManager::subscribe<EventImHexStartupFinished>([] {
+            EventManager::subscribe<EventAbnormalTermination>([](int) {
+                auto imguiSettingsPath = hex::getImGuiSettingsPath();
+                if (!imguiSettingsPath.empty())
+                    ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
 
-            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (ProjectFile::store(path / CrashBackupFileName))
-                    break;
-            }
+                for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    if (ProjectFile::store(path / CrashBackupFileName, false))
+                        break;
+                }
+            });
         });
 
+        // change the crash callback when ImHex has finished startup
         EventManager::subscribe<EventImHexStartupFinished>([]{
             crashCallback = saveCrashFile;
         });
+    }
+
+    void resetCrashHandlers() {
+        std::set_terminate(originalHandler);
+
+        for(auto signal : Signals) std::signal(signal, SIG_DFL);
     }
 }

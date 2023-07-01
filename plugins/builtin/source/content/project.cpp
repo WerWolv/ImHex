@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
         return true;
     }
     
-    bool store(std::optional<std::fs::path> filePath = std::nullopt) {
+    bool store(std::optional<std::fs::path> filePath = std::nullopt, bool updateLocation = true) {
         auto originalPath = ProjectFile::getPath();
 
         if (!filePath.has_value())
@@ -155,7 +155,11 @@ namespace hex::plugin::builtin {
         }
 
         ImHexApi::Provider::resetDirty();
-        resetPath.release();
+
+        // if saveLocation is false, reset the project path (do not release the lock)
+        if (updateLocation) {
+            resetPath.release();
+        }
 
         return result;
     }
