@@ -143,15 +143,18 @@ namespace hex::crash {
         // We need to save the project no mater if it is dirty,
         // because this save is responsible for telling us which files
         // were opened in case there wasn't a project
-        EventManager::subscribe<EventAbnormalTermination>([](int) {
-            auto imguiSettingsPath = hex::getImGuiSettingsPath();
-            if (!imguiSettingsPath.empty())
-                ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
+        // Only do it when ImHex has finished its loading
+        EventManager::subscribe<EventImHexStartupFinished>([] {
+            EventManager::subscribe<EventAbnormalTermination>([](int) {
+                auto imguiSettingsPath = hex::getImGuiSettingsPath();
+                if (!imguiSettingsPath.empty())
+                    ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
 
-            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (ProjectFile::store(path / CrashBackupFileName))
-                    break;
-            }
+                for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                    if (ProjectFile::store(path / CrashBackupFileName))
+                        break;
+                }
+            });
         });
 
         EventManager::subscribe<EventImHexStartupFinished>([]{
