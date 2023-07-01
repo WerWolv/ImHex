@@ -5,36 +5,71 @@
 #include <hex/helpers/logger.hpp>
 
 namespace hex::init {
-    void processArguments(std::vector<std::string> args){
-        if (args.empty()) return;
 
-        std::optional<SubCommand> selectedSubCommand;
-
-        // default subcommand if no subcommand has been specified
-        std::optional<SubCommand> openSubCommand;
-
+    std::optional<SubCommand> findSubCommand(const std::string &name) {
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                if (hex::format("--{}", subCommand.commandKey) == args[0]) {
-                    if (selectedSubCommand) {
-                        log::error("Multiple subcommands entered: {} and {}", selectedSubCommand->commandKey, args[0]);
-                        exit(EXIT_FAILURE);
-                    } else {
-                        selectedSubCommand = subCommand;
-                    }
-                } else if (subCommand.commandKey == "open") {
-                    openSubCommand = subCommand;
+                if (hex::format("--{}", subCommand.commandKey) == name) {
+                    return subCommand;
                 }
             }
         }
+        return { };
+    }
 
+    void processArguments(const std::vector<std::string> &args){
+        if (args.empty()) return;
 
-        if (selectedSubCommand) {
-            args.erase(args.begin()); // remove subcommand argument
-            selectedSubCommand->callback(args);
+        std::vector<std::pair<SubCommand, std::vector<std::string>>> subCommands;
+
+        auto argsIter = args.begin();
+
+        // get subcommand associated with the first argument
+        std::optional<SubCommand> currentSubCommand = findSubCommand(*argsIter);
+
+        if (currentSubCommand) {
+            argsIter++;
+            // if it is a valid subcommand, remove it from the argument list
         } else {
-            openSubCommand->callback(args);
+            // if no (valid) subcommand was provided, the default one is --open
+            currentSubCommand = findSubCommand("open");
         }
-        
+
+        // arguments of the current subcommand
+        std::vector<std::string> currentSubCommandArgs;
+
+        // compute all subcommands to run
+        while(argsIter != args.end()) {
+            const std::string &arg = *argsIter;
+
+            if (arg == "--othercmd") {
+                // save command to run
+                subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+
+                currentSubCommand = { };
+                currentSubCommandArgs = { };
+
+            } else if (currentSubCommand) {
+                // add current argument to the current command
+                currentSubCommandArgs.push_back(arg);
+            } else { 
+                // get next subcommand from current argument
+                currentSubCommand = findSubCommand(arg);
+                if (!currentSubCommand) {
+                    log::error("No subcommand named '{}' found", arg);
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            argsIter++;
+        }
+
+        // save last command to run
+        subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+
+        // run the subcommands
+        for (auto& subCommandPair : subCommands) {
+            subCommandPair.first.callback(subCommandPair.second);
+        }
     }
 }

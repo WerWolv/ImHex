@@ -4,5 +4,5 @@ namespace hex::init {
      * In some cases, the subcommand might exit the program (e.g. --help)
      * and so this function might not return
      */
-    void processArguments(std::vector<std::string> args);
+    void processArguments(const std::vector<std::string> &args);
 }
