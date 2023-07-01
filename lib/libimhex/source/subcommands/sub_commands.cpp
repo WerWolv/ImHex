@@ -6,7 +6,7 @@
 
 namespace hex::init {
     void processArguments(std::vector<std::string> args){
-        if (args.size() == 0) return;
+        if (args.empty()) return;
 
         std::optional<SubCommand> selectedSubCommand;
 
