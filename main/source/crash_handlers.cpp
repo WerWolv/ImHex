@@ -72,8 +72,6 @@ namespace hex::crash {
         printStackTrace();
         
         // Trigger an event so that plugins can handle crashes
-        // It may affect things (like the project path),
-        // so we do this after saving the crash file
         EventManager::post<EventAbnormalTermination>(signalNumber);
     }
 
@@ -151,7 +149,7 @@ namespace hex::crash {
                     ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
 
                 for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                    if (ProjectFile::store(path / CrashBackupFileName))
+                    if (ProjectFile::store(path / CrashBackupFileName, false))
                         break;
                 }
             });

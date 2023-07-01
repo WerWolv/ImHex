@@ -47,7 +47,7 @@ namespace hex {
          */
         static void setProjectFunctions(
             const std::function<bool(const std::fs::path&)> &loadFun,
-            const std::function<bool(std::optional<std::fs::path>)> &storeFun
+            const std::function<bool(std::optional<std::fs::path>, bool)> &storeFun
         );
 
         /**
@@ -63,10 +63,11 @@ namespace hex {
          * @brief Store a project file
          *
          * @param filePath Path to the project file
+         * @param updateLocation update the project location so subssequent saves will save there
          * @return true if the project file was stored successfully
          * @return false if the project file was not stored successfully
          */
-        static bool store(std::optional<std::fs::path> filePath = std::nullopt);
+        static bool store(std::optional<std::fs::path> filePath = std::nullopt, bool updateLocation = true);
 
         /**
          * @brief Check if a project file is currently loaded
@@ -131,7 +132,7 @@ namespace hex {
         ProjectFile() = default;
 
         static std::function<bool(const std::fs::path&)> s_loadProjectFunction;
-        static std::function<bool(std::optional<std::fs::path>)> s_storeProjectFunction;
+        static std::function<bool(std::optional<std::fs::path>, bool)> s_storeProjectFunction;
 
         static std::fs::path s_currProjectPath;
         static std::vector<Handler> s_handlers;

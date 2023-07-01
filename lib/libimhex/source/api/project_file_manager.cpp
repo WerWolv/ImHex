@@ -17,11 +17,11 @@ namespace hex {
     std::fs::path ProjectFile::s_currProjectPath;
 
     std::function<bool(const std::fs::path&)> ProjectFile::s_loadProjectFunction;
-    std::function<bool(std::optional<std::fs::path>)> ProjectFile::s_storeProjectFunction;
+    std::function<bool(std::optional<std::fs::path>, bool)> ProjectFile::s_storeProjectFunction;
 
     void ProjectFile::setProjectFunctions(
             const std::function<bool(const std::fs::path&)> &loadFun,
-            const std::function<bool(std::optional<std::fs::path>)> &storeFun
+            const std::function<bool(std::optional<std::fs::path>, bool)> &storeFun
     ) {
         ProjectFile::s_loadProjectFunction = loadFun;
         ProjectFile::s_storeProjectFunction = storeFun;
@@ -31,8 +31,8 @@ namespace hex {
       return s_loadProjectFunction(filePath);
     }
 
-    bool ProjectFile::store(std::optional<std::fs::path> filePath) {
-       return s_storeProjectFunction(filePath);
+    bool ProjectFile::store(std::optional<std::fs::path> filePath, bool updateLocation) {
+       return s_storeProjectFunction(filePath, updateLocation);
     }
 
     bool ProjectFile::hasPath() {
