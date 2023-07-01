@@ -35,7 +35,7 @@ namespace hex {
         this->m_getCompatibleVersionFunction = getPluginSymbol<GetCompatibleVersionFunc>("getCompatibleVersion");
         this->m_setImGuiContextFunction      = getPluginSymbol<SetImGuiContextFunc>("setImGuiContext");
         this->m_isBuiltinPluginFunction      = getPluginSymbol<IsBuiltinPluginFunc>("isBuiltinPlugin");
-        this->m_subCommandsVar               = getPluginSymbol<SubCommandsVar>("subCommands");
+        this->m_getSubCommandsFunction       = getPluginSymbol<GetSubCommandsFunc>("getSubCommands");
     }
 
     Plugin::Plugin(Plugin &&other) noexcept {
@@ -143,8 +143,8 @@ namespace hex {
     }
 
     std::vector<SubCommand> Plugin::getSubCommands() const {
-        if (this->m_subCommandsVar != nullptr)
-            return *this->m_subCommandsVar;
+        if (this->m_getSubCommandsFunction != nullptr)
+            return this->m_getSubCommandsFunction();
         else
             return { };
     }

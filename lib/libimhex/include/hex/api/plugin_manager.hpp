@@ -52,7 +52,7 @@ namespace hex {
         using GetCompatibleVersionFunc = const char *(*)();
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using IsBuiltinPluginFunc      = bool (*)();
-        using SubCommandsVar           = std::vector<SubCommand>*;
+        using GetSubCommandsFunc       = std::vector<SubCommand>& (*)();
 
         #if defined(OS_WINDOWS)
             HMODULE m_handle = nullptr;
@@ -70,7 +70,7 @@ namespace hex {
         GetCompatibleVersionFunc m_getCompatibleVersionFunction = nullptr;
         SetImGuiContextFunc m_setImGuiContextFunction           = nullptr;
         IsBuiltinPluginFunc m_isBuiltinPluginFunction           = nullptr;
-        SubCommandsVar m_subCommandsVar                         = nullptr;
+        GetSubCommandsFunc m_getSubCommandsFunction             = nullptr;
 
         template<typename T>
         [[nodiscard]] auto getPluginSymbol(const std::string &symbol) {
