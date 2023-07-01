@@ -26,7 +26,7 @@
     extern "C" [[gnu::visibility("default")]] void initializePlugin()
 
 /**
- * This macro is used to define subcommands defined by the plugin/
+ * This macro is used to define subcommands defined by the plugin
  * A subcommand consists of a key, a description, and a callback
  * The key is what the first argument to ImHex should be, prefixed by `--`
  * For example, if the key if `help`, ImHex should be started with `--help` as its first argument to trigger the subcommand
