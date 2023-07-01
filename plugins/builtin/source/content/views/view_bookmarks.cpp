@@ -116,7 +116,7 @@ namespace hex::plugin::builtin {
                     return true;
 
                 auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                this->m_bookmarks->clear();
+                this->m_bookmarks.get(provider).clear();
                 return this->importBookmarks(provider, data);
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
