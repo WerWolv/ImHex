@@ -50,7 +50,7 @@ namespace hex::plugin::builtin {
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
     { "help", "Print help about this command", [](const std::vector<std::string>&) {
-        printf(
+        hex::print(
             "ImHex - A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.\n"
             "\n"
             "usage: imhex [subcommand] [options]\n"
@@ -59,7 +59,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
 
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                printf("\t--%s\t\t%s\n", subCommand.commandKey.c_str(), subCommand.commandDesc.c_str());
+                hex::print("\t--%s\t\t%s\n", subCommand.commandKey.c_str(), subCommand.commandDesc.c_str());
             }
         }
         exit(EXIT_SUCCESS);
