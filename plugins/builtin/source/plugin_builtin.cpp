@@ -68,6 +68,8 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
         [](const std::vector<std::string> &args) {
         bool doubleDashFound = false;
         for (auto &arg : args) {
+            
+            // Skip the first argument named `--`
             if (arg == "--" && !doubleDashFound) {
                 doubleDashFound = true;
             } else {
