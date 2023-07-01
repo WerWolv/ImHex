@@ -131,7 +131,7 @@ namespace hex::crash {
                     handleCrash(hex::format("Uncaught exception: {}", exceptionStr), 0);
 
                     // Reset signal handlers prior to calling the original handler, because it may raise a signal
-                    for(auto signal : Signals) std::signal(signal, SIG_DFL);
+                    for (auto signal : Signals) std::signal(signal, SIG_DFL);
 
                     #if defined(DEBUG)
                         assert(!"Debug build, triggering breakpoint");

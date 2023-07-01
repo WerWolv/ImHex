@@ -157,7 +157,7 @@ namespace hex::plugin::builtin {
         ImHexApi::Provider::resetDirty();
 
         // if saveLocation is false, reset the project path (do not release the lock)
-        if(updateLocation) {
+        if (updateLocation) {
             resetPath.release();
         }
 
