@@ -1179,14 +1179,11 @@ namespace hex::plugin::builtin {
             std::optional<ImColor> color;
 
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                for (const auto &pattern : runtime.getPatternsAtAddress(address)) {
-                    if (pattern->getVisibility() != pl::ptrn::Visibility::Visible)
-                        continue;
-
+                for (const auto &patternColor : runtime.getColorsAtAddress(address)) {
                     if (color.has_value())
-                        color = ImAlphaBlendColors(*color, pattern->getColor());
+                        color = ImAlphaBlendColors(*color, patternColor);
                     else
-                        color = pattern->getColor();
+                        color = patternColor;
                 }
             }
 
