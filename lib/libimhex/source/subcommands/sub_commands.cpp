@@ -6,10 +6,10 @@
 
 namespace hex::init {
 
-    std::optional<SubCommand> findSubCommand(const std::string &name) {
+    std::optional<SubCommand> findSubCommand(const std::string &arg) {
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                if (hex::format("--{}", subCommand.commandKey) == name) {
+                if (hex::format("--{}", subCommand.commandKey) == arg) {
                     return subCommand;
                 }
             }
@@ -32,7 +32,7 @@ namespace hex::init {
             // if it is a valid subcommand, remove it from the argument list
         } else {
             // if no (valid) subcommand was provided, the default one is --open
-            currentSubCommand = findSubCommand("open");
+            currentSubCommand = findSubCommand("--open");
         }
 
         // arguments of the current subcommand
