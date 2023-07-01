@@ -29,10 +29,7 @@ int main(int argc, char **argv, char **envp) {
     hex::crash::setupCrashHandlers();
     ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
 
-    std::vector<std::string> args;
-    for(int i=1;i<argc;i++){
-        args.emplace_back(argv[i]);
-    }
+    std::vector<std::string> args(argv + 1, argv + argc);
 
     initPlugins();
     init::processArguments(args);
