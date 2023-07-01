@@ -59,7 +59,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
 
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                hex::print("\t--%s\t\t%s\n", subCommand.commandKey.c_str(), subCommand.commandDesc.c_str());
+                hex::print("\t--{}\t\t{}\n", subCommand.commandKey.c_str(), subCommand.commandDesc.c_str());
             }
         }
         exit(EXIT_SUCCESS);
