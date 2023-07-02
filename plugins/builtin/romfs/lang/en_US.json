@@ -816,6 +816,8 @@
         "hex.builtin.view.information.magic_db_added": "Magic database added!",
         "hex.builtin.view.information.mime": "MIME Type:",
         "hex.builtin.view.information.name": "Data Information",
+        "hex.builtin.view.information.octet_stream_text": "Unknown",
+        "hex.builtin.view.information.octet_stream_warning": "application/octet-stream denotes an unknown data type.\n\nThis means that this data has no MIME type associated with it because it's not in a known format.",
         "hex.builtin.view.information.region": "Analyzed region",
         "hex.builtin.view.information.plain_text": "This data is most likely plain text.",
         "hex.builtin.view.information.plain_text_percentage": "Plain text percentage",

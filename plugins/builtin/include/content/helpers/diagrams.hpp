@@ -812,6 +812,10 @@ namespace hex {
 
         // Return the percentage of plain text character inside the analyzed region
         double getPlainTextCharacterPercentage() {
+            if (this->m_yBlockTypeDistributions[2].empty() || this->m_yBlockTypeDistributions[4].empty())
+                return -1.0;
+
+
             double plainTextPercentage = std::reduce(this->m_yBlockTypeDistributions[2].begin(), this->m_yBlockTypeDistributions[2].end()) / this->m_yBlockTypeDistributions[2].size();
             return plainTextPercentage + std::reduce(this->m_yBlockTypeDistributions[4].begin(), this->m_yBlockTypeDistributions[4].end()) / this->m_yBlockTypeDistributions[4].size();
         }

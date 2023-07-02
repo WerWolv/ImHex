@@ -199,14 +199,28 @@ namespace hex::plugin::builtin {
                                     ImGui::TableNextColumn();
                                     ImGui::TextUnformatted("hex.builtin.view.information.description"_lang);
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormattedWrapped("{}", this->m_dataDescription.c_str());
+
+                                    if (this->m_dataDescription == "data") {
+                                        ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataDescription);
+                                    } else {
+                                        ImGui::TextFormattedWrapped("{}", this->m_dataDescription);
+                                    }
                                 }
 
                                 if (!this->m_dataMimeType.empty()) {
                                     ImGui::TableNextColumn();
                                     ImGui::TextUnformatted("hex.builtin.view.information.mime"_lang);
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormattedWrapped("{}", this->m_dataMimeType.c_str());
+
+                                    if (this->m_dataMimeType == "application/octet-stream") {
+                                        ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataMimeType);
+                                        ImGui::SameLine();
+                                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                                        ImGui::HelpHover("hex.builtin.view.information.octet_stream_warning"_lang);
+                                        ImGui::PopStyleVar();
+                                    } else {
+                                        ImGui::TextFormatted("{}", this->m_dataMimeType);
+                                    }
                                 }
 
                                 ImGui::EndTable();
