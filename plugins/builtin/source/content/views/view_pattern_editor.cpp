@@ -480,6 +480,9 @@ namespace hex::plugin::builtin {
 
             if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                 for (auto &[id, section] : sections) {
+                    if (section.name.empty())
+                        continue;
+
                     ImGui::PushID(id);
 
                     ImGui::TableNextRow();
