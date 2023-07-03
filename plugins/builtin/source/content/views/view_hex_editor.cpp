@@ -960,7 +960,7 @@ namespace hex::plugin::builtin {
                                                     auto provider      = ImHexApi::Provider::get();
                                                     bool providerValid = ImHexApi::Provider::isValid();
 
-                                                    return providerValid && provider->isWritable();
+                                                    return providerValid && provider->isWritable() && provider->isSavable() && provider->isDirty();
                                                 });
 
         /* Save As */
@@ -971,7 +971,7 @@ namespace hex::plugin::builtin {
                                                     auto provider      = ImHexApi::Provider::get();
                                                     bool providerValid = ImHexApi::Provider::isValid();
 
-                                                    return providerValid && provider->isWritable();
+                                                    return providerValid && provider->isDumpable();
                                                 });
 
         /* Load Encoding File */

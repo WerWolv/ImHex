@@ -356,4 +356,8 @@ namespace hex::prv {
             return 0;
     }
 
+    [[nodiscard]] bool Provider::isDumpable() const {
+        return true;
+    }
+
 }

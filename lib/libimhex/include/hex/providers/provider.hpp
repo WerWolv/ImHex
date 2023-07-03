@@ -38,9 +38,28 @@ namespace hex::prv {
 
         [[nodiscard]] virtual bool isAvailable() const = 0;
         [[nodiscard]] virtual bool isReadable() const  = 0;
+
+        /**
+         * @brief Controls if the user can write data to this specific provider.
+         *   This may be false for e.g. a file opened in read-only
+         */
         [[nodiscard]] virtual bool isWritable() const  = 0;
         [[nodiscard]] virtual bool isResizable() const = 0;
+
+        /**
+         * @brief Controls whether the provider can be saved ("saved", not "saved as")
+         *   This is mainly used by providers that aren't buffered, and so don't need to be saved
+         *   This function will usually return false for providers that aren't writable, but this isn't guaranted
+         */
         [[nodiscard]] virtual bool isSavable() const   = 0;
+
+        /**
+         * @brief Controls whether we can dump data from this provider (e.g. "save as", or "export -> ..").
+         *   Typically disabled for process with sparse data, like the Process memory provider
+         *   where the virtual address space is several TiBs large.
+         *   Default implementation returns true.
+         */
+        [[nodiscard]] virtual bool isDumpable() const;
 
         /**
          * @brief Read data from this provider, applying overlays and patches

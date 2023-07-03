@@ -285,6 +285,13 @@ namespace hex::plugin::builtin {
     }
 
 
+    /**
+     * @brief returns true if there is a currently selected provider, and it is possibl to dump data from it
+     */
+    bool isProviderDumpable() {
+        auto provider = ImHexApi::Provider::get();
+        return ImHexApi::Provider::isValid() && provider->isDumpable();
+    }
 
     static void createFileMenu() {
 
@@ -368,12 +375,13 @@ namespace hex::plugin::builtin {
         }
 
         /* Export */
+        /* Only make them accessible if the current provider is dumpable */
         {
             /* Base 64 */
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.base64" }, 6000,
                                                     Shortcut::None,
                                                     exportBase64,
-                                                    ImHexApi::Provider::isValid);
+                                                    isProviderDumpable);
 
             ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, 6050);
 
@@ -381,13 +389,13 @@ namespace hex::plugin::builtin {
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.ips" }, 6100,
                                                     Shortcut::None,
                                                     exportIPSPatch,
-                                                    ImHexApi::Provider::isValid);
+                                                    isProviderDumpable);
 
             /* IPS32 */
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.ips32" }, 6150,
                                                     Shortcut::None,
                                                     exportIPS32Patch,
-                                                    ImHexApi::Provider::isValid);
+                                                    isProviderDumpable);
         }
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 10000);
