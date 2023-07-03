@@ -111,9 +111,7 @@ namespace hex::plugin::builtin::ui {
                 if (pattern.isPatternLocal()) {
                     ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
                 } else {
-                    if (pattern.getSize() > 0) {
-                        ImGui::TextFormatted("0x{0:08X}", pattern.getOffset());
-                    }
+                    ImGui::TextFormatted("0x{0:08X}", pattern.getOffset());
                 }
 
                 ImGui::TableNextColumn();
@@ -121,9 +119,7 @@ namespace hex::plugin::builtin::ui {
                 if (pattern.isPatternLocal()) {
                     ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
                 } else {
-                    if (pattern.getSize() > 0) {
-                        ImGui::TextFormatted("0x{0:08X}", pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
-                    }
+                    ImGui::TextFormatted("0x{0:08X}", pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
                 }
 
                 ImGui::TableNextColumn();
@@ -140,7 +136,7 @@ namespace hex::plugin::builtin::ui {
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
             if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
-            else if (pattern.getSize() > 0)
+            else
                 ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
 
             ImGui::TableNextColumn();
