@@ -89,6 +89,7 @@ namespace hex::plugin::builtin {
         void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static ImGui::Texture texture;
             static float scale = 1.0F;
+
             if (shouldReset) {
                 auto pattern  = arguments[0].toPattern();
 
@@ -111,6 +112,8 @@ namespace hex::plugin::builtin {
 
         void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
             static ImGui::Texture texture;
+            static float scale = 1.0F;
+
             if (shouldReset) {
                 auto pattern  = arguments[0].toPattern();
                 auto width  = arguments[1].toUnsigned();
@@ -121,7 +124,15 @@ namespace hex::plugin::builtin {
             }
 
             if (texture.isValid())
-                ImGui::Image(texture, texture.getSize());
+                ImGui::Image(texture, texture.getSize() * scale);
+
+            if (ImGui::IsWindowHovered()) {
+                auto scrollDelta = ImGui::GetIO().MouseWheel;
+                if (scrollDelta != 0.0F) {
+                    scale += scrollDelta * 0.1F;
+                    scale = std::clamp(scale, 0.1F, 10.0F);
+                }
+            }
         }
 
         void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
