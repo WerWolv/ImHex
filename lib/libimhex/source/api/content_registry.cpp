@@ -336,10 +336,21 @@ namespace hex {
             impl::getVisualizers()[name] = impl::Visualizer { parameterCount, function };
         }
 
+        void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, u32 parameterCount) {
+            log::debug("Registered new inline pattern visualizer function: {}", name);
+            impl::getInlineVisualizers()[name] = impl::Visualizer { parameterCount, function };
+        }
+
 
         namespace impl {
 
             std::map<std::string, impl::Visualizer> &getVisualizers() {
+                static std::map<std::string, impl::Visualizer> visualizers;
+
+                return visualizers;
+            }
+
+            std::map<std::string, impl::Visualizer> &getInlineVisualizers() {
                 static std::map<std::string, impl::Visualizer> visualizers;
 
                 return visualizers;

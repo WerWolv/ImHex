@@ -13,6 +13,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/pl_builtin_functions.cpp
         source/content/pl_pragmas.cpp
         source/content/pl_visualizers.cpp
+        source/content/pl_inline_visualizers.cpp
         source/content/settings_entries.cpp
         source/content/tools_entries.cpp
         source/content/data_processor_nodes.cpp

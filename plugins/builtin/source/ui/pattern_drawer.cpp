@@ -219,10 +219,8 @@ namespace hex::plugin::builtin::ui {
         ImGui::TableNextColumn();
     }
 
-    void PatternDrawer::drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset) {
+    void PatternDrawer::drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset) {
         auto visualizerName = arguments.front().toString(true);
-
-        const auto &visualizers = ContentRegistry::PatternLanguage::impl::getVisualizers();
 
         if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
             const auto &[name, visualizer] = *entry;
@@ -248,12 +246,12 @@ namespace hex::plugin::builtin::ui {
         const auto value = pattern.getFormattedValue();
 
         const auto width = ImGui::GetColumnWidth();
-        if (const auto &arguments = pattern.getAttributeArguments("hex::visualize"); !arguments.empty()) {
+        if (const auto &visualizeArgs = pattern.getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0, 0.5F));
 
             bool shouldReset = false;
-            if (ImGui::Button(hex::format("{}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
+            if (ImGui::Button(hex::format(" {}  {}", ICON_VS_EYE_WATCH, value).c_str(), ImVec2(width, ImGui::GetTextLineHeight()))) {
                 auto previousPattern = this->m_currVisualizedPattern;
 
                 this->m_currVisualizedPattern = &pattern;
@@ -270,12 +268,14 @@ namespace hex::plugin::builtin::ui {
 
             if (ImGui::BeginPopup("Visualizer")) {
                 if (this->m_currVisualizedPattern == &pattern) {
-                    drawVisualizer(arguments, pattern, dynamic_cast<pl::ptrn::IIterable&>(pattern), !this->m_visualizedPatterns.contains(&pattern) || shouldReset);
+                    drawVisualizer(ContentRegistry::PatternLanguage::impl::getVisualizers(), visualizeArgs, pattern, dynamic_cast<pl::ptrn::IIterable&>(pattern), !this->m_visualizedPatterns.contains(&pattern) || shouldReset);
                     this->m_visualizedPatterns.insert(&pattern);
                 }
 
                 ImGui::EndPopup();
             }
+        } else if (const auto &inlineVisualizeArgs = pattern.getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
+            drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, dynamic_cast<pl::ptrn::IIterable&>(pattern), true);
         } else {
             ImGui::TextFormatted("{}", value);
         }
@@ -660,20 +660,16 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "struct");
 
-            if (this->isEditingPattern(pattern)) {
-                if (pattern.getWriteFormatterFunction().empty())
-                    ImGui::TextFormatted("{}", pattern.getFormattedValue());
-                else {
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                    auto value = pattern.toString();
-                    if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                        pattern.setValue(value);
-                        this->resetEditing();
-                    }
-                    ImGui::PopItemWidth();
-                    ImGui::PopStyleVar();
+            if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                auto value = pattern.toString();
+                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    pattern.setValue(value);
+                    this->resetEditing();
                 }
+                ImGui::PopItemWidth();
+                ImGui::PopStyleVar();
             } else {
                 drawValueColumn(pattern);
             }
@@ -712,20 +708,16 @@ namespace hex::plugin::builtin::ui {
             drawSizeColumn(pattern);
             drawTypenameColumn(pattern, "union");
 
-            if (this->isEditingPattern(pattern)) {
-                if (pattern.getWriteFormatterFunction().empty())
-                    ImGui::TextFormatted("{}", pattern.getFormattedValue());
-                else {
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                    auto value = pattern.toString();
-                    if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                        pattern.setValue(value);
-                        this->resetEditing();
-                    }
-                    ImGui::PopItemWidth();
-                    ImGui::PopStyleVar();
+            if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                auto value = pattern.toString();
+                if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    pattern.setValue(value);
+                    this->resetEditing();
                 }
+                ImGui::PopItemWidth();
+                ImGui::PopStyleVar();
             } else {
                 drawValueColumn(pattern);
             }

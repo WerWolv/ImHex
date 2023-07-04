@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex/api/task.hpp>
+#include <hex/api/content_registry.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
@@ -61,7 +62,7 @@ namespace hex::plugin::builtin::ui {
         void makeSelectable(const pl::ptrn::Pattern &pattern);
 
         void drawValueColumn(pl::ptrn::Pattern& pattern);
-        void drawVisualizer(const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset);
+        void drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset);
         void drawFavoriteColumn(const pl::ptrn::Pattern& pattern);
 
         bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);

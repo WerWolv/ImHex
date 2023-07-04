@@ -258,6 +258,7 @@ namespace hex {
                 };
 
                 std::map<std::string, Visualizer> &getVisualizers();
+                std::map<std::string, Visualizer> &getInlineVisualizers();
                 std::map<std::string, pl::api::PragmaHandler> &getPragmas();
                 std::vector<impl::FunctionDefinition> &getFunctions();
 
@@ -316,6 +317,15 @@ namespace hex {
              * @param parameterCount The amount of parameters the function takes
              */
             void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, u32 parameterCount);
+
+            /**
+             * @brief Adds a new inline visualizer to the pattern language
+             * @note Inline visualizers are extensions to the [[hex::inline_visualize]] attribute, used to visualize data
+             * @param name The name of the visualizer
+             * @param func The function callback
+             * @param parameterCount The amount of parameters the function takes
+             */
+            void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, u32 parameterCount);
 
         }
 

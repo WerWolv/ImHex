@@ -15,6 +15,7 @@ namespace hex::plugin::builtin {
     void registerPatternLanguageFunctions();
     void registerPatternLanguagePragmas();
     void registerPatternLanguageVisualizers();
+    void registerPatternLanguageInlineVisualizers();
     void registerCommandPaletteCommands();
     void registerSettings();
     void loadSettings();
@@ -57,6 +58,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerPatternLanguageFunctions();
     registerPatternLanguagePragmas();
     registerPatternLanguageVisualizers();
+    registerPatternLanguageInlineVisualizers();
     registerCommandPaletteCommands();
     registerSettings();
     loadSettings();

@@ -367,6 +367,7 @@ namespace hex::init {
         ContentRegistry::PatternLanguage::impl::getFunctions().clear();
         ContentRegistry::PatternLanguage::impl::getPragmas().clear();
         ContentRegistry::PatternLanguage::impl::getVisualizers().clear();
+        ContentRegistry::PatternLanguage::impl::getInlineVisualizers().clear();
 
         ContentRegistry::Views::impl::getEntries().clear();
         impl::PopupBase::getOpenPopups().clear();
