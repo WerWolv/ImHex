@@ -15,14 +15,7 @@ namespace hex::plugin::builtin {
     constexpr static auto MetadataHeaderMagic = "HEX";
     constexpr static auto MetadataPath = "IMHEX_METADATA";
 
-    bool load(const std::fs::path &filePath) { 
-        auto originalPath = ProjectFile::getPath();
-
-        ProjectFile::setPath(filePath);
-        auto resetPath = SCOPE_GUARD {
-            ProjectFile::setPath(originalPath);
-        };
-
+    bool load(const std::fs::path &filePath) {
         if (!wolv::io::fs::exists(filePath) || !wolv::io::fs::isRegularFile(filePath)) {
             showError(hex::format("hex.builtin.popup.error.project.load"_lang,
                 hex::format("hex.builtin.popup.error.project.load.file_not_found"_lang,
@@ -62,6 +55,12 @@ namespace hex::plugin::builtin {
         for (const auto &provider : providers) {
             ImHexApi::Provider::remove(provider);
         }
+
+        auto originalPath = ProjectFile::getPath();
+        ProjectFile::setPath(filePath);
+        auto resetPath = SCOPE_GUARD {
+            ProjectFile::setPath(originalPath);
+        };
 
         for (const auto &handler : ProjectFile::getHandlers()) {
             bool result = true;
