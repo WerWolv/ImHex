@@ -12,7 +12,7 @@ namespace hex {
     std::map<std::string, nlohmann::json> ThemeManager::s_themes;
     std::map<std::string, ThemeManager::ThemeHandler> ThemeManager::s_themeHandlers;
     std::map<std::string, ThemeManager::StyleHandler> ThemeManager::s_styleHandlers;
-    std::string ThemeManager::s_imagePostfix;
+    std::string ThemeManager::s_imageTheme;
     std::string ThemeManager::s_currTheme;
 
     void ThemeManager::addThemeHandler(const std::string &name, const ColorMap &colorMap, const std::function<ImColor(u32)> &getFunction, const std::function<void(u32, ImColor)> &setFunction) {
@@ -62,7 +62,7 @@ namespace hex {
     nlohmann::json ThemeManager::exportCurrentTheme(const std::string &name) {
         nlohmann::json theme = {
                 { "name", name },
-                { "image_postfix", s_imagePostfix },
+                { "image_theme", s_imageTheme },
                 { "colors", {} },
                 { "styles", {} },
                 { "base", s_currTheme }
@@ -174,11 +174,12 @@ namespace hex {
             }
         }
 
-        if (theme.contains("image_postfix")) {
-            if (theme["image_postfix"].is_string()) {
-                s_imagePostfix = theme["image_postfix"].get<std::string>();
+        if (theme.contains("image_theme")) {
+            if (theme["image_theme"].is_string()) {
+                s_imageTheme = theme["image_theme"].get<std::string>();
             } else {
-                hex::log::error("Theme '{}' has invalid image postfix!", name);
+                hex::log::error("Theme '{}' has invalid image theme!", name);
+                s_imageTheme = "dark";
             }
         }
 
@@ -187,8 +188,8 @@ namespace hex {
         EventManager::post<EventThemeChanged>();
     }
 
-    const std::string &ThemeManager::getThemeImagePostfix() {
-        return s_imagePostfix;
+    const std::string &ThemeManager::getImageTheme() {
+        return s_imageTheme;
     }
 
     std::vector<std::string> ThemeManager::getThemeNames() {
@@ -203,7 +204,7 @@ namespace hex {
         ThemeManager::s_themes.clear();
         ThemeManager::s_styleHandlers.clear();
         ThemeManager::s_themeHandlers.clear();
-        ThemeManager::s_imagePostfix.clear();
+        ThemeManager::s_imageTheme.clear();
         ThemeManager::s_currTheme.clear();
     }
 

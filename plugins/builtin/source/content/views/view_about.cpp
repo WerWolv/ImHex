@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             if (!this->m_logoTexture.isValid()) {
-                auto logo           = romfs::get("logo.png");
+                auto logo           = romfs::get("assets/common/logo.png");
                 this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logo.data()), logo.size());
             }
 
@@ -190,7 +190,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAbout::drawLicensePage() {
-        ImGui::TextFormattedWrapped("{}", romfs::get("LICENSE").string());
+        ImGui::TextFormattedWrapped("{}", romfs::get("licenses/LICENSE").string());
     }
 
     void ViewAbout::drawAboutPopup() {

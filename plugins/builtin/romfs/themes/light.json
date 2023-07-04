@@ -153,7 +153,7 @@
             "string": "#A02020FF"
         }
     },
-    "image_postfix": "_light",
+    "image_theme": "light",
     "name": "Light",
     "styles": {
         "imgui": {

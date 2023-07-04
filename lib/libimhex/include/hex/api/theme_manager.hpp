@@ -58,7 +58,7 @@ namespace hex {
 
 
         static std::vector<std::string> getThemeNames();
-        static const std::string &getThemeImagePostfix();
+        static const std::string &getImageTheme();
 
         static std::optional<ImColor> parseColorString(const std::string &colorString);
 
@@ -88,7 +88,7 @@ namespace hex {
         static std::map<std::string, nlohmann::json> s_themes;
         static std::map<std::string, ThemeHandler> s_themeHandlers;
         static std::map<std::string, StyleHandler> s_styleHandlers;
-        static std::string s_imagePostfix;
+        static std::string s_imageTheme;
         static std::string s_currTheme;
     };
 

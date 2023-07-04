@@ -421,8 +421,8 @@ namespace hex::plugin::builtin {
             };
 
             ThemeManager::changeTheme(theme);
-            s_bannerTexture = changeTexture(hex::format("banner{}.png", ThemeManager::getThemeImagePostfix()));
-            s_backdropTexture = changeTexture(hex::format("backdrop{}.png", ThemeManager::getThemeImagePostfix()));
+            s_bannerTexture = changeTexture(hex::format("assets/{}/banner.png", ThemeManager::getImageTheme()));
+            s_backdropTexture = changeTexture(hex::format("assets/{}/backdrop.png", ThemeManager::getImageTheme()));
 
             if (!s_bannerTexture.isValid()) {
                 log::error("Failed to load banner texture!");
