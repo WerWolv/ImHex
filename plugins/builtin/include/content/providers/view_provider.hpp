@@ -38,7 +38,13 @@ namespace hex::plugin::builtin {
                 return this->m_provider->isWritable();
         }
         [[nodiscard]] bool isResizable() const override { return true; }
-        [[nodiscard]] bool isSavable() const override { return true; }
+
+        [[nodiscard]] bool isSavable() const override { 
+            if (this->m_provider == nullptr)
+                return false;
+            else
+                return this->m_provider->isSavable();
+        }
 
         void save() override {
             this->m_provider->save();
