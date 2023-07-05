@@ -21,6 +21,7 @@ set(LIBIMHEX_SOURCES
         source/data_processor/node.cpp
 
         source/helpers/utils.cpp
+        source/helpers/utils_linux.cpp
         source/helpers/fs.cpp
         source/helpers/magic.cpp
         source/helpers/crypto.cpp
