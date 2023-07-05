@@ -217,6 +217,11 @@ namespace hex::plugin::builtin {
                         if (this->m_breakpointHit) {
                             if (ImGui::IconButton(ICON_VS_DEBUG_CONTINUE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow)))
                                 this->m_breakpointHit = false;
+                            ImGui::SameLine();
+                            if (ImGui::IconButton(ICON_VS_DEBUG_STEP_INTO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow))) {
+                                runtime.getInternals().evaluator->pauseNextLine();
+                                this->m_breakpointHit = false;
+                            }
                         } else {
                             if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
                                 runtime.abort();
@@ -605,10 +610,12 @@ namespace hex::plugin::builtin {
                 }
 
                 if (this->m_resetDebuggerVariables) {
+                    auto pauseLine = evaluator->getPauseLine();
+
                     this->m_debuggerDrawer->reset();
                     this->m_resetDebuggerVariables = false;
+                    this->m_textEditor.SetCursorPosition(TextEditor::Coordinates(pauseLine.value_or(0) - 1, 0));
 
-                    auto pauseLine = evaluator->getPauseLine();
                     if (pauseLine.has_value())
                         this->m_textEditor.SetCursorPosition({ int(pauseLine.value() - 1), 0 });
                 }
