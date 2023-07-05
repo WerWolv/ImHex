@@ -67,12 +67,12 @@ namespace hex::plugin::builtin {
         this->m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
             auto provider = ImHexApi::Provider::get();
 
-            if ((this->m_inputChunkSize <= 0)
-             || (this->m_analyzedRegion.getStartAddress() >= this->m_analyzedRegion.getEndAddress())
-             || (this->m_analyzedRegion.getEndAddress() > provider->getActualSize())) {
-                // Invalid parameters, set default one
-                this->m_inputChunkSize    = 256;
+            if ((this->m_analyzedRegion.getStartAddress() >= this->m_analyzedRegion.getEndAddress()) || (this->m_analyzedRegion.getEndAddress() > provider->getActualSize())) {
                 this->m_analyzedRegion = { provider->getBaseAddress(), provider->getActualSize() };
+            }
+
+            if (this->m_inputChunkSize <= 0) {
+                this->m_inputChunkSize = 256;
             }
 
             task.setMaxValue(this->m_analyzedRegion.getSize());
