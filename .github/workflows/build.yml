@@ -276,6 +276,7 @@ jobs:
       # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
+          git config --global --add safe.directory '*'
           echo COMMIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
           echo COMMIT_SHA_LONG=$(git rev-parse HEAD) >> $GITHUB_ENV
           echo COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $GITHUB_ENV
@@ -302,12 +303,12 @@ jobs:
         run: |
           cp -r build/DEBIAN build/DebDir
           dpkg-deb -Zgzip --build build/DebDir
-          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-22.04-x86_64.deb
+          mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
 
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v3
         with:
-          name: Ubuntu 22.04 DEB x86_64
+          name: Ubuntu ${{ matrix.release_num }} DEB x86_64
           path: '*.deb'
 
   # AppImage build
