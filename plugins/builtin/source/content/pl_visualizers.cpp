@@ -21,6 +21,7 @@
 #include <romfs/romfs.hpp>
 
 #include <numeric>
+#include <numbers>
 
 #include <content/helpers/diagrams.hpp>
 #include <ui/hex_editor.hpp>
@@ -615,6 +616,104 @@ namespace hex::plugin::builtin {
             }
         }
 
+        void drawTimestampVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments) {
+            time_t timestamp = arguments[0].toUnsigned();
+            auto tm = fmt::gmtime(timestamp);
+            auto date = std::chrono::year_month_day(std::chrono::year(tm.tm_year + 1900), std::chrono::month(tm.tm_mon + 1), std::chrono::day(tm.tm_mday));
+
+            auto lastMonthDay = std::chrono::year_month_day_last(date.year(), date.month() / std::chrono::last);
+            auto firstWeekDay = std::chrono::weekday(std::chrono::year_month_day(date.year(), date.month(), std::chrono::day(1)));
+
+
+            // Draw calendar
+            if (ImGui::BeginTable("##month_table", 2)) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                // Draw centered month name and year
+                ImGui::PushStyleColor(ImGuiCol_Button, 0);
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0);
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0);
+                ImGui::Button(hex::format("{:%B %Y}", tm).c_str(), ImVec2(ImGui::GetColumnWidth(), 0));
+                ImGui::PopStyleColor(3);
+
+                if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders, scaled(ImVec2(160, 120)))) {
+                    constexpr static auto ColumnFlags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide;
+                    ImGui::TableSetupColumn("M", ColumnFlags);
+                    ImGui::TableSetupColumn("T", ColumnFlags);
+                    ImGui::TableSetupColumn("W", ColumnFlags);
+                    ImGui::TableSetupColumn("T", ColumnFlags);
+                    ImGui::TableSetupColumn("F", ColumnFlags);
+                    ImGui::TableSetupColumn("S", ColumnFlags);
+                    ImGui::TableSetupColumn("S", ColumnFlags);
+
+                    ImGui::TableHeadersRow();
+
+                    ImGui::TableNextRow();
+
+                    // Skip days before the first day of the month
+                    for (u8 i = 0; i < firstWeekDay.c_encoding() - 1; ++i)
+                        ImGui::TableNextColumn();
+
+                    // Draw days
+                    for (u8 i = 1; i <= u32(lastMonthDay.day()); ++i) {
+                        ImGui::TableNextColumn();
+                        ImGui::TextFormatted("{:02}", i);
+
+                        if (std::chrono::day(i) == date.day())
+                            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+
+                        if (std::chrono::weekday(std::chrono::year_month_day(date.year(), date.month(), std::chrono::day(i))) == std::chrono::Sunday)
+                            ImGui::TableNextRow();
+                    }
+
+                    ImGui::EndTable();
+                }
+
+                ImGui::TableNextColumn();
+
+                // Draw centered digital hour, minute and seconds
+                ImGui::PushStyleColor(ImGuiCol_Button, 0);
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0);
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0);
+                ImGui::Button(hex::format("{:%H:%M:%S}", tm).c_str(), ImVec2(ImGui::GetColumnWidth(), 0));
+                ImGui::PopStyleColor(3);
+
+                // Draw analog clock
+                const auto size = scaled(ImVec2(120, 120));
+                if (ImGui::BeginChild("##clock", size)) {
+                    auto drawList = ImGui::GetWindowDrawList();
+                    const auto center = ImGui::GetWindowPos() + size / 2;
+
+                    // Draw clock face
+                    drawList->AddCircle(center, size.x / 2, ImGui::GetColorU32(ImGuiCol_TextDisabled), 0);
+
+                    auto sectionPos = [](float i) {
+                        return ImVec2(std::sin(-i * 30.0F * std::numbers::pi / 180.0F + std::numbers::pi / 2), std::cos(-i * 30.0F * std::numbers::pi / 180.0F + std::numbers::pi / 2));
+                    };
+
+                    // Draw clock sections and numbers
+                    for (u8 i = 0; i < 12; ++i) {
+                        auto text = hex::format("{}", (((i + 2) % 12) + 1));
+                        drawList->AddLine(center + sectionPos(i) * size / 2.2, center + sectionPos(i) * size / 2, ImGui::GetColorU32(ImGuiCol_TextDisabled), 1_scaled);
+                        drawList->AddText(center + sectionPos(i) * size / 3 - ImGui::CalcTextSize(text.c_str()) / 2, ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
+                    }
+
+                    // Draw hour hand
+                    drawList->AddLine(center, center + sectionPos((tm.tm_hour + 9) % 12 + float(tm.tm_min) / 60.0) * size / 3.5, ImGui::GetColorU32(ImGuiCol_TextDisabled), 3_scaled);
+
+                    // Draw minute hand
+                    drawList->AddLine(center, center + sectionPos((float(tm.tm_min) / 5.0F) - 3)  * size / 2.5, ImGui::GetColorU32(ImGuiCol_TextDisabled), 3_scaled);
+
+                    // Draw second hand
+                    drawList->AddLine(center, center + sectionPos((float(tm.tm_sec) / 5.0F) - 3)  * size / 2.5, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed), 2_scaled);
+                }
+                ImGui::EndChild();
+
+                ImGui::EndTable();
+            }
+        }
+
     }
 
     void registerPatternLanguageVisualizers() {
@@ -628,6 +727,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::PatternLanguage::addVisualizer("chunk_entropy", drawChunkBasedEntropyVisualizer, 2);
         ContentRegistry::PatternLanguage::addVisualizer("hex_viewer", drawHexVisualizer, 1);
         ContentRegistry::PatternLanguage::addVisualizer("coordinates", drawCoordinateVisualizer, 2);
+        ContentRegistry::PatternLanguage::addVisualizer("timestamp", drawTimestampVisualizer, 1);
     }
 
 }
