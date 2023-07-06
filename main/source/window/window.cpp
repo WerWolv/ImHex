@@ -166,29 +166,42 @@ namespace hex {
                 // If no events have been received in a while, lower the frame rate
                 {
                     // If the mouse is down, the mouse is moving or a popup is open, we don't want to lower the frame rate
-                    bool frameRateUnlocked =
-                            ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ||
-                            TaskManager::getRunningTaskCount() > 0 ||
-                            this->m_buttonDown ||
-                            this->m_hadEvent ||
-                            !this->m_pressedKeys.empty();
-
-                    // Calculate the time until the next frame
-                    const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
+                    if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ||
+                        TaskManager::getRunningTaskCount() > 0 ||
+                        this->m_buttonDown ||
+                        this->m_hadEvent ||
+                        !this->m_pressedKeys.empty())
+                    {
+                        this->m_frameRateTemporarilyUnlocked = true;
+                    }
 
                     // If the frame rate has been unlocked for 5 seconds, lock it again
-                    if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
+                    if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked) {
                         this->m_frameRateTemporarilyUnlocked = false;
+                        this->m_frameRateUnlockTime = this->m_lastFrameTime;
                     }
 
                     // If the frame rate is locked, wait for events with a timeout
-                    if (frameRateUnlocked || this->m_frameRateTemporarilyUnlocked) {
-                        if (!this->m_frameRateTemporarilyUnlocked) {
-                            this->m_frameRateTemporarilyUnlocked = true;
-                            this->m_frameRateUnlockTime = this->m_lastFrameTime;
-                        }
+                    const auto targetFps = ImHexApi::System::getTargetFPS();
+                    if (targetFps >= 200) {
+                        // Frame rate is unlocked
+                    } else if (targetFps < 15) {
+                        // Limit frame rate to monitor refresh rate
+                        glfwSwapInterval(1);
+                    } else if (this->m_frameRateTemporarilyUnlocked) {
+                        // Handle regular frame rate when it was temporarily unlocked
+                        // Limit the frame rate to the target frame rate
+
+                        const double timeout = std::max(0.0, (1.0 / targetFps) - (glfwGetTime() - this->m_lastFrameTime));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(u32(timeout * 1000)));
+                        glfwSwapInterval(0);
                     } else {
-                        glfwWaitEventsTimeout(timeout);
+                        // Handle frame rate when there's no interaction with the window
+                        // Limit the frame rate to ~5 FPS
+
+                        const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
+                        std::this_thread::sleep_for(std::chrono::milliseconds(u32(timeout * 1000)));
+                        glfwSwapInterval(0);
                     }
 
                     this->m_hadEvent = false;
@@ -199,24 +212,6 @@ namespace hex {
             this->frameBegin();
             this->frame();
             this->frameEnd();
-
-            glfwSwapInterval(0);
-
-            // Limit frame rate
-            // If the target FPS are below 15, use the monitor refresh rate, if it's above 200, don't limit the frame rate
-            const auto targetFPS = ImHexApi::System::getTargetFPS();
-            if (targetFPS < 15) {
-                glfwSwapInterval(1);
-            } else if (targetFPS > 200) {
-                glfwSwapInterval(0);
-            } else {
-                glfwSwapInterval(0);
-                const auto frameTime = glfwGetTime() - this->m_lastFrameTime;
-                const auto targetFrameTime = 1.0 / targetFPS;
-                if (frameTime < targetFrameTime) {
-                    glfwWaitEventsTimeout(targetFrameTime - frameTime);
-                }
-            }
         }
     }
 
