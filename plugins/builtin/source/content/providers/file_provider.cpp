@@ -115,6 +115,12 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::remove(u64 offset, size_t size) {
+        if (offset > this->getActualSize() || size == 0)
+            return;
+
+        if ((offset + size) > this->getActualSize())
+            size = this->getActualSize() - offset;
+
         auto oldSize = this->getActualSize();
 
         std::vector<u8> buffer(0x1000);
