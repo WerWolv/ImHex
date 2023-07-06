@@ -165,6 +165,18 @@ namespace ImGui {
         ImGui::PopTextWrapPos();
     }
 
+    inline void TextFormattedCenteredHorizontal(const std::string &fmt, auto &&...args) {
+        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+        auto availableSpace = ImGui::GetContentRegionAvail();
+        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
+
+        ImGui::SetCursorPosX(((availableSpace - textSize) / 2.0F).x);
+
+        ImGui::PushTextWrapPos(availableSpace.x * 0.75F);
+        ImGui::TextFormattedWrapped("{}", text);
+        ImGui::PopTextWrapPos();
+    }
+
     bool InputText(const char* label, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputTextIcon(const char* label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputText(const char *label, std::u8string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);

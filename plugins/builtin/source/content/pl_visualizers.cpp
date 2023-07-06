@@ -546,7 +546,8 @@ namespace hex::plugin::builtin {
             ImGui::Image(mapTexture, mapSize);
 
             // Draw Longitude / Latitude text below image
-            ImGui::TextFormatted("{}: {:.0f}° {:.0f}' {:.4f}\" {}  |  {}: {:.0f}° {:.0f}' {:.4f}\" {}",
+            ImGui::PushTextWrapPos(startPos.x + mapSize.x);
+            ImGui::TextFormattedWrapped("{}: {:.0f}° {:.0f}' {:.4f}\" {}  |  {}: {:.0f}° {:.0f}' {:.4f}\" {}",
                                  "hex.builtin.pl_visualizer.coordinates.latitude"_lang,
                                  std::floor(std::abs(latitude)),
                                  std::floor(std::abs(latitude - std::floor(latitude)) * 60),
@@ -558,6 +559,7 @@ namespace hex::plugin::builtin {
                                  (std::abs(longitude - std::floor(longitude)) * 60 - std::floor(std::abs(longitude - std::floor(longitude)) * 60)) * 60,
                                  longitude >= 0 ? "E" : "W"
                                  );
+            ImGui::PopTextWrapPos();
 
             if (addressTask.isRunning()) {
                 ImGui::TextSpinner("hex.builtin.pl_visualizer.coordinates.querying"_lang);
@@ -624,6 +626,7 @@ namespace hex::plugin::builtin {
             auto lastMonthDay = std::chrono::year_month_day_last(date.year(), date.month() / std::chrono::last);
             auto firstWeekDay = std::chrono::weekday(std::chrono::year_month_day(date.year(), date.month(), std::chrono::day(1)));
 
+            const auto scale = 1_scaled * (ImHexApi::System::getFontSize() / ImHexApi::System::DefaultFontSize);
 
             // Draw calendar
             if (ImGui::BeginTable("##month_table", 2)) {
@@ -631,13 +634,9 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
 
                 // Draw centered month name and year
-                ImGui::PushStyleColor(ImGuiCol_Button, 0);
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0);
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0);
-                ImGui::Button(hex::format("{:%B %Y}", tm).c_str(), ImVec2(ImGui::GetColumnWidth(), 0));
-                ImGui::PopStyleColor(3);
+                ImGui::TextFormattedCenteredHorizontal("{:%B %Y}", tm);
 
-                if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders, scaled(ImVec2(160, 120)))) {
+                if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_NoHostExtendX, ImVec2(160, 120) * scale)) {
                     constexpr static auto ColumnFlags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide;
                     ImGui::TableSetupColumn("M", ColumnFlags);
                     ImGui::TableSetupColumn("T", ColumnFlags);
@@ -672,18 +671,13 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
 
-                // Draw centered digital hour, minute and seconds
-                ImGui::PushStyleColor(ImGuiCol_Button, 0);
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0);
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0);
-                ImGui::Button(hex::format("{:%H:%M:%S}", tm).c_str(), ImVec2(ImGui::GetColumnWidth(), 0));
-                ImGui::PopStyleColor(3);
-
                 // Draw analog clock
-                const auto size = scaled(ImVec2(120, 120));
-                if (ImGui::BeginChild("##clock", size)) {
+                const auto size = ImVec2(120, 120) * scale;
+                if (ImGui::BeginChild("##clock", size + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()))) {
+                    // Draw centered digital hour, minute and seconds
+                    ImGui::TextFormattedCenteredHorizontal("{:%H:%M:%S}", tm);
                     auto drawList = ImGui::GetWindowDrawList();
-                    const auto center = ImGui::GetWindowPos() + size / 2;
+                    const auto center = ImGui::GetWindowPos() + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()) + size / 2;
 
                     // Draw clock face
                     drawList->AddCircle(center, size.x / 2, ImGui::GetColorU32(ImGuiCol_TextDisabled), 0);
