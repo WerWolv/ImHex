@@ -824,34 +824,7 @@ static void ImGui_ImplGlfw_UpdateMouseCursor()
             // FIXME-PLATFORM: Unfocused windows seems to fail changing the mouse cursor with GLFW 3.2, but 3.3 works here.
 
             // IMHEX PATCH BEGIN
-            #if defined(_WIN32)
-                switch (imgui_cursor) {
-                    case ImGuiMouseCursor_Hand:
-                        SetCursor(LoadCursor(nullptr, IDC_HAND));
-                        break;
-                    case ImGuiMouseCursor_ResizeEW:
-                        SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
-                        break;
-                    case ImGuiMouseCursor_ResizeNS:
-                        SetCursor(LoadCursor(nullptr, IDC_SIZENS));
-                        break;
-                    case ImGuiMouseCursor_ResizeNWSE:
-                        SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
-                        break;
-                    case ImGuiMouseCursor_ResizeNESW:
-                        SetCursor(LoadCursor(nullptr, IDC_SIZENESW));
-                        break;
-                    case ImGuiMouseCursor_ResizeAll:
-                        SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
-                        break;
-                    case ImGuiMouseCursor_NotAllowed:
-                        SetCursor(LoadCursor(nullptr, IDC_NO));
-                        break;
-                    case ImGuiMouseCursor_TextInput:
-                        SetCursor(LoadCursor(nullptr, IDC_IBEAM));
-                        break;
-                }
-            #else
+            #if !defined(_WIN32)
                 glfwSetCursor(window, bd->MouseCursors[imgui_cursor] ? bd->MouseCursors[imgui_cursor] : bd->MouseCursors[ImGuiMouseCursor_Arrow]);
             #endif
 

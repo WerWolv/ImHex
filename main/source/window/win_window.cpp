@@ -69,6 +69,43 @@ namespace hex {
 
                 break;
             }
+            case WM_SETCURSOR: {
+                if (LOWORD(lParam) != HTCLIENT) {
+                    return CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
+                } else {
+                    switch (ImGui::GetMouseCursor()) {
+                        case ImGuiMouseCursor_Arrow:
+                            SetCursor(LoadCursor(nullptr, IDC_ARROW));
+                            break;
+                        case ImGuiMouseCursor_Hand:
+                            SetCursor(LoadCursor(nullptr, IDC_HAND));
+                            break;
+                        case ImGuiMouseCursor_ResizeEW:
+                            SetCursor(LoadCursor(nullptr, IDC_SIZEWE));
+                            break;
+                        case ImGuiMouseCursor_ResizeNS:
+                            SetCursor(LoadCursor(nullptr, IDC_SIZENS));
+                            break;
+                        case ImGuiMouseCursor_ResizeNWSE:
+                            SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
+                            break;
+                        case ImGuiMouseCursor_ResizeNESW:
+                            SetCursor(LoadCursor(nullptr, IDC_SIZENESW));
+                            break;
+                        case ImGuiMouseCursor_ResizeAll:
+                            SetCursor(LoadCursor(nullptr, IDC_SIZEALL));
+                            break;
+                        case ImGuiMouseCursor_NotAllowed:
+                            SetCursor(LoadCursor(nullptr, IDC_NO));
+                            break;
+                        case ImGuiMouseCursor_TextInput:
+                            SetCursor(LoadCursor(nullptr, IDC_IBEAM));
+                            break;
+                    }
+
+                    return TRUE;
+                }
+            }
             default:
                 break;
         }
