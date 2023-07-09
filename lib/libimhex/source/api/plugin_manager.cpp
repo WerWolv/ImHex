@@ -28,14 +28,14 @@ namespace hex {
             }
         #endif
 
-        this->m_initializePluginFunction     = getPluginSymbol<InitializePluginFunc>("initializePlugin");
-        this->m_getPluginNameFunction        = getPluginSymbol<GetPluginNameFunc>("getPluginName");
-        this->m_getPluginAuthorFunction      = getPluginSymbol<GetPluginAuthorFunc>("getPluginAuthor");
-        this->m_getPluginDescriptionFunction = getPluginSymbol<GetPluginDescriptionFunc>("getPluginDescription");
-        this->m_getCompatibleVersionFunction = getPluginSymbol<GetCompatibleVersionFunc>("getCompatibleVersion");
-        this->m_setImGuiContextFunction      = getPluginSymbol<SetImGuiContextFunc>("setImGuiContext");
-        this->m_isBuiltinPluginFunction      = getPluginSymbol<IsBuiltinPluginFunc>("isBuiltinPlugin");
-        this->m_getSubCommandsFunction       = getPluginSymbol<GetSubCommandsFunc>("getSubCommands");
+        this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
+        this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
+        this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
+        this->m_getPluginDescriptionFunction = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
+        this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
+        this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
+        this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
+        this->m_getSubCommandsFunction       = getPluginFunction<GetSubCommandsFunc>("getSubCommands");
     }
 
     Plugin::Plugin(Plugin &&other) noexcept {
@@ -150,7 +150,7 @@ namespace hex {
     }
 
 
-    void *Plugin::getPluginSymbol(const std::string &symbol) {
+    void *Plugin::getPluginFunction(const std::string &symbol) {
         #if defined(OS_WINDOWS)
             return reinterpret_cast<void *>(GetProcAddress(this->m_handle, symbol.c_str()));
         #else

@@ -73,12 +73,12 @@ namespace hex {
         GetSubCommandsFunc m_getSubCommandsFunction             = nullptr;
 
         template<typename T>
-        [[nodiscard]] auto getPluginSymbol(const std::string &symbol) {
-            return reinterpret_cast<T>(this->getPluginSymbol(symbol));
+        [[nodiscard]] auto getPluginFunction(const std::string &symbol) {
+            return reinterpret_cast<T>(this->getPluginFunction(symbol));
         }
 
     private:
-        [[nodiscard]] void *getPluginSymbol(const std::string &symbol);
+        [[nodiscard]] void *getPluginFunction(const std::string &symbol);
     };
 
     class PluginManager {
