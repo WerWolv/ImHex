@@ -30,16 +30,16 @@ namespace {
     }
 
     std::vector<const Script*> loadAllScripts() {
-        static ScriptLoaders loaders;
         std::vector<const Script*> plugins;
 
-        std::apply([&plugins](auto&&... args) {
-            try {
-                (loadScript(plugins, args), ...);
-            } catch (const std::exception &exception) {
-                log::error("Failed to load plugin: {}", exception.what());
-            }
-        }, loaders);
+        try {
+            static ScriptLoaders loaders;
+            std::apply([&plugins](auto&&... args) {
+                    (loadScript(plugins, args), ...);
+            }, loaders);
+        } catch (const std::exception &e) {
+            log::error("Error when loading scripts: {}", e.what());
+        }
 
         return plugins;
     }
@@ -51,7 +51,7 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     for (auto &path : romfs::list("lang"))
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
-    static auto plugins = loadAllScripts();
+    static std::vector<const Script*> scripts;
 
     static TaskHolder runnerTask, updaterTask;
 
@@ -62,19 +62,19 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
                 menuJustOpened = false;
                 if (!updaterTask.isRunning()) {
                     updaterTask = TaskManager::createBackgroundTask("Updating Scripts...", [] (auto&) {
-                        plugins = loadAllScripts();
+                        scripts = loadAllScripts();
                     });
                 }
             }
 
             if (updaterTask.isRunning()) {
                 ImGui::TextSpinner("hex.script_loader.menu.loading"_lang);
-            } else if (plugins.empty()) {
+            } else if (scripts.empty()) {
                 ImGui::TextUnformatted("hex.script_loader.menu.no_scripts"_lang);
             }
 
-            for (const auto &plugin : plugins) {
-                const auto &[name, entryPoint] = *plugin;
+            for (const auto &script : scripts) {
+                const auto &[name, entryPoint] = *script;
 
                 if (ImGui::MenuItem(name.c_str())) {
                     runnerTask = TaskManager::createTask("Running script...", TaskManager::NoProgress, [entryPoint](auto&) {

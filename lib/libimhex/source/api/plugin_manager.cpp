@@ -76,6 +76,8 @@ namespace hex {
         if (this->m_handle == nullptr)
             return false;
 
+        const auto pluginName = wolv::util::toUTF8String(this->m_path.filename());
+
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != ImHexApi::System::getImHexVersion()) {
             if (requestedVersion.empty()) {
@@ -90,7 +92,9 @@ namespace hex {
             try {
                 this->m_initializePluginFunction();
             } catch (const std::exception &e) {
-                log::error("Plugin '{}' threw an exception on init: {}", e.what());
+                log::error("Plugin '{}' threw an exception on init: {}", pluginName, e.what());
+            } catch (...) {
+                log::error("Plugin '{}' threw an exception on init", pluginName);
             }
         } else {
             return false;
