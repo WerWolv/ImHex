@@ -6,9 +6,9 @@
 
 #include <functional>
 
-namespace hex::plugin::loader {
+namespace hex::script::loader {
 
-    class DotNetLoader : public PluginLoader {
+    class DotNetLoader : public ScriptLoader {
     public:
         DotNetLoader();
         ~DotNetLoader() override = default;

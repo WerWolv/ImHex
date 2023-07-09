@@ -23,7 +23,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 
-namespace hex::plugin::loader {
+namespace hex::script::loader {
 
     namespace {
 
@@ -151,7 +151,7 @@ namespace hex::plugin::loader {
     }
 
     bool DotNetLoader::loadAll() {
-        this->clearPlugins();
+        this->clearScripts();
 
         for (const auto &imhexPath : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Scripts)) {
             auto directoryPath = imhexPath / "custom" / "dotnet";
@@ -166,7 +166,7 @@ namespace hex::plugin::loader {
                 if (!std::fs::exists(scriptPath))
                     continue;
 
-                this->addPlugin(scriptPath.stem().string(), [this, scriptPath] {
+                this->addScript(scriptPath.stem().string(), [this, scriptPath] {
                     this->m_loadAssembly(scriptPath);
                 });
             }

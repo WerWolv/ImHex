@@ -12,9 +12,9 @@
 #include <nlohmann/json.hpp>
 
 using namespace hex;
-using namespace hex::plugin::loader;
+using namespace hex::script::loader;
 
-using PluginLoaders = std::tuple<
+using ScriptLoaders = std::tuple<
     #if defined(DOTNET_PLUGINS)
         DotNetLoader
     #endif
@@ -22,20 +22,20 @@ using PluginLoaders = std::tuple<
 
 namespace {
 
-    void loadPlugin(std::vector<const Plugin*> &plugins, auto &loader) {
+    void loadScript(std::vector<const Script*> &scripts, auto &loader) {
         loader.loadAll();
 
-        for (auto &plugin : loader.getPlugins())
-            plugins.emplace_back(&plugin);
+        for (auto &script : loader.getScripts())
+            scripts.emplace_back(&script);
     }
 
-    std::vector<const Plugin*> loadAllPlugins() {
-        static PluginLoaders loaders;
-        std::vector<const Plugin*> plugins;
+    std::vector<const Script*> loadAllScripts() {
+        static ScriptLoaders loaders;
+        std::vector<const Script*> plugins;
 
         std::apply([&plugins](auto&&... args) {
             try {
-                (loadPlugin(plugins, args), ...);
+                (loadScript(plugins, args), ...);
             } catch (const std::exception &exception) {
                 log::error("Failed to load plugin: {}", exception.what());
             }
@@ -51,7 +51,7 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     for (auto &path : romfs::list("lang"))
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
-    static auto plugins = loadAllPlugins();
+    static auto plugins = loadAllScripts();
 
     static TaskHolder runnerTask, updaterTask;
 
@@ -62,7 +62,7 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
                 menuJustOpened = false;
                 if (!updaterTask.isRunning()) {
                     updaterTask = TaskManager::createBackgroundTask("Updating Scripts...", [] (auto&) {
-                        plugins = loadAllPlugins();
+                        plugins = loadAllScripts();
                     });
                 }
             }

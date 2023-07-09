@@ -4,35 +4,35 @@
 #include <string>
 #include <vector>
 
-namespace hex::plugin::loader {
+namespace hex::script::loader {
 
-    struct Plugin {
+    struct Script {
         std::string name;
         std::function<void()> entryPoint;
     };
 
-    class PluginLoader {
+    class ScriptLoader {
     public:
-        PluginLoader() = default;
-        virtual ~PluginLoader() = default;
+        ScriptLoader() = default;
+        virtual ~ScriptLoader() = default;
 
         virtual bool loadAll() = 0;
 
-        void addPlugin(std::string name, std::function<void()> entryPoint) {
-            m_plugins.emplace_back(std::move(name), std::move(entryPoint));
+        void addScript(std::string name, std::function<void()> entryPoint) {
+            this->m_scripts.emplace_back(std::move(name), std::move(entryPoint));
         }
 
-        const auto& getPlugins() const {
-            return m_plugins;
+        const auto& getScripts() const {
+            return this->m_scripts;
         }
 
     protected:
-        void clearPlugins() {
-            m_plugins.clear();
+        void clearScripts() {
+            this->m_scripts.clear();
         }
 
     private:
-        std::vector<Plugin> m_plugins;
+        std::vector<Script> m_scripts;
     };
 
 }
