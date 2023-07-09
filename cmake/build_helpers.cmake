@@ -295,6 +295,11 @@ macro(configureCMake)
             message(WARNING "LTO is not supported!")
         endif ()
     endif ()
+
+    # Some libraries we use set the BUILD_SHARED_LIBS variable to ON, which causes CMake to
+    # display a warning about options being set using set() instead of option().
+    # Explicitly set the policy to NEW to suppress the warning.
+    set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 endmacro()
 
 macro(setDefaultBuiltTypeIfUnset)
