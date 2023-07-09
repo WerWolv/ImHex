@@ -40,7 +40,7 @@ if (CoreClrEmbed_FOUND)
     set(EXTRA_BUNDLE_LIBRARY_PATHS "${CoreClrEmbed_FOLDER}" PARENT_SCOPE)
 
     if (IMHEX_BUNDLE_DOTNET)
-        install(FILES ${CoreClrEmbed_LIBRARIES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+        install(FILES ${CoreClrEmbed_SHARED_LIBRARIES} DESTINATION ${CMAKE_INSTALL_LIBDIR})
     endif ()
 
     add_subdirectory(dotnet)
