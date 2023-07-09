@@ -295,7 +295,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                       \
-            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                  \
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
             -DCMAKE_INSTALL_PREFIX="/usr"                             \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
@@ -383,7 +383,7 @@ jobs:
             -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
             -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
             -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-            -DIMHEX_ENABLE_LTO=ON       \
+            -DIMHEX_ENABLE_LTO=ON                         \
             -DIMHEX_PLUGINS_IN_SHARE=ON                   \
             -DIMHEX_USE_BUNDLED_CA=ON                     \
             ..
