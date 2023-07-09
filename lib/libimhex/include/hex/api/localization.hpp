@@ -39,10 +39,13 @@ namespace hex {
 
         static void resetLanguageStrings();
 
+        static const std::string &getSelectedLanguage();
+
     private:
         std::string m_unlocalizedString;
 
         static std::string s_fallbackLanguage;
+        static std::string s_selectedLanguage;
         static std::map<std::string, std::string> s_currStrings;
     };
 

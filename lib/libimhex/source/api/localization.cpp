@@ -5,6 +5,7 @@
 namespace hex {
 
     std::string LangEntry::s_fallbackLanguage;
+    std::string LangEntry::s_selectedLanguage;
     std::map<std::string, std::string> LangEntry::s_currStrings;
 
     LanguageDefinition::LanguageDefinition(std::map<std::string, std::string> &&entries) {
@@ -89,6 +90,8 @@ namespace hex {
             for (auto &definition : definitions[fallbackLanguage])
                 LangEntry::s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
         }
+
+        LangEntry::s_selectedLanguage = language;
     }
 
     const std::map<std::string, std::string> &LangEntry::getSupportedLanguages() {
@@ -105,6 +108,10 @@ namespace hex {
 
     void LangEntry::resetLanguageStrings() {
         LangEntry::s_currStrings.clear();
+    }
+
+    const std::string &LangEntry::getSelectedLanguage() {
+        return s_selectedLanguage;
     }
 
 }
