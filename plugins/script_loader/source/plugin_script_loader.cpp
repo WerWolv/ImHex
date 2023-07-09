@@ -15,7 +15,9 @@ using namespace hex;
 using namespace hex::plugin::loader;
 
 using PluginLoaders = std::tuple<
-    DotNetLoader
+    #if defined(DOTNET_PLUGINS)
+        DotNetLoader
+    #endif
 >;
 
 namespace {
@@ -68,7 +70,7 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
             if (updaterTask.isRunning()) {
                 ImGui::TextSpinner("hex.script_loader.menu.loading"_lang);
             } else if (plugins.empty()) {
-                ImGui::Text("hex.script_loader.menu.no_scripts"_lang);
+                ImGui::TextUnformatted("hex.script_loader.menu.no_scripts"_lang);
             }
 
             for (const auto &plugin : plugins) {

@@ -253,8 +253,8 @@ jobs:
       options: --privileged
 
     steps:
-      - name: ⬇️ Install git
-        run: apt update && apt install -y git
+      - name: ⬇️ Install setup dependencies
+        run: apt update && apt install -y git curl
 
       - name: 🧰 Checkout
         uses: actions/checkout@v3
