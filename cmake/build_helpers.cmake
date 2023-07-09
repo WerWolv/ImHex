@@ -284,6 +284,17 @@ function(JOIN OUTPUT GLUE)
 endfunction()
 
 macro(configureCMake)
+    # Enable LTO if desired and supported
+    if (IMHEX_ENABLE_LTO)
+        include(CheckIPOSupported)
+
+        check_ipo_supported(RESULT result)
+        if (result)
+            set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+        else ()
+            message(WARNING "LTO is not supported!")
+        endif ()
+    endif ()
 endmacro()
 
 function(message ${ARGN})

@@ -291,7 +291,7 @@ jobs:
             -DIMHEX_COMMIT_HASH_SHORT="${{env.COMMIT_SHA_SHORT}}"   \
             -DIMHEX_COMMIT_HASH_LONG="${{env.COMMIT_SHA_LONG}}"     \
             -DIMHEX_COMMIT_BRANCH="${{env.COMMIT_BRANCH}}"          \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON                 \
+            -DIMHEX_ENABLE_LTO=ON                 \
             ..
           make -j 4 install DESTDIR=DebDir
 
@@ -364,7 +364,7 @@ jobs:
             -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
             -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
             -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-            -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON       \
+            -DIMHEX_ENABLE_LTO=ON       \
             -DIMHEX_PLUGINS_IN_SHARE=ON                   \
             -DIMHEX_USE_BUNDLED_CA=ON                     \
             ..
@@ -447,7 +447,7 @@ jobs:
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON       \
+          -DIMHEX_ENABLE_LTO=ON       \
           ..
           make -j 4 install DESTDIR=installDir
 
