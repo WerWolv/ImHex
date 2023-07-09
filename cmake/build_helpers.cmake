@@ -297,13 +297,6 @@ macro(configureCMake)
     endif ()
 endmacro()
 
-function(message ${ARGN})
-    # Supress any NOTICE messages
-    if (ARGC GREATER 1)
-        _message(${ARGN})
-    endif()
-endfunction()
-
 macro(setDefaultBuiltTypeIfUnset)
     if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Using Release build type as it was left unset" FORCE)
@@ -369,7 +362,7 @@ function(downloadImHexPatternsFiles dest)
         FetchContent_Declare(
             imhex_patterns
             GIT_REPOSITORY https://github.com/WerWolv/ImHex-Patterns.git
-            GIT_TAG master
+            GIT_TAG origin/master
         )
 
         message(STATUS "Downloading ImHex-Patterns repo branch ${PATTERNS_BRANCH}...")
