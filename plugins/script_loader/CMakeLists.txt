@@ -13,7 +13,7 @@ add_library(${PROJECT_NAME} SHARED
 # Add additional include directories here #
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 # Add additional libraries here #
-target_link_libraries(${PROJECT_NAME} PRIVATE libimhex ${FMT_LIBRARIES} nethost)
+target_link_libraries(${PROJECT_NAME} PRIVATE libimhex ${FMT_LIBRARIES})
 
 if (CoreClrEmbed_FOUND)
     add_library(nethost SHARED IMPORTED)
@@ -27,6 +27,7 @@ if (CoreClrEmbed_FOUND)
             INSTALL_RPATH       ${CoreClrEmbed_FOLDER})
 
     target_link_directories(${PROJECT_NAME} PRIVATE ${CoreClrEmbed_FOLDER})
+    target_link_libraries(${PROJECT_NAME} PRIVATE nethost)
     target_compile_definitions(${PROJECT_NAME} PRIVATE DOTNET_PLUGINS=1)
     target_sources(${PROJECT_NAME} PRIVATE
             source/loaders/dotnet/dotnet_loader.cpp

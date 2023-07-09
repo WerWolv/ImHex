@@ -305,7 +305,7 @@ jobs:
             -DIMHEX_COMMIT_BRANCH="${{ env.COMMIT_BRANCH }}"          \
             -DIMHEX_ENABLE_LTO=ON                                     \
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
-            -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
+            -DDOTNET_EXECUTABLE="dotnet"                              \
             ..
           DESTDIR=DebDir ninja install 
 
