@@ -29,14 +29,22 @@ namespace hex::script::loader {
 
         #if defined(OS_WINDOWS)
             void *loadLibrary(const char_t *path) {
-                HMODULE h = ::LoadLibraryW(path);
-                return (void*)h;
+                try {
+                    HMODULE h = ::LoadLibraryW(path);
+                    return (void*)h;
+                } catch (...) {
+                    return nullptr;
+                }
             }
 
             template<typename T>
             T getExport(void *h, const char *name) {
-                FARPROC f = ::GetProcAddress((HMODULE)h, name);
-                return reinterpret_cast<T>((void*)f);
+                try {
+                    FARPROC f = ::GetProcAddress((HMODULE)h, name);
+                    return reinterpret_cast<T>((void*)f);
+                } catch (...) {
+                    return nullptr;
+                }
             }
         #else
             void *loadLibrary(const char_t *path) {
@@ -63,6 +71,9 @@ namespace hex::script::loader {
             }
 
             void *hostfxrLibrary = loadLibrary(buffer.data());
+            if (hostfxrLibrary == nullptr)
+                return false;
+
             {
                 hostfxr_initialize_for_runtime_config
                         = getExport<hostfxr_initialize_for_runtime_config_fn>(hostfxrLibrary, "hostfxr_initialize_for_runtime_config");
