@@ -10,6 +10,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <wolv/utils/guards.hpp>
+#include <wolv/utils/string.hpp>
 
 #include <content/recent.hpp>
 #include <content/popups/popup_notification.hpp>

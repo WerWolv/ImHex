@@ -7,6 +7,8 @@
 
 #include <content/helpers/math_evaluator.hpp>
 
+#include <wolv/utils/string.hpp>
+
 namespace hex::plugin::builtin {
 
     void registerCommandPaletteCommands() {

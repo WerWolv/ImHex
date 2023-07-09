@@ -20,6 +20,7 @@
 
 #include <wolv/utils/core.hpp>
 #include <wolv/utils/lock.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 

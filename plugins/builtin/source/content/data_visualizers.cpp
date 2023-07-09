@@ -2,8 +2,12 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+
+#include <wolv/utils/string.hpp>
+
 
 namespace hex::plugin::builtin {
 

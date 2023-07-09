@@ -13,6 +13,7 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/utils/core.hpp>
 
 namespace hex::plugin::builtin {
 

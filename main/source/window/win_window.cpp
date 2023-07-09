@@ -7,6 +7,8 @@
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/logger.hpp>
 
+    #include <wolv/utils/string.hpp>
+
     #include <imgui.h>
     #include <imgui_internal.h>
     #include <fonts/codicons_font.h>

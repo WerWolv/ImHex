@@ -12,6 +12,7 @@
 #include <nlohmann/json.hpp>
 
 #include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex {
 

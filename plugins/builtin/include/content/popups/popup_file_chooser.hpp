@@ -2,6 +2,8 @@
 
 #include <hex/api/localization.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #include <functional>
 #include <string>
 

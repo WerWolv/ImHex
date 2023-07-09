@@ -33,6 +33,8 @@
 #include <imnodes.h>
 #include <imnodes_internal.h>
 
+#include <wolv/utils/string.hpp>
+
 #include <fonts/codicons_font.h>
 
 #include <hex/api/project_file_manager.hpp>

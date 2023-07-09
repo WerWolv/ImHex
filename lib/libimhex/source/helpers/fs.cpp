@@ -18,9 +18,11 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <utility>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::fs {
 
