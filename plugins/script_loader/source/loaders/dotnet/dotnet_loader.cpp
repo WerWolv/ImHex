@@ -27,6 +27,8 @@ namespace hex::script::loader {
 
     namespace {
 
+        using get_hostfxr_path_fn = int(*)(char_t * buffer, size_t * buffer_size, const struct get_hostfxr_parameters *parameters);
+
         #if defined(OS_WINDOWS)
             void *loadLibrary(const char_t *path) {
                 try {
@@ -64,9 +66,22 @@ namespace hex::script::loader {
         hostfxr_close_fn hostfxr_close = nullptr;
 
         bool loadHostfxr() {
+            #if defined(OS_WINDOWS)
+                auto netHostLibrary = loadLibrary(L"nethost.dll");
+            #elif  defined(OS_LINUX)
+                auto netHostLibrary = loadLibrary("libnethost.so");
+            #elif defined(OS_MACOS)
+                auto netHostLibrary = loadLibrary("libnethost.dylib");
+            #endif
+
+            if (netHostLibrary == nullptr)
+                return false;
+
+            auto get_hostfxr_path_ptr = getExport<get_hostfxr_path_fn>(netHostLibrary, "get_hostfxr_path");
+
             std::array<char_t, 300> buffer = { 0 };
             size_t bufferSize = buffer.size();
-            if (get_hostfxr_path(buffer.data(), &bufferSize, nullptr) != 0) {
+            if (get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr) != 0) {
                 return false;
             }
 
@@ -166,8 +181,8 @@ namespace hex::script::loader {
 
         for (const auto &imhexPath : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Scripts)) {
             auto directoryPath = imhexPath / "custom" / "dotnet";
-            if (!std::fs::exists(directoryPath))
-                continue;
+            if (!wolv::io::fs::exists(directoryPath))
+                wolv::io::fs::createDirectories(directoryPath);
 
             for (const auto &entry : std::fs::directory_iterator(directoryPath)) {
                 if (!entry.is_regular_file())
