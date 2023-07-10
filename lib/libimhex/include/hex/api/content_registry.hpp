@@ -867,6 +867,20 @@ namespace hex {
             void registerNetworkEndpoint(const std::string &endpoint, const impl::NetworkCallback &callback);
 
         }
+
+        namespace ForwardEvent {
+
+            namespace impl {
+                using ForwardEventHandler = std::function<void(const std::vector<u8> &)>;
+
+                std::map<std::string, ForwardEventHandler> &getHandlers();
+
+                void runHandler(const std::string &evtName, const std::vector<u8> &args);
+            }
+
+            void registerHandler(const std::string &evtName, const impl::ForwardEventHandler &handler);
+
+        }
     }
 
 }

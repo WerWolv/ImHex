@@ -364,13 +364,6 @@ namespace hex {
             }
 
 
-            static ProgramArguments s_programArguments;
-            void setProgramArguments(int argc, char **argv, char **envp) {
-                s_programArguments.argc = argc;
-                s_programArguments.argv = argv;
-                s_programArguments.envp = envp;
-            }
-
             static bool s_borderlessWindowMode;
             void setBorderlessWindowMode(bool enabled) {
                 s_borderlessWindowMode = enabled;
@@ -416,25 +409,6 @@ namespace hex {
 
         void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress) {
             EventManager::post<EventSetTaskBarIconState>(u32(state), u32(type), progress);
-        }
-
-        const ProgramArguments &getProgramArguments() {
-            return impl::s_programArguments;
-        }
-
-        std::optional<std::u8string> getProgramArgument(int index) {
-            if (index >= impl::s_programArguments.argc) {
-                return std::nullopt;
-            }
-
-            #if defined(OS_WINDOWS)
-                std::wstring wideArg = ::CommandLineToArgvW(::GetCommandLineW(), &impl::s_programArguments.argc)[index];
-                std::string byteArg = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().to_bytes(wideArg);
-
-                return std::u8string(byteArg.begin(), byteArg.end());
-            #else
-                return std::u8string(reinterpret_cast<const char8_t *>(impl::s_programArguments.argv[index]));
-            #endif
         }
 
 

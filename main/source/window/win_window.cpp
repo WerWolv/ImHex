@@ -1,5 +1,7 @@
 #include "window.hpp"
 
+#include "messaging.hpp"
+
 #include <hex/api/content_registry.hpp>
 
 #if defined(OS_WINDOWS)
@@ -51,12 +53,32 @@ namespace hex {
                 auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
                 if (message == nullptr) break;
 
-                auto data = reinterpret_cast<const char8_t *>(message->lpData);
-                if (data == nullptr) break;
+                int nullIndex = -1;
 
-                std::fs::path path = data;
-                log::info("Opening file in existing instance: {}", wolv::util::toUTF8String(path));
-                EventManager::post<RequestOpenFile>(path);
+                char* messageData = reinterpret_cast<char*>(message->lpData);
+                size_t messageSize = message->cbData;
+
+                for (size_t i = 0; i < messageSize; i++) {
+                    if (messageData[i] == '\0') {
+                        nullIndex = i;
+                        break;
+                    }
+                }
+
+                if (nullIndex == -1) {
+                    log::warn("Received invalid forwarded event");
+                    break;
+                }
+
+                std::string evtName(messageData, nullIndex);
+
+                std::vector<u8> evtData;
+                for (size_t i=0; i<(messageSize-nullIndex)-1; i++) {
+                    u8 b = *reinterpret_cast<u8*>(messageData+nullIndex+i+1);
+                    evtData.push_back(b);
+                }
+                
+                hex::messaging::eventReceived(evtName, evtData);
                 break;
             }
             case WM_SETTINGCHANGE: {
@@ -256,50 +278,6 @@ namespace hex {
             }
         } else {
             log::impl::redirectToFile();
-        }
-
-        // Open new files in already existing ImHex instance
-        constexpr static auto UniqueMutexId = "ImHex/a477ea68-e334-4d07-a439-4f159c683763";
-
-        HANDLE globalMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
-        if (globalMutex == nullptr) {
-            // If no ImHex instance is running, create a new global mutex
-            globalMutex = CreateMutex(nullptr, FALSE, UniqueMutexId);
-        } else {
-            // If an ImHex instance is already running, send the file path to it and exit
-
-            if (ImHexApi::System::getProgramArguments().argc > 1) {
-                // Find the ImHex Window and send the file path as a message to it
-                ::EnumWindows([](HWND hWnd, LPARAM) -> BOOL {
-                    auto &programArgs = ImHexApi::System::getProgramArguments();
-
-                    // Get the window name
-                    auto length = ::GetWindowTextLength(hWnd);
-                    std::string windowName(length + 1, '\x00');
-                    ::GetWindowText(hWnd, windowName.data(), windowName.size());
-
-                    // Check if the window is visible and if it's an ImHex window
-                    if (::IsWindowVisible(hWnd) == TRUE && length != 0) {
-                        if (windowName.starts_with("ImHex")) {
-                            // Create the message
-                            COPYDATASTRUCT message = {
-                                .dwData = 0,
-                                .cbData = static_cast<DWORD>(std::strlen(programArgs.argv[1])) + 1,
-                                .lpData = programArgs.argv[1]
-                            };
-
-                            // Send the message
-                            SendMessage(hWnd, WM_COPYDATA, reinterpret_cast<WPARAM>(hWnd), reinterpret_cast<LPARAM>(&message));
-
-                            return FALSE;
-                        }
-                    }
-
-                    return TRUE;
-                }, 0);
-
-                std::exit(0);
-            }
         }
     }
 

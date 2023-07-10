@@ -4,6 +4,7 @@
 
 #include "window.hpp"
 #include "crash_handlers.hpp"
+#include "messaging.hpp"
 
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
@@ -11,6 +12,7 @@
 #include <hex/api/task.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
+#include <hex/api/content_registry.hpp>
 #include <hex/helpers/fs.hpp>
 #include "hex/subcommands/sub_commands.hpp"
 
@@ -27,12 +29,11 @@ void initPlugins(){
 
 int main(int argc, char **argv, char **envp) {
     hex::crash::setupCrashHandlers();
-    ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
+    hex::unused(envp);
 
     std::vector<std::string> args(argv + 1, argv + argc);
 
     initPlugins();
-    init::processArguments(args);
 
     // Check if ImHex is installed in portable mode
     {
@@ -56,6 +57,9 @@ int main(int argc, char **argv, char **envp) {
 
             log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
             log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+
+            hex::messaging::setupMessaging();
+            init::processArguments(args);
 
             init::WindowSplash splashWindow;
 

@@ -331,8 +331,6 @@ namespace hex {
                 void setGlobalScale(float scale);
                 void setNativeScale(float scale);
 
-                void setProgramArguments(int argc, char **argv, char **envp);
-
                 void setBorderlessWindowMode(bool enabled);
 
                 void setCustomFontPath(const std::fs::path &path);
@@ -381,20 +379,6 @@ namespace hex {
              * @param progress The progress of the progress bar
              */
             void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress);
-
-
-            /**
-             * @brief Gets the current program arguments
-             * @return The current program arguments
-             */
-            const ProgramArguments &getProgramArguments();
-
-            /**
-             * @brief Gets a program argument
-             * @param index The index of the argument to get
-             * @return The argument at the given index
-             */
-            std::optional<std::u8string> getProgramArgument(int index);
 
 
             /**

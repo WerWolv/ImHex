@@ -232,4 +232,15 @@ namespace hex {
     EVENT_DEF(RequestOpenInfoPopup, const std::string);
     EVENT_DEF(RequestOpenErrorPopup, const std::string);
     EVENT_DEF(RequestOpenFatalPopup, const std::string);
+
+
+    /**
+     * @brief Send an event to the main Imhex instance
+     */
+    EVENT_DEF(SendEventToMainInstance, const std::string, const std::vector<u8>&);
+
+    /**
+     * @brief Checks if we are running in the main instance
+     */
+    EVENT_DEF(IsMainInstance, bool&);
 }
