@@ -37,11 +37,14 @@ namespace hex {
 
         [[nodiscard]] const std::string& getTableContent() const { return this->m_tableContent; }
 
+        [[nodiscard]] const std::string& getName() const { return this->m_name; }
+
     private:
         void parse(const std::string &content);
 
         bool m_valid = false;
 
+        std::string m_name;
         std::string m_tableContent;
         std::unique_ptr<std::map<size_t, std::map<std::vector<u8>, std::string>>> m_mapping;
         size_t m_longestSequence = 0;

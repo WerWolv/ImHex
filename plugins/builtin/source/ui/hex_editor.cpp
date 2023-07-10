@@ -285,11 +285,17 @@ namespace hex::plugin::builtin::ui {
 
             // ASCII column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, this->m_showAscii ? (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow : 0);
+            ImGui::TableSetupColumn("hex.builtin.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, this->m_showAscii ? (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow : 0);
 
             // Custom encoding column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
+            {
+                if (this->m_currCustomEncoding.has_value()) {
+                    ImGui::TableSetupColumn(this->m_currCustomEncoding->getName().c_str(), ImGuiTableColumnFlags_WidthStretch);
+                } else {
+                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
+                }
+            }
 
             ImGui::TableNextRow();
             for (i32 i = 0; i < ImGui::TableGetColumnCount(); i++) {

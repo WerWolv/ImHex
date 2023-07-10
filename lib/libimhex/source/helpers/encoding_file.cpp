@@ -16,6 +16,7 @@ namespace hex {
         this->m_tableContent = other.m_tableContent;
         this->m_longestSequence = other.m_longestSequence;
         this->m_valid = other.m_valid;
+        this->m_name = other.m_name;
     }
 
     EncodingFile::EncodingFile(EncodingFile &&other) {
@@ -23,6 +24,7 @@ namespace hex {
         this->m_tableContent = std::move(other.m_tableContent);
         this->m_longestSequence = other.m_longestSequence;
         this->m_valid = other.m_valid;
+        this->m_name = std::move(other.m_name);
     }
 
     EncodingFile::EncodingFile(Type type, const std::fs::path &path) : EncodingFile() {
@@ -33,6 +35,14 @@ namespace hex {
                 break;
             default:
                 return;
+        }
+
+        {
+            this->m_name = path.stem().string();
+            this->m_name = wolv::util::replaceStrings(this->m_name, "_", " ");
+
+            if (!this->m_name.empty())
+                this->m_name[0] = std::toupper(this->m_name[0]);
         }
 
         this->m_valid = true;
@@ -47,6 +57,7 @@ namespace hex {
                 return;
         }
 
+        this->m_name = "Unknown";
         this->m_valid = true;
     }
 
@@ -56,6 +67,7 @@ namespace hex {
         this->m_tableContent = other.m_tableContent;
         this->m_longestSequence = other.m_longestSequence;
         this->m_valid = other.m_valid;
+        this->m_name = other.m_name;
 
         return *this;
     }
@@ -65,6 +77,7 @@ namespace hex {
         this->m_tableContent = std::move(other.m_tableContent);
         this->m_longestSequence = other.m_longestSequence;
         this->m_valid = other.m_valid;
+        this->m_name = std::move(other.m_name);
 
         return *this;
     }
