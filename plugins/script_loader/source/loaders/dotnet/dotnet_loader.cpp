@@ -184,6 +184,9 @@ namespace hex::script::loader {
             if (!wolv::io::fs::exists(directoryPath))
                 wolv::io::fs::createDirectories(directoryPath);
 
+            if (!wolv::io::fs::exists(directoryPath))
+                continue;
+
             for (const auto &entry : std::fs::directory_iterator(directoryPath)) {
                 if (!entry.is_regular_file())
                     continue;
