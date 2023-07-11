@@ -7,7 +7,6 @@
 #include <content/popups/popup_notification.hpp>
 
 #include <imgui.h>
-#include <imgui_internal.h>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/crypto.hpp>
@@ -36,6 +35,82 @@ namespace hex::plugin::builtin {
         });
 
         this->m_httpRequest.setTimeout(30'0000);
+
+        addCategory("hex.builtin.view.store.tab.patterns"_lang,     "patterns",     fs::ImHexPath::Patterns);
+        addCategory("hex.builtin.view.store.tab.includes"_lang,     "includes",     fs::ImHexPath::PatternsInclude);
+        addCategory("hex.builtin.view.store.tab.magic"_lang,        "magic",        fs::ImHexPath::Magic, []{
+            magic::compile();
+        });
+        addCategory("hex.builtin.view.store.tab.nodes"_lang,        "nodes",        fs::ImHexPath::Nodes);
+        addCategory("hex.builtin.view.store.tab.encodings"_lang,    "encodings",    fs::ImHexPath::Encodings);
+        addCategory("hex.builtin.view.store.tab.constants"_lang,    "constants",    fs::ImHexPath::Constants);
+        addCategory("hex.builtin.view.store.tab.themes"_lang,       "themes",       fs::ImHexPath::Themes, [this]{
+            auto themeFile = wolv::io::File(this->m_downloadPath, wolv::io::File::Mode::Read);
+
+            ThemeManager::addTheme(themeFile.readString());
+        });
+        addCategory("hex.builtin.view.store.tab.yara"_lang,         "yara",         fs::ImHexPath::Yara);
+    }
+
+    void ViewStore::drawTab(hex::plugin::builtin::StoreCategory &category) {
+        if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
+            if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_None);
+                ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+
+                ImGui::TableHeadersRow();
+
+                u32 id = 1;
+                for (auto &entry : category.entries) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(entry.name.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(entry.description.c_str());
+                    ImGui::TableNextColumn();
+
+                    const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
+
+                    ImGui::PushID(id);
+                    ImGui::BeginDisabled(this->m_updateAllTask.isRunning() || (this->m_download.valid() && this->m_download.wait_for(0s) != std::future_status::ready));
+                    {
+                        if (entry.downloading) {
+                            ImGui::ProgressBar(this->m_httpRequest.getProgress(), buttonSize, "");
+
+                            if (this->m_download.valid() && this->m_download.wait_for(0s) == std::future_status::ready) {
+                                this->handleDownloadFinished(category, entry);
+                            }
+
+                        } else {
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+                            if (entry.hasUpdate) {
+                                if (ImGui::Button("hex.builtin.view.store.update"_lang, buttonSize)) {
+                                    entry.downloading = this->download(category.path, entry.fileName, entry.link, true);
+                                }
+                            } else if (!entry.installed) {
+                                if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
+                                    entry.downloading = this->download(category.path, entry.fileName, entry.link, false);
+                                }
+                            } else {
+                                if (ImGui::Button("hex.builtin.view.store.remove"_lang, buttonSize)) {
+                                    entry.installed = !this->remove(category.path, entry.fileName);
+                                }
+                            }
+                            ImGui::PopStyleVar();
+                        }
+                    }
+                    ImGui::EndDisabled();
+                    ImGui::PopID();
+                    id++;
+                }
+
+                ImGui::EndTable();
+            }
+            ImGui::EndTabItem();
+        }
     }
 
     void ViewStore::drawStore() {
@@ -60,106 +135,36 @@ namespace hex::plugin::builtin {
             ImGui::TextSpinner("hex.builtin.view.store.loading"_lang);
         }
 
-
-        auto drawTab = [this](auto title, fs::ImHexPath pathType, auto &content, const std::function<void()> &downloadDoneCallback = []{}) {
-            if (ImGui::BeginTabItem(title)) {
-                if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
-                    ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("hex.builtin.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);
-                    ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_None);
-                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
-
-                    ImGui::TableHeadersRow();
-
-                    u32 id = 1;
-                    for (auto &entry : content) {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(entry.name.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(entry.description.c_str());
-                        ImGui::TableNextColumn();
-
-                        const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
-
-                        ImGui::PushID(id);
-                        ImGui::BeginDisabled(this->m_download.valid() && this->m_download.wait_for(0s) != std::future_status::ready);
-                        {
-                            if (entry.downloading) {
-                                ImGui::ProgressBar(this->m_httpRequest.getProgress(), buttonSize, "");
-
-                                if (this->m_download.valid() && this->m_download.wait_for(0s) == std::future_status::ready) {
-                                    entry.downloading = false;
-
-                                    auto response = this->m_download.get();
-                                    if (response.isSuccess()) {
-                                        entry.installed = true;
-                                        entry.hasUpdate = false;
-
-                                        if (entry.isFolder) {
-                                            Tar tar(this->m_downloadPath, Tar::Mode::Read);
-                                            tar.extractAll(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
-                                            EventManager::post<EventStoreContentDownloaded>(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
-                                        } else {
-                                            EventManager::post<EventStoreContentDownloaded>(this->m_downloadPath);
-                                        }
-
-                                        downloadDoneCallback();
-                                    } else
-                                        log::error("Download failed! HTTP Code {}", response.getStatusCode());
-
-
-                                    this->m_download = {};
-                                }
-
-                            } else {
-                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-
-                                if (entry.hasUpdate) {
-                                    if (ImGui::Button("hex.builtin.view.store.update"_lang, buttonSize)) {
-                                        entry.downloading = this->download(pathType, entry.fileName, entry.link, true);
-                                    }
-                                } else if (!entry.installed) {
-                                    if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
-                                        entry.downloading = this->download(pathType, entry.fileName, entry.link, false);
-                                    }
-                                } else {
-                                    if (ImGui::Button("hex.builtin.view.store.remove"_lang, buttonSize)) {
-                                        entry.installed = !this->remove(pathType, entry.fileName);
-                                    }
-                                }
-                                ImGui::PopStyleVar();
-                            }
+        // Align the button to the right
+        ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 25_scaled);
+        ImGui::BeginDisabled(this->m_updateAllTask.isRunning() || this->m_updateCount == 0);
+        if (ImGui::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            this->m_updateAllTask = TaskManager::createTask("Update All...", this->m_updateCount, [this](auto &task) {
+                u32 progress = 0;
+                for (auto &category : this->m_categories) {
+                    for (auto &entry : category.entries) {
+                        if (entry.hasUpdate) {
+                            entry.downloading = this->download(category.path, entry.fileName, entry.link, true);
+                            this->m_download.wait();
+                            this->handleDownloadFinished(category, entry);
+                            task.update(progress);
                         }
-                        ImGui::EndDisabled();
-                        ImGui::PopID();
-                        id++;
                     }
-
-                    ImGui::EndTable();
                 }
-                ImGui::EndTabItem();
-            }
-        };
+            });
+        }
+        ImGui::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, this->m_updateCount.load()).c_str());
+
+        ImGui::EndDisabled();
 
         if (ImGui::BeginTabBar("storeTabs")) {
-            drawTab("hex.builtin.view.store.tab.patterns"_lang,     fs::ImHexPath::Patterns,        this->m_patterns);
-            drawTab("hex.builtin.view.store.tab.includes"_lang,     fs::ImHexPath::PatternsInclude, this->m_includes);
-            drawTab("hex.builtin.view.store.tab.magic"_lang,        fs::ImHexPath::Magic,           this->m_magics, []{
-                magic::compile();
-            });
-            drawTab("hex.builtin.view.store.tab.nodes"_lang,        fs::ImHexPath::Nodes,           this->m_nodes);
-            drawTab("hex.builtin.view.store.tab.encodings"_lang,    fs::ImHexPath::Encodings,       this->m_encodings);
-            drawTab("hex.builtin.view.store.tab.constants"_lang,    fs::ImHexPath::Constants,       this->m_constants);
-            drawTab("hex.builtin.view.store.tab.themes"_lang,       fs::ImHexPath::Themes,          this->m_themes, [this]{
-                auto themeFile = wolv::io::File(this->m_downloadPath, wolv::io::File::Mode::Read);
-
-                ThemeManager::addTheme(themeFile.readString());
-            });
-            drawTab("hex.builtin.view.store.tab.yara"_lang,         fs::ImHexPath::Yara,            this->m_yara);
+            for (auto &category : this->m_categories) {
+                this->drawTab(category);
+            }
 
             ImGui::EndTabBar();
         }
+
     }
 
     void ViewStore::refresh() {
@@ -168,14 +173,9 @@ namespace hex::plugin::builtin {
             return;
         this->m_requestStatus = RequestStatus::InProgress;
 
-        this->m_patterns.clear();
-        this->m_includes.clear();
-        this->m_magics.clear();
-        this->m_constants.clear();
-        this->m_yara.clear();
-        this->m_encodings.clear();
-        this->m_nodes.clear();
-        this->m_themes.clear();
+        for (auto &category : this->m_categories) {
+            category.entries.clear();
+        }
 
         this->m_httpRequest.setUrl(ImHexApiURL + "/store"s);
         this->m_apiRequest = this->m_httpRequest.execute();
@@ -187,11 +187,11 @@ namespace hex::plugin::builtin {
         if (this->m_requestStatus == RequestStatus::Succeeded) {
             auto json = nlohmann::json::parse(response.getData());
 
-            auto parseStoreEntries = [](auto storeJson, const std::string &name, fs::ImHexPath pathType, std::vector<StoreEntry> &results) {
+            auto parseStoreEntries = [](auto storeJson, StoreCategory &category) {
                 // Check if the response handles the type of files
-                if (storeJson.contains(name)) {
+                if (storeJson.contains(category.requestName)) {
 
-                    for (auto &entry : storeJson[name]) {
+                    for (auto &entry : storeJson[category.requestName]) {
 
                         // Check if entry is valid
                         if (entry.contains("name") && entry.contains("desc") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
@@ -200,7 +200,7 @@ namespace hex::plugin::builtin {
                             StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false };
 
                             // Check if file is installed already or has an update available
-                            for (const auto &folder : fs::getDefaultPaths(pathType)) {
+                            for (const auto &folder : fs::getDefaultPaths(category.path)) {
 
                                 auto path = folder / std::fs::path(storeEntry.fileName);
 
@@ -218,24 +218,27 @@ namespace hex::plugin::builtin {
                                 }
                             }
 
-                            results.push_back(storeEntry);
+                            category.entries.push_back(storeEntry);
                         }
                     }
                 }
 
-                std::sort(results.begin(), results.end(), [](const auto &lhs, const auto &rhs) {
+                std::sort(category.entries.begin(), category.entries.end(), [](const auto &lhs, const auto &rhs) {
                     return lhs.name < rhs.name;
                 });
             };
 
-            parseStoreEntries(json, "patterns", fs::ImHexPath::Patterns, this->m_patterns);
-            parseStoreEntries(json, "includes", fs::ImHexPath::PatternsInclude, this->m_includes);
-            parseStoreEntries(json, "magic", fs::ImHexPath::Magic, this->m_magics);
-            parseStoreEntries(json, "constants", fs::ImHexPath::Constants, this->m_constants);
-            parseStoreEntries(json, "yara", fs::ImHexPath::Yara, this->m_yara);
-            parseStoreEntries(json, "encodings", fs::ImHexPath::Encodings, this->m_encodings);
-            parseStoreEntries(json, "nodes", fs::ImHexPath::Nodes, this->m_nodes);
-            parseStoreEntries(json, "themes", fs::ImHexPath::Themes, this->m_themes);
+            for (auto &category : this->m_categories) {
+                parseStoreEntries(json, category);
+            }
+
+            this->m_updateCount = 0;
+            for (auto &category : this->m_categories) {
+                for (auto &entry : category.entries) {
+                    if (entry.hasUpdate)
+                        this->m_updateCount += 1;
+                }
+            }
         }
         this->m_apiRequest = {};
     }
@@ -293,6 +296,37 @@ namespace hex::plugin::builtin {
         }
 
         return removed;
+    }
+
+    void ViewStore::addCategory(const std::string &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback) {
+        this->m_categories.push_back({ unlocalizedName, requestName, path, { }, std::move(downloadCallback) });
+    }
+
+    void ViewStore::handleDownloadFinished(const StoreCategory &category, StoreEntry &entry) {
+        entry.downloading = false;
+
+        auto response = this->m_download.get();
+        if (response.isSuccess()) {
+            if (entry.hasUpdate)
+                this->m_updateCount -= 1;
+
+            entry.installed = true;
+            entry.hasUpdate = false;
+
+            if (entry.isFolder) {
+                Tar tar(this->m_downloadPath, Tar::Mode::Read);
+                tar.extractAll(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
+                EventManager::post<EventStoreContentDownloaded>(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
+            } else {
+                EventManager::post<EventStoreContentDownloaded>(this->m_downloadPath);
+            }
+
+            category.downloadCallback();
+        } else
+            log::error("Download failed! HTTP Code {}", response.getStatusCode());
+
+
+        this->m_download = {};
     }
 
 }

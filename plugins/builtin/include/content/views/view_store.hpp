@@ -5,6 +5,7 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/api/task.hpp>
 
 #include <array>
 #include <future>
@@ -34,6 +35,14 @@ namespace hex::plugin::builtin {
         bool hasUpdate;
     };
 
+    struct StoreCategory {
+        std::string unlocalizedName;
+        std::string requestName;
+        fs::ImHexPath path;
+        std::vector<StoreEntry> entries;
+        std::function<void()> downloadCallback;
+    };
+
     class ViewStore : public View {
     public:
         ViewStore();
@@ -54,12 +63,18 @@ namespace hex::plugin::builtin {
         std::fs::path m_downloadPath;
         RequestStatus m_requestStatus = RequestStatus::NotAttempted;
 
-        std::vector<StoreEntry> m_patterns, m_includes, m_magics, m_constants, m_yara, m_encodings, m_nodes, m_themes;
+        std::vector<StoreCategory> m_categories;
+        TaskHolder m_updateAllTask;
+        std::atomic<u32> m_updateCount = 0;
 
         void drawStore();
+        void drawTab(StoreCategory &category);
+        void handleDownloadFinished(const StoreCategory &category, StoreEntry &entry);
 
         void refresh();
         void parseResponse();
+
+        void addCategory(const std::string &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback = []{});
 
         bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
         bool remove(fs::ImHexPath pathType, const std::string &fileName);
