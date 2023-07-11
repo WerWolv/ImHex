@@ -10,7 +10,7 @@ namespace hex::messaging {
 
     std::optional<bool> s_isMainInstance;
 
-    void eventReceived(const std::string &evtName, const std::vector<u8> &evtData) {
+    void messageReceived(const std::string &evtName, const std::vector<u8> &evtData) {
         log::debug("Received event '{}' with size {}", evtName, evtData.size());
         ImHexApi::Messaging::impl::runHandler(evtName, evtData);
     }
@@ -20,8 +20,8 @@ namespace hex::messaging {
             ret = *s_isMainInstance;
         });
 
-        EventManager::subscribe<SendEventToMainInstance>([](const std::string evtName, const std::vector<u8> &evtData){
-            log::debug("Forwarding event {} (maybe to us)", evtName);
+        EventManager::subscribe<SendMessageToMainInstance>([](const std::string evtName, const std::vector<u8> &evtData){
+            log::debug("Forwarding message {} (maybe to us)", evtName);
             if (*s_isMainInstance) {
                 EventManager::subscribe<EventImHexStartupFinished>([evtName, evtData](){
                     ImHexApi::Messaging::impl::runHandler(evtName, evtData);

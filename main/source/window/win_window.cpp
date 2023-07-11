@@ -78,7 +78,7 @@ namespace hex {
                     evtData.push_back(b);
                 }
                 
-                hex::messaging::eventReceived(evtName, evtData);
+                hex::messaging::messageReceived(evtName, evtData);
                 break;
             }
             case WM_SETTINGCHANGE: {

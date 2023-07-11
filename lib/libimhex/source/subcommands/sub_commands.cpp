@@ -100,7 +100,7 @@ namespace hex::init {
 
         std::vector<u8> data(dataStr.begin(), dataStr.end());
         
-        EventManager::post<SendEventToMainInstance>(hex::format("command/{}", cmdName), data);
+        EventManager::post<SendMessageToMainInstance>(hex::format("command/{}", cmdName), data);
     }
 
     void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler) {
