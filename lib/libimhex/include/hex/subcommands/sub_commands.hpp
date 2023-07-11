@@ -1,3 +1,8 @@
+#pragma once
+
+#include<vector>
+#include<string>
+
 namespace hex::init {
     /**
      * determine which subcommand to run from the args given, and run it.
