@@ -49,6 +49,7 @@ namespace hex {
         this->m_getCompatibleVersionFunction = other.m_getCompatibleVersionFunction;
         this->m_setImGuiContextFunction      = other.m_setImGuiContextFunction;
         this->m_isBuiltinPluginFunction      = other.m_isBuiltinPluginFunction;
+        this->m_getSubCommandsFunction       = other.m_getSubCommandsFunction;
 
         other.m_handle                       = nullptr;
         other.m_initializePluginFunction     = nullptr;
@@ -58,6 +59,7 @@ namespace hex {
         other.m_getCompatibleVersionFunction = nullptr;
         other.m_setImGuiContextFunction      = nullptr;
         other.m_isBuiltinPluginFunction      = nullptr;
+        other.m_getSubCommandsFunction       = nullptr;
     }
 
     Plugin::~Plugin() {
