@@ -595,4 +595,35 @@ namespace hex {
 
     }
 
+    namespace ImHexApi::Messaging {
+
+        namespace impl {
+
+            std::map<std::string, MessagingHandler> &getHandlers(){
+                static std::map<std::string, MessagingHandler> handlers;
+
+                return handlers;
+            }
+
+            void runHandler(const std::string &evtName, const std::vector<u8> &args){
+                const auto& handlers = impl::getHandlers();
+                auto matchHandler = handlers.find(evtName);
+                
+                if (matchHandler == handlers.end()) {
+                    throw std::runtime_error(hex::format("Forward event handler {} not found", evtName));
+                }
+
+                matchHandler->second(args);
+            }
+
+        }
+
+        void registerHandler(const std::string &evtName, const impl::MessagingHandler &handler) {
+            log::debug("Registered new forward event handler: {}", evtName);
+
+            impl::getHandlers().insert({ evtName, handler });
+        }
+
+    }
+
 }

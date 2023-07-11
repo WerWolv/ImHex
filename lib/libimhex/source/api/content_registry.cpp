@@ -867,34 +867,4 @@ namespace hex {
 
     }
 
-    namespace ContentRegistry::ForwardEvent {
-
-        namespace impl {
-
-            std::map<std::string, ForwardEventHandler> &getHandlers(){
-                static std::map<std::string, ForwardEventHandler> handlers;
-
-                return handlers;
-            }
-
-            void runHandler(const std::string &evtName, const std::vector<u8> &args){
-                const auto& handlers = impl::getHandlers();
-                auto matchHandler = handlers.find(evtName);
-                
-                if (matchHandler == handlers.end()) {
-                    throw std::runtime_error(hex::format("Forward event handler {} not found", evtName));
-                }
-
-                matchHandler->second(args);
-            }
-
-        }
-
-        void registerHandler(const std::string &evtName, const impl::ForwardEventHandler &handler) {
-            log::debug("Registered new forward event handler: {}", evtName);
-
-            impl::getHandlers().insert({ evtName, handler });
-        }
-
-    }
 }

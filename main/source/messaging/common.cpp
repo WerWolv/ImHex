@@ -1,6 +1,7 @@
 #include <optional>
 
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
+#include <hex/api/event.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include "messaging.hpp"
@@ -11,7 +12,7 @@ namespace hex::messaging {
 
     void eventReceived(const std::string &evtName, const std::vector<u8> &evtData) {
         log::debug("Received event '{}' with size {}", evtName, evtData.size());
-        ContentRegistry::ForwardEvent::impl::runHandler(evtName, evtData);
+        ImHexApi::Messaging::impl::runHandler(evtName, evtData);
     }
 
     void setupEvents() {
@@ -23,7 +24,7 @@ namespace hex::messaging {
             log::debug("Forwarding event {} (maybe to us)", evtName);
             if (*s_isMainInstance) {
                 EventManager::subscribe<EventImHexStartupFinished>([evtName, evtData](){
-                    ContentRegistry::ForwardEvent::impl::runHandler(evtName, evtData);
+                    ImHexApi::Messaging::impl::runHandler(evtName, evtData);
                 });
             } else {
                 sendToOtherInstance(evtName, evtData);

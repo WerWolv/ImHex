@@ -529,6 +529,19 @@ namespace hex {
             std::string getCommitBranch();
         }
 
+        namespace Messaging {
+            
+            namespace impl {
+                using MessagingHandler = std::function<void(const std::vector<u8> &)>;
+
+                std::map<std::string, MessagingHandler> &getHandlers();
+
+                void runHandler(const std::string &evtName, const std::vector<u8> &args);
+            }
+
+            void registerHandler(const std::string &evtName, const impl::MessagingHandler &handler);
+        }
+
     }
 
 }

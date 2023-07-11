@@ -8,7 +8,7 @@
 
 #include <hex/api/event.hpp>
 #include <hex/api/plugin_manager.hpp>
-#include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
 #include <hex/helpers/logger.hpp>
 
 namespace hex::init {
@@ -106,7 +106,7 @@ namespace hex::init {
     void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler) {
         log::debug("Registered new forward command handler: {}", cmdName);
 
-        ContentRegistry::ForwardEvent::impl::getHandlers().insert({ hex::format("command/{}", cmdName), [handler](const std::vector<u8> &evtData){
+        ImHexApi::Messaging::impl::getHandlers().insert({ hex::format("command/{}", cmdName), [handler](const std::vector<u8> &evtData){
             std::string str((const char*) evtData.data(), evtData.size());
 
             std::vector<std::string> args;
