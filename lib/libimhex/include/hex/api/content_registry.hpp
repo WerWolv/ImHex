@@ -882,14 +882,6 @@ namespace hex {
 
         }
 
-        namespace ForwardCommand {
-
-            namespace impl {
-                using ForwardCommandHandler = std::function<void(const std::vector<std::string> &)>;
-            }
-
-            void registerHandler(const std::string &cmdName, const impl::ForwardCommandHandler &handler);
-        }
     }
 
 }

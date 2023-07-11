@@ -2,6 +2,7 @@
 
 #include<vector>
 #include<string>
+#include<functional>
 
 namespace hex::init {
     /**
@@ -12,4 +13,8 @@ namespace hex::init {
     void processArguments(const std::vector<std::string> &args);
 
     void forwardSubCommand(const std::string &cmdName, const std::vector<std::string> &args);
+
+    using ForwardCommandHandler = std::function<void(const std::vector<std::string> &)>;
+
+    void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler);
 }
