@@ -116,10 +116,10 @@
                 static std::vector<StackFrame> result;
 
                 std::array<void*, 128> addresses;
-                auto count = backtrace(addresses.data(), addresses.size());
+                size_t count = backtrace(addresses.data(), addresses.size());
                 auto functions = backtrace_symbols(addresses.data(), count);
 
-                for (i32 i = 0; i < count; i++)
+                for (size_t i = 0; i < count; i++)
                     result.push_back(StackFrame { "", functions[i], 0 });
 
                 return result;
