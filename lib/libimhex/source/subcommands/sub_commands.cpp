@@ -1,6 +1,8 @@
 #include<iostream>
+#include<numeric>
 #include<stdlib.h>
 
+#include <hex/api/event.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -18,6 +20,9 @@ namespace hex::init {
     }
 
     void processArguments(const std::vector<std::string> &args) {
+        // if no arguments, do not even try to process arguments
+        // (important because this function will exit ImHex if an instance is already opened,
+        // and we don't want that if no arguments were provided)
         if (args.empty()) return;
 
         std::vector<std::pair<SubCommand, std::vector<std::string>>> subCommands;
@@ -75,5 +80,22 @@ namespace hex::init {
         for (auto& subCommandPair : subCommands) {
             subCommandPair.first.callback(subCommandPair.second);
         }
+
+        // exit the process if its not the main instance (the commands have been forwarded to another instance)
+        bool isMainInstance;
+        EventManager::post<IsMainInstance>(isMainInstance);
+        if (!isMainInstance) {
+            exit(0);
+        }
+    }
+
+    void forwardSubCommand(const std::string &cmdName, const std::vector<std::string> &args) {
+        log::debug("Forwarding subcommand {} (maybe to us)", cmdName);
+        std::string dataStr = std::accumulate(args.begin(), args.end(), std::string("\0"));
+
+        std::vector<u8> data(dataStr.begin(), dataStr.end());
+        
+        EventManager::post<SendEventToMainInstance>(hex::format("command/{}", cmdName), data);
+
     }
 }

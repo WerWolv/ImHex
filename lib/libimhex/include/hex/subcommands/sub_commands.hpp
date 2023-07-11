@@ -5,4 +5,6 @@ namespace hex::init {
      * and so this function might not return
      */
     void processArguments(const std::vector<std::string> &args);
+
+    void forwardSubCommand(const std::string &cmdName, const std::vector<std::string> &args);
 }

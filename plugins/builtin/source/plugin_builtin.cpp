@@ -1,4 +1,5 @@
 #include <hex/plugin.hpp>
+#include <hex/subcommands/sub_commands.hpp>
 
 #include <hex/api/event.hpp>
 #include <hex/api/content_registry.hpp>
@@ -71,7 +72,15 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
         exit(EXIT_SUCCESS);
     }},
     { "open", "Open files passed as argument. This is the default subcommand is none is entered",
-        [](const std::vector<std::string> &args) {
+            [](const std::vector<std::string> &args) {
+
+        ContentRegistry::ForwardCommand::registerHandler("open", [](const std::vector<std::string> &args){
+            for (auto arg : args) {
+                EventManager::post<RequestOpenFile>(arg);
+            }
+        });
+        
+        std::vector<std::string> fullPaths;
         bool doubleDashFound = false;
         for (auto &arg : args) {
             
@@ -79,11 +88,12 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
             if (arg == "--" && !doubleDashFound) {
                 doubleDashFound = true;
             } else {
-                EventManager::subscribe<EventImHexStartupFinished>([arg]() {
-                    EventManager::post<RequestOpenFile>(arg);
-                });
+                auto path = std::filesystem::weakly_canonical(arg);
+                fullPaths.push_back(wolv::util::toUTF8String(path));
             }
         }
+
+        hex::init::forwardSubCommand("open", fullPaths);
     }}
 };
 

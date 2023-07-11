@@ -8,6 +8,7 @@
 
 #include <filesystem>
 #include <thread>
+#include <ranges>
 
 #include <nlohmann/json.hpp>
 
@@ -893,6 +894,27 @@ namespace hex {
             log::debug("Registered new forward event handler: {}", evtName);
 
             impl::getHandlers().insert({ evtName, handler });
+        }
+
+    }
+
+    namespace ContentRegistry::ForwardCommand {
+
+        void registerHandler(const std::string &cmdName, const impl::ForwardCommandHandler &handler) {
+            log::debug("Registered new forward command handler: {}", cmdName);
+
+            ContentRegistry::ForwardEvent::impl::getHandlers().insert({ hex::format("command/{}", cmdName), [handler](const std::vector<u8> &evtData){
+                std::string str((const char*) evtData.data(), evtData.size());
+
+                std::vector<std::string> args;
+
+                for (const auto &arg_view : std::views::split(str, '\0')) {
+                    std::string arg(arg_view.data(), arg_view.size());
+                    args.push_back(arg);
+                }
+
+                handler(args);
+            }});
         }
 
     }
