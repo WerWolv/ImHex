@@ -106,8 +106,8 @@ namespace hex::subcommands {
     void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler) {
         log::debug("Registered new forward command handler: {}", cmdName);
 
-        ImHexApi::Messaging::impl::getHandlers().insert({ hex::format("command/{}", cmdName), [handler](const std::vector<u8> &evtData){
-            std::string str((const char*) evtData.data(), evtData.size());
+        ImHexApi::Messaging::impl::getHandlers().insert({ hex::format("command/{}", cmdName), [handler](const std::vector<u8> &eventData){
+            std::string str((const char*) eventData.data(), eventData.size());
 
             std::vector<std::string> args;
 

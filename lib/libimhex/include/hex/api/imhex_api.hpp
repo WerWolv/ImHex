@@ -540,13 +540,13 @@ namespace hex {
 
                 std::map<std::string, MessagingHandler> &getHandlers();
 
-                void runHandler(const std::string &evtName, const std::vector<u8> &args);
+                void runHandler(const std::string &eventName, const std::vector<u8> &args);
             }
 
             /**
              * @brief Register the handler for this specific event name
              */
-            void registerHandler(const std::string &evtName, const impl::MessagingHandler &handler);
+            void registerHandler(const std::string &eventName, const impl::MessagingHandler &handler);
         }
 
     }

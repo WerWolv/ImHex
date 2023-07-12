@@ -605,12 +605,12 @@ namespace hex {
                 return handlers;
             }
 
-            void runHandler(const std::string &evtName, const std::vector<u8> &args) {
+            void runHandler(const std::string &eventName, const std::vector<u8> &args) {
                 const auto& handlers = impl::getHandlers();
-                auto matchHandler = handlers.find(evtName);
+                auto matchHandler = handlers.find(eventName);
                 
                 if (matchHandler == handlers.end()) {
-                    log::error("Forward event handler {} not found", evtName);
+                    log::error("Forward event handler {} not found", eventName);
                 } else {
                     matchHandler->second(args);
                 }
@@ -619,10 +619,10 @@ namespace hex {
 
         }
 
-        void registerHandler(const std::string &evtName, const impl::MessagingHandler &handler) {
-            log::debug("Registered new forward event handler: {}", evtName);
+        void registerHandler(const std::string &eventName, const impl::MessagingHandler &handler) {
+            log::debug("Registered new forward event handler: {}", eventName);
 
-            impl::getHandlers().insert({ evtName, handler });
+            impl::getHandlers().insert({ eventName, handler });
         }
 
     }

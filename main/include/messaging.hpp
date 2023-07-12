@@ -26,10 +26,10 @@ namespace hex::messaging {
     /**
      * @brief Internal method - send a message to another Imhex instance in a platform-specific way
      */
-    void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &args);
+    void sendToOtherInstance(const std::string &eventName, const std::vector<u8> &args);
     
     /**
      * @brief Internal method - called by platform-specific code when a event has been received
      */
-    void messageReceived(const std::string &evtName, const std::vector<u8> &args);
+    void messageReceived(const std::string &eventName, const std::vector<u8> &args);
 }

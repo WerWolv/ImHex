@@ -37,22 +37,22 @@ namespace hex::messaging {
         else return imhexWindow;
     }
 
-    void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &evtData) {
-        log::debug("Sending event {} to another instance (not us)", evtName);
+    void sendToOtherInstance(const std::string &eventName, const std::vector<u8> &eventData) {
+        log::debug("Sending event {} to another instance (not us)", eventName);
 
         // Get the window we want to send it to
         HWND imHexWindow = *getImHexWindow();
 
         // Create the message
-        // TODO actually send all arguments and not just the evtName
+        // TODO actually send all arguments and not just the eventName
         
-        std::vector<u8> fullEvtData(evtName.begin(), evtName.end());
-        fullEvtData.push_back('\0');
+        std::vector<u8> fulleventData(eventName.begin(), eventName.end());
+        fulleventData.push_back('\0');
 
-        fullEvtData.insert(fullEvtData.end(), evtData.begin(), evtData.end());
+        fulleventData.insert(fulleventData.end(), eventData.begin(), eventData.end());
         
-        u8 *data = &fullEvtData[0];
-        DWORD dataSize = static_cast<DWORD>(fullEvtData.size());
+        u8 *data = &fulleventData[0];
+        DWORD dataSize = static_cast<DWORD>(fulleventData.size());
 
         COPYDATASTRUCT message = {
             .dwData = 0,

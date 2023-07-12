@@ -70,11 +70,11 @@ namespace hex {
                     break;
                 }
 
-                std::string evtName(messageData, nullIndex);
+                std::string eventName(messageData, nullIndex);
 
-                std::vector<u8> evtData(messageData + nullIndex + 1, messageData + messageSize);
+                std::vector<u8> eventData(messageData + nullIndex + 1, messageData + messageSize);
 
-                hex::messaging::messageReceived(evtName, evtData);
+                hex::messaging::messageReceived(eventName, eventData);
                 break;
             }
             case WM_SETTINGCHANGE: {

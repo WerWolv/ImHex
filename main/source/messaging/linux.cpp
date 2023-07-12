@@ -9,8 +9,8 @@
 
 namespace hex::messaging {
 
-    void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &args) {
-        hex::unused(evtName);
+    void sendToOtherInstance(const std::string &eventName, const std::vector<u8> &args) {
+        hex::unused(eventName);
         hex::unused(args);
         log::error("Not implemented function sendToOtherInstance() called");
     }

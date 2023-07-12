@@ -10,9 +10,9 @@ namespace hex::messaging {
 
     static std::optional<bool> s_isMainInstance;
 
-    void messageReceived(const std::string &evtName, const std::vector<u8> &evtData) {
-        log::debug("Received event '{}' with size {}", evtName, evtData.size());
-        ImHexApi::Messaging::impl::runHandler(evtName, evtData);
+    void messageReceived(const std::string &eventName, const std::vector<u8> &eventData) {
+        log::debug("Received event '{}' with size {}", eventName, eventData.size());
+        ImHexApi::Messaging::impl::runHandler(eventName, eventData);
     }
 
     void setupEvents() {
@@ -20,14 +20,14 @@ namespace hex::messaging {
             ret = *s_isMainInstance;
         });
 
-        EventManager::subscribe<SendMessageToMainInstance>([](const std::string evtName, const std::vector<u8> &evtData) {
-            log::debug("Forwarding message {} (maybe to us)", evtName);
+        EventManager::subscribe<SendMessageToMainInstance>([](const std::string eventName, const std::vector<u8> &eventData) {
+            log::debug("Forwarding message {} (maybe to us)", eventName);
             if (*s_isMainInstance) {
-                EventManager::subscribe<EventImHexStartupFinished>([evtName, evtData](){
-                    ImHexApi::Messaging::impl::runHandler(evtName, evtData);
+                EventManager::subscribe<EventImHexStartupFinished>([eventName, eventData](){
+                    ImHexApi::Messaging::impl::runHandler(eventName, eventData);
                 });
             } else {
-                sendToOtherInstance(evtName, evtData);
+                sendToOtherInstance(eventName, eventData);
             }
         });
     }
