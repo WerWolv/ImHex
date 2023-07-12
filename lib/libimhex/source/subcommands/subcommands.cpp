@@ -21,7 +21,7 @@ namespace hex::subcommands {
                 }
             }
         }
-        return { };
+        return std::nullopt;
     }
 
     void processArguments(const std::vector<std::string> &args) {
@@ -58,7 +58,7 @@ namespace hex::subcommands {
                     subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
                 }
 
-                currentSubCommand = { };
+                currentSubCommand = std::nullopt;
                 currentSubCommandArgs = { };
 
             } else if (currentSubCommand) {
