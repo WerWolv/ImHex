@@ -11,7 +11,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/logger.hpp>
 
-namespace hex::init {
+namespace hex::subcommands {
 
     std::optional<SubCommand> findSubCommand(const std::string &arg) {
         for (auto &plugin : PluginManager::getPlugins()) {

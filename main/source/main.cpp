@@ -59,7 +59,7 @@ int main(int argc, char **argv, char **envp) {
             log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
 
             hex::messaging::setupMessaging();
-            init::processArguments(args);
+            hex::subcommands::processArguments(args);
 
             init::WindowSplash splashWindow;
 

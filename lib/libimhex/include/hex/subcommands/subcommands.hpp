@@ -4,7 +4,7 @@
 #include<string>
 #include<functional>
 
-namespace hex::init {
+namespace hex::subcommands {
     /**
      * determine which subcommand to run from the args given, and run it.
      * In some cases, the subcommand might exit the program (e.g. --help)

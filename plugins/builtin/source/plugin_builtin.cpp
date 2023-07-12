@@ -74,7 +74,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "open", "Open files passed as argument. This is the default subcommand is none is entered",
             [](const std::vector<std::string> &args) {
 
-        hex::init::registerSubCommand("open", [](const std::vector<std::string> &args){
+        hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
             for (auto arg : args) {
                 EventManager::post<RequestOpenFile>(arg);
             }
@@ -93,7 +93,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
             }
         }
 
-        hex::init::forwardSubCommand("open", fullPaths);
+        hex::subcommands::forwardSubCommand("open", fullPaths);
     }}
 };
 
