@@ -7,7 +7,7 @@
 
 namespace hex::messaging {
 
-    void sendToOtherInstance(const std::string &evtName, const std::vector<std::string> &args) {
+    void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &args) {
         hex::unused(evtName);
         hex::unused(args);
         std::logic_error("Not implemented");
