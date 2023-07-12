@@ -72,12 +72,8 @@ namespace hex {
 
                 std::string evtName(messageData, nullIndex);
 
-                std::vector<u8> evtData;
-                for (size_t i=0; i<(messageSize-nullIndex)-1; i++) {
-                    u8 b = *reinterpret_cast<u8*>(messageData+nullIndex+i+1);
-                    evtData.push_back(b);
-                }
-                
+                std::vector<u8> evtData(messageData+nullIndex+1, messageData+messageSize);
+
                 hex::messaging::messageReceived(evtName, evtData);
                 break;
             }
