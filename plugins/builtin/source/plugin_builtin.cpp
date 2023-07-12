@@ -51,9 +51,9 @@ namespace hex::plugin::builtin {
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
     { "version", "Print ImHex version and exit", [](const std::vector<std::string>&) {
-        std::string version_str = hex::format("{} (Commit {}@{})", ImHexApi::System::getImHexVersion(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+        std::string versionString = hex::format("{} (Commit {}@{})", ImHexApi::System::getImHexVersion(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
         
-        hex::print("ImHex version: {}\n", version_str);
+        hex::print("ImHex version: {}\n", versionString);
         exit(EXIT_SUCCESS);
     }},
     { "help", "Print help about this command and exit", [](const std::vector<std::string>&) {
