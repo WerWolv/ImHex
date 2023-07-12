@@ -322,7 +322,10 @@ namespace hex {
         /* Functions to interact with various ImHex system settings */
         namespace System {
 
+            bool isMainInstance();
+
             namespace impl {
+                void setMainInstanceStatus(bool status);
 
                 void setMainWindowPosition(i32 x, i32 y);
                 void setMainWindowSize(u32 width, u32 height);

@@ -238,9 +238,4 @@ namespace hex {
      * @brief Send an event to the main Imhex instance
      */
     EVENT_DEF(SendMessageToMainInstance, const std::string, const std::vector<u8>&);
-
-    /**
-     * @brief Checks if we are running in the main instance
-     */
-    EVENT_DEF(IsMainInstance, bool&);
 }

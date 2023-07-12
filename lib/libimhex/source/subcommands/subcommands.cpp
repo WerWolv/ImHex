@@ -87,9 +87,7 @@ namespace hex::subcommands {
         }
 
         // exit the process if its not the main instance (the commands have been forwarded to another instance)
-        bool isMainInstance;
-        EventManager::post<IsMainInstance>(isMainInstance);
-        if (!isMainInstance) {
+        if (!ImHexApi::System::isMainInstance()) {
             exit(0);
         }
     }

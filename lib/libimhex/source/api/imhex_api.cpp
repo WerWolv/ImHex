@@ -335,7 +335,15 @@ namespace hex {
 
     namespace ImHexApi::System {
 
+
         namespace impl {
+
+            // default to true means we forward to ourselves by default
+            static bool s_isMainInstance = true;
+
+            void setMainInstanceStatus(bool status) {
+                s_isMainInstance = status;
+            }
 
             static ImVec2 s_mainWindowPos;
             static ImVec2 s_mainWindowSize;
@@ -396,6 +404,10 @@ namespace hex {
                 getInitArguments()[key] = value;
             }
 
+        }
+
+        bool isMainInstance() {
+            return impl::s_isMainInstance;
         }
 
         void closeImHex(bool noQuestions) {
