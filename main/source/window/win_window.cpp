@@ -72,7 +72,7 @@ namespace hex {
 
                 std::string evtName(messageData, nullIndex);
 
-                std::vector<u8> evtData(messageData+nullIndex+1, messageData+messageSize);
+                std::vector<u8> evtData(messageData + nullIndex + 1, messageData + messageSize);
 
                 hex::messaging::messageReceived(evtName, evtData);
                 break;
