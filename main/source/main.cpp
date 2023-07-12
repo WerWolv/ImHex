@@ -21,7 +21,7 @@
 
 using namespace hex;
 
-void initPlugins() {
+void loadPlugins() {
     for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
         PluginManager::load(dir);
     }
@@ -33,7 +33,7 @@ int main(int argc, char **argv, char **envp) {
 
     std::vector<std::string> args(argv + 1, argv + argc);
 
-    initPlugins();
+    loadPlugins();
     
     hex::messaging::setupMessaging();
     hex::subcommands::processArguments(args);
