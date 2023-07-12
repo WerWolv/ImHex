@@ -34,6 +34,9 @@ int main(int argc, char **argv, char **envp) {
     std::vector<std::string> args(argv + 1, argv + argc);
 
     initPlugins();
+    
+    hex::messaging::setupMessaging();
+    hex::subcommands::processArguments(args);
 
     // Check if ImHex is installed in portable mode
     {
@@ -57,9 +60,6 @@ int main(int argc, char **argv, char **envp) {
 
             log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
             log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
-
-            hex::messaging::setupMessaging();
-            hex::subcommands::processArguments(args);
 
             init::WindowSplash splashWindow;
 
