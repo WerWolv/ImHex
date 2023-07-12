@@ -39,8 +39,6 @@ namespace hex::messaging {
 
     void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &evtData) {
         log::debug("Sending event {} to another instance (not us)", evtName);
-        hex::unused(evtName);
-        hex::unused(evtData);
 
         // Get the window we want to send it to
         HWND imHexWindow = *getImHexWindow();
