@@ -14,8 +14,6 @@ namespace hex::messaging {
         HWND imhexWindow = 0;
         
         ::EnumWindows([](HWND hWnd, LPARAM ret) -> BOOL {
-            const std::string evtName = "a";
-
             // Get the window name
             auto length = ::GetWindowTextLength(hWnd);
             std::string windowName(length + 1, '\x00');
