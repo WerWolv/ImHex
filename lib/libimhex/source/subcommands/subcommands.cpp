@@ -25,7 +25,7 @@ namespace hex::subcommands {
     }
 
     void processArguments(const std::vector<std::string> &args) {
-        // if no arguments, do not even try to process arguments
+        // If no arguments, do not even try to process arguments
         // (important because this function will exit ImHex if an instance is already opened,
         // and we don't want that if no arguments were provided)
         if (args.empty()) return;
