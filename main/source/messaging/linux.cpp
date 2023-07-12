@@ -3,6 +3,8 @@
 #include<stdexcept>
 
 #include <hex/helpers/intrinsics.hpp>
+#include <hex/helpers/logger.hpp>
+
 #include "messaging.hpp"
 
 namespace hex::messaging {

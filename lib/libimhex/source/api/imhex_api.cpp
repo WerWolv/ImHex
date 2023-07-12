@@ -610,10 +610,11 @@ namespace hex {
                 auto matchHandler = handlers.find(evtName);
                 
                 if (matchHandler == handlers.end()) {
-                    throw std::runtime_error(hex::format("Forward event handler {} not found", evtName));
+                    log::error("Forward event handler {} not found", evtName);
+                } else {
+                    matchHandler->second(args);
                 }
 
-                matchHandler->second(args);
             }
 
         }
