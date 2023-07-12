@@ -8,6 +8,8 @@
 #include <hex.hpp>
 #include <hex/api/plugin_manager.hpp>
 
+#include <wolv/utils/string.hpp>
+
 /**
  * This macro is used to define all the required entry points for a plugin.
  * Name, Author and Description will be displayed in the in the plugin list on the Welcome screen.
