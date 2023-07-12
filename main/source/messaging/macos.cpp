@@ -12,7 +12,7 @@ namespace hex::messaging {
     void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &args) {
         hex::unused(evtName);
         hex::unused(args);
-        std::logic_error("Not implemented");
+        log::error("Not implemented function sendToOtherInstance() called");
     }
 
     // Not implemented, so lets say we are the main instance every time so events are forwarded to ourselves
