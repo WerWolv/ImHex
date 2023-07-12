@@ -53,7 +53,7 @@ namespace hex {
                 auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
                 if (message == nullptr) break;
 
-                int nullIndex = -1;
+                ssize_t nullIndex = -1;
 
                 char* messageData = reinterpret_cast<char*>(message->lpData);
                 size_t messageSize = message->cbData;
