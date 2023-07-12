@@ -720,8 +720,15 @@ namespace hex {
 
     void Window::initGLFW() {
         glfwSetErrorCallback([](int error, const char *desc) {
+            if (error == GLFW_PLATFORM_ERROR) {
+                // Ignore error spam caused by Wayland not supporting moving or resizing
+                // windows or querying their position and size.
+                if (std::string_view(desc).contains("Wayland"))
+                    return;
+            }
+
             try {
-                log::error("GLFW Error [{}] : {}", error, desc);
+                log::error("GLFW Error [0x{:05X}] : {}", error, desc);
             } catch (const std::system_error &) {
                 // Catch and ignore system error that might be thrown when too many errors are being logged to a file
             }
