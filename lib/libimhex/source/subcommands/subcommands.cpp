@@ -4,7 +4,7 @@
 #include<ranges>
 #include<stdlib.h>
 
-#include "hex/subcommands/sub_commands.hpp"
+#include "hex/subcommands/subcommands.hpp"
 
 #include <hex/api/event.hpp>
 #include <hex/api/plugin_manager.hpp>

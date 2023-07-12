@@ -14,7 +14,7 @@
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/fs.hpp>
-#include "hex/subcommands/sub_commands.hpp"
+#include "hex/subcommands/subcommands.hpp"
 
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>

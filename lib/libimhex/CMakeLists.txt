@@ -39,7 +39,7 @@ set(LIBIMHEX_SOURCES
         source/ui/view.cpp
         source/ui/popup.cpp
 
-        source/subcommands/sub_commands.cpp
+        source/subcommands/subcommands.cpp
 )
 
 if (APPLE)

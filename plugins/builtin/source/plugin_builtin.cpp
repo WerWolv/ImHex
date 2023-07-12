@@ -1,5 +1,5 @@
 #include <hex/plugin.hpp>
-#include <hex/subcommands/sub_commands.hpp>
+#include <hex/subcommands/subcommands.hpp>
 
 #include <hex/api/event.hpp>
 #include <hex/api/content_registry.hpp>
