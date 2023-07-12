@@ -529,6 +529,10 @@ namespace hex {
             std::string getCommitBranch();
         }
 
+        /**
+         * @brief Cross-instance messaging system
+         * This allows you to send messages to the "main" instance of ImHex running, from any other instance
+         */
         namespace Messaging {
             
             namespace impl {
@@ -539,6 +543,9 @@ namespace hex {
                 void runHandler(const std::string &evtName, const std::vector<u8> &args);
             }
 
+            /**
+             * @brief Register the handler for this specific event name
+             */
             void registerHandler(const std::string &evtName, const impl::MessagingHandler &handler);
         }
 
