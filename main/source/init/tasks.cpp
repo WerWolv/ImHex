@@ -357,6 +357,7 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
         ImHexApi::System::getAdditionalFolderPaths().clear();
         ImHexApi::System::getCustomFontPath().clear();
+        ImHexApi::Messaging::impl::getHandlers().clear();
 
         ContentRegistry::Settings::impl::getEntries().clear();
         ContentRegistry::Settings::impl::getSettingsData().clear();
