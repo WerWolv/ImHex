@@ -8,7 +8,6 @@
 
 #include <filesystem>
 #include <thread>
-#include <ranges>
 
 #include <nlohmann/json.hpp>
 
