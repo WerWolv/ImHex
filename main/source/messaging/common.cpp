@@ -8,7 +8,7 @@
 
 namespace hex::messaging {
 
-    std::optional<bool> s_isMainInstance;
+    static std::optional<bool> s_isMainInstance;
 
     void messageReceived(const std::string &evtName, const std::vector<u8> &evtData) {
         log::debug("Received event '{}' with size {}", evtName, evtData.size());
