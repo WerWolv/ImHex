@@ -21,7 +21,7 @@
 
 using namespace hex;
 
-void initPlugins(){
+void initPlugins() {
     for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
         PluginManager::load(dir);
     }

@@ -20,7 +20,7 @@ namespace hex::messaging {
             ret = *s_isMainInstance;
         });
 
-        EventManager::subscribe<SendMessageToMainInstance>([](const std::string evtName, const std::vector<u8> &evtData){
+        EventManager::subscribe<SendMessageToMainInstance>([](const std::string evtName, const std::vector<u8> &evtData) {
             log::debug("Forwarding message {} (maybe to us)", evtName);
             if (*s_isMainInstance) {
                 EventManager::subscribe<EventImHexStartupFinished>([evtName, evtData](){

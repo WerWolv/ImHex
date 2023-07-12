@@ -599,13 +599,13 @@ namespace hex {
 
         namespace impl {
 
-            std::map<std::string, MessagingHandler> &getHandlers(){
+            std::map<std::string, MessagingHandler> &getHandlers() {
                 static std::map<std::string, MessagingHandler> handlers;
 
                 return handlers;
             }
 
-            void runHandler(const std::string &evtName, const std::vector<u8> &args){
+            void runHandler(const std::string &evtName, const std::vector<u8> &args) {
                 const auto& handlers = impl::getHandlers();
                 auto matchHandler = handlers.find(evtName);
                 

@@ -9,7 +9,7 @@
 
 namespace hex::messaging {
 
-    std::optional<HWND> getImHexWindow(){
+    std::optional<HWND> getImHexWindow() {
 
         HWND imhexWindow = 0;
         
@@ -39,7 +39,7 @@ namespace hex::messaging {
         else return imhexWindow;
     }
 
-    void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &evtData){
+    void sendToOtherInstance(const std::string &evtName, const std::vector<u8> &evtData) {
         log::debug("Sending event {} to another instance (not us)", evtName);
         hex::unused(evtName);
         hex::unused(evtData);
@@ -69,7 +69,7 @@ namespace hex::messaging {
 
     }
 
-    bool setupNative(){
+    bool setupNative() {
 
         constexpr static auto UniqueMutexId = "ImHex/a477ea68-e334-4d07-a439-4f159c683763";
 
