@@ -28,13 +28,15 @@ void loadPlugins() {
 }
 
 int main(int argc, char **argv, char **envp) {
+    Window::initNative();
+
     hex::crash::setupCrashHandlers();
     hex::unused(envp);
 
     std::vector<std::string> args(argv + 1, argv + argc);
 
     loadPlugins();
-    
+
     hex::messaging::setupMessaging();
     hex::subcommands::processArguments(args);
 
@@ -49,14 +51,14 @@ int main(int argc, char **argv, char **envp) {
     }
 
     bool shouldRestart = false;
+    // Register an event to handle restarting of ImHex
+    EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
+
     do {
-        // Register an event to handle restarting of ImHex
-        EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
         shouldRestart = false;
 
         // Initialization
         {
-            Window::initNative();
 
             log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
             log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());

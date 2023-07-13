@@ -230,6 +230,24 @@ namespace hex {
 
 
     void Window::initNative() {
+        HWND consoleWindow = ::GetConsoleWindow();
+        DWORD processId = 0;
+        ::GetWindowThreadProcessId(consoleWindow, &processId);
+        if (GetCurrentProcessId() == processId) {
+            ShowWindow(consoleWindow, SW_HIDE);
+            FreeConsole();
+            log::impl::redirectToFile();
+        } else {
+            auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
+            if (hConsole != INVALID_HANDLE_VALUE) {
+                DWORD mode = 0;
+                if (::GetConsoleMode(hConsole, &mode) == TRUE) {
+                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
+                    ::SetConsoleMode(hConsole, mode);
+                }
+            }
+        }
+
         ImHexApi::System::impl::setBorderlessWindowMode(true);
 
         // Add plugin library folders to dll search path
@@ -242,39 +260,6 @@ namespace hex {
         // We redirect stderr to NUL to prevent this
         freopen("NUL:", "w", stderr);
         setvbuf(stderr, nullptr, _IONBF, 0);
-
-        // Attach to parent console if one exists
-        bool result = AttachConsole(ATTACH_PARENT_PROCESS) == TRUE;
-
-        #if defined(DEBUG)
-            if (::GetLastError() == ERROR_INVALID_HANDLE) {
-                result = AllocConsole() == TRUE;
-            }
-        #endif
-
-        if (result) {
-            // Redirect stdin and stdout to that new console
-            freopen("CONIN$", "r", stdin);
-            freopen("CONOUT$", "w", stdout);
-            setvbuf(stdin, nullptr, _IONBF, 0);
-            setvbuf(stdout, nullptr, _IONBF, 0);
-
-            fmt::print("\n");
-
-            // Enable color format specifiers in console
-            {
-                auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
-                if (hConsole != INVALID_HANDLE_VALUE) {
-                    DWORD mode = 0;
-                    if (::GetConsoleMode(hConsole, &mode) == TRUE) {
-                        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
-                        ::SetConsoleMode(hConsole, mode);
-                    }
-                }
-            }
-        } else {
-            log::impl::redirectToFile();
-        }
     }
 
     void Window::setupNativeWindow() {
