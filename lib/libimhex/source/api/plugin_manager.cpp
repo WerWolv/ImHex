@@ -144,10 +144,11 @@ namespace hex {
         return this->m_initialized;
     }
 
-    std::vector<SubCommand> Plugin::getSubCommands() const {
-        if (this->m_getSubCommandsFunction != nullptr)
-            return this->m_getSubCommandsFunction();
-        else
+    std::span<SubCommand> Plugin::getSubCommands() const {
+        if (this->m_getSubCommandsFunction != nullptr) {
+            auto result = this->m_getSubCommandsFunction();
+            return { result->subCommands, result->size };
+        } else
             return { };
     }
 

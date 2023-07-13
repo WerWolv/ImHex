@@ -32,12 +32,17 @@
  * A subcommand consists of a key, a description, and a callback
  * The key is what the first argument to ImHex should be, prefixed by `--`
  * For example, if the key if `help`, ImHex should be started with `--help` as its first argument to trigger the subcommand
- * when the subcommand is trigerred, it's callback will be executed. The callback is executed BEFORE most of ImHex initialization
+ * when the subcommand is triggerred, it's callback will be executed. The callback is executed BEFORE most of ImHex initialization
  * so to do anything meaningful, you should subscribe to an event (like EventImHexStartupFinished) and run your code there.
  */
 #define IMHEX_PLUGIN_SUBCOMMANDS() IMHEX_PLUGIN_SUBCOMMANDS_IMPL()
 
-#define IMHEX_PLUGIN_SUBCOMMANDS_IMPL()                                                                    \
-    extern std::vector<hex::SubCommand> subCommands;                                                        \
-    extern "C" [[gnu::visibility("default")]] std::vector<hex::SubCommand>& getSubCommands() { return subCommands; }     \
-    std::vector<hex::SubCommand> subCommands
+#define IMHEX_PLUGIN_SUBCOMMANDS_IMPL()                                                 \
+    extern std::vector<hex::SubCommand> g_subCommands;                                  \
+    extern "C" [[gnu::visibility("default")]] hex::SubCommandList getSubCommands() {    \
+        return hex::SubCommandList {                                                    \
+            g_subCommands.data(),                                                       \
+            g_subCommands.size()                                                        \
+        };                                                                              \
+    }                                                                                   \
+    std::vector<hex::SubCommand> g_subCommands

@@ -23,6 +23,11 @@ namespace hex {
         std::function<void(const std::vector<std::string>&)> callback;
     };
 
+    struct SubCommandList {
+        hex::SubCommand *subCommands;
+        size_t size;
+    };
+
     class Plugin {
     public:
         explicit Plugin(const std::fs::path &path);
@@ -42,7 +47,7 @@ namespace hex {
 
         [[nodiscard]] bool isLoaded() const;
 
-        [[nodiscard]] std::vector<SubCommand> getSubCommands() const;
+        [[nodiscard]] std::span<SubCommand> getSubCommands() const;
 
     private:
         using InitializePluginFunc     = void (*)();
@@ -52,7 +57,7 @@ namespace hex {
         using GetCompatibleVersionFunc = const char *(*)();
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using IsBuiltinPluginFunc      = bool (*)();
-        using GetSubCommandsFunc       = std::vector<SubCommand>& (*)();
+        using GetSubCommandsFunc       = SubCommandList* (*)();
 
         #if defined(OS_WINDOWS)
             HMODULE m_handle = nullptr;
