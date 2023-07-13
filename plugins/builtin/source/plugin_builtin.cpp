@@ -68,14 +68,14 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
         );
 
         size_t longestCommand = 0;
-        for (auto &plugin : PluginManager::getPlugins()) {
-            for (auto &subCommand : plugin.getSubCommands()) {
+        for (const auto &plugin : PluginManager::getPlugins()) {
+            for (const auto &subCommand : plugin.getSubCommands()) {
                 longestCommand = std::max(longestCommand, subCommand.commandKey.size());
             }
         }
 
-        for (auto &plugin : PluginManager::getPlugins()) {
-            for (auto &subCommand : plugin.getSubCommands()) {
+        for (const auto &plugin : PluginManager::getPlugins()) {
+            for (const auto &subCommand : plugin.getSubCommands()) {
                 hex::print("    --{}{: <{}}        {}\n", subCommand.commandKey, "", longestCommand - subCommand.commandKey.size(), subCommand.commandDesc);
             }
         }
