@@ -322,7 +322,10 @@ namespace hex {
         /* Functions to interact with various ImHex system settings */
         namespace System {
 
+            bool isMainInstance();
+
             namespace impl {
+                void setMainInstanceStatus(bool status);
 
                 void setMainWindowPosition(i32 x, i32 y);
                 void setMainWindowSize(u32 width, u32 height);
@@ -330,8 +333,6 @@ namespace hex {
 
                 void setGlobalScale(float scale);
                 void setNativeScale(float scale);
-
-                void setProgramArguments(int argc, char **argv, char **envp);
 
                 void setBorderlessWindowMode(bool enabled);
 
@@ -381,20 +382,6 @@ namespace hex {
              * @param progress The progress of the progress bar
              */
             void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress);
-
-
-            /**
-             * @brief Gets the current program arguments
-             * @return The current program arguments
-             */
-            const ProgramArguments &getProgramArguments();
-
-            /**
-             * @brief Gets a program argument
-             * @param index The index of the argument to get
-             * @return The argument at the given index
-             */
-            std::optional<std::u8string> getProgramArgument(int index);
 
 
             /**
@@ -543,6 +530,26 @@ namespace hex {
              * @return Git commit branch
              */
             std::string getCommitBranch();
+        }
+
+        /**
+         * @brief Cross-instance messaging system
+         * This allows you to send messages to the "main" instance of ImHex running, from any other instance
+         */
+        namespace Messaging {
+            
+            namespace impl {
+                using MessagingHandler = std::function<void(const std::vector<u8> &)>;
+
+                std::map<std::string, MessagingHandler> &getHandlers();
+
+                void runHandler(const std::string &eventName, const std::vector<u8> &args);
+            }
+
+            /**
+             * @brief Register the handler for this specific event name
+             */
+            void registerHandler(const std::string &eventName, const impl::MessagingHandler &handler);
         }
 
     }

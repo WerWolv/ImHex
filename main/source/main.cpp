@@ -4,20 +4,41 @@
 
 #include "window.hpp"
 #include "crash_handlers.hpp"
+#include "messaging.hpp"
 
 #include "init/splash_window.hpp"
 #include "init/tasks.hpp"
 
 #include <hex/api/task.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/plugin_manager.hpp>
+#include <hex/api/content_registry.hpp>
+#include <hex/helpers/fs.hpp>
+#include "hex/subcommands/subcommands.hpp"
 
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
 
+using namespace hex;
+
+void loadPlugins() {
+    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+        PluginManager::load(dir);
+    }
+}
+
 int main(int argc, char **argv, char **envp) {
-    using namespace hex;
+    Window::initNative();
+
     hex::crash::setupCrashHandlers();
-    ImHexApi::System::impl::setProgramArguments(argc, argv, envp);
+    hex::unused(envp);
+
+    std::vector<std::string> args(argv + 1, argv + argc);
+
+    loadPlugins();
+
+    hex::messaging::setupMessaging();
+    hex::subcommands::processArguments(args);
 
     // Check if ImHex is installed in portable mode
     {
@@ -30,14 +51,14 @@ int main(int argc, char **argv, char **envp) {
     }
 
     bool shouldRestart = false;
+    // Register an event to handle restarting of ImHex
+    EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
+
     do {
-        // Register an event to handle restarting of ImHex
-        EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
         shouldRestart = false;
 
         // Initialization
         {
-            Window::initNative();
 
             log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
             log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
@@ -69,14 +90,6 @@ int main(int argc, char **argv, char **envp) {
         // Main window
         {
             Window window;
-            if (argc == 1)
-                ;    // No arguments provided
-            else if (argc >= 2) {
-                for (auto i = 1; i < argc; i++) {
-                    if (auto argument = ImHexApi::System::getProgramArgument(i); argument.has_value())
-                        EventManager::post<RequestOpenFile>(argument.value());
-                }
-            }
 
             // Open file that has been requested to be opened through other, OS-specific means
             if (auto path = hex::getInitialFilePath(); path.has_value()) {

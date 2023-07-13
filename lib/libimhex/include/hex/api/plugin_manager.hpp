@@ -5,6 +5,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 
+#include <span>
 #include <string>
 
 #if defined(OS_WINDOWS)
@@ -16,6 +17,17 @@
 struct ImGuiContext;
 
 namespace hex {
+
+    struct SubCommand {
+        std::string commandKey;
+        std::string commandDesc;
+        std::function<void(const std::vector<std::string>&)> callback;
+    };
+
+    struct SubCommandList {
+        hex::SubCommand *subCommands;
+        size_t size;
+    };
 
     class Plugin {
     public:
@@ -36,6 +48,8 @@ namespace hex {
 
         [[nodiscard]] bool isLoaded() const;
 
+        [[nodiscard]] std::span<SubCommand> getSubCommands() const;
+
     private:
         using InitializePluginFunc     = void (*)();
         using GetPluginNameFunc        = const char *(*)();
@@ -44,6 +58,7 @@ namespace hex {
         using GetCompatibleVersionFunc = const char *(*)();
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using IsBuiltinPluginFunc      = bool (*)();
+        using GetSubCommandsFunc       = SubCommandList* (*)();
 
         #if defined(OS_WINDOWS)
             HMODULE m_handle = nullptr;
@@ -61,6 +76,7 @@ namespace hex {
         GetCompatibleVersionFunc m_getCompatibleVersionFunction = nullptr;
         SetImGuiContextFunc m_setImGuiContextFunction           = nullptr;
         IsBuiltinPluginFunc m_isBuiltinPluginFunction           = nullptr;
+        GetSubCommandsFunc m_getSubCommandsFunction             = nullptr;
 
         template<typename T>
         [[nodiscard]] auto getPluginFunction(const std::string &symbol) {

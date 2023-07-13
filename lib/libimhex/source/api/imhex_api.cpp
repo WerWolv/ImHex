@@ -335,7 +335,15 @@ namespace hex {
 
     namespace ImHexApi::System {
 
+
         namespace impl {
+
+            // default to true means we forward to ourselves by default
+            static bool s_isMainInstance = true;
+
+            void setMainInstanceStatus(bool status) {
+                s_isMainInstance = status;
+            }
 
             static ImVec2 s_mainWindowPos;
             static ImVec2 s_mainWindowSize;
@@ -363,13 +371,6 @@ namespace hex {
                 s_nativeScale = scale;
             }
 
-
-            static ProgramArguments s_programArguments;
-            void setProgramArguments(int argc, char **argv, char **envp) {
-                s_programArguments.argc = argc;
-                s_programArguments.argv = argv;
-                s_programArguments.envp = envp;
-            }
 
             static bool s_borderlessWindowMode;
             void setBorderlessWindowMode(bool enabled) {
@@ -405,6 +406,10 @@ namespace hex {
 
         }
 
+        bool isMainInstance() {
+            return impl::s_isMainInstance;
+        }
+
         void closeImHex(bool noQuestions) {
             EventManager::post<RequestCloseImHex>(noQuestions);
         }
@@ -416,25 +421,6 @@ namespace hex {
 
         void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress) {
             EventManager::post<EventSetTaskBarIconState>(u32(state), u32(type), progress);
-        }
-
-        const ProgramArguments &getProgramArguments() {
-            return impl::s_programArguments;
-        }
-
-        std::optional<std::u8string> getProgramArgument(int index) {
-            if (index >= impl::s_programArguments.argc) {
-                return std::nullopt;
-            }
-
-            #if defined(OS_WINDOWS)
-                std::wstring wideArg = ::CommandLineToArgvW(::GetCommandLineW(), &impl::s_programArguments.argc)[index];
-                std::string byteArg = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().to_bytes(wideArg);
-
-                return std::u8string(byteArg.begin(), byteArg.end());
-            #else
-                return std::u8string(reinterpret_cast<const char8_t *>(impl::s_programArguments.argv[index]));
-            #endif
         }
 
 
@@ -617,6 +603,38 @@ namespace hex {
             #else
                 return "Unknown";
             #endif
+        }
+
+    }
+
+    namespace ImHexApi::Messaging {
+
+        namespace impl {
+
+            std::map<std::string, MessagingHandler> &getHandlers() {
+                static std::map<std::string, MessagingHandler> handlers;
+
+                return handlers;
+            }
+
+            void runHandler(const std::string &eventName, const std::vector<u8> &args) {
+                const auto& handlers = impl::getHandlers();
+                auto matchHandler = handlers.find(eventName);
+                
+                if (matchHandler == handlers.end()) {
+                    log::error("Forward event handler {} not found", eventName);
+                } else {
+                    matchHandler->second(args);
+                }
+
+            }
+
+        }
+
+        void registerHandler(const std::string &eventName, const impl::MessagingHandler &handler) {
+            log::debug("Registered new forward event handler: {}", eventName);
+
+            impl::getHandlers().insert({ eventName, handler });
         }
 
     }

@@ -357,6 +357,7 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
         ImHexApi::System::getAdditionalFolderPaths().clear();
         ImHexApi::System::getCustomFontPath().clear();
+        ImHexApi::Messaging::impl::getHandlers().clear();
 
         ContentRegistry::Settings::impl::getEntries().clear();
         ContentRegistry::Settings::impl::getSettingsData().clear();
@@ -418,11 +419,6 @@ namespace hex::init {
     }
 
     bool loadPlugins() {
-        // Load plugins
-        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
-            PluginManager::load(dir);
-        }
-
         // Get loaded plugins
         auto &plugins = PluginManager::getPlugins();
 

@@ -35,6 +35,7 @@ namespace hex {
         this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
         this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
         this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
+        this->m_getSubCommandsFunction       = getPluginFunction<GetSubCommandsFunc>("getSubCommands");
     }
 
     Plugin::Plugin(Plugin &&other) noexcept {
@@ -48,6 +49,7 @@ namespace hex {
         this->m_getCompatibleVersionFunction = other.m_getCompatibleVersionFunction;
         this->m_setImGuiContextFunction      = other.m_setImGuiContextFunction;
         this->m_isBuiltinPluginFunction      = other.m_isBuiltinPluginFunction;
+        this->m_getSubCommandsFunction       = other.m_getSubCommandsFunction;
 
         other.m_handle                       = nullptr;
         other.m_initializePluginFunction     = nullptr;
@@ -57,6 +59,7 @@ namespace hex {
         other.m_getCompatibleVersionFunction = nullptr;
         other.m_setImGuiContextFunction      = nullptr;
         other.m_isBuiltinPluginFunction      = nullptr;
+        other.m_getSubCommandsFunction       = nullptr;
     }
 
     Plugin::~Plugin() {
@@ -139,6 +142,14 @@ namespace hex {
 
     bool Plugin::isLoaded() const {
         return this->m_initialized;
+    }
+
+    std::span<SubCommand> Plugin::getSubCommands() const {
+        if (this->m_getSubCommandsFunction != nullptr) {
+            auto result = this->m_getSubCommandsFunction();
+            return { result->subCommands, result->size };
+        } else
+            return { };
     }
 
 

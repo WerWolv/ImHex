@@ -1,5 +1,7 @@
 #include "window.hpp"
 
+#include "messaging.hpp"
+
 #include <hex/api/content_registry.hpp>
 
 #if defined(OS_WINDOWS)
@@ -53,12 +55,28 @@ namespace hex {
                 auto message = reinterpret_cast<COPYDATASTRUCT *>(lParam);
                 if (message == nullptr) break;
 
-                auto data = reinterpret_cast<const char8_t *>(message->lpData);
-                if (data == nullptr) break;
+                ssize_t nullIndex = -1;
 
-                std::fs::path path = data;
-                log::info("Opening file in existing instance: {}", wolv::util::toUTF8String(path));
-                EventManager::post<RequestOpenFile>(path);
+                char* messageData = reinterpret_cast<char*>(message->lpData);
+                size_t messageSize = message->cbData;
+
+                for (size_t i = 0; i < messageSize; i++) {
+                    if (messageData[i] == '\0') {
+                        nullIndex = i;
+                        break;
+                    }
+                }
+
+                if (nullIndex == -1) {
+                    log::warn("Received invalid forwarded event");
+                    break;
+                }
+
+                std::string eventName(messageData, nullIndex);
+
+                std::vector<u8> eventData(messageData + nullIndex + 1, messageData + messageSize);
+
+                hex::messaging::messageReceived(eventName, eventData);
                 break;
             }
             case WM_SETTINGCHANGE: {
@@ -214,6 +232,24 @@ namespace hex {
 
 
     void Window::initNative() {
+        HWND consoleWindow = ::GetConsoleWindow();
+        DWORD processId = 0;
+        ::GetWindowThreadProcessId(consoleWindow, &processId);
+        if (GetCurrentProcessId() == processId) {
+            ShowWindow(consoleWindow, SW_HIDE);
+            FreeConsole();
+            log::impl::redirectToFile();
+        } else {
+            auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
+            if (hConsole != INVALID_HANDLE_VALUE) {
+                DWORD mode = 0;
+                if (::GetConsoleMode(hConsole, &mode) == TRUE) {
+                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
+                    ::SetConsoleMode(hConsole, mode);
+                }
+            }
+        }
+
         ImHexApi::System::impl::setBorderlessWindowMode(true);
 
         // Add plugin library folders to dll search path
@@ -226,83 +262,6 @@ namespace hex {
         // We redirect stderr to NUL to prevent this
         freopen("NUL:", "w", stderr);
         setvbuf(stderr, nullptr, _IONBF, 0);
-
-        // Attach to parent console if one exists
-        bool result = AttachConsole(ATTACH_PARENT_PROCESS) == TRUE;
-
-        #if defined(DEBUG)
-            if (::GetLastError() == ERROR_INVALID_HANDLE) {
-                result = AllocConsole() == TRUE;
-            }
-        #endif
-
-        if (result) {
-            // Redirect stdin and stdout to that new console
-            freopen("CONIN$", "r", stdin);
-            freopen("CONOUT$", "w", stdout);
-            setvbuf(stdin, nullptr, _IONBF, 0);
-            setvbuf(stdout, nullptr, _IONBF, 0);
-
-            fmt::print("\n");
-
-            // Enable color format specifiers in console
-            {
-                auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
-                if (hConsole != INVALID_HANDLE_VALUE) {
-                    DWORD mode = 0;
-                    if (::GetConsoleMode(hConsole, &mode) == TRUE) {
-                        mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
-                        ::SetConsoleMode(hConsole, mode);
-                    }
-                }
-            }
-        } else {
-            log::impl::redirectToFile();
-        }
-
-        // Open new files in already existing ImHex instance
-        constexpr static auto UniqueMutexId = "ImHex/a477ea68-e334-4d07-a439-4f159c683763";
-
-        HANDLE globalMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
-        if (globalMutex == nullptr) {
-            // If no ImHex instance is running, create a new global mutex
-            globalMutex = CreateMutex(nullptr, FALSE, UniqueMutexId);
-        } else {
-            // If an ImHex instance is already running, send the file path to it and exit
-
-            if (ImHexApi::System::getProgramArguments().argc > 1) {
-                // Find the ImHex Window and send the file path as a message to it
-                ::EnumWindows([](HWND hWnd, LPARAM) -> BOOL {
-                    auto &programArgs = ImHexApi::System::getProgramArguments();
-
-                    // Get the window name
-                    auto length = ::GetWindowTextLength(hWnd);
-                    std::string windowName(length + 1, '\x00');
-                    ::GetWindowText(hWnd, windowName.data(), windowName.size());
-
-                    // Check if the window is visible and if it's an ImHex window
-                    if (::IsWindowVisible(hWnd) == TRUE && length != 0) {
-                        if (windowName.starts_with("ImHex")) {
-                            // Create the message
-                            COPYDATASTRUCT message = {
-                                .dwData = 0,
-                                .cbData = static_cast<DWORD>(std::strlen(programArgs.argv[1])) + 1,
-                                .lpData = programArgs.argv[1]
-                            };
-
-                            // Send the message
-                            SendMessage(hWnd, WM_COPYDATA, reinterpret_cast<WPARAM>(hWnd), reinterpret_cast<LPARAM>(&message));
-
-                            return FALSE;
-                        }
-                    }
-
-                    return TRUE;
-                }, 0);
-
-                std::exit(0);
-            }
-        }
     }
 
     void Window::setupNativeWindow() {

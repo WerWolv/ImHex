@@ -9,6 +9,11 @@ add_executable(main ${APPLICATION_TYPE}
     source/window/macos_window.cpp
     source/window/linux_window.cpp
 
+    source/messaging/common.cpp
+    source/messaging/linux.cpp
+    source/messaging/macos.cpp
+    source/messaging/win.cpp
+
     source/init/splash_window.cpp
     source/init/tasks.cpp
 
