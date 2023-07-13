@@ -5,6 +5,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 
+#include <span>
 #include <string>
 
 #if defined(OS_WINDOWS)

@@ -7,7 +7,6 @@
 #include <wolv/utils/string.hpp>
 
 #include <filesystem>
-#include <span>
 #include <system_error>
 
 namespace hex {
