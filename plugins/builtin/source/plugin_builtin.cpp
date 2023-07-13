@@ -51,9 +51,12 @@ namespace hex::plugin::builtin {
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
     { "version", "Print ImHex version and exit", [](const std::vector<std::string>&) {
-        std::string versionString = hex::format("{} (Commit {}@{})", ImHexApi::System::getImHexVersion(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
-        
-        hex::print("ImHex version: {}\n", versionString);
+        hex::print(romfs::get("logo.ans").string(),
+                   ImHexApi::System::getImHexVersion(),
+                   ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(),
+                   __DATE__, __TIME__,
+                   ImHexApi::System::isPortableVersion() ? "Portable" : "Installed");
+
         exit(EXIT_SUCCESS);
     }},
     { "help", "Print help about this command and exit", [](const std::vector<std::string>&) {
@@ -61,21 +64,29 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
             "ImHex - A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.\n"
             "\n"
             "usage: imhex [subcommand] [options]\n"
-            "registered subcommands:\n"
+            "Available subcommands:\n"
         );
+
+        size_t longestCommand = 0;
+        for (auto &plugin : PluginManager::getPlugins()) {
+            for (auto &subCommand : plugin.getSubCommands()) {
+                longestCommand = std::max(longestCommand, subCommand.commandKey.size());
+            }
+        }
 
         for (auto &plugin : PluginManager::getPlugins()) {
             for (auto &subCommand : plugin.getSubCommands()) {
-                hex::print("\t--{}\t\t{}\n", subCommand.commandKey.c_str(), subCommand.commandDesc.c_str());
+                hex::print("    --{}{: <{}}        {}\n", subCommand.commandKey, "", longestCommand - subCommand.commandKey.size(), subCommand.commandDesc);
             }
         }
+
         exit(EXIT_SUCCESS);
     }},
     { "open", "Open files passed as argument. This is the default subcommand is none is entered",
             [](const std::vector<std::string> &args) {
 
         hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
-            for (auto arg : args) {
+            for (auto &arg : args) {
                 EventManager::post<RequestOpenFile>(arg);
             }
         });
