@@ -22,8 +22,12 @@ namespace hex::plugin::builtin {
         auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
         if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
             fileProvider->setPath(path);
-            if (fileProvider->open())
+            if (!provider->open() || !provider->isAvailable()) {
+                PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
+            } else {
                 EventManager::post<EventProviderOpened>(fileProvider);
+            }
         }
     }
 
