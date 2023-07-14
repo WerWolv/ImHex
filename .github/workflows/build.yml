@@ -437,7 +437,6 @@ jobs:
           -DCMAKE_INSTALL_PREFIX="/usr"                 \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-          -DUSE_SYSTEM_CURL=ON                          \
           -DUSE_SYSTEM_FMT=ON                           \
           -DUSE_SYSTEM_YARA=ON                          \
           -DUSE_SYSTEM_NLOHMANN_JSON=ON                 \

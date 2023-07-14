@@ -19,7 +19,6 @@
         "CMAKE_CXX_COMPILER": "g++",
         "IMHEX_PATTERNS_PULL_MASTER": "ON",
         "CMAKE_INSTALL_PREFIX": "./install",
-        "USE_SYSTEM_CURL": "ON",
         "USE_SYSTEM_CAPSTONE": "ON",
         "IMHEX_USE_DEFAULT_BUILD_SETTINGS": "ON"
       }
