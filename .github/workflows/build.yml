@@ -203,7 +203,6 @@ jobs:
         OBJC=$(brew --prefix llvm)/bin/clang                                                        \
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
-        MACOSX_DEPLOYMENT_TARGET="10.10"                                                            \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
           -DCREATE_BUNDLE=ON                                                                        \
@@ -216,7 +215,6 @@ jobs:
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"                                              \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
-          -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"                                                     \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"   \
           ..
         ninja package
