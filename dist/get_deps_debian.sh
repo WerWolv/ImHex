@@ -20,6 +20,6 @@ apt install -y \
   libmbedtls-dev        \
   libfreetype-dev       \
   libdbus-1-dev         \
-  libcurl-dev           \
+  libcurl4-gnutls-dev   \
   xdg-desktop-portal    \
   ninja-build
