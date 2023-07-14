@@ -51,7 +51,6 @@ jobs:
           gcc:p
           lld:p
           cmake:p
-          make:p
           ccache:p
           glfw:p
           file:p
@@ -59,6 +58,7 @@ jobs:
           freetype:p
           dlfcn:p
           libbacktrace:p
+          ninja:p
 
     - name: 📜 Set version variable
       run: |
@@ -70,7 +70,7 @@ jobs:
         mkdir -p build
         cd build
 
-        cmake -G "MinGW Makefiles"                      \
+        cmake -G "Ninja"                                \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
           -DCREATE_PACKAGE=ON                           \
@@ -79,8 +79,9 @@ jobs:
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
+          -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
           ..
-        mingw32-make -j4 install
+        ninja install
         cpack
         mv ImHex-*.msi ../imhex-${{env.IMHEX_VERSION}}-Windows-x86_64.msi
 
@@ -179,17 +180,18 @@ jobs:
         mkdir build
         cd build
 
-        cmake                                           \
+        cmake -G "Ninja"                                \
           -DBUILD_SHARED_LIBS=ON                        \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
+          -DDOTNET_EXECUTABLE="/usr/local/bin/dotnet"   \
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
         ..
-        make -j 4 install
+        ninja install
 
     # MacOS cmake build
     - name: 🛠️ Build
@@ -202,7 +204,7 @@ jobs:
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         MACOSX_DEPLOYMENT_TARGET="10.10"                                                            \
-        cmake                                                                                       \
+        cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
@@ -217,7 +219,7 @@ jobs:
           -DCMAKE_OSX_DEPLOYMENT_TARGET="10.10"                                                     \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"   \
           ..
-        make -j4 package
+        ninja package
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
@@ -279,18 +281,18 @@ jobs:
           echo COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $GITHUB_ENV
           mkdir -p build
           cd build
-          CC=gcc-12 CXX=g++-12 cmake                                \
+          CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                       \
             -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                  \
-            -DCMAKE_INSTALL_PREFIX="/usr"                           \
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache                      \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                    \
-            -DIMHEX_PATTERNS_PULL_MASTER=ON                         \
+            -DCMAKE_INSTALL_PREFIX="/usr"                             \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
+            -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
             -DIMHEX_COMMIT_HASH_SHORT="${{env.COMMIT_SHA_SHORT}}"   \
             -DIMHEX_COMMIT_HASH_LONG="${{env.COMMIT_SHA_LONG}}"     \
             -DIMHEX_COMMIT_BRANCH="${{env.COMMIT_BRANCH}}"          \
             -DIMHEX_ENABLE_LTO=ON                 \
             ..
-          make -j 4 install DESTDIR=DebDir
+          DESTDIR=DebDir ninja install 
 
       - name: 📜 Set version variable
         run: |
@@ -338,7 +340,7 @@ jobs:
           sudo apt update
           sudo bash dist/get_deps_debian.sh
 
-          sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse
+          sudo apt install -y python3-pip python3-setuptools desktop-file-utils libgdk-pixbuf2.0-dev fuse ninja-build
           sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
           sudo chmod +x /usr/local/bin/appimagetool
           sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
@@ -352,7 +354,7 @@ jobs:
         run: |
           mkdir -p build-appimage
           cd build-appimage
-          CC=gcc-12 CXX=g++-12 cmake                      \
+          CC=gcc-12 CXX=g++-12 cmake -G "Ninja"           \
             -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
             -DCMAKE_INSTALL_PREFIX="/usr"                 \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
@@ -365,7 +367,7 @@ jobs:
             -DIMHEX_PLUGINS_IN_SHARE=ON                   \
             -DIMHEX_USE_BUNDLED_CA=ON                     \
             ..
-          make -j 4 install DESTDIR=AppDir
+          DESTDIR=AppDir ninja install
 
       - name: 📦 Bundle AppImage
         run: |
@@ -430,7 +432,7 @@ jobs:
         run: |
           mkdir -p build
           cd build
-          CC=gcc CXX=g++ cmake                          \
+          CC=gcc CXX=g++ cmake -G "Ninja"               \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="/usr"                 \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
@@ -446,7 +448,7 @@ jobs:
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
           -DIMHEX_ENABLE_LTO=ON       \
           ..
-          make -j 4 install DESTDIR=installDir
+          DESTDIR=installDir ninja install 
 
       - name: 📜 Set version variable
         run: |

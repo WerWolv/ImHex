@@ -21,4 +21,5 @@ apt install -y \
   libmbedtls-dev        \
   libfreetype-dev       \
   libdbus-1-dev         \
-  xdg-desktop-portal
+  xdg-desktop-portal    \
+  ninja-build
