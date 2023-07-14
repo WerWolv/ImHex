@@ -5,6 +5,7 @@ dnf install -y      \
   dbus-devel        \
   file-devel        \
   freetype-devel    \
+  libcurl-devel     \
   gcc-c++           \
   git               \
   mesa-libGL-devel  \

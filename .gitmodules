@@ -14,10 +14,6 @@
 	path = lib/external/fmt
 	url = https://github.com/fmtlib/fmt
 	ignore = dirty
-[submodule "lib/external/curl"]
-	path = lib/external/curl
-	url = https://github.com/curl/curl
-	ignore = dirty
 [submodule "lib/external/capstone"]
 	path = lib/external/capstone
 	url = https://github.com/capstone-engine/capstone

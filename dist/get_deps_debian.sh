@@ -13,7 +13,6 @@ apt install -y \
   lld                   \
   ${PKGCONF:-}          \
   cmake                 \
-  make                  \
   ccache                \
   libglfw3-dev          \
   libglm-dev            \
@@ -21,5 +20,6 @@ apt install -y \
   libmbedtls-dev        \
   libfreetype-dev       \
   libdbus-1-dev         \
+  libcurl4-gnutls-dev   \
   xdg-desktop-portal    \
   ninja-build
