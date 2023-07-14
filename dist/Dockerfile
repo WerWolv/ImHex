@@ -14,6 +14,7 @@ RUN pacman -S --needed --noconfirm      \
     file                                \
     mbedtls                             \
     freetype2                           \
+    curl                                \
     dbus                                \
     xdg-desktop-portal
 
