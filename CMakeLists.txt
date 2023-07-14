@@ -11,6 +11,7 @@ option(IMHEX_IGNORE_BAD_COMPILER "Allow compiling with an unsupported compiler" 
 option(IMHEX_USE_GTK_FILE_PICKER "Use GTK file picker instead of xdg-desktop-portals" OFF)
 option(IMHEX_DISABLE_STACKTRACE "Disables support for printing stack traces" OFF)
 option(IMHEX_ENABLE_LTO "Enables Link Time Optimizations if possible" OFF)
+option(IMHEX_USE_DEFAULT_BUILD_SETTINGS "Use default build settings" OFF)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
@@ -20,9 +21,9 @@ set(CMAKE_MODULE_PATH "${IMHEX_BASE_FOLDER}/cmake/modules")
 include("${IMHEX_BASE_FOLDER}/cmake/build_helpers.cmake")
 
 # Setup project
-configureCMake()
 loadVersion(IMHEX_VERSION)
 setVariableInParent(IMHEX_VERSION ${IMHEX_VERSION})
+configureCMake()
 project(imhex
         LANGUAGES C CXX VERSION ${IMHEX_VERSION}
         DESCRIPTION "The ImHex Hex Editor"

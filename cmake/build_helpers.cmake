@@ -283,6 +283,48 @@ function(JOIN OUTPUT GLUE)
 endfunction()
 
 macro(configureCMake)
+    message(STATUS "Configuring ImHex v${IMHEX_VERSION}")
+
+    # Configure use of recommended build tools
+    if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
+        message(STATUS "Configuring CMake to use recommended build tools...")
+
+        find_program(CCACHE_PATH ccache)
+        find_program(NINJA_PATH ninja)
+        find_program(LD_LLD_PATH ld.lld)
+        find_program(AR_LLVMLIBS_PATH llvm-ar)
+        find_program(RANLIB_LLVMLIBS_PATH llvm-ranlib)
+
+        if (CCACHE_PATH)
+            set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_PATH})
+            set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_PATH})
+        else ()
+            message(WARNING "ccache not found!")
+        endif ()
+
+        if (AR_LLVMLIBS_PATH)
+            set(CMAKE_AR ${AR_LLVMLIBS_PATH})
+        else ()
+            message(WARNING "llvm-ar not found, using default ar!")
+        endif ()
+
+        if (RANLIB_LLVMLIBS_PATH)
+            set(CMAKE_RANLIB ${RANLIB_LLVMLIBS_PATH})
+        else ()
+            message(WARNING "llvm-ranlib not found, using default ranlib!")
+        endif ()
+
+        if (LD_LLD_PATH)
+            set(CMAKE_LINKER ${LD_LLD_PATH})
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=lld")
+            set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=lld")
+        else ()
+            message(WARNING "lld not found, using default linker!")
+        endif ()
+
+        set(CMAKE_GENERATOR Ninja)
+    endif()
+
     # Enable LTO if desired and supported
     if (IMHEX_ENABLE_LTO)
         include(CheckIPOSupported)
@@ -290,6 +332,7 @@ macro(configureCMake)
         check_ipo_supported(RESULT result)
         if (result)
             set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+            message(STATUS "LTO enabled!")
         else ()
             message(WARNING "LTO is not supported!")
         endif ()

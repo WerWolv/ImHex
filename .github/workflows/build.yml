@@ -74,10 +74,7 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
           -DCREATE_PACKAGE=ON                           \
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
-          -DCMAKE_C_FLAGS="-fuse-ld=lld"                \
-          -DCMAKE_CXX_FLAGS="-fuse-ld=lld"              \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON         \
           -DIMHEX_PATTERNS_PULL_MASTER=ON               \
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
