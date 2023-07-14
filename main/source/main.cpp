@@ -30,6 +30,9 @@ void loadPlugins() {
 int main(int argc, char **argv, char **envp) {
     Window::initNative();
 
+    log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
+    log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+
     hex::crash::setupCrashHandlers();
     hex::unused(envp);
 
@@ -59,10 +62,6 @@ int main(int argc, char **argv, char **envp) {
 
         // Initialization
         {
-
-            log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
-            log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
-
             init::WindowSplash splashWindow;
 
             // Add initialization tasks to run
