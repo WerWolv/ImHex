@@ -198,14 +198,14 @@ namespace hex::script::loader {
                 continue;
 
             for (const auto &entry : std::fs::directory_iterator(directoryPath)) {
-                if (!entry.is_regular_file())
+                if (!entry.is_directory())
                     continue;
 
-                const auto &scriptPath = entry.path();
+                const auto &scriptPath = entry.path() / "Main.dll";
                 if (!std::fs::exists(scriptPath))
                     continue;
 
-                this->addScript(scriptPath.stem().string(), [this, scriptPath] {
+                this->addScript(entry.path().stem().string(), [this, scriptPath] {
                     this->m_loadAssembly(scriptPath);
                 });
             }
