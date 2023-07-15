@@ -16,6 +16,7 @@ namespace hex::script::loader {
         ScriptLoader() = default;
         virtual ~ScriptLoader() = default;
 
+        virtual bool initialize() = 0;
         virtual bool loadAll() = 0;
 
         void addScript(std::string name, std::function<void()> entryPoint) {

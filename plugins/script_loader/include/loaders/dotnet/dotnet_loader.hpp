@@ -10,9 +10,10 @@ namespace hex::script::loader {
 
     class DotNetLoader : public ScriptLoader {
     public:
-        DotNetLoader();
+        DotNetLoader() = default;
         ~DotNetLoader() override = default;
 
+        bool initialize() override;
         bool loadAll() override;
 
     private:

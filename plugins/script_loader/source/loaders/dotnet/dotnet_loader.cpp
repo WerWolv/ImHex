@@ -133,12 +133,18 @@ namespace hex::script::loader {
         }
     }
 
-    DotNetLoader::DotNetLoader() {
-        AT_FIRST_TIME {
-            if (!loadHostfxr()) {
-                throw std::runtime_error("Failed to load hostfxr");
-            }
-        };
+
+    bool DotNetLoader::initialize() {
+        try {
+            AT_FIRST_TIME {
+                if (!loadHostfxr()) {
+                    throw std::runtime_error("Failed to load hostfxr");
+                }
+            };
+        } catch (const std::exception &e) {
+            log::error("Failed to initialize DotNetLoader: {}", e.what());
+            return false;
+        }
 
         for (const auto& path : hex::fs::getDefaultPaths(hex::fs::ImHexPath::Plugins)) {
             auto assemblyLoader = path / "AssemblyLoader.dll";
@@ -173,7 +179,11 @@ namespace hex::script::loader {
 
                 return result == 0;
             };
-        };
+
+            return true;
+        }
+
+        return false;
     }
 
     bool DotNetLoader::loadAll() {
