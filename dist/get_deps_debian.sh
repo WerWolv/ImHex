@@ -21,5 +21,5 @@ apt install -y \
   libfreetype-dev       \
   libdbus-1-dev         \
   libcurl4-gnutls-dev   \
-  xdg-desktop-portal    \
+  libgtk-3-dev          \
   ninja-build

@@ -11,4 +11,5 @@ dnf install -y      \
   mesa-libGL-devel  \
   glfw-devel        \
   lld               \
-  mbedtls-devel
+  mbedtls-devel     \
+  gtk3-devel

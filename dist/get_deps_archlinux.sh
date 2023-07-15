@@ -9,7 +9,7 @@ pacman -S $@ --needed \
   mbedtls   \
   freetype2 \
   dbus      \
-  xdg-desktop-portal \
+  gtk3      \
   curl      \
   fmt       \
   yara      \
