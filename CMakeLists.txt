@@ -12,6 +12,7 @@ option(IMHEX_USE_GTK_FILE_PICKER "Use GTK file picker instead of xdg-desktop-por
 option(IMHEX_DISABLE_STACKTRACE "Disables support for printing stack traces" OFF)
 option(IMHEX_ENABLE_LTO "Enables Link Time Optimizations if possible" OFF)
 option(IMHEX_USE_DEFAULT_BUILD_SETTINGS "Use default build settings" OFF)
+option(IMHEX_STRICT_WARNINGS "Enable most available warnings and treat them as errors" ON)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)

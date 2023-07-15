@@ -114,7 +114,9 @@ target_compile_definitions(libyara PRIVATE
         HASH_MODULE DOTNET_MODULE MAGIC_MODULE MACHO_MODULE DEX_MODULE
 )
 
-target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
+endif ()
 
 target_include_directories(
         libyara
