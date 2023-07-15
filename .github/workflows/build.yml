@@ -60,6 +60,11 @@ jobs:
           libbacktrace:p
           ninja:p
 
+    - name: ⬇️ Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
+
     - name: 📜 Set version variable
       run: |
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
@@ -164,6 +169,11 @@ jobs:
       run: |
         brew install glfw
 
+    - name: ⬇️ Install .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '7.0.x'
+
     - name: 🧰 Checkout glfw
       if: ${{matrix.custom_glfw}}
       uses: actions/checkout@v3
@@ -243,8 +253,8 @@ jobs:
       options: --privileged
 
     steps:
-      - name: ⬇️ Install git
-        run: apt update && apt install -y git
+      - name: ⬇️ Install setup dependencies
+        run: apt update && apt install -y git curl
 
       - name: 🧰 Checkout
         uses: actions/checkout@v3
@@ -270,6 +280,11 @@ jobs:
           apt update
           bash dist/get_deps_debian.sh
 
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
       # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
@@ -280,7 +295,7 @@ jobs:
           mkdir -p build
           cd build
           CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                       \
-            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                  \
+            -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
             -DCMAKE_INSTALL_PREFIX="/usr"                             \
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
@@ -290,6 +305,7 @@ jobs:
             -DIMHEX_COMMIT_BRANCH="${{ env.COMMIT_BRANCH }}"          \
             -DIMHEX_ENABLE_LTO=ON                                     \
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
+            -DDOTNET_EXECUTABLE="dotnet"                              \
             ..
           DESTDIR=DebDir ninja install 
 
@@ -344,6 +360,11 @@ jobs:
           sudo chmod +x /usr/local/bin/appimagetool
           sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
 
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
@@ -362,7 +383,7 @@ jobs:
             -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
             -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
             -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-            -DIMHEX_ENABLE_LTO=ON       \
+            -DIMHEX_ENABLE_LTO=ON                         \
             -DIMHEX_PLUGINS_IN_SHARE=ON                   \
             -DIMHEX_USE_BUNDLED_CA=ON                     \
             ..
@@ -411,6 +432,11 @@ jobs:
       - name: ⬇️ Install ImHex dependencies
         run: |
           dist/get_deps_archlinux.sh --noconfirm
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -535,6 +561,11 @@ jobs:
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg         \
           ccache
+
+      - name: ⬇️ Install .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.5

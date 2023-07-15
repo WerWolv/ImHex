@@ -27,7 +27,7 @@ namespace hex::init {
         GLFWwindow *m_window;
         std::mutex m_progressMutex;
         std::atomic<float> m_progress = 0;
-        std::string m_currTaskName;
+        std::list<std::string> m_currTaskNames;
 
         void initGLFW();
         void initImGui();

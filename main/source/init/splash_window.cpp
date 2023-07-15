@@ -59,34 +59,41 @@ namespace hex::init {
             std::atomic<u32> tasksCompleted = 0;
             for (const auto &[name, task, async] : this->m_tasks) {
                 auto runTask = [&, task = task, name = name] {
-                    {
-                        std::lock_guard guard(this->m_progressMutex);
-                        this->m_currTaskName = name;
-                    }
+                    try {
+                        decltype(this->m_currTaskNames)::iterator taskNameIter;
+                        {
+                            std::lock_guard guard(this->m_progressMutex);
+                            this->m_currTaskNames.push_back(name + "...");
+                            taskNameIter = std::prev(this->m_currTaskNames.end());
+                        }
 
-                    ON_SCOPE_EXIT {
-                        tasksCompleted++;
-                        this->m_progress = float(tasksCompleted) / this->m_tasks.size();
-                    };
+                        ON_SCOPE_EXIT {
+                            tasksCompleted++;
+                            this->m_progress = float(tasksCompleted) / this->m_tasks.size();
+                        };
 
-                    auto startTime = std::chrono::high_resolution_clock::now();
-                    if (!task())
+                        auto startTime = std::chrono::high_resolution_clock::now();
+                        if (!task())
+                            status = false;
+                        auto endTime = std::chrono::high_resolution_clock::now();
+
+                        log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
+
+                        {
+                            std::lock_guard guard(this->m_progressMutex);
+                            this->m_currTaskNames.erase(taskNameIter);
+                        }
+                    } catch (std::exception &e) {
+                        log::error("Init task '{}' threw an exception: {}", name, e.what());
                         status = false;
-                    auto endTime = std::chrono::high_resolution_clock::now();
-
-                    log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
+                    }
                 };
 
-                try {
-                    if (async) {
-                        TaskManager::createBackgroundTask(name, [runTask](auto&){ runTask(); });
-                    } else {
-                        runTask();
-                    }
 
-                } catch (std::exception &e) {
-                    log::error("Init task '{}' threw an exception: {}", name, e.what());
-                    status = false;
+                if (async) {
+                    TaskManager::createBackgroundTask(name, [runTask](auto&){ runTask(); });
+                } else {
+                    runTask();
                 }
             }
 
@@ -146,7 +153,9 @@ namespace hex::init {
             {
                 std::lock_guard guard(this->m_progressMutex);
                 drawList->AddRectFilled(ImVec2(0, splashTexture.getSize().y - 5) * scale, ImVec2(splashTexture.getSize().x * this->m_progress, splashTexture.getSize().y) * scale, 0xFFFFFFFF);
-                drawList->AddText(ImVec2(15, splashTexture.getSize().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}...", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], this->m_currTaskName).c_str());
+
+                if (!this->m_currTaskNames.empty())
+                    drawList->AddText(ImVec2(15, splashTexture.getSize().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], fmt::join(this->m_currTaskNames, " | ")).c_str());
             }
 
             // Render the frame

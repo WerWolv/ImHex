@@ -15,7 +15,9 @@ if(CMAKE_GENERATOR)
 	set(_POSTPROCESS_BUNDLE_MODULE_LOCATION "${CMAKE_CURRENT_LIST_FILE}")
 	function(postprocess_bundle out_target in_target)
 		add_custom_command(TARGET ${out_target} POST_BUILD
-			COMMAND ${CMAKE_COMMAND} -DBUNDLE_PATH="$<TARGET_FILE_DIR:${in_target}>/../.." -DCODE_SIGN_CERTIFICATE_ID="${CODE_SIGN_CERTIFICATE_ID}"
+			COMMAND ${CMAKE_COMMAND} -DBUNDLE_PATH="$<TARGET_FILE_DIR:${in_target}>/../.."
+				-DCODE_SIGN_CERTIFICATE_ID="${CODE_SIGN_CERTIFICATE_ID}"
+				-DEXTRA_BUNDLE_LIBRARY_PATHS="${EXTRA_BUNDLE_LIBRARY_PATHS}"
 				-P "${_POSTPROCESS_BUNDLE_MODULE_LOCATION}"
 		)
 	endfunction()
@@ -29,13 +31,13 @@ message(STATUS "Fixing up application bundle: ${BUNDLE_PATH}")
 # Make sure to fix up any included ImHex plugin.
 file(GLOB_RECURSE extra_libs "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug")
 
-message(STATUS "Fixing up application bundle: ${extra_dirs}")
 
 # BundleUtilities doesn't support DYLD_FALLBACK_LIBRARY_PATH behavior, which
 # makes it sometimes break on libraries that do weird things with @rpath. Specify
 # equivalent search directories until https://gitlab.kitware.com/cmake/cmake/issues/16625
 # is fixed and in our minimum CMake version.
-set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib")
+set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib" ${EXTRA_BUNDLE_LIBRARY_PATHS})
+message(STATUS "Fixing up application bundle: ${extra_dirs}")
 
 # BundleUtilities is overly verbose, so disable most of its messages
 function(message)

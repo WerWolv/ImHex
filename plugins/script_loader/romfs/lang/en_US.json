@@ -1,0 +1,10 @@
+{
+    "code": "en-US",
+    "country": "United States",
+    "language": "English",
+    "translations": {
+        "hex.script_loader.menu.run_script": "Run Script...",
+        "hex.script_loader.menu.loading": "Loading...",
+        "hex.script_loader.menu.no_scripts": "No scripts found"
+    }
+}

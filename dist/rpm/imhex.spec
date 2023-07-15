@@ -26,6 +26,7 @@ BuildRequires:  llvm-devel
 BuildRequires:  mbedtls-devel
 BuildRequires:  yara-devel
 BuildRequires:  nativefiledialog-extended-devel
+BuildRequires:  dotnet-sdk-7.0
 %if 0%{?rhel}
 BuildRequires:  gcc-toolset-12
 %endif
@@ -78,6 +79,7 @@ CXXFLAGS+=" -std=gnu++2b"
  -D USE_SYSTEM_YARA=ON                   \
  -D USE_SYSTEM_NFD=ON                    \
  -D IMHEX_USE_GTK_FILE_PICKER=ON         \
+ -D IMHEX_BUNDLE_DOTNET=OFF              \
 # when capstone >= 5.x is released we should be able to build against \
 # system libs of it \
 # -D USE_SYSTEM_CAPSTONE=ON
