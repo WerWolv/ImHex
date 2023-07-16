@@ -2,6 +2,7 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/task.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
@@ -284,12 +285,14 @@ namespace hex::plugin::builtin {
 
                             ImGui::SameLine();
                             if (ImGui::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                                if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
-                                    viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
-                                    if (viewProvider->open())
-                                        EventManager::post<EventProviderOpened>(viewProvider);
-                                }
+                                TaskManager::doLater([region, provider]{
+                                    auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                                    if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                        viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
+                                        if (viewProvider->open())
+                                            EventManager::post<EventProviderOpened>(viewProvider);
+                                    }
+                                });
                             }
                             ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
 
