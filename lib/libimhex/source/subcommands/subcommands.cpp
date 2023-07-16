@@ -55,7 +55,7 @@ namespace hex::subcommands {
             if (arg == "--othercmd") {
                 // save command to run
                 if (currentSubCommand) {
-                    subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+                    subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
                 }
 
                 currentSubCommand = std::nullopt;
@@ -78,7 +78,7 @@ namespace hex::subcommands {
 
         // save last command to run
         if (currentSubCommand) {
-            subCommands.push_back({*currentSubCommand, currentSubCommandArgs});
+            subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
         }
 
         // run the subcommands

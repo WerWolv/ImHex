@@ -1,12 +1,13 @@
 #include <hex/plugin.hpp>
-#include <hex/subcommands/subcommands.hpp>
 
-#include <hex/api/event.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/subcommands/subcommands.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>
+
+#include "content/command_line_interface.hpp"
 
 using namespace hex;
 
@@ -45,67 +46,19 @@ namespace hex::plugin::builtin {
 
     void handleBorderlessWindowMode();
 
-    void handleSubCommands();
-
 }
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
-    { "version", "Print ImHex version and exit", [](const std::vector<std::string>&) {
-        hex::print(romfs::get("logo.ans").string(),
-                   ImHexApi::System::getImHexVersion(),
-                   ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash(),
-                   __DATE__, __TIME__,
-                   ImHexApi::System::isPortableVersion() ? "Portable" : "Installed");
+    { "help",       "Print help about this command",                hex::plugin::builtin::handleHelpCommand     },
+    { "version",    "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand  },
+    { "plugins",    "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand  },
 
-        exit(EXIT_SUCCESS);
-    }},
-    { "help", "Print help about this command and exit", [](const std::vector<std::string>&) {
-        hex::print(
-            "ImHex - A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.\n"
-            "\n"
-            "usage: imhex [subcommand] [options]\n"
-            "Available subcommands:\n"
-        );
+    { "open", "Open files passed as argument. [default]", hex::plugin::builtin::handleOpenCommand },
 
-        size_t longestCommand = 0;
-        for (const auto &plugin : PluginManager::getPlugins()) {
-            for (const auto &subCommand : plugin.getSubCommands()) {
-                longestCommand = std::max(longestCommand, subCommand.commandKey.size());
-            }
-        }
-
-        for (const auto &plugin : PluginManager::getPlugins()) {
-            for (const auto &subCommand : plugin.getSubCommands()) {
-                hex::print("    --{}{: <{}}        {}\n", subCommand.commandKey, "", longestCommand - subCommand.commandKey.size(), subCommand.commandDesc);
-            }
-        }
-
-        exit(EXIT_SUCCESS);
-    }},
-    { "open", "Open files passed as argument. This is the default subcommand is none is entered",
-            [](const std::vector<std::string> &args) {
-
-        hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
-            for (auto &arg : args) {
-                EventManager::post<RequestOpenFile>(arg);
-            }
-        });
-        
-        std::vector<std::string> fullPaths;
-        bool doubleDashFound = false;
-        for (auto &arg : args) {
-            
-            // Skip the first argument named `--`
-            if (arg == "--" && !doubleDashFound) {
-                doubleDashFound = true;
-            } else {
-                auto path = std::filesystem::weakly_canonical(arg);
-                fullPaths.push_back(wolv::util::toUTF8String(path));
-            }
-        }
-
-        hex::subcommands::forwardSubCommand("open", fullPaths);
-    }}
+    { "calc",   "Evaluate a mathematical expression",   hex::plugin::builtin::handleCalcCommand     },
+    { "hash",   "Calculate the hash of a file",         hex::plugin::builtin::handleHashCommand     },
+    { "encode", "Encode a string",                      hex::plugin::builtin::handleEncodeCommand   },
+    { "decode", "Decode a string",                      hex::plugin::builtin::handleDecodeCommand   },
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
@@ -140,6 +93,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerNetworkEndpoints();
     registerFileHandlers();
     registerProjectHandlers();
+    registerCommandForwarders();
 
     addFooterItems();
     addTitleBarButtons();
