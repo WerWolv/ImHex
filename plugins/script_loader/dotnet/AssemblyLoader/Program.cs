@@ -16,7 +16,7 @@ namespace ImHex
             }
             catch (Exception e)
             {
-                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e.Message);
+                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e.ToString());
                 return 1;
             }
         }
@@ -24,10 +24,22 @@ namespace ImHex
 
         private static bool ExecuteScript(string path)
         {
-            AssemblyLoadContext? context = new("ScriptDomain_" + Path.GetFileNameWithoutExtension(path), true);
+            string? basePath = Path.GetDirectoryName(path);
+            if (basePath == null)
+            {
+                Console.WriteLine("[.NET Script] Failed to get base path");
+                return false;
+            }
+
+            AssemblyLoadContext? context = new("ScriptDomain_" + basePath, true);
 
             try
             {
+                foreach (var file in Directory.GetFiles(basePath, "*.dll"))
+                {
+                    context.LoadFromStream(new MemoryStream(File.ReadAllBytes(file)));
+                }
+
                 var assembly = context.LoadFromStream(new MemoryStream(File.ReadAllBytes(path)));
 
                 var entryPointType = assembly.GetType("Script");
@@ -48,7 +60,7 @@ namespace ImHex
             }
             catch (Exception e)
             {
-                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e.Message);
+                Console.WriteLine("[.NET Script] Exception in AssemblyLoader: " + e.ToString());
                 return false;
             }
             finally

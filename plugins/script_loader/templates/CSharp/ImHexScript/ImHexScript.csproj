@@ -6,12 +6,20 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>Main</AssemblyName>
-        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
         <SelfContained>true</SelfContained>
     </PropertyGroup>
 
     <PropertyGroup>
 	    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="ImGui.NET" Version="1.89.7.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\ImHexLibrary\ImHexLibrary.csproj" />
+    </ItemGroup>
 
 </Project>

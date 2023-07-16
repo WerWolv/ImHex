@@ -5,6 +5,6 @@ class Script
 {
     public static void Main()
     {
-
+        UI.ShowMessageBox("Hello World!");
     }
 }
