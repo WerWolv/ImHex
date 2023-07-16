@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
 # Options
-option(IMHEX_USE_BUNDLED_CA "Use the CA bundle in romfs instead of the system one" OFF)
 option(IMHEX_PLUGINS_IN_SHARE "Put the plugins in share/imhex/plugins instead of lib[..]/imhex/plugins" OFF)
 option(IMHEX_STRIP_RELEASE "Strip the release builds" ON)
 option(IMHEX_OFFLINE_BUILD "Enable offline build" OFF)

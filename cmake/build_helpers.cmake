@@ -47,7 +47,6 @@ macro(detectOS)
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
-        set(IMHEX_USE_BUNDLED_CA ON)
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -69,10 +68,6 @@ macro(detectOS)
 
     else ()
         message(FATAL_ERROR "Unknown / unsupported system!")
-    endif()
-
-    if(IMHEX_USE_BUNDLED_CA)
-        add_compile_definitions(IMHEX_USE_BUNDLED_CA)
     endif()
 
 endmacro()

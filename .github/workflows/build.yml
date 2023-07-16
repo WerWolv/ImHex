@@ -385,7 +385,6 @@ jobs:
             -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
             -DIMHEX_ENABLE_LTO=ON                         \
             -DIMHEX_PLUGINS_IN_SHARE=ON                   \
-            -DIMHEX_USE_BUNDLED_CA=ON                     \
             ..
           DESTDIR=AppDir ninja install
 

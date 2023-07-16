@@ -36,16 +36,6 @@ namespace hex {
         curl_easy_setopt(this->m_curl, CURLOPT_XFERINFODATA, this);
         curl_easy_setopt(this->m_curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
         curl_easy_setopt(this->m_curl, CURLOPT_PROXY, s_proxyUrl.c_str());
-
-        #if defined(IMHEX_USE_BUNDLED_CA)
-            curl_easy_setopt(this->m_curl, CURLOPT_CAINFO, nullptr);
-            curl_easy_setopt(this->m_curl, CURLOPT_CAPATH, nullptr);
-            curl_easy_setopt(this->m_curl, CURLOPT_SSLCERTTYPE, "PEM");
-            curl_easy_setopt(this->m_curl, CURLOPT_SSL_CTX_FUNCTION, sslCtxFunction);
-
-            this->m_caCert = std::make_unique<mbedtls_x509_crt>();
-            curl_easy_setopt(this->m_curl, CURLOPT_SSL_CTX_DATA, this->m_caCert.get());
-        #endif
     }
 
     CURLcode HttpRequest::sslCtxFunction(CURL *ctx, void *sslctx, void *userData) {
