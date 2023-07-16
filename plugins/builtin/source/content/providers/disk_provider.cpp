@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <sys/disk.h>
 #endif
 
 #if defined(OS_LINUX)
@@ -75,12 +76,12 @@ namespace hex::plugin::builtin {
         this->m_path = path;
     }
 
-#if defined (OS_LINUX) || defined(OS_MACOS)
+#if defined (OS_LINUX)
     #ifdef BLKSSZGET
         int blkdev_get_sector_size(int fd, int *sector_size) {
-            if (ioctl(fd, BLKSSZGET, sector_size) >= 0)
-                return 0;
-            return -1;
+            if (ioctl(fd, BLKSSZGET, sector_size) < 0)
+                return -1;
+            return 0;
         }
     #else
         int blkdev_get_sector_size(int fd, int *sector_size) {
@@ -92,9 +93,9 @@ namespace hex::plugin::builtin {
 
     #ifdef BLKGETSIZE64
         int blkdev_get_size(int fd, u64 *bytes) {
-            if (ioctl(fd, BLKGETSIZE64, bytes) >= 0)
-                return 0;
-            return -1;
+            if (ioctl(fd, BLKGETSIZE64, bytes) < 0)
+                return -1;
+            return 0;
         }
     #else
         int blkdev_get_size(int fd, u64 *bytes) {
@@ -116,6 +117,31 @@ namespace hex::plugin::builtin {
             return 0;
         }
     #endif
+#elif defined(OS_MACOS)
+    int blkdev_get_sector_size(int fd, int *sector_size) {
+        if (ioctl(fd, DKIOCGETBLOCKSIZE, bytes) >= 0)
+            return 0;
+        return -1;
+    }
+
+    int blkdev_get_size(int fd, u64 *bytes) {
+        struct stat st;
+
+        if (fstat(fd, &st) < 0)
+            return -1;
+
+        if (st.st_size == 0) {
+            // try BLKGETSIZE
+            unsigned long long bytes64;
+            if (ioctl(fd, DKIOCGETBLOCKSIZE, &bytes64) >= 0) {
+                *bytes = bytes64;
+                return 0;
+            }
+        }
+
+        *bytes = st.st_size;
+        return 0;
+    }
 #endif
 
     bool DiskProvider::open() {
