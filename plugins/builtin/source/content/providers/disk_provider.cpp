@@ -119,7 +119,7 @@ namespace hex::plugin::builtin {
     #endif
 #elif defined(OS_MACOS)
     int blkdev_get_sector_size(int fd, int *sector_size) {
-        if (ioctl(fd, DKIOCGETBLOCKSIZE, bytes) >= 0)
+        if (ioctl(fd, DKIOCGETBLOCKSIZE, sector_size) >= 0)
             return 0;
         return -1;
     }
@@ -201,7 +201,7 @@ namespace hex::plugin::builtin {
         }
 
         u64 numBlocks = 0;
-        if(ioctl(this->m_diskHandle, BLKGETSIZE64, &numBlocks) == -1) {
+        if(blkdev_get_size(this->m_diskHandle, &numBlocks) == -1) {
             numBlocks = -1;
         }
 
