@@ -183,6 +183,20 @@ namespace hex::plugin::builtin::ui {
             this->m_scrollPosition = scrollPosition;
         }
 
+        void setEditingAddress(u64 address) {
+            this->m_editingAddress = address;
+            this->m_shouldModifyValue = false;
+            this->m_enteredEditingMode = true;
+
+            this->m_editingBytes.resize(this->m_currDataVisualizer->getBytesPerCell());
+            this->m_provider->read(address + this->m_provider->getBaseAddress(), this->m_editingBytes.data(), this->m_editingBytes.size());
+            this->m_editingCellType = CellType::Hex;
+        }
+
+        void clearEditingAddress() {
+            this->m_editingAddress = std::nullopt;
+        }
+
     private:
         prv::Provider *m_provider;
 

@@ -708,6 +708,11 @@ namespace hex::plugin::builtin {
             EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), provider });
         });
 
+        ShortcutManager::addShortcut(this, Keys::Enter, [this] {
+            if (auto cursor = this->m_hexEditor.getCursorPosition(); cursor.has_value())
+                this->m_hexEditor.setEditingAddress(cursor.value());
+        });
+
         // Move cursor around
         ShortcutManager::addShortcut(this, Keys::Up, [this] {
             auto selection = getSelection();
