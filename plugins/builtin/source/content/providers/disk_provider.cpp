@@ -17,10 +17,16 @@
 
 #if defined(OS_WINDOWS)
 #include <winioctl.h>
-#elif defined(OS_LINUX) || defined(OS_MACOS)
+#elif defined(OS_LINUX)
 #include <fcntl.h>
 #include <unistd.h>
 #include <linux/fs.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#elif defined(OS_MACOS)
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -69,50 +75,48 @@ namespace hex::plugin::builtin {
         this->m_path = path;
     }
 
-#ifdef BLKSSZGET
-    int blkdev_get_sector_size(int fd, int *sector_size)
-    {
-        if (ioctl(fd, BLKSSZGET, sector_size) >= 0)
-            return 0;
-        return -1;
-    }
-#else
-    int blkdev_get_sector_size(int fd __attribute__((__unused__)), int *sector_size)
-    {
-        *sector_size = DEFAULT_SECTOR_SIZE;
-        return 0;
-    }
-#endif
-
-#ifdef BLKGETSIZE64
-    int blkdev_get_size(int fd, uint64_t *bytes)
-    {
-        if (ioctl(fd, BLKGETSIZE64, bytes) >= 0)
-            return 0;
-        return -1;
-    }
-#else
-    int blkdev_get_size(int fd, uint64_t *bytes)
-    {
-        struct stat st;
-
-        if (fstat(fd, &st) < 0)
-            return -1;
-
-        if (st.st_size == 0) {
-            // try BLKGETSIZE
-            unsigned long long bytes64;
-            if (ioctl(fd, BLKGETSIZE, &bytes64) >= 0) {
-                *bytes = bytes64;
+#if defined (OS_LINUX) || defined(OS_MACOS)
+    #ifdef BLKSSZGET
+        int blkdev_get_sector_size(int fd, int *sector_size) {
+            if (ioctl(fd, BLKSSZGET, sector_size) >= 0)
                 return 0;
-            }
+            return -1;
         }
+    #else
+        int blkdev_get_sector_size(int fd, int *sector_size) {
+            (void)fd;
+            *sector_size = DEFAULT_SECTOR_SIZE;
+            return 0;
+        }
+    #endif
 
-        *bytes = st.st_size;
-        return 0;
-    }
+    #ifdef BLKGETSIZE64
+        int blkdev_get_size(int fd, u64 *bytes) {
+            if (ioctl(fd, BLKGETSIZE64, bytes) >= 0)
+                return 0;
+            return -1;
+        }
+    #else
+        int blkdev_get_size(int fd, u64 *bytes) {
+            struct stat st;
+
+            if (fstat(fd, &st) < 0)
+                return -1;
+
+            if (st.st_size == 0) {
+                // try BLKGETSIZE
+                unsigned long long bytes64;
+                if (ioctl(fd, BLKGETSIZE, &bytes64) >= 0) {
+                    *bytes = bytes64;
+                    return 0;
+                }
+            }
+
+            *bytes = st.st_size;
+            return 0;
+        }
+    #endif
 #endif
-
 
     bool DiskProvider::open() {
         this->m_readable = true;
