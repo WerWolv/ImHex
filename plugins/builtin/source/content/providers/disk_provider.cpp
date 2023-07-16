@@ -125,21 +125,15 @@ namespace hex::plugin::builtin {
     }
 
     int blkdev_get_size(int fd, u64 *bytes) {
-        struct stat st;
-
-        if (fstat(fd, &st) < 0)
+        int sectorSize = 0;
+        if (blkdev_get_sector_size(fd, &sectorSize) < 0)
             return -1;
 
-        if (st.st_size == 0) {
-            // try BLKGETSIZE
-            unsigned long long bytes64;
-            if (ioctl(fd, DKIOCGETBLOCKSIZE, &bytes64) >= 0) {
-                *bytes = bytes64;
-                return 0;
-            }
-        }
+        if (ioctl(fd, DKIOCGETBLOCKCOUNT, bytes) < 0)
+            return -1;
 
-        *bytes = st.st_size;
+        *bytes *= sectorSize;
+
         return 0;
     }
 #endif
