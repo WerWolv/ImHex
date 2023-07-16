@@ -200,12 +200,9 @@ namespace hex::plugin::builtin {
             return false;
         }
 
-        u64 numBlocks = 0;
-        if(blkdev_get_size(this->m_diskHandle, &numBlocks) == -1) {
-            numBlocks = -1;
-        }
-
-        blkdev_get_size(this->m_diskHandle, &this->m_diskSize);
+        u64 diskSize = 0;
+        blkdev_get_size(this->m_diskHandle, &numBlocks);
+        this->m_diskSize = diskSize;
         blkdev_get_sector_size(this->m_diskHandle, reinterpret_cast<int *>(&this->m_sectorSize));
 
         this->m_sectorBuffer.resize(this->m_sectorSize);
