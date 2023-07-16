@@ -825,7 +825,7 @@ namespace hex::plugin::builtin::ui {
 
                         int sliderPos = this->m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
                         ImGui::PushItemWidth(60_scaled);
-                        ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "Little" : "Big");
+                        ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
                         ImGui::PopItemWidth();
                         this->m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
 
