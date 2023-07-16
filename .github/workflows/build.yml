@@ -59,6 +59,7 @@ jobs:
           dlfcn:p
           libbacktrace:p
           ninja:p
+          capstone:p
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v3
@@ -84,6 +85,7 @@ jobs:
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
+          -DUSE_SYSTEM_CAPSTONE=ON                      \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
           ..
         ninja install
