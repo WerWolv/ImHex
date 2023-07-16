@@ -206,6 +206,7 @@ namespace hex::plugin::builtin::ui {
         float m_scrollPosition = 0;
 
         u16 m_bytesPerRow = 16;
+        std::endian m_dataVisualizerEndianness = std::endian::little;
         std::shared_ptr<ContentRegistry::HexEditor::DataVisualizer> m_currDataVisualizer;
         char m_unknownDataCharacter = '?';
 

@@ -171,10 +171,17 @@ namespace hex::plugin::builtin::ui {
         }
 
         if (this->m_editingAddress != address || this->m_editingCellType != cellType) {
-            if (cellType == CellType::Hex)
-                this->m_currDataVisualizer->draw(address, data, size, this->m_upperCaseHex);
-            else
+            if (cellType == CellType::Hex) {
+                std::vector<u8> buffer(size);
+                std::memcpy(buffer.data(), data, size);
+
+                if (this->m_dataVisualizerEndianness != std::endian::native)
+                    std::reverse(buffer.begin(), buffer.end());
+
+                this->m_currDataVisualizer->draw(address, buffer.data(), buffer.size(), this->m_upperCaseHex);
+            } else {
                 asciiVisualizer.draw(address, data, size, this->m_upperCaseHex);
+            }
 
             if (hovered && this->m_provider->isWritable()) {
                 // Enter editing mode when double-clicking a cell
@@ -194,10 +201,18 @@ namespace hex::plugin::builtin::ui {
             ImGui::SetNextFrameWantCaptureKeyboard(true);
 
             bool shouldExitEditingMode = true;
-            if (cellType == this->m_editingCellType && cellType == CellType::Hex)
-                shouldExitEditingMode = this->m_currDataVisualizer->drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
-            else if (cellType == this->m_editingCellType && cellType == CellType::ASCII)
+            if (cellType == this->m_editingCellType && cellType == CellType::Hex) {
+                std::vector<u8> buffer = this->m_editingBytes;
+
+                if (this->m_dataVisualizerEndianness != std::endian::native)
+                    std::reverse(buffer.begin(), buffer.end());
+
+                shouldExitEditingMode = this->m_currDataVisualizer->drawEditing(*this->m_editingAddress, buffer.data(), buffer.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
+
+                this->m_editingBytes = buffer;
+            } else if (cellType == this->m_editingCellType && cellType == CellType::ASCII) {
                 shouldExitEditingMode = asciiVisualizer.drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
+            }
 
             if (shouldExitEditingMode || this->m_shouldModifyValue) {
                 this->m_provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
@@ -805,8 +820,17 @@ namespace hex::plugin::builtin::ui {
                         auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
 
                         ImGui::TextFormatted("{}: ", "hex.builtin.hex_editor.visualizer"_lang);
+
                         ImGui::SameLine(0, 0);
-                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+                        int sliderPos = this->m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
+                        ImGui::PushItemWidth(60_scaled);
+                        ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "Little" : "Big");
+                        ImGui::PopItemWidth();
+                        this->m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
+
+                        ImGui::SameLine(0, 2_scaled);
+                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 60_scaled);
                         if (ImGui::BeginCombo("##visualizer", LangEntry(this->m_currDataVisualizer->getUnlocalizedName()))) {
 
                             for (const auto &visualizer : visualizers) {
