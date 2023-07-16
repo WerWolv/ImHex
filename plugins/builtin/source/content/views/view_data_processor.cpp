@@ -1,4 +1,5 @@
 #include "content/views/view_data_processor.hpp"
+#include "content/popups/popup_notification.hpp"
 
 #include <hex/api/content_registry.hpp>
 
@@ -6,6 +7,7 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/api/project_file_manager.hpp>
+
 
 #include <imnodes.h>
 #include <imnodes_internal.h>
@@ -358,7 +360,7 @@ namespace hex::plugin::builtin {
             ViewDataProcessor::processNodes(*this->m_workspaceStack->back());
         });
 
-        /* Import bookmarks */
+        /* Import Nodes */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, 4050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&](const std::fs::path &path) {
@@ -370,7 +372,7 @@ namespace hex::plugin::builtin {
                                 });
         }, ImHexApi::Provider::isValid);
 
-        /* Export bookmarks */
+        /* Export Nodes */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, 8050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&, this](const std::fs::path &path) {
@@ -940,87 +942,91 @@ namespace hex::plugin::builtin {
         workspace.endNodes.clear();
         workspace.links.clear();
 
-        for (auto &node : jsonData["nodes"]) {
-            auto newNode = loadNode(node);
-            if (newNode == nullptr)
-                continue;
+        try {
+            for (auto &node : jsonData["nodes"]) {
+                auto newNode = loadNode(node);
+                if (newNode == nullptr)
+                    continue;
 
-            newNode->setPosition(ImVec2(node["pos"]["x"], node["pos"]["y"]));
+                newNode->setPosition(ImVec2(node["pos"]["x"], node["pos"]["y"]));
 
-            if (!node["data"].is_null())
-                newNode->load(node["data"]);
+                if (!node["data"].is_null())
+                    newNode->load(node["data"]);
 
-            bool hasOutput = false;
-            bool hasInput  = false;
-            u32 attrIndex  = 0;
-            for (auto &attr : newNode->getAttributes()) {
-                if (attr.getIOType() == dp::Attribute::IOType::Out)
-                    hasOutput = true;
+                bool hasOutput = false;
+                bool hasInput  = false;
+                u32 attrIndex  = 0;
+                for (auto &attr : newNode->getAttributes()) {
+                    if (attr.getIOType() == dp::Attribute::IOType::Out)
+                        hasOutput = true;
 
-                if (attr.getIOType() == dp::Attribute::IOType::In)
-                    hasInput = true;
+                    if (attr.getIOType() == dp::Attribute::IOType::In)
+                        hasInput = true;
 
-                attr.setId(node["attrs"][attrIndex]);
-                attrIndex++;
+                    attr.setId(node["attrs"][attrIndex]);
+                    attrIndex++;
+                }
+
+                if (hasInput && !hasOutput)
+                    workspace.endNodes.push_back(newNode.get());
+
+                workspace.nodes.push_back(std::move(newNode));
             }
 
-            if (hasInput && !hasOutput)
-                workspace.endNodes.push_back(newNode.get());
+            int maxLinkId = 0;
+            for (auto &link : jsonData["links"]) {
+                dp::Link newLink(link["from"], link["to"]);
 
-            workspace.nodes.push_back(std::move(newNode));
-        }
+                int linkId = link["id"];
+                maxLinkId  = std::max(linkId, maxLinkId);
 
-        int maxLinkId = 0;
-        for (auto &link : jsonData["links"]) {
-            dp::Link newLink(link["from"], link["to"]);
+                newLink.setId(linkId);
+                workspace.links.push_back(newLink);
 
-            int linkId = link["id"];
-            maxLinkId  = std::max(linkId, maxLinkId);
+                dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
+                for (auto &node : workspace.nodes) {
+                    for (auto &attribute : node->getAttributes()) {
+                        if (attribute.getId() == newLink.getFromId())
+                            fromAttr = &attribute;
+                        else if (attribute.getId() == newLink.getToId())
+                            toAttr = &attribute;
+                    }
+                }
 
-            newLink.setId(linkId);
-            workspace.links.push_back(newLink);
+                if (fromAttr == nullptr || toAttr == nullptr)
+                    break;
 
-            dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
+                if (fromAttr->getType() != toAttr->getType())
+                    break;
+
+                if (fromAttr->getIOType() == toAttr->getIOType())
+                    break;
+
+                if (!toAttr->getConnectedAttributes().empty())
+                    break;
+
+                fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
+                toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
+            }
+
+            int maxNodeId = 0;
+            int maxAttrId = 0;
             for (auto &node : workspace.nodes) {
-                for (auto &attribute : node->getAttributes()) {
-                    if (attribute.getId() == newLink.getFromId())
-                        fromAttr = &attribute;
-                    else if (attribute.getId() == newLink.getToId())
-                        toAttr = &attribute;
+                maxNodeId = std::max(maxNodeId, node->getId());
+
+                for (auto &attr : node->getAttributes()) {
+                    maxAttrId = std::max(maxAttrId, attr.getId());
                 }
             }
 
-            if (fromAttr == nullptr || toAttr == nullptr)
-                break;
+            dp::Node::setIdCounter(maxNodeId + 1);
+            dp::Attribute::setIdCounter(maxAttrId + 1);
+            dp::Link::setIdCounter(maxLinkId + 1);
 
-            if (fromAttr->getType() != toAttr->getType())
-                break;
-
-            if (fromAttr->getIOType() == toAttr->getIOType())
-                break;
-
-            if (!toAttr->getConnectedAttributes().empty())
-                break;
-
-            fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
-            toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
+            ViewDataProcessor::processNodes(workspace);
+        } catch (nlohmann::json::exception &e) {
+            PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
         }
-
-        int maxNodeId = 0;
-        int maxAttrId = 0;
-        for (auto &node : workspace.nodes) {
-            maxNodeId = std::max(maxNodeId, node->getId());
-
-            for (auto &attr : node->getAttributes()) {
-                maxAttrId = std::max(maxAttrId, attr.getId());
-            }
-        }
-
-        dp::Node::setIdCounter(maxNodeId + 1);
-        dp::Attribute::setIdCounter(maxAttrId + 1);
-        dp::Link::setIdCounter(maxLinkId + 1);
-
-        ViewDataProcessor::processNodes(workspace);
     }
 
 }
