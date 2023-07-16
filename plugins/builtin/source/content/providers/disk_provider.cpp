@@ -201,7 +201,7 @@ namespace hex::plugin::builtin {
         }
 
         u64 diskSize = 0;
-        blkdev_get_size(this->m_diskHandle, &numBlocks);
+        blkdev_get_size(this->m_diskHandle, &diskSize);
         this->m_diskSize = diskSize;
         blkdev_get_sector_size(this->m_diskHandle, reinterpret_cast<int *>(&this->m_sectorSize));
 
