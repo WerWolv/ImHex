@@ -59,6 +59,7 @@ jobs:
           dlfcn:p
           libbacktrace:p
           ninja:p
+          curl-winssl:p
           capstone:p
 
     - name: ⬇️ Install .NET
