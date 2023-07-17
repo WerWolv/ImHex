@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
             std::exit(EXIT_FAILURE);
         }
 
-        auto data = file.readVector(std::min(file.getSize(), 100_KiB));
+        auto data = file.readVector(std::min<size_t>(file.getSize(), 100_KiB));
 
         if (operation == "mime") {
             auto result = magic::getMIMEType(data);
