@@ -73,7 +73,7 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} libpl libpl-gen ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
 
 
 if (DEFINED IMHEX_COMMIT_HASH_LONG AND DEFINED IMHEX_COMMIT_HASH_SHORT AND DEFINED IMHEX_COMMIT_BRANCH)

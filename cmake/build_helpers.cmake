@@ -564,6 +564,7 @@ macro(addBundledLibraries)
         pkg_search_module(CAPSTONE 4.0.2 REQUIRED capstone)
     endif()
 
+    set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
     add_subdirectory(${EXTERN_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     set_target_properties(libpl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

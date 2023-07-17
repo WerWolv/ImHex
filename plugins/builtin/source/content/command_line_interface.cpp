@@ -6,7 +6,9 @@
 #include <hex/helpers/fmt.hpp>
 #include <fmt/color.h>
 
+#include <hex/helpers/magic.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/literals.hpp>
 #include <romfs/romfs.hpp>
 
 #include <hex/api/plugin_manager.hpp>
@@ -16,7 +18,11 @@
 
 #include "content/helpers/math_evaluator.hpp"
 
+#include <pl/cli/cli.hpp>
+
 namespace hex::plugin::builtin {
+
+    using namespace hex::literals;
 
     void handleVersionCommand(const std::vector<std::string> &args) {
         hex::unused(args);
@@ -210,6 +216,50 @@ namespace hex::plugin::builtin {
 
         hex::print("decode_{}({}) = {}", algorithm, args[1], result);
         std::exit(EXIT_SUCCESS);
+    }
+
+    void handleMagicCommand(const std::vector<std::string> &args) {
+        if (args.size() != 2) {
+            hex::print("usage: imhex --magic <operation> <file>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        if (!magic::compile()) {
+            hex::print("Failed to compile magic database!");
+            std::exit(EXIT_FAILURE);
+        }
+
+        const auto &operation  = args[0];
+        const auto &filePath   = std::fs::path(args[1]);
+
+        wolv::io::File file(filePath, wolv::io::File::Mode::Read);
+        if (!file.isValid()) {
+            hex::print("Failed to open file: {}", wolv::util::toUTF8String(filePath));
+            std::exit(EXIT_FAILURE);
+        }
+
+        auto data = file.readVector(std::min(file.getSize(), 100_KiB));
+
+        if (operation == "mime") {
+            auto result = magic::getMIMEType(data);
+            hex::print("{}", result);
+        } else if (operation == "desc") {
+            auto result = magic::getDescription(data);
+            hex::print("{}", result);
+        } else {
+            hex::print("Unknown operation: {}", operation);
+            hex::print("Available operations: mime, desc");
+            std::exit(EXIT_FAILURE);
+        }
+
+        std::exit(EXIT_SUCCESS);
+    }
+
+    void handlePatternLanguageCommand(const std::vector<std::string> &args) {
+        auto processedArgs = args;
+        processedArgs.insert(processedArgs.begin(), "imhex");
+
+        std::exit(pl::cli::executeCommandLineInterface(processedArgs));
     }
 
 

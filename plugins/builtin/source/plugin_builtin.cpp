@@ -55,10 +55,12 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
 
     { "open", "Open files passed as argument. [default]", hex::plugin::builtin::handleOpenCommand },
 
-    { "calc",   "Evaluate a mathematical expression",   hex::plugin::builtin::handleCalcCommand     },
-    { "hash",   "Calculate the hash of a file",         hex::plugin::builtin::handleHashCommand     },
-    { "encode", "Encode a string",                      hex::plugin::builtin::handleEncodeCommand   },
-    { "decode", "Decode a string",                      hex::plugin::builtin::handleDecodeCommand   },
+    { "calc",   "Evaluate a mathematical expression",   hex::plugin::builtin::handleCalcCommand             },
+    { "hash",   "Calculate the hash of a file",         hex::plugin::builtin::handleHashCommand             },
+    { "encode", "Encode a string",                      hex::plugin::builtin::handleEncodeCommand           },
+    { "decode", "Decode a string",                      hex::plugin::builtin::handleDecodeCommand           },
+    { "magic",  "Identify file types",                  hex::plugin::builtin::handleMagicCommand            },
+    { "pl",     "Interact with the pattern language",   hex::plugin::builtin::handlePatternLanguageCommand  },
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {

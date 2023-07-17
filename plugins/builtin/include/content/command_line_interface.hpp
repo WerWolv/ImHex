@@ -15,6 +15,8 @@ namespace hex::plugin::builtin {
     void handleHashCommand(const std::vector<std::string> &args);
     void handleEncodeCommand(const std::vector<std::string> &args);
     void handleDecodeCommand(const std::vector<std::string> &args);
+    void handleMagicCommand(const std::vector<std::string> &args);
+    void handlePatternLanguageCommand(const std::vector<std::string> &args);
 
 
     void registerCommandForwarders();
