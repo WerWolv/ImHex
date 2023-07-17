@@ -4,7 +4,7 @@
 #include <hex/api/event.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <fmt/ranges.h>
+#include <fmt/color.h>
 
 #include <hex/helpers/crypto.hpp>
 #include <romfs/romfs.hpp>
