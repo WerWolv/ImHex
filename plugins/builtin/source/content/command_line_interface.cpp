@@ -4,7 +4,6 @@
 #include <hex/api/event.hpp>
 
 #include <hex/helpers/fmt.hpp>
-#include <fmt/color.h>
 
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/crypto.hpp>
@@ -112,13 +111,13 @@ namespace hex::plugin::builtin {
             hex::print("- ");
 
             if (plugin.isBuiltinPlugin())
-                hex::print("{}", fmt::styled(plugin.getPluginName(), fmt::emphasis::bold | fmt::bg(fmt::terminal_color::yellow)));
+                hex::print("\033[1;43m{}\033[0m", plugin.getPluginName());
             else
-                hex::print("{}", fmt::styled(plugin.getPluginName(), fmt::emphasis::bold));
+                hex::print("\033[1m{}\033[0m", plugin.getPluginName());
 
             hex::print(" by {}\n", plugin.getPluginAuthor());
 
-            hex::print("  {}\n", fmt::styled(plugin.getPluginDescription(), fmt::emphasis::italic | fmt::emphasis::faint));
+            hex::print("  \033[2;3m{}\033[0m\n", plugin.getPluginDescription());
         }
 
         std::exit(EXIT_SUCCESS);
