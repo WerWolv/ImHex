@@ -386,7 +386,7 @@
         "hex.builtin.popup.docs_question.title": "Búsqueda de Documentación",
         "hex.builtin.popup.error.create": "¡Fallo al crear nuevo archivo!",
         "hex.builtin.popup.error.file_dialog.common": "Ocurrió un error al abrir el explorador de archivos: '{}'",
-        "hex.builtin.popup.error.file_dialog.portal": "Ocurrió un error al abrir el explorador de archivos: {}.\nEsto ha podido deberse a que su sistema no tenga un backend de xdg-desktop-portal instalado adecuadamente.\n\nEn KDE es xdg-desktop-portal-kde.\nEn Gnome es xdg-desktop-portal-gnome.\nEn wlroots es xdg-desktop-portal-wlr.\nDe lo contrario, puede intentar utilizar xdg-desktop-portal-gtk.\n\nReinicie el sistema tras instalarlo.\n\nSi tras esto el explorador de archivos sigue sin funcionar, cree un issue en https://github.com/WerWolv/ImHex/issues\n\n¡Mientras tanto, los archivos pueden ser abiertos arrastrándose hacia la ventana de ImHex!",
+        "hex.builtin.popup.error.file_dialog.portal": "",
         "hex.builtin.popup.error.project.load": "¡Fallo al cargar proyecto!",
         "hex.builtin.popup.error.project.save": "¡Fallo al guardar proyecto!",
         "hex.builtin.popup.error.read_only": "No se pudo obtener acceso de escritura. Archivo abierto en modo de sólo lectura.",

@@ -386,7 +386,7 @@
         "hex.builtin.popup.docs_question.title": "",
         "hex.builtin.popup.error.create": "创建新文件失败！",
         "hex.builtin.popup.error.file_dialog.common": "尝试打开文件浏览器时发生了错误！",
-        "hex.builtin.popup.error.file_dialog.portal": "打开文件浏览器时发生了错误。这可能是由于您的系统没有正确安装 xdg-desktop-portal 后端。\n\n对于 KDE，请使用 xdg-desktop-portal-kde。\n对于 Gnome，请使用 xdg-desktop-portal-gnome。\n对于 wlroots，请使用 xdg-desktop-portal-wlr。\n其他情况，您可以尝试使用 xdg-desktop-portal-gtk。\n\n重启后请重启您的系统。\n\n如果在这之后文件浏览器仍然不能正常工作，请在 https://github.com/WerWolv/ImHex/issues 提交问题。\n\n与此同时，仍然可以通过将文件拖到 ImHex 窗口来打开它们！",
+        "hex.builtin.popup.error.file_dialog.portal": "",
         "hex.builtin.popup.error.project.load": "加载工程失败！",
         "hex.builtin.popup.error.project.save": "保存工程失败！",
         "hex.builtin.popup.error.read_only": "无法获得写权限，文件以只读方式打开。",
