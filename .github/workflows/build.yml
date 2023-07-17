@@ -621,7 +621,7 @@ jobs:
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
         run: |
-          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg extra_args -- -v
+          fedpkg --path $GITHUB_WORKSPACE --release ${{ matrix.mock_release }} mockbuild --enable-network -N --root $GITHUB_WORKSPACE/mock.cfg
 
       - name: 🟩 Move and rename finished RPM
         run: |
