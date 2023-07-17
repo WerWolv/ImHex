@@ -386,7 +386,7 @@
         "hex.builtin.popup.docs_question.title": "",
         "hex.builtin.popup.error.create": "無法建立新檔案！",
         "hex.builtin.popup.error.file_dialog.common": "開啟檔案瀏覽器時發生錯誤！",
-        "hex.builtin.popup.error.file_dialog.portal": "開啟檔案瀏覽器時發生錯誤。可能是因為您的系統未正確安裝 xdg-desktop-portal 後端。\n\nKDE 為 xdg-desktop-portal-kde。\nGnome 為 xdg-desktop-portal-gnome。\nwlroots 為 xdg-desktop-portal-wlr。\n否則您可以嘗試使用 xdg-desktop-portal-gtk。\n\n安裝後，請重新啟動您的系統\n\n若安裝後，檔案管理器仍無法正常運作，請在 https://github.com/WerWolv/ImHex/issues 提交 Issue。\n\n您仍可以將檔案拖曳至 ImHex 視窗來開啟！",
+        "hex.builtin.popup.error.file_dialog.portal": "",
         "hex.builtin.popup.error.project.load": "無法載入專案！",
         "hex.builtin.popup.error.project.save": "無法儲存專案！",
         "hex.builtin.popup.error.read_only": "無法取得寫入權限。檔案已以唯讀模式開啟。",

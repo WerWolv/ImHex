@@ -388,7 +388,7 @@
         "hex.builtin.popup.docs_question.title": "",
         "hex.builtin.popup.error.create": "Erstellen der neuen Datei fehlgeschlagen!",
         "hex.builtin.popup.error.file_dialog.common": "Ein Fehler trat beim Öffnen des Dateibrowser auf!",
-        "hex.builtin.popup.error.file_dialog.portal": "Ein Fehler trat beim Öffnen des Dateibrowser auf! Der Grund dafür kann sein, dass dein System kein xdg-desktop-portal Backend korrekt installiert hat.\n\nFür KDE wird xdg-desktop-portal-kde benötigt.\nFür Gnome wird xdg-desktop-portal-gnome benötigt.\nFür wlroots wird xdg-desktop-portal-wlr benötigt.\nAndernfalls kann eventuell xdg-desktop-portal-gtk verwendet werden.\n\nStarte dein System nach der Installation neu.\n\nFalls der Dateibrowser immer noch nicht funktionieren sollte, erstelle ein Issue auf https://github.com/WerWolv/ImHex/issues\n\nIn der Zwischenzeit können Dateien immer noch geöffnet werden, in dem sie auf das ImHex Fenster gezogen werden.",
+        "hex.builtin.popup.error.file_dialog.portal": "",
         "hex.builtin.popup.error.project.load": "Laden des Projektes fehlgeschlagen!",
         "hex.builtin.popup.error.project.save": "Speichern des Projektes fehlgeschlagen!",
         "hex.builtin.popup.error.read_only": "Fehlende Schreibrechte. Datei wurde im Lesemodus geöffnet.",
