@@ -824,11 +824,22 @@ namespace hex::plugin::builtin::ui {
 
                         ImGui::SameLine(0, 0);
 
-                        int sliderPos = this->m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
-                        ImGui::PushItemWidth(60_scaled);
-                        ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
-                        ImGui::PopItemWidth();
-                        this->m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
+                        {
+                            bool hasEndianess = this->m_currDataVisualizer->getBytesPerCell() > 1;
+                            
+                            if (!hasEndianess)
+                                this->m_dataVisualizerEndianness = std::endian::native;
+
+                            ImGui::BeginDisabled(!hasEndianess);
+                            {
+                                int sliderPos = this->m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
+                                ImGui::PushItemWidth(60_scaled);
+                                ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
+                                ImGui::PopItemWidth();
+                                this->m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
+                            }
+                            ImGui::EndDisabled();
+                        }
 
                         ImGui::SameLine(0, 2_scaled);
                         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 60_scaled);
