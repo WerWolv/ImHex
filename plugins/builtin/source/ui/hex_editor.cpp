@@ -334,12 +334,13 @@ namespace hex::plugin::builtin::ui {
 
                 ImGuiListClipper clipper;
 
-                clipper.Begin(std::ceil(this->m_provider->getSize() / (long double)(this->m_bytesPerRow)), CharacterSize.y);
+                u64 numRows = std::ceil(this->m_provider->getSize() / (long double)(this->m_bytesPerRow));
+                clipper.Begin(numRows + size.y / CharacterSize.y - 3, CharacterSize.y);
                 while (clipper.Step()) {
                     this->m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
 
                     // Loop over rows
-                    for (u64 y = u64(clipper.DisplayStart); y < u64(clipper.DisplayEnd); y++) {
+                    for (u64 y = u64(clipper.DisplayStart); y < std::min(numRows, u64(clipper.DisplayEnd)); y++) {
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
