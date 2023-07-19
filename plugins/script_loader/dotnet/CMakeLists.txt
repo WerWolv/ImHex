@@ -7,7 +7,7 @@ function(add_dotnet_assembly name)
     file(GLOB_RECURSE sources ${CMAKE_CURRENT_SOURCE_DIR}/${name}/*.cs)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/../../${name}.dll
-        COMMAND ${DOTNET_EXECUTABLE} build ${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.csproj --nologo -c Release -o ${CMAKE_CURRENT_BINARY_DIR}/../.. && ${CMAKE_COMMAND} -DOUTPUT_RUNTIMECONFIG="${OUTPUT_RUNTIMECONFIG}" -P ${CMAKE_CURRENT_SOURCE_DIR}/post_process_runtimeconfig.cmake
+        COMMAND ${DOTNET_EXECUTABLE} build ${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.csproj --nologo -c Release -o ${CMAKE_CURRENT_BINARY_DIR}/../.. && ${CMAKE_COMMAND} -DOUTPUT_RUNTIMECONFIG="\"${OUTPUT_RUNTIMECONFIG}\"" -P ${CMAKE_CURRENT_SOURCE_DIR}/post_process_runtimeconfig.cmake
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${name}/${name}.csproj ${sources}
         COMMENT "Building ${name}.dll"
     )

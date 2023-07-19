@@ -77,7 +77,7 @@ namespace hex::init {
                             status = false;
                         auto endTime = std::chrono::high_resolution_clock::now();
 
-                        log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime-startTime).count());
+                        log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
 
                         {
                             std::lock_guard guard(this->m_progressMutex);
@@ -86,12 +86,14 @@ namespace hex::init {
                     } catch (std::exception &e) {
                         log::error("Init task '{}' threw an exception: {}", name, e.what());
                         status = false;
+                    } catch (...) {
+                        status = false;
                     }
                 };
 
 
                 if (async) {
-                    TaskManager::createBackgroundTask(name, [runTask](auto&){ runTask(); });
+                    std::thread([runTask]{ runTask(); }).detach();
                 } else {
                     runTask();
                 }
