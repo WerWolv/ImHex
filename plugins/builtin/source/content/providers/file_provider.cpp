@@ -249,8 +249,17 @@ namespace hex::plugin::builtin {
         auto pathString = settings.at("path").get<std::string>();
         std::fs::path path = std::u8string(pathString.begin(), pathString.end());
 
-        if (auto projectPath = ProjectFile::getPath(); !projectPath.empty())
-            this->setPath(std::fs::weakly_canonical(projectPath.parent_path() / path));
+        if (auto projectPath = ProjectFile::getPath(); !projectPath.empty()) {
+            try {
+                this->setPath(std::fs::weakly_canonical(projectPath.parent_path() / path));
+            } catch (const std::fs::filesystem_error &) {
+                try {
+                    this->setPath(projectPath.parent_path() / path);
+                } catch (const std::fs::filesystem_error &e) {
+                    this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, this->m_path.string(), e.what()));
+                }
+            }
+        }
         else
             this->setPath(path);
     }
