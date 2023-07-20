@@ -363,11 +363,6 @@ jobs:
           sudo chmod +x /usr/local/bin/appimagetool
           sudo pip3 install git+https://github.com/iTrooz/appimage-builder@dpkg-package-versions
 
-      - name: ⬇️ Install .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '7.0.x'
-
       - name: 📜 Set version variable
         run: |
           echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV

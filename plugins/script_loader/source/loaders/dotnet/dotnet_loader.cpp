@@ -50,7 +50,7 @@ namespace hex::script::loader {
             }
         #else
             void *loadLibrary(const char_t *path) {
-                void *h = dlopen(path, RTLD_LAZY | RTLD_LOCAL);
+                void *h = dlopen(path, RTLD_LAZY);
                 return h;
             }
 
@@ -135,14 +135,8 @@ namespace hex::script::loader {
 
 
     bool DotNetLoader::initialize() {
-        try {
-            AT_FIRST_TIME {
-                if (!loadHostfxr()) {
-                    throw std::runtime_error("Failed to load hostfxr");
-                }
-            };
-        } catch (const std::exception &e) {
-            log::error("Failed to initialize DotNetLoader: {}", e.what());
+        if (!loadHostfxr()) {
+            log::error("Failed to initialize dotnet loader, could not load hostfxr");
             return false;
         }
 
