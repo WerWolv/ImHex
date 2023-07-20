@@ -739,7 +739,7 @@ namespace hex::plugin::builtin {
             auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
             if (cursor > 0) {
-                auto pos = cursor - 1;
+                auto pos = cursor - this->m_hexEditor.getBytesPerCell();
                 this->setSelection(pos, pos);
                 this->m_hexEditor.scrollToSelection();
                 this->m_hexEditor.jumpIfOffScreen();
@@ -749,7 +749,7 @@ namespace hex::plugin::builtin {
             auto selection = getSelection();
             auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
-            auto pos = cursor + 1;
+            auto pos = cursor + this->m_hexEditor.getBytesPerCell();
             this->setSelection(pos, pos);
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
@@ -762,7 +762,7 @@ namespace hex::plugin::builtin {
             u64 visibleByteCount = this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount();
             if (cursor >= visibleByteCount) {
                 auto pos = cursor - visibleByteCount;
-                this->setSelection(pos, pos);
+                this->setSelection(pos, pos + this->m_hexEditor.getBytesPerCell());
                 this->m_hexEditor.scrollToSelection();
                 this->m_hexEditor.jumpIfOffScreen();
             }
@@ -772,7 +772,7 @@ namespace hex::plugin::builtin {
             auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
             auto pos = cursor + (this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount());
-            this->setSelection(pos, pos);
+            this->setSelection(pos, pos + this->m_hexEditor.getBytesPerCell());
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
@@ -782,7 +782,7 @@ namespace hex::plugin::builtin {
             auto selection = getSelection();
             auto cursor = this->m_hexEditor.getCursorPosition();
 
-            if (cursor == selection.getEndAddress()) {
+            if (cursor != selection.getStartAddress()) {
                 auto newCursor = std::max<u64>(cursor.value_or(selection.getEndAddress()), this->m_hexEditor.getBytesPerRow()) - this->m_hexEditor.getBytesPerRow();
                 setSelection(selection.getStartAddress(), newCursor);
                 this->m_hexEditor.setCursorPosition(newCursor);
@@ -799,7 +799,7 @@ namespace hex::plugin::builtin {
             auto selection = getSelection();
             auto cursor = this->m_hexEditor.getCursorPosition();
 
-            if (cursor == selection.getEndAddress()) {
+            if (cursor != selection.getStartAddress()) {
                 auto newCursor = cursor.value_or(selection.getEndAddress()) + this->m_hexEditor.getBytesPerRow();
                 setSelection(selection.getStartAddress(), newCursor);
                 this->m_hexEditor.setCursorPosition(newCursor);
@@ -816,12 +816,12 @@ namespace hex::plugin::builtin {
             auto selection = getSelection();
             auto cursor = this->m_hexEditor.getCursorPosition();
 
-            if (cursor == selection.getEndAddress()) {
-                auto newCursor = std::max<u64>(cursor.value_or(selection.getEndAddress()), 1) - 1;
+            if (cursor != selection.getStartAddress()) {
+                auto newCursor = cursor.value_or(selection.getEndAddress()) - this->m_hexEditor.getBytesPerCell();
                 setSelection(selection.getStartAddress(), newCursor);
                 this->m_hexEditor.setCursorPosition(newCursor);
             } else {
-                auto newCursor = std::max<u64>(cursor.value_or(selection.getEndAddress()), 1) - 1;
+                auto newCursor = cursor.value_or(selection.getEndAddress()) - this->m_hexEditor.getBytesPerCell();
                 setSelection(newCursor, selection.getEndAddress());
                 this->m_hexEditor.setCursorPosition(newCursor);
             }
@@ -833,12 +833,12 @@ namespace hex::plugin::builtin {
             auto selection = getSelection();
             auto cursor = this->m_hexEditor.getCursorPosition();
 
-            if (cursor == selection.getEndAddress()) {
-                auto newCursor = cursor.value_or(selection.getEndAddress()) + 1;
+            if (cursor != selection.getStartAddress()) {
+                auto newCursor = cursor.value_or(selection.getEndAddress()) + this->m_hexEditor.getBytesPerCell();
                 setSelection(selection.getStartAddress(), newCursor);
                 this->m_hexEditor.setCursorPosition(newCursor);
             } else {
-                auto newCursor = cursor.value_or(selection.getEndAddress()) + 1;
+                auto newCursor = cursor.value_or(selection.getEndAddress()) + this->m_hexEditor.getBytesPerCell();
                 setSelection(newCursor, selection.getEndAddress());
                 this->m_hexEditor.setCursorPosition(newCursor);
             }

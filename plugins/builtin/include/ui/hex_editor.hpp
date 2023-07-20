@@ -54,12 +54,28 @@ namespace hex::plugin::builtin::ui {
 
             const size_t maxAddress = this->m_provider->getActualSize() + this->m_provider->getBaseAddress() - 1;
 
-            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
+            constexpr static auto alignDown = [](u128 value, u128 alignment) {
+                return value & ~(alignment - 1);
+            };
+
+            if (!this->m_selectionStart.has_value()) this->m_selectionStart = start;
+            if (!this->m_selectionEnd.has_value())   this->m_selectionEnd = end;
+
+            if (auto bytesPerCell = this->m_currDataVisualizer->getBytesPerCell(); bytesPerCell > 1) {
+                if (end > start) {
+                    start = alignDown(start, bytesPerCell);
+                    end   = alignDown(end, bytesPerCell) + (bytesPerCell - 1);
+                } else {
+                    start = alignDown(start, bytesPerCell) + (bytesPerCell - 1);
+                    end   = alignDown(end, bytesPerCell);
+                }
+            }
 
             this->m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
             this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
             this->m_cursorPosition = this->m_selectionEnd;
 
+            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
             if (this->m_selectionChanged) {
                 auto selection = this->getSelection();
                 EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, this->m_provider });
@@ -107,6 +123,10 @@ namespace hex::plugin::builtin::ui {
 
         [[nodiscard]] u16 getBytesPerRow() const {
             return this->m_bytesPerRow;
+        }
+
+        [[nodiscard]] u16 getBytesPerCell() const {
+            return this->m_currDataVisualizer->getBytesPerCell();
         }
 
         void setBytesPerRow(u16 bytesPerRow) {

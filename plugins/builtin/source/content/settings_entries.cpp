@@ -283,17 +283,6 @@ namespace hex::plugin::builtin {
             return false;
         });
 
-        ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", 16, [](auto name, nlohmann::json &setting) {
-            static int columns = static_cast<int>(setting);
-
-            if (ImGui::SliderInt(name.data(), &columns, 1, 32)) {
-                setting = columns;
-                return true;
-            }
-
-            return false;
-        });
-
         ContentRegistry::Settings::add("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", 0, [](auto name, nlohmann::json &setting) {
             static bool syncScrolling = static_cast<int>(setting);
 

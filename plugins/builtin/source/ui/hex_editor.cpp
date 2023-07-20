@@ -73,11 +73,6 @@ namespace hex::plugin::builtin::ui {
         this->m_currDataVisualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit");
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            {
-                this->m_bytesPerRow = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", 16);
-                this->m_encodingLineStartAddresses.clear();
-            }
-
             this->m_selectionColor = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080);
             this->m_syncScrolling = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", 0);
             this->m_byteCellPadding = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0);
@@ -366,7 +361,7 @@ namespace hex::plugin::builtin::ui {
 
                                     if (this->m_grayOutZero && !foregroundColor.has_value()) {
                                         bool allZero = true;
-                                        for (u64 i = 0; i < cellBytes; i++) {
+                                        for (u64 i = 0; i < cellBytes && (x * cellBytes + i) < bytes.size(); i++) {
                                             if (bytes[x * cellBytes + i] != 0x00) {
                                                 allZero = false;
                                                 break;
@@ -826,7 +821,7 @@ namespace hex::plugin::builtin::ui {
 
                         {
                             bool hasEndianess = this->m_currDataVisualizer->getBytesPerCell() > 1;
-                            
+
                             if (!hasEndianess)
                                 this->m_dataVisualizerEndianness = std::endian::native;
 
@@ -842,16 +837,29 @@ namespace hex::plugin::builtin::ui {
                         }
 
                         ImGui::SameLine(0, 2_scaled);
-                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 60_scaled);
+                        ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x / 3) * 2);
                         if (ImGui::BeginCombo("##visualizer", LangEntry(this->m_currDataVisualizer->getUnlocalizedName()))) {
 
                             for (const auto &visualizer : visualizers) {
                                 if (ImGui::Selectable(LangEntry(visualizer->getUnlocalizedName()))) {
                                     this->m_currDataVisualizer = visualizer;
+                                    this->m_encodingLineStartAddresses.clear();
+
+                                    if (this->m_bytesPerRow < visualizer->getBytesPerCell())
+                                        this->m_bytesPerRow = visualizer->getBytesPerCell();
                                 }
                             }
 
                             ImGui::EndCombo();
+                        }
+                        ImGui::PopItemWidth();
+
+                        ImGui::SameLine(0, 2_scaled);
+                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                        int bytesPerRow = this->m_bytesPerRow / this->getBytesPerCell();
+                        if (ImGui::SliderInt("##row_size", &bytesPerRow, 1, 32 / this->getBytesPerCell(), hex::format("{}", bytesPerRow * this->getBytesPerCell()).c_str())) {
+                            this->m_bytesPerRow = bytesPerRow * this->getBytesPerCell();
+                            this->m_encodingLineStartAddresses.clear();
                         }
                         ImGui::PopItemWidth();
                     }
@@ -888,11 +896,16 @@ namespace hex::plugin::builtin::ui {
     void HexEditor::draw(float height) {
         const auto width = ImGui::GetContentRegionAvail().x;
 
-        const auto FooterSize = ImVec2(width, ImGui::GetTextLineHeightWithSpacing() * 3.6F);
-        const auto TableSize  = ImVec2(width, height - FooterSize.y);
+        auto FooterSize = ImVec2(width, ImGui::GetTextLineHeightWithSpacing() * 3.6F);
+        auto TableSize  = ImVec2(width, height - FooterSize.y);
+
+        if (TableSize.y <= 0)
+            TableSize.y = height;
 
         this->drawEditor(TableSize);
-        this->drawFooter(FooterSize);
+
+        if (TableSize.y > 0)
+            this->drawFooter(FooterSize);
 
         this->m_selectionChanged = false;
     }
