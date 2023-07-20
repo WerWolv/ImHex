@@ -179,7 +179,7 @@
     namespace hex::stacktrace {
 
         void initialize() { }
-        std::vector<StackFrame> getStackTrace() { return { }; }
+        std::vector<StackFrame> getStackTrace() { return { StackFrame { "??", "Stacktrace collecting not available!", 0 } }; }
 
     }
     
