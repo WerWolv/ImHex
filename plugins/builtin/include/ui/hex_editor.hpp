@@ -58,6 +58,8 @@ namespace hex::plugin::builtin::ui {
                 return value & ~(alignment - 1);
             };
 
+            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
+
             if (!this->m_selectionStart.has_value()) this->m_selectionStart = start;
             if (!this->m_selectionEnd.has_value())   this->m_selectionEnd = end;
 
@@ -75,7 +77,6 @@ namespace hex::plugin::builtin::ui {
             this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
             this->m_cursorPosition = this->m_selectionEnd;
 
-            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
             if (this->m_selectionChanged) {
                 auto selection = this->getSelection();
                 EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, this->m_provider });
