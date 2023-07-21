@@ -27,11 +27,10 @@ void loadPlugins() {
     }
 }
 
-int main(int argc, char **argv, char **envp) {
+int main(int argc, char **argv) {
     Window::initNative();
 
     hex::crash::setupCrashHandlers();
-    hex::unused(envp);
 
     std::vector<std::string> args(argv + 1, argv + argc);
 
@@ -79,13 +78,12 @@ int main(int argc, char **argv, char **envp) {
         log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
 
         // Clean up everything after the main window is closed
-        auto exitHandler = [](auto){
+        ON_SCOPE_EXIT {
             for (const auto &[name, task, async] : init::getExitTasks())
                 task();
+
             TaskManager::exit();
         };
-
-        ON_SCOPE_EXIT { exitHandler(0); };
 
         // Main window
         {
