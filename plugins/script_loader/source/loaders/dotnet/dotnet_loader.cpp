@@ -121,7 +121,7 @@ namespace hex::script::loader {
 
             result = hostfxr_get_runtime_delegate(
                 ctx,
-                hdt_load_assembly_and_get_function_pointer,
+                hostfxr_delegate_type::hdt_load_assembly_and_get_function_pointer,
                 (void**)&loadAssemblyFunction
             );
 

@@ -68,14 +68,7 @@ namespace {
         return count > 0;
     }
 
-}
-
-IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
-    hex::log::debug("Using romfs: '{}'", romfs::name());
-    for (auto &path : romfs::list("lang"))
-        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
-
-    if (initializeAllLoaders()) {
+    void addScriptsMenu() {
         static TaskHolder runnerTask, updaterTask;
         hex::ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.extras" }, 5000, [] {
             static bool menuJustOpened = true;
@@ -115,4 +108,18 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
             return !runnerTask.isRunning();
         });
     }
+
+}
+
+IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
+    hex::log::debug("Using romfs: '{}'", romfs::name());
+    for (auto &path : romfs::list("lang"))
+        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+
+    TaskManager::doLater([] {
+        if (initializeAllLoaders()) {
+            addScriptsMenu();
+        }
+    });
+
 }
