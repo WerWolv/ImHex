@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
 
         for (const auto &plugin : PluginManager::getPlugins()) {
             for (const auto &subCommand : plugin.getSubCommands()) {
-                hex::print("    --{}{: <{}}        {}\n", subCommand.commandKey, "", longestCommand - subCommand.commandKey.size(), subCommand.commandDesc);
+                hex::println("    --{}{: <{}}        {}", subCommand.commandKey, "", longestCommand - subCommand.commandKey.size(), subCommand.commandDesc);
             }
         }
 
@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
 
     void handleOpenCommand(const std::vector<std::string> &args) {
         if (args.empty()) {
-            hex::print("No files provided to open.");
+            hex::println("No files provided to open.");
             std::exit(EXIT_FAILURE);
         }
 
@@ -85,8 +85,8 @@ namespace hex::plugin::builtin {
 
     void handleCalcCommand(const std::vector<std::string> &args) {
         if (args.empty()) {
-            hex::print("No expression provided!");
-            hex::print("Example: imhex --calc \"5 * 7\"");
+            hex::println("No expression provided!");
+            hex::println("Example: imhex --calc \"5 * 7\"");
             std::exit(EXIT_FAILURE);
         }
 
@@ -96,9 +96,9 @@ namespace hex::plugin::builtin {
         auto result = evaluator.evaluate(input);
 
         if (!result.has_value())
-            hex::print("{}\n> '{}'", evaluator.getLastError().value(), input);
+            hex::println("{}\n> '{}'", evaluator.getLastError().value(), input);
         else
-            hex::print("{}", result.value());
+            hex::println("{}", result.value());
 
         std::exit(EXIT_SUCCESS);
     }
@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
     void handlePluginsCommand(const std::vector<std::string> &args) {
         hex::unused(args);
 
-        hex::print("Loaded plugins:\n");
+        hex::println("Loaded plugins:");
 
         for (const auto &plugin : PluginManager::getPlugins()) {
             hex::print("- ");
@@ -116,9 +116,9 @@ namespace hex::plugin::builtin {
             else
                 hex::print("\033[1m{}\033[0m", plugin.getPluginName());
 
-            hex::print(" by {}\n", plugin.getPluginAuthor());
+            hex::println(" by {}", plugin.getPluginAuthor());
 
-            hex::print("  \033[2;3m{}\033[0m\n", plugin.getPluginDescription());
+            hex::println("  \033[2;3m{}\033[0m", plugin.getPluginDescription());
         }
 
         std::exit(EXIT_SUCCESS);
@@ -126,8 +126,8 @@ namespace hex::plugin::builtin {
 
     void handleHashCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
-            hex::print("usage: imhex --hash <algorithm> <file>");
-            hex::print("Available algorithms: md5, sha1, sha224, sha256, sha384, sha512");
+            hex::println("usage: imhex --hash <algorithm> <file>");
+            hex::println("Available algorithms: md5, sha1, sha224, sha256, sha384, sha512");
             std::exit(EXIT_FAILURE);
         }
 
@@ -136,7 +136,7 @@ namespace hex::plugin::builtin {
 
         wolv::io::File file(filePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            hex::print("Failed to open file: {}", wolv::util::toUTF8String(filePath));
+            hex::println("Failed to open file: {}", wolv::util::toUTF8String(filePath));
             std::exit(EXIT_FAILURE);
         }
 
@@ -158,20 +158,20 @@ namespace hex::plugin::builtin {
         } else if (algorithm == "sha512") {
             result = toVector(hex::crypt::sha512(file.readVector()));
         } else {
-            hex::print("Unknown algorithm: {}", algorithm);
-            hex::print("Available algorithms: md5, sha1, sha224, sha256, sha384, sha512");
+            hex::println("Unknown algorithm: {}", algorithm);
+            hex::println("Available algorithms: md5, sha1, sha224, sha256, sha384, sha512");
             std::exit(EXIT_FAILURE);
         }
 
-        hex::print("{}({}) = {}", algorithm, wolv::util::toUTF8String(filePath.filename()), hex::crypt::encode16(result));
+        hex::println("{}({}) = {}", algorithm, wolv::util::toUTF8String(filePath.filename()), hex::crypt::encode16(result));
 
         std::exit(EXIT_SUCCESS);
     }
 
     void handleEncodeCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
-            hex::print("usage: imhex --encode <algorithm> <string>");
-            hex::print("Available algorithms: base64, hex");
+            hex::println("usage: imhex --encode <algorithm> <string>");
+            hex::println("Available algorithms: base64, hex");
             std::exit(EXIT_FAILURE);
         }
 
@@ -185,19 +185,19 @@ namespace hex::plugin::builtin {
         } else if (algorithm == "hex") {
             result = hex::crypt::encode16(data);
         } else {
-            hex::print("Unknown algorithm: {}", algorithm);
-            hex::print("Available algorithms: base64, hex");
+            hex::println("Unknown algorithm: {}", algorithm);
+            hex::println("Available algorithms: base64, hex");
             std::exit(EXIT_FAILURE);
         }
 
-        hex::print("encode_{}({}) = {}", algorithm, args[1], result);
+        hex::println("encode_{}({}) = {}", algorithm, args[1], result);
         std::exit(EXIT_SUCCESS);
     }
 
     void handleDecodeCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
-            hex::print("usage: imhex --decode <algorithm> <string>");
-            hex::print("Available algorithms: base64, hex");
+            hex::println("usage: imhex --decode <algorithm> <string>");
+            hex::println("Available algorithms: base64, hex");
             std::exit(EXIT_FAILURE);
         }
 
@@ -212,8 +212,8 @@ namespace hex::plugin::builtin {
             auto base16 = hex::crypt::decode16(std::string(data.begin(), data.end()));
             result = std::string(base16.begin(), base16.end());
         } else {
-            hex::print("Unknown algorithm: {}", algorithm);
-            hex::print("Available algorithms: base64, hex");
+            hex::println("Unknown algorithm: {}", algorithm);
+            hex::println("Available algorithms: base64, hex");
             std::exit(EXIT_FAILURE);
         }
 
@@ -223,8 +223,8 @@ namespace hex::plugin::builtin {
 
     void handleMagicCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
-            hex::print("usage: imhex --magic <operation> <file>");
-            hex::print("Available operations: mime, desc");
+            hex::println("usage: imhex --magic <operation> <file>");
+            hex::println("Available operations: mime, desc");
             std::exit(EXIT_FAILURE);
         }
 
@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
 
         wolv::io::File file(filePath, wolv::io::File::Mode::Read);
         if (!file.isValid()) {
-            hex::print("Failed to open file: {}", wolv::util::toUTF8String(filePath));
+            hex::println("Failed to open file: {}", wolv::util::toUTF8String(filePath));
             std::exit(EXIT_FAILURE);
         }
 
@@ -246,13 +246,13 @@ namespace hex::plugin::builtin {
 
         if (operation == "mime") {
             auto result = magic::getMIMEType(data);
-            hex::print("{}", result);
+            hex::println("{}", result);
         } else if (operation == "desc") {
             auto result = magic::getDescription(data);
-            hex::print("{}", result);
+            hex::println("{}", result);
         } else {
-            hex::print("Unknown operation: {}", operation);
-            hex::print("Available operations: mime, desc");
+            hex::println("Unknown operation: {}", operation);
+            hex::println("Available operations: mime, desc");
             std::exit(EXIT_FAILURE);
         }
 

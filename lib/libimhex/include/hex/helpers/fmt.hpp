@@ -16,4 +16,9 @@ namespace hex {
         fmt::print(fmt::runtime(format), args...);
     }
 
+    template<typename... Args>
+    inline void println(std::string_view format, Args... args) {
+        fmt::println(fmt::runtime(format), args...);
+    }
+
 }
