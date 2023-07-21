@@ -86,6 +86,7 @@ namespace hex::plugin::builtin {
     void handleCalcCommand(const std::vector<std::string> &args) {
         if (args.empty()) {
             hex::print("No expression provided!");
+            hex::print("Example: imhex --calc \"5 * 7\"");
             std::exit(EXIT_FAILURE);
         }
 
@@ -126,6 +127,7 @@ namespace hex::plugin::builtin {
     void handleHashCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
             hex::print("usage: imhex --hash <algorithm> <file>");
+            hex::print("Available algorithms: md5, sha1, sha224, sha256, sha384, sha512");
             std::exit(EXIT_FAILURE);
         }
 
@@ -169,6 +171,7 @@ namespace hex::plugin::builtin {
     void handleEncodeCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
             hex::print("usage: imhex --encode <algorithm> <string>");
+            hex::print("Available algorithms: base64, hex");
             std::exit(EXIT_FAILURE);
         }
 
@@ -194,6 +197,7 @@ namespace hex::plugin::builtin {
     void handleDecodeCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
             hex::print("usage: imhex --decode <algorithm> <string>");
+            hex::print("Available algorithms: base64, hex");
             std::exit(EXIT_FAILURE);
         }
 
@@ -220,6 +224,7 @@ namespace hex::plugin::builtin {
     void handleMagicCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
             hex::print("usage: imhex --magic <operation> <file>");
+            hex::print("Available operations: mime, desc");
             std::exit(EXIT_FAILURE);
         }
 
