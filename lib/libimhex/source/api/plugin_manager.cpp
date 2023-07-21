@@ -155,7 +155,7 @@ namespace hex {
     std::span<SubCommand> Plugin::getSubCommands() const {
         if (this->m_getSubCommandsFunction != nullptr) {
             auto result = this->m_getSubCommandsFunction();
-            return { result->subCommands, result->size };
+            return *reinterpret_cast<std::vector<SubCommand>*>(result);
         } else
             return { };
     }

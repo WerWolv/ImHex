@@ -39,10 +39,7 @@
 
 #define IMHEX_PLUGIN_SUBCOMMANDS_IMPL()                                                 \
     extern std::vector<hex::SubCommand> g_subCommands;                                  \
-    extern "C" [[gnu::visibility("default")]] hex::SubCommandList getSubCommands() {    \
-        return hex::SubCommandList {                                                    \
-            g_subCommands.data(),                                                       \
-            g_subCommands.size()                                                        \
-        };                                                                              \
+    extern "C" [[gnu::visibility("default")]] void* getSubCommands() {                  \
+        return &g_subCommands;                                                          \
     }                                                                                   \
     std::vector<hex::SubCommand> g_subCommands
