@@ -1,6 +1,8 @@
 #include <hex/helpers/stacktrace.hpp>
 #include <hex/helpers/fmt.hpp>
 
+#include <array>
+
 #if defined(OS_WINDOWS)
 
     #include <windows.h>
