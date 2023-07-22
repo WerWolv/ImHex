@@ -180,9 +180,6 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
                     setting = selection;
-
-                    ImHexApi::System::restartImHex();
-
                     return true;
                 }
 

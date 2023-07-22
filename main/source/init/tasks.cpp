@@ -193,6 +193,8 @@ namespace hex::init {
     }
 
     static bool loadFontsImpl(bool loadUnicode) {
+        const float defaultFontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
+
         // Load font related settings
         {
             std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
@@ -215,7 +217,7 @@ namespace hex::init {
             ImHexApi::System::impl::setCustomFontPath(fontFile);
 
             // If a custom font has been loaded now, also load the font size
-            float fontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
+            float fontSize = defaultFontSize;
             if (!fontFile.empty()) {
                 fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
             }
@@ -281,7 +283,13 @@ namespace hex::init {
             fonts->Clear();
             fonts->AddFontDefault(&cfg);
         } else {
-            fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
+            auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
+            if (font == nullptr || font->ContainerAtlas == nullptr) {
+                ImHexApi::System::impl::setFontSize(defaultFontSize);
+                cfg.SizePixels = defaultFontSize;
+                fonts->Clear();
+                fonts->AddFontDefault(&cfg);
+            }
         }
 
         // Merge all fonts into one big font atlas
