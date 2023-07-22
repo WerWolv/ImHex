@@ -27,6 +27,7 @@
 #include <chrono>
 #include <future>
 #include <numeric>
+#include <random>
 
 using namespace std::literals::chrono_literals;
 
@@ -112,12 +113,14 @@ namespace hex::init {
 
     bool WindowSplash::loop() {
         // Load splash screen image from romfs
-        auto splash = romfs::get("splash.png");
-        ImGui::Texture splashTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splash.data()), splash.size());
+        auto splashBackground = romfs::get("splash_background.png");
+        auto splashText = romfs::get("splash_text.png");
+        ImGui::Texture splashBackgroundTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splashBackground.data()), splashBackground.size());
+        ImGui::Texture splashTextTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splashText.data()), splashText.size());
 
         // If the image couldn't be loaded correctly, something went wrong during the build process
         // Close the application since this would lead to errors later on anyway.
-        if (!splashTexture.isValid()) {
+        if (!splashBackgroundTexture.isValid() || !splashTextTexture.isValid()) {
             log::fatal("Could not load splash screen image!");
             exit(EXIT_FAILURE);
         }
@@ -127,7 +130,33 @@ namespace hex::init {
 
         auto scale = ImHexApi::System::getGlobalScale();
 
+        struct Highlight {
+            ImVec2 start;
+            size_t count;
+            ImColor color;
+        };
+
+        std::array<Highlight, 3> highlights;
+
+        std::mt19937 rng(std::random_device{}());
+
+        u32 lastPos = 0;
+        u32 lastCount = 0;
+        for (auto &highlight : highlights) {
+            auto newPos = lastPos + lastCount + (rng() % 40);
+            auto newCount = (rng() % 7) + 3;
+            highlight.start.x = newPos % 13;
+            highlight.start.y = newPos / 13;
+            highlight.count = newCount;
+            highlight.color = ImColor((rng() % 0x90) + 0x3F, (rng() % 0x90) + 0x3F, (rng() % 0x90) + 0x3F, 0x70);
+
+            lastPos = newPos;
+            lastCount = newCount;
+        }
+
         // Splash window rendering loop
+
+        float progressLerp = 0.0F;
         while (!glfwWindowShouldClose(this->m_window)) {
             glfwPollEvents();
 
@@ -140,24 +169,81 @@ namespace hex::init {
             auto drawList = ImGui::GetForegroundDrawList();
             {
 
-                drawList->AddImage(splashTexture, ImVec2(0, 0), splashTexture.getSize() * scale);
+                drawList->AddImage(splashBackgroundTexture, ImVec2(0, 0), splashBackgroundTexture.getSize() * scale);
 
-                drawList->AddText(ImVec2(15, 120) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv 2020 - {0}", &__DATE__[7]).c_str());
+                {
+                    const auto highlightBytes = [&](ImVec2 start, size_t count, ImColor color, float opacity) {
+                        const auto hexSize = ImVec2(29, 18) * scale;
+                        const auto hexSpacing = ImVec2(17.4, 15) * scale;
+                        const auto hexStart = ImVec2(27, 127) * scale;
+
+                        const auto hexCount = ImVec2(13, 7);
+
+                        bool isStart = true;
+
+                        color.Value.w *= opacity;
+
+                        for (u32 y = u32(start.y); y < u32(hexCount.y); y += 1) {
+                            for (u32 x = u32(start.x); x < u32(hexCount.x); x += 1) {
+                                if (count-- == 0)
+                                    return;
+
+                                auto pos = hexStart + ImVec2(float(x), float(y)) * (hexSize + hexSpacing);
+
+                                drawList->AddRectFilled(pos + ImVec2(0, -hexSpacing.y / 2), pos + hexSize + ImVec2(0, hexSpacing.y / 2), color);
+
+                                if (count > 0 && x != u32(hexCount.x) - 1)
+                                    drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + ImVec2(hexSpacing.x, hexSpacing.y / 2), color);
+
+                                if (isStart) {
+                                    isStart = false;
+                                    drawList->AddRectFilled(pos - hexSpacing / 2, pos + ImVec2(0, hexSize.y + hexSpacing.y / 2), color);
+                                }
+                                if (count == 0) {
+                                    drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + hexSpacing / 2, color);
+                                }
+                            }
+
+                            start.x = 0;
+                        }
+                    };
+
+                    for (const auto &highlight : highlights)
+                        highlightBytes(highlight.start, highlight.count, highlight.color, progressLerp);
+                }
+
+                progressLerp += (this->m_progress - progressLerp) * 0.1F;
+
+                drawList->AddImage(splashTextTexture, ImVec2(0, 0), splashTextTexture.getSize() * scale);
+
+                drawList->AddText(ImVec2(35, 85) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
 
                 #if defined(DEBUG)
-                    drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0} : {1} {2}@{3}", ImHexApi::System::getImHexVersion(), ICON_FA_CODE_BRANCH, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str());
+                    const static auto VersionInfo = hex::format("{0} : {1} {2}@{3}", ImHexApi::System::getImHexVersion(), ICON_FA_CODE_BRANCH, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
                 #else
-                    drawList->AddText(ImVec2(15, 140) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{0}", ImHexApi::System::getImHexVersion()).c_str());
+                    const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion());
                 #endif
+
+                drawList->AddText(ImVec2((splashBackgroundTexture.getSize().x * scale - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105 * scale), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
+
             }
 
             // Draw the task progress bar
             {
                 std::lock_guard guard(this->m_progressMutex);
-                drawList->AddRectFilled(ImVec2(0, splashTexture.getSize().y - 5) * scale, ImVec2(splashTexture.getSize().x * this->m_progress, splashTexture.getSize().y) * scale, 0xFFFFFFFF);
 
-                if (!this->m_currTaskNames.empty())
-                    drawList->AddText(ImVec2(15, splashTexture.getSize().y - 25) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("[{}] {}", "|/-\\"[ImU32(ImGui::GetTime() * 15) % 4], fmt::join(this->m_currTaskNames, " | ")).c_str());
+                const auto progressBackgroundStart = ImVec2(99, 357) * scale;
+                const auto progressBackgroundSize = ImVec2(442, 30) * scale;
+
+                const auto progressStart = progressBackgroundStart + ImVec2(0, 20) * scale;
+                const auto progressSize = ImVec2(progressBackgroundSize.x * this->m_progress, 10 * scale);
+                drawList->AddRectFilled(progressStart, progressStart + progressSize, 0xD0FFFFFF);
+
+                if (!this->m_currTaskNames.empty()) {
+                    drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
+                    drawList->AddText(progressStart + ImVec2(5, -20), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(this->m_currTaskNames, " | ")).c_str());
+                    drawList->PopClipRect();
+                }
             }
 
             // Render the frame
