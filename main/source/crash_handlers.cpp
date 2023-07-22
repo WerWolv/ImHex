@@ -24,7 +24,7 @@
 namespace hex::crash {
 
     constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
-    constexpr static auto Signals = {SIGSEGV, SIGILL, SIGABRT,SIGFPE};
+    constexpr static auto Signals = { SIGSEGV, SIGILL, SIGABRT, SIGFPE };
 
     static std::terminate_handler originalHandler;
 
@@ -42,8 +42,8 @@ namespace hex::crash {
         log::fatal(message);
 
         nlohmann::json crashData{
-            {"logFile", wolv::util::toUTF8String(hex::log::impl::getFile().getPath())},
-            {"project", wolv::util::toUTF8String(ProjectFile::getPath())},
+            { "logFile", wolv::util::toUTF8String(hex::log::impl::getFile().getPath()) },
+            { "project", wolv::util::toUTF8String(ProjectFile::getPath()) },
         };
         
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
@@ -79,7 +79,7 @@ namespace hex::crash {
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
     static void signalHandler(int signalNumber, const std::string &signalName) {
-        // reset crash handlers so we can't have a recursion if this code crashes
+        // Reset crash handlers, so we can't have a recursion if this code crashes
         resetCrashHandlers();
 
         // Actually handle the crash
@@ -115,20 +115,19 @@ namespace hex::crash {
             #undef HANDLE_SIGNAL
         }
 
-        // reset uncaught C++ exception handler
+        // Reset uncaught C++ exception handler
         {
             originalHandler = std::set_terminate([]{
-                // reset crash handlers so we can't have a recursion if this code crashes
+                // Reset crash handlers, so we can't have a recursion if this code crashes
                 resetCrashHandlers();
+
+                handleCrash("Uncaught exception!", 0);
 
                 try {
                     std::rethrow_exception(std::current_exception());
                 } catch (std::exception &ex) {
                     std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
                     log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
-
-                    // Actually handle the crash
-                    handleCrash(hex::format("Uncaught exception: {}", exceptionStr), 0);
 
                     // Reset signal handlers prior to calling the original handler, because it may raise a signal
                     for (auto signal : Signals) std::signal(signal, SIG_DFL);
