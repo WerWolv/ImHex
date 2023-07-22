@@ -475,7 +475,7 @@ namespace hex {
         {
             auto drawPluginFolderTable = []() {
                 ImGui::UnderlinedText("Plugin folders");
-                if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit)) {
+                if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2);
                     ImGui::TableSetupColumn("Exists", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight() * 3);
@@ -505,6 +505,10 @@ namespace hex {
 
                 drawPluginFolderTable();
 
+                ImGui::NewLine();
+                if (ImGui::Button("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                    ImHexApi::System::closeImHex(true);
+
                 ImGui::EndPopup();
             }
 
@@ -518,6 +522,10 @@ namespace hex {
                 ImGui::NewLine();
 
                 drawPluginFolderTable();
+
+                ImGui::NewLine();
+                if (ImGui::Button("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                    ImHexApi::System::closeImHex(true);
 
                 ImGui::EndPopup();
             }
@@ -533,6 +541,10 @@ namespace hex {
                 ImGui::NewLine();
 
                 drawPluginFolderTable();
+
+                ImGui::NewLine();
+                if (ImGui::Button("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                    ImHexApi::System::closeImHex(true);
 
                 ImGui::EndPopup();
             }
