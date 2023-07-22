@@ -18,7 +18,10 @@ namespace hex {
 
     template<typename... Args>
     inline void println(std::string_view format, Args... args) {
-        fmt::println(fmt::runtime(format), args...);
+        if constexpr (requires { fmt::println(fmt::runtime(format), args...); })
+            fmt::println(fmt::runtime(format), args...);
+        else
+            fmt::print(fmt::runtime(format), args...);
     }
 
 }
