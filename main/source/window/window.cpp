@@ -91,6 +91,7 @@ namespace hex {
         ContentRegistry::Settings::impl::store();
         EventManager::post<EventSettingsChanged>();
         EventManager::post<EventWindowInitialized>();
+        EventManager::post<EventImHexStartupFinished>();
     }
 
     Window::~Window() {

@@ -12,7 +12,7 @@
 #include <hex/api/task.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
-#include <hex/api/content_registry.hpp>
+
 #include <hex/helpers/fs.hpp>
 #include "hex/subcommands/subcommands.hpp"
 
@@ -21,84 +21,129 @@
 
 using namespace hex;
 
-int main(int argc, char **argv) {
-    Window::initNative();
+namespace {
 
-    hex::crash::setupCrashHandlers();
+    /**
+     * @brief Handles commands passed to ImHex via the command line
+     * @param argc Argument count
+     * @param argv Argument values
+     */
+    void handleCommandLineInterface(int argc, char **argv) {
+        // Skip the first argument (the executable path) and convert the rest to a vector of strings
+        std::vector<std::string> args(argv + 1, argv + argc);
 
-    std::vector<std::string> args(argv + 1, argv + argc);
-
-    if (argc > 1) {
+        // Load all plugins but don't initialize them
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
             PluginManager::load(dir);
         }
 
+        // Setup messaging system to allow sending commands to the main ImHex instance
         hex::messaging::setupMessaging();
+
+        // Process the arguments
         hex::subcommands::processArguments(args);
 
+        // Unload plugins again
         PluginManager::unload();
     }
 
-    log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
-    log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
-
-
-    // Check if ImHex is installed in portable mode
-    {
+    /**
+     * @brief Checks if the portable version of ImHex is installed
+     * @note The portable version is detected by the presence of a file named "PORTABLE" in the same directory as the executable
+     * @return True if ImHex is running in portable mode, false otherwise
+     */
+    bool isPortableVersion() {
         if (const auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
             const auto flagFile = executablePath->parent_path() / "PORTABLE";
 
             if (wolv::io::fs::exists(flagFile) && wolv::io::fs::isRegularFile(flagFile))
-                ImHexApi::System::impl::setPortableVersion(true);
+                return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @brief Displays ImHex's splash screen and runs all initialization tasks. The splash screen will be displayed until all tasks have finished.
+     */
+    void initializeImHex() {
+        init::WindowSplash splashWindow;
+
+        log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
+
+        // Add initialization tasks to run
+        TaskManager::init();
+        for (const auto &[name, task, async] : init::getInitTasks())
+            splashWindow.addStartupTask(name, task, async);
+
+        // Draw the splash window while tasks are running
+        if (!splashWindow.loop())
+            ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
+    }
+
+
+    /**
+     * @brief Deinitializes ImHex by running all exit tasks and terminating all asynchronous tasks
+     */
+    void deinitializeImHex() {
+        // Run exit tasks
+        for (const auto &[name, task, async] : init::getExitTasks())
+            task();
+
+        // Terminate all asynchronous tasks
+        TaskManager::exit();
+    }
+
+    /**
+     * @brief Handles a file open request by opening the file specified by OS-specific means
+     */
+    void handleFileOpenRequest() {
+        if (auto path = hex::getInitialFilePath(); path.has_value()) {
+            EventManager::post<RequestOpenFile>(path.value());
         }
     }
 
+}
+
+/**
+ * @brief Main entry point of ImHex
+ * @param argc Argument count
+ * @param argv Argument values
+ * @return Exit code
+ */
+int main(int argc, char **argv) {
+    Window::initNative();
+    hex::crash::setupCrashHandlers();
+
+    if (argc > 1) {
+        handleCommandLineInterface(argc, argv);
+    }
+
+    log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
+    log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+    log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
+
+    ImHexApi::System::impl::setPortableVersion(isPortableVersion());
+
     bool shouldRestart = false;
-    // Register an event to handle restarting of ImHex
-    EventManager::subscribe<RequestRestartImHex>([&]{ shouldRestart = true; });
-
     do {
+        // Register an event handler that will make ImHex restart when requested
         shouldRestart = false;
+        EventManager::subscribe<RequestRestartImHex>([&] {
+            shouldRestart = true;
+        });
 
-        // Initialization
-        {
-            init::WindowSplash splashWindow;
-
-            // Add initialization tasks to run
-            TaskManager::init();
-            for (const auto &[name, task, async] : init::getInitTasks())
-                splashWindow.addStartupTask(name, task, async);
-
-            // Draw the splash window while tasks are running
-            if (!splashWindow.loop())
-                ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
-        }
-
-        log::info("Running on {} {} ({})", ImHexApi::System::getOSName(), ImHexApi::System::getOSVersion(), ImHexApi::System::getArchitecture());
-        log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
+        initializeImHex();
+        handleFileOpenRequest();
 
         // Clean up everything after the main window is closed
         ON_SCOPE_EXIT {
-            for (const auto &[name, task, async] : init::getExitTasks())
-                task();
-
-            TaskManager::exit();
+            deinitializeImHex();
         };
 
         // Main window
-        {
-            Window window;
-
-            // Open file that has been requested to be opened through other, OS-specific means
-            if (auto path = hex::getInitialFilePath(); path.has_value()) {
-                EventManager::post<RequestOpenFile>(path.value());
-            }
-
-            // Render the main window
-
-            EventManager::post<EventImHexStartupFinished>();
-            window.loop();
-        }
+        Window window;
+        window.loop();
 
     } while (shouldRestart);
 
