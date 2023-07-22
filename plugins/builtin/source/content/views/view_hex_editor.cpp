@@ -657,7 +657,11 @@ namespace hex::plugin::builtin {
     static void pasteBytes(const Region &selection, bool selectionCheck) {
         auto provider = ImHexApi::Provider::get();
 
-        auto buffer = parseHexString(ImGui::GetClipboardText());
+        auto clipboard = ImGui::GetClipboardText();
+        if (clipboard == nullptr)
+            return;
+
+        auto buffer = parseHexString(clipboard);
 
         if (!selectionCheck) {
             if (selection.getStartAddress() + buffer.size() >= provider->getActualSize())
