@@ -108,10 +108,11 @@ namespace hex {
 
     void LangEntry::resetLanguageStrings() {
         LangEntry::s_currStrings.clear();
+        LangEntry::s_selectedLanguage.clear();
     }
 
     const std::string &LangEntry::getSelectedLanguage() {
-        return s_selectedLanguage;
+        return LangEntry::s_selectedLanguage;
     }
 
 }

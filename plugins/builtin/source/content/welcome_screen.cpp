@@ -218,6 +218,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
             ImGui::UnderlinedText("hex.builtin.welcome.header.help"_lang);
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
+            ImGui::Dummy({0, 0});
             {
                 if (ImGui::IconHyperlink(ICON_VS_GITHUB, "hex.builtin.welcome.help.repo"_lang)) hex::openWebpage("hex.builtin.welcome.help.repo.link"_lang);
                 if (ImGui::IconHyperlink(ICON_VS_ORGANIZATION, "hex.builtin.welcome.help.gethelp"_lang)) hex::openWebpage("hex.builtin.welcome.help.gethelp.link"_lang);

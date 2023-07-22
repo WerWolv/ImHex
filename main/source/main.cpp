@@ -21,12 +21,6 @@
 
 using namespace hex;
 
-void loadPlugins() {
-    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
-        PluginManager::load(dir);
-    }
-}
-
 int main(int argc, char **argv) {
     Window::initNative();
 
@@ -34,10 +28,16 @@ int main(int argc, char **argv) {
 
     std::vector<std::string> args(argv + 1, argv + argc);
 
-    loadPlugins();
+    if (argc > 1) {
+        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+            PluginManager::load(dir);
+        }
 
-    hex::messaging::setupMessaging();
-    hex::subcommands::processArguments(args);
+        hex::messaging::setupMessaging();
+        hex::subcommands::processArguments(args);
+
+        PluginManager::unload();
+    }
 
     log::info("Welcome to ImHex {}!", ImHexApi::System::getImHexVersion());
     log::info("Compiled using commit {}@{}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
