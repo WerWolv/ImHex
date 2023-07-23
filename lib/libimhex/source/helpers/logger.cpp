@@ -42,4 +42,14 @@ namespace hex::log::impl {
         return logEntries;
     }
 
+    void assertionHandler(bool expr, const char* expr_str, const char* file, int line) {
+        if (!expr) {
+            log::error("Assertion failed: {} at {}:{}", expr_str, file, line);
+
+            #if defined (DEBUG)
+                std::abort();
+            #endif
+        }
+    }
+
 }
