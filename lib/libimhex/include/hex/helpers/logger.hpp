@@ -20,11 +20,19 @@ namespace hex::log {
         bool isRedirected();
         [[maybe_unused]] void redirectToFile();
 
-        extern std::mutex s_loggerMutex;
+        extern std::mutex g_loggerMutex;
 
+        struct LogEntry {
+            std::string project;
+            std::string level;
+            std::string message;
+        };
+
+        std::vector<LogEntry>& getLogEntries();
     }
 
     namespace {
+
 
         [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
             const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
@@ -41,22 +49,25 @@ namespace hex::log {
 
         template<typename... T>
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
-            std::scoped_lock lock(impl::s_loggerMutex);
+            std::scoped_lock lock(impl::g_loggerMutex);
 
             auto dest = impl::getDestination();
             printPrefix(dest, ts, level);
-            fmt::print(dest, fmt::runtime(fmt), args...);
-            fmt::print(dest, "\n");
+
+            auto message = fmt::format(fmt::runtime(fmt), args...);
+            fmt::print(dest, "{}\n", message);
+
+            impl::getLogEntries().push_back({ IMHEX_PROJECT_NAME, level, std::move(message) });
         }
 
     }
 
     [[maybe_unused]] void debug(const std::string &fmt, auto &&...args) {
-#if defined(DEBUG)
-        hex::log::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
-#else
-        hex::unused(fmt, args...);
-#endif
+        #if defined(DEBUG)
+            hex::log::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+        #else
+            impl::getLogEntries().push_back({ IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...) });
+        #endif
     }
 
     [[maybe_unused]] void info(const std::string &fmt, auto &&...args) {

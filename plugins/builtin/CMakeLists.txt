@@ -61,6 +61,7 @@ add_library(${PROJECT_NAME} SHARED
         source/content/views/view_provider_settings.cpp
         source/content/views/view_find.cpp
         source/content/views/view_theme_manager.cpp
+        source/content/views/view_logs.cpp
 
         source/content/helpers/math_evaluator.cpp
         source/content/helpers/notification.cpp

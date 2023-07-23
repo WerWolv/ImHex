@@ -19,6 +19,7 @@
 #include "content/views/view_provider_settings.hpp"
 #include "content/views/view_find.hpp"
 #include "content/views/view_theme_manager.hpp"
+#include "content/views/view_logs.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -44,6 +45,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewProviderSettings>();
         ContentRegistry::Views::add<ViewFind>();
         ContentRegistry::Views::add<ViewThemeManager>();
+        ContentRegistry::Views::add<ViewLogs>();
     }
 
 }

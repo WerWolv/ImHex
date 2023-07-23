@@ -7,7 +7,7 @@
 namespace hex::log::impl {
 
     static wolv::io::File s_loggerFile;
-    std::mutex s_loggerMutex;
+    std::mutex g_loggerMutex;
 
     FILE *getDestination() {
         if (s_loggerFile.isValid())
@@ -34,6 +34,12 @@ namespace hex::log::impl {
 
             if (s_loggerFile.isValid()) break;
         }
+    }
+
+
+    std::vector<LogEntry>& getLogEntries() {
+        static std::vector<LogEntry> logEntries;
+        return logEntries;
     }
 
 }
