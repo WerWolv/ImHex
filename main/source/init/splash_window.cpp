@@ -122,7 +122,7 @@ namespace hex::init {
         // Close the application since this would lead to errors later on anyway.
         if (!splashBackgroundTexture.isValid() || !splashTextTexture.isValid()) {
             log::fatal("Could not load splash screen image!");
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
 
         // Launch init tasks in background
@@ -148,7 +148,16 @@ namespace hex::init {
             highlight.start.x = newPos % 13;
             highlight.start.y = newPos / 13;
             highlight.count = newCount;
-            highlight.color = ImColor((rng() % 0x90) + 0x3F, (rng() % 0x90) + 0x3F, (rng() % 0x90) + 0x3F, 0x70);
+
+            {
+                float r, g, b;
+                ImGui::ColorConvertHSVtoRGB(
+                        (rng() % 360) / 100.0F,
+                        (25 + rng() % 70) / 100.0F,
+                        (85 + rng() % 10) / 100.0F,
+                        r, g, b);
+                highlight.color = ImColor(r, g, b, 0x50 / 255.0F);
+            }
 
             lastPos = newPos;
             lastCount = newCount;
@@ -298,7 +307,7 @@ namespace hex::init {
 
         if (!glfwInit()) {
             log::fatal("Failed to initialize GLFW!");
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
 
         // Configure used OpenGL version
@@ -328,7 +337,7 @@ namespace hex::init {
                 "The most common cause of this is using a virtual machine\n"
                 "You may want to try a release artifact ending with 'NoGPU'"
                 , lastGlfwError.errorCode, lastGlfwError.desc));
-            exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE);
         }
 
         // Calculate native scale factor for hidpi displays
