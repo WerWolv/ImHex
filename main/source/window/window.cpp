@@ -568,17 +568,26 @@ namespace hex {
             static bool popupDisplaying = false;
             static bool positionSet = false;
             static bool sizeSet = false;
+            static double popupDelay = -2.0;
 
             static std::unique_ptr<impl::PopupBase> currPopup;
             static LangEntry name("");
 
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
-                    currPopup = std::move(popups.back());
-                    name = LangEntry(currPopup->getUnlocalizedName());
+                    if (popupDelay <= -1.0) {
+                        popupDelay = 200;
+                    } else {
+                        popupDelay -= this->m_lastFrameTime;
+                        if (popupDelay < 0) {
+                            popupDelay = -2.0;
+                            currPopup = std::move(popups.back());
+                            name = LangEntry(currPopup->getUnlocalizedName());
 
-                    ImGui::OpenPopup(name);
-                    popups.pop_back();
+                            ImGui::OpenPopup(name);
+                            popups.pop_back();
+                        }
+                    }
                 }
             }
 
