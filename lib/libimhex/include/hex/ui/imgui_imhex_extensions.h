@@ -191,5 +191,6 @@ namespace ImGui {
 
     bool DimmedButton(const char* label);
     bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
+    bool DimmedIconToggle(const char *icon, bool *v);
 
 }

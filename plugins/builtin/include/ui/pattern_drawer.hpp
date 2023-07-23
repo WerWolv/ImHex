@@ -10,6 +10,8 @@
 
 #include <hex/providers/provider.hpp>
 
+struct ImGuiTableSortSpecs;
+
 namespace hex::plugin::builtin::ui {
 
     class PatternDrawer : public pl::PatternVisitor {
@@ -65,14 +67,17 @@ namespace hex::plugin::builtin::ui {
         void drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset);
         void drawFavoriteColumn(const pl::ptrn::Pattern& pattern);
 
+        bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height);
         bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);
         void createDefaultEntry(pl::ptrn::Pattern &pattern);
         void closeTreeNode(bool inlined);
 
+        bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const;
         bool isEditingPattern(const pl::ptrn::Pattern& pattern) const;
         void resetEditing();
         bool matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch);
         void traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback);
+        std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
@@ -93,6 +98,8 @@ namespace hex::plugin::builtin::ui {
         std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
         bool m_showFavoriteStars = false;
         bool m_favoritesUpdated = false;
+        bool m_showSpecName = false;
+
         TaskHolder m_favoritesUpdateTask;
 
         std::function<void(Region)> m_selectionCallback = [](Region) { };

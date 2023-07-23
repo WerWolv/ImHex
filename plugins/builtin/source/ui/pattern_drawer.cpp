@@ -285,12 +285,19 @@ namespace hex::plugin::builtin::ui {
         }
     }
 
+    std::string PatternDrawer::getDisplayName(const pl::ptrn::Pattern& pattern) const {
+        if (this->m_showSpecName && pattern.hasAttribute("hex::spec_name"))
+            return pattern.getAttributeArguments("hex::spec_name")[0].toString(true);
+        else
+            return pattern.getDisplayName();
+    }
+
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf) {
         drawFavoriteColumn(pattern);
 
         if (pattern.isSealed() || leaf) {
             ImGui::Indent();
-            highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(pattern.getDisplayName().c_str()); });
+            highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(this->getDisplayName(pattern).c_str()); });
             ImGui::Unindent();
             return false;
         }
@@ -300,11 +307,11 @@ namespace hex::plugin::builtin::ui {
                     using enum TreeStyle;
                     default:
                     case Default:
-                        return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                        return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                     case AutoExpanded:
-                        return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
+                        return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_DefaultOpen);
                     case Flattened:
-                        return ImGui::TreeNodeEx(pattern.getDisplayName().c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+                        return ImGui::TreeNodeEx(this->getDisplayName(pattern).c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
                 }
             });
         }
@@ -847,7 +854,7 @@ namespace hex::plugin::builtin::ui {
                         ImGui::TableNextColumn();
 
                         chunkOpen = highlightWhenSelected(startOffset, ((endOffset + endSize) - startOffset) - 1, [&]{
-                            return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", this->m_treeStyle == TreeStyle::Flattened ? pattern.getDisplayName().c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
+                            return ImGui::TreeNodeEx(hex::format("{0}[{1} ... {2}]", this->m_treeStyle == TreeStyle::Flattened ? this->getDisplayName(pattern).c_str() : "", i, endIndex - 1).c_str(), ImGuiTreeNodeFlags_SpanFullWidth);
                         });
 
                         ImGui::TableNextColumn();
@@ -900,12 +907,12 @@ namespace hex::plugin::builtin::ui {
         return value->second;
     }
 
-    static bool sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) {
+    bool PatternDrawer::sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const {
         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getDisplayName() < right->getDisplayName();
+                return this->getDisplayName(*left) < this->getDisplayName(*right);
             else
-                return left->getDisplayName() > right->getDisplayName();
+                return this->getDisplayName(*left) > this->getDisplayName(*right);
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("start")) {
             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                 return left->getOffsetForSorting() < right->getOffsetForSorting();
@@ -941,7 +948,7 @@ namespace hex::plugin::builtin::ui {
         return false;
     }
 
-    static bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) {
+    bool PatternDrawer::beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) {
         if (ImGui::BeginTable("##Patterntable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("##favorite",                               ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentDisable, ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
@@ -964,13 +971,13 @@ namespace hex::plugin::builtin::ui {
                     return pattern.get();
                 });
 
-                std::sort(sortedPatterns.begin(), sortedPatterns.end(), [&sortSpecs](pl::ptrn::Pattern *left, pl::ptrn::Pattern *right) -> bool {
-                    return sortPatterns(sortSpecs, left, right);
+                std::sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](pl::ptrn::Pattern *left, pl::ptrn::Pattern *right) -> bool {
+                    return this->sortPatterns(sortSpecs, left, right);
                 });
 
                 for (auto &pattern : sortedPatterns)
-                    pattern->sort([&sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
-                        return sortPatterns(sortSpecs, left, right);
+                    pattern->sort([this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
+                        return this->sortPatterns(sortSpecs, left, right);
                     });
 
                 sortSpecs->SpecsDirty = false;
@@ -1016,11 +1023,16 @@ namespace hex::plugin::builtin::ui {
             this->resetEditing();
         }
 
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 7.5);
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 9.5);
         if (ImGui::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
             this->m_filter = parseRValueFilter(this->m_filterText);
         }
         ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+
+        ImGui::DimmedIconToggle(ICON_VS_BOOK, &this->m_showSpecName);
+        ImGui::InfoTooltip("hex.builtin.pattern_drawer.spec_name"_lang);
 
         ImGui::SameLine();
 

@@ -788,4 +788,24 @@ namespace ImGui {
         return res;
     }
 
+    bool DimmedIconToggle(const char *icon, bool *v) {
+        bool pushed = false;
+        bool toggled = false;
+
+        if (*v) {
+            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+            pushed = true;
+        }
+
+        if (ImGui::DimmedIconButton(icon, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            *v = !*v;
+            toggled = true;
+        }
+
+        if (pushed)
+            ImGui::PopStyleColor();
+
+        return toggled;
+    }
+
 }

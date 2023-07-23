@@ -374,6 +374,7 @@
         "hex.builtin.pattern_drawer.favorites": "Favorites",
         "hex.builtin.pattern_drawer.local": "Local",
         "hex.builtin.pattern_drawer.size": "Size",
+        "hex.builtin.pattern_drawer.spec_name": "Display specification names",
         "hex.builtin.pattern_drawer.start": "Start",
         "hex.builtin.pattern_drawer.tree_style.tree": "Tree",
         "hex.builtin.pattern_drawer.tree_style.auto_expanded": "Auto Expanded Tree",

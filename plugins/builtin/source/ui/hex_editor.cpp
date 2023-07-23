@@ -725,89 +725,29 @@ namespace hex::plugin::builtin::ui {
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 2_scaled);
 
                     // Upper/lower case hex
-                    {
-                        bool pushed = false;
-
-                        if (this->m_upperCaseHex) {
-                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-                            pushed = true;
-                        }
-
-                        if (ImGui::DimmedIconButton(ICON_VS_CASE_SENSITIVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                            this->m_upperCaseHex = !this->m_upperCaseHex;
-                        }
-
-                        if (pushed)
-                            ImGui::PopStyleColor();
-
-                        ImGui::InfoTooltip("hex.builtin.hex_editor.uppercase_hex"_lang);
-                    }
+                    ImGui::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &this->m_upperCaseHex);
+                    ImGui::InfoTooltip("hex.builtin.hex_editor.uppercase_hex"_lang);
 
                     ImGui::SameLine();
 
                     // Grayed out zeros
-                    {
-                        bool pushed = false;
-
-                        if (this->m_grayOutZero) {
-                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-                            pushed = true;
-                        }
-
-                        if (ImGui::DimmedIconButton(ICON_VS_LIGHTBULB, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                            this->m_grayOutZero = !this->m_grayOutZero;
-                            EventManager::post<EventHighlightingChanged>();
-                        }
-
-                        if (pushed)
-                            ImGui::PopStyleColor();
-
-                        ImGui::InfoTooltip("hex.builtin.hex_editor.gray_out_zero"_lang);
-                    }
+                    ImGui::DimmedIconToggle(ICON_VS_LIGHTBULB, &this->m_grayOutZero);
+                    ImGui::InfoTooltip("hex.builtin.hex_editor.gray_out_zero"_lang);
 
                     ImGui::SameLine();
 
                     // ASCII view
-                    {
-                        bool pushed = false;
-
-                        if (this->m_showAscii) {
-                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-                            pushed = true;
-                        }
-
-                        if (ImGui::DimmedIconButton(ICON_VS_SYMBOL_KEY, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                            this->m_showAscii = !this->m_showAscii;
-                        }
-
-                        if (pushed)
-                            ImGui::PopStyleColor();
-
-                        ImGui::InfoTooltip("hex.builtin.hex_editor.ascii_view"_lang);
-                    }
+                    ImGui::DimmedIconToggle(ICON_VS_SYMBOL_KEY, &this->m_showAscii);
+                    ImGui::InfoTooltip("hex.builtin.hex_editor.ascii_view"_lang);
 
                     ImGui::SameLine(0, 1_scaled);
 
                     // Custom encoding view
-                    {
-                        bool pushed = false;
+                    ImGui::BeginDisabled(!this->m_currCustomEncoding.has_value());
+                    ImGui::DimmedIconToggle(ICON_VS_WHITESPACE, &this->m_showCustomEncoding);
+                    ImGui::EndDisabled();
 
-                        if (this->m_showCustomEncoding) {
-                            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
-                            pushed = true;
-                        }
-
-                        ImGui::BeginDisabled(!this->m_currCustomEncoding.has_value());
-                        if (ImGui::DimmedIconButton(ICON_VS_WHITESPACE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                            this->m_showCustomEncoding = !this->m_showCustomEncoding;
-                        }
-                        ImGui::EndDisabled();
-
-                        if (pushed)
-                            ImGui::PopStyleColor();
-
-                        ImGui::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
-                    }
+                    ImGui::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
 
                     ImGui::TableNextColumn();
 
