@@ -2,6 +2,7 @@
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
@@ -13,6 +14,7 @@
 #include <string>
 
 #include <magic.h>
+#include <unistd.h>
 
 #if defined(OS_WINDOWS)
     #define MAGIC_PATH_SEPARATOR ";"
@@ -52,7 +54,29 @@ namespace hex::magic {
         if (!magicFiles.has_value())
             return false;
 
-        return magic_compile(ctx, magicFiles->c_str()) == 0;
+        std::array<char, 1024> cwd = { 0x00 };
+        getcwd(cwd.data(), cwd.size());
+
+        std::optional<std::fs::path> magicFolder;
+        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
+            if (std::fs::exists(dir) && fs::isPathWritable(dir)) {
+                magicFolder = dir;
+                break;
+            }
+        }
+
+        if (!magicFolder.has_value()) {
+            log::error("Could not find a writable magic folder");
+            return false;
+        }
+
+        chdir(wolv::util::toUTF8String(*magicFolder).c_str());
+
+        auto result = magic_compile(ctx, magicFiles->c_str()) == 0;
+
+        chdir(cwd.data());
+
+        return result;
     }
 
     std::string getDescription(const std::vector<u8> &data) {
