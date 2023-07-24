@@ -858,9 +858,8 @@ namespace hex::plugin::builtin::ui {
                         });
 
                         ImGui::TableNextColumn();
-                        drawColorColumn(pattern);
-                        ImGui::TextFormatted("0x{0:08X} : 0x{1:08X}", startOffset, startOffset + chunkSize - (pattern.getSize() == 0 ? 0 : 1));
                         ImGui::TableNextColumn();
+                        drawOffsetColumn(pattern);
                         ImGui::TextFormatted("0x{0:04X}", chunkSize);
                         ImGui::TableNextColumn();
                         ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
