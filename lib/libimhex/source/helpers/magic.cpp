@@ -55,7 +55,8 @@ namespace hex::magic {
             return false;
 
         std::array<char, 1024> cwd = { 0x00 };
-        getcwd(cwd.data(), cwd.size());
+        if (getcwd(cwd.data(), cwd.size()) == nullptr)
+            return false;
 
         std::optional<std::fs::path> magicFolder;
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
@@ -70,11 +71,13 @@ namespace hex::magic {
             return false;
         }
 
-        chdir(wolv::util::toUTF8String(*magicFolder).c_str());
+        if (chdir(wolv::util::toUTF8String(*magicFolder).c_str()) != 0)
+            return false;
 
         auto result = magic_compile(ctx, magicFiles->c_str()) == 0;
 
-        chdir(cwd.data());
+        if (chdir(cwd.data()) != 0)
+            return false;
 
         return result;
     }
