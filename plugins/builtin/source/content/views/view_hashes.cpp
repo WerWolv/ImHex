@@ -1,11 +1,58 @@
 #include "content/views/view_hashes.hpp"
 
+#include "content/providers/memory_file_provider.hpp"
+
 #include <hex/api/project_file_manager.hpp>
+#include <hex/ui/popup.hpp>
 #include <hex/helpers/crypto.hpp>
 
 #include <vector>
 
 namespace hex::plugin::builtin {
+
+    class PopupTextHash : public Popup<PopupTextHash> {
+    public:
+        explicit PopupTextHash(ContentRegistry::Hashes::Hash::Function hash)
+                : hex::Popup<PopupTextHash>(hash.getName(), true, false),
+                  m_hash(hash) { }
+
+        void drawContent() override {
+            ImGui::Header(this->getUnlocalizedName().c_str(), true);
+
+            ImGui::PushItemWidth(-1);
+            if (ImGui::InputTextMultiline("##input", this->m_input)) {
+                auto provider = std::make_unique<MemoryFileProvider>();
+                provider->resize(this->m_input.size());
+                provider->writeRaw(0x00, this->m_input.data(), this->m_input.size());
+
+                this->m_hash.reset();
+                auto bytes = this->m_hash.get(Region { 0x00, provider->getActualSize() }, provider.get());
+
+                this->m_result = crypt::encode16(bytes);
+            }
+
+            ImGui::NewLine();
+            ImGui::InputText("##result", this->m_result, ImGuiInputTextFlags_ReadOnly);
+            ImGui::PopItemWidth();
+        }
+
+        [[nodiscard]] ImGuiWindowFlags getFlags() const override {
+            return ImGuiWindowFlags_AlwaysAutoResize;
+        }
+
+        [[nodiscard]] ImVec2 getMinSize() const override {
+            return scaled({ 400, 100 });
+        }
+
+        [[nodiscard]] ImVec2 getMaxSize() const override {
+            return scaled({ 600, 300 });
+        }
+
+    private:
+        std::string m_input;
+        std::string m_result;
+        ContentRegistry::Hashes::Hash::Function m_hash;
+    };
 
     ViewHashes::ViewHashes() : View("hex.builtin.view.hashes.name") {
         EventManager::subscribe<EventRegionSelected>(this, [this](const auto &providerRegion) {
@@ -137,10 +184,11 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
             ImGui::HelpHover("hex.builtin.view.hashes.hover_info"_lang);
 
-            if (ImGui::BeginTable("##hashes", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
+            if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.table.name"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.table.type"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("##buttons", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
 
                 ImGui::TableHeadersRow();
 
@@ -162,20 +210,6 @@ namespace hex::plugin::builtin {
                     ImGui::Selectable(function.getName().c_str(), false);
                     ImGui::PopStyleColor(3);
 
-                    {
-                        const auto ContextMenuId = hex::format("Context Menu {}", i);
-
-                        if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-                            ImGui::OpenPopup(ContextMenuId.c_str());
-
-                        if (ImGui::BeginPopup(ContextMenuId.c_str())) {
-                            if (ImGui::MenuItem("hex.builtin.view.hashes.remove"_lang))
-                                indexToRemove = i;
-
-                            ImGui::EndPopup();
-                        }
-                    }
-
                     ImGui::TableNextColumn();
                     ImGui::TextFormatted("{}", LangEntry(function.getType()->getUnlocalizedName()));
 
@@ -186,9 +220,19 @@ namespace hex::plugin::builtin {
                     else
                         result = "???";
 
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                    ImGui::PushItemWidth(-1);
                     ImGui::InputText("##result", result, ImGuiInputTextFlags_ReadOnly);
                     ImGui::PopItemWidth();
+
+                    ImGui::TableNextColumn();
+
+                    if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        PopupTextHash::open(function);
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::IconButton(ICON_VS_X, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                        indexToRemove = i;
+                    }
 
                     ImGui::PopID();
                 }
