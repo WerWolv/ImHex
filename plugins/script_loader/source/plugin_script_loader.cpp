@@ -116,10 +116,8 @@ IMHEX_PLUGIN_SETUP("Script Loader", "WerWolv", "Script Loader plugin") {
     for (auto &path : romfs::list("lang"))
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
-    TaskManager::doLater([] {
-        if (initializeAllLoaders()) {
-            addScriptsMenu();
-        }
-    });
+    if (initializeAllLoaders()) {
+        addScriptsMenu();
+    }
 
 }
