@@ -175,7 +175,7 @@ namespace hex::init {
             ImGui::NewFrame();
 
             // Draw the splash screen background
-            auto drawList = ImGui::GetForegroundDrawList();
+            auto drawList = ImGui::GetBackgroundDrawList();
             {
 
                 drawList->AddImage(splashBackgroundTexture, ImVec2(0, 0), splashBackgroundTexture.getSize() * scale);
@@ -234,7 +234,6 @@ namespace hex::init {
                 #endif
 
                 drawList->AddText(ImVec2((splashBackgroundTexture.getSize().x * scale - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105 * scale), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
-
             }
 
             // Draw the task progress bar

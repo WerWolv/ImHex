@@ -198,9 +198,13 @@ namespace hex::init {
         // Load font related settings
         {
             std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
-            if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
-                log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));
-                fontFile.clear();
+            if (!fontFile.empty()) {
+                if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
+                    log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));
+                    fontFile.clear();
+                }
+
+                log::info("Loading custom font from {}", wolv::util::toUTF8String(fontFile));
             }
 
             // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
@@ -208,7 +212,7 @@ namespace hex::init {
                 for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
                     auto path = dir / "font.ttf";
                     if (wolv::io::fs::exists(path)) {
-                        log::info("Loading custom front from {}", wolv::util::toUTF8String(path));
+                        log::info("Loading custom font from {}", wolv::util::toUTF8String(path));
 
                         fontFile = path;
                         break;
