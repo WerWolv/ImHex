@@ -521,18 +521,23 @@ namespace hex::init {
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs)) {
             std::vector<std::filesystem::directory_entry> files;
 
-            for (const auto& file : std::filesystem::directory_iterator(path))
-                files.push_back(file);
+            try {
+                for (const auto& file : std::filesystem::directory_iterator(path))
+                    files.push_back(file);
 
-            if (files.size() <= 10)
-                return true;
+                if (files.size() <= 10)
+                    return true;
 
-            std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
-                return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
-            });
+                std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+                    return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
+                });
 
-            for (auto it = files.begin() + 10; it != files.end(); it++)
-                std::filesystem::remove(it->path());
+                for (auto it = files.begin() + 10; it != files.end(); it++)
+                    std::filesystem::remove(it->path());
+            } catch (std::filesystem::filesystem_error &e) {
+                log::error("Failed to clear old log! {}", e.what());
+                continue;
+            }
         }
 
         return true;
