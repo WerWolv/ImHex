@@ -636,8 +636,10 @@ bool ImFontAtlasBuildWithFreeTypeEx(FT_Library ft_library, ImFontAtlas* atlas, u
     for (int src_i = 0; src_i < src_tmp_array.Size; src_i++)
     {
         ImFontBuildSrcDataFT& src_tmp = src_tmp_array[src_i];
-        if (src_tmp.GlyphsCount == 0)
-            continue;
+        // IMHEX PATCH BEGIN
+        // if (src_tmp.GlyphsCount == 0)
+        //     continue;
+        // IMHEX PATCH END
 
         // When merging fonts with MergeMode=true:
         // - We can have multiple input fonts writing into a same destination font.

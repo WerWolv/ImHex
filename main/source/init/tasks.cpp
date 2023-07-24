@@ -198,8 +198,10 @@ namespace hex::init {
         // Load font related settings
         {
             std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
-            if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile))
+            if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
+                log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));
                 fontFile.clear();
+            }
 
             // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
             if (fontFile.empty()) {
@@ -284,7 +286,9 @@ namespace hex::init {
             fonts->AddFontDefault(&cfg);
         } else {
             auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
-            if (font == nullptr || font->ContainerAtlas == nullptr) {
+            if (font == nullptr) {
+                log::warn("Failed to load custom font! Falling back to default font.");
+
                 ImHexApi::System::impl::setFontSize(defaultFontSize);
                 cfg.SizePixels = defaultFontSize;
                 fonts->Clear();
