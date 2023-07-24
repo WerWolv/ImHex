@@ -505,40 +505,50 @@ namespace hex::plugin::builtin {
     /* Hex Editor */
 
     ViewHexEditor::ViewHexEditor() : View("hex.builtin.view.hex_editor.name") {
-        this->m_hexEditor.setForegroundHighlightCallback([](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
+        this->m_hexEditor.setForegroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
+            if (auto highlight = this->m_foregroundHighlights->find(address); highlight != this->m_foregroundHighlights->end())
+                return highlight->second;
+
             std::optional<color_t> result;
             for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions()) {
                 if (auto color = callback(address, data, size, result.has_value()); color.has_value())
                     result = color;
             }
 
-            if (result.has_value())
-                return result;
-
-            for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getForegroundHighlights()) {
-                if (highlighting.getRegion().overlaps({ address, size }))
-                    return highlighting.getColor();
+            if (!result.has_value()) {
+                for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getForegroundHighlights()) {
+                    if (highlighting.getRegion().overlaps({ address, size }))
+                        return highlighting.getColor();
+                }
             }
 
-            return std::nullopt;
+            if (result.has_value())
+                this->m_foregroundHighlights->insert({ address, result.value() });
+
+            return result;
         });
 
-        this->m_hexEditor.setBackgroundHighlightCallback([](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
+        this->m_hexEditor.setBackgroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
+            if (auto highlight = this->m_backgroundHighlights->find(address); highlight != this->m_backgroundHighlights->end())
+                return highlight->second;
+
             std::optional<color_t> result;
             for (const auto &[id, callback] : ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions()) {
                 if (auto color = callback(address, data, size, result.has_value()); color.has_value())
-                    return color.value();
+                    result = color;
+            }
+
+            if (!result.has_value()) {
+                for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getBackgroundHighlights()) {
+                    if (highlighting.getRegion().overlaps({ address, size }))
+                        return highlighting.getColor();
+                }
             }
 
             if (result.has_value())
-                return result;
+                this->m_backgroundHighlights->insert({ address, result.value() });
 
-            for (const auto &[id, highlighting] : ImHexApi::HexEditor::impl::getBackgroundHighlights()) {
-                if (highlighting.getRegion().overlaps({ address, size }))
-                    return highlighting.getColor();
-            }
-
-            return std::nullopt;
+            return result;
         });
 
         this->m_hexEditor.setTooltipCallback([](u64 address, const u8 *data, size_t size) {
@@ -573,8 +583,10 @@ namespace hex::plugin::builtin {
     }
 
     ViewHexEditor::~ViewHexEditor() {
+        EventManager::unsubscribe<RequestSelectionChange>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
         EventManager::unsubscribe<EventProviderOpened>(this);
+        EventManager::unsubscribe<EventHighlightingChanged>(this);
     }
 
     void ViewHexEditor::drawPopup() {
@@ -929,6 +941,11 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventProviderOpened>(this, [](auto *) {
            ImHexApi::HexEditor::clearSelection();
+        });
+
+        EventManager::subscribe<EventHighlightingChanged>(this, [this]{
+           this->m_foregroundHighlights->clear();
+           this->m_backgroundHighlights->clear();
         });
 
         ProjectFile::registerPerProviderHandler({

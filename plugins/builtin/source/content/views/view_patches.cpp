@@ -117,4 +117,14 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
 
+    void ViewPatches::drawAlwaysVisible() {
+        if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
+            const auto &patches = provider->getPatches();
+            if (this->m_numPatches.get(provider) != patches.size()) {
+                this->m_numPatches.get(provider) = patches.size();
+                EventManager::post<EventHighlightingChanged>();
+            }
+        }
+    }
+
 }

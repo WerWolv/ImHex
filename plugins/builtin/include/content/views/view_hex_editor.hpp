@@ -76,6 +76,8 @@ namespace hex::plugin::builtin {
 
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;
         PerProvider<float> m_scrollPosition;
+
+        PerProvider<std::map<u64, color_t>> m_foregroundHighlights, m_backgroundHighlights;
     };
 
 }
