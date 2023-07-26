@@ -5,10 +5,15 @@
 
 namespace hex {
 
-    std::map<Shortcut, std::function<void()>> ShortcutManager::s_globalShortcuts;
+    namespace {
+
+        std::map<Shortcut, std::function<void()>> s_globalShortcuts;
+
+    }
+
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::function<void()> &callback) {
-        ShortcutManager::s_globalShortcuts.insert({ shortcut, callback });
+        s_globalShortcuts.insert({ shortcut, callback });
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const std::function<void()> &callback) {
@@ -48,16 +53,16 @@ namespace hex {
     void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
         Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, keyCode);
 
-        if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut + AllowWhileTyping)) {
-            ShortcutManager::s_globalShortcuts[pressedShortcut + AllowWhileTyping]();
-        } else if (ShortcutManager::s_globalShortcuts.contains(pressedShortcut)) {
+        if (s_globalShortcuts.contains(pressedShortcut + AllowWhileTyping)) {
+            s_globalShortcuts[pressedShortcut + AllowWhileTyping]();
+        } else if (s_globalShortcuts.contains(pressedShortcut)) {
             if (!ImGui::GetIO().WantTextInput)
-                ShortcutManager::s_globalShortcuts[pressedShortcut]();
+                s_globalShortcuts[pressedShortcut]();
         }
     }
 
     void ShortcutManager::clearShortcuts() {
-        ShortcutManager::s_globalShortcuts.clear();
+        s_globalShortcuts.clear();
     }
 
 }

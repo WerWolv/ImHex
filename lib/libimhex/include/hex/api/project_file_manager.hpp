@@ -116,27 +116,16 @@ namespace hex {
          * @brief Get the list of registered handlers
          * @return List of registered handlers
          */
-        static std::vector<Handler>& getHandlers() {
-            return s_handlers;
-        }
+        static std::vector<Handler>& getHandlers();
 
         /**
          * @brief Get the list of registered per-provider handlers
          * @return List of registered per-provider handlers
          */
-        static std::vector<ProviderHandler>& getProviderHandlers() {
-            return s_providerHandlers;
-        }
+        static std::vector<ProviderHandler>& getProviderHandlers();
 
     private:
         ProjectFile() = default;
-
-        static std::function<bool(const std::fs::path&)> s_loadProjectFunction;
-        static std::function<bool(std::optional<std::fs::path>, bool)> s_storeProjectFunction;
-
-        static std::fs::path s_currProjectPath;
-        static std::vector<Handler> s_handlers;
-        static std::vector<ProviderHandler> s_providerHandlers;
     };
 
 }

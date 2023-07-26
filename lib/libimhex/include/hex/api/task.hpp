@@ -167,17 +167,6 @@ namespace hex {
         static void runDeferredCalls();
 
     private:
-        static std::mutex s_deferredCallsMutex, s_tasksFinishedMutex;
-
-        static std::list<std::shared_ptr<Task>> s_tasks;
-        static std::list<std::shared_ptr<Task>> s_taskQueue;
-        static std::list<std::function<void()>> s_deferredCalls;
-        static std::list<std::function<void()>> s_tasksFinishedCallbacks;
-
-        static std::mutex s_queueMutex;
-        static std::condition_variable s_jobCondVar;
-        static std::vector<std::jthread> s_workers;
-
         static void runner(const std::stop_token &stopToken);
     };
 

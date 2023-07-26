@@ -90,13 +90,7 @@ namespace hex {
         static void unload();
         static void reload();
 
-        static const auto &getPlugins() {
-            return PluginManager::s_plugins;
-        }
-
-    private:
-        static std::fs::path s_pluginFolder;
-        static std::vector<Plugin> s_plugins;
+        static const std::vector<Plugin> &getPlugins();
     };
 
 }

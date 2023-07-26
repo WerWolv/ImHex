@@ -69,10 +69,7 @@ namespace hex::dp {
             return this->m_position;
         }
 
-        static void setIdCounter(int id) {
-            if (id > Node::s_idCounter)
-                Node::s_idCounter = id;
-        }
+        static void setIdCounter(int id);
 
         const std::vector<u8>& getBufferOnInput(u32 index);
         const i128& getIntegerOnInput(u32 index);
@@ -89,8 +86,6 @@ namespace hex::dp {
         std::set<u32> m_processedInputs;
         prv::Overlay *m_overlay = nullptr;
         ImVec2 m_position;
-
-        static int s_idCounter;
 
         Attribute& getAttribute(u32 index) {
             if (index >= this->getAttributes().size())

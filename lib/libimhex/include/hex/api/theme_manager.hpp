@@ -78,18 +78,11 @@ namespace hex {
             StyleMap styleMap;
         };
 
-        static std::map<std::string, ThemeHandler>& getThemeHandlers() { return s_themeHandlers; }
-        static std::map<std::string, StyleHandler>& getStyleHandlers() { return s_styleHandlers; }
+        static std::map<std::string, ThemeHandler>& getThemeHandlers();
+        static std::map<std::string, StyleHandler>& getStyleHandlers();
 
     private:
         ThemeManager() = default;
-
-
-        static std::map<std::string, nlohmann::json> s_themes;
-        static std::map<std::string, ThemeHandler> s_themeHandlers;
-        static std::map<std::string, StyleHandler> s_styleHandlers;
-        static std::string s_imageTheme;
-        static std::string s_currTheme;
     };
 
 }

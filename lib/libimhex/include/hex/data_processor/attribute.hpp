@@ -51,10 +51,7 @@ namespace hex::dp {
 
         [[nodiscard]] std::vector<u8>& getDefaultData() { return this->m_defaultData; }
 
-        static void setIdCounter(int id) {
-            if (id > Attribute::s_idCounter)
-                Attribute::s_idCounter = id;
-        }
+        static void setIdCounter(int id);
 
     private:
         int m_id;
@@ -69,8 +66,6 @@ namespace hex::dp {
 
         friend class Node;
         void setParentNode(Node *node) { this->m_parentNode = node; }
-
-        static int s_idCounter;
     };
 
 }

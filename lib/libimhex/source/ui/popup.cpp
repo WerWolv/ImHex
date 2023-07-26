@@ -2,6 +2,12 @@
 
 namespace hex::impl {
 
-    std::vector<std::unique_ptr<PopupBase>> PopupBase::s_openPopups;
+
+    [[nodiscard]] std::vector<std::unique_ptr<PopupBase>> &PopupBase::getOpenPopups() {
+        static std::vector<std::unique_ptr<PopupBase>> openPopups;
+
+        return openPopups;
+    }
+
 
 }

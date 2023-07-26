@@ -82,7 +82,8 @@ namespace hex {
          */
         template<typename E>
         static EventList::iterator subscribe(typename E::Callback function) {
-            return s_events.insert(s_events.end(), std::make_pair(E::Id, std::make_unique<E>(function)));
+            auto &events = getEvents();
+            return events.insert(events.end(), std::make_pair(E::Id, std::make_unique<E>(function)));
         }
 
         /**
@@ -93,7 +94,7 @@ namespace hex {
          */
         template<typename E>
         static void subscribe(void *token, typename E::Callback function) {
-            s_tokenStore.insert(std::make_pair(token, subscribe<E>(function)));
+            getTokenStore().insert(std::make_pair(token, subscribe<E>(function)));
         }
 
         /**
@@ -101,7 +102,7 @@ namespace hex {
          * @param token Token returned by subscribe
          */
         static void unsubscribe(const EventList::iterator &token) noexcept {
-            s_events.erase(token);
+            getEvents().erase(token);
         }
 
         /**
@@ -111,13 +112,14 @@ namespace hex {
          */
         template<typename E>
         static void unsubscribe(void *token) noexcept {
-            auto iter = std::find_if(s_tokenStore.begin(), s_tokenStore.end(), [&](auto &item) {
+            auto &tokenStore = getTokenStore();
+            auto iter = std::find_if(tokenStore.begin(), tokenStore.end(), [&](auto &item) {
                 return item.first == token && item.second->first == E::Id;
             });
 
-            if (iter != s_tokenStore.end()) {
-                s_events.remove(*iter->second);
-                s_tokenStore.erase(iter);
+            if (iter != tokenStore.end()) {
+                getEvents().remove(*iter->second);
+                tokenStore.erase(iter);
             }
 
         }
@@ -129,7 +131,7 @@ namespace hex {
          */
         template<typename E>
         static void post(auto &&...args) noexcept {
-            for (const auto &[id, event] : s_events) {
+            for (const auto &[id, event] : getEvents()) {
                 if (id == E::Id) {
                     (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
                 }
@@ -145,13 +147,13 @@ namespace hex {
          * @brief Unsubscribe all subscribers from all events
          */
         static void clear() noexcept {
-            s_events.clear();
-            s_tokenStore.clear();
+            getEvents().clear();
+            getTokenStore().clear();
         }
 
     private:
-        static std::map<void *, EventList::iterator> s_tokenStore;
-        static EventList s_events;
+        static std::map<void *, EventList::iterator>& getTokenStore();
+        static EventList& getEvents();
     };
 
     /* Default Events */

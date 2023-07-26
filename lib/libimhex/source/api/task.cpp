@@ -14,15 +14,20 @@
 
 namespace hex {
 
-    std::mutex TaskManager::s_deferredCallsMutex, TaskManager::s_tasksFinishedMutex;
+    namespace {
 
-    std::list<std::shared_ptr<Task>> TaskManager::s_tasks, TaskManager::s_taskQueue;
-    std::list<std::function<void()>> TaskManager::s_deferredCalls;
-    std::list<std::function<void()>> TaskManager::s_tasksFinishedCallbacks;
+        std::mutex s_deferredCallsMutex, s_tasksFinishedMutex;
 
-    std::mutex TaskManager::s_queueMutex;
-    std::condition_variable TaskManager::s_jobCondVar;
-    std::vector<std::jthread> TaskManager::s_workers;
+        std::list<std::shared_ptr<Task>> s_tasks, s_taskQueue;
+        std::list<std::function<void()>> s_deferredCalls;
+        std::list<std::function<void()>> s_tasksFinishedCallbacks;
+
+        std::mutex s_queueMutex;
+        std::condition_variable s_jobCondVar;
+        std::vector<std::jthread> s_workers;
+
+    }
+
 
     static void setThreadName(const std::string &name) {
         #if defined(OS_WINDOWS)
@@ -210,19 +215,19 @@ namespace hex {
         log::debug("Initializing task manager thread pool with {} workers.", threadCount);
 
         for (u32 i = 0; i < threadCount; i++)
-            TaskManager::s_workers.emplace_back(TaskManager::runner);
+            s_workers.emplace_back(TaskManager::runner);
     }
 
     void TaskManager::exit() {
-        for (auto &task : TaskManager::s_tasks)
+        for (auto &task : s_tasks)
             task->interrupt();
 
-        for (auto &thread : TaskManager::s_workers)
+        for (auto &thread : s_workers)
             thread.request_stop();
 
         s_jobCondVar.notify_all();
 
-        TaskManager::s_workers.clear();
+        s_workers.clear();
     }
 
     void TaskManager::runner(const std::stop_token &stopToken) {

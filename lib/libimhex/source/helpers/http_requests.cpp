@@ -2,8 +2,12 @@
 
 namespace hex {
 
-    std::string HttpRequest::s_caCertData;
-    std::string HttpRequest::s_proxyUrl;
+    namespace {
+
+        std::string s_proxyUrl;
+
+    }
+
 
     HttpRequest::HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
         AT_FIRST_TIME {
@@ -38,21 +42,6 @@ namespace hex {
         curl_easy_setopt(this->m_curl, CURLOPT_PROXY, s_proxyUrl.c_str());
     }
 
-    CURLcode HttpRequest::sslCtxFunction(CURL *ctx, void *sslctx, void *userData) {
-        hex::unused(ctx, userData);
-
-        auto *cfg = static_cast<mbedtls_ssl_config *>(sslctx);
-
-        auto crt = static_cast<mbedtls_x509_crt*>(userData);
-        mbedtls_x509_crt_init(crt);
-
-        mbedtls_x509_crt_parse(crt, reinterpret_cast<const u8 *>(HttpRequest::s_caCertData.data()), HttpRequest::s_caCertData.size());
-
-        mbedtls_ssl_conf_ca_chain(cfg, crt, nullptr);
-
-        return CURLE_OK;
-    }
-
     size_t HttpRequest::writeToVector(void *contents, size_t size, size_t nmemb, void *userdata) {
         auto &response = *reinterpret_cast<std::vector<u8>*>(userdata);
         auto startSize = response.size();
@@ -82,6 +71,16 @@ namespace hex {
             request.m_progress = 0.0F;
 
         return request.m_canceled ? CURLE_ABORTED_BY_CALLBACK : CURLE_OK;
+    }
+
+    void HttpRequest::setProxy(std::string proxy) {
+        s_proxyUrl = std::move(proxy);
+    }
+
+    void HttpRequest::checkProxyErrors() {
+        if (!s_proxyUrl.empty()){
+            log::info("A custom proxy '{0}' is in use. Is it working correctly?", s_proxyUrl);
+        }
     }
 
 }

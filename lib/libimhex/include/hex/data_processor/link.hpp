@@ -14,16 +14,11 @@ namespace hex::dp {
         [[nodiscard]] int getFromId() const { return this->m_from; }
         [[nodiscard]] int getToId() const { return this->m_to; }
 
-        static void setIdCounter(int id) {
-            if (id > Link::s_idCounter)
-                Link::s_idCounter = id;
-        }
+        static void setIdCounter(int id);
 
     private:
         int m_id;
         int m_from, m_to;
-
-        static int s_idCounter;
     };
 
 }

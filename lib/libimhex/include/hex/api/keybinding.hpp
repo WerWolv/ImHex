@@ -413,9 +413,6 @@ namespace hex {
          * @brief Clear all shortcuts
          */
         static void clearShortcuts();
-
-    private:
-        static std::map<Shortcut, std::function<void()>> s_globalShortcuts;
     };
 
 }

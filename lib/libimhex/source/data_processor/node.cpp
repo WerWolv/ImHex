@@ -7,9 +7,13 @@
 
 namespace hex::dp {
 
-    int Node::s_idCounter = 1;
+    namespace {
 
-    Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(Node::s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
+        int s_idCounter = 1;
+
+    }
+
+    Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
         for (auto &attr : this->m_attributes)
             attr.setParentNode(this);
     }
@@ -134,6 +138,11 @@ namespace hex::dp {
 
         this->m_overlay->setAddress(address);
         this->m_overlay->getData() = data;
+    }
+
+    void Node::setIdCounter(int id) {
+        if (id > s_idCounter)
+            s_idCounter = id;
     }
 
 }

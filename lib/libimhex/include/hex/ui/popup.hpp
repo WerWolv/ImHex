@@ -34,9 +34,7 @@ namespace hex {
                 return { 0, 0 };
             }
 
-            [[nodiscard]] static std::vector<std::unique_ptr<PopupBase>> &getOpenPopups() {
-                return s_openPopups;
-            }
+            [[nodiscard]] static std::vector<std::unique_ptr<PopupBase>> &getOpenPopups();
 
             [[nodiscard]] const std::string &getUnlocalizedName() const {
                 return this->m_unlocalizedName;
@@ -57,9 +55,6 @@ namespace hex {
             [[nodiscard]] bool shouldClose() const {
                 return this->m_close;
             }
-
-        protected:
-            static std::vector<std::unique_ptr<PopupBase>> s_openPopups;
 
         private:
 
@@ -84,7 +79,7 @@ namespace hex {
 
             auto popup = std::make_unique<T>(std::forward<Args>(args)...);
 
-            s_openPopups.emplace_back(std::move(popup));
+            getOpenPopups().emplace_back(std::move(popup));
         }
 
     };

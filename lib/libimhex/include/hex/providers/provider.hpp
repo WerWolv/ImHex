@@ -206,9 +206,6 @@ namespace hex::prv {
         std::string m_errorMessage;
 
         size_t m_pageSize = MaxPageSize;
-
-    private:
-        static u32 s_idCounter;
     };
 
 }

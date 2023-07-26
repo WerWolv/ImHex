@@ -8,8 +8,12 @@
 
 namespace hex {
 
-    ImFontAtlas *View::s_fontAtlas;
-    ImFontConfig View::s_fontConfig;
+    namespace {
+
+        ImFontAtlas *s_fontAtlas;
+        ImFontConfig s_fontConfig;
+
+    }
 
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
 
@@ -61,5 +65,11 @@ namespace hex {
         if (ImGui::Button(textRight.c_str(), ImVec2(width / 3, 0)))
             rightButtonFn();
     }
+
+    ImFontAtlas *View::getFontAtlas() { return s_fontAtlas; }
+    void View::setFontAtlas(ImFontAtlas *atlas) { s_fontAtlas = atlas; }
+
+    ImFontConfig View::getFontConfig() { return s_fontConfig; }
+    void View::setFontConfig(ImFontConfig config) { s_fontConfig = config; }
 
 }

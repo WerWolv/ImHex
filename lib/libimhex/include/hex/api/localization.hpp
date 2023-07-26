@@ -43,10 +43,6 @@ namespace hex {
 
     private:
         std::string m_unlocalizedString;
-
-        static std::string s_fallbackLanguage;
-        static std::string s_selectedLanguage;
-        static std::map<std::string, std::string> s_currStrings;
     };
 
     std::string operator+(const std::string &&left, const LangEntry &&right);

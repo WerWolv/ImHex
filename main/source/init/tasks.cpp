@@ -108,29 +108,6 @@ namespace hex::init {
     bool setupEnvironment() {
         hex::log::debug("Using romfs: '{}'", romfs::name());
 
-        // Load the SSL certificate
-        constexpr static auto CaCertFileName = "cacert.pem";
-
-        // Look for a custom certificate in the config folder
-        std::fs::path caCertPath;
-        for (const auto &folder : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-            for (const auto &file : std::fs::directory_iterator(folder)) {
-                if (file.path().filename() == CaCertFileName) {
-                    caCertPath = file.path();
-                    break;
-                }
-            }
-        }
-
-        // If a custom certificate was found, use it, otherwise use the one from the romfs
-        std::string caCertData;
-        if (!caCertPath.empty())
-            caCertData = wolv::io::File(caCertPath, wolv::io::File::Mode::Read).readString();
-        else
-            caCertData = std::string(romfs::get(CaCertFileName).string());
-
-        HttpRequest::setCACert(caCertData);
-
         return true;
     }
 

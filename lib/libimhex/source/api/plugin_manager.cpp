@@ -170,34 +170,42 @@ namespace hex {
     }
 
 
-    std::fs::path PluginManager::s_pluginFolder;
-    std::vector<Plugin> PluginManager::s_plugins;
+    namespace {
+
+        std::fs::path s_pluginFolder;
+        std::vector<Plugin> s_plugins;
+
+    }
 
     bool PluginManager::load(const std::fs::path &pluginFolder) {
         if (!wolv::io::fs::exists(pluginFolder))
             return false;
 
-        PluginManager::s_pluginFolder = pluginFolder;
+        s_pluginFolder = pluginFolder;
 
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-                PluginManager::s_plugins.emplace_back(pluginPath.path());
+                s_plugins.emplace_back(pluginPath.path());
         }
 
-        if (PluginManager::s_plugins.empty())
+        if (s_plugins.empty())
             return false;
 
         return true;
     }
 
     void PluginManager::unload() {
-        PluginManager::s_plugins.clear();
-        PluginManager::s_pluginFolder.clear();
+        s_plugins.clear();
+        s_pluginFolder.clear();
     }
 
     void PluginManager::reload() {
         PluginManager::unload();
-        PluginManager::load(PluginManager::s_pluginFolder);
+        PluginManager::load(s_pluginFolder);
+    }
+
+    const std::vector<Plugin> &PluginManager::getPlugins() {
+        return s_plugins;
     }
 
 }

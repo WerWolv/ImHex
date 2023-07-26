@@ -9,11 +9,16 @@
 
 namespace hex {
 
-    std::map<std::string, nlohmann::json> ThemeManager::s_themes;
-    std::map<std::string, ThemeManager::ThemeHandler> ThemeManager::s_themeHandlers;
-    std::map<std::string, ThemeManager::StyleHandler> ThemeManager::s_styleHandlers;
-    std::string ThemeManager::s_imageTheme;
-    std::string ThemeManager::s_currTheme;
+    namespace {
+
+        std::map<std::string, nlohmann::json> s_themes;
+        std::map<std::string, ThemeManager::ThemeHandler> s_themeHandlers;
+        std::map<std::string, ThemeManager::StyleHandler> s_styleHandlers;
+        std::string s_imageTheme;
+        std::string s_currTheme;
+
+    }
+
 
     void ThemeManager::addThemeHandler(const std::string &name, const ColorMap &colorMap, const std::function<ImColor(u32)> &getFunction, const std::function<void(u32, ImColor)> &setFunction) {
         s_themeHandlers[name] = { colorMap, getFunction, setFunction };
@@ -201,11 +206,20 @@ namespace hex {
     }
 
     void ThemeManager::reset() {
-        ThemeManager::s_themes.clear();
-        ThemeManager::s_styleHandlers.clear();
-        ThemeManager::s_themeHandlers.clear();
-        ThemeManager::s_imageTheme.clear();
-        ThemeManager::s_currTheme.clear();
+        s_themes.clear();
+        s_styleHandlers.clear();
+        s_themeHandlers.clear();
+        s_imageTheme.clear();
+        s_currTheme.clear();
+    }
+
+
+    std::map<std::string, ThemeManager::ThemeHandler> &ThemeManager::getThemeHandlers() {
+        return s_themeHandlers;
+    }
+
+    std::map<std::string, ThemeManager::StyleHandler> &ThemeManager::getStyleHandlers() {
+        return s_styleHandlers;
     }
 
 }

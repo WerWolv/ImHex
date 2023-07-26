@@ -93,13 +93,7 @@ namespace hex {
             return *this;
         }
 
-        static void setCACert(std::string data) {
-            HttpRequest::s_caCertData = std::move(data);
-        }
-
-        static void setProxy(std::string proxy) {
-            HttpRequest::s_proxyUrl = std::move(proxy);
-        }
+        static void setProxy(std::string proxy);
 
         void setMethod(std::string method) {
             this->m_method = std::move(method);
@@ -286,9 +280,7 @@ namespace hex {
                     char *url = nullptr;
                     curl_easy_getinfo(this->m_curl, CURLINFO_EFFECTIVE_URL, &url);
                     log::error("Http request '{0} {1}' failed with error {2}: '{3}'", this->m_method, url, u32(result), curl_easy_strerror(result));
-                    if (!HttpRequest::s_proxyUrl.empty()){
-                        log::info("A custom proxy '{0}' is in use. Is it working correctly?", HttpRequest::s_proxyUrl);
-                    }
+                    checkProxyErrors();
 
                     return { };
                 }
@@ -300,10 +292,12 @@ namespace hex {
             return Result<T>(statusCode, { data.begin(), data.end() });
         }
 
-        [[maybe_unused]] static CURLcode sslCtxFunction(CURL *ctx, void *sslctx, void *userData);
         static size_t writeToVector(void *contents, size_t size, size_t nmemb, void *userdata);
         static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata);
         static int progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow);
+
+    private:
+        static void checkProxyErrors();
 
     private:
         CURL *m_curl;
@@ -320,7 +314,6 @@ namespace hex {
         std::atomic<bool> m_canceled = false;
 
         [[maybe_unused]] std::unique_ptr<mbedtls_x509_crt> m_caCert;
-        static std::string s_caCertData, s_proxyUrl;
     };
 
 }

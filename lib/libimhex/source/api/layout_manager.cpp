@@ -9,9 +9,14 @@
 
 namespace hex {
 
-    std::optional<std::fs::path> LayoutManager::s_layoutPathToLoad;
-    std::optional<std::string> LayoutManager::s_layoutStringToLoad;
-    std::vector<LayoutManager::Layout> LayoutManager::s_layouts;
+    namespace {
+
+        std::optional<std::fs::path> s_layoutPathToLoad;
+        std::optional<std::string> s_layoutStringToLoad;
+        std::vector<LayoutManager::Layout> s_layouts;
+
+    }
+
 
     void LayoutManager::load(const std::fs::path &path) {
         s_layoutPathToLoad = path;

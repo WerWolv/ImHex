@@ -4,9 +4,14 @@
 
 namespace hex {
 
-    std::string LangEntry::s_fallbackLanguage;
-    std::string LangEntry::s_selectedLanguage;
-    std::map<std::string, std::string> LangEntry::s_currStrings;
+    namespace {
+
+        std::string s_fallbackLanguage;
+        std::string s_selectedLanguage;
+        std::map<std::string, std::string> s_currStrings;
+
+    }
+
 
     LanguageDefinition::LanguageDefinition(std::map<std::string, std::string> &&entries) {
         for (const auto &[key, value] : entries) {
@@ -67,7 +72,7 @@ namespace hex {
     }
 
     const std::string &LangEntry::get() const {
-        auto &lang = LangEntry::s_currStrings;
+        auto &lang = s_currStrings;
         if (lang.contains(this->m_unlocalizedString))
             return lang[this->m_unlocalizedString];
         else
@@ -75,7 +80,7 @@ namespace hex {
     }
 
     void LangEntry::loadLanguage(const std::string &language) {
-        LangEntry::s_currStrings.clear();
+        s_currStrings.clear();
 
         auto &definitions = ContentRegistry::Language::impl::getLanguageDefinitions();
 
@@ -83,15 +88,15 @@ namespace hex {
             return;
 
         for (auto &definition : definitions[language])
-            LangEntry::s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
+            s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
 
         const auto fallbackLanguage = LangEntry::getFallbackLanguage();
         if (language != fallbackLanguage) {
             for (auto &definition : definitions[fallbackLanguage])
-                LangEntry::s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
+                s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
         }
 
-        LangEntry::s_selectedLanguage = language;
+        s_selectedLanguage = language;
     }
 
     const std::map<std::string, std::string> &LangEntry::getSupportedLanguages() {
@@ -99,20 +104,20 @@ namespace hex {
     }
 
     void LangEntry::setFallbackLanguage(const std::string &language) {
-        LangEntry::s_fallbackLanguage = language;
+        s_fallbackLanguage = language;
     }
 
     const std::string &LangEntry::getFallbackLanguage() {
-        return LangEntry::s_fallbackLanguage;
+        return s_fallbackLanguage;
     }
 
     void LangEntry::resetLanguageStrings() {
-        LangEntry::s_currStrings.clear();
-        LangEntry::s_selectedLanguage.clear();
+        s_currStrings.clear();
+        s_selectedLanguage.clear();
     }
 
     const std::string &LangEntry::getSelectedLanguage() {
-        return LangEntry::s_selectedLanguage;
+        return s_selectedLanguage;
     }
 
 }

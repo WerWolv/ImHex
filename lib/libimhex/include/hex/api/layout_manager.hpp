@@ -30,10 +30,6 @@ namespace hex {
 
     private:
         LayoutManager() = default;
-
-        static std::optional<std::fs::path> s_layoutPathToLoad;
-        static std::optional<std::string> s_layoutStringToLoad;
-        static std::vector<Layout> s_layouts;
     };
 
 }

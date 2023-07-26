@@ -13,7 +13,12 @@
 
 namespace hex::prv {
 
-    u32 Provider::s_idCounter = 0;
+    namespace {
+
+        u32 s_idCounter = 0;
+
+    }
+
 
     Provider::Provider() : m_id(s_idCounter++) {
         this->m_patches.emplace_back();
