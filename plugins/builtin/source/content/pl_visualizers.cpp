@@ -378,6 +378,11 @@ namespace hex::plugin::builtin {
             static u64 index = 0;
             static TaskHolder resetTask;
 
+            if (sampleRate == 0)
+                throw std::logic_error(hex::format("Invalid sample rate: {}", sampleRate));
+            else if (channels == 0)
+                throw std::logic_error(hex::format("Invalid channel count: {}", channels));
+
             if (shouldReset) {
                 waveData.clear();
 
