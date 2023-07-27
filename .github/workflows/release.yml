@@ -51,26 +51,6 @@ jobs:
           repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}
 
-      - name: ✉️ Update C++ Plugin Template
-        uses: peter-evans/repository-dispatch@v2
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        if: "${{ env.RELEASE_TOKEN != '' }}"
-        with:
-          token: ${{ secrets.RELEASE_TOKEN }}
-          repository: WerWolv/ImHex-Cpp-Plugin-Template
-          event-type: update_submodule
-
-      - name: ✉️ Update Rust Plugin Template
-        uses: peter-evans/repository-dispatch@v2
-        env:
-          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        if: "${{ env.RELEASE_TOKEN != '' }}"
-        with:
-          token: ${{ secrets.RELEASE_TOKEN }}
-          repository: WerWolv/ImHex-Rust-Plugin-Template
-          event-type: update_submodule
-
   release-upload-artifacts:
     runs-on: ubuntu-latest
     name: Release Upload Artifacts
