@@ -5,13 +5,15 @@
 
 #include <content/popups/popup_notification.hpp>
 
+#include <wolv/utils/string.hpp>
+
 namespace hex::plugin::builtin {
 
     void openProject() {
         fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                             [](const auto &path) {
                                 if (!ProjectFile::load(path)) {
-                                    PopupError::open("hex.builtin.popup.error.project.load"_lang);
+                                    PopupError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                                 }
                             });
     }

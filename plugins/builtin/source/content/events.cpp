@@ -11,6 +11,7 @@
 #include <content/providers/file_provider.hpp>
 
 #include <wolv/io/fs.hpp>
+#include <wolv/utils/string.hpp>
 
 #include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_question.hpp>
@@ -91,7 +92,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     if (path.extension() == ".hexproj") {
                         if (!ProjectFile::load(path)) {
-                            PopupError::open("hex.builtin.popup.error.project.load"_lang);
+                            PopupError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     } else {
                         FileProvider* newProvider = static_cast<FileProvider*>(
@@ -112,7 +113,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
                         if (!ProjectFile::load(path)) {
-                            PopupError::open("hex.builtin.popup.error.project.load"_lang);
+                            PopupError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     });
             }
