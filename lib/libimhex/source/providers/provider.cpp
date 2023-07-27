@@ -143,6 +143,14 @@ namespace hex::prv {
         if (!this->isWritable())
             return;
 
+        this->m_patches.emplace_back();
+
+        for (auto &[patchAddress, patch] : getPatches()) {
+            u8 value = 0x00;
+            this->readRaw(patchAddress - this->getBaseAddress(), &value, 1);
+            this->m_patches.back().insert({ patchAddress, value });
+        }
+
         for (auto &[patchAddress, patch] : getPatches()) {
             this->writeRaw(patchAddress - this->getBaseAddress(), &patch, 1);
         }
@@ -150,6 +158,7 @@ namespace hex::prv {
         this->markDirty();
 
         this->m_patches.emplace_back();
+        this->m_currPatches = std::prev(this->m_patches.end());
     }
 
 
@@ -231,7 +240,7 @@ namespace hex::prv {
         for (u64 i = 0; i < size; i++) {
             u8 patch         = reinterpret_cast<const u8 *>(buffer)[i];
             u8 originalValue = 0x00;
-            this->readRaw(offset + i, &originalValue, sizeof(u8));
+            this->readRaw((offset + i) - this->getBaseAddress(), &originalValue, sizeof(u8));
 
             if (patch == originalValue)
                 getPatches().erase(offset + i);

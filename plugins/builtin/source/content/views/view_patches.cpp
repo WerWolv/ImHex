@@ -47,6 +47,10 @@ namespace hex::plugin::builtin {
             else
                 return std::nullopt;
         });
+
+        EventManager::subscribe<EventProviderSaved>([](auto *) {
+            EventManager::post<EventHighlightingChanged>();
+        });
     }
 
     void ViewPatches::drawContent() {
