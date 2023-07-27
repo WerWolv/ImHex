@@ -27,4 +27,6 @@ macro(add_imhex_plugin)
     target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE ${LIBROMFS_LIBRARY})
 
     set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+
+    add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
 endmacro()
