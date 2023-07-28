@@ -128,7 +128,7 @@ namespace hex::plugin::builtin::ui {
         provider->read(address, buffer.data(), size);
 
         const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
-        const ImColor color = [&decoded = decoded, &advance = advance]{
+        const ImColor color = [&]{
             if (decoded.length() == 1 && std::isalnum(decoded[0]))
                 return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
             else if (decoded.length() == 1 && advance == 1)
@@ -295,15 +295,20 @@ namespace hex::plugin::builtin::ui {
 
             // ASCII column
             ImGui::TableSetupColumn("");
-            ImGui::TableSetupColumn("hex.builtin.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, this->m_showAscii ? (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow : 0);
 
-            // Custom encoding column
+            if (this->m_showAscii) {
+                ImGui::TableSetupColumn("hex.builtin.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + this->m_characterCellPadding * 1_scaled) * this->m_bytesPerRow);
+            }
+            else
+                ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
+
             ImGui::TableSetupColumn("");
+            // Custom encoding column
             {
-                if (this->m_currCustomEncoding.has_value()) {
+                if (this->m_currCustomEncoding.has_value() && this->m_showCustomEncoding) {
                     ImGui::TableSetupColumn(this->m_currCustomEncoding->getName().c_str(), ImGuiTableColumnFlags_WidthStretch);
                 } else {
-                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
+                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
                 }
             }
 
