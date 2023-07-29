@@ -202,8 +202,6 @@ void TextEditor::DeleteRange(const Coordinates &aStart, const Coordinates &aEnd)
 }
 
 int TextEditor::InsertTextAt(Coordinates & /* inout */ aWhere, const char *aValue) {
-    assert(!mReadOnly);
-
     int cindex     = GetCharacterIndex(aWhere);
     int totalLines = 0;
     while (*aValue != '\0') {
@@ -541,8 +539,6 @@ void TextEditor::RemoveLine(int aIndex) {
 }
 
 TextEditor::Line &TextEditor::InsertLine(int aIndex) {
-    assert(!mReadOnly);
-
     auto &result = *mLines.insert(mLines.begin() + aIndex, Line());
 
     ErrorMarkers etmp;

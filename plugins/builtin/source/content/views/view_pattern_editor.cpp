@@ -306,8 +306,20 @@ namespace hex::plugin::builtin {
         if (this->m_consoleNeedsUpdate) {
             std::scoped_lock lock(this->m_logMutex);
 
-            this->m_consoleEditor.SetTextLines(*this->m_console);
-            this->m_consoleEditor.SetCursorPosition({ int(this->m_consoleEditor.GetTextLines().size()), 0 });
+            auto lineCount = this->m_consoleEditor.GetTextLines().size() - 1;
+            if (this->m_console->size() < lineCount) {
+                this->m_consoleEditor.SetText("");
+                lineCount = 0;
+            }
+
+            this->m_consoleEditor.SetCursorPosition({ int(lineCount + 1), 0 });
+
+            auto linesToAdd = this->m_console->size() - lineCount;
+            for (size_t i = 0; i < linesToAdd; i += 1) {
+                this->m_consoleEditor.InsertText(this->m_console->at(lineCount + i));
+                this->m_consoleEditor.InsertText("\n");
+            }
+
             this->m_consoleNeedsUpdate = false;
         }
 
