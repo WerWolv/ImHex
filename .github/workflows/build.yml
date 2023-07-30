@@ -183,7 +183,8 @@ jobs:
       with:
         repository: glfw/glfw
         path: glfw
-
+    
+    # GLFW custom build (to allow software rendering)
     - name: ⬇️ Patch and install custom glfw
       if: ${{matrix.custom_glfw}}
       run: |
