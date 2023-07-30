@@ -195,6 +195,7 @@ jobs:
         cd build
 
         cmake -G "Ninja"                                \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DBUILD_SHARED_LIBS=ON                        \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
