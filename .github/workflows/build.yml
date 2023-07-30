@@ -183,7 +183,8 @@ jobs:
       with:
         repository: glfw/glfw
         path: glfw
-
+    
+    # GLFW custom build (to allow software rendering)
     - name: ⬇️ Patch and install custom glfw
       if: ${{matrix.custom_glfw}}
       run: |
@@ -194,15 +195,12 @@ jobs:
         cd build
 
         cmake -G "Ninja"                                \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DBUILD_SHARED_LIBS=ON                        \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache          \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
-          -DDOTNET_EXECUTABLE="/usr/local/bin/dotnet"   \
-          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
-          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
         ..
         ninja install
 
