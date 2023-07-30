@@ -919,6 +919,7 @@ namespace hex::plugin::builtin {
         this->m_consoleNeedsUpdate = true;
 
         this->m_sectionWindowDrawer.clear();
+        this->m_consoleEditor.SetText("");
 
         EventManager::post<EventHighlightingChanged>();
 
