@@ -741,6 +741,8 @@ namespace hex {
     }
 
     void Window::initGLFW() {
+        bool restoreWindowPos = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.restore_window_pos", false);
+
         glfwSetErrorCallback([](int error, const char *desc) {
             if (error == GLFW_PLATFORM_ERROR) {
                 // Ignore error spam caused by Wayland not supporting moving or resizing
@@ -777,6 +779,11 @@ namespace hex {
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
+        if (restoreWindowPos) {
+            int maximized = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", GLFW_FALSE);
+            glfwWindowHint(GLFW_MAXIMIZED, maximized);
+        }
+
         // Create window
         this->m_windowTitle = "ImHex";
         this->m_window      = glfwCreateWindow(1280_scaled, 720_scaled, this->m_windowTitle.c_str(), nullptr, nullptr);
@@ -811,7 +818,13 @@ namespace hex {
             int x = 0, y = 0;
             glfwGetWindowPos(this->m_window, &x, &y);
 
+            if (restoreWindowPos) {
+                x = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
+                y = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
+            }
+
             ImHexApi::System::impl::setMainWindowPosition(x, y);
+            glfwSetWindowPos(this->m_window, x, y);
         }
 
         // Set up initial window size
@@ -819,7 +832,14 @@ namespace hex {
             int width = 0, height = 0;
             glfwGetWindowSize(this->m_window, &width, &height);
             glfwSetWindowSize(this->m_window, width, height);
+
+            if (restoreWindowPos) {
+                width = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
+                height = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
+            }
+
             ImHexApi::System::impl::setMainWindowSize(width, height);
+            glfwSetWindowSize(this->m_window, width, height);
         }
 
         // Register window move callback
@@ -1055,6 +1075,19 @@ namespace hex {
     }
 
     void Window::exitGLFW() {
+        {
+            int x = 0, y = 0, width = 0, height = 0, maximized = 0;
+            glfwGetWindowPos(this->m_window, &x, &y);
+            glfwGetWindowSize(this->m_window, &width, &height);
+            maximized = glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED);
+
+            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.", x);
+            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
+            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
+            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
+            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
+        }
+
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
 

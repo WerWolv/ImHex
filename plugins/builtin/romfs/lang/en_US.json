@@ -486,6 +486,7 @@
         "hex.builtin.setting.interface.scaling.x1_5": "x1.5",
         "hex.builtin.setting.interface.scaling.x2_0": "x2.0",
         "hex.builtin.setting.interface.wiki_explain_language": "Wikipedia Language",
+        "hex.builtin.setting.interface.restore_window_pos": "Restore window position",
         "hex.builtin.setting.proxy": "Proxy",
         "hex.builtin.setting.proxy.description": "Proxy will take effect on store, wikipedia or any other plugin immediately.",
         "hex.builtin.setting.proxy.enable": "Enable Proxy",
