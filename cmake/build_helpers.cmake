@@ -277,6 +277,9 @@ endfunction()
 macro(configureCMake)
     message(STATUS "Configuring ImHex v${IMHEX_VERSION}")
 
+    # Enable C and C++ languages
+    enable_language(C CXX)
+
     # Configure use of recommended build tools
     if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
         message(STATUS "Configuring CMake to use recommended build tools...")
