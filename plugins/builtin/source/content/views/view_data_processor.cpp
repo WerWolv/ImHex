@@ -484,7 +484,7 @@ namespace hex::plugin::builtin {
             workspace.dataOverlays.clear();
 
         } catch (std::runtime_error &e) {
-            log::fatal("Node implementation bug! {}\n", e.what());
+            log::fatal("Node implementation bug! {}", e.what());
         }
     }
 
@@ -760,10 +760,12 @@ namespace hex::plugin::builtin {
                     ImGui::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
 
                 if (this->m_workspaceStack->size() > 1) {
-                    ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.2F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
-                    if (ImGui::IconButton(ICON_VS_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
+                    ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.5F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0F, 4.0F));
+                    if (ImGui::DimmedIconButton(ICON_VS_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                         popWorkspace = true;
                     }
+                    ImGui::PopStyleVar();
                 }
 
                 ImNodes::EndNodeEditor();
