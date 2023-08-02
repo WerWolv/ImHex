@@ -204,6 +204,9 @@ namespace hex::plugin::builtin::ui {
 
                 shouldExitEditingMode = this->m_currDataVisualizer->drawEditing(*this->m_editingAddress, buffer.data(), buffer.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
 
+                if (this->m_dataVisualizerEndianness != std::endian::native)
+                    std::reverse(buffer.begin(), buffer.end());
+
                 this->m_editingBytes = buffer;
             } else if (cellType == this->m_editingCellType && cellType == CellType::ASCII) {
                 shouldExitEditingMode = asciiVisualizer.drawEditing(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size(), this->m_upperCaseHex, this->m_enteredEditingMode);
