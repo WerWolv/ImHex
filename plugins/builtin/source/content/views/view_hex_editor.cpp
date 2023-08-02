@@ -502,6 +502,53 @@ namespace hex::plugin::builtin {
         u64 m_size;
     };
 
+    class PopupFill : public ViewHexEditor::Popup {
+    public:
+        PopupFill(u64 address, size_t size) : m_address(address), m_size(size) {}
+
+        void draw(ViewHexEditor *editor) override {
+            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.fill"_lang);
+
+            ImGui::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
+            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
+
+            ImGui::Separator();
+
+            ImGui::InputTextIcon("hex.builtin.common.bytes"_lang, ICON_VS_SYMBOL_NAMESPACE, this->m_input);
+
+            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            [&, this] {
+                fill(this->m_address, static_cast<size_t>(this->m_size), this->m_input);
+                editor->closePopup();
+            },
+            [&] {
+                editor->closePopup();
+            });
+        }
+
+    private:
+        static void fill(u64 address, size_t size, const std::string &input) {
+            if (!ImHexApi::Provider::isValid())
+                return;
+
+            auto bytes = crypt::decode16(input);
+            if (bytes.empty())
+                return;
+
+            auto provider = ImHexApi::Provider::get();
+            for (u64 i = 0; i < size; i += bytes.size()) {
+                auto remainingSize = std::min<size_t>(size - i, bytes.size());
+                provider->write(provider->getBaseAddress() + address + i, bytes.data(), remainingSize);
+            }
+        }
+
+    private:
+        u64 m_address;
+        u64 m_size;
+
+        std::string m_input;
+    };
+
     /* Hex Editor */
 
     ViewHexEditor::ViewHexEditor() : View("hex.builtin.view.hex_editor.name") {
@@ -1186,6 +1233,15 @@ namespace hex::plugin::builtin {
                                                     this->openPopup<PopupRemove>(selection->getStartAddress(), selection->getSize());
                                                 },
                                                 [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isResizable(); });
+
+        /* Fill */
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.fill" }, 1810, Shortcut::None,
+                                                [this] {
+                                                    auto selection      = ImHexApi::HexEditor::getSelection();
+
+                                                    this->openPopup<PopupFill>(selection->getStartAddress(), selection->getSize());
+                                                },
+                                                [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isWritable(); });
 
         /* Jump to */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, 1850, Shortcut::None,
