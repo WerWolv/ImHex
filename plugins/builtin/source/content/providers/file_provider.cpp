@@ -157,9 +157,20 @@ namespace hex::plugin::builtin {
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         if (this->m_fileStats.has_value()) {
-            result.emplace_back("hex.builtin.provider.file.creation"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_ctime)));
-            result.emplace_back("hex.builtin.provider.file.access"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_atime)));
-            result.emplace_back("hex.builtin.provider.file.modification"_lang, hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_mtime)));
+            std::string creationTime, accessTime, modificationTime;
+
+            try { creationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_ctime)); }
+            catch (const std::exception&) { creationTime = "???"; }
+
+            try { accessTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_atime)); }
+            catch (const std::exception&) { accessTime = "???"; }
+
+            try { modificationTime = hex::format("{:%Y-%m-%d %H:%M:%S}", fmt::localtime(this->m_fileStats->st_mtime)); }
+            catch (const std::exception&) { modificationTime = "???"; }
+
+            result.emplace_back("hex.builtin.provider.file.creation"_lang,      creationTime);
+            result.emplace_back("hex.builtin.provider.file.access"_lang,        accessTime);
+            result.emplace_back("hex.builtin.provider.file.modification"_lang,  modificationTime);
         }
 
         return result;
