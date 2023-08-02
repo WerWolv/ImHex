@@ -260,8 +260,9 @@ namespace hex::plugin::builtin {
     }
 
     void handlePatternLanguageCommand(const std::vector<std::string> &args) {
-        auto processedArgs = args;
-        processedArgs.insert(processedArgs.begin(), "imhex");
+        std::vector<std::string> processedArgs = args;
+        if (processedArgs.empty())
+            processedArgs.emplace_back("--help");
 
         std::exit(pl::cli::executeCommandLineInterface(processedArgs));
     }
