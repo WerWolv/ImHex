@@ -436,9 +436,9 @@ namespace hex::plugin::builtin {
             if (patternVariables.empty()) {
                 ImGui::TextFormattedCentered("hex.builtin.view.pattern_editor.no_in_out_vars"_lang);
             } else {
-                if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
-                    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4F);
-                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.6F);
+                if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg)) {
+                    ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.25F);
+                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.75F);
 
                     for (auto &[name, variable] : patternVariables) {
                         ImGui::TableNextRow();
@@ -448,6 +448,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::TableNextColumn();
 
+                        ImGui::PushItemWidth(-1);
                         if (variable.outVariable) {
                             ImGui::TextUnformatted(variable.value.toString(true).c_str());
                         } else if (variable.inVariable) {
@@ -470,11 +471,16 @@ namespace hex::plugin::builtin {
                                 ImGui::Checkbox(label.c_str(), &value);
                                 variable.value = value;
                             } else if (variable.type == pl::core::Token::ValueType::Character) {
-                                std::array<char, 2> buffer = { };
+                                std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
                                 ImGui::InputText(label.c_str(), buffer.data(), buffer.size());
                                 variable.value = buffer[0];
+                            } else if (variable.type == pl::core::Token::ValueType::String) {
+                                std::string buffer = hex::get_or<std::string>(variable.value, "");
+                                ImGui::InputText(label.c_str(), buffer);
+                                variable.value = buffer;
                             }
                         }
+                        ImGui::PopItemWidth();
                     }
 
                     ImGui::EndTable();
