@@ -171,15 +171,15 @@ namespace hex::fs {
 
         #endif
 
-        for (auto &path : paths)
-            path = path / "imhex";
-
         #if defined(OS_MACOS)
 
             if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
                 paths.push_back(*executablePath);
 
         #else
+
+            for (auto &path : paths)
+                path = path / "imhex";
 
             if (auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value())
                 paths.push_back(executablePath->parent_path());
