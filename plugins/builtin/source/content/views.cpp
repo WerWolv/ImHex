@@ -20,6 +20,7 @@
 #include "content/views/view_find.hpp"
 #include "content/views/view_theme_manager.hpp"
 #include "content/views/view_logs.hpp"
+#include "content/views/view_achievements.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -46,6 +47,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewFind>();
         ContentRegistry::Views::add<ViewThemeManager>();
         ContentRegistry::Views::add<ViewLogs>();
+        ContentRegistry::Views::add<ViewAchievements>();
     }
 
 }

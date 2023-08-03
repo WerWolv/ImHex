@@ -1,0 +1,129 @@
+#include <hex/api/achievement_manager.hpp>
+
+namespace hex {
+
+    std::map<std::string, std::map<std::string, std::unique_ptr<Achievement>>> &AchievementManager::getAchievements() {
+        static std::map<std::string, std::map<std::string, std::unique_ptr<Achievement>>> achievements;
+
+        return achievements;
+    }
+
+    std::map<std::string, std::list<AchievementManager::AchievementNode>>& AchievementManager::getAchievementNodes(bool rebuild) {
+        static std::map<std::string, std::list<AchievementNode>> nodeCategoryStorage;
+
+        if (!nodeCategoryStorage.empty() || !rebuild)
+            return nodeCategoryStorage;
+
+        nodeCategoryStorage.clear();
+
+        // Add all achievements to the node storage
+        for (auto &[categoryName, achievements] : getAchievements()) {
+            auto &nodes = nodeCategoryStorage[categoryName];
+
+            for (auto &[achievementName, achievement] : achievements) {
+                nodes.emplace_back(achievement.get());
+            }
+        }
+
+        return nodeCategoryStorage;
+    }
+
+    std::map<std::string, std::vector<AchievementManager::AchievementNode*>>& AchievementManager::getAchievementStartNodes(bool rebuild) {
+        static std::map<std::string, std::vector<AchievementNode*>> startNodes;
+
+        if (!startNodes.empty() || !rebuild)
+            return startNodes;
+
+        auto &nodeCategoryStorage = getAchievementNodes();
+
+        startNodes.clear();
+
+        // Add all parents and children to the nodes
+        for (auto &[categoryName, achievements] : nodeCategoryStorage) {
+            for (auto &achievementNode : achievements) {
+                for (auto &requirement : achievementNode.achievement->getRequirements()) {
+                    for (auto &[requirementCategoryName, requirementAchievements] : nodeCategoryStorage) {
+                        auto iter = std::find_if(requirementAchievements.begin(), requirementAchievements.end(), [&requirement](auto &node) {
+                            return node.achievement->getUnlocalizedName() == requirement;
+                        });
+
+                        if (iter != requirementAchievements.end()) {
+                            achievementNode.parents.emplace_back(&*iter);
+                            iter->children.emplace_back(&achievementNode);
+                        }
+                    }
+                }
+            }
+        }
+
+        for (auto &[categoryName, achievements] : nodeCategoryStorage) {
+            for (auto &achievementNode : achievements) {
+                if (!achievementNode.hasParents()) {
+                    startNodes[categoryName].emplace_back(&achievementNode);
+                }
+
+                for (const auto &parent : achievementNode.parents) {
+                    if (parent->achievement->getUnlocalizedCategory() != achievementNode.achievement->getUnlocalizedCategory())
+                        startNodes[categoryName].emplace_back(&achievementNode);
+                }
+            }
+        }
+
+        return startNodes;
+    }
+
+    void AchievementManager::unlockAchievement(const std::string &unlocalizedCategory, const std::string &unlocalizedName)  {
+        auto &categories = getAchievements();
+
+        auto categoryIter = categories.find(unlocalizedCategory);
+        if (categoryIter == categories.end()) {
+            return;
+        }
+
+        auto &[categoryName, achievements] = *categoryIter;
+
+        auto achievementIter = achievements.find(unlocalizedName);
+
+        if (achievementIter == achievements.end()) {
+            return;
+        }
+
+        auto &nodes = getAchievementNodes()[categoryName];
+
+        for (const auto &node : nodes) {
+            auto &achievement = node.achievement;
+
+            if (achievement->getUnlocalizedCategory() != unlocalizedCategory) {
+                continue;
+            }
+            if (achievement->getUnlocalizedName() != unlocalizedName) {
+                continue;
+            }
+
+            if (node.achievement->isUnlocked()) {
+                return;
+            }
+
+            for (const auto &requirement : node.parents) {
+                if (!requirement->achievement->isUnlocked()) {
+                    return;
+                }
+            }
+
+            achievement->setUnlocked(true);
+            EventManager::post<EventAchievementUnlocked>(*achievement);
+        }
+    }
+
+    void AchievementManager::clear() {
+        getAchievements().clear();
+        getAchievementStartNodes(false).clear();
+        getAchievementNodes(false).clear();
+    }
+
+    void AchievementManager::achievementAdded() {
+        getAchievementStartNodes(false).clear();
+        getAchievementNodes(false).clear();
+    }
+
+}

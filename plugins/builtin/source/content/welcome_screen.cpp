@@ -6,6 +6,7 @@
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/layout_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
 #include <hex/api_urls.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
@@ -284,6 +285,10 @@ namespace hex::plugin::builtin {
             {
                 if (ImGui::DescriptionButton("hex.builtin.welcome.learn.latest.title"_lang, "hex.builtin.welcome.learn.latest.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     hex::openWebpage("hex.builtin.welcome.learn.latest.link"_lang);
+                if (ImGui::DescriptionButton("hex.builtin.welcome.learn.imhex.title"_lang, "hex.builtin.welcome.learn.imhex.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0))) {
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
+                    hex::openWebpage("hex.builtin.welcome.learn.imhex.link"_lang);
+                }
                 if (ImGui::DescriptionButton("hex.builtin.welcome.learn.pattern.title"_lang, "hex.builtin.welcome.learn.pattern.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
                     hex::openWebpage("hex.builtin.welcome.learn.pattern.link"_lang);
                 if (ImGui::DescriptionButton("hex.builtin.welcome.learn.plugins.title"_lang, "hex.builtin.welcome.learn.plugins.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))

@@ -13,6 +13,7 @@
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/layout_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -401,6 +402,8 @@ namespace hex::init {
         LayoutManager::reset();
 
         ThemeManager::reset();
+
+        AchievementManager::getAchievements().clear();
 
         ProjectFile::getHandlers().clear();
         ProjectFile::getProviderHandlers().clear();

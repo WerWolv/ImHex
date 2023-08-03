@@ -2,10 +2,13 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/keybinding.hpp>
-#include <hex/helpers/utils.hpp>
-#include <hex/providers/buffered_reader.hpp>
-#include <hex/helpers/crypto.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
+
+#include <hex/helpers/utils.hpp>
+#include <hex/helpers/crypto.hpp>
+
+#include <hex/providers/buffered_reader.hpp>
 
 #include <content/providers/view_provider.hpp>
 #include <content/helpers/math_evaluator.hpp>
@@ -540,6 +543,8 @@ namespace hex::plugin::builtin {
                 auto remainingSize = std::min<size_t>(size - i, bytes.size());
                 provider->write(provider->getBaseAddress() + address + i, bytes.data(), remainingSize);
             }
+
+            AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.fill.name");
         }
 
     private:

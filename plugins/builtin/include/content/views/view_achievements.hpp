@@ -1,0 +1,37 @@
+#pragma once
+
+#include <hex.hpp>
+#include <hex/ui/view.hpp>
+
+namespace hex::plugin::builtin {
+
+    class ViewAchievements : public View {
+    public:
+        ViewAchievements();
+        ~ViewAchievements() override;
+
+        void drawContent() override;
+        void drawAlwaysVisible() override;
+
+        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
+
+        [[nodiscard]] ImVec2 getMinSize() const override {
+            return scaled({ 800, 600 });
+        }
+
+        [[nodiscard]] ImVec2 getMaxSize() const override {
+            return scaled({ 800, 600 });
+        }
+
+    private:
+        bool m_viewOpen = false;
+
+        std::list<const Achievement*> m_achievementUnlockQueue;
+        const Achievement *m_currAchievement = nullptr;
+        float m_achievementUnlockQueueTimer = -1;
+
+        ImVec2 m_offset;
+    };
+
+}

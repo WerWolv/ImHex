@@ -5,6 +5,8 @@
 
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/localization.hpp>
+#include <hex/api/achievement_manager.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 
@@ -159,6 +161,9 @@ namespace hex::plugin::builtin {
         if (updateLocation) {
             resetPath.release();
         }
+
+        AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.save_project.name");
+
 
         return result;
     }

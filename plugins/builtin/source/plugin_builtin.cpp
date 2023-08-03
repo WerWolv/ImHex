@@ -38,6 +38,7 @@ namespace hex::plugin::builtin {
     void registerNetworkEndpoints();
     void registerFileHandlers();
     void registerProjectHandlers();
+    void registerAchievements();
 
     void addFooterItems();
     void addTitleBarButtons();
@@ -96,6 +97,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerFileHandlers();
     registerProjectHandlers();
     registerCommandForwarders();
+    registerAchievements();
 
     addFooterItems();
     addTitleBarButtons();

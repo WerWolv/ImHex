@@ -23,7 +23,11 @@
 #define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, #event_name, true, __VA_ARGS__)
 #define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, #event_name, false, __VA_ARGS__)
 
+
+/* Forward declarations */
 struct GLFWwindow;
+namespace hex { class Achievement; }
+
 
 namespace hex {
 
@@ -202,6 +206,7 @@ namespace hex {
     EVENT_DEF(EventStoreContentDownloaded, const std::fs::path&);
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
     EVENT_DEF(EventImHexClosing);
+    EVENT_DEF(EventAchievementUnlocked, const Achievement&);
 
     /**
      * @brief Called when a project has been loaded
