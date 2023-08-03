@@ -1,6 +1,5 @@
 #include "content/views/view_achievements.hpp"
 
-#include <hex/api/achievement_manager.hpp>
 #include <hex/api/content_registry.hpp>
 
 #include <wolv/utils/guards.hpp>
@@ -97,7 +96,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    ImVec2 drawAchievementTree(ImDrawList *drawList, const AchievementManager::AchievementNode * prevNode, const std::vector<AchievementManager::AchievementNode*> &nodes, ImVec2 position) {
+    ImVec2 ViewAchievements::drawAchievementTree(ImDrawList *drawList, const AchievementManager::AchievementNode * prevNode, const std::vector<AchievementManager::AchievementNode*> &nodes, ImVec2 position) {
         ImVec2 maxPos = position;
         for (auto &node : nodes) {
             if (node->achievement->isInvisible() && !node->achievement->isUnlocked())
@@ -134,6 +133,12 @@ namespace hex::plugin::builtin {
                 }();
 
                 drawList->AddBezierQuadratic(start, middle, end, color, 2_scaled);
+
+                if (this->m_achievementToGoto != nullptr) {
+                    if (this->m_achievementToGoto == node->achievement) {
+                        this->m_offset = position - scaled({ 100, 100 });
+                    }
+                }
             }
 
             drawList->ChannelsSetCurrent(1);
@@ -155,12 +160,8 @@ namespace hex::plugin::builtin {
 
     void ViewAchievements::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.achievements.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking)) {
-            for (const auto &[categoryName, achievements] : AchievementManager::getAchievementStartNodes()) {
-                if (ImGui::BeginTabBar("##achievement_categories")) {
-                    ON_SCOPE_EXIT {
-                        ImGui::EndTabBar();
-                    };
-
+            if (ImGui::BeginTabBar("##achievement_categories")) {
+                for (const auto &[categoryName, achievements] : AchievementManager::getAchievementStartNodes()) {
                     bool visible = false;
                     for (const auto &achievement : achievements) {
                         if (achievement->isUnlocked() || achievement->isUnlockable()) {
@@ -172,7 +173,15 @@ namespace hex::plugin::builtin {
                     if (!visible)
                         continue;
 
-                    if (ImGui::BeginTabItem(LangEntry(categoryName))) {
+                    ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
+
+                    if (this->m_achievementToGoto != nullptr) {
+                        if (this->m_achievementToGoto->getUnlocalizedCategory() == categoryName) {
+                            flags |= ImGuiTabItemFlags_SetSelected;
+                        }
+                    }
+
+                    if (ImGui::BeginTabItem(LangEntry(categoryName), nullptr, flags)) {
                         auto drawList = ImGui::GetWindowDrawList();
 
                         const auto cursorPos = ImGui::GetCursorPos();
@@ -197,22 +206,22 @@ namespace hex::plugin::builtin {
                             ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
                         }
 
-                        if (this->m_offset.x > 0) this->m_offset.x = 0;
-                        else if (this->m_offset.x < (-maxPos.x + innerWindowPos.x)) this->m_offset.x = -maxPos.x + innerWindowPos.x;
-
-                        if (this->m_offset.y > 0) this->m_offset.y = 0;
-                        else if (this->m_offset.y < (-maxPos.y + innerWindowPos.y)) this->m_offset.y = -maxPos.y + innerWindowPos.y;
+                        this->m_offset = -ImClamp(-this->m_offset, { 0, 0 }, ImMax(maxPos - innerWindowPos - innerWindowSize, { 0, 0 }));
 
                         drawList->PopClipRect();
 
                         ImGui::EndTabItem();
                     }
                 }
+
+                ImGui::EndTabBar();
             }
         }
         ImGui::End();
 
         this->getWindowOpenState() = this->m_viewOpen;
+
+        this->m_achievementToGoto = nullptr;
     }
 
     void ViewAchievements::drawAlwaysVisible() {
@@ -227,6 +236,12 @@ namespace hex::plugin::builtin {
                 if (ImGui::Begin("##achievement_unlocked", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar)) {
                     ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "{}", "hex.builtin.view.achievements.unlocked"_lang);
                     ImGui::TextUnformatted(LangEntry(this->m_currAchievement->getUnlocalizedName()));
+
+                    if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
+                        this->m_viewOpen = true;
+                        this->getWindowOpenState() = this->m_viewOpen;
+                        this->m_achievementToGoto = this->m_currAchievement;
+                    }
                 }
                 ImGui::End();
             }

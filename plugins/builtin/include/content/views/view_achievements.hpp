@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/ui/view.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -25,10 +26,14 @@ namespace hex::plugin::builtin {
         }
 
     private:
+        ImVec2 drawAchievementTree(ImDrawList *drawList, const AchievementManager::AchievementNode * prevNode, const std::vector<AchievementManager::AchievementNode*> &nodes, ImVec2 position);
+
+    private:
         bool m_viewOpen = false;
 
         std::list<const Achievement*> m_achievementUnlockQueue;
         const Achievement *m_currAchievement = nullptr;
+        const Achievement *m_achievementToGoto = nullptr;
         float m_achievementUnlockQueueTimer = -1;
 
         ImVec2 m_offset;
