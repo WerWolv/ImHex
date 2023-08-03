@@ -895,7 +895,7 @@
         "hex.builtin.view.store.tab.themes": "Themes",
         "hex.builtin.view.store.tab.yara": "Yara Rules",
         "hex.builtin.view.store.update": "Update",
-        "hex.builtin.view.store.update_count": "Available Updates: {}",
+        "hex.builtin.view.store.update_count": "Update all\nAvailable Updates: {}",
         "hex.builtin.view.theme_manager.name": "Theme Manager",
         "hex.builtin.view.theme_manager.colors": "Colors",
         "hex.builtin.view.theme_manager.export": "Export",
