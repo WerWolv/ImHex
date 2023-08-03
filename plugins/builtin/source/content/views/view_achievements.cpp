@@ -116,14 +116,15 @@ namespace hex::plugin::builtin {
                     continue;
             }
 
+            drawList->ChannelsSetCurrent(0);
+
             if (prevNode != nullptr) {
                 if (prevNode->achievement->getUnlocalizedCategory() != node->achievement->getUnlocalizedCategory())
                     continue;
 
-                auto start = prevNode->position + scaled({ 50, 25 });
-                auto end = node->position + scaled({ 0, 25 });
-                auto middle1 = ((start + end) / 2.0F) + scaled({ 50, 0 });
-                auto middle2 = ((start + end) / 2.0F) - scaled({ 50, 0 });
+                auto start = prevNode->position + scaled({ 25, 25 });
+                auto end = position + scaled({ 25, 25 });
+                auto middle = ((start + end) / 2.0F) - scaled({ 50, 0 });
 
                 const auto color = [prevNode]{
                     if (prevNode->achievement->isUnlocked())
@@ -132,8 +133,10 @@ namespace hex::plugin::builtin {
                         return ImGui::GetColorU32(ImGuiCol_TextDisabled) | 0xFF000000;
                 }();
 
-                drawList->AddBezierCubic(start, middle1, middle2, end, color, 2_scaled);
+                drawList->AddBezierQuadratic(start, middle, end, color, 2_scaled);
             }
+
+            drawList->ChannelsSetCurrent(1);
 
             drawAchievement(drawList, node, position);
 
@@ -175,15 +178,18 @@ namespace hex::plugin::builtin {
                         const auto cursorPos = ImGui::GetCursorPos();
                         const auto windowPos = ImGui::GetWindowPos() + ImVec2(0, cursorPos.y);
                         const auto windowSize = ImGui::GetWindowSize() - ImVec2(0, cursorPos.y);;
-                        const float borderSize = 50.0_scaled;
+                        const float borderSize = 20.0_scaled;
 
                         const auto innerWindowPos = windowPos + ImVec2(borderSize, borderSize);
                         const auto innerWindowSize = windowSize - ImVec2(borderSize * 2, borderSize * 2);
                         drawList->PushClipRect(innerWindowPos, innerWindowPos + innerWindowSize, true);
                         drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, this->m_offset);
 
+                        drawList->ChannelsSplit(2);
+
                         auto maxPos = drawAchievementTree(drawList, nullptr, achievements, innerWindowPos + scaled({ 100, 100 }) + this->m_offset);
 
+                        drawList->ChannelsMerge();
 
                         if (ImGui::IsMouseHoveringRect(innerWindowPos, innerWindowPos + innerWindowSize)) {
                             auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);

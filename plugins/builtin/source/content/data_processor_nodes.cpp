@@ -6,7 +6,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/providers/provider.hpp>
-#include <hex/providers/provider_data.hpp>
 
 #include <content/helpers/diagrams.hpp>
 
@@ -905,46 +904,6 @@ namespace hex::plugin::builtin {
         }
     };
 
-    class NodeVariable : public dp::Node {
-    public:
-        NodeVariable() : Node("Variable",
-                             { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"),
-                                 dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) {
-            s_value->insert(this);
-        }
-
-        ~NodeVariable() override {
-            s_value->erase(this);
-        }
-
-        void drawNode() override {
-            ImGui::PushItemWidth(100_scaled);
-            ImGui::InputText("Name", this->m_name);
-            ImGui::PopItemWidth();
-        }
-
-        void process() override {
-            NodeVariable *foundNode = nullptr;
-            for (const auto &node : *s_value) {
-                if (node->m_name == this->m_name && node != this) {
-                    if (foundNode != nullptr)
-                        throwNodeError("Variable is being assigned from multiple places");
-
-                    foundNode = node;
-                }
-            }
-
-            if (foundNode == nullptr)
-                throwNodeError("Variable is being used before being assigned");
-
-            this->setIntegerOnOutput(1, foundNode->getIntegerOnInput(0));
-        }
-
-    private:
-        std::string m_name;
-        static inline PerProvider<std::set<NodeVariable*>> s_value;
-    };
-
     class NodeCryptoAESDecrypt : public dp::Node {
     public:
         NodeCryptoAESDecrypt() : Node("hex.builtin.nodes.crypto.aes.header",
@@ -1354,7 +1313,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeLessThan>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.lt");
         ContentRegistry::DataProcessorNode::add<NodeBoolAND>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.and");
         ContentRegistry::DataProcessorNode::add<NodeBoolOR>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.or");
-        ContentRegistry::DataProcessorNode::add<NodeVariable>("hex.builtin.nodes.control_flow", "hex.builtin.nodes.control_flow.variable");
 
         ContentRegistry::DataProcessorNode::add<NodeBitwiseADD>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.add");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseAND>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.and");

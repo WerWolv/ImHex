@@ -79,10 +79,6 @@ namespace hex::dp {
         void setIntegerOnOutput(u32 index, i128 integer);
         void setFloatOnOutput(u32 index, long double floatingPoint);
 
-        bool isInputConnected(u32 index) {
-            return this->getConnectedInputAttribute(index) != nullptr;
-        }
-
     private:
         int m_id;
         std::string m_unlocalizedTitle, m_unlocalizedName;
