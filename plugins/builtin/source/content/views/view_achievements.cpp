@@ -219,7 +219,7 @@ namespace hex::plugin::builtin {
                 ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImVec2 { ImHexApi::System::getMainWindowSize().x - windowSize.x - 20_scaled, 20_scaled });
                 ImGui::SetNextWindowSize(windowSize);
                 if (ImGui::Begin("##achievement_unlocked", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar)) {
-                    ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "hex.builtin.view.achievements.unlocked"_lang);
+                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "{}", "hex.builtin.view.achievements.unlocked"_lang);
                     ImGui::TextUnformatted(LangEntry(this->m_currAchievement->getUnlocalizedName()));
                 }
                 ImGui::End();
