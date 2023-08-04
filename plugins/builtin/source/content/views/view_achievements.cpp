@@ -6,6 +6,8 @@
 
 #include <cmath>
 
+#include <imgui_internal.h>
+
 namespace hex::plugin::builtin {
 
     ViewAchievements::ViewAchievements() : View("hex.builtin.view.achievements.name") {
@@ -118,6 +120,37 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void drawOverlay(ImDrawList *drawList, ImVec2 windowMin, ImVec2 windowMax, const std::string &currCategory) {
+        auto &achievements = AchievementManager::getAchievements()[currCategory];
+        auto unlockedCount = std::count_if(achievements.begin(), achievements.end(), [](const auto &entry) {
+            const auto &[name, achievement] = entry;
+            return achievement->isUnlocked();
+        });
+
+        auto invisibleCount = std::count_if(achievements.begin(), achievements.end(), [](const auto &entry) {
+            const auto &[name, achievement] = entry;
+            return achievement->isInvisible();
+        });
+
+        auto unlockedText = hex::format("{}: {} / {}{}", "Unlocked", unlockedCount, achievements.size() - invisibleCount, invisibleCount > 0 ? "+" : " ");
+
+        auto &style = ImGui::GetStyle();
+        auto overlaySize = ImGui::CalcTextSize(unlockedText.c_str()) + style.ItemSpacing + style.WindowPadding * 2.0F;
+        auto padding = scaled({ 10, 10 });
+
+        auto overlayPos = ImVec2(windowMax.x - overlaySize.x - padding.x, windowMin.y + padding.y);
+
+        drawList->AddRectFilled(overlayPos, overlayPos + overlaySize, ImGui::GetColorU32(ImGuiCol_WindowBg, 0.8F));
+        drawList->AddRect(overlayPos, overlayPos + overlaySize, ImGui::GetColorU32(ImGuiCol_Border));
+
+        ImGui::SetCursorScreenPos(overlayPos + padding);
+        ImGui::BeginGroup();
+
+        ImGui::TextUnformatted(unlockedText.c_str());
+
+        ImGui::EndGroup();
+    }
+
     void drawBackground(ImDrawList *drawList, ImVec2 min, ImVec2 max, ImVec2 offset) {
         const auto patternSize = scaled({ 10, 10 });
 
@@ -159,7 +192,7 @@ namespace hex::plugin::builtin {
                     continue;
             }
 
-            drawList->ChannelsSetCurrent(0);
+            drawList->ChannelsSetCurrent(1);
 
             if (prevNode != nullptr) {
                 if (prevNode->achievement->getUnlocalizedCategory() != node->achievement->getUnlocalizedCategory())
@@ -185,7 +218,7 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            drawList->ChannelsSetCurrent(1);
+            drawList->ChannelsSetCurrent(2);
 
             drawAchievement(drawList, node, position);
 
@@ -247,11 +280,17 @@ namespace hex::plugin::builtin {
                         const auto innerWindowPos = windowPos + ImVec2(borderSize, borderSize);
                         const auto innerWindowSize = windowSize - ImVec2(borderSize * 2, borderSize * 2);
                         drawList->PushClipRect(innerWindowPos, innerWindowPos + innerWindowSize, true);
+
+                        drawList->ChannelsSplit(4);
+
+                        drawList->ChannelsSetCurrent(0);
                         drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, this->m_offset);
 
-                        drawList->ChannelsSplit(2);
-
                         auto maxPos = drawAchievementTree(drawList, nullptr, achievements, innerWindowPos + scaled({ 100, 100 }) + this->m_offset);
+
+                        drawList->ChannelsSetCurrent(3);
+
+                        drawOverlay(drawList, innerWindowPos, innerWindowPos + innerWindowSize, categoryName);
 
                         drawList->ChannelsMerge();
 
