@@ -129,6 +129,9 @@ namespace hex::plugin::builtin {
                 std::vector<u8> bytes(sizeof(result), 0x00);
                 std::memcpy(bytes.data(), &result, bytes.size());
 
+                if constexpr (std::endian::native == std::endian::little)
+                    std::reverse(bytes.begin(), bytes.end());
+
                 return bytes;
             });
         }
