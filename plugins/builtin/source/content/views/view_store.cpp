@@ -1,5 +1,6 @@
 #include "content/views/view_store.hpp"
 #include <hex/api/theme_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
 #include <hex/api_urls.hpp>
 
 #include <hex/api/content_registry.hpp>
@@ -93,6 +94,7 @@ namespace hex::plugin::builtin {
                             } else if (!entry.installed) {
                                 if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
                                     entry.downloading = this->download(category.path, entry.fileName, entry.link, false);
+                                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.download_from_store.name");
                                 }
                             } else {
                                 if (ImGui::Button("hex.builtin.view.store.remove"_lang, buttonSize)) {

@@ -21,8 +21,10 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
-#include <hex/helpers/utils.hpp>
+#include <hex/api/achievement_manager.hpp>
 #include <hex/api/localization.hpp>
+
+#include <hex/helpers/utils.hpp>
 #include <content/helpers/math_evaluator.hpp>
 
 #include <imgui.h>
@@ -332,6 +334,7 @@ namespace hex::plugin::builtin::ui {
         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
             this->m_editingPattern = &pattern;
             this->m_editingPatternOffset = pattern.getOffset();
+            AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.modify_data.name");
         }
 
         ImGui::SameLine(0, 0);

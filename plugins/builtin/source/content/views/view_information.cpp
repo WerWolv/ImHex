@@ -1,6 +1,7 @@
 #include "content/views/view_information.hpp"
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
@@ -64,6 +65,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewInformation::analyze() {
+        AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.analyze_file.name");
+
         this->m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
             auto provider = ImHexApi::Provider::get();
 

@@ -3,6 +3,8 @@
 #include "content/providers/memory_file_provider.hpp"
 
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
+
 #include <hex/ui/popup.hpp>
 #include <hex/helpers/crypto.hpp>
 
@@ -176,8 +178,10 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(this->m_newHashName.empty() || this->m_selectedHash == nullptr);
             if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                if (this->m_selectedHash != nullptr)
+                if (this->m_selectedHash != nullptr) {
                     this->m_hashFunctions->push_back(this->m_selectedHash->create(this->m_newHashName));
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.create_hash.name");
+                }
             }
             ImGui::EndDisabled();
 

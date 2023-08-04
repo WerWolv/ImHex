@@ -1,6 +1,8 @@
 #include "content/views/view_find.hpp"
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/achievement_manager.hpp>
+
 #include <hex/providers/buffered_reader.hpp>
 
 #include <array>
@@ -438,6 +440,16 @@ namespace hex::plugin::builtin {
 
     void ViewFind::runSearch() {
         Region searchRegion = this->m_searchSettings.region;
+
+        if (this->m_searchSettings.mode == SearchSettings::Mode::Strings)
+            AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_strings.name");
+        else if (this->m_searchSettings.mode == SearchSettings::Mode::Sequence)
+            AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_specific_string.name");
+        else if (this->m_searchSettings.mode == SearchSettings::Mode::Value) {
+            if (this->m_searchSettings.value.inputMin == "250" && this->m_searchSettings.value.inputMax == "1000")
+                AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_specific_string.name");
+        }
+
 
         this->m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = this->m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();

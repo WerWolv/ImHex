@@ -161,7 +161,18 @@ namespace hex::plugin::builtin {
     void ViewAchievements::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.achievements.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking)) {
             if (ImGui::BeginTabBar("##achievement_categories")) {
-                for (const auto &[categoryName, achievements] : AchievementManager::getAchievementStartNodes()) {
+                auto &startNodes = AchievementManager::getAchievementStartNodes();
+
+                std::vector<std::string> categories;
+                for (const auto &[categoryName, achievements] : startNodes) {
+                    categories.push_back(categoryName);
+                }
+
+                std::reverse(categories.begin(), categories.end());
+
+                for (const auto &categoryName : categories) {
+                    const auto &achievements = startNodes[categoryName];
+
                     bool visible = false;
                     for (const auto &achievement : achievements) {
                         if (achievement->isUnlocked() || achievement->isUnlockable()) {

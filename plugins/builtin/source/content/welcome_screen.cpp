@@ -532,6 +532,10 @@ namespace hex::plugin::builtin {
             if (showTipOfTheDay)
                 PopupTipOfTheDay::open();
         }
+
+        if (hasCrashed) {
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.crash.name");
+        }
     }
 
 }

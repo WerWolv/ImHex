@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <utility>
 #include <memory>
 #include <vector>
@@ -131,7 +131,7 @@ namespace hex {
             const auto &category = newAchievement->getUnlocalizedCategory();
             const auto &name = newAchievement->getUnlocalizedName();
 
-            auto [categoryIter, categoryInserted] = getAchievements().insert({ category, std::map<std::string, std::unique_ptr<Achievement>>{} });
+            auto [categoryIter, categoryInserted] = getAchievements().insert({ category, std::unordered_map<std::string, std::unique_ptr<Achievement>>{} });
             auto &[categoryKey, achievements] = *categoryIter;
 
             auto [achievementIter, achievementInserted] = achievements.insert({ name, std::move(newAchievement) });
@@ -144,10 +144,10 @@ namespace hex {
 
         static void unlockAchievement(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
 
-        static std::map<std::string, std::map<std::string, std::unique_ptr<Achievement>>>& getAchievements();
+        static std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>& getAchievements();
 
-        static std::map<std::string, std::vector<AchievementNode*>>& getAchievementStartNodes(bool rebuild = true);
-        static std::map<std::string, std::list<AchievementNode>>& getAchievementNodes(bool rebuild = true);
+        static std::unordered_map<std::string, std::vector<AchievementNode*>>& getAchievementStartNodes(bool rebuild = true);
+        static std::unordered_map<std::string, std::list<AchievementNode>>& getAchievementNodes(bool rebuild = true);
 
         static void clear();
 

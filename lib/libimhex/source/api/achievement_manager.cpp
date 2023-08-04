@@ -2,14 +2,14 @@
 
 namespace hex {
 
-    std::map<std::string, std::map<std::string, std::unique_ptr<Achievement>>> &AchievementManager::getAchievements() {
-        static std::map<std::string, std::map<std::string, std::unique_ptr<Achievement>>> achievements;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>> &AchievementManager::getAchievements() {
+        static std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>> achievements;
 
         return achievements;
     }
 
-    std::map<std::string, std::list<AchievementManager::AchievementNode>>& AchievementManager::getAchievementNodes(bool rebuild) {
-        static std::map<std::string, std::list<AchievementNode>> nodeCategoryStorage;
+    std::unordered_map<std::string, std::list<AchievementManager::AchievementNode>>& AchievementManager::getAchievementNodes(bool rebuild) {
+        static std::unordered_map<std::string, std::list<AchievementNode>> nodeCategoryStorage;
 
         if (!nodeCategoryStorage.empty() || !rebuild)
             return nodeCategoryStorage;
@@ -28,8 +28,8 @@ namespace hex {
         return nodeCategoryStorage;
     }
 
-    std::map<std::string, std::vector<AchievementManager::AchievementNode*>>& AchievementManager::getAchievementStartNodes(bool rebuild) {
-        static std::map<std::string, std::vector<AchievementNode*>> startNodes;
+    std::unordered_map<std::string, std::vector<AchievementManager::AchievementNode*>>& AchievementManager::getAchievementStartNodes(bool rebuild) {
+        static std::unordered_map<std::string, std::vector<AchievementNode*>> startNodes;
 
         if (!startNodes.empty() || !rebuild)
             return startNodes;
