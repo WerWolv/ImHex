@@ -1,5 +1,7 @@
 #include <hex/api/achievement_manager.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex {
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>> &AchievementManager::getAchievements() {
@@ -124,6 +126,66 @@ namespace hex {
     void AchievementManager::achievementAdded() {
         getAchievementStartNodes(false).clear();
         getAchievementNodes(false).clear();
+    }
+
+    constexpr static auto AchievementsFile = "achievements.json";
+
+    void AchievementManager::loadProgress() {
+        for (const auto &directory : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+            auto path = directory / AchievementsFile;
+
+            if (!wolv::io::fs::exists(path)) {
+                continue;
+            }
+
+            wolv::io::File file(path, wolv::io::File::Mode::Read);
+
+            if (!file.isValid()) {
+                continue;
+            }
+
+            try {
+                auto json = nlohmann::json::parse(file.readString());
+
+                for (const auto &[categoryName, achievements] : getAchievements()) {
+                    for (const auto &[achievementName, achievement] : achievements) {
+                        try {
+                            achievement->setUnlocked(json[categoryName][achievementName]);
+                        } catch (const std::exception &e) {
+                            log::warn("Failed to load achievement progress for '{}::{}': {}", categoryName, achievementName, e.what());
+                        }
+                    }
+                }
+            } catch (const std::exception &e) {
+                log::error("Failed to load achievements: {}", e.what());
+            }
+
+        }
+    }
+
+    void AchievementManager::storeProgress() {
+        for (const auto &directory : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+            auto path = directory / AchievementsFile;
+
+            wolv::io::File file(path, wolv::io::File::Mode::Create);
+
+            if (!file.isValid()) {
+                continue;
+            }
+
+            nlohmann::json json;
+
+            for (const auto &[categoryName, achievements] : getAchievements()) {
+                json[categoryName] = nlohmann::json::object();
+
+                for (const auto &[achievementName, achievement] : achievements) {
+                    json[categoryName][achievementName] = achievement->isUnlocked();
+                }
+            }
+
+            file.writeString(json.dump(4));
+            break;
+        }
     }
 
 }

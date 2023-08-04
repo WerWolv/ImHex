@@ -164,6 +164,15 @@ namespace hex::plugin::builtin {
             EventManager::subscribe<EventPatchCreated>([](u64, u8, u8){
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.modify_byte.name");
             });
+
+
+            EventManager::subscribe<EventImHexStartupFinished>([]{
+                AchievementManager::loadProgress();
+            });
+
+            EventManager::subscribe<EventImHexClosing>([]{
+                AchievementManager::storeProgress();
+            });
         }
 
     }

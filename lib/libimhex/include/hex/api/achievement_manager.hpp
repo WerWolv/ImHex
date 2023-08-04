@@ -149,6 +149,9 @@ namespace hex {
         static std::unordered_map<std::string, std::vector<AchievementNode*>>& getAchievementStartNodes(bool rebuild = true);
         static std::unordered_map<std::string, std::list<AchievementNode>>& getAchievementNodes(bool rebuild = true);
 
+        static void loadProgress();
+        static void storeProgress();
+
         static void clear();
 
     private:
