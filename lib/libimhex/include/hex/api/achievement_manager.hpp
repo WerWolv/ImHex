@@ -9,6 +9,7 @@
 
 #include <hex/api/event.hpp>
 #include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 namespace hex {
 
@@ -27,7 +28,7 @@ namespace hex {
         }
 
         [[nodiscard]] bool isUnlocked() const {
-            return this->m_unlocked;
+            return this->m_progress == this->m_maxProgress;
         }
 
         Achievement& setDescription(std::string description) {
@@ -80,19 +81,75 @@ namespace hex {
             return this->m_unlocalizedDescription;
         }
 
+        [[nodiscard]] const ImGui::Texture &getIcon() const {
+            if (this->m_iconData.empty())
+                return this->m_icon;
+
+            if (this->m_icon.isValid())
+                return m_icon;
+
+            this->m_icon = ImGui::Texture(reinterpret_cast<const u8*>(this->m_iconData.data()), this->m_iconData.size());
+
+            return this->m_icon;
+        }
+
+        Achievement& setIcon(std::span<const std::byte> data) {
+            this->m_iconData = data;
+
+            return *this;
+        }
+
+        Achievement& setRequiredProgress(u32 progress) {
+            this->m_maxProgress = progress;
+
+            return *this;
+        }
+
+        [[nodiscard]] u32 getRequiredProgress() const {
+            return this->m_maxProgress;
+        }
+
+        [[nodiscard]] u32 getProgress() const {
+            return this->m_progress;
+        }
+
+        void setClickCallback(const std::function<void(Achievement &)> &callback) {
+            this->m_clickCallback = callback;
+        }
+
+        [[nodiscard]] const std::function<void(Achievement &)> &getClickCallback() const {
+            return this->m_clickCallback;
+        }
+
     protected:
         void setUnlocked(bool unlocked) {
-            this->m_unlocked = unlocked;
+            if (unlocked) {
+                if (this->m_progress < this->m_maxProgress)
+                    this->m_progress++;
+            } else {
+                this->m_progress = 0;
+            }
+        }
+
+        void setProgress(u32 progress) {
+            this->m_progress = progress;
         }
 
     private:
         std::string m_unlocalizedCategory, m_unlocalizedName;
         std::string m_unlocalizedDescription;
 
-        bool m_unlocked = false;
         bool m_blacked = false;
         bool m_invisible = false;
         std::vector<std::string> m_requirements, m_visibilityRequirements;
+
+        std::function<void(Achievement &)> m_clickCallback;
+
+        std::span<const std::byte> m_iconData;
+        mutable ImGui::Texture m_icon;
+
+        u32 m_progress = 0;
+        u32 m_maxProgress = 1;
 
         friend class AchievementManager;
     };

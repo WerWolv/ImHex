@@ -55,6 +55,18 @@ namespace hex {
                         }
                     }
                 }
+
+                for (auto &requirement : achievementNode.achievement->getVisibilityRequirements()) {
+                    for (auto &[requirementCategoryName, requirementAchievements] : nodeCategoryStorage) {
+                        auto iter = std::find_if(requirementAchievements.begin(), requirementAchievements.end(), [&requirement](auto &node) {
+                            return node.achievement->getUnlocalizedName() == requirement;
+                        });
+
+                        if (iter != requirementAchievements.end()) {
+                            achievementNode.visibilityParents.emplace_back(&*iter);
+                        }
+                    }
+                }
             }
         }
 
@@ -113,7 +125,9 @@ namespace hex {
             }
 
             achievement->setUnlocked(true);
-            EventManager::post<EventAchievementUnlocked>(*achievement);
+
+            if (achievement->isUnlocked())
+                EventManager::post<EventAchievementUnlocked>(*achievement);
         }
     }
 
@@ -150,7 +164,7 @@ namespace hex {
                 for (const auto &[categoryName, achievements] : getAchievements()) {
                     for (const auto &[achievementName, achievement] : achievements) {
                         try {
-                            achievement->setUnlocked(json[categoryName][achievementName]);
+                            achievement->setProgress(json[categoryName][achievementName]);
                         } catch (const std::exception &e) {
                             log::warn("Failed to load achievement progress for '{}::{}': {}", categoryName, achievementName, e.what());
                         }
@@ -179,7 +193,7 @@ namespace hex {
                 json[categoryName] = nlohmann::json::object();
 
                 for (const auto &[achievementName, achievement] : achievements) {
-                    json[categoryName][achievementName] = achievement->isUnlocked();
+                    json[categoryName][achievementName] = achievement->getProgress();
                 }
             }
 

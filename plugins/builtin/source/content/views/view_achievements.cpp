@@ -4,6 +4,8 @@
 
 #include <wolv/utils/guards.hpp>
 
+#include <cmath>
+
 namespace hex::plugin::builtin {
 
     ViewAchievements::ViewAchievements() : View("hex.builtin.view.achievements.name") {
@@ -24,20 +26,22 @@ namespace hex::plugin::builtin {
     void drawAchievement(ImDrawList *drawList, const AchievementManager::AchievementNode *node, ImVec2 position) {
         const auto achievementSize = scaled({ 50, 50 });
 
+        auto &achievement = *node->achievement;
+
         const auto borderColor = [&] {
-            if (node->achievement->isUnlocked())
-                return ImGui::GetColorU32(ImGuiCol_PlotHistogram) | 0xFF000000;
+            if (achievement.isUnlocked())
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow) | 0xFF000000;
             else if (node->isUnlockable())
                 return ImGui::GetColorU32(ImGuiCol_Button) | 0xFF000000;
             else
-                return ImGui::GetColorU32(ImGuiCol_Text) | 0xFF000000;
+                return ImGui::GetColorU32(ImGuiCol_PlotLines) | 0xFF000000;
         }();
 
         const auto fillColor = [&] {
-            if (node->achievement->isUnlocked())
+            if (achievement.isUnlocked())
                 return ImGui::GetColorU32(ImGuiCol_Text) | 0xFF000000;
             else if (node->isUnlockable())
-                return u32(ImColor(ImLerp(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), ImGui::GetStyleColorVec4(ImGuiCol_Text), std::sin(ImGui::GetTime() * 6) * 0.5f + 0.5f)));
+                return u32(ImColor(ImLerp(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), ImGui::GetStyleColorVec4(ImGuiCol_Text), sinf(ImGui::GetTime() * 6.0F) * 0.5F + 0.5F)));
             else
                 return ImGui::GetColorU32(ImGuiCol_TextDisabled) | 0xFF000000;
         }();
@@ -45,32 +49,72 @@ namespace hex::plugin::builtin {
         drawList->AddRectFilled(position, position + achievementSize, fillColor, 5_scaled, 0);
         drawList->AddRect(position, position + achievementSize, borderColor, 5_scaled, 0, 2_scaled);
 
-        if (ImGui::IsMouseHoveringRect(position, position + achievementSize)) {
-            ImGui::SetNextWindowPos(position + ImVec2(achievementSize.x, 0));
-            ImGui::SetNextWindowSize(achievementSize * ImVec2(4, 0));
-            ImGui::BeginTooltip();
-            {
-                if (node->achievement->isBlacked() && !node->achievement->isUnlocked()) {
-                    ImGui::TextUnformatted("???");
-                } else {
-                    ImGui::BeginDisabled(!node->achievement->isUnlocked());
-                    ImGui::TextUnformatted(LangEntry(node->achievement->getUnlocalizedName()));
+        if (const auto &icon = achievement.getIcon(); icon.isValid()) {
+            ImVec2 iconSize;
+            if (icon.getSize().x > icon.getSize().y) {
+                iconSize.x = achievementSize.x;
+                iconSize.y = iconSize.x / icon.getSize().x * icon.getSize().y;
+            } else {
+                iconSize.y = achievementSize.y;
+                iconSize.x = iconSize.y / icon.getSize().y * icon.getSize().x;
+            }
 
-                    if (const auto &desc = node->achievement->getUnlocalizedDescription(); !desc.empty()) {
+            iconSize *= 0.7F;
+
+            ImVec2 margin = (achievementSize - iconSize) / 2.0F;
+            drawList->AddImage(icon, position + margin, position + margin + iconSize);
+        }
+
+        auto tooltipPos = position + ImVec2(achievementSize.x, 0);
+        auto tooltipSize = achievementSize * ImVec2(4, 0);
+
+        if (ImGui::IsMouseHoveringRect(position, position + achievementSize)) {
+            ImGui::SetNextWindowPos(tooltipPos);
+            ImGui::SetNextWindowSize(tooltipSize);
+            if (ImGui::BeginTooltip()) {
+                if (achievement.isBlacked() && !achievement.isUnlocked()) {
+                    ImGui::TextUnformatted("[ ??? ]");
+                } else {
+                    ImGui::BeginDisabled(!achievement.isUnlocked());
+                    ImGui::TextUnformatted(LangEntry(achievement.getUnlocalizedName()));
+
+                    if (auto requiredProgress = achievement.getRequiredProgress(); requiredProgress > 1) {
+                        ImGui::ProgressBar(float(achievement.getProgress()) / float(requiredProgress + 1), ImVec2(achievementSize.x * 4, 5_scaled), "");
+                    }
+
+                    bool separator = false;
+
+                    if (achievement.getClickCallback()) {
                         ImGui::Separator();
-                        ImGui::TextWrapped("%s", static_cast<const char *>(LangEntry(desc)));
+                        separator = true;
+
+                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "[ {} ]", LangEntry("hex.builtin.view.achievements.click"));
+                    }
+
+                    if (const auto &desc = achievement.getUnlocalizedDescription(); !desc.empty()) {
+                        if (!separator)
+                            ImGui::Separator();
+                        else
+                            ImGui::NewLine();
+
+                        ImGui::TextFormattedWrapped("{}", LangEntry(desc));
                     }
                     ImGui::EndDisabled();
                 }
 
+                ImGui::EndTooltip();
             }
-            ImGui::EndTooltip();
 
-            #if defined (DEBUG)
-                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                    AchievementManager::unlockAchievement(node->achievement->getUnlocalizedCategory(), node->achievement->getUnlocalizedName());
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                if (ImGui::GetIO().KeyShift) {
+                    #if defined (DEBUG)
+                        AchievementManager::unlockAchievement(node->achievement->getUnlocalizedCategory(), node->achievement->getUnlocalizedName());
+                    #endif
+                } else {
+                    if (auto clickCallback = achievement.getClickCallback(); clickCallback)
+                        clickCallback(achievement);
                 }
-            #endif
+            }
         }
     }
 
@@ -84,12 +128,12 @@ namespace hex::plugin::builtin {
 
         bool light = false;
         bool prevStart = false;
-        for (float x = min.x + offset.x; x < max.x; x += patternSize.x) {
+        for (float x = min.x + offset.x; x < max.x; x += i32(patternSize.x)) {
             if (prevStart == light)
                 light = !light;
             prevStart = light;
 
-            for (float y = min.y + offset.y; y < max.y; y += patternSize.y) {
+            for (float y = min.y + offset.y; y < max.y; y += i32(patternSize.y)) {
                 drawList->AddRectFilled({ x, y }, { x + patternSize.x, y + patternSize.y }, light ? lightColor : darkColor);
                 light = !light;
             }
@@ -159,7 +203,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAchievements::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.achievements.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking)) {
+        if (ImGui::Begin(View::toWindowName("hex.builtin.view.achievements.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking)) {
             if (ImGui::BeginTabBar("##achievement_categories")) {
                 auto &startNodes = AchievementManager::getAchievementStartNodes();
 
