@@ -133,6 +133,8 @@ else ()
 endif ()
 
 include(GNUInstallDirs)
+
+file(REMOVE ${CMAKE_CURRENT_SOURCE_DIR}/yara/yara.pc)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/yara/yara.pc.in
         ${CMAKE_CURRENT_SOURCE_DIR}/yara/yara.pc @ONLY)
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
