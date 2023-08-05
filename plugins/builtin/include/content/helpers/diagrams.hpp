@@ -310,7 +310,7 @@ namespace hex {
                         ImGuiCond_Always);
 
                 // Draw the plot
-                ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropy.data(), this->m_xBlockEntropy.size());
+                ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropySampled.data(), this->m_xBlockEntropy.size());
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
                 // but just a set of bytes we won't be able to use the drag bar correctly.
@@ -431,14 +431,20 @@ namespace hex {
         double calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
             double entropy = 0;
 
+            u8 processedValueCount = 0;
             for (auto count : valueCounts) {
                 if (count == 0) [[unlikely]]
                     continue;
+
+                processedValueCount += 1;
 
                 double probability = static_cast<double>(count) / blockSize;
 
                 entropy += probability * std::log2(probability);
             }
+
+            if (processedValueCount == 1)
+                return 0.0;
 
             return std::min<double>(1.0, (-entropy) / 8);    // log2(256) = 8
         }
@@ -456,7 +462,7 @@ namespace hex {
             u64 address = 0x00;
             if (!this->m_yBlockEntropy.empty())
                 address = (std::max_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end()) - this->m_yBlockEntropy.begin()) * this->m_blockSize;
-            return address;
+            return this->m_startAddress + address;
         }
 
         // Return the highest entropy value among all of the blocks
@@ -472,12 +478,12 @@ namespace hex {
             u64 address = 0x00;
             if (this->m_yBlockEntropy.size() > 1)
                 address = (std::min_element(this->m_yBlockEntropy.begin(), this->m_yBlockEntropy.end() - 1) - this->m_yBlockEntropy.begin()) * this->m_blockSize;
-            return address;
+            return this->m_startAddress + address;
         }
 
         // Return the number of blocks that have been processed
         u64 getSize() {
-            return this->m_yBlockEntropy.size();
+            return this->m_yBlockEntropySampled.size();
         }
     
         // Return the size of the chunk used for this analysis
@@ -519,15 +525,15 @@ namespace hex {
 
         void processFinalize() {
             // Only save at most m_sampleSize elements of the result
-            this->m_yBlockEntropy = sampleData(this->m_yBlockEntropy, std::min<size_t>(this->m_blockCount + 1, this->m_sampleSize));
+            this->m_yBlockEntropySampled = sampleData(this->m_yBlockEntropy, std::min<size_t>(this->m_blockCount + 1, this->m_sampleSize));
 
-            if (!this->m_yBlockEntropy.empty())
-                this->m_yBlockEntropy.push_back(this->m_yBlockEntropy.back());
+            if (!this->m_yBlockEntropySampled.empty())
+                this->m_yBlockEntropySampled.push_back(this->m_yBlockEntropySampled.back());
 
             double stride = std::max(1.0, double(
-                double(std::ceil((this->m_endAddress - this->m_startAddress)) / this->m_blockSize) / this->m_yBlockEntropy.size()));
+                double(std::ceil((this->m_endAddress - this->m_startAddress)) / this->m_blockSize) / this->m_yBlockEntropySampled.size()));
 
-            this->m_blockCount = this->m_yBlockEntropy.size() - 1;
+            this->m_blockCount = this->m_yBlockEntropySampled.size() - 1;
 
             // The m_xBlockEntropy attribute is used to specify the position of entropy values 
             // in the plot when the Y axis doesn't start at 0
@@ -569,7 +575,7 @@ namespace hex {
         // Variable to hold the result of the chunk based
         // entropy analysis
         std::vector<double> m_xBlockEntropy;
-        std::vector<double> m_yBlockEntropy;
+        std::vector<double> m_yBlockEntropy, m_yBlockEntropySampled;
 
         // Sampling size, number of elements displayed in the plot,
         // avoid showing to many data because it decreased the frame rate
@@ -698,7 +704,7 @@ namespace hex {
                                                     };
 
                 for (u32 i = 0; i < Names.size(); i++) {
-                    ImPlot::PlotLine(Names[i], this->m_xBlockTypeDistributions.data(), this->m_yBlockTypeDistributions[i].data(), this->m_xBlockTypeDistributions.size());
+                    ImPlot::PlotLine(Names[i], this->m_xBlockTypeDistributions.data(), this->m_yBlockTypeDistributionsSampled[i].data(), this->m_xBlockTypeDistributions.size());
                 }
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
@@ -896,14 +902,14 @@ namespace hex {
         void processFinalize() {
             // Only save at most m_sampleSize elements of the result
             for (size_t i = 0; i < this->m_yBlockTypeDistributions.size(); ++i) {
-                this->m_yBlockTypeDistributions[i] = sampleData(this->m_yBlockTypeDistributions[i], std::min<size_t>(this->m_blockCount + 1, this->m_sampleSize));
+                this->m_yBlockTypeDistributionsSampled[i] = sampleData(this->m_yBlockTypeDistributions[i], std::min<size_t>(this->m_blockCount + 1, this->m_sampleSize));
 
-                if (!this->m_yBlockTypeDistributions[i].empty())
-                    this->m_yBlockTypeDistributions[i].push_back(this->m_yBlockTypeDistributions[i].back());
+                if (!this->m_yBlockTypeDistributionsSampled[i].empty())
+                    this->m_yBlockTypeDistributionsSampled[i].push_back(this->m_yBlockTypeDistributionsSampled[i].back());
             }
 
-            double stride = std::max(1.0, double(this->m_blockCount) / this->m_yBlockTypeDistributions[0].size());
-            this->m_blockCount = this->m_yBlockTypeDistributions[0].size() - 1;
+            double stride = std::max(1.0, double(this->m_blockCount) / this->m_yBlockTypeDistributionsSampled[0].size());
+            this->m_blockCount = this->m_yBlockTypeDistributionsSampled[0].size() - 1;
 
             // The m_xBlockTypeDistributions attribute is used to specify the position of entropy 
             // values in the plot when the Y axis doesn't start at 0
@@ -948,7 +954,7 @@ namespace hex {
         // the values in the plot when the Y axis doesn't start at 0 
         std::vector<float> m_xBlockTypeDistributions;
         // Hold the result of the byte distribution analysis 
-        std::array<std::vector<float>, 12> m_yBlockTypeDistributions;
+        std::array<std::vector<float>, 12> m_yBlockTypeDistributions, m_yBlockTypeDistributionsSampled;
         std::atomic<bool> m_processing = false;
     };
 }
