@@ -19,6 +19,8 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventAchievementUnlocked>(this, [this](const Achievement &achievement) {
             this->m_achievementUnlockQueue.push_back(&achievement);
         });
+
+        this->m_showPopup = bool(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", 1));
     }
 
     ViewAchievements::~ViewAchievements() {
@@ -132,7 +134,7 @@ namespace hex::plugin::builtin {
             return achievement->isInvisible();
         });
 
-        auto unlockedText = hex::format("{}: {} / {}{}", "Unlocked", unlockedCount, achievements.size() - invisibleCount, invisibleCount > 0 ? "+" : " ");
+        auto unlockedText = hex::format("{}: {} / {}{}", "hex.builtin.view.achievements.unlocked"_lang, unlockedCount, achievements.size() - invisibleCount, invisibleCount > 0 ? "+" : " ");
 
         auto &style = ImGui::GetStyle();
         auto overlaySize = ImGui::CalcTextSize(unlockedText.c_str()) + style.ItemSpacing + style.WindowPadding * 2.0F;
@@ -277,15 +279,16 @@ namespace hex::plugin::builtin {
                         const auto windowSize = ImGui::GetWindowSize() - ImVec2(0, cursorPos.y);;
                         const float borderSize = 20.0_scaled;
 
+                        const auto windowPadding = ImGui::GetStyle().WindowPadding;
                         const auto innerWindowPos = windowPos + ImVec2(borderSize, borderSize);
-                        const auto innerWindowSize = windowSize - ImVec2(borderSize * 2, borderSize * 2);
+                        const auto innerWindowSize = windowSize - ImVec2(borderSize * 2, borderSize * 2) - ImVec2(0, ImGui::GetTextLineHeightWithSpacing());
                         drawList->PushClipRect(innerWindowPos, innerWindowPos + innerWindowSize, true);
 
                         drawList->ChannelsSplit(4);
 
                         drawList->ChannelsSetCurrent(0);
-                        drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, this->m_offset);
 
+                        drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, this->m_offset);
                         auto maxPos = drawAchievementTree(drawList, nullptr, achievements, innerWindowPos + scaled({ 100, 100 }) + this->m_offset);
 
                         drawList->ChannelsSetCurrent(3);
@@ -304,6 +307,14 @@ namespace hex::plugin::builtin {
 
                         drawList->PopClipRect();
 
+                        ImGui::SetCursorScreenPos(innerWindowPos + ImVec2(0, innerWindowSize.y + windowPadding.y));
+                        ImGui::BeginGroup();
+                        {
+                            if (ImGui::Checkbox("Show popup", &this->m_showPopup))
+                                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", i64(this->m_showPopup));
+                        }
+                        ImGui::EndGroup();
+
                         ImGui::EndTabItem();
                     }
                 }
@@ -319,7 +330,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAchievements::drawAlwaysVisible() {
-        if (this->m_achievementUnlockQueueTimer >= 0) {
+        if (this->m_achievementUnlockQueueTimer >= 0 && this->m_showPopup) {
             this->m_achievementUnlockQueueTimer -= ImGui::GetIO().DeltaTime;
 
             if (this->m_currAchievement != nullptr) {
@@ -340,11 +351,12 @@ namespace hex::plugin::builtin {
                 ImGui::End();
             }
         } else {
+            this->m_achievementUnlockQueueTimer = -1.0F;
             this->m_currAchievement = nullptr;
             if (!this->m_achievementUnlockQueue.empty()) {
                 this->m_currAchievement = this->m_achievementUnlockQueue.front();
                 this->m_achievementUnlockQueue.pop_front();
-                this->m_achievementUnlockQueueTimer = 2.5;
+                this->m_achievementUnlockQueueTimer = 2.5F;
             }
         }
     }

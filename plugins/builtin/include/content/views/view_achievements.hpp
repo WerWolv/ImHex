@@ -35,6 +35,7 @@ namespace hex::plugin::builtin {
         const Achievement *m_currAchievement = nullptr;
         const Achievement *m_achievementToGoto = nullptr;
         float m_achievementUnlockQueueTimer = -1;
+        bool m_showPopup = true;
 
         ImVec2 m_offset;
     };
