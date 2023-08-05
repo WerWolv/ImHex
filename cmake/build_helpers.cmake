@@ -277,6 +277,9 @@ endfunction()
 macro(configureCMake)
     message(STATUS "Configuring ImHex v${IMHEX_VERSION}")
 
+    # Enable C and C++ languages
+    enable_language(C CXX)
+
     # Configure use of recommended build tools
     if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
         message(STATUS "Configuring CMake to use recommended build tools...")
@@ -335,12 +338,12 @@ macro(configureCMake)
     if (IMHEX_ENABLE_LTO)
         include(CheckIPOSupported)
 
-        check_ipo_supported(RESULT result)
+        check_ipo_supported(RESULT result OUTPUT output_error)
         if (result)
             set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
             message(STATUS "LTO enabled!")
         else ()
-            message(WARNING "LTO is not supported!")
+            message(WARNING "LTO is not supported: ${output_error}")
         endif ()
     endif ()
 
