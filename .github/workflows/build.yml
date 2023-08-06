@@ -78,7 +78,7 @@ jobs:
         cmake -G "Ninja"                                \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
           -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
-          -DCREATE_PACKAGE=ON                           \
+          -DIMHEX_GENERATE_PACKAGE=ON                   \
           -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON         \
           -DIMHEX_PATTERNS_PULL_MASTER=ON               \
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
@@ -214,8 +214,7 @@ jobs:
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
-          -DCREATE_BUNDLE=ON                                                                        \
-          -DCREATE_PACKAGE=ON                                                                       \
+          -DIMHEX_GENERATE_PACKAGE=ON                                                               \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
