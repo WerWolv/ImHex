@@ -217,6 +217,8 @@ namespace hex::plugin::builtin {
                 static std::string challengeAchievement;
                 static std::string challengeDescription;
 
+                static std::map<std::string, std::vector<u8>> icons;
+
                 ProjectFile::registerHandler({
                     .basePath = "challenge",
                     .required = false,
@@ -226,6 +228,11 @@ namespace hex::plugin::builtin {
 
                         challengeAchievement = tar.readString(basePath / "achievements.json");
                         challengeDescription = tar.readString(basePath / "description.txt");
+
+                        nlohmann::json unlockedJson;
+                        if (tar.contains(basePath / "unlocked.json")) {
+                            unlockedJson = nlohmann::json::parse(tar.readString(basePath / "unlocked.json"));
+                        }
 
                         try {
                             auto json = nlohmann::json::parse(challengeAchievement);
@@ -238,7 +245,10 @@ namespace hex::plugin::builtin {
                                     if (achievement.contains("icon")) {
                                         if (const auto &icon = achievement["icon"]; icon.is_string() && !icon.is_null()) {
                                             auto iconPath = icon.get<std::string>();
-                                            newAchievement.setIcon(tar.readVector(basePath / iconPath));
+
+                                            auto data = tar.readVector(basePath / iconPath);
+                                            newAchievement.setIcon(data);
+                                            icons[iconPath] = std::move(data);
                                         }
                                     }
 
@@ -271,6 +281,15 @@ namespace hex::plugin::builtin {
                                                             PopupInfo::open("The password you entered was incorrect.");
                                                     });
                                             });
+
+                                            if (unlockedJson.contains("achievements") && unlockedJson["achievements"].is_array()) {
+                                                for (const auto &unlockedAchievement : unlockedJson["achievements"]) {
+                                                    if (unlockedAchievement.is_string() && unlockedAchievement.get<std::string>() == achievement["name"].get<std::string>()) {
+                                                        newAchievement.setUnlocked(true);
+                                                        break;
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -290,6 +309,23 @@ namespace hex::plugin::builtin {
                             tar.writeString(basePath / "achievements.json", challengeAchievement);
                         if (!challengeDescription.empty())
                             tar.writeString(basePath / "description.txt", challengeDescription);
+
+                        for (const auto &[iconPath, data] : icons) {
+                            tar.writeVector(basePath / iconPath, data);
+                        }
+
+                        nlohmann::json unlockedJson;
+
+                        unlockedJson["achievements"] = nlohmann::json::array();
+                        for (const auto &[categoryName, achievements] : AchievementManager::getAchievements()) {
+                            for (const auto &[achievementName, achievement] : achievements) {
+                                if (achievement->isTemporary() && achievement->isUnlocked()) {
+                                    unlockedJson["achievements"].push_back(achievementName);
+                                }
+                            }
+                        }
+
+                        tar.writeString(basePath / "unlocked.json", unlockedJson.dump(4));
 
                         return true;
                     }
