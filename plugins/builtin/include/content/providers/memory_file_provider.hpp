@@ -38,8 +38,8 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
-        void loadSettings(const nlohmann::json &settings) override { hex::unused(settings); }
-        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override { return settings; }
+        void loadSettings(const nlohmann::json &settings) override;
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
         void setReadOnly(bool readOnly) { this->m_readOnly = readOnly; }
 

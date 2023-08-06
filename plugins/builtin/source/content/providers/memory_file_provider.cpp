@@ -12,8 +12,11 @@
 namespace hex::plugin::builtin {
 
     bool MemoryFileProvider::open() {
-        this->m_data.resize(1);
-        this->markDirty();
+        if (this->m_data.empty()) {
+            this->m_data.resize(1);
+            this->markDirty();
+        }
+
         return true;
     }
 
@@ -107,6 +110,18 @@ namespace hex::plugin::builtin {
             return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
+    }
+
+    void MemoryFileProvider::loadSettings(const nlohmann::json &settings) {
+        Provider::loadSettings(settings);
+
+        this->m_data = settings["data"].get<std::vector<u8>>();
+    }
+
+    [[nodiscard]] nlohmann::json MemoryFileProvider::storeSettings(nlohmann::json settings) const {
+        settings["data"] = this->m_data;
+
+        return Provider::storeSettings(settings);
     }
 
 }
