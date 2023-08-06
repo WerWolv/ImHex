@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
 
                     bool separator = false;
 
-                    if (achievement.getClickCallback()) {
+                    if (achievement.getClickCallback() && !achievement.isUnlocked()) {
                         ImGui::Separator();
                         separator = true;
 
@@ -109,7 +109,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndTooltip();
             }
 
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            if (!achievement.isUnlocked() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                 if (ImGui::GetIO().KeyShift) {
                     #if defined (DEBUG)
                         AchievementManager::unlockAchievement(node->achievement->getUnlocalizedCategory(), node->achievement->getUnlocalizedName());

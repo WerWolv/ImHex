@@ -137,6 +137,24 @@ namespace hex {
         getAchievementNodes(false).clear();
     }
 
+    void AchievementManager::clearTemporary() {
+        auto &categories = getAchievements();
+        for (auto &[categoryName, achievements] : categories) {
+            std::erase_if(achievements, [](auto &data) {
+                auto &[achievementName, achievement] = data;
+                return achievement->isTemporary();
+            });
+        }
+
+        std::erase_if(categories, [](auto &data) {
+            auto &[categoryName, achievements] = data;
+            return achievements.empty();
+        });
+
+        getAchievementStartNodes(false).clear();
+        getAchievementNodes(false).clear();
+    }
+
     void AchievementManager::achievementAdded() {
         getAchievementStartNodes(false).clear();
         getAchievementNodes(false).clear();

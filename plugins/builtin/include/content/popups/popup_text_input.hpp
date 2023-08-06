@@ -5,6 +5,8 @@
 #include <functional>
 #include <string>
 
+#include <fonts/codicons_font.h>
+
 namespace hex::plugin::builtin {
 
     class PopupTextInput : public Popup<PopupTextInput> {

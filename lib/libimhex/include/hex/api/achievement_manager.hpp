@@ -121,7 +121,10 @@ namespace hex {
             return this->m_clickCallback;
         }
 
-    protected:
+        [[nodiscard]] bool isTemporary() const {
+            return this->m_temporary;
+        }
+
         void setUnlocked(bool unlocked) {
             if (unlocked) {
                 if (this->m_progress < this->m_maxProgress)
@@ -131,6 +134,7 @@ namespace hex {
             }
         }
 
+    protected:
         void setProgress(u32 progress) {
             this->m_progress = progress;
         }
@@ -150,6 +154,8 @@ namespace hex {
 
         u32 m_progress = 0;
         u32 m_maxProgress = 1;
+
+        bool m_temporary = false;
 
         friend class AchievementManager;
     };
@@ -199,6 +205,15 @@ namespace hex {
             return *achievement;
         }
 
+        template<std::derived_from<Achievement> T = Achievement>
+        static Achievement& addTemporaryAchievement(auto && ... args) {
+            auto &achievement = addAchievement(std::forward<decltype(args)>(args)...);
+
+            achievement.m_temporary = true;
+
+            return achievement;
+        }
+
         static void unlockAchievement(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
 
         static std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>& getAchievements();
@@ -210,6 +225,7 @@ namespace hex {
         static void storeProgress();
 
         static void clear();
+        static void clearTemporary();
 
     private:
         static void achievementAdded();
