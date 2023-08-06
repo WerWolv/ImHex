@@ -93,8 +93,10 @@ namespace hex {
                 this->m_initializePluginFunction();
             } catch (const std::exception &e) {
                 log::error("Plugin '{}' threw an exception on init: {}", pluginName, e.what());
+                return false;
             } catch (...) {
                 log::error("Plugin '{}' threw an exception on init", pluginName);
+                return false;
             }
         } else {
             return false;

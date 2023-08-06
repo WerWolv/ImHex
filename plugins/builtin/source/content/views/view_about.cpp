@@ -1,6 +1,7 @@
 #include "content/views/view_about.hpp"
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
@@ -23,7 +24,8 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 3000, Shortcut::None, [] {
-            hex::openWebpage("https://imhex.werwolv.net/docs");
+            hex::openWebpage("https://docs.werwolv.net/imhex");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
         });
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.menu.help.ask_for_help" }, 4000, CTRLCMD + SHIFT + Keys::D, [] {

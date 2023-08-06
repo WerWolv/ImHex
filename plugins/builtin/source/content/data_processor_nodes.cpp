@@ -1,7 +1,9 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/localization.hpp>
+#include <hex/api/achievement_manager.hpp>
+
 #include <hex/data_processor/node.hpp>
 
-#include <hex/api/localization.hpp>
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
@@ -466,6 +468,10 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &address = this->getIntegerOnInput(0);
             const auto &data    = this->getBufferOnInput(1);
+
+            if (!data.empty()) {
+                AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.modify_data.name");
+            }
 
             this->setOverlayData(address, data);
         }

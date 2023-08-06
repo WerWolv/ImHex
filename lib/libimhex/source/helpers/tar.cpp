@@ -88,7 +88,13 @@ namespace hex {
 
     bool Tar::contains(const std::fs::path &path) {
         mtar_header_t header;
-        return mtar_find(&this->m_ctx, path.string().c_str(), &header) == MTAR_ESUCCESS;
+
+        auto fixedPath = path.string();
+        #if defined(OS_WINDOWS)
+            std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
+        #endif
+
+        return mtar_find(&this->m_ctx, fixedPath.c_str(), &header) == MTAR_ESUCCESS;
     }
 
     std::string Tar::getOpenErrorString(){

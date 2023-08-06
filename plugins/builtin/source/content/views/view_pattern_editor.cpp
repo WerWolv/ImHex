@@ -1,6 +1,8 @@
 #include "content/views/view_pattern_editor.hpp"
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/project_file_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/core/preprocessor.hpp>
@@ -11,7 +13,6 @@
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 
@@ -1086,6 +1087,7 @@ namespace hex::plugin::builtin {
         auto selection = ImHexApi::HexEditor::getSelection();
 
         appendEditorText(hex::format("{0} {0}_at_0x{1:02X} @ 0x{1:02X};", type, selection->getStartAddress()));
+        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.place_menu.name");
     }
 
     void ViewPatternEditor::appendArray(const std::string &type, size_t size) {
@@ -1115,6 +1117,7 @@ namespace hex::plugin::builtin {
                                                     PopupFileChooser::open(paths, std::vector<nfdfilteritem_t>{ { "Pattern File", "hexpat" } }, false,
                                                                                [this, provider](const std::fs::path &path) {
                                                                                    this->loadPatternFile(path, provider);
+                                                                                   AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
                                                                                });
                                                 }, ImHexApi::Provider::isValid);
 

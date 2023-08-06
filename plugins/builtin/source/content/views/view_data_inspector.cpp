@@ -4,8 +4,7 @@
 
 #include <hex/providers/provider.hpp>
 
-#include <cstring>
-
+#include <hex/api/achievement_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <pl/pattern_language.hpp>
@@ -144,6 +143,8 @@ namespace hex::plugin::builtin {
                                                 editingFunction,
                                                 false
                                             });
+
+                                            AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.data_inspector.name");
                                         } catch (const pl::core::err::EvaluatorError::Exception &error) {
                                             log::error("Failed to get value of pattern '{}': {}", pattern->getDisplayName(), error.what());
                                         }

@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
@@ -48,6 +49,8 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.cpp", [](prv::Provider *provider, u64 offset, size_t size) {
+            AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.copy_as.name");
+
             return formatLanguageArray(provider, offset, size, hex::format("constexpr std::array<uint8_t, {0}> data = {{", size), "0x{0:02X}, ", "};");
         });
 

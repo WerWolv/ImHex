@@ -4,6 +4,7 @@
 
 #include <hex/api/localization.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -246,6 +247,8 @@ namespace hex::plugin::builtin {
         this->m_fileSize = this->m_file.getSize();
 
         this->m_file.close();
+
+        AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
 
         return true;
     }

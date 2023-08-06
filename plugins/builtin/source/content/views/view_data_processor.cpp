@@ -2,12 +2,11 @@
 #include "content/popups/popup_notification.hpp"
 
 #include <hex/api/content_registry.hpp>
-
-#include <hex/helpers/logger.hpp>
+#include <hex/api/project_file_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
 
 #include <hex/providers/provider.hpp>
-#include <hex/api/project_file_manager.hpp>
-
+#include <hex/helpers/logger.hpp>
 
 #include <imnodes.h>
 #include <imnodes_internal.h>
@@ -166,6 +165,8 @@ namespace hex::plugin::builtin {
                 editing = ImGui::IsItemActive();
 
                 if (ImGui::Button("hex.builtin.nodes.custom.custom.edit"_lang, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing()))) {
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.custom_node.name");
+
                     this->m_dataProcessor->getWorkspaceStack().push_back(&this->m_workspace);
 
                     this->m_requiresAttributeUpdate = true;
@@ -595,6 +596,7 @@ namespace hex::plugin::builtin {
                     ImNodes::SetNodeScreenSpacePos(node->getId(), this->m_rightClickedCoords);
                     workspace.nodes.push_back(std::move(node));
                     ImHexApi::Provider::markDirty();
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.place_node.name");
                 }
 
                 ImGui::EndPopup();
@@ -818,6 +820,8 @@ namespace hex::plugin::builtin {
 
                         fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
                         toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
+
+                        AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.create_connection.name");
                     } while (false);
                 }
             }
