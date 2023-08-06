@@ -218,8 +218,8 @@ namespace hex::plugin::builtin {
 
                                     if (achievement.contains("icon")) {
                                         if (const auto &icon = achievement["icon"]; icon.is_string() && !icon.is_null()) {
-                                            auto iconString = icon.get<std::string>();
-                                            newAchievement.setIcon(crypt::decode64(std::vector<u8>(iconString.begin(), iconString.end())));
+                                            auto iconPath = icon.get<std::string>();
+                                            newAchievement.setIcon(tar.readVector(basePath / iconPath));
                                         }
                                     }
 
