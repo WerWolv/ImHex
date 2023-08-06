@@ -198,7 +198,6 @@ namespace hex::plugin::builtin {
                 static std::string challengeAchievement;
                 static std::string challengeDescription;
 
-                static std::list<std::vector<u8>> icons;
                 ProjectFile::registerHandler({
                     .basePath = "challenge",
                     .required = false,
@@ -220,8 +219,7 @@ namespace hex::plugin::builtin {
                                     if (achievement.contains("icon")) {
                                         if (const auto &icon = achievement["icon"]; icon.is_string() && !icon.is_null()) {
                                             auto iconString = icon.get<std::string>();
-                                            icons.push_back(crypt::decode64(std::vector<u8>(iconString.begin(), iconString.end())));
-                                            newAchievement.setIcon({ reinterpret_cast<std::byte*>(icons.back().data()), icons.back().size() });
+                                            newAchievement.setIcon(crypt::decode64(std::vector<u8>(iconString.begin(), iconString.end())));
                                         }
                                     }
 

@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <span>
 
 #include <hex/api/event.hpp>
 #include <imgui.h>
@@ -94,7 +95,29 @@ namespace hex {
         }
 
         Achievement& setIcon(std::span<const std::byte> data) {
-            this->m_iconData = data;
+            this->m_iconData.reserve(data.size());
+            for (auto &byte : data)
+                this->m_iconData.emplace_back(static_cast<u8>(byte));
+
+            return *this;
+        }
+
+        Achievement& setIcon(std::span<const u8> data) {
+            this->m_iconData.assign(data.begin(), data.end());
+
+            return *this;
+        }
+
+        Achievement& setIcon(std::vector<u8> data) {
+            this->m_iconData = std::move(data);
+
+            return *this;
+        }
+
+        Achievement& setIcon(std::vector<std::byte> data) {
+            this->m_iconData.reserve(data.size());
+            for (auto &byte : data)
+                this->m_iconData.emplace_back(static_cast<u8>(byte));
 
             return *this;
         }
@@ -149,7 +172,7 @@ namespace hex {
 
         std::function<void(Achievement &)> m_clickCallback;
 
-        std::span<const std::byte> m_iconData;
+        std::vector<u8> m_iconData;
         mutable ImGui::Texture m_icon;
 
         u32 m_progress = 0;
