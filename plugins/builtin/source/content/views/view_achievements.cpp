@@ -43,12 +43,19 @@ namespace hex::plugin::builtin {
 
         const auto fillColor = [&] {
             if (achievement.isUnlocked())
-                return u32(0x00000000);
+                return ImGui::GetColorU32(ImGuiCol_FrameBg, 1.0F) | 0xFF000000;
             else if (node->isUnlockable())
                 return (u32(ImColor(ImLerp(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), ImGui::GetStyleColorVec4(ImGuiCol_Text), sinf(ImGui::GetTime() * 6.0F) * 0.5F + 0.5F))) & 0x00FFFFFF) | 0x80000000;
             else
                 return ImGui::GetColorU32(ImGuiCol_TextDisabled, 0.5F);
         }();
+
+        if (achievement.isUnlocked()) {
+            drawList->AddRectFilled(position, position + achievementSize, fillColor, 5_scaled, 0);
+            drawList->AddRect(position, position + achievementSize, borderColor, 5_scaled, 0, 2_scaled);
+        } else {
+            drawList->AddRectFilled(position, position + achievementSize, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000, 5_scaled, 0);
+        }
 
         if (const auto &icon = achievement.getIcon(); icon.isValid()) {
             ImVec2 iconSize;
@@ -66,8 +73,10 @@ namespace hex::plugin::builtin {
             drawList->AddImage(icon, position + margin, position + margin + iconSize);
         }
 
-        drawList->AddRectFilled(position, position + achievementSize, fillColor, 5_scaled, 0);
-        drawList->AddRect(position, position + achievementSize, borderColor, 5_scaled, 0, 2_scaled);
+        if (!achievement.isUnlocked()) {
+            drawList->AddRectFilled(position, position + achievementSize, fillColor, 5_scaled, 0);
+            drawList->AddRect(position, position + achievementSize, borderColor, 5_scaled, 0, 2_scaled);
+        }
 
         auto tooltipPos = position + ImVec2(achievementSize.x, 0);
         auto tooltipSize = achievementSize * ImVec2(4, 0);
@@ -134,7 +143,7 @@ namespace hex::plugin::builtin {
             return achievement->isInvisible();
         });
 
-        auto unlockedText = hex::format("{}: {} / {}{}", "hex.builtin.view.achievements.unlocked"_lang, unlockedCount, achievements.size() - invisibleCount, invisibleCount > 0 ? "+" : " ");
+        auto unlockedText = hex::format("{}: {} / {}{}", "hex.builtin.view.achievements.unlocked_count"_lang, unlockedCount, achievements.size() - invisibleCount, invisibleCount > 0 ? "+" : " ");
 
         auto &style = ImGui::GetStyle();
         auto overlaySize = ImGui::CalcTextSize(unlockedText.c_str()) + style.ItemSpacing + style.WindowPadding * 2.0F;

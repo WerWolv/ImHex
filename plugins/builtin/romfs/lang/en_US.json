@@ -660,6 +660,7 @@
         "hex.builtin.tools.wiki_explain.search": "Search",
         "hex.builtin.view.achievements.name": "Achievements",
         "hex.builtin.view.achievements.unlocked": "Achievement Unlocked!",
+        "hex.builtin.view.achievements.unlocked_count": "Unlocked",
         "hex.builtin.view.achievements.click": "Click here",
         "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "Jump to",
