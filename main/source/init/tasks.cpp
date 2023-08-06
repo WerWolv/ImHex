@@ -457,13 +457,14 @@ namespace hex::init {
             }
 
             // Make sure there's only one built-in plugin
-            builtinPlugins++;
             if (builtinPlugins > 1) continue;
 
             // Initialize the plugin
             if (!plugin.initializePlugin()) {
                 log::error("Failed to initialize plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
+            } else {
+                builtinPlugins++;
             }
         }
 

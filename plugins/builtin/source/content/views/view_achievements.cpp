@@ -34,24 +34,21 @@ namespace hex::plugin::builtin {
 
         const auto borderColor = [&] {
             if (achievement.isUnlocked())
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow) | 0xFF000000;
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow, 1.0F);
             else if (node->isUnlockable())
-                return ImGui::GetColorU32(ImGuiCol_Button) | 0xFF000000;
+                return ImGui::GetColorU32(ImGuiCol_Button, 1.0F);
             else
-                return ImGui::GetColorU32(ImGuiCol_PlotLines) | 0xFF000000;
+                return ImGui::GetColorU32(ImGuiCol_PlotLines, 1.0F);
         }();
 
         const auto fillColor = [&] {
             if (achievement.isUnlocked())
-                return ImGui::GetColorU32(ImGuiCol_Text) | 0xFF000000;
+                return u32(0x00000000);
             else if (node->isUnlockable())
-                return u32(ImColor(ImLerp(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), ImGui::GetStyleColorVec4(ImGuiCol_Text), sinf(ImGui::GetTime() * 6.0F) * 0.5F + 0.5F)));
+                return (u32(ImColor(ImLerp(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), ImGui::GetStyleColorVec4(ImGuiCol_Text), sinf(ImGui::GetTime() * 6.0F) * 0.5F + 0.5F))) & 0x00FFFFFF) | 0x80000000;
             else
-                return ImGui::GetColorU32(ImGuiCol_TextDisabled) | 0xFF000000;
+                return ImGui::GetColorU32(ImGuiCol_TextDisabled, 0.5F);
         }();
-
-        drawList->AddRectFilled(position, position + achievementSize, fillColor, 5_scaled, 0);
-        drawList->AddRect(position, position + achievementSize, borderColor, 5_scaled, 0, 2_scaled);
 
         if (const auto &icon = achievement.getIcon(); icon.isValid()) {
             ImVec2 iconSize;
@@ -68,6 +65,9 @@ namespace hex::plugin::builtin {
             ImVec2 margin = (achievementSize - iconSize) / 2.0F;
             drawList->AddImage(icon, position + margin, position + margin + iconSize);
         }
+
+        drawList->AddRectFilled(position, position + achievementSize, fillColor, 5_scaled, 0);
+        drawList->AddRect(position, position + achievementSize, borderColor, 5_scaled, 0, 2_scaled);
 
         auto tooltipPos = position + ImVec2(achievementSize.x, 0);
         auto tooltipSize = achievementSize * ImVec2(4, 0);
@@ -335,12 +335,17 @@ namespace hex::plugin::builtin {
 
             if (this->m_currAchievement != nullptr) {
 
-                const ImVec2 windowSize = scaled({ 200, 50 });
-                ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImVec2 { ImHexApi::System::getMainWindowSize().x - windowSize.x - 20_scaled, 20_scaled });
+                const ImVec2 windowSize = scaled({ 200, 55 });
+                ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImVec2 { ImHexApi::System::getMainWindowSize().x - windowSize.x - 100_scaled, 0 });
                 ImGui::SetNextWindowSize(windowSize);
-                if (ImGui::Begin("##achievement_unlocked", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs)) {
+                if (ImGui::Begin("##achievement_unlocked", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs)) {
                     ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "{}", "hex.builtin.view.achievements.unlocked"_lang);
-                    ImGui::TextUnformatted(LangEntry(this->m_currAchievement->getUnlocalizedName()));
+
+                    ImGui::Image(this->m_currAchievement->getIcon(), scaled({ 20, 20 }));
+                    ImGui::SameLine();
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    ImGui::SameLine();
+                    ImGui::TextFormattedWrapped("{}", LangEntry(this->m_currAchievement->getUnlocalizedName()));
 
                     if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                         this->m_viewOpen = true;
