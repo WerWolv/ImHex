@@ -499,6 +499,8 @@
         "hex.builtin.provider.intel_hex.name": "Intel Hex {0}",
         "hex.builtin.provider.mem_file": "Memory File",
         "hex.builtin.provider.mem_file.unsaved": "Unsaved File",
+        "hex.builtin.provider.mem_file.rename": "Rename",
+        "hex.builtin.provider.mem_file.rename.desc": "Enter a name for this memory file.",
         "hex.builtin.provider.motorola_srec": "Motorola SREC Provider",
         "hex.builtin.provider.motorola_srec.name": "Motorola SREC {0}",
         "hex.builtin.provider.view": "View",

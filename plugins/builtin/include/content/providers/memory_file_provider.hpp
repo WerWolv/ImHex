@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isReadable()  const override { return true; }
         [[nodiscard]] bool isWritable()  const override { return !this->m_readOnly; }
         [[nodiscard]] bool isResizable() const override { return !this->m_readOnly; }
-        [[nodiscard]] bool isSavable()   const override { return !this->m_readOnly; }
+        [[nodiscard]] bool isSavable()   const override { return this->m_name.empty(); }
 
         [[nodiscard]] bool open() override;
         void close() override { }
@@ -29,8 +29,10 @@ namespace hex::plugin::builtin {
 
         void save() override;
 
-        [[nodiscard]] std::string getName() const override { return LangEntry("hex.builtin.provider.mem_file.unsaved"); }
+        [[nodiscard]] std::string getName() const override;
         [[nodiscard]] std::vector<Description> getDataDescription() const override { return { }; }
+
+        std::vector<MenuEntry> getMenuEntries() override;
 
         [[nodiscard]] std::string getTypeName() const override {
             return "hex.builtin.provider.mem_file";
@@ -44,7 +46,11 @@ namespace hex::plugin::builtin {
         void setReadOnly(bool readOnly) { this->m_readOnly = readOnly; }
 
     private:
+        void renameFile();
+
+    private:
         std::vector<u8> m_data;
+        std::string m_name;
         bool m_readOnly = false;
     };
 
