@@ -485,6 +485,7 @@
         "hex.builtin.provider.file.error.open": "Failed to open file {}: {}",
         "hex.builtin.provider.file.access": "Last access time",
         "hex.builtin.provider.file.creation": "Creation time",
+        "hex.builtin.provider.file.menu.into_memory": "Load into memory",
         "hex.builtin.provider.file.modification": "Last modification time",
         "hex.builtin.provider.file.path": "File path",
         "hex.builtin.provider.file.size": "Size",

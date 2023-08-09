@@ -47,12 +47,16 @@ namespace hex::plugin::builtin {
 
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
 
-            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr && (fileProvider->setPath(path), !fileProvider->open()))
-                ImHexApi::Provider::remove(newProvider);
-            else {
-                fileProvider->markDirty(false);
-                EventManager::post<EventProviderOpened>(newProvider);
-                ImHexApi::Provider::remove(this, true);
+            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr) {
+                fileProvider->setPath(path);
+
+                if (!fileProvider->open())
+                    ImHexApi::Provider::remove(newProvider);
+                else {
+                    fileProvider->markDirty(false);
+                    EventManager::post<EventProviderOpened>(newProvider);
+                    ImHexApi::Provider::remove(this, true);
+                }
             }
         });
     }
@@ -134,11 +138,13 @@ namespace hex::plugin::builtin {
 
         this->m_data = settings["data"].get<std::vector<u8>>();
         this->m_name = settings["name"].get<std::string>();
+        this->m_readOnly = settings["readOnly"].get<bool>();
     }
 
     [[nodiscard]] nlohmann::json MemoryFileProvider::storeSettings(nlohmann::json settings) const {
         settings["data"] = this->m_data;
         settings["name"] = this->m_name;
+        settings["readOnly"] = this->m_readOnly;
 
         return Provider::storeSettings(settings);
     }
