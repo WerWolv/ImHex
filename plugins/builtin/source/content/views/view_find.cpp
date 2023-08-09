@@ -450,6 +450,7 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_specific_string.name");
         }
 
+        this->m_occurrenceTree->clear();
 
         this->m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = this->m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();

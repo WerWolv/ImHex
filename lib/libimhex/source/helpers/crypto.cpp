@@ -390,16 +390,22 @@ namespace hex::crypt {
     std::vector<u8> decode16(const std::string &input) {
         std::vector<u8> output(input.length() / 2, 0x00);
 
+
         mbedtls_mpi ctx;
         mbedtls_mpi_init(&ctx);
 
         ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
 
-        if (mbedtls_mpi_read_string(&ctx, 16, input.c_str()))
-            return {};
+        constexpr static auto BufferSize = 0x100;
+        for (size_t offset = 0; offset < input.size(); offset += BufferSize) {
+            std::string inputPart = input.substr(offset, std::min<size_t>(BufferSize, input.size() - offset));
+            if (mbedtls_mpi_read_string(&ctx, 16, inputPart.c_str()))
+                return {};
 
-        if (mbedtls_mpi_write_binary(&ctx, output.data(), output.size()))
-            return {};
+            auto size = std::min<size_t>(BufferSize / 2, input.size() - offset);
+            if (mbedtls_mpi_write_binary(&ctx, output.data() + offset / 2, size) != 0)
+                return {};
+        }
 
         return output;
     }

@@ -58,6 +58,9 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64 address) const override;
 
+    private:
+        void convertToMemoryFile();
+
     protected:
         std::fs::path m_path;
         wolv::io::File m_file;

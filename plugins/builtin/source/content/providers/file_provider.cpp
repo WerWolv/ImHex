@@ -1,10 +1,13 @@
 #include "content/providers/file_provider.hpp"
+#include "content/providers/memory_file_provider.hpp"
 
 #include <cstring>
 
 #include <hex/api/localization.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/task.hpp>
+
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -204,14 +207,9 @@ namespace hex::plugin::builtin {
 
     std::vector<FileProvider::MenuEntry> FileProvider::getMenuEntries(){
         return {
-            {"hex.builtin.provider.file.menu.open_folder"_lang, [path = this->m_path] {
-                fs::openFolderWithSelectionExternal(path);
-            }},
-            
-            {"hex.builtin.provider.file.menu.open_file"_lang, [path = this->m_path] {
-                fs::openFileExternal(path);
-            }},
-            
+            { "hex.builtin.provider.file.menu.open_folder"_lang, [this] { fs::openFolderWithSelectionExternal(this->m_path); } },
+            { "hex.builtin.provider.file.menu.open_file"_lang,   [this] { fs::openFileExternal(this->m_path); } },
+            { "hex.builtin.provider.file.menu.into_memory",      [this] { this->convertToMemoryFile(); } }
         };
     }
 
@@ -297,6 +295,38 @@ namespace hex::plugin::builtin {
             return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
         else
             return { Region::Invalid(), false };
+    }
+
+    void FileProvider::convertToMemoryFile() {
+        auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+
+        if (auto memoryProvider = dynamic_cast<MemoryFileProvider*>(newProvider); memoryProvider != nullptr) {
+            if (!memoryProvider->open())
+                ImHexApi::Provider::remove(newProvider);
+            else {
+                const auto size = this->getActualSize();
+                TaskManager::createTask("Loading into memory", size, [this, size, memoryProvider](Task &task) {
+                    task.setInterruptCallback([memoryProvider]{
+                        ImHexApi::Provider::remove(memoryProvider);
+                    });
+
+                    constexpr static size_t BufferSize = 0x10000;
+                    std::vector<u8> buffer(BufferSize);
+
+                    memoryProvider->resize(size);
+
+                    for (u64 i = 0; i < size; i += BufferSize) {
+                        auto copySize = std::min<size_t>(BufferSize, size - i);
+                        this->read(i, buffer.data(), copySize, true);
+                        memoryProvider->writeRaw(i, buffer.data(), copySize);
+                        task.update(i);
+                    }
+
+                    memoryProvider->markDirty(true);
+                    ImHexApi::Provider::remove(this, false);
+                });
+            }
+        }
     }
 
 }

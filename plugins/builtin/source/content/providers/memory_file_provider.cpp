@@ -1,5 +1,6 @@
 #include "content/providers/memory_file_provider.hpp"
 #include "content/providers/file_provider.hpp"
+#include "content/popups/popup_text_input.hpp"
 
 #include <cstring>
 
@@ -35,6 +36,9 @@ namespace hex::plugin::builtin {
     }
 
     void MemoryFileProvider::save() {
+        if (!this->m_name.empty())
+            return;
+
         fs::openFileBrowser(fs::DialogMode::Save, { }, [this](const std::fs::path &path) {
             if (path.empty())
                 return;
@@ -43,12 +47,16 @@ namespace hex::plugin::builtin {
 
             auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.file", true);
 
-            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr && (fileProvider->setPath(path), !fileProvider->open()))
-                ImHexApi::Provider::remove(newProvider);
-            else {
-                fileProvider->markDirty(false);
-                EventManager::post<EventProviderOpened>(newProvider);
-                ImHexApi::Provider::remove(this, true);
+            if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr) {
+                fileProvider->setPath(path);
+
+                if (!fileProvider->open())
+                    ImHexApi::Provider::remove(newProvider);
+                else {
+                    fileProvider->markDirty(false);
+                    EventManager::post<EventProviderOpened>(newProvider);
+                    ImHexApi::Provider::remove(this, true);
+                }
             }
         });
     }
@@ -103,6 +111,19 @@ namespace hex::plugin::builtin {
         Provider::remove(offset, size);
     }
 
+    [[nodiscard]] std::string MemoryFileProvider::getName() const {
+        if (this->m_name.empty())
+            return LangEntry("hex.builtin.provider.mem_file.unsaved");
+        else
+            return this->m_name;
+    }
+
+    std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
+        return {
+            MenuEntry { LangEntry("hex.builtin.provider.mem_file.rename"), [this]() { this->renameFile(); } }
+        };
+    }
+
     std::pair<Region, bool> MemoryFileProvider::getRegionValidity(u64 address) const {
         address -= this->getBaseAddress();
 
@@ -116,12 +137,22 @@ namespace hex::plugin::builtin {
         Provider::loadSettings(settings);
 
         this->m_data = settings["data"].get<std::vector<u8>>();
+        this->m_name = settings["name"].get<std::string>();
+        this->m_readOnly = settings["readOnly"].get<bool>();
     }
 
     [[nodiscard]] nlohmann::json MemoryFileProvider::storeSettings(nlohmann::json settings) const {
         settings["data"] = this->m_data;
+        settings["name"] = this->m_name;
+        settings["readOnly"] = this->m_readOnly;
 
         return Provider::storeSettings(settings);
+    }
+
+    void MemoryFileProvider::renameFile() {
+        PopupTextInput::open("hex.builtin.provider.mem_file.rename"_lang, "hex.builtin.provider.mem_file.rename.desc"_lang, [this](const std::string &name) {
+            this->m_name = name;
+        });
     }
 
 }
