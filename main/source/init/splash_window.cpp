@@ -249,7 +249,7 @@ namespace hex::init {
 
                 if (!this->m_currTaskNames.empty()) {
                     drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
-                    drawList->AddText(progressStart + ImVec2(5, -20), ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(this->m_currTaskNames, " | ")).c_str());
+                    drawList->AddText(progressStart + ImVec2(5, -20) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(this->m_currTaskNames, " | ")).c_str());
                     drawList->PopClipRect();
                 }
             }
