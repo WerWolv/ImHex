@@ -48,7 +48,23 @@ namespace hex::plugin::builtin {
 
             ImGui::Header("hex.builtin.tools.demangler.demangled"_lang);
             if (ImGui::BeginChild("demangled", ImVec2(0, 200_scaled), true)) {
-                ImGui::TextFormattedWrapped("{}", demangledName);
+                ImVec2 text_size = ImGui::CalcTextSize(demangledName.c_str(), demangledName.c_str()+demangledName.size());
+                text_size.x = -FLT_MIN; // fill width (suppresses label)
+                text_size.y += ImGui::GetStyle().FramePadding.y; // single pad
+
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, {0, 0}); // make align with text height
+                ImGui::PushStyleColor(ImGuiCol_FrameBg, {0.f, 0.f, 0.f, 0.f}); // remove text input box
+
+                ImGui::InputTextMultiline(
+                        "###demangled",
+                        const_cast<char*>(demangledName.c_str()), // ugly const cast
+                        demangledName.size() + 1, // needs to include '\0'
+                        text_size,
+                        ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll
+                );
+
+                ImGui::PopStyleColor();
+                ImGui::PopStyleVar();
             }
             ImGui::EndChild();
         }
