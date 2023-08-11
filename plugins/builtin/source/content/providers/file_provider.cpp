@@ -16,6 +16,10 @@
 
 #include <nlohmann/json.hpp>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#endif
+
 namespace hex::plugin::builtin {
 
     bool FileProvider::isAvailable() const {
@@ -75,6 +79,17 @@ namespace hex::plugin::builtin {
 
     void FileProvider::save() {
         this->applyPatches();
+
+        #if defined(OS_WINDOWS)
+            FILETIME ft;
+            SYSTEMTIME st;
+
+            auto fileHandle = (HANDLE)_get_osfhandle(_fileno(this->m_file.getHandle()));
+            GetSystemTime(&st);
+            SystemTimeToFileTime(&st, &ft);
+            SetFileTime(fileHandle, (LPFILETIME) NULL, (LPFILETIME) NULL, &ft);
+        #endif
+
         Provider::save();
     }
 
@@ -244,7 +259,9 @@ namespace hex::plugin::builtin {
         this->m_file.map();
         this->m_fileSize = this->m_file.getSize();
 
-        this->m_file.close();
+        #if !defined(OS_WINDOWS)
+            this->m_file.close();
+        #endif
 
         AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
 
@@ -253,6 +270,9 @@ namespace hex::plugin::builtin {
 
     void FileProvider::close() {
         this->m_file.unmap();
+        #if defined(OS_WINDOWS)
+            this->m_file.close();
+        #endif
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
