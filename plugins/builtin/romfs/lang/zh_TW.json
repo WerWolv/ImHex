@@ -94,6 +94,7 @@
         "hex.builtin.hash.sha512": "SHA512",
         "hex.builtin.hex_editor.ascii_view": "顯示 ASCII 欄",
         "hex.builtin.hex_editor.custom_encoding_view": "顯示進階解碼欄",
+        "hex.builtin.hex_editor.human_readable_units_footer": "",
         "hex.builtin.hex_editor.data_size": "資料大小",
         "hex.builtin.hex_editor.gray_out_zero": "Grey out zeros",
         "hex.builtin.hex_editor.no_bytes": "無可用位元組",

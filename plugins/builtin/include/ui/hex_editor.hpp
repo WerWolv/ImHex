@@ -154,6 +154,10 @@ namespace hex::plugin::builtin::ui {
             this->m_showAscii = showAscii;
         }
 
+        void enableShowHumanReadableUnits(bool showHumanReadableUnits) {
+            this->m_showHumanReadableUnits = showHumanReadableUnits;
+        }
+
         void enableSyncScrolling(bool syncScrolling) {
             this->m_syncScrolling = syncScrolling;
         }
@@ -253,6 +257,7 @@ namespace hex::plugin::builtin::ui {
         bool m_grayOutZero = true;
         bool m_showAscii = true;
         bool m_showCustomEncoding = true;
+        bool m_showHumanReadableUnits = true;
         bool m_syncScrolling = false;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
 

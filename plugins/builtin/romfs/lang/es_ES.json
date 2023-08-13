@@ -94,6 +94,7 @@
         "hex.builtin.hash.sha512": "SHA512",
         "hex.builtin.hex_editor.ascii_view": "Mostrar columna ASCII",
         "hex.builtin.hex_editor.custom_encoding_view": "Mostrar columna de decodificación avanzada",
+        "hex.builtin.hex_editor.human_readable_units_footer": "",
         "hex.builtin.hex_editor.data_size": "Tamaño de Datos",
         "hex.builtin.hex_editor.gray_out_zero": "Mostrar ceros en gris",
         "hex.builtin.hex_editor.no_bytes": "No hay bytes disponibles",

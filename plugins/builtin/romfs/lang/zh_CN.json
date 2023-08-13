@@ -94,6 +94,7 @@
         "hex.builtin.hash.sha512": "SHA512",
         "hex.builtin.hex_editor.ascii_view": "显示 ASCII 栏",
         "hex.builtin.hex_editor.custom_encoding_view": "显示高级解码栏",
+        "hex.builtin.hex_editor.human_readable_units_footer": "",
         "hex.builtin.hex_editor.data_size": "总大小",
         "hex.builtin.hex_editor.gray_out_zero": "显示零字节为灰色",
         "hex.builtin.hex_editor.no_bytes": "没有可显示的字节",
