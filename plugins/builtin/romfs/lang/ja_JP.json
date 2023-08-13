@@ -94,6 +94,7 @@
         "hex.builtin.hash.sha512": "SHA512",
         "hex.builtin.hex_editor.ascii_view": "ASCIIを表示",
         "hex.builtin.hex_editor.custom_encoding_view": "他のデコード列を表示",
+        "hex.builtin.hex_editor.human_readable_units_footer": "",
         "hex.builtin.hex_editor.data_size": "ファイルサイズ",
         "hex.builtin.hex_editor.gray_out_zero": "ゼロをグレーアウト",
         "hex.builtin.hex_editor.no_bytes": "",

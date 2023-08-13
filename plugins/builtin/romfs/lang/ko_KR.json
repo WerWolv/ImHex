@@ -94,6 +94,7 @@
         "hex.builtin.hash.sha512": "SHA512",
         "hex.builtin.hex_editor.ascii_view": "ASCII 열 표시",
         "hex.builtin.hex_editor.custom_encoding_view": "추가 디코딩 열 표시",
+        "hex.builtin.hex_editor.human_readable_units_footer": "",
         "hex.builtin.hex_editor.data_size": "데이터 크기",
         "hex.builtin.hex_editor.gray_out_zero": "00을 회색으로 표시",
         "hex.builtin.hex_editor.no_bytes": "바이트가 존재하지 않습니다",

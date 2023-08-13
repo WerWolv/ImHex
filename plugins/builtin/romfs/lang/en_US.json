@@ -153,6 +153,7 @@
         "hex.builtin.hash.sha512": "SHA512",
         "hex.builtin.hex_editor.ascii_view": "Display ASCII column",
         "hex.builtin.hex_editor.custom_encoding_view": "Display advanced decoding column",
+        "hex.builtin.hex_editor.human_readable_units_footer": "Convert sizes to human-readable units",
         "hex.builtin.hex_editor.data_size": "Data Size",
         "hex.builtin.hex_editor.gray_out_zero": "Grey out zeros",
         "hex.builtin.hex_editor.no_bytes": "No bytes available",
