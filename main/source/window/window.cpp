@@ -258,12 +258,14 @@ namespace hex {
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
-        for (const auto &[icon, tooltip, callback] : titleBarButtons) {
-            if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
-                callback();
+        if(!titleBarButtons.empty()) {
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
+            for (const auto &[icon, tooltip, callback]: titleBarButtons) {
+                if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
+                    callback();
+                }
+                ImGui::InfoTooltip(LangEntry(tooltip));
             }
-            ImGui::InfoTooltip(LangEntry(tooltip));
         }
 
         // Draw minimize, restore and maximize buttons
@@ -306,12 +308,14 @@ namespace hex {
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (titleBarButtons.size()+0.5));
-        for (const auto &[icon, tooltip, callback] : titleBarButtons) {
-            if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
-                callback();
+        if(!titleBarButtons.empty()) {
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (titleBarButtons.size() + 0.5));
+            for (const auto &[icon, tooltip, callback]: titleBarButtons) {
+                if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
+                    callback();
+                }
+                ImGui::InfoTooltip(LangEntry(tooltip));
             }
-            ImGui::InfoTooltip(LangEntry(tooltip));
         }
 
         ImGui::PopStyleColor(3);
