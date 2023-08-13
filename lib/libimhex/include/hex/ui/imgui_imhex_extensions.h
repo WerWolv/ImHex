@@ -10,6 +10,8 @@
 
 #include <hex/helpers/fmt.hpp>
 
+#include <wolv/utils/string.hpp>
+
 enum ImGuiCustomCol {
     ImGuiCustomCol_DescButton,
     ImGuiCustomCol_DescButtonHovered,
@@ -141,6 +143,24 @@ namespace ImGui {
         ImGui::TextUnformatted(hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
 
+    inline void TextFormattedSelectable(const std::string &fmt, auto &&...args) {
+        auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
+
+        ImGui::PushID(text.c_str());
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
+
+        ImGui::PushItemWidth(-FLT_MIN);
+        ImGui::InputText("##", const_cast<char *>(text.c_str()), text.size(), ImGuiInputTextFlags_ReadOnly);
+        ImGui::PopItemWidth();
+
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+
+        ImGui::PopID();
+    }
+
     inline void TextFormattedColored(ImColor color, const std::string &fmt, auto &&...args) {
         ImGui::TextColored(color, "%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
     }
@@ -151,6 +171,35 @@ namespace ImGui {
 
     inline void TextFormattedWrapped(const std::string &fmt, auto &&...args) {
         ImGui::TextWrapped("%s", hex::format(fmt, std::forward<decltype(args)>(args)...).c_str());
+    }
+
+    inline void TextFormattedWrappedSelectable(const std::string &fmt, auto &&...args) {
+        //Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
+        auto text = wolv::util::wrapMonospacedString(
+                hex::format(fmt, std::forward<decltype(args)>(args)...),
+                ImGui::CalcTextSize("M").x,
+                ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
+        );
+
+        ImGui::PushID(text.c_str());
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4());
+
+        ImGui::PushItemWidth(-FLT_MIN);
+        ImGui::InputTextMultiline(
+                "##",
+                const_cast<char *>(text.c_str()),
+                text.size(),
+                ImVec2(0, -FLT_MIN),
+                ImGuiInputTextFlags_ReadOnly | ImGuiInputTextFlags_NoHorizontalScroll
+        );
+        ImGui::PopItemWidth();
+
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
+
+        ImGui::PopID();
     }
 
     inline void TextFormattedCentered(const std::string &fmt, auto &&...args) {

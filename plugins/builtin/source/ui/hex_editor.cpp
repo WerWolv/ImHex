@@ -694,7 +694,12 @@ namespace hex::plugin::builtin::ui {
                     ImGui::TableNextColumn();
                     {
                         auto pageAddress = this->m_provider->getCurrentPageAddress();
-                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.hex_editor.region"_lang, pageAddress, pageAddress + this->m_provider->getSize() - 1);
+                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.region"_lang);
+                        ImGui::SameLine();
+                        ImGui::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
+                                                       pageAddress,
+                                                       pageAddress + this->m_provider->getSize() - 1
+                       );
                     }
 
                     ImGui::TableNextRow();
@@ -715,16 +720,20 @@ namespace hex::plugin::builtin::ui {
                         else
                             value = std::string("hex.builtin.hex_editor.selection.none"_lang);
 
-                        ImGui::TextFormatted("{0}: {1}", "hex.builtin.hex_editor.selection"_lang, value);
+                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.selection"_lang);
+                        ImGui::SameLine();
+                        ImGui::TextFormattedSelectable(value);
                     }
 
                     // Loaded data size
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{0}: 0x{1:08X} (0x{2:X} | {3})", "hex.builtin.hex_editor.data_size"_lang,
-                                             this->m_provider->getActualSize(),
-                                             this->m_provider->getActualSize(),
-                                             hex::toByteString(this->m_provider->getActualSize())
+                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.data_size"_lang);
+                        ImGui::SameLine();
+                        ImGui::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
+                                                       this->m_provider->getActualSize(),
+                                                       this->m_provider->getActualSize(),
+                                                       hex::toByteString(this->m_provider->getActualSize())
                         );
                     }
 
