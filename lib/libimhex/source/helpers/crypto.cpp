@@ -396,14 +396,14 @@ namespace hex::crypt {
 
         ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
 
+        // read buffered
         constexpr static auto BufferSize = 0x100;
         for (size_t offset = 0; offset < input.size(); offset += BufferSize) {
             std::string inputPart = input.substr(offset, std::min<size_t>(BufferSize, input.size() - offset));
             if (mbedtls_mpi_read_string(&ctx, 16, inputPart.c_str()))
                 return {};
 
-            auto size = std::min<size_t>(BufferSize / 2, input.size() - offset);
-            if (mbedtls_mpi_write_binary(&ctx, output.data() + offset / 2, size) != 0)
+            if (mbedtls_mpi_write_binary(&ctx, output.data() + offset / 2, inputPart.size() / 2))
                 return {};
         }
 
