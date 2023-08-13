@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
 
             ImGui::Header("hex.builtin.tools.demangler.demangled"_lang);
             if (ImGui::BeginChild("demangled", ImVec2(0, 200_scaled), true)) {
-                ImGui::TextFormattedWrapped("{}", demangledName);
+                ImGui::TextFormattedWrappedSelectable("{}", demangledName);
             }
             ImGui::EndChild();
         }
