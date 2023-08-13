@@ -84,10 +84,14 @@ namespace hex::plugin::builtin {
             FILETIME ft;
             SYSTEMTIME st;
 
-            auto fileHandle = (HANDLE)_get_osfhandle(_fileno(this->m_file.getHandle()));
-            GetSystemTime(&st);
-            SystemTimeToFileTime(&st, &ft);
-            SetFileTime(fileHandle, (LPFILETIME) NULL, (LPFILETIME) NULL, &ft);
+            wolv::io::File file(this->m_path, wolv::io::File::Mode::Write);
+            if (file.isValid()) {
+                GetSystemTime(&st);
+                if (SystemTimeToFileTime(&st, &ft)) {
+                    auto fileHandle = (HANDLE)_get_osfhandle(_fileno(file.getHandle()));
+                    SetFileTime(fileHandle, (LPFILETIME) NULL, (LPFILETIME) NULL, &ft);
+                }
+            }
         #endif
 
         Provider::save();
@@ -259,9 +263,7 @@ namespace hex::plugin::builtin {
         this->m_file.map();
         this->m_fileSize = this->m_file.getSize();
 
-        #if !defined(OS_WINDOWS)
-            this->m_file.close();
-        #endif
+        this->m_file.close();
 
         AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
 
@@ -270,9 +272,6 @@ namespace hex::plugin::builtin {
 
     void FileProvider::close() {
         this->m_file.unmap();
-        #if defined(OS_WINDOWS)
-            this->m_file.close();
-        #endif
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
