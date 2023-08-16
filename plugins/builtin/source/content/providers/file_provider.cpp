@@ -16,6 +16,10 @@
 
 #include <nlohmann/json.hpp>
 
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#endif
+
 namespace hex::plugin::builtin {
 
     bool FileProvider::isAvailable() const {
@@ -75,6 +79,21 @@ namespace hex::plugin::builtin {
 
     void FileProvider::save() {
         this->applyPatches();
+
+        #if defined(OS_WINDOWS)
+            FILETIME ft;
+            SYSTEMTIME st;
+
+            wolv::io::File file(this->m_path, wolv::io::File::Mode::Write);
+            if (file.isValid()) {
+                GetSystemTime(&st);
+                if (SystemTimeToFileTime(&st, &ft)) {
+                    auto fileHandle = (HANDLE)_get_osfhandle(_fileno(file.getHandle()));
+                    SetFileTime(fileHandle, (LPFILETIME) NULL, (LPFILETIME) NULL, &ft);
+                }
+            }
+        #endif
+
         Provider::save();
     }
 
