@@ -133,6 +133,7 @@ namespace hex::plugin::builtin {
         PerProvider<std::vector<std::fs::path>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;
         bool m_triggerEvaluation  = false;
+        std::atomic<bool> m_triggerAutoEvaluate = false;
 
         bool m_lastEvaluationProcessed = true;
         bool m_lastEvaluationResult    = false;
