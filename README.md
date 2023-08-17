@@ -120,7 +120,6 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Hexadecimal Color picker
   - Base converter
   - UNIX Permissions calculator
-  - Anonfiles File upload tool
   - Wikipedia term definition finder
   - File utilities
     - File splitter

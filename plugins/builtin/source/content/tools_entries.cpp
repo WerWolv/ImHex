@@ -563,7 +563,7 @@ namespace hex::plugin::builtin {
                 ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.sticky_error"_lang);
         }
 
-        void drawFileUploader() {
+        /*void drawFileUploader() {
             struct UploadedFile {
                 std::string fileName, link, size;
             };
@@ -653,7 +653,7 @@ namespace hex::plugin::builtin {
                 uploadProcess = {};
                 currFile.clear();
             }
-        }
+        }*/
 
         std::string getWikipediaApiUrl() {
             auto setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en");
@@ -1835,7 +1835,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.base_converter", drawBaseConverter);
         ContentRegistry::Tools::add("hex.builtin.tools.byte_swapper", drawByteSwapper);
         ContentRegistry::Tools::add("hex.builtin.tools.permissions", drawPermissionsCalculator);
-        ContentRegistry::Tools::add("hex.builtin.tools.file_uploader", drawFileUploader);
+        // ContentRegistry::Tools::add("hex.builtin.tools.file_uploader", drawFileUploader);
         ContentRegistry::Tools::add("hex.builtin.tools.wiki_explain", drawWikiExplainer);
         ContentRegistry::Tools::add("hex.builtin.tools.file_tools", drawFileTools);
         ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Decoder);
