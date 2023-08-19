@@ -1028,7 +1028,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.add"_lang)) {
                         fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                             files.push_back(path);
-                        });
+                        }, "", true);
                     }
                     ImGui::SameLine();
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.delete"_lang)) {
