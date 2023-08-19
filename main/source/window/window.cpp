@@ -439,7 +439,31 @@ namespace hex {
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
                     auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
                     ImGui::SetCursorPosX(5);
+
                     ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
+                    ImGui::SetCursorPosX(5);
+                    ImGui::InvisibleButton("##logo", ImVec2(menuBarHeight, menuBarHeight));
+                    ImGui::OpenPopupOnItemClick("WindowingMenu", ImGuiPopupFlags_MouseButtonLeft);
+                }
+
+                if (ImGui::BeginPopup("WindowingMenu")) {
+                    bool maximized = glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED);
+
+                    ImGui::BeginDisabled(!maximized);
+                    if (ImGui::MenuItem(ICON_VS_CHROME_RESTORE " Restore"))  glfwRestoreWindow(this->m_window);
+                    ImGui::EndDisabled();
+
+                    if (ImGui::MenuItem(ICON_VS_CHROME_MINIMIZE " Minimize")) glfwIconifyWindow(this->m_window);
+
+                    ImGui::BeginDisabled(maximized);
+                    if (ImGui::MenuItem(ICON_VS_CHROME_MAXIMIZE " Maximize")) glfwMaximizeWindow(this->m_window);
+                    ImGui::EndDisabled();
+
+                    ImGui::Separator();
+
+                    if (ImGui::MenuItem(ICON_VS_CHROME_CLOSE " Close"))    ImHexApi::System::closeImHex();
+
+                    ImGui::EndPopup();
                 }
 
                 for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
