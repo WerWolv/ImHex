@@ -71,6 +71,10 @@ namespace hex::plugin::builtin {
                         index++;
                     }
 
+                    // Close the popup if there aren't any patterns available
+                    if (index == 0)
+                        this->close();
+
                     ImGui::EndListBox();
                 }
 
