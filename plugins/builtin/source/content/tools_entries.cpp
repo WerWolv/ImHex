@@ -1031,14 +1031,20 @@ namespace hex::plugin::builtin {
                         }, "", true);
                     }
                     ImGui::SameLine();
+                    ImGui::BeginDisabled(files.empty() || selectedIndex >= files.size());
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.delete"_lang)) {
                         files.erase(files.begin() + selectedIndex);
-                        selectedIndex--;
+
+                        if (selectedIndex > 0)
+                            selectedIndex--;
                     }
+                    ImGui::EndDisabled();
                     ImGui::SameLine();
+                    ImGui::BeginDisabled(files.empty());
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.clear"_lang)) {
                         files.clear();
                     }
+                    ImGui::EndDisabled();
                 }
                 ImGui::EndDisabled();
 
