@@ -20,8 +20,6 @@ jobs:
         shell: msys2 {0}
     env:
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"
-      CCACHE_MAXSIZE:  "1000M"
-      CCACHE_COMPRESS: "true"
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v3
