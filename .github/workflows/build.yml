@@ -34,7 +34,7 @@ jobs:
       with:
         key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
-        max-size: 50M
+        max-size: 1G
 
     - name: 📜 Restore CMakeCache
       uses:  actions/cache@v3
@@ -153,7 +153,7 @@ jobs:
       with:
         key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build
-        max-size: 50M
+        max-size: 1G
 
     - name: 📜 Restore CMakeCache
       uses: actions/cache@v3
@@ -267,7 +267,7 @@ jobs:
         with:
           key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
-          max-size: 50M
+          max-size: 1G
 
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
@@ -342,7 +342,7 @@ jobs:
         with:
           key: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build
-          max-size: 50M
+          max-size: 1G
 
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
@@ -438,7 +438,7 @@ jobs:
         with:
           key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
           restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
-          max-size: 50M
+          max-size: 1G
 
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
