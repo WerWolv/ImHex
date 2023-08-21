@@ -20,8 +20,6 @@ jobs:
         shell: msys2 {0}
     env:
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"
-      CCACHE_MAXSIZE:  "1000M"
-      CCACHE_COMPRESS: "true"
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v3
@@ -32,16 +30,16 @@ jobs:
       uses:  hendrikmuhs/ccache-action@v1.2
       id:    cache-ccache
       with:
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
-        max-size: 50M
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-ccache
+        max-size: 1G
 
     - name: 📜 Restore CMakeCache
       uses:  actions/cache@v3
       with:
         path: |
           build/CMakeCache.txt
-        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
@@ -151,16 +149,16 @@ jobs:
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build
-        max-size: 50M
+        key: ${{ runner.os }}${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-ccache-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-ccache
+        max-size: 1G
 
     - name: 📜 Restore CMakeCache
       uses: actions/cache@v3
       with:
         path: |
           build/CMakeCache.txt
-        key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os }}-${{ matrix.suffix }}-${{ secrets.CACHE_VERSION }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: ⬇️ Install dependencies
       run: |
@@ -265,16 +263,16 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build
-          max-size: 50M
+          key: Ubuntu-${{matrix.release_num}}-${{ secrets.CACHE_VERSION }}-ccache-${{ github.run_id }}
+          restore-keys: Ubuntu-${{matrix.release_num}}-${{ secrets.CACHE_VERSION }}-ccache
+          max-size: 1G
 
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
-          key: ${{ runner.os }}-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          key: Ubuntu-${{matrix.release_num}}-${{ secrets.CACHE_VERSION }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
       - name: ⬇️ Install dependencies
         run: |
@@ -340,16 +338,16 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build
-          max-size: 50M
+          key: appimage-${{ secrets.CACHE_VERSION }}-ccache-${{ github.run_id }}
+          restore-keys: appimage-${{ secrets.CACHE_VERSION }}-ccache
+          max-size: 1G
 
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build-appimage/CMakeCache.txt
-          key: ${{ runner.os }}-appimage-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          key: appimage-${{ secrets.CACHE_VERSION }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
       - name: ⬇️ Install dependencies
         run: |
@@ -436,16 +434,16 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-build
-          max-size: 50M
+          key: archlinux-${{ secrets.CACHE_VERSION }}-ccache-${{ github.run_id }}
+          restore-keys: archlinux-${{ secrets.CACHE_VERSION }}-ccache
+          max-size: 1G
 
       - name: 📜 Restore CMakeCache
         uses: actions/cache@v3
         with:
           path: |
             build/CMakeCache.txt
-          key: archlinux-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+          key: archlinux-${{ secrets.CACHE_VERSION }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
       # ArchLinux cmake build
       - name: 🛠️ Build
@@ -565,8 +563,8 @@ jobs:
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.5
         with:
-          key: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-          restore-keys: rpm-${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-build
+          key: ${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-rpm-${{ github.run_id }}
+          restore-keys: ${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-rpm
           max-size: 1G
 
       - name: 📜 Set version variable
@@ -609,7 +607,7 @@ jobs:
           path: /var/cache/mock
           key: ${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-mock-${{ github.run_id }}
           restore-keys: |
-            ${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-mock-
+            ${{ matrix.mock_release }}-${{ secrets.CACHE_VERSION }}-mock
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM
