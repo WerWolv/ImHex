@@ -15,6 +15,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isWritable()  const override { return !this->m_readOnly; }
         [[nodiscard]] bool isResizable() const override { return !this->m_readOnly; }
         [[nodiscard]] bool isSavable()   const override { return this->m_name.empty(); }
+        [[nodiscard]] bool isSavableAsRecent() const override { return false; }
 
         [[nodiscard]] bool open() override;
         void close() override { }
