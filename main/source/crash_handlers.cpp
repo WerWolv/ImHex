@@ -1,6 +1,8 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task.hpp>
 
+#include <init/tasks.hpp>
+
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/stacktrace.hpp>
@@ -25,8 +27,6 @@ namespace hex::crash {
 
     constexpr static auto CrashBackupFileName = "crash_backup.hexproj";
     constexpr static auto Signals = { SIGSEGV, SIGILL, SIGABRT, SIGFPE };
-
-    static std::terminate_handler originalHandler;
 
     void resetCrashHandlers();
     
@@ -68,13 +68,39 @@ namespace hex::crash {
         }
     }
 
-    void handleCrash(const std::string &msg, int signalNumber) {
+    extern "C" void triggerSafeShutdown(int signalNumber = 0) {
+        // Trigger an event so that plugins can handle crashes
+        EventManager::post<EventAbnormalTermination>(signalNumber);
+
+        // Run exit tasks
+        for (const auto &[name, task, async] : init::getExitTasks())
+            task();
+
+        // Terminate all asynchronous tasks
+        TaskManager::exit();
+
+        // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
+        #if defined(DEBUG)
+            #if defined(OS_WINDOWS)
+                __debugbreak();
+            #else
+                raise(SIGTRAP);
+            #endif
+        #else
+            if (signalNumber == 0)
+                std::abort();
+            else
+                std::exit(signalNumber);
+        #endif
+    }
+
+    void handleCrash(const std::string &msg) {
         crashCallback(msg);
 
         printStackTrace();
-        
-        // Trigger an event so that plugins can handle crashes
-        EventManager::post<EventAbnormalTermination>(signalNumber);
+
+        fflush(stdout);
+        fflush(stderr);
     }
 
     // Custom signal handler to print various information and a stacktrace when the application crashes
@@ -83,19 +109,31 @@ namespace hex::crash {
         resetCrashHandlers();
 
         // Actually handle the crash
-        handleCrash(hex::format("Received signal '{}' ({})", signalName, signalNumber), signalNumber);
+        handleCrash(hex::format("Received signal '{}' ({})", signalName, signalNumber));
 
         // Detect if the crash was due to an uncaught exception
         if (std::uncaught_exceptions() > 0) {
             log::fatal("Uncaught exception thrown!");
         }
 
-        // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
-        #if defined(DEBUG)
-            assert(!"Debug build, triggering breakpoint");
-        #else
-            std::exit(signalNumber);
-        #endif
+        triggerSafeShutdown(signalNumber);
+    }
+
+    static void uncaughtExceptionHandler() {
+        // Reset crash handlers, so we can't have a recursion if this code crashes
+        resetCrashHandlers();
+
+        handleCrash("Uncaught exception!");
+
+        try {
+            std::rethrow_exception(std::current_exception());
+        } catch (std::exception &ex) {
+            std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
+            log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
+
+        }
+
+        triggerSafeShutdown();
     }
 
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
@@ -115,31 +153,8 @@ namespace hex::crash {
             #undef HANDLE_SIGNAL
         }
 
-        // Reset uncaught C++ exception handler
-        {
-            originalHandler = std::set_terminate([]{
-                // Reset crash handlers, so we can't have a recursion if this code crashes
-                resetCrashHandlers();
-
-                handleCrash("Uncaught exception!", 0);
-
-                try {
-                    std::rethrow_exception(std::current_exception());
-                } catch (std::exception &ex) {
-                    std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
-                    log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
-
-                    // Reset signal handlers prior to calling the original handler, because it may raise a signal
-                    for (auto signal : Signals) std::signal(signal, SIG_DFL);
-
-                    #if defined(DEBUG)
-                        assert(!"Debug build, triggering breakpoint");
-                    #else
-                        std::exit(100);
-                    #endif
-                }
-            });
-        }
+        // Configure the uncaught exception handler
+        std::set_terminate(uncaughtExceptionHandler);
 
         // Save a backup project when the application crashes
         // We need to save the project no mater if it is dirty,
@@ -152,9 +167,11 @@ namespace hex::crash {
                 if (!imguiSettingsPath.empty())
                     ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
 
-                for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                    if (ProjectFile::store(path / CrashBackupFileName, false))
-                        break;
+                if (ImHexApi::Provider::isValid()) {
+                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                        if (ProjectFile::store(path / CrashBackupFileName, false))
+                            break;
+                    }
                 }
             });
         });
@@ -166,7 +183,7 @@ namespace hex::crash {
     }
 
     void resetCrashHandlers() {
-        std::set_terminate(originalHandler);
+        std::set_terminate(nullptr);
 
         for(auto signal : Signals) std::signal(signal, SIG_DFL);
     }
