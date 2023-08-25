@@ -84,16 +84,24 @@ namespace hex::crash {
 
         // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
         #if defined(DEBUG)
-            #if defined(OS_WINDOWS)
-                __debugbreak();
-            #else
-                raise(SIGTRAP);
-            #endif
+
+            if (signalNumber == 0) {
+                #if defined(OS_WINDOWS)
+                    __debugbreak();
+                #else
+                    raise(SIGTRAP);
+                #endif
+            } else {
+                std::exit(signalNumber);
+            }
+
         #else
+
             if (signalNumber == 0)
                 std::abort();
             else
                 std::exit(signalNumber);
+
         #endif
     }
 
@@ -147,14 +155,15 @@ namespace hex::crash {
     void setupCrashHandlers() {
          // Register signal handlers
         {
-            #define HANDLE_SIGNAL(name)             \
-            std::signal(name, [](int signalNumber){ \
-                signalHandler(signalNumber, #name); \
+            #define HANDLE_SIGNAL(name)              \
+            std::signal(name, [](int signalNumber) { \
+                signalHandler(signalNumber, #name);  \
             })
 
-            for (auto signal : Signals) {
-                HANDLE_SIGNAL(signal);
-            }
+            HANDLE_SIGNAL(SIGSEGV);
+            HANDLE_SIGNAL(SIGILL);
+            HANDLE_SIGNAL(SIGABRT);
+            HANDLE_SIGNAL(SIGFPE);
 
             #undef HANDLE_SIGNAL
         }
