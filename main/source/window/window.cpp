@@ -1034,7 +1034,7 @@ namespace hex {
             ImNodes::GetIO().LinkDetachWithModifierClick.Modifier = &always;
         }
 
-        io.UserData = new ImGui::ImHexCustomData();
+        io.UserData = &this->m_imguiCustomData;
 
         auto scale = ImHexApi::System::getGlobalScale();
         style.ScaleAllSizes(scale);
@@ -1128,8 +1128,6 @@ namespace hex {
     }
 
     void Window::exitImGui() {
-        delete static_cast<ImGui::ImHexCustomData *>(ImGui::GetIO().UserData);
-
         ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(s_imguiSettingsPath).c_str());
 
         ImGui_ImplOpenGL3_Shutdown();

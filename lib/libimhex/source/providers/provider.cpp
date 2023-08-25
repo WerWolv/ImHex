@@ -26,8 +26,6 @@ namespace hex::prv {
     }
 
     Provider::~Provider() {
-        for (auto overlay : this->m_overlays)
-            delete overlay;
         this->m_overlays.clear();
     }
 
@@ -163,15 +161,16 @@ namespace hex::prv {
 
 
     Overlay *Provider::newOverlay() {
-        return this->m_overlays.emplace_back(new Overlay());
+        return this->m_overlays.emplace_back().get();
     }
 
     void Provider::deleteOverlay(Overlay *overlay) {
-        this->m_overlays.remove(overlay);
-        delete overlay;
+        this->m_overlays.remove_if([overlay](const auto &item) {
+            return item.get() == overlay;
+        });
     }
 
-    const std::list<Overlay *> &Provider::getOverlays() {
+    const std::list<std::unique_ptr<Overlay>> &Provider::getOverlays() {
         return this->m_overlays;
     }
 
