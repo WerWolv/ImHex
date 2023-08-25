@@ -62,6 +62,12 @@ namespace hex::prv {
         [[nodiscard]] virtual bool isDumpable() const;
 
         /**
+         * @brief Controls whether this provider can be saved as a recent entry
+         *   Tipitcally used for providers that do not retain data, e.g. the memory provider
+         */
+        [[nodiscard]] virtual bool isSavableAsRecent() const { return true; }
+
+        /**
          * @brief Read data from this provider, applying overlays and patches
          * @param offset offset to start reading the data
          * @param buffer buffer to write read data
