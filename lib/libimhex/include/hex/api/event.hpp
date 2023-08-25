@@ -245,4 +245,10 @@ namespace hex {
      * @brief Send an event to the main Imhex instance
      */
     EVENT_DEF(SendMessageToMainInstance, const std::string, const std::vector<u8>&);
+
+    /**
+     * Move the data from all PerProvider instances from one provider to another.
+     * The 'from' provider should not have any per provider data after this, and should be immediately deleted
+    */
+    EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
 }
