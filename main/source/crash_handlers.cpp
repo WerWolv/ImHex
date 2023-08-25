@@ -37,7 +37,8 @@ namespace hex::crash {
 
     // Function that decides what should happen on a crash
     // (either sending a message or saving a crash file, depending on when the crash occurred)
-    static std::function<void(const std::string&)> crashCallback = sendNativeMessage;
+    using CrashCallback = void (*) (const std::string&);
+    static CrashCallback crashCallback = sendNativeMessage;
 
     static void saveCrashFile(const std::string& message) {
         log::fatal(message);
@@ -57,7 +58,8 @@ namespace hex::crash {
                 return;
             }
         }
-        log::warn("Could not write crash.json file !");
+
+        log::warn("Could not write crash.json file!");
     }
 
     static void printStackTrace() {
@@ -96,10 +98,13 @@ namespace hex::crash {
     }
 
     void handleCrash(const std::string &msg) {
+        // Call the crash callback
         crashCallback(msg);
 
+        // Print the stacktrace to the console or log file
         printStackTrace();
 
+        // Flush all streams
         fflush(stdout);
         fflush(stderr);
     }
@@ -126,6 +131,7 @@ namespace hex::crash {
 
         handleCrash("Uncaught exception!");
 
+        // Print the current exception info
         try {
             std::rethrow_exception(std::current_exception());
         } catch (std::exception &ex) {
@@ -146,10 +152,9 @@ namespace hex::crash {
                 signalHandler(signalNumber, #name); \
             })
 
-            HANDLE_SIGNAL(SIGSEGV);
-            HANDLE_SIGNAL(SIGILL);
-            HANDLE_SIGNAL(SIGABRT);
-            HANDLE_SIGNAL(SIGFPE);
+            for (auto signal : Signals) {
+                HANDLE_SIGNAL(signal);
+            }
 
             #undef HANDLE_SIGNAL
         }
@@ -164,10 +169,12 @@ namespace hex::crash {
         // Only do it when ImHex has finished its loading
         EventManager::subscribe<EventImHexStartupFinished>([] {
             EventManager::subscribe<EventAbnormalTermination>([](int) {
+                // Save ImGui settings
                 auto imguiSettingsPath = hex::getImGuiSettingsPath();
                 if (!imguiSettingsPath.empty())
                     ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
 
+                // Create crash backup if any providers are open
                 if (ImHexApi::Provider::isValid()) {
                     for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Config)) {
                         if (ProjectFile::store(path / CrashBackupFileName, false))
@@ -177,7 +184,7 @@ namespace hex::crash {
             });
         });
 
-        // change the crash callback when ImHex has finished startup
+        // Change the crash callback when ImHex has finished startup
         EventManager::subscribe<EventImHexStartupFinished>([]{
             crashCallback = saveCrashFile;
         });
@@ -186,6 +193,7 @@ namespace hex::crash {
     void resetCrashHandlers() {
         std::set_terminate(nullptr);
 
-        for(auto signal : Signals) std::signal(signal, SIG_DFL);
+        for (auto signal : Signals)
+            std::signal(signal, SIG_DFL);
     }
 }
