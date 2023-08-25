@@ -16,8 +16,9 @@
 
 #include <llvm/Demangle/Demangle.h>
 
-#include <exception>
 #include <csignal>
+#include <exception>
+#include <typeinfo>
 
 #if defined (OS_MACOS)
     #include <sys/utsname.h>
