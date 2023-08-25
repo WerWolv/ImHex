@@ -56,6 +56,7 @@ namespace hex::log {
 
             auto message = fmt::format(fmt::runtime(fmt), args...);
             fmt::print(dest, "{}\n", message);
+            fflush(dest);
 
             impl::getLogEntries().push_back({ IMHEX_PROJECT_NAME, level, std::move(message) });
         }
