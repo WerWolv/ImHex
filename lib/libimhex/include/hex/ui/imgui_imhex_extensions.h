@@ -48,6 +48,7 @@ namespace ImGui {
     public:
         Texture() = default;
         Texture(const ImU8 *buffer, int size, int width = 0, int height = 0);
+        Texture(std::span<const std::byte> bytes, int width = 0, int height = 0);
         explicit Texture(const char *path);
         Texture(unsigned int texture, int width, int height);
         Texture(const Texture&) = delete;
