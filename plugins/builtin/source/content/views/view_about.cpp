@@ -33,8 +33,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.menu.help.ask_for_help" }, 4000, CTRLCMD + SHIFT + Keys::D, [] {
             PopupDocsQuestion::open();
         });
-
-        this->m_logoTexture = ImGui::Texture(romfs::get("assets/common/logo.png").span());
     }
 
     static void link(const std::string &name, const std::string &author, const std::string &url) {
@@ -63,6 +61,9 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             // Draw the ImHex icon
+            if (!this->m_logoTexture.isValid())
+                this->m_logoTexture = ImGui::Texture(romfs::get("assets/common/logo.png").span());
+
             ImGui::Image(this->m_logoTexture, scaled({ 64, 64 }));
             ImGui::TableNextColumn();
 

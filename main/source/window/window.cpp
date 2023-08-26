@@ -85,8 +85,7 @@ namespace hex {
         this->setupNativeWindow();
         this->registerEventHandlers();
 
-        auto logoData      = romfs::get("logo.png");
-        this->m_logoTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(logoData.data()), logoData.size());
+        this->m_logoTexture = ImGui::Texture(romfs::get("logo.png").span());
 
         ContentRegistry::Settings::impl::store();
         EventManager::post<EventSettingsChanged>();

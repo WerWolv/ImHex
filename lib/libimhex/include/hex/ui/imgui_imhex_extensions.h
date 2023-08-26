@@ -2,8 +2,10 @@
 
 #include <hex.hpp>
 
+#include <cstddef>
 #include <functional>
 #include <string>
+#include <span>
 
 #include <imgui.h>
 #include <imgui_internal.h>
