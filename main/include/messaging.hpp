@@ -32,4 +32,5 @@ namespace hex::messaging {
      * @brief Internal method - called by platform-specific code when a event has been received
      */
     void messageReceived(const std::string &eventName, const std::vector<u8> &args);
+
 }

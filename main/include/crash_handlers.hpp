@@ -3,4 +3,5 @@
 namespace hex::crash {
 
     void setupCrashHandlers();
+
 }

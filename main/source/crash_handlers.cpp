@@ -43,7 +43,7 @@ namespace hex::crash {
     static void saveCrashFile(const std::string& message) {
         log::fatal(message);
 
-        nlohmann::json crashData{
+        nlohmann::json crashData {
             { "logFile", wolv::util::toUTF8String(hex::log::impl::getFile().getPath()) },
             { "project", wolv::util::toUTF8String(ProjectFile::getPath()) },
         };
