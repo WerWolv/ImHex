@@ -26,9 +26,11 @@ namespace hex {
             RISCV   = CS_ARCH_RISCV,
             MOS65XX = CS_ARCH_MOS65XX,
             BPF     = CS_ARCH_BPF,
+            SH      = CS_ARCH_SH,
+            TRICORE = CS_ARCH_TRICORE,
         #endif
 
-        MAX         = CS_ARCH_MAX,
+        MAX         = TRICORE,
         MIN         = ARM
     };
 
@@ -43,7 +45,7 @@ namespace hex {
         }
 
         constexpr static auto ArchitectureNames = [](){
-            std::array<const char *, static_cast<u32>(Architecture::MAX)> names = { };
+            std::array<const char *, static_cast<u32>(Architecture::MAX) + 1> names = { };
 
             names[CS_ARCH_ARM]          = "ARM";
             names[CS_ARCH_ARM64]        = "AArch64";
@@ -63,6 +65,8 @@ namespace hex {
                 names[CS_ARCH_RISCV]    = "RISC-V";
                 names[CS_ARCH_MOS65XX]  = "MOS Technology 65xx";
                 names[CS_ARCH_BPF]      = "Berkeley Packet Filter";
+                names[CS_ARCH_SH]       = "SuperH";
+                names[CS_ARCH_TRICORE]  = "Tricore";
             #endif
 
             return names;
@@ -75,7 +79,7 @@ namespace hex {
                 return supportedCount;
             }
 
-            for (supportedCount = static_cast<i32>(Architecture::MIN); supportedCount < static_cast<i32>(Architecture::MAX); supportedCount++) {
+            for (supportedCount = static_cast<i32>(Architecture::MIN); supportedCount < static_cast<i32>(Architecture::MAX) + 1; supportedCount++) {
                 if (!cs_support(supportedCount)) {
                     break;
                 }

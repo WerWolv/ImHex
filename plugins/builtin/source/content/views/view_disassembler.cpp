@@ -293,6 +293,60 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(mode);
                             }
                             break;
+                        case Architecture::SH:
+                            {
+                                static u32 selectionMode = 0;
+                                static bool fpu = false;
+                                static bool dsp = false;
+
+                                std::pair<const char*, cs_mode> modes[] = {
+                                        { "hex.builtin.view.disassembler.sh.sh2"_lang, CS_MODE_SH2 },
+                                        { "hex.builtin.view.disassembler.sh.sh2a"_lang, CS_MODE_SH2A },
+                                        { "hex.builtin.view.disassembler.sh.sh3"_lang, CS_MODE_SH3 },
+                                        { "hex.builtin.view.disassembler.sh.sh4"_lang, CS_MODE_SH4 },
+                                        { "hex.builtin.view.disassembler.sh.sh4a"_lang, CS_MODE_SH4A },
+                                };
+
+                                if (ImGui::BeginCombo("hex.builtin.view.disassembler.settings.mode"_lang, modes[selectionMode].first)) {
+                                    for (u32 i = 0; i < IM_ARRAYSIZE(modes); i++) {
+                                        if (ImGui::Selectable(modes[i].first))
+                                            selectionMode = i;
+                                    }
+                                    ImGui::EndCombo();
+                                }
+
+                                ImGui::Checkbox("hex.builtin.view.disassembler.sh.fpu"_lang, &fpu);
+                                ImGui::SameLine();
+                                ImGui::Checkbox("hex.builtin.view.disassembler.sh.dsp"_lang, &dsp);
+
+                                this->m_mode = cs_mode(modes[selectionMode].second | (fpu ? CS_MODE_SHFPU : cs_mode(0)) | (dsp ? CS_MODE_SHDSP : cs_mode(0)));
+                            }
+                            break;
+                        case Architecture::TRICORE:
+                            {
+                                static u32 selectionMode = 0;
+
+                                std::pair<const char*, cs_mode> modes[] = {
+                                        { "hex.builtin.view.disassembler.tricore.110"_lang, CS_MODE_TRICORE_110 },
+                                        { "hex.builtin.view.disassembler.tricore.120"_lang, CS_MODE_TRICORE_120 },
+                                        { "hex.builtin.view.disassembler.tricore.130"_lang, CS_MODE_TRICORE_130 },
+                                        { "hex.builtin.view.disassembler.tricore.131"_lang, CS_MODE_TRICORE_131 },
+                                        { "hex.builtin.view.disassembler.tricore.160"_lang, CS_MODE_TRICORE_160 },
+                                        { "hex.builtin.view.disassembler.tricore.161"_lang, CS_MODE_TRICORE_161 },
+                                        { "hex.builtin.view.disassembler.tricore.162"_lang, CS_MODE_TRICORE_162 },
+                                };
+
+                                if (ImGui::BeginCombo("hex.builtin.view.disassembler.settings.mode"_lang, modes[selectionMode].first)) {
+                                    for (u32 i = 0; i < IM_ARRAYSIZE(modes); i++) {
+                                        if (ImGui::Selectable(modes[i].first))
+                                            selectionMode = i;
+                                    }
+                                    ImGui::EndCombo();
+                                }
+
+                                this->m_mode = cs_mode(modes[selectionMode].second);
+                            }
+                            break;
                         case Architecture::WASM:
                         #endif
                         case Architecture::EVM:
@@ -300,7 +354,6 @@ namespace hex::plugin::builtin {
                         case Architecture::ARM64:
                         case Architecture::SYSZ:
                         case Architecture::XCORE:
-                        case Architecture::MAX:
                             this->m_mode = cs_mode(0);
                             break;
                     }
