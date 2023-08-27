@@ -4,6 +4,7 @@ pacman -S --needed --noconfirm  \
   mingw-w64-x86_64-gcc          \
   mingw-w64-x86_64-lld          \
   mingw-w64-x86_64-cmake        \
+  mingw-w64-x86_64-make         \
   mingw-w64-x86_64-ccache       \
   mingw-w64-x86_64-glfw         \
   mingw-w64-x86_64-file         \
