@@ -228,7 +228,7 @@ namespace hex::plugin::builtin {
         return {
             { "hex.builtin.provider.file.menu.open_folder"_lang, [this] { fs::openFolderWithSelectionExternal(this->m_path); } },
             { "hex.builtin.provider.file.menu.open_file"_lang,   [this] { fs::openFileExternal(this->m_path); } },
-            { "hex.builtin.provider.file.menu.into_memory",      [this] { this->convertToMemoryFile(); } }
+            { "hex.builtin.provider.file.menu.into_memory"_lang,      [this] { this->convertToMemoryFile(); } }
         };
     }
 
