@@ -62,6 +62,12 @@ namespace hex::prv {
         [[nodiscard]] virtual bool isDumpable() const;
 
         /**
+         * @brief Controls whether this provider can be saved as a recent entry
+         *   Tipitcally used for providers that do not retain data, e.g. the memory provider
+         */
+        [[nodiscard]] virtual bool isSavableAsRecent() const { return true; }
+
+        /**
          * @brief Read data from this provider, applying overlays and patches
          * @param offset offset to start reading the data
          * @param buffer buffer to write read data
@@ -109,7 +115,7 @@ namespace hex::prv {
 
         [[nodiscard]] Overlay *newOverlay();
         void deleteOverlay(Overlay *overlay);
-        [[nodiscard]] const std::list<Overlay *> &getOverlays();
+        [[nodiscard]] const std::list<std::unique_ptr<Overlay>> &getOverlays();
 
         [[nodiscard]] size_t getPageSize() const;
         void setPageSize(size_t pageSize);
@@ -184,7 +190,7 @@ namespace hex::prv {
 
         std::list<std::map<u64, u8>> m_patches;
         decltype(m_patches)::iterator m_currPatches;
-        std::list<Overlay *> m_overlays;
+        std::list<std::unique_ptr<Overlay>> m_overlays;
 
         u32 m_id;
 

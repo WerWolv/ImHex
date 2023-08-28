@@ -422,9 +422,7 @@ namespace hex::plugin::builtin {
 
         (void)EventManager::subscribe<RequestChangeTheme>([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
-                auto textureData = romfs::get(path);
-
-                return ImGui::Texture(reinterpret_cast<const ImU8*>(textureData.data()), textureData.size());
+                return ImGui::Texture(romfs::get(path).span());
             };
 
             ThemeManager::changeTheme(theme);

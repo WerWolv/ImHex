@@ -1,8 +1,7 @@
 #include "content/views/view_achievements.hpp"
 
 #include <hex/api/content_registry.hpp>
-
-#include <wolv/utils/guards.hpp>
+#include <hex/api/task.hpp>
 
 #include <cmath>
 

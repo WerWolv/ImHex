@@ -53,6 +53,8 @@ namespace hex::plugin::builtin {
                 if (!fileProvider->open())
                     ImHexApi::Provider::remove(newProvider);
                 else {
+                    EventManager::post<MovePerProviderData>(this, fileProvider);
+
                     fileProvider->markDirty(false);
                     EventManager::post<EventProviderOpened>(newProvider);
                     ImHexApi::Provider::remove(this, true);

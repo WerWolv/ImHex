@@ -113,10 +113,8 @@ namespace hex::init {
 
     bool WindowSplash::loop() {
         // Load splash screen image from romfs
-        auto splashBackground = romfs::get("splash_background.png");
-        auto splashText = romfs::get("splash_text.png");
-        ImGui::Texture splashBackgroundTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splashBackground.data()), splashBackground.size());
-        ImGui::Texture splashTextTexture = ImGui::Texture(reinterpret_cast<const ImU8 *>(splashText.data()), splashText.size());
+        ImGui::Texture splashBackgroundTexture = ImGui::Texture(romfs::get("splash_background.png").span());
+        ImGui::Texture splashTextTexture = ImGui::Texture(romfs::get("splash_text.png").span());
 
         // If the image couldn't be loaded correctly, something went wrong during the build process
         // Close the application since this would lead to errors later on anyway.

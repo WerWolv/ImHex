@@ -48,6 +48,8 @@ namespace ImGui {
         this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
 
+    Texture::Texture(std::span<const std::byte> bytes, int width, int height) : Texture(reinterpret_cast<const ImU8*>(bytes.data()), bytes.size(), width, height) { }
+
     Texture::Texture(const char *path) {
         unsigned char *imageData = stbi_load(path, &this->m_width, &this->m_height, nullptr, 4);
         if (imageData == nullptr)

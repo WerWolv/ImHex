@@ -281,8 +281,12 @@ namespace hex::plugin::builtin {
                         this->parsePattern(code, provider);
 
                         if (this->m_runAutomatically)
-                            this->evaluatePattern(code, provider);
+                            this->m_triggerAutoEvaluate = true;
                     });
+                }
+
+                if (this->m_triggerAutoEvaluate.exchange(false)) {
+                    this->evaluatePattern(this->m_textEditor.GetText(), provider);
                 }
             }
 

@@ -43,7 +43,9 @@ namespace hex {
                 }
             }
 
-            constexpr bool operator==(const EventId &rhs) const = default;
+            constexpr bool operator==(const EventId &other) const {
+                return this->m_hash == other.m_hash;
+            }
 
         private:
             u32 m_hash;
@@ -67,6 +69,9 @@ namespace hex {
             Callback m_func;
         };
 
+        template<typename T>
+        concept EventType = std::derived_from<T, EventBase>;
+
     }
 
 
@@ -84,7 +89,7 @@ namespace hex {
          * @param function Function to call when the event is posted
          * @return Token to unsubscribe from the event
          */
-        template<typename E>
+        template<impl::EventType E>
         static EventList::iterator subscribe(typename E::Callback function) {
             auto &events = getEvents();
             return events.insert(events.end(), std::make_pair(E::Id, std::make_unique<E>(function)));
@@ -96,7 +101,7 @@ namespace hex {
          * @param token Unique token to register the event to. Later required to unsubscribe again
          * @param function Function to call when the event is posted
          */
-        template<typename E>
+        template<impl::EventType E>
         static void subscribe(void *token, typename E::Callback function) {
             getTokenStore().insert(std::make_pair(token, subscribe<E>(function)));
         }
@@ -114,7 +119,7 @@ namespace hex {
          * @tparam E Event
          * @param token Token passed to subscribe
          */
-        template<typename E>
+        template<impl::EventType E>
         static void unsubscribe(void *token) noexcept {
             auto &tokenStore = getTokenStore();
             auto iter = std::find_if(tokenStore.begin(), tokenStore.end(), [&](auto &item) {
@@ -133,7 +138,7 @@ namespace hex {
          * @tparam E Event
          * @param args Arguments to pass to the event
          */
-        template<typename E>
+        template<impl::EventType E>
         static void post(auto &&...args) noexcept {
             for (const auto &[id, event] : getEvents()) {
                 if (id == E::Id) {
@@ -245,4 +250,10 @@ namespace hex {
      * @brief Send an event to the main Imhex instance
      */
     EVENT_DEF(SendMessageToMainInstance, const std::string, const std::vector<u8>&);
+
+    /**
+     * Move the data from all PerProvider instances from one provider to another.
+     * The 'from' provider should not have any per provider data after this, and should be immediately deleted
+    */
+    EVENT_DEF(MovePerProviderData, prv::Provider *, prv::Provider *);
 }

@@ -694,7 +694,12 @@ namespace hex::plugin::builtin::ui {
                     ImGui::TableNextColumn();
                     {
                         auto pageAddress = this->m_provider->getCurrentPageAddress();
-                        ImGui::TextFormatted("{0}: 0x{1:08X} - 0x{2:08X} ({1} - {2})", "hex.builtin.hex_editor.region"_lang, pageAddress, pageAddress + this->m_provider->getSize() - 1);
+                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.region"_lang);
+                        ImGui::SameLine();
+                        ImGui::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
+                                                       pageAddress,
+                                                       pageAddress + this->m_provider->getSize() - 1
+                       );
                     }
 
                     ImGui::TableNextRow();
@@ -709,22 +714,30 @@ namespace hex::plugin::builtin::ui {
                                                 selection.getStartAddress(),
                                                 selection.getEndAddress(),
                                                 selection.getSize(),
-                                                hex::toByteString(selection.getSize())
+                                                this->m_showHumanReadableUnits
+                                                    ? hex::toByteString(selection.getSize())
+                                                    : hex::format("{}", selection.getSize())
                             );
                         }
                         else
                             value = std::string("hex.builtin.hex_editor.selection.none"_lang);
 
-                        ImGui::TextFormatted("{0}: {1}", "hex.builtin.hex_editor.selection"_lang, value);
+                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.selection"_lang);
+                        ImGui::SameLine();
+                        ImGui::TextFormattedSelectable(value);
                     }
 
                     // Loaded data size
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{0}: 0x{1:08X} (0x{2:X} | {3})", "hex.builtin.hex_editor.data_size"_lang,
-                                             this->m_provider->getActualSize(),
-                                             this->m_provider->getActualSize(),
-                                             hex::toByteString(this->m_provider->getActualSize())
+                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.data_size"_lang);
+                        ImGui::SameLine();
+                        ImGui::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
+                                                       this->m_provider->getActualSize(),
+                                                       this->m_provider->getActualSize(),
+                                                       this->m_showHumanReadableUnits
+                                                           ? hex::toByteString(this->m_provider->getActualSize())
+                                                           : hex::format("{}", this->m_provider->getActualSize())
                         );
                     }
 
@@ -756,6 +769,12 @@ namespace hex::plugin::builtin::ui {
                     ImGui::EndDisabled();
 
                     ImGui::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
+
+                    ImGui::SameLine();
+
+                    // Human-readable units
+                    ImGui::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &this->m_showHumanReadableUnits);
+                    ImGui::InfoTooltip("hex.builtin.hex_editor.human_readable_units_footer"_lang);
 
                     ImGui::TableNextColumn();
 

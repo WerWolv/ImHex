@@ -63,6 +63,6 @@ template<>
 struct fmt::formatter<hex::LangEntry> : fmt::formatter<std::string_view> {
     template<typename FormatContext>
     auto format(const hex::LangEntry &entry, FormatContext &ctx) {
-        return fmt::formatter<std::string_view>::format(entry, ctx);
+        return fmt::formatter<std::string_view>::format(entry.get(), ctx);
     }
 };

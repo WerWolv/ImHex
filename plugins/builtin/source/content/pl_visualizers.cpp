@@ -527,10 +527,7 @@ namespace hex::plugin::builtin {
             static std::mutex addressMutex;
             static TaskHolder addressTask;
 
-            static auto mapTexture = [] {
-                auto image = romfs::get("assets/common/map.jpg");
-                return ImGui::Texture(reinterpret_cast<const ImU8 *>(image.data()), image.size());
-            }();
+            static auto mapTexture = ImGui::Texture(romfs::get("assets/common/map.jpg").span());
             static ImVec2 mapSize = scaled(ImVec2(500, 500 / mapTexture.getAspectRatio()));
 
             if (shouldReset) {

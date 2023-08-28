@@ -33,6 +33,9 @@ namespace hex::plugin::builtin::recent {
                 // do not save to recents if the provider is part of a project
                 if (ProjectFile::hasPath()) return;
 
+                // do not save to recents if the provider doesnt want it
+                if (!provider->isSavableAsRecent()) return;
+
                 // The recent provider is saved to every "recent" directory
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                     wolv::io::File recentFile(recentPath / fileName, wolv::io::File::Mode::Create);

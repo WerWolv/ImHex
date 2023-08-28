@@ -94,6 +94,7 @@
         "hex.builtin.hash.sha512": "SHA512",
         "hex.builtin.hex_editor.ascii_view": "Exibir coluna ASCII",
         "hex.builtin.hex_editor.custom_encoding_view": "",
+        "hex.builtin.hex_editor.human_readable_units_footer": "",
         "hex.builtin.hex_editor.data_size": "Tamanho dos Dados",
         "hex.builtin.hex_editor.gray_out_zero": "",
         "hex.builtin.hex_editor.no_bytes": "Nenhum Byte Disponivel",
