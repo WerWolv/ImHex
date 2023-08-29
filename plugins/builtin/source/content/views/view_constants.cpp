@@ -14,9 +14,6 @@ namespace hex::plugin::builtin {
 
     ViewConstants::ViewConstants() : View("hex.builtin.view.constants.name") {
         this->reloadConstants();
-
-        this->m_filter.reserve(0xFFFF);
-        std::memset(this->m_filter.data(), 0x00, this->m_filter.capacity());
     }
 
     void ViewConstants::reloadConstants() {
@@ -70,24 +67,21 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.constants.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             ImGui::PushItemWidth(-1);
-            ImGui::InputText(
-                "##search", this->m_filter.data(), this->m_filter.capacity(), ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) {
-                    auto &view = *static_cast<ViewConstants *>(data->UserData);
-                    view.m_filter.resize(data->BufTextLen);
 
-                    view.m_filterIndices.clear();
-                    for (u64 i = 0; i < view.m_constants.size(); i++) {
-                        auto &constant = view.m_constants[i];
-                        if (hex::containsIgnoreCase(constant.name, data->Buf) ||
-                            hex::containsIgnoreCase(constant.category, data->Buf) ||
-                            hex::containsIgnoreCase(constant.description, data->Buf) ||
-                            hex::containsIgnoreCase(constant.value, data->Buf))
-                            view.m_filterIndices.push_back(i);
-                    }
+            if (ImGui::InputTextIcon("##search", ICON_VS_FILTER, this->m_filter)) {
+                this->m_filterIndices.clear();
 
-                    return 0;
-                },
-                this);
+                // Filter the constants according to the entered value
+                for (u64 i = 0; i < this->m_constants.size(); i++) {
+                    auto &constant = this->m_constants[i];
+                    if (hex::containsIgnoreCase(constant.name, this->m_filter) ||
+                        hex::containsIgnoreCase(constant.category, this->m_filter) ||
+                        hex::containsIgnoreCase(constant.description, this->m_filter) ||
+                        hex::containsIgnoreCase(constant.value, this->m_filter))
+                        this->m_filterIndices.push_back(i);
+                }
+            }
+
             ImGui::PopItemWidth();
 
             if (ImGui::BeginTable("##strings", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
@@ -99,6 +93,7 @@ namespace hex::plugin::builtin {
 
                 auto sortSpecs = ImGui::TableGetSortSpecs();
 
+                // Handle table sorting
                 if (sortSpecs->SpecsDirty) {
                     std::sort(this->m_constants.begin(), this->m_constants.end(), [&sortSpecs](Constant &left, Constant &right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("category")) {
@@ -134,6 +129,7 @@ namespace hex::plugin::builtin {
                 ImGuiListClipper clipper;
                 clipper.Begin(this->m_filterIndices.size());
 
+                // Draw the constants table
                 while (clipper.Step()) {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         auto &constant = this->m_constants[this->m_filterIndices[i]];

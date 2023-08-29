@@ -3,11 +3,10 @@
 #include <hex/api/content_registry.hpp>
 #include <wolv/utils/guards.hpp>
 
-#include <cstring>
-
 namespace hex::plugin::builtin {
 
     ViewCommandPalette::ViewCommandPalette() : View("hex.builtin.view.command_palette.name") {
+        // Add global shortcut to open the command palette
         ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, [this] {
             EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
             this->m_commandPaletteOpen = true;
@@ -16,7 +15,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewCommandPalette::drawContent() {
-
+        // If the command palette is hidden, don't draw it
         if (!this->m_commandPaletteOpen) return;
 
         auto windowPos  = ImHexApi::System::getMainWindowPosition();
@@ -24,10 +23,12 @@ namespace hex::plugin::builtin {
 
         ImGui::SetNextWindowPos(ImVec2(windowPos.x + windowSize.x * 0.5F, windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
         if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang)) {
+            // Close the popup if the user presses ESC
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
 
 
+            // Draw the main input text box
             ImGui::PushItemWidth(-1);
             if (ImGui::InputText("##command_input", this->m_commandBuffer)) {
                 this->m_lastResults = this->getCommandResults(this->m_commandBuffer);
@@ -35,6 +36,7 @@ namespace hex::plugin::builtin {
             ImGui::PopItemWidth();
             ImGui::SetItemDefaultFocus();
 
+            // Handle giving back focus to the input text box
             if (this->m_focusInputTextBox) {
                 ImGui::SetKeyboardFocusHere(-1);
                 ImGui::ActivateItem(ImGui::GetID("##command_input"));
@@ -49,6 +51,7 @@ namespace hex::plugin::builtin {
                 this->m_focusInputTextBox = false;
             }
 
+            // Execute the currently selected command when pressing enter
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter, false) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter, false))) {
                 if (!this->m_lastResults.empty()) {
                     auto &[displayResult, matchedCommand, callback] = this->m_lastResults.front();
@@ -57,6 +60,7 @@ namespace hex::plugin::builtin {
                 ImGui::CloseCurrentPopup();
             }
 
+            // Focus the input text box when the popup is opened
             if (this->m_justOpened) {
                 focusInputTextBox();
                 this->m_lastResults = this->getCommandResults("");
@@ -66,11 +70,13 @@ namespace hex::plugin::builtin {
 
             ImGui::Separator();
 
+            // Draw the results
             if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), false, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened)) {
                 for (const auto &[displayResult, matchedCommand, callback] : this->m_lastResults) {;
                     ImGui::PushTabStop(true);
                     ON_SCOPE_EXIT { ImGui::PopTabStop(); };
 
+                    // Allow executing a command by clicking on it or selecting it with the keyboard and pressing enter
                     if (ImGui::Selectable(displayResult.c_str(), false, ImGuiSelectableFlags_DontClosePopups)) {
                         callback(matchedCommand);
                         break;
@@ -91,6 +97,11 @@ namespace hex::plugin::builtin {
 
     std::vector<ViewCommandPalette::CommandResult> ViewCommandPalette::getCommandResults(const std::string &input) {
         constexpr static auto MatchCommand = [](const std::string &currCommand, const std::string &commandToMatch) -> std::pair<MatchType, std::string_view> {
+            // Check if the current input matches a command
+            // NoMatch means that the input doesn't match the command
+            // PartialMatch means that the input partially matches the command but is not a perfect match
+            // PerfectMatch means that the input perfectly matches the command
+
             if (currCommand.empty()) {
                 return { MatchType::InfoMatch, "" };
             } else if (currCommand.size() <= commandToMatch.size()) {
@@ -108,6 +119,7 @@ namespace hex::plugin::builtin {
 
         std::vector<CommandResult> results;
 
+        // Loop over every registered command and check if the input matches it
         for (const auto &[type, command, unlocalizedDescription, displayCallback, executeCallback] : ContentRegistry::CommandPaletteCommands::impl::getEntries()) {
 
             auto AutoComplete = [this, currCommand = command](auto) {
@@ -117,6 +129,9 @@ namespace hex::plugin::builtin {
             };
 
             if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
+                // Handle symbol commands
+                // These commands are used by entering a single symbol and then any input
+
                 if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch)
                         results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
@@ -126,6 +141,9 @@ namespace hex::plugin::builtin {
                     }
                 }
             } else if (type == ContentRegistry::CommandPaletteCommands::Type::KeywordCommand) {
+                // Handle keyword commands
+                // These commands are used by entering a keyword followed by a space and then any input
+
                 if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch)
                         results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
@@ -137,6 +155,7 @@ namespace hex::plugin::builtin {
             }
         }
 
+        // WHen a command has been identified, show the query results for that command
         for (const auto &handler : ContentRegistry::CommandPaletteCommands::impl::getHandlers()) {
             const auto &[type, command, queryCallback, displayCallback] = handler;
 

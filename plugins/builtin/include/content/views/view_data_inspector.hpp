@@ -26,6 +26,10 @@ namespace hex::plugin::builtin {
             bool editing;
         };
 
+    private:
+        void updateInspectorRows();
+
+    private:
         bool m_shouldInvalidate = true;
 
         std::endian m_endian = std::endian::native;
