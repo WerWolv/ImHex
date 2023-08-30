@@ -1510,8 +1510,8 @@ namespace hex::plugin::builtin {
                 ImGui::Unindent(indent);
             };
 
-            const static auto FloatToBits = [specialNumbers,totalBitCount](IEEE754 &ieee754, std::string decimalFloatingPointNumberString
-            , std::string_view decimalStrView, std::from_chars_result &res) {
+            const static auto FloatToBits = [&specialNumbers](IEEE754 &ieee754, std::string decimalFloatingPointNumberString
+            , std::string_view decimalStrView, std::from_chars_result &res,int totalBitCount) {
 
                 // Always obtain sign first.
                 if (decimalFloatingPointNumberString[0] == '-') {
@@ -1811,7 +1811,7 @@ namespace hex::plugin::builtin {
                 // are detected by from_chars. You can also enter -0 or -inf.
                 std::from_chars_result res;
                 if (ImGui::InputText("##resultFloat", decimalFloatingPointNumberString, flags)) {
-                    FloatToBits(ieee754, decimalFloatingPointNumberString, decimalStrView, res);
+                    FloatToBits(ieee754, decimalFloatingPointNumberString, decimalStrView, res, totalBitCount);
                 }
                 ImGui::PopItemWidth();
 
