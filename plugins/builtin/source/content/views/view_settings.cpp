@@ -10,6 +10,7 @@
 namespace hex::plugin::builtin {
 
     ViewSettings::ViewSettings() : View("hex.builtin.view.settings.name") {
+        // Handle window open requests
         EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
             if (name == "Settings") {
                 TaskManager::doLater([this] {
@@ -19,8 +20,8 @@ namespace hex::plugin::builtin {
             }
         });
 
+        // Add the settings menu item to the Extras menu
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
-
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name"_lang }, 4000, Shortcut::None, [&, this] {
             TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
             this->getWindowOpenState() = true;
@@ -37,32 +38,49 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginTabBar("settings")) {
                 auto &entries = ContentRegistry::Settings::impl::getEntries();
 
-                std::vector<std::decay_t<decltype(entries)>::const_iterator> sortedCategories;
+                // Sort the categories by slot
+                auto sortedCategories = [&entries] {
+                    std::vector<std::decay_t<decltype(entries)>::const_iterator> sortedCategories;
 
-                for (auto it = entries.cbegin(); it != entries.cend(); it++) {
-                    sortedCategories.emplace_back(it);
-                }
+                    for (auto it = entries.cbegin(); it != entries.cend(); it++) {
+                        sortedCategories.emplace_back(it);
+                    }
 
-                std::sort(sortedCategories.begin(), sortedCategories.end(), [](auto &item0, auto &item1) {
-                    return item0->first.slot < item1->first.slot;
-                });
+                    std::sort(sortedCategories.begin(), sortedCategories.end(), [](auto &item0, auto &item1) {
+                        return item0->first.slot < item1->first.slot;
+                    });
 
+                    return sortedCategories;
+                }();
+
+                // Get the description of the current category
                 const auto &descriptions = ContentRegistry::Settings::impl::getCategoryDescriptions();
 
-                for (auto &it : sortedCategories) {
-                    auto &[category, settings] = *it;
+                // Draw all categories
+                for (auto &iter : sortedCategories) {
+                    auto &[category, settings] = *iter;
+
+                    // For each category, create a new tab
                     if (ImGui::BeginTabItem(LangEntry(category.name))) {
                         const std::string &categoryDesc = descriptions.contains(category.name) ? descriptions.at(category.name) : category.name;
 
-                        LangEntry descriptionEntry{categoryDesc};
+                        // Draw the category description
+                        LangEntry descriptionEntry(categoryDesc);
                         ImGui::TextFormattedWrapped("{}", descriptionEntry);
                         ImGui::InfoTooltip(descriptionEntry);
                         ImGui::Separator();
 
+                        // Draw all settings of that category
                         for (auto &[name, requiresRestart, callback] : settings) {
+                            // Get the current value of the setting
                             auto &setting = ContentRegistry::Settings::impl::getSettingsData()[category.name][name];
+
+                            // Execute the settings drawing callback
                             if (callback(LangEntry(name), setting)) {
-                                log::debug("Setting [{}]: {} was changed to {}", category.name, name, [&] -> std::string{
+                                // Handle a setting being changed
+
+                                // Print a debug message
+                                log::debug("Setting [{}]: {} was changed to {}", category.name, name, [&] -> std::string {
                                    if (setting.is_number())
                                        return std::to_string(setting.get<int>());
                                    else if (setting.is_string())
@@ -70,8 +88,11 @@ namespace hex::plugin::builtin {
                                    else
                                        return "";
                                 }());
+
+                                // Post an event
                                 EventManager::post<EventSettingsChanged>();
 
+                                // Request a restart if the setting requires it
                                 if (requiresRestart)
                                     this->m_restartRequested = true;
                             }
@@ -87,6 +108,7 @@ namespace hex::plugin::builtin {
         } else
             this->getWindowOpenState() = false;
 
+        // If a restart is required, ask the user if they want to restart
         if (!this->getWindowOpenState() && this->m_restartRequested) {
             PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang, ImHexApi::System::restartImHex, []{});
         }

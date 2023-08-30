@@ -810,4 +810,17 @@ namespace ImGui {
         return toggled;
     }
 
+    void TextOverlay(const char *text, ImVec2 pos) {
+        const auto textSize = ImGui::CalcTextSize(text);
+        const auto textPos  = pos - textSize / 2;
+        const auto margin   = ImGui::GetStyle().FramePadding * 2;
+        const auto textRect = ImRect(textPos - margin, textPos + textSize + margin);
+
+        auto drawList = ImGui::GetForegroundDrawList();
+
+        drawList->AddRectFilled(textRect.Min, textRect.Max, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
+        drawList->AddRect(textRect.Min, textRect.Max, ImGui::GetColorU32(ImGuiCol_Border));
+        drawList->AddText(textPos, ImGui::GetColorU32(ImGuiCol_Text), text);
+    }
+
 }

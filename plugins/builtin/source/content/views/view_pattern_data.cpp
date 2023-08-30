@@ -9,16 +9,18 @@
 namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
-
+        // Handle tree style setting changes
         EventManager::subscribe<EventSettingsChanged>(this, [this]() {
             auto patternStyle = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0);
             this->m_patternDrawer.setTreeStyle(static_cast<ui::PatternDrawer::TreeStyle>(patternStyle));
         });
 
+        // Reset the pattern drawer when the provider changes
         EventManager::subscribe<EventProviderChanged>(this, [this](auto, auto) {
             this->m_patternDrawer.reset();
         });
 
+        // Handle jumping to a pattern's location when it is clicked
         this->m_patternDrawer.setSelectionCallback([](Region region){ ImHexApi::HexEditor::setSelection(region); });
     }
 
@@ -29,13 +31,17 @@ namespace hex::plugin::builtin {
 
     void ViewPatternData::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+            // Draw the pattern tree if the provider is valid
             if (ImHexApi::Provider::isValid()) {
+                // Make sure the runtime has finished evaluating and produced valid patterns
                 auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                 if (!runtime.arePatternsValid()) {
+                    // If the runtime is still evaluating, reset the pattern drawer
                     this->m_shouldReset = true;
                     this->m_patternDrawer.reset();
-                    this->m_patternDrawer.draw({});
+                    this->m_patternDrawer.draw({ });
                 } else {
+                    // If the runtime has finished evaluating, draw the patterns
                     if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
                         auto runId = runtime.getRunId();
                         if (this->m_shouldReset || this->m_lastRunId != runId) {
