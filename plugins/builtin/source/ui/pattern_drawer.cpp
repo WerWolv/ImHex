@@ -37,6 +37,8 @@ namespace hex::plugin::builtin::ui {
 
     namespace {
 
+        std::mutex s_favoritesMutex;
+
         constexpr auto DisplayEndDefault = 50U;
 
         using namespace ::std::literals::string_literals;
@@ -1086,6 +1088,8 @@ namespace hex::plugin::builtin::ui {
             if (!patterns.empty() && !this->m_favoritesUpdateTask.isRunning()) {
                 this->m_favoritesUpdateTask = TaskManager::createTask("hex.builtin.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
                     size_t updatedFavorites = 0;
+
+                    std::scoped_lock lock(s_favoritesMutex);
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
                         traversePatternTree(*pattern, patternPath, [&, this](pl::ptrn::Pattern &pattern) {
@@ -1128,12 +1132,13 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableHeadersRow();
 
             this->m_showFavoriteStars = false;
-            if (!this->m_favorites.empty() && !patterns.empty()) {
-                ImGui::TableNextColumn();
-                ImGui::TableNextColumn();
-                ImGui::PushID(1);
-                if (ImGui::TreeNodeEx("hex.builtin.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
-                    if (!this->m_favoritesUpdateTask.isRunning()) {
+            if (!this->m_favoritesUpdateTask.isRunning()) {
+
+                if (!this->m_favorites.empty() && !patterns.empty()) {
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGui::PushID(1);
+                    if (ImGui::TreeNodeEx("hex.builtin.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
                         for (auto &[path, pattern] : this->m_favorites) {
                             if (pattern == nullptr)
                                 continue;
@@ -1142,27 +1147,22 @@ namespace hex::plugin::builtin::ui {
                             this->draw(*pattern);
                             ImGui::PopID();
                         }
-                    } else {
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        ImGui::TextSpinner("hex.builtin.pattern_drawer.updating"_lang);
+
+                        ImGui::TreePop();
                     }
-
-                    ImGui::TreePop();
+                    ImGui::PopID();
                 }
-                ImGui::PopID();
-            }
 
-            this->m_showFavoriteStars = true;
+                this->m_showFavoriteStars = true;
 
-            int id = 2;
-            for (auto &pattern : this->m_sortedPatterns) {
-                ImGui::PushID(id);
-                this->draw(*pattern);
-                ImGui::PopID();
+                int id = 2;
+                for (auto &pattern : this->m_sortedPatterns) {
+                    ImGui::PushID(id);
+                    this->draw(*pattern);
+                    ImGui::PopID();
 
-                id += 1;
+                    id += 1;
+                }
             }
 
             ImGui::EndTable();
@@ -1178,6 +1178,9 @@ namespace hex::plugin::builtin::ui {
         this->m_lastVisualizerError.clear();
         this->m_currPatternPath.clear();
 
+        this->m_favoritesUpdateTask.interrupt();
+
+        std::scoped_lock lock(s_favoritesMutex);
         for (auto &[path, pattern] : this->m_favorites)
             pattern = nullptr;
         this->m_favoritesUpdated = false;

@@ -948,7 +948,6 @@
         "hex.builtin.pattern_drawer.end": "结束",
         "hex.builtin.pattern_drawer.export": "导出为...",
         "hex.builtin.pattern_drawer.start": "开始",
-        "hex.builtin.pattern_drawer.updating": "正在更新收藏...",
         "hex.builtin.pl_visualizer.coordinates.latitude": "维度",
         "hex.builtin.pl_visualizer.coordinates.longitude": "精度",
         "hex.builtin.pl_visualizer.coordinates.query": "查找地址",

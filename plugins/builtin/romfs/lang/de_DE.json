@@ -947,7 +947,6 @@
         "hex.builtin.common.deny": "Verweigern",
         "hex.builtin.common.warning": "Warnung",
         "hex.builtin.pattern_drawer.export": "Pattern exportieren als...",
-        "hex.builtin.pattern_drawer.updating": "Favoriten werden aktualisiert...",
         "hex.builtin.pl_visualizer.coordinates.latitude": "Breitengrade",
         "hex.builtin.pl_visualizer.coordinates.longitude": "Längengrad",
         "hex.builtin.pl_visualizer.coordinates.query": "Adresse finden",
