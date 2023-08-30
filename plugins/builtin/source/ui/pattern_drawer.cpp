@@ -1083,15 +1083,21 @@ namespace hex::plugin::builtin::ui {
         if (!this->m_favoritesUpdated) {
             this->m_favoritesUpdated = true;
 
-            if (!this->m_favorites.empty() && !patterns.empty() && !this->m_favoritesUpdateTask.isRunning()) {
+            if (!patterns.empty() && !this->m_favoritesUpdateTask.isRunning()) {
                 this->m_favoritesUpdateTask = TaskManager::createTask("hex.builtin.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
                     size_t updatedFavorites = 0;
                     for (auto &pattern : patterns) {
+                        std::vector<std::string> patternPath;
+                        traversePatternTree(*pattern, patternPath, [&, this](pl::ptrn::Pattern &pattern) {
+                            if (pattern.hasAttribute("hex::favorite"))
+                                this->m_favorites.insert({ patternPath, pattern.clone() });
+                        });
+
                         if (updatedFavorites == this->m_favorites.size())
                             task.interrupt();
                         task.update();
 
-                        std::vector<std::string> patternPath;
+                        patternPath.clear();
                         traversePatternTree(*pattern, patternPath, [&, this](pl::ptrn::Pattern &pattern) {
                             for (auto &[path, favoritePattern] : this->m_favorites) {
                                 if (updatedFavorites == this->m_favorites.size())
@@ -1122,7 +1128,7 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableHeadersRow();
 
             this->m_showFavoriteStars = false;
-            if (!this->m_favorites.empty()) {
+            if (!this->m_favorites.empty() && !patterns.empty()) {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
                 ImGui::PushID(1);

@@ -18,6 +18,8 @@
 namespace hex::plugin::builtin {
 
     ViewBookmarks::ViewBookmarks() : View("hex.builtin.view.bookmarks.name") {
+
+        // Handle bookmark add requests sent by the API
         EventManager::subscribe<RequestAddBookmark>(this, [this](Region region, std::string name, std::string comment, color_t color) {
             if (name.empty()) {
                 name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
@@ -39,9 +41,11 @@ namespace hex::plugin::builtin {
             EventManager::post<EventBookmarkCreated>(this->m_bookmarks->back());
         });
 
+        // Draw hex editor background highlights for bookmarks
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
             hex::unused(data);
 
+            // Check all bookmarks for potential overlaps with the current address
             for (const auto &bookmark : *this->m_bookmarks) {
                 if (Region { address, size }.isWithin(bookmark.region))
                     return bookmark.color;
@@ -50,12 +54,17 @@ namespace hex::plugin::builtin {
             return std::nullopt;
         });
 
+        // Draw hex editor tooltips for bookmarks
         ImHexApi::HexEditor::addTooltipProvider([this](u64 address, const u8 *data, size_t size) {
             hex::unused(data);
+
+            // Loop over all bookmarks
             for (const auto &bookmark : *this->m_bookmarks) {
+                // Make sure the bookmark overlaps the currently hovered address
                 if (!Region { address, size }.isWithin(bookmark.region))
                     continue;
 
+                // Draw tooltip
                 ImGui::BeginTooltip();
 
                 ImGui::PushID(&bookmark);
@@ -64,10 +73,12 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     {
+                        // Draw bookmark header
                         ImGui::ColorButton("##color", ImColor(bookmark.color));
                         ImGui::SameLine(0, 10);
                         ImGui::TextFormatted("{} ", bookmark.name);
 
+                        // Draw extra information table when holding down shift
                         if (ImGui::GetIO().KeyShift) {
                             ImGui::Indent();
                             if (ImGui::BeginTable("##extra_info", 2, ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
@@ -75,12 +86,14 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
 
+                                // Draw region
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
                                 ImGui::TableNextColumn();
                                 ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
+                                // Draw comment if it's not empty
                                 if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
@@ -109,6 +122,7 @@ namespace hex::plugin::builtin {
             }
         });
 
+        // Handle saving / restoring of bookmarks in projects
         ProjectFile::registerPerProviderHandler({
             .basePath = "bookmarks.json",
             .required = false,
@@ -140,14 +154,15 @@ namespace hex::plugin::builtin {
     }
 
     static void drawColorPopup(ImColor &color) {
-        static auto Palette = []{
+        // Generate color picker palette
+        static auto Palette = [] {
             constexpr static auto ColorCount = 36;
             std::array<ImColor, ColorCount> result = { 0 };
 
             u32 counter = 0;
             for (auto &color : result) {
                 ImGui::ColorConvertHSVtoRGB(float(counter) / float(ColorCount - 1), 0.8F, 0.8F, color.Value.x, color.Value.y, color.Value.z);
-                color.Value.w = 0.7f;
+                color.Value.w = 0.7F;
 
                 counter++;
             }
@@ -155,15 +170,17 @@ namespace hex::plugin::builtin {
             return result;
         }();
 
+        // Draw default color picker
         ImGui::ColorPicker4("##picker", (float*)&color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview);
 
         ImGui::Separator();
 
+        // Draw color palette
         int id = 0;
         for (const auto &paletteColor : Palette) {
             ImGui::PushID(id);
             if ((id % 9) != 0)
-                ImGui::SameLine(0.0f, ImGui::GetStyle().ItemSpacing.y);
+                ImGui::SameLine(0.0F, ImGui::GetStyle().ItemSpacing.y);
 
             constexpr static ImGuiColorEditFlags flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoDragDrop;
             if (ImGui::ColorButton("##palette", paletteColor.Value, flags, ImVec2(20, 20))) {
@@ -179,6 +196,7 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
             auto provider = ImHexApi::Provider::get();
 
+            // Draw filter input
             ImGui::PushItemWidth(-1);
             ImGui::InputTextIcon("##filter", ICON_VS_FILTER, this->m_currFilter);
             ImGui::PopItemWidth();
@@ -192,9 +210,12 @@ namespace hex::plugin::builtin {
 
                 int id = 1;
                 auto bookmarkToRemove = this->m_bookmarks->end();
+
+                // Draw all bookmarks
                 for (auto iter = this->m_bookmarks->begin(); iter != this->m_bookmarks->end(); iter++) {
                     auto &[region, name, comment, color, locked] = *iter;
 
+                    // Apply filter
                     if (!this->m_currFilter.empty()) {
                         if (!name.contains(this->m_currFilter) && !comment.contains(this->m_currFilter))
                             continue;
@@ -204,6 +225,7 @@ namespace hex::plugin::builtin {
                     auto hoverColor  = ImColor(color);
                     hoverColor.Value.w *= 1.3F;
 
+                    // Draw bookmark header in the same color as the bookmark was set to
                     ImGui::PushID(id);
                     ImGui::PushStyleColor(ImGuiCol_Header, color);
                     ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
@@ -217,14 +239,19 @@ namespace hex::plugin::builtin {
 
                     bool open = true;
                     if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), locked ? nullptr : &open)) {
+                        // Handle dragging bookmarks up and down when they're collapsed
+
+                        // Set the currently held bookmark as the one being dragged
                         if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == this->m_bookmarks->end())
                             this->m_dragStartIterator = iter;
 
+                        // When the mouse moved away from the current bookmark, swap the dragged bookmark with the current one
                         if (ImGui::IsItemHovered() && this->m_dragStartIterator != this->m_bookmarks->end()) {
                             std::iter_swap(iter, this->m_dragStartIterator);
                             this->m_dragStartIterator = iter;
                         }
 
+                        // When the mouse is released, reset the dragged bookmark
                         if (!ImGui::IsMouseDown(0))
                             this->m_dragStartIterator = this->m_bookmarks->end();
                     } else {
@@ -237,10 +264,12 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
                             ImGui::TableNextColumn();
 
+                            // Draw bookmark name
                             ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.name"_lang);
                             ImGui::TableNextColumn();
                             ImGui::TableNextColumn();
 
+                            // Draw lock/unlock button
                             if (locked) {
                                 if (ImGui::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
                                 ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
@@ -251,12 +280,14 @@ namespace hex::plugin::builtin {
 
                             ImGui::SameLine();
 
+                            // Draw color button
                             if (ImGui::ColorButton("hex.builtin.view.bookmarks.header.color"_lang, headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha)) {
                                 if (!locked)
                                     ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
                             }
                             ImGui::InfoTooltip("hex.builtin.view.bookmarks.header.color"_lang);
 
+                            // Draw color picker
                             if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
                                 drawColorPopup(headerColor);
                                 color = headerColor;
@@ -265,6 +296,7 @@ namespace hex::plugin::builtin {
 
                             ImGui::SameLine();
 
+                            // Draw bookmark name if the bookmark is locked or an input text box if it's unlocked
                             if (locked)
                                 ImGui::TextUnformatted(name.data());
                             else {
@@ -280,11 +312,14 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
                             ImGui::TableNextColumn();
 
+                            // Draw jump to address button
                             if (ImGui::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                                 ImHexApi::HexEditor::setSelection(region);
                             ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
 
                             ImGui::SameLine();
+
+                            // Draw open in new view button
                             if (ImGui::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                 TaskManager::doLater([region, provider]{
                                     auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
@@ -300,11 +335,14 @@ namespace hex::plugin::builtin {
                             ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
 
                             ImGui::SameLine();
+
+                            // Draw the address of the bookmark
                             ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.getStartAddress(), region.getEndAddress());
 
                             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
                             ImGui::TableNextColumn();
 
+                            // Draw size of the bookmark
                             ImGui::TextUnformatted("hex.builtin.common.size"_lang);
                             ImGui::TableNextColumn();
                             ImGui::TableNextColumn();
@@ -313,6 +351,7 @@ namespace hex::plugin::builtin {
                             ImGui::EndTable();
                         }
 
+                        // Draw comment if the bookmark is locked or an input text box if it's unlocked
                         if (locked) {
                             if (!comment.empty()) {
                                 ImGui::Header("hex.builtin.view.bookmarks.header.comment"_lang);
@@ -327,10 +366,12 @@ namespace hex::plugin::builtin {
                         ImGui::NewLine();
                     }
 
+                    // Mark a bookmark for removal when the user clicks the remove button
                     if (!open)
                         bookmarkToRemove = iter;
                 }
 
+                // Remove the bookmark that was marked for removal
                 if (bookmarkToRemove != this->m_bookmarks->end()) {
                     this->m_bookmarks->erase(bookmarkToRemove);
                 }
