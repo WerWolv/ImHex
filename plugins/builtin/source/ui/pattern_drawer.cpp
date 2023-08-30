@@ -1167,6 +1167,10 @@ namespace hex::plugin::builtin::ui {
 
             ImGui::EndTable();
         }
+
+        if (this->m_favoritesUpdateTask.isRunning()) {
+            ImGui::TextOverlay("hex.builtin.pattern_drawer.updating"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2);
+        }
     }
 
     void PatternDrawer::reset() {

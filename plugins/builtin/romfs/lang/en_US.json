@@ -436,6 +436,7 @@
         "hex.builtin.pattern_drawer.tree_style.auto_expanded": "Auto Expanded Tree",
         "hex.builtin.pattern_drawer.tree_style.flattened": "Flattened",
         "hex.builtin.pattern_drawer.type": "Type",
+        "hex.builtin.pattern_drawer.updating": "Updating patterns...",
         "hex.builtin.pattern_drawer.value": "Value",
         "hex.builtin.pattern_drawer.var_name": "Name",
         "hex.builtin.pattern_drawer.visualizer.unknown": "Unknown visualizer",
