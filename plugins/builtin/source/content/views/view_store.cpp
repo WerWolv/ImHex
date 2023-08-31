@@ -260,11 +260,18 @@ namespace hex::plugin::builtin {
 
     bool ViewStore::download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
         bool downloading = false;
-        for (const auto &path : fs::getDefaultPaths(pathType)) {
-            if (!fs::isPathWritable(path))
+        for (const auto &folderPath : fs::getDefaultPaths(pathType)) {
+            if (!fs::isPathWritable(folderPath))
                 continue;
 
-            auto fullPath = path / std::fs::path(fileName);
+            // verify that we write the file to the right folder
+            // this is to prevent the filename from having elements like ../
+            auto fullPath = std::fs::weakly_canonical(folderPath / std::fs::path(fileName));
+            auto [folderIter, pathIter] = std::mismatch(folderPath.begin(), folderPath.end(), fullPath.begin());
+            if(folderIter != folderPath.end()) {
+                log::warn("The destination file name '{}' is invalid", fileName);
+                return false;
+            }
 
             if (!update || wolv::io::fs::exists(fullPath)) {
                 downloading          = true;
