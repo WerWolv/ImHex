@@ -284,8 +284,12 @@ namespace hex::plugin::builtin {
         return true;
     }
 
+    /**
+     * @brief Remove an entry from the content store from the filesystem
+     * @return true if the entry was removed, false if nothing was removed (not found)
+     */
     bool ViewStore::remove(fs::ImHexPath pathType, const std::string &fileName) {
-        bool removed = true;
+        bool removed = false;
         for (const auto &path : fs::getDefaultPaths(pathType)) {
             const auto filePath = path / fileName;
             const auto folderPath = (path / std::fs::path(fileName).stem());
@@ -293,7 +297,7 @@ namespace hex::plugin::builtin {
             wolv::io::fs::remove(filePath);
             wolv::io::fs::removeAll(folderPath);
 
-            removed = removed && !wolv::io::fs::exists(filePath) && !wolv::io::fs::exists(folderPath);
+            removed = removed || (!wolv::io::fs::exists(filePath) && !wolv::io::fs::exists(folderPath));
             EventManager::post<EventStoreContentRemoved>(filePath);
         }
 
