@@ -79,9 +79,7 @@ namespace hex::plugin::builtin {
                         ImGui::EndTooltip();
                     }
                     ImGui::TableNextColumn();
-                    for (auto &author : entry.authors) {
-                        ImGui::TextUnformatted(author.c_str());
-                    }
+                    ImGui::TextUnformatted(wolv::util::combineStrings(entry.authors, ", ").c_str());
                     ImGui::TableNextColumn();
 
                     const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
