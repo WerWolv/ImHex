@@ -71,6 +71,13 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted(entry.name.c_str());
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(entry.description.c_str());
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::BeginTooltip();
+                        ImGui::PushTextWrapPos(500);
+                        ImGui::TextUnformatted(entry.description.c_str());
+                        ImGui::PopTextWrapPos();
+                        ImGui::EndTooltip();
+                    }
                     ImGui::TableNextColumn();
                     for (auto &author : entry.authors) {
                         ImGui::TextUnformatted(author.c_str());
