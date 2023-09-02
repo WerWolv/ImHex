@@ -75,8 +75,6 @@ namespace hex {
             this->m_url = std::move(other.m_url);
             this->m_headers = std::move(other.m_headers);
             this->m_body = std::move(other.m_body);
-
-            this->m_caCert = std::move(other.m_caCert);
         }
 
         HttpRequest& operator=(HttpRequest &&other) noexcept {
@@ -87,8 +85,6 @@ namespace hex {
             this->m_url = std::move(other.m_url);
             this->m_headers = std::move(other.m_headers);
             this->m_body = std::move(other.m_body);
-
-            this->m_caCert = std::move(other.m_caCert);
 
             return *this;
         }
@@ -312,8 +308,6 @@ namespace hex {
 
         std::atomic<float> m_progress = 0.0F;
         std::atomic<bool> m_canceled = false;
-
-        [[maybe_unused]] std::unique_ptr<mbedtls_x509_crt> m_caCert;
     };
 
 }
