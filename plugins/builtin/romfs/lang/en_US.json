@@ -962,6 +962,7 @@
         "hex.builtin.view.store.reload": "Reload",
         "hex.builtin.view.store.remove": "Remove",
         "hex.builtin.view.store.row.description": "Description",
+        "hex.builtin.view.store.row.authors": "Authors",
         "hex.builtin.view.store.row.name": "Name",
         "hex.builtin.view.store.tab.constants": "Constants",
         "hex.builtin.view.store.tab.encodings": "Encodings",

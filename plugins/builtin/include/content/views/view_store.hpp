@@ -24,6 +24,7 @@ namespace hex::plugin::builtin {
     struct StoreEntry {
         std::string name;
         std::string description;
+        std::vector<std::string> authors;
         std::string fileName;
         std::string link;
         std::string hash;

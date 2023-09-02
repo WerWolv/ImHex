@@ -55,10 +55,11 @@ namespace hex::plugin::builtin {
 
     void ViewStore::drawTab(hex::plugin::builtin::StoreCategory &category) {
         if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
-            if (ImGui::BeginTable("##pattern_language", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
+            if (ImGui::BeginTable("##pattern_language", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);
                 ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_None);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.authors"_lang, ImGuiTableColumnFlags_WidthFixed);
                 ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 
                 ImGui::TableHeadersRow();
@@ -70,6 +71,16 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted(entry.name.c_str());
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(entry.description.c_str());
+                    if (ImGui::IsItemHovered()) {
+                        ImGui::BeginTooltip();
+                        ImGui::PushTextWrapPos(500);
+                        ImGui::TextUnformatted(entry.description.c_str());
+                        ImGui::PopTextWrapPos();
+                        ImGui::EndTooltip();
+                    }
+                    ImGui::TableNextColumn();
+                    // the space makes a padding in the UI
+                    ImGui::Text("%s ", wolv::util::combineStrings(entry.authors, ", ").c_str());
                     ImGui::TableNextColumn();
 
                     const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
@@ -196,10 +207,10 @@ namespace hex::plugin::builtin {
                     for (auto &entry : storeJson[category.requestName]) {
 
                         // Check if entry is valid
-                        if (entry.contains("name") && entry.contains("desc") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
+                        if (entry.contains("name") && entry.contains("desc") && entry.contains("authors") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
 
                             // Parse entry
-                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false };
+                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["authors"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false };
 
                             // Check if file is installed already or has an update available
                             for (const auto &folder : fs::getDefaultPaths(category.path)) {
