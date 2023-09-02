@@ -71,6 +71,7 @@ namespace hex::plugin::builtin::ui {
 
     HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
         this->m_currDataVisualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit");
+        this->m_bytesPerRow = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", this->m_bytesPerRow);
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             this->m_selectionColor = ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080);
@@ -827,6 +828,8 @@ namespace hex::plugin::builtin::ui {
                         if (ImGui::SliderInt("##row_size", &bytesPerRow, 1, 32 / this->getBytesPerCell(), hex::format("{}", bytesPerRow * this->getBytesPerCell()).c_str())) {
                             this->m_bytesPerRow = bytesPerRow * this->getBytesPerCell();
                             this->m_encodingLineStartAddresses.clear();
+
+                            ContentRegistry::Settings::write("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", this->m_bytesPerRow);
                         }
                         ImGui::PopItemWidth();
                     }
