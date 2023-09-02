@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);
                 ImGui::TableSetupColumn("hex.builtin.view.store.row.description"_lang, ImGuiTableColumnFlags_None);
-                ImGui::TableSetupColumn("hex.builtin.view.store.row.authors"_lang, ImGuiTableColumnFlags_None);
+                ImGui::TableSetupColumn("hex.builtin.view.store.row.authors"_lang, ImGuiTableColumnFlags_WidthFixed);
                 ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 
                 ImGui::TableHeadersRow();
