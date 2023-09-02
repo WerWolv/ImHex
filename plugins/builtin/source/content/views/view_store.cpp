@@ -79,7 +79,8 @@ namespace hex::plugin::builtin {
                         ImGui::EndTooltip();
                     }
                     ImGui::TableNextColumn();
-                    ImGui::TextUnformatted(wolv::util::combineStrings(entry.authors, ", ").c_str());
+                    // the space makes a padding in the UI
+                    ImGui::Text("%s ", wolv::util::combineStrings(entry.authors, ", ").c_str());
                     ImGui::TableNextColumn();
 
                     const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
