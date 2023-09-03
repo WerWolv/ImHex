@@ -13,7 +13,7 @@
     #include <shlobj.h>
 #elif defined(OS_LINUX)
     #include <xdg.hpp>
-    #include <linux/limits.h>
+    #include <limits.h>
 #endif
 
 #include <algorithm>

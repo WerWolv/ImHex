@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <numbers>
 
 namespace hex {
 
