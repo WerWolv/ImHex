@@ -72,7 +72,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            // Draw clickable link to the current commit
+            // Draw a clickable link to the current commit
             if (ImGui::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
                 hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
 
@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            //Draw clickable link to the GitHub repository
+            // Draw a clickable link to the GitHub repository
             if (ImGui::Hyperlink("WerWolv/ImHex"))
                 hex::openWebpage("https://github.com/WerWolv/ImHex");
 
@@ -97,7 +97,7 @@ namespace hex::plugin::builtin {
         ImGui::TextUnformatted("hex.builtin.view.help.about.donations"_lang);
         ImGui::Separator();
 
-        constexpr const char *Links[] = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };
+        constexpr std::array Links = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };
 
         ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
 
@@ -209,7 +209,7 @@ namespace hex::plugin::builtin {
                             fs::openFolderExternal(path);
                         }
                     } else {
-                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path).c_str());
+                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path));
                     }
                 }
             }
@@ -225,7 +225,7 @@ namespace hex::plugin::builtin {
     void ViewAbout::drawAboutPopup() {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.help.about.name").c_str(), &this->m_aboutWindowOpen)) {
 
-            // Allow window to be closed by pressing ESC
+            // Allow the window to be closed by pressing ESC
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
 
@@ -240,7 +240,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                // Draw contributors tab
+                // Draw contributor tab
                 if (ImGui::BeginTabItem("hex.builtin.view.help.about.contributor"_lang)) {
                     ImGui::NewLine();
                     if (ImGui::BeginChild(1)) {

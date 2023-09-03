@@ -526,6 +526,9 @@ namespace hex::plugin::builtin {
                         dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
                         dataProvider->setReadOnly(true);
 
+                        if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && selection->provider != ImHexApi::Provider::get())
+                            EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion { { 0x00, 0x00 }, nullptr });
+
                         auto hexEditor = auto(this->m_sectionHexEditor);
 
                         hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
@@ -790,7 +793,11 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             continue;
 
-                        runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
+                        try {
+                            runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
+                        } catch (pl::core::err::PreprocessorError::Exception &e) {
+                            log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), e.what());
+                        }
 
                         if (foundCorrectType)
                             this->m_possiblePatternFiles.get(provider).push_back(entry.path());

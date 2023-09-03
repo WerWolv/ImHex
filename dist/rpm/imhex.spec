@@ -75,7 +75,6 @@ CXXFLAGS+=" -std=gnu++2b"
  -D IMHEX_OFFLINE_BUILD=ON               \
  -D USE_SYSTEM_NLOHMANN_JSON=ON          \
  -D USE_SYSTEM_FMT=ON                    \
- -D USE_SYSTEM_LLVM=ON                   \
  -D USE_SYSTEM_YARA=ON                   \
  -D USE_SYSTEM_NFD=ON                    \
  -D IMHEX_USE_GTK_FILE_PICKER=ON         \

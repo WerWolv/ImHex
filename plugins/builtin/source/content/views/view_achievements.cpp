@@ -440,11 +440,11 @@ namespace hex::plugin::builtin {
             this->m_achievementUnlockQueueTimer = -1.0F;
             this->m_currAchievement = nullptr;
 
-            // If there's more achievements to draw, draw the next one
+            // If there are more achievements to draw, draw the next one
             if (!this->m_achievementUnlockQueue.empty()) {
                 this->m_currAchievement = this->m_achievementUnlockQueue.front();
                 this->m_achievementUnlockQueue.pop_front();
-                this->m_achievementUnlockQueueTimer = 2.5F;
+                this->m_achievementUnlockQueueTimer = 5.0F;
             }
         }
     }
