@@ -110,6 +110,19 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
         }
 
+        void addf(const std::string &unlocalizedCategory, const std::string &unlocalizedName, float defaultValue, const impl::Callback &callback, bool requiresRestart) {
+            log::debug("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+
+            impl::getCategoryEntry(unlocalizedCategory)->second.emplace_back(impl::Entry { unlocalizedName, requiresRestart, callback });
+
+            auto &json = impl::getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number_float())
+                json[unlocalizedCategory][unlocalizedName] = float(defaultValue);
+        }
+
         void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const impl::Callback &callback, bool requiresRestart) {
             log::debug("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
 
@@ -149,6 +162,15 @@ namespace hex {
             json[unlocalizedCategory][unlocalizedName] = value;
         }
 
+        void writef(const std::string &unlocalizedCategory, const std::string &unlocalizedName, float value) {
+            auto &json = impl::getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                json[unlocalizedCategory] = nlohmann::json::object();
+
+            json[unlocalizedCategory][unlocalizedName] = value;
+        }
+
         void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value) {
             auto &json = impl::getSettingsData();
 
@@ -180,6 +202,20 @@ namespace hex {
                 json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
             return json[unlocalizedCategory][unlocalizedName].get<i64>();
+        }
+
+        float readf(const std::string &unlocalizedCategory, const std::string &unlocalizedName, float defaultValue) {
+            auto &json = impl::getSettingsData();
+
+            if (!json.contains(unlocalizedCategory))
+                return defaultValue;
+            if (!json[unlocalizedCategory].contains(unlocalizedName))
+                return defaultValue;
+
+            if (!json[unlocalizedCategory][unlocalizedName].is_number_float())
+                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+
+            return json[unlocalizedCategory][unlocalizedName].get<float>();
         }
 
         std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue) {
@@ -315,20 +351,20 @@ namespace hex {
             log::debug("Registered new pattern language function: {}", getFunctionName(ns, name));
 
             impl::getFunctions().push_back({
-                ns, name,
-                parameterCount, func,
-                false
-            });
+                                                   ns, name,
+                                                   parameterCount, func,
+                                                   false
+                                           });
         }
 
         void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func) {
             log::debug("Registered new dangerous pattern language function: {}", getFunctionName(ns, name));
 
             impl::getFunctions().push_back({
-                ns, name,
-                parameterCount, func,
-                true
-            });
+                                                   ns, name,
+                                                   parameterCount, func,
+                                                   true
+                                           });
         }
 
 
@@ -549,8 +585,8 @@ namespace hex {
             log::debug("Added new menu item to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
 
             impl::getMenuItems().insert({
-                priority, { unlocalizedMainMenuNames, shortcut, function, enabledCallback }
-            });
+                                                priority, { unlocalizedMainMenuNames, shortcut, function, enabledCallback }
+                                        });
 
             if (shortcut.isLocal() && view != nullptr)
                 ShortcutManager::addShortcut(view, shortcut, function);
@@ -563,15 +599,15 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::getMenuItems().insert({
-                priority, { unlocalizedMainMenuNames, {}, function, enabledCallback }
-            });
+                                                priority, { unlocalizedMainMenuNames, {}, function, enabledCallback }
+                                        });
         }
 
         void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::getMenuItems().insert({
-                priority, { unlocalizedMainMenuNames, {}, []{}, []{ return true; } }
-            });
+                                                priority, { unlocalizedMainMenuNames, {}, []{}, []{ return true; } }
+                                        });
         }
 
         void addWelcomeScreenEntry(const impl::DrawCallback &function) {
@@ -713,10 +749,10 @@ namespace hex {
             };
 
             UserData userData = {
-                .data = data,
-                .maxChars = this->getMaxCharsPerCell(),
+                    .data = data,
+                    .maxChars = this->getMaxCharsPerCell(),
 
-                .editingDone = false
+                    .editingDone = false
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
@@ -835,13 +871,13 @@ namespace hex {
             log::debug("Registered new background service: {}", unlocalizedName);
 
             impl::getServices().push_back(impl::Service {
-                unlocalizedName,
-                std::jthread([callback](const std::stop_token &stopToken){
-                    while (!stopToken.stop_requested()) {
-                        callback();
-                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                    }
-                })
+                    unlocalizedName,
+                    std::jthread([callback](const std::stop_token &stopToken){
+                        while (!stopToken.stop_requested()) {
+                            callback();
+                            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                        }
+                    })
             });
         }
 

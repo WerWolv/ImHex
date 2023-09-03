@@ -166,24 +166,18 @@ namespace hex::plugin::builtin {
             return changed;
         });
 
-        ContentRegistry::Settings::add(
-            "hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0, [](auto name, nlohmann::json &setting) {
-                static int selection = static_cast<int>(setting);
+        ContentRegistry::Settings::addf(
+                "hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 1.0F, [](auto name, nlohmann::json &setting) {
+                    static float scaling = 1.0F;
 
-                const char *scaling[] = {
-                    "hex.builtin.setting.interface.scaling.native"_lang,
-                    "hex.builtin.setting.interface.scaling.x0_5"_lang,
-                    "hex.builtin.setting.interface.scaling.x1_0"_lang,
-                    "hex.builtin.setting.interface.scaling.x1_5"_lang,
-                    "hex.builtin.setting.interface.scaling.x2_0"_lang,
-                };
+                    if (ImGui::SliderFloat(name.data(), &scaling, 0.5F, 4.0F, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+                        // if default font is loaded, limit to .5f step scaling
+                        /*if (ImHexApi::System::getCustomFontPath().empty())
+                            scaling = std::round(scaling * 2.0F) / 2.0F;*/
+                        setting = scaling;
 
-                if (ImGui::Combo(name.data(), &selection, scaling, IM_ARRAYSIZE(scaling))) {
-                    setting = selection;
-                    return true;
-                }
-
-                return false;
+                        return false;
+                    }
             },
             true);
 

@@ -557,31 +557,7 @@ namespace hex::init {
     }
 
     bool configureUIScale() {
-        float interfaceScaling;
-        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-            default:
-            case 0:
-                interfaceScaling = ImHexApi::System::getNativeScale();
-                break;
-            case 1:
-                interfaceScaling = 0.5F;
-                break;
-            case 2:
-                interfaceScaling = 1.0F;
-                break;
-            case 3:
-                interfaceScaling = 1.5F;
-                break;
-            case 4:
-                interfaceScaling = 2.0F;
-                break;
-            case 5:
-                interfaceScaling = 3.0F;
-                break;
-            case 6:
-                interfaceScaling = 4.0F;
-                break;
-        }
+        float interfaceScaling = ContentRegistry::Settings::readf("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 1.0F);
 
         ImHexApi::System::impl::setGlobalScale(interfaceScaling);
 

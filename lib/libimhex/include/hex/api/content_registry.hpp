@@ -87,6 +87,16 @@ namespace hex {
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const impl::Callback &callback, bool requiresRestart = false);
 
             /**
+             * @brief Adds a new integer setting entry
+             * @param unlocalizedCategory The category of the setting
+             * @param unlocalizedName The name of the setting
+             * @param defaultValue The default value of the setting
+             * @param callback The callback that will be called when the settings item in the preferences window is rendered
+             * @param requiresRestart Whether the setting requires a restart to take effect
+             */
+            void addf(const std::string &unlocalizedCategory, const std::string &unlocalizedName, float defaultValue, const impl::Callback &callback, bool requiresRestart = false);
+
+            /**
              * @brief Adds a new string setting entry
              * @param unlocalizedCategory The category of the setting
              * @param unlocalizedName The name of the setting
@@ -122,6 +132,14 @@ namespace hex {
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
 
             /**
+             * @brief Writes a float value to the settings file
+             * @param unlocalizedCategory The category of the setting
+             * @param unlocalizedName The name of the setting
+             * @param value The value to write
+             */
+            void writef(const std::string &unlocalizedCategory, const std::string &unlocalizedName, float value);
+
+            /**
              * @brief Writes a string value to the settings file
              * @param unlocalizedCategory The category of the setting
              * @param unlocalizedName The name of the setting
@@ -145,6 +163,15 @@ namespace hex {
              * @return The value of the setting
              */
             i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue);
+
+            /**
+             * @brief Reads a float value from the settings file
+             * @param unlocalizedCategory The category of the setting
+             * @param unlocalizedName The name of the setting
+             * @param defaultValue The default value of the setting
+             * @return The value of the setting
+             */
+            float readf(const std::string &unlocalizedCategory, const std::string &unlocalizedName, float defaultValue);
 
             /**
              * @brief Reads a string value from the settings file
@@ -214,11 +241,11 @@ namespace hex {
              * @param executeCallback The callback that will be called when the command is executed
              */
             void add(
-                Type type,
-                const std::string &command,
-                const std::string &unlocalizedDescription,
-                const impl::DisplayCallback &displayCallback,
-                const impl::ExecuteCallback &executeCallback = [](auto) {});
+                    Type type,
+                    const std::string &command,
+                    const std::string &unlocalizedDescription,
+                    const impl::DisplayCallback &displayCallback,
+                    const impl::ExecuteCallback &executeCallback = [](auto) {});
 
             /**
              * @brief Adds a new command handler to the command palette
@@ -229,10 +256,10 @@ namespace hex {
              * @param displayCallback The callback that will be called when the command is displayed in the command palette
              */
             void addHandler(
-                Type type,
-                const std::string &command,
-                const impl::QueryCallback &queryCallback,
-                const impl::DisplayCallback &displayCallback);
+                    Type type,
+                    const std::string &command,
+                    const impl::QueryCallback &queryCallback,
+                    const impl::DisplayCallback &displayCallback);
         }
 
         /* Pattern Language Function Registry. Allows adding of new functions that may be used inside the pattern language */
@@ -461,13 +488,13 @@ namespace hex {
             template<std::derived_from<dp::Node> T, typename... Args>
             void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args &&...args) {
                 add(impl::Entry {
-                    unlocalizedCategory.c_str(),
-                    unlocalizedName.c_str(),
-                    [=, ...args = std::forward<Args>(args)] mutable {
-                        auto node = std::make_unique<T>(std::forward<Args>(args)...);
-                        node->setUnlocalizedName(unlocalizedName);
-                        return node;
-                    }
+                        unlocalizedCategory.c_str(),
+                        unlocalizedName.c_str(),
+                        [=, ...args = std::forward<Args>(args)] mutable {
+                            auto node = std::make_unique<T>(std::forward<Args>(args)...);
+                            node->setUnlocalizedName(unlocalizedName);
+                            return node;
+                        }
                 });
             }
 
@@ -705,9 +732,9 @@ namespace hex {
             class DataVisualizer {
             public:
                 DataVisualizer(std::string unlocalizedName, u16 bytesPerCell, u16 maxCharsPerCell)
-                    : m_unlocalizedName(std::move(unlocalizedName)),
-                      m_bytesPerCell(bytesPerCell),
-                      m_maxCharsPerCell(maxCharsPerCell) { }
+                        : m_unlocalizedName(std::move(unlocalizedName)),
+                          m_bytesPerCell(bytesPerCell),
+                          m_maxCharsPerCell(maxCharsPerCell) { }
 
                 virtual ~DataVisualizer() = default;
 
@@ -772,7 +799,7 @@ namespace hex {
                     using Callback = std::function<std::vector<u8>(const Region&, prv::Provider *)>;
 
                     Function(Hash *type, std::string name, Callback callback)
-                        : m_type(type), m_name(std::move(name)), m_callback(std::move(callback)) {
+                            : m_type(type), m_name(std::move(name)), m_callback(std::move(callback)) {
 
                     }
 
