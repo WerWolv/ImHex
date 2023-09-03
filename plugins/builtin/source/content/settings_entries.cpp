@@ -166,18 +166,19 @@ namespace hex::plugin::builtin {
             return changed;
         });
 
-        ContentRegistry::Settings::addf(
-                "hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 1.0F, [](auto name, nlohmann::json &setting) {
-                    static float scaling = 1.0F;
+        ContentRegistry::Settings::addf("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 1.0F, [](auto name, nlohmann::json &setting) {
+                static float scaling = 1.0F;
 
-                    if (ImGui::SliderFloat(name.data(), &scaling, 0.5F, 4.0F, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
-                        // if default font is loaded, limit to .5f step scaling
-                        /*if (ImHexApi::System::getCustomFontPath().empty())
-                            scaling = std::round(scaling * 2.0F) / 2.0F;*/
-                        setting = scaling;
+                if (ImGui::SliderFloat(name.data(), &scaling, 0.5F, 4.0F, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+                    // if default font is loaded, limit to .5f step scaling
+                    /*if (ImHexApi::System::getCustomFontPath().empty())
+                        scaling = std::round(scaling * 2.0F) / 2.0F;*/
+                    setting = scaling;
 
-                        return false;
-                    }
+                    return true;
+                }
+
+                return false;
             },
             true);
 
