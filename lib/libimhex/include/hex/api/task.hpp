@@ -12,6 +12,10 @@
 #include <list>
 #include <condition_variable>
 
+#if defined(OS_EMSCRIPTEN)
+#include <jthread.hpp>
+#endif
+
 namespace hex {
 
     class TaskHolder;
