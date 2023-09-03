@@ -1538,10 +1538,9 @@ namespace hex::plugin::builtin {
                     inputType = InputType::regular;
 
                 if (inputType == InputType::regular) {
-                    decimalStrView = decimalFloatingPointNumberString;
-                    res = std::from_chars(decimalStrView.data(), decimalStrView.data() + decimalStrView.size(), ieee754statics.resultFloat);
-                    // this is why we use from_chars
-                    if (res.ec != std::errc()) {
+                    try {
+                        ieee754statics.resultFloat = stod(decimalFloatingPointNumberString);
+                    } catch(const std::invalid_argument& _) {
                         inputType = InputType::invalid;
                     }
                 } else if (inputType == InputType::infinity) {
