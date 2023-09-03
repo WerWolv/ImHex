@@ -523,6 +523,7 @@ namespace hex::plugin::builtin {
         size_t overlayIndex = 0;
         for (auto endNode : workspace.endNodes) {
             endNode->setCurrentOverlay(workspace.dataOverlays[overlayIndex]);
+            overlayIndex += 1;
         }
 
         // Reset any potential node errors
