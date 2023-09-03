@@ -47,7 +47,7 @@ namespace hex::log {
             fmt::print(dest, "[{0}] ", IMHEX_PROJECT_NAME);
 
             constexpr static auto ProjectNameLength = std::char_traits<char>::length(IMHEX_PROJECT_NAME);
-            fmt::print("{}", std::string(ProjectNameLength > 10 ? 0 : 10 - ProjectNameLength, ' '));
+            fmt::print(dest, "{}", std::string(ProjectNameLength > 10 ? 0 : 10 - ProjectNameLength, ' '));
         }
 
         template<typename... T>
