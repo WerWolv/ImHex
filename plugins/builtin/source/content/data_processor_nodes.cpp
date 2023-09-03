@@ -532,7 +532,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &input = this->getBufferOnInput(0);
 
-            i64 output = 0;
+            i128 output = 0;
             if (input.empty() || input.size() > sizeof(output))
                 throwNodeError("Buffer is empty or bigger than 64 bits");
 
