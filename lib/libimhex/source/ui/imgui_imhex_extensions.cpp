@@ -9,8 +9,6 @@
 
 #include <string>
 
-#include <imgui_impl_opengl3_loader.h>
-
 #include <hex/api/imhex_api.hpp>
 
 #include <fonts/codicons_font.h>
