@@ -126,6 +126,8 @@
 #define GLFW_HAS_GETKEYNAME             (GLFW_VERSION_COMBINED >= 3200) // 3.2+ glfwGetKeyName()
 #define GLFW_HAS_GETERROR               (GLFW_VERSION_COMBINED >= 3300) // 3.3+ glfwGetError()
 
+#undef GLFW_HAS_VULKAN
+
 // GLFW data
 enum GlfwClientApi
 {
