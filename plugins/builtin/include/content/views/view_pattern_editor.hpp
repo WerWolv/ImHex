@@ -156,7 +156,7 @@ namespace hex::plugin::builtin {
         bool m_syncPatternSourceCode = false;
         bool m_autoLoadPatterns = true;
 
-        std::map<prv::Provider*, std::move_only_function<void()>> m_sectionWindowDrawer;
+        std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
 
         ui::HexEditor m_sectionHexEditor;
 

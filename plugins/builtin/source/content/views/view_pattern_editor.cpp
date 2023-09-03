@@ -521,7 +521,7 @@ namespace hex::plugin::builtin {
                     ImGui::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
                     ImGui::TableNextColumn();
                     if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        auto dataProvider = std::make_unique<MemoryFileProvider>();
+                        auto dataProvider = std::make_shared<MemoryFileProvider>();
                         dataProvider->resize(section.data.size());
                         dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
                         dataProvider->setReadOnly(true);
@@ -551,10 +551,10 @@ namespace hex::plugin::builtin {
                         auto patternProvider = ImHexApi::Provider::get();
 
 
-                        this->m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider = std::move(dataProvider), hexEditor, patternDrawer = ui::PatternDrawer(), &runtime] mutable {
+                        this->m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime] mutable {
                             hexEditor.setProvider(dataProvider.get());
                             hexEditor.draw(480_scaled);
-                            patternDrawer.setSelectionCallback([&](const auto &region) {
+                            patternDrawer->setSelectionCallback([&](const auto &region) {
                                 hexEditor.setSelection(region);
                             });
 
@@ -568,7 +568,7 @@ namespace hex::plugin::builtin {
                             }();
 
                             if (*this->m_executionDone)
-                                patternDrawer.draw(patterns, &runtime, 150_scaled);
+                                patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
                     }
 
