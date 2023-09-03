@@ -161,7 +161,7 @@ namespace hex::prv {
 
 
     Overlay *Provider::newOverlay() {
-        return this->m_overlays.emplace_back().get();
+        return this->m_overlays.emplace_back(std::make_unique<Overlay>()).get();
     }
 
     void Provider::deleteOverlay(Overlay *overlay) {
