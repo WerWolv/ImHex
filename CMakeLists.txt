@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 
+SET(NATIVE_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+SET(NATIVE_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+SET(ADDITIONAL_FLAGS "-Wno-c++11-narrowing -Wno-deprecated-literal-operator")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADDITIONAL_FLAGS}")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDITIONAL_FLAGS}")
+
+
 # Options
 option(IMHEX_PLUGINS_IN_SHARE "Put the plugins in share/imhex/plugins instead of lib[..]/imhex/plugins" OFF)
 option(IMHEX_STRIP_RELEASE "Strip the release builds" ON)
