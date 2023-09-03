@@ -515,13 +515,14 @@ namespace hex::plugin::builtin {
             workspace.dataOverlays.clear();
 
             // Create a new overlay for each end node
-            for (u32 i = 0; i < workspace.endNodes.size(); i++)
+            for (u32 i = 0; i < workspace.endNodes.size(); i += 1)
                 workspace.dataOverlays.push_back(ImHexApi::Provider::get()->newOverlay());
         }
 
         // Set the current overlay of each end node to the corresponding overlay
-        for (auto [index, endNode] : workspace.endNodes | std::views::enumerate) {
-            endNode->setCurrentOverlay(workspace.dataOverlays[index]);
+        size_t overlayIndex = 0;
+        for (auto endNode : workspace.endNodes) {
+            endNode->setCurrentOverlay(workspace.dataOverlays[overlayIndex]);
         }
 
         // Reset any potential node errors
