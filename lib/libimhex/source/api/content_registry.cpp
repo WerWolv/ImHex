@@ -8,6 +8,9 @@
 
 #include <filesystem>
 #include <thread>
+#if defined(OS_EMSCRIPTEN)
+#include <jthread.hpp>
+#endif
 
 #include <nlohmann/json.hpp>
 

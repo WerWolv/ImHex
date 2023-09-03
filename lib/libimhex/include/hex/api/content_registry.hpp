@@ -16,6 +16,10 @@
 #include <unordered_map>
 #include <vector>
 
+#if defined(OS_EMSCRIPTEN)
+#include <jthread.hpp>
+#endif
+
 #include <nlohmann/json_fwd.hpp>
 
 using ImGuiDataType = int;
