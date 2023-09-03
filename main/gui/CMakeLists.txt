@@ -29,6 +29,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../lib/external/libromfs ${CMAKE
 set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_dependencies(imhex_all main)
 
+target_link_options(main PRIVATE -s USE_GLFW=3)
+
 set_target_properties(main PROPERTIES
     OUTPUT_NAME ${IMHEX_APPLICATION_NAME}
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../..
