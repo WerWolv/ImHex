@@ -534,7 +534,7 @@ namespace hex::plugin::builtin {
 
             i128 output = 0;
             if (input.empty() || input.size() > sizeof(output))
-                throwNodeError("Buffer is empty or bigger than 64 bits");
+                throwNodeError("Buffer is empty or bigger than 128 bits");
 
             std::memcpy(&output, input.data(), input.size());
 
@@ -691,7 +691,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &input = this->getFloatOnInput(0);
 
-            this->setIntegerOnOutput(1, std::ceil(input));
+            this->setFloatOnOutput(1, std::ceil(input));
         }
     };
 
@@ -702,7 +702,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &input = this->getFloatOnInput(0);
 
-            this->setIntegerOnOutput(1, std::floor(input));
+            this->setFloatOnOutput(1, std::floor(input));
         }
     };
 
@@ -713,7 +713,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &input = this->getFloatOnInput(0);
 
-            this->setIntegerOnOutput(1, std::round(input));
+            this->setFloatOnOutput(1, std::round(input));
         }
     };
 
