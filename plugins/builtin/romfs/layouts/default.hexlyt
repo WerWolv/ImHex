@@ -3,16 +3,6 @@ Pos=0,38
 Size=2560,1513
 Collapsed=0
 
-[Window][Debug##Default]
-Pos=162,46
-Size=400,400
-Collapsed=0
-
-[Window][Question]
-Pos=729,657
-Size=400,105
-Collapsed=0
-
 [Window][###hex.builtin.view.settings.name]
 Pos=259,200
 Size=700,400
@@ -60,55 +50,14 @@ Size=863,1427
 Collapsed=0
 DockId=0x00000004,2
 
-[Window][Restore lost data]
-Pos=498,309
-Size=283,101
-Collapsed=0
-
 [Window][###hex.builtin.view.information.name]
 Pos=-1889,-120
 Size=510,420
 Collapsed=0
 
-[Window][Accept pattern]
-Pos=598,267
-Size=311,251
-Collapsed=0
-
-[Window][Error]
-Pos=413,296
-Size=400,100
-Collapsed=0
-
-[Window][Exit Application?]
-Pos=470,301
-Size=339,118
-Collapsed=0
-
-[Window][Close Provider?]
-ViewportPos=-327,0
-ViewportId=0x47432683
-Size=346,144
-Collapsed=0
-
-[Window][Choose file]
-Pos=-1500,152
-Size=516,458
-Collapsed=0
-
 [Window][###hex.builtin.view.yara.name]
 Pos=720,38
 Size=560,660
-Collapsed=0
-
-[Window][hex.builtin.popup.waiting_for_tasks.title]
-Pos=481,308
-Size=318,103
-Collapsed=0
-
-[Window][Waiting for Tasks]
-Pos=316,308
-Size=353,122
 Collapsed=0
 
 [Window][###hex.builtin.view.store.name]
@@ -153,12 +102,6 @@ Pos=391,302
 Size=469,400
 Collapsed=0
 
-[Window][Section]
-ViewportPos=380,240
-ViewportId=0xE2CE4373
-Size=600,700
-Collapsed=0
-
 [Window][###hex.builtin.tools.invariant_multiplication]
 Pos=-1826,300
 Size=600,232
@@ -179,60 +122,9 @@ Pos=423,296
 Size=600,220
 Collapsed=0
 
-[Window][ImPlot Demo]
-Pos=1647,388
-Size=600,741
-Collapsed=0
-
-[Window][Dear ImGui Debug Log]
-Pos=60,152
-Size=1166,312
-Collapsed=0
-
-[Window][Dear ImGui Stack Tool]
-Pos=60,152
-Size=707,208
-Collapsed=0
-
-[Window][Dear ImGui Metrics/Debugger]
-Pos=74,297
-Size=677,614
-Collapsed=0
-
-[Window][Dear ImGui Style Editor]
-ViewportPos=280,340
-ViewportId=0x6D551092
-Size=678,1804
-Collapsed=0
-
-[Window][Dear ImGui Demo]
-Pos=650,158
-Size=550,680
-Collapsed=0
-
 [Window][###hex.builtin.view.help.about.name]
 Pos=214,201
 Size=600,350
-Collapsed=0
-
-[Window][mal.malcore.popup.api_key]
-Pos=465,304
-Size=350,111
-Collapsed=0
-
-[Window][Malcore Analysis]
-Pos=592,38
-Size=688,660
-Collapsed=0
-
-[Window][Enter your Malcore API Key]
-Pos=2065,148
-Size=350,124
-Collapsed=0
-
-[Window][Malcore Upload]
-Pos=276,261
-Size=350,101
 Collapsed=0
 
 [Window][###hex.builtin.view.constants.name]
@@ -244,100 +136,6 @@ Collapsed=0
 Pos=1004,-204
 Size=1336,1320
 Collapsed=0
-
-[Window][Test]
-ViewportPos=-888,391
-ViewportId=0x784DD132
-Size=731,257
-Collapsed=0
-
-[Window][ABCD]
-Pos=60,60
-Size=52,54
-Collapsed=0
-
-[Window][Information]
-Pos=440,310
-Size=400,100
-Collapsed=0
-
-[Window][Fatal Error]
-Pos=440,310
-Size=400,100
-Collapsed=0
-
-[Window][hex.builtin.popup.update_store.name]
-Pos=440,285
-Size=400,150
-Collapsed=0
-
-[Window][hex.builtin.popup.docs_question.title]
-Pos=864,462
-Size=832,516
-Collapsed=0
-
-[Window][Documentation query]
-Pos=664,312
-Size=1232,816
-Collapsed=0
-
-[Window][hex.builtin.popup.save_layout.title]
-Pos=880,641
-Size=800,264
-Collapsed=0
-
-[Table][0x7EE28D79,6]
-Column 0  Weight=1.2067
-Column 1  Weight=0.7016
-Column 2  Weight=1.2516 Sort=0v
-Column 3  Weight=0.4715
-Column 4  Weight=0.8026
-Column 5  Weight=1.5659
-
-[Table][0x6A4694E4,3]
-RefScale=26
-Column 0  Sort=0v
-
-[Table][0x8A6C34FA,4]
-Column 0  Weight=1.0000
-Column 1  Weight=1.0000
-Column 2  Weight=1.0000
-Column 3  Weight=1.0000 Sort=0^
-
-[Table][0x86997068,3]
-Column 0  Weight=1.0000 Sort=0v
-Column 1  Weight=1.0000
-Column 2  Weight=1.0000
-
-[Table][0x6190819E,3]
-Column 0  Weight=0.7508
-Column 1  Weight=1.2447
-Column 2  Weight=1.0044
-
-[Table][0x204AA40F,6]
-Column 0  Weight=0.9981
-Column 1  Weight=0.5784
-Column 2  Weight=0.8393 Sort=0v
-Column 3  Weight=0.7259
-Column 4  Weight=0.7486
-Column 5  Weight=2.1096
-
-[Table][0x92C7E695,3]
-Column 0  Weight=1.0000
-Column 1  Weight=1.0000
-Column 2  Weight=1.0000
-
-[Table][0xDB02BA59,4]
-Column 0  Weight=1.0000 Sort=0v
-Column 1  Weight=1.0000
-Column 2  Weight=1.0000
-Column 3  Weight=1.0000
-
-[Table][0x22CDC436,4]
-Column 0  Weight=1.0000
-Column 1  Weight=1.0000
-Column 2  Weight=1.0000
-Column 3  Weight=1.0000
 
 [Docking][Data]
 DockSpace       ID=0x81A8BB71 Window=0xF9B0A590 Pos=161,350 Size=2560,1427 Split=X
@@ -373,17 +171,3 @@ hex.builtin.view.theme_manager.name=0
 hex.builtin.view.tools.name=0
 hex.builtin.view.yara.name=0
 hex.windows.view.tty_console.name=0
-hex.builtin.tools.demangler=0
-hex.builtin.tools.ascii_table=0
-hex.builtin.tools.regex_replacer=0
-hex.builtin.tools.color=0
-hex.builtin.tools.calc=0
-hex.builtin.tools.base_converter=0
-hex.builtin.tools.byte_swapper=0
-hex.builtin.tools.permissions=0
-hex.builtin.tools.file_uploader=0
-hex.builtin.tools.wiki_explain=0
-hex.builtin.tools.file_tools=0
-hex.builtin.tools.ieee754=0
-hex.builtin.tools.invariant_multiplication=0
-

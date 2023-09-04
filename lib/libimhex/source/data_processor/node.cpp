@@ -99,6 +99,9 @@ namespace hex::dp {
         if (attribute.getIOType() != Attribute::IOType::Out)
             throwNodeError("Tried to set output data of an input attribute!");
 
+        if (attribute.getType() != Attribute::Type::Buffer)
+            throwNodeError("Tried to set buffer on non-buffer attribute!");
+
         attribute.getOutputData() = { data.begin(), data.end() };
     }
 
@@ -110,6 +113,9 @@ namespace hex::dp {
 
         if (attribute.getIOType() != Attribute::IOType::Out)
             throwNodeError("Tried to set output data of an input attribute!");
+
+        if (attribute.getType() != Attribute::Type::Integer)
+            throwNodeError("Tried to set integer on non-integer attribute!");
 
         std::vector<u8> buffer(sizeof(integer), 0);
         std::memcpy(buffer.data(), &integer, sizeof(integer));
@@ -125,6 +131,9 @@ namespace hex::dp {
 
         if (attribute.getIOType() != Attribute::IOType::Out)
             throwNodeError("Tried to set output data of an input attribute!");
+
+        if (attribute.getType() != Attribute::Type::Float)
+            throwNodeError("Tried to set float on non-float attribute!");
 
         std::vector<u8> buffer(sizeof(floatingPoint), 0);
         std::memcpy(buffer.data(), &floatingPoint, sizeof(floatingPoint));

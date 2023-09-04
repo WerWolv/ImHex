@@ -734,7 +734,7 @@ namespace hex::plugin::builtin {
 
         // Write bytes
         auto size = selectionCheck ? std::min(buffer.size(), selection.getSize()) : buffer.size();
-        provider->write(selection.getStartAddress() + provider->getBaseAddress() + provider->getCurrentPageAddress(), buffer.data(), size);
+        provider->write(selection.getStartAddress(), buffer.data(), size);
     }
 
     static void copyString(const Region &selection) {
