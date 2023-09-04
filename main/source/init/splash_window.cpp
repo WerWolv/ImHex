@@ -215,7 +215,13 @@ namespace hex::init {
 
         // Check if all background tasks have finished so the splash screen can be closed
         if (this->tasksSucceeded.wait_for(0s) == std::future_status::ready) {
-            return this->tasksSucceeded.get() ? FrameResult::success : FrameResult::failure;
+            if (this->tasksSucceeded.get()) {
+                log::debug("All tasks finished with success !");
+                return FrameResult::success;
+            } else {
+                log::warn("All tasks finished, but some failed");
+                return FrameResult::failure;
+            }
         }
 
         return FrameResult::wait;
