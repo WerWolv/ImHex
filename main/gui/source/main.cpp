@@ -19,6 +19,10 @@
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
 
+#if defined(OS_EMSCRIPTEN)
+#include <emscripten.h>
+#endif
+
 using namespace hex;
 
 namespace {
@@ -105,6 +109,78 @@ namespace {
         }
     }
 
+
+    #if defined(OS_EMSCRIPTEN)
+    using namespace hex::init;
+
+    WindowSplash* splashWindow;
+    Window* window;
+    int runImHex() {        
+        // I pasted and modified initializeImHex() here
+        splashWindow = new WindowSplash();
+
+        log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
+
+        // Add initialization tasks to run
+        TaskManager::init();
+        for (const auto &[name, task, async] : init::getInitTasks())
+            splashWindow->addStartupTask(name, task, async);
+
+        splashWindow->startStartupTasks();
+
+        // Draw the splash window while tasks are running
+        emscripten_set_main_loop([]() {
+            FrameResult res = splashWindow->fullFrame();
+            if (res == FrameResult::success) {
+                handleFileOpenRequest();
+
+                // Clean up everything after the main window is closed
+                // ON_SCOPE_EXIT {
+                //     deinitializeImHex();
+                // };
+
+                // Main window
+                window = new Window();
+                emscripten_set_main_loop([](){ window->loop(); }, 60, 0);
+            }
+        }, 60, 0);
+        // end of initializeImHex()
+        
+
+        return -1;
+    }
+
+    #else
+
+    int runImHex() {
+
+        bool shouldRestart = false;
+        do {
+            // Register an event handler that will make ImHex restart when requested
+            shouldRestart = false;
+            EventManager::subscribe<RequestRestartImHex>([&] {
+                shouldRestart = true;
+            });
+
+            initializeImHex();
+            handleFileOpenRequest();
+
+            // Clean up everything after the main window is closed
+            ON_SCOPE_EXIT {
+                deinitializeImHex();
+            };
+
+            // Main window
+            Window window;
+            window.loop();
+
+        } while (shouldRestart);
+
+        return EXIT_SUCCESS;
+    }
+
+    #endif
+
 }
 
 /**
@@ -127,27 +203,5 @@ int main(int argc, char **argv) {
 
     ImHexApi::System::impl::setPortableVersion(isPortableVersion());
 
-    bool shouldRestart = false;
-    do {
-        // Register an event handler that will make ImHex restart when requested
-        shouldRestart = false;
-        EventManager::subscribe<RequestRestartImHex>([&] {
-            shouldRestart = true;
-        });
-
-        initializeImHex();
-        handleFileOpenRequest();
-
-        // Clean up everything after the main window is closed
-        ON_SCOPE_EXIT {
-            deinitializeImHex();
-        };
-
-        // Main window
-        Window window;
-        window.loop();
-
-    } while (shouldRestart);
-
-    return EXIT_SUCCESS;
-}
+    return runImHex();
+};
