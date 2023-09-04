@@ -75,11 +75,12 @@ namespace hex::init {
                         };
 
                         auto startTime = std::chrono::high_resolution_clock::now();
-                        if (!task())
-                            status = false;
+                        bool taskStatus = task();
                         auto endTime = std::chrono::high_resolution_clock::now();
 
-                        log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
+                        log::info("Task '{}' finished in {} ms (success={})", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count(), taskStatus);
+                        
+                        status = status && taskStatus;
 
                         {
                             std::lock_guard guard(this->m_progressMutex);
