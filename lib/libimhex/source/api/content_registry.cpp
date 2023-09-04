@@ -119,7 +119,7 @@ namespace hex {
 
             if (!json.contains(unlocalizedCategory))
                 json[unlocalizedCategory] = nlohmann::json::object();
-            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number_float())
+            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number())
                 json[unlocalizedCategory][unlocalizedName] = float(defaultValue);
         }
 
@@ -212,7 +212,7 @@ namespace hex {
             if (!json[unlocalizedCategory].contains(unlocalizedName))
                 return defaultValue;
 
-            if (!json[unlocalizedCategory][unlocalizedName].is_number_float())
+            if (!json[unlocalizedCategory][unlocalizedName].is_number())
                 json[unlocalizedCategory][unlocalizedName] = defaultValue;
 
             return json[unlocalizedCategory][unlocalizedName].get<float>();

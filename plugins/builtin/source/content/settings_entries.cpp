@@ -167,7 +167,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Settings::addf("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 1.0F, [](auto name, nlohmann::json &setting) {
-                static float scaling = 1.0F;
+                static auto scaling = static_cast<float>(setting);
 
                 if (ImGui::SliderFloat(name.data(), &scaling, 0.5F, 4.0F, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
                     // if default font is loaded, limit to .5f step scaling
