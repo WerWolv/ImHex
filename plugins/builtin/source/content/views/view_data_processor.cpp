@@ -988,9 +988,10 @@ namespace hex::plugin::builtin {
             {
                 const int selectedLinkCount = ImNodes::NumSelectedLinks();
                 if (selectedLinkCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
-                    static std::vector<int> selectedLinks;
+                    std::vector<int> selectedLinks;
                     selectedLinks.resize(static_cast<size_t>(selectedLinkCount));
                     ImNodes::GetSelectedLinks(selectedLinks.data());
+                    ImNodes::ClearLinkSelection();
 
                     for (const int id : selectedLinks) {
                         eraseLink(workspace, id);
@@ -1002,9 +1003,10 @@ namespace hex::plugin::builtin {
             {
                 const int selectedNodeCount = ImNodes::NumSelectedNodes();
                 if (selectedNodeCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
-                    static std::vector<int> selectedNodes;
+                    std::vector<int> selectedNodes;
                     selectedNodes.resize(static_cast<size_t>(selectedNodeCount));
                     ImNodes::GetSelectedNodes(selectedNodes.data());
+                    ImNodes::ClearNodeSelection();
 
                     this->eraseNodes(workspace, selectedNodes);
                 }
