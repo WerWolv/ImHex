@@ -30,7 +30,7 @@ set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE O
 add_dependencies(imhex_all main)
 
 if(EMSCRIPTEN)
-    target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1)
+    target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1)
 endif()
 
 set_target_properties(main PROPERTIES
