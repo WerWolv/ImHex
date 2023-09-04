@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 SET(NATIVE_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 SET(NATIVE_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-SET(ADDITIONAL_FLAGS "-Wno-c++11-narrowing -Wno-deprecated-literal-operator")
+SET(ADDITIONAL_FLAGS "-Wno-c++11-narrowing -Wno-deprecated-literal-operator -O0 -pthread")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADDITIONAL_FLAGS}")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDITIONAL_FLAGS}")
 
