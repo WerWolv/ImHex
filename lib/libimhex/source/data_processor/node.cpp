@@ -64,7 +64,7 @@ namespace hex::dp {
         return *reinterpret_cast<i128 *>(outputData.data());
     }
 
-    const long double& Node::getFloatOnInput(u32 index) {
+    const double& Node::getFloatOnInput(u32 index) {
         auto attribute = this->getConnectedInputAttribute(index);
 
         auto &outputData = [&] -> std::vector<u8>& {
@@ -84,10 +84,10 @@ namespace hex::dp {
         if (outputData.empty())
             throwNodeError("No data available at connected attribute");
 
-        if (outputData.size() < sizeof(long double))
+        if (outputData.size() < sizeof(double))
             throwNodeError("Not enough data provided for float");
 
-        return *reinterpret_cast<long double *>(outputData.data());
+        return *reinterpret_cast<double *>(outputData.data());
     }
 
     void Node::setBufferOnOutput(u32 index, std::span<const u8> data) {
@@ -123,7 +123,7 @@ namespace hex::dp {
         attribute.getOutputData() = buffer;
     }
 
-    void Node::setFloatOnOutput(u32 index, long double floatingPoint) {
+    void Node::setFloatOnOutput(u32 index, double floatingPoint) {
         if (index >= this->getAttributes().size())
             throwNodeError("Attribute index out of bounds!");
 

@@ -73,11 +73,11 @@ namespace hex::dp {
 
         const std::vector<u8>& getBufferOnInput(u32 index);
         const i128& getIntegerOnInput(u32 index);
-        const long double& getFloatOnInput(u32 index);
+        const double& getFloatOnInput(u32 index);
 
         void setBufferOnOutput(u32 index, std::span<const u8> data);
         void setIntegerOnOutput(u32 index, i128 integer);
-        void setFloatOnOutput(u32 index, long double floatingPoint);
+        void setFloatOnOutput(u32 index, double floatingPoint);
 
     private:
         int m_id;
