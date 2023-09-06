@@ -46,8 +46,6 @@ verifyCompiler()
 # List plugin names here. Project name must match folder name
 set(PLUGINS
     builtin
-    windows
-    script_loader
 )
 
 # Add various defines
