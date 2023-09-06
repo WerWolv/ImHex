@@ -5,6 +5,8 @@
 
 #include <wolv/utils/guards.hpp>
 
+#include <GLES2/gl2.h>
+
 namespace hex::gl {
 
     Shader::Shader(std::string_view vertexSource, std::string_view fragmentSource) {
