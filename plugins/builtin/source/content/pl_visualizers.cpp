@@ -9,7 +9,11 @@
 
 #include <imgui.h>
 #include <implot.h>
-#include <imgui_impl_opengl3_loader.h>
+
+#define GLFW_INCLUDE_ES3
+#include <GLES3/gl3.h>
+#include <GLFW/glfw3.h>
+
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
 

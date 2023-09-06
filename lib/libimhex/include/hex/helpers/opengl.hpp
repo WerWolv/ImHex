@@ -9,7 +9,9 @@
 #include <span>
 #include <string>
 
-#include <imgui_impl_opengl3_loader.h>
+#define GLFW_INCLUDE_ES3
+#include <GLES3/gl3.h>
+#include <GLFW/glfw3.h>
 
 namespace hex::gl {
 
