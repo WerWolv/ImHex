@@ -6,8 +6,14 @@
 
 #include <wolv/utils/string.hpp>
 
+#include <wolv/utils/string.hpp>
+
 #include <filesystem>
 #include <system_error>
+
+namespace test {
+    #include <plugin_builtin.hpp>
+}
 
 namespace hex {
 
@@ -20,22 +26,29 @@ namespace hex {
                 return;
             }
         #else
-            this->m_handle = dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY);
+            // this->m_handle = dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY);
 
-            if (this->m_handle == nullptr) {
-                log::error("dlopen failed: {}!", dlerror());
-                return;
-            }
+            // if (this->m_handle == nullptr) {
+            //     log::error("dlopen failed: {}!", dlerror());
+            //     return;
+            // }
         #endif
 
-        this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
-        this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
-        this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
-        this->m_getPluginDescriptionFunction = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
-        this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
-        this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
-        this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
-        this->m_getSubCommandsFunction       = getPluginFunction<GetSubCommandsFunc>("getSubCommands");
+        // this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
+        this->m_initializePluginFunction = (InitializePluginFunc) test::initializePlugin;
+        this->m_getPluginNameFunction = test::getPluginName;
+        this->m_getPluginAuthorFunction = test::getPluginAuthor;
+        this->m_getPluginDescriptionFunction = test::getPluginDescription;
+        this->m_getCompatibleVersionFunction = test::getCompatibleVersion;
+        this->m_setImGuiContextFunction = (SetImGuiContextFunc) test::setImGuiContext;
+        this->m_isBuiltinPluginFunction = test::isBuiltinPlugin;
+        // this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
+        // this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
+        // this->m_getPluginDescriptionFunction = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
+        // this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
+        // this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
+        // this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
+        // this->m_getSubCommandsFunction       = getPluginFunction<GetSubCommandsFunc>("getSubCommands");
     }
 
     Plugin::Plugin(Plugin &&other) noexcept {
@@ -67,15 +80,10 @@ namespace hex {
             if (this->m_handle != nullptr)
                 FreeLibrary(this->m_handle);
         #else
-            if (this->m_handle != nullptr)
-                dlclose(this->m_handle);
         #endif
     }
 
     bool Plugin::initializePlugin() const {
-        if (this->m_handle == nullptr)
-            return false;
-
         const auto pluginName = wolv::util::toUTF8String(this->m_path.filename());
 
         const auto requestedVersion = getCompatibleVersion();
@@ -99,6 +107,7 @@ namespace hex {
                 return false;
             }
         } else {
+            log::error("aaaaa");
             return false;
         }
 
@@ -180,20 +189,28 @@ namespace hex {
     }
 
     bool PluginManager::load(const std::fs::path &pluginFolder) {
-        if (!wolv::io::fs::exists(pluginFolder))
-            return false;
-
-        s_pluginFolder = pluginFolder;
-
-        for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
-            if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-                s_plugins.emplace_back(pluginPath.path());
+        if (s_plugins.empty()) {
+            s_plugins.emplace_back("nopath");
         }
 
-        if (s_plugins.empty())
-            return false;
-
         return true;
+
+        // if (!wolv::io::fs::exists(pluginFolder))
+        //     return false;
+
+        // s_pluginFolder = pluginFolder;
+
+        // log::warn("Folder A: {}", pluginFolder.string());
+        // for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
+        //     log::warn("Folder B: {}", pluginPath.path().string());
+        //     if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
+        //         s_plugins.emplace_back(pluginPath.path());
+        // }
+
+        // if (s_plugins.empty())
+        //     return false;
+
+        // return true;
     }
 
     void PluginManager::unload() {
