@@ -47,8 +47,10 @@ namespace hex {
 
             const DWORD MS_VC_EXCEPTION = 0x406D1388;
             RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
-        #elif defined(OS_LINUX)
+        #elif defined(OS_LINUX) && !defined(OS_EMSCRIPTEN)
             pthread_setname_np(pthread_self(), name.c_str());
+        #elif defined(OS_EMSCRIPTEN)
+            hex::unused(name);
         #elif defined(OS_MACOS)
             pthread_setname_np(name.c_str());
         #endif
