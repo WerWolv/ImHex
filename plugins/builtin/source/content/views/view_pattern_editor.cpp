@@ -790,7 +790,11 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             continue;
 
-                        runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
+                        try {
+                            runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
+                        } catch (pl::core::err::PreprocessorError::Exception &e) {
+                            log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), e.what());
+                        }
 
                         if (foundCorrectType)
                             this->m_possiblePatternFiles.get(provider).push_back(entry.path());

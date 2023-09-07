@@ -56,6 +56,10 @@ namespace hex::plugin::builtin {
         std::vector<Workspace*> &getWorkspaceStack() { return *this->m_workspaceStack; }
 
     private:
+        void drawContextMenus(ViewDataProcessor::Workspace &workspace);
+        void drawNode(dp::Node &node);
+
+    private:
         bool m_updateNodePositions = false;
         int m_rightClickedId = -1;
         ImVec2 m_rightClickedCoords;

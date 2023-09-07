@@ -27,6 +27,9 @@ namespace hex::prv {
 
     Provider::~Provider() {
         this->m_overlays.clear();
+
+        if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && selection->provider == this)
+            EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion { { 0x00, 0x00 }, nullptr });
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
@@ -161,7 +164,7 @@ namespace hex::prv {
 
 
     Overlay *Provider::newOverlay() {
-        return this->m_overlays.emplace_back().get();
+        return this->m_overlays.emplace_back(std::make_unique<Overlay>()).get();
     }
 
     void Provider::deleteOverlay(Overlay *overlay) {

@@ -263,6 +263,10 @@ namespace hex::plugin::builtin {
         std::vector<std::string> processedArgs = args;
         if (processedArgs.empty())
             processedArgs.emplace_back("--help");
+        else {
+            for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::PatternsInclude))
+                processedArgs.emplace_back(hex::format("--includes={}", wolv::util::toUTF8String(path)));
+        }
 
         std::exit(pl::cli::executeCommandLineInterface(processedArgs));
     }

@@ -12,18 +12,12 @@ On Windows, ImHex is built through [msys2 / mingw](https://www.msys2.org/)'s gcc
 cd ImHex
 mkdir build
 cd build
-cmake -G "MinGW Makefiles"                \
+cmake -G "Ninja"                          \
   -DCMAKE_BUILD_TYPE=Release              \
   -DCMAKE_INSTALL_PREFIX="$PWD/install"   \
-  -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
-  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
-  -DCMAKE_C_FLAGS="-fuse-ld=lld"          \
-  -DCMAKE_CXX_FLAGS="-fuse-ld=lld"        \
-  -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
-  -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
-  -DRUST_PATH="$USERPROFILE/.cargo/bin/"  \
+  -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON   \
   ..
-mingw32-make -j install
+ninja install
 ```
 
 ImHex will look for any extra resources either in various folders directly next to the executable or in `%localappdata%/imhex`
