@@ -155,6 +155,15 @@ namespace hex {
         });
     }
 
+    void Window::fullFrame() {
+        glfwPollEvents();
+
+        // Render frame
+        this->frameBegin();
+        this->frame();
+        this->frameEnd();
+    }
+
     void Window::loop() {
         while (!glfwWindowShouldClose(this->m_window)) {
             this->m_lastFrameTime = glfwGetTime();
@@ -163,8 +172,6 @@ namespace hex {
                 // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
             } else {
-                glfwPollEvents();
-
                 // If no events have been received in a while, lower the frame rate
                 {
                     // If the mouse is down, the mouse is moving or a popup is open, we don't want to lower the frame rate
@@ -197,12 +204,7 @@ namespace hex {
                 }
             }
 
-            // Render frame
-            this->frameBegin();
-            this->frame();
-            this->frameEnd();
-
-            glfwSwapInterval(0);
+            this->fullFrame();
 
             // Limit frame rate
             // If the target FPS are below 15, use the monitor refresh rate, if it's above 200, don't limit the frame rate

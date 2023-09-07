@@ -24,6 +24,7 @@ namespace hex {
         ~Window();
 
         void loop();
+        void fullFrame();
 
         static void initNative();
 
