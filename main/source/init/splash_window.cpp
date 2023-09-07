@@ -43,6 +43,7 @@ namespace hex::init {
     WindowSplash::WindowSplash() : m_window(nullptr) {
         this->initGLFW();
         this->initImGui();
+        this->initMyself();
 
         ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
     }
@@ -111,165 +112,122 @@ namespace hex::init {
         });
     }
 
-    bool WindowSplash::loop() {
-        // Load splash screen image from romfs
-        ImGui::Texture splashBackgroundTexture = ImGui::Texture(romfs::get("splash_background.png").span());
-        ImGui::Texture splashTextTexture = ImGui::Texture(romfs::get("splash_text.png").span());
+    FrameResult WindowSplash::fullFrame() {
+        glfwPollEvents();
 
-        // If the image couldn't be loaded correctly, something went wrong during the build process
-        // Close the application since this would lead to errors later on anyway.
-        if (!splashBackgroundTexture.isValid() || !splashTextTexture.isValid()) {
-            log::fatal("Could not load splash screen image!");
-            std::exit(EXIT_FAILURE);
-        }
-
-        // Launch init tasks in background
-        auto tasksSucceeded = processTasksAsync();
+        // Start a new ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         auto scale = ImHexApi::System::getGlobalScale();
 
-        struct Highlight {
-            ImVec2 start;
-            size_t count;
-            ImColor color;
-        };
+        // Draw the splash screen background
+        auto drawList = ImGui::GetBackgroundDrawList();
+        {
 
-        std::array<Highlight, 3> highlights;
-
-        std::mt19937 rng(std::random_device{}());
-
-        u32 lastPos = 0;
-        u32 lastCount = 0;
-        for (auto &highlight : highlights) {
-            auto newPos = lastPos + lastCount + (rng() % 40);
-            auto newCount = (rng() % 7) + 3;
-            highlight.start.x = newPos % 13;
-            highlight.start.y = newPos / 13;
-            highlight.count = newCount;
+            drawList->AddImage(this->splashBackgroundTexture, ImVec2(0, 0), this->splashBackgroundTexture.getSize() * scale);
 
             {
-                float r, g, b;
-                ImGui::ColorConvertHSVtoRGB(
-                        (rng() % 360) / 100.0F,
-                        (25 + rng() % 70) / 100.0F,
-                        (85 + rng() % 10) / 100.0F,
-                        r, g, b);
-                highlight.color = ImColor(r, g, b, 0x50 / 255.0F);
-            }
+                const auto highlightBytes = [&](ImVec2 start, size_t count, ImColor color, float opacity) {
+                    const auto hexSize = ImVec2(29, 18) * scale;
+                    const auto hexSpacing = ImVec2(17.4, 15) * scale;
+                    const auto hexStart = ImVec2(27, 127) * scale;
 
-            lastPos = newPos;
-            lastCount = newCount;
-        }
+                    const auto hexCount = ImVec2(13, 7);
 
-        // Splash window rendering loop
+                    bool isStart = true;
 
-        float progressLerp = 0.0F;
-        while (!glfwWindowShouldClose(this->m_window)) {
-            glfwPollEvents();
+                    color.Value.w *= opacity;
 
-            // Start a new ImGui frame
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
+                    for (u32 y = u32(start.y); y < u32(hexCount.y); y += 1) {
+                        for (u32 x = u32(start.x); x < u32(hexCount.x); x += 1) {
+                            if (count-- == 0)
+                                return;
 
-            // Draw the splash screen background
-            auto drawList = ImGui::GetBackgroundDrawList();
-            {
+                            auto pos = hexStart + ImVec2(float(x), float(y)) * (hexSize + hexSpacing);
 
-                drawList->AddImage(splashBackgroundTexture, ImVec2(0, 0), splashBackgroundTexture.getSize() * scale);
+                            drawList->AddRectFilled(pos + ImVec2(0, -hexSpacing.y / 2), pos + hexSize + ImVec2(0, hexSpacing.y / 2), color);
 
-                {
-                    const auto highlightBytes = [&](ImVec2 start, size_t count, ImColor color, float opacity) {
-                        const auto hexSize = ImVec2(29, 18) * scale;
-                        const auto hexSpacing = ImVec2(17.4, 15) * scale;
-                        const auto hexStart = ImVec2(27, 127) * scale;
+                            if (count > 0 && x != u32(hexCount.x) - 1)
+                                drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + ImVec2(hexSpacing.x, hexSpacing.y / 2), color);
 
-                        const auto hexCount = ImVec2(13, 7);
-
-                        bool isStart = true;
-
-                        color.Value.w *= opacity;
-
-                        for (u32 y = u32(start.y); y < u32(hexCount.y); y += 1) {
-                            for (u32 x = u32(start.x); x < u32(hexCount.x); x += 1) {
-                                if (count-- == 0)
-                                    return;
-
-                                auto pos = hexStart + ImVec2(float(x), float(y)) * (hexSize + hexSpacing);
-
-                                drawList->AddRectFilled(pos + ImVec2(0, -hexSpacing.y / 2), pos + hexSize + ImVec2(0, hexSpacing.y / 2), color);
-
-                                if (count > 0 && x != u32(hexCount.x) - 1)
-                                    drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + ImVec2(hexSpacing.x, hexSpacing.y / 2), color);
-
-                                if (isStart) {
-                                    isStart = false;
-                                    drawList->AddRectFilled(pos - hexSpacing / 2, pos + ImVec2(0, hexSize.y + hexSpacing.y / 2), color);
-                                }
-                                if (count == 0) {
-                                    drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + hexSpacing / 2, color);
-                                }
+                            if (isStart) {
+                                isStart = false;
+                                drawList->AddRectFilled(pos - hexSpacing / 2, pos + ImVec2(0, hexSize.y + hexSpacing.y / 2), color);
                             }
-
-                            start.x = 0;
+                            if (count == 0) {
+                                drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + hexSpacing / 2, color);
+                            }
                         }
-                    };
 
-                    for (const auto &highlight : highlights)
-                        highlightBytes(highlight.start, highlight.count, highlight.color, progressLerp);
-                }
+                        start.x = 0;
+                    }
+                };
 
-                progressLerp += (this->m_progress - progressLerp) * 0.1F;
-
-                drawList->AddImage(splashTextTexture, ImVec2(0, 0), splashTextTexture.getSize() * scale);
-
-                drawList->AddText(ImVec2(35, 85) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
-
-                #if defined(DEBUG)
-                    const static auto VersionInfo = hex::format("{0} : {1} {2}@{3}", ImHexApi::System::getImHexVersion(), ICON_FA_CODE_BRANCH, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
-                #else
-                    const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion());
-                #endif
-
-                drawList->AddText(ImVec2((splashBackgroundTexture.getSize().x * scale - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105 * scale), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
+                for (const auto &highlight : this->highlights)
+                    highlightBytes(highlight.start, highlight.count, highlight.color, this->progressLerp);
             }
 
-            // Draw the task progress bar
-            {
-                std::lock_guard guard(this->m_progressMutex);
+            this->progressLerp += (this->m_progress - this->progressLerp) * 0.1F;
 
-                const auto progressBackgroundStart = ImVec2(99, 357) * scale;
-                const auto progressBackgroundSize = ImVec2(442, 30) * scale;
+            drawList->AddImage(this->splashTextTexture, ImVec2(0, 0), this->splashTextTexture.getSize() * scale);
 
-                const auto progressStart = progressBackgroundStart + ImVec2(0, 20) * scale;
-                const auto progressSize = ImVec2(progressBackgroundSize.x * this->m_progress, 10 * scale);
-                drawList->AddRectFilled(progressStart, progressStart + progressSize, 0xD0FFFFFF);
+            drawList->AddText(ImVec2(35, 85) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
 
-                if (!this->m_currTaskNames.empty()) {
-                    drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
-                    drawList->AddText(progressStart + ImVec2(5, -20) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(this->m_currTaskNames, " | ")).c_str());
-                    drawList->PopClipRect();
-                }
-            }
+            #if defined(DEBUG)
+                const static auto VersionInfo = hex::format("{0} : {1} {2}@{3}", ImHexApi::System::getImHexVersion(), ICON_FA_CODE_BRANCH, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+            #else
+                const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion());
+            #endif
 
-            // Render the frame
-            ImGui::Render();
-            int displayWidth, displayHeight;
-            glfwGetFramebufferSize(this->m_window, &displayWidth, &displayHeight);
-            glViewport(0, 0, displayWidth, displayHeight);
-            glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
-            glClear(GL_COLOR_BUFFER_BIT);
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            drawList->AddText(ImVec2((this->splashBackgroundTexture.getSize().x * scale - ImGui::CalcTextSize(VersionInfo.c_str()).x) / 2, 105 * scale), ImColor(0xFF, 0xFF, 0xFF, 0xFF), VersionInfo.c_str());
+        }
 
-            glfwSwapBuffers(this->m_window);
+        // Draw the task progress bar
+        {
+            std::lock_guard guard(this->m_progressMutex);
 
-            // Check if all background tasks have finished so the splash screen can be closed
-            if (tasksSucceeded.wait_for(0s) == std::future_status::ready) {
-                return tasksSucceeded.get();
+            const auto progressBackgroundStart = ImVec2(99, 357) * scale;
+            const auto progressBackgroundSize = ImVec2(442, 30) * scale;
+
+            const auto progressStart = progressBackgroundStart + ImVec2(0, 20) * scale;
+            const auto progressSize = ImVec2(progressBackgroundSize.x * this->m_progress, 10 * scale);
+            drawList->AddRectFilled(progressStart, progressStart + progressSize, 0xD0FFFFFF);
+
+            if (!this->m_currTaskNames.empty()) {
+                drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
+                drawList->AddText(progressStart + ImVec2(5, -20) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(this->m_currTaskNames, " | ")).c_str());
+                drawList->PopClipRect();
             }
         }
 
-        return false;
+        // Render the frame
+        ImGui::Render();
+        int displayWidth, displayHeight;
+        glfwGetFramebufferSize(this->m_window, &displayWidth, &displayHeight);
+        glViewport(0, 0, displayWidth, displayHeight);
+        glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
+        glClear(GL_COLOR_BUFFER_BIT);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+        glfwSwapBuffers(this->m_window);
+
+        // Check if all background tasks have finished so the splash screen can be closed
+        if (this->tasksSucceeded.wait_for(0s) == std::future_status::ready) {
+            return this->tasksSucceeded.get() ? FrameResult::success : FrameResult::failure;
+        }
+
+        return FrameResult::wait;
+    }
+
+    bool WindowSplash::loop() {
+        // Splash window rendering loop
+        while (true) {
+            auto res = this->fullFrame();
+            if (res == FrameResult::success) return true;
+            else if (res == FrameResult::failure) return false;
+        }
     }
 
     static void centerWindow(GLFWwindow *window) {
@@ -412,6 +370,55 @@ namespace hex::init {
 
         // Don't save window settings for the splash screen
         io.IniFilename = nullptr;
+    }
+
+    /**
+     * @brief Initialize resources for the splash window
+     */
+    void WindowSplash::initMyself() {
+
+        // Load splash screen image from romfs
+        this->splashBackgroundTexture = ImGui::Texture(romfs::get("splash_background.png").span());
+        this->splashTextTexture = ImGui::Texture(romfs::get("splash_text.png").span());
+
+        // If the image couldn't be loaded correctly, something went wrong during the build process
+        // Close the application since this would lead to errors later on anyway.
+        if (!this->splashBackgroundTexture.isValid() || !this->splashTextTexture.isValid()) {
+            log::fatal("Could not load splash screen image!");
+            std::exit(EXIT_FAILURE);
+        }
+
+
+
+        std::mt19937 rng(std::random_device{}());
+
+        u32 lastPos = 0;
+        u32 lastCount = 0;
+        for (auto &highlight : this->highlights) {
+            auto newPos = lastPos + lastCount + (rng() % 40);
+            auto newCount = (rng() % 7) + 3;
+            highlight.start.x = newPos % 13;
+            highlight.start.y = newPos / 13;
+            highlight.count = newCount;
+
+            {
+                float r, g, b;
+                ImGui::ColorConvertHSVtoRGB(
+                        (rng() % 360) / 100.0F,
+                        (25 + rng() % 70) / 100.0F,
+                        (85 + rng() % 10) / 100.0F,
+                        r, g, b);
+                highlight.color = ImColor(r, g, b, 0x50 / 255.0F);
+            }
+
+            lastPos = newPos;
+            lastCount = newCount;
+        }
+    }
+
+    void WindowSplash::startStartupTasks() {
+        // Launch init tasks in background
+        this->tasksSucceeded = processTasksAsync();
     }
 
     void WindowSplash::exitGLFW() {
