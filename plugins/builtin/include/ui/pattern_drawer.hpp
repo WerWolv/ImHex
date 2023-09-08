@@ -96,6 +96,7 @@ namespace hex::plugin::builtin::ui {
         std::vector<std::string> m_filter;
         std::vector<std::string> m_currPatternPath;
         std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
+        std::map<std::string, std::vector<std::unique_ptr<pl::ptrn::Pattern>>> m_groups;
         bool m_showFavoriteStars = false;
         bool m_favoritesUpdated = false;
         bool m_showSpecName = false;

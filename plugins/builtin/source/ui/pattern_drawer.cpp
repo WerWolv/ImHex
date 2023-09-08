@@ -37,7 +37,7 @@ namespace hex::plugin::builtin::ui {
 
     namespace {
 
-        std::mutex s_favoritesMutex;
+        std::mutex s_resetDrawMutex;
 
         constexpr auto DisplayEndDefault = 50U;
 
@@ -1006,6 +1006,8 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime, float height) {
+        std::scoped_lock lock(s_resetDrawMutex);
+
         const auto treeStyleButton = [this](auto icon, TreeStyle style, const char *tooltip) {
             bool pushed = false;
 
@@ -1089,12 +1091,20 @@ namespace hex::plugin::builtin::ui {
                 this->m_favoritesUpdateTask = TaskManager::createTask("hex.builtin.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
                     size_t updatedFavorites = 0;
 
-                    std::scoped_lock lock(s_favoritesMutex);
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
                         traversePatternTree(*pattern, patternPath, [&, this](pl::ptrn::Pattern &pattern) {
                             if (pattern.hasAttribute("hex::favorite"))
                                 this->m_favorites.insert({ patternPath, pattern.clone() });
+
+                            if (const auto &args = pattern.getAttributeArguments("hex::group"); !args.empty()) {
+                                auto groupName = args.front().toString();
+
+                                if (!this->m_groups.contains(groupName))
+                                    this->m_groups.insert({groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>()});
+
+                                this->m_groups[groupName].push_back(pattern.clone());
+                            }
                         });
 
                         if (updatedFavorites == this->m_favorites.size())
@@ -1133,11 +1143,13 @@ namespace hex::plugin::builtin::ui {
 
             this->m_showFavoriteStars = false;
             if (!this->m_favoritesUpdateTask.isRunning()) {
+                int id = 1;
+                bool doTableNextRow = false;
 
                 if (!this->m_favorites.empty() && !patterns.empty()) {
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
-                    ImGui::PushID(1);
+                    ImGui::PushID(id);
                     if (ImGui::TreeNodeEx("hex.builtin.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
                         for (auto &[path, pattern] : this->m_favorites) {
                             if (pattern == nullptr)
@@ -1151,11 +1163,43 @@ namespace hex::plugin::builtin::ui {
                         ImGui::TreePop();
                     }
                     ImGui::PopID();
+
+                    id += 1;
+                    doTableNextRow = true;
+                }
+
+                if (!this->m_groups.empty() && !patterns.empty()) {
+                    for (auto &[groupName, groupPatterns]: this->m_groups) {
+                        if(doTableNextRow) {
+                            ImGui::TableNextRow();
+                        }
+
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::PushID(id);
+                        if (ImGui::TreeNodeEx(groupName.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
+                            for (auto &groupPattern: groupPatterns) {
+                                if (groupPattern == nullptr)
+                                    continue;
+
+                                ImGui::PushID(id);
+                                this->draw(*groupPattern);
+                                ImGui::PopID();
+
+                                id += 1;
+                            }
+
+                            ImGui::TreePop();
+                        }
+                        ImGui::PopID();
+
+                        id += 1;
+                        doTableNextRow = true;
+                    }
                 }
 
                 this->m_showFavoriteStars = true;
 
-                int id = 2;
                 for (auto &pattern : this->m_sortedPatterns) {
                     ImGui::PushID(id);
                     this->draw(*pattern);
@@ -1174,6 +1218,8 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::reset() {
+        std::scoped_lock lock(s_resetDrawMutex);
+
         this->resetEditing();
         this->m_displayEnd.clear();
         this->m_visualizedPatterns.clear();
@@ -1184,9 +1230,14 @@ namespace hex::plugin::builtin::ui {
 
         this->m_favoritesUpdateTask.interrupt();
 
-        std::scoped_lock lock(s_favoritesMutex);
         for (auto &[path, pattern] : this->m_favorites)
             pattern = nullptr;
+        for (auto &[groupName, patterns]: this->m_groups)
+            for (auto &pattern: patterns)
+                pattern = nullptr;
+
+        this->m_groups.clear();
+
         this->m_favoritesUpdated = false;
     }
 }
