@@ -150,11 +150,11 @@ namespace hex::script::loader {
             auto dotnetType = STRING("ImHex.EntryPoint, AssemblyLoader");
 
             const char_t *dotnetTypeMethod = STRING("ExecuteScript");
-            const auto &assemblyPathStr = assemblyLoader.native();
+            this-> m_assemblyLoaderPathString = assemblyLoader.native();
 
             component_entry_point_fn entryPoint = nullptr;
             u32 result = loadAssembly(
-                    assemblyPathStr.c_str(),
+                    this->m_assemblyLoaderPathString.c_str(),
                     dotnetType,
                     dotnetTypeMethod,
                     nullptr,
