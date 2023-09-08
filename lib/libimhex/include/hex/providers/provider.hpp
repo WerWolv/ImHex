@@ -36,7 +36,34 @@ namespace hex::prv {
         Provider();
         virtual ~Provider();
 
+        /**
+         * @brief Opens this provider
+         * @note The return value of this function allows to ensure the provider is available,
+         * so calling Provider::isAvailable() just after a call to open() that returned true is redundant.
+         * @note This is not related to the EventProviderOpened event
+         * @return true if the provider was opened successfully, else false
+         */
+        [[nodiscard]] virtual bool open() = 0;
+
+        /**
+         * @brief Closes this provider
+         * @note This function is called when the user requests for a provider to be closed, e.g. by closing a tab.
+         * In general, this function should close the underlying data source but leave the provider in a state where
+         * it can be opened again later by calling the open() function again.
+         */
+        virtual void close() = 0;
+
+        /**
+         * @brief Checks if this provider is open and can be used to access data
+         * @return Generally, if the open() function succeeded and the data source was successfully opened, this
+         * function should return true
+         */
         [[nodiscard]] virtual bool isAvailable() const = 0;
+
+        /**
+         * @brief Checks if the data in this provider can be read
+         * @return True if the provider is readable, false otherwise
+         */
         [[nodiscard]] virtual bool isReadable() const  = 0;
 
         /**
@@ -44,6 +71,11 @@ namespace hex::prv {
          *   This may be false for e.g. a file opened in read-only
          */
         [[nodiscard]] virtual bool isWritable() const  = 0;
+
+        /**
+         * @brief Controls if the user can resize this provider
+         * @return True if the provider is resizable, false otherwise
+         */
         [[nodiscard]] virtual bool isResizable() const = 0;
 
         /**
@@ -51,7 +83,7 @@ namespace hex::prv {
          *   This is mainly used by providers that aren't buffered, and so don't need to be saved
          *   This function will usually return false for providers that aren't writable, but this isn't guaranted
          */
-        [[nodiscard]] virtual bool isSavable() const   = 0;
+        [[nodiscard]] virtual bool isSavable() const = 0;
 
         /**
          * @brief Controls whether we can dump data from this provider (e.g. "save as", or "export -> ..").
@@ -63,7 +95,7 @@ namespace hex::prv {
 
         /**
          * @brief Controls whether this provider can be saved as a recent entry
-         *   Tipitcally used for providers that do not retain data, e.g. the memory provider
+         *   Typically used for providers that do not retain data, e.g. the memory provider
          */
         [[nodiscard]] virtual bool isSavableAsRecent() const { return true; }
 
@@ -84,20 +116,13 @@ namespace hex::prv {
          */
         virtual void write(u64 offset, const void *buffer, size_t size);
 
-        virtual void resize(size_t newSize);
-        virtual void insert(u64 offset, size_t size);
-        virtual void remove(u64 offset, size_t size);
-
-        virtual void save();
-        virtual void saveAs(const std::fs::path &path);
-
         /**
          * @brief Read data from this provider, without applying overlays and patches
          * @param offset offset to start reading the data
          * @param buffer buffer to write read data
          * @param size number of bytes to read
          */
-        virtual void readRaw(u64 offset, void *buffer, size_t size)        = 0;
+        virtual void readRaw(u64 offset, void *buffer, size_t size) = 0;
         /**
          * @brief Write data directly to this provider
          * @param offset offset to start writing the data
@@ -105,7 +130,39 @@ namespace hex::prv {
          * @param size number of bytes to write
          */
         virtual void writeRaw(u64 offset, const void *buffer, size_t size) = 0;
-        [[nodiscard]] virtual size_t getActualSize() const                 = 0;
+
+        /**
+         * @brief Get the full size of the data in this provider
+         * @return The size of the entire available data of this provider
+         */
+        [[nodiscard]] virtual size_t getActualSize() const = 0;
+
+        /**
+         * @brief Gets the type name of this provider
+         * @note This is mainly used to be stored in project files and recents to be able to later on
+         * recreate this exact provider type. This needs to be unique across all providers, this is usually something
+         * like "hex.builtin.provider.memory" or "hex.builtin.provider.file"
+         * @return The provider's type name
+         */
+        [[nodiscard]] virtual std::string getTypeName() const = 0;
+
+        /**
+         * @brief Gets a human readable representation of the current provider
+         * @note This is mainly used to display the provider in the UI. For example, the file provider
+         * will return the file name here
+         * @return The name of the current provider
+         */
+        [[nodiscard]] virtual std::string getName() const = 0;
+
+
+
+        virtual void resize(size_t newSize);
+        virtual void insert(u64 offset, size_t size);
+        virtual void remove(u64 offset, size_t size);
+
+        virtual void save();
+        virtual void saveAs(const std::fs::path &path);
+
 
         void applyOverlays(u64 offset, void *buffer, size_t size);
 
@@ -130,19 +187,8 @@ namespace hex::prv {
         [[nodiscard]] virtual size_t getSize() const;
         [[nodiscard]] virtual std::optional<u32> getPageOfAddress(u64 address) const;
 
-        [[nodiscard]] virtual std::string getName() const                                                 = 0;
-        [[nodiscard]] virtual std::vector<Description> getDataDescription() const = 0;
+        [[nodiscard]] virtual std::vector<Description> getDataDescription() const;
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
-
-        /**
-         * @brief Opens this provider
-         * the return value of this function allows to ensure the provider is available,
-         * so calling Provider::isAvailable() just after a call to open() that returned true is dedundant.
-         * @note This is not related to the EventProviderOpened event
-         * @return true if the provider was opened sucessfully, else false
-         */
-        [[nodiscard]] virtual bool open() = 0;
-        virtual void close() = 0;
 
         void addPatch(u64 offset, const void *buffer, size_t size, bool createUndo = false);
         void createUndoPoint();
@@ -156,9 +202,7 @@ namespace hex::prv {
         [[nodiscard]] virtual bool hasFilePicker() const;
         virtual bool handleFilePicker();
 
-        virtual std::vector<MenuEntry> getMenuEntries() {
-            return { };
-        };
+        virtual std::vector<MenuEntry> getMenuEntries() { return { }; }
 
         [[nodiscard]] virtual bool hasLoadInterface() const;
         [[nodiscard]] virtual bool hasInterface() const;
@@ -170,8 +214,6 @@ namespace hex::prv {
 
         [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings = { }) const;
         virtual void loadSettings(const nlohmann::json &settings);
-
-        [[nodiscard]] virtual std::string getTypeName() const = 0;
 
         void markDirty(bool dirty = true) { this->m_dirty = dirty; }
         [[nodiscard]] bool isDirty() const { return this->m_dirty; }
