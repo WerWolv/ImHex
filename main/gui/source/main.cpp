@@ -25,6 +25,22 @@
 
 using namespace hex;
 
+// Function used by c++ to get the size of the html canvas
+EM_JS(int, canvas_get_width, (), {
+  return Module.canvas.width;
+});
+
+// Function used by c++ to get the size of the html canvas
+EM_JS(int, canvas_get_height, (), {
+  return Module.canvas.height;
+});
+
+// Function called by javascript
+EM_JS(void, resizeCanvas, (), {
+  js_resizeCanvas();
+});
+
+
 namespace {
 
     /**
@@ -139,9 +155,33 @@ namespace {
                 //     deinitializeImHex();
                 // };
 
+                // delete splash window (do it before creating the main window so glfw destroys the window)
+                delete splashWindow;
+
+                emscripten_cancel_main_loop();
+
                 // Main window
                 window = new Window();
-                emscripten_set_main_loop([](){ window->loop(); }, 60, 0);
+
+                resizeCanvas();
+
+                emscripten_set_main_loop([](){
+                    static int g_width = 0;
+                    static int g_height = 0;
+
+                    int width = canvas_get_width();
+                    int height = canvas_get_height();
+
+                    if(g_width != width || g_height != height) {
+                        // size has changed
+
+                        g_width = width;
+                        g_height = height;
+                        window->resize(g_width, g_height);
+                    }
+
+                    window->fullFrame();
+                }, 60, 0);
             }
         }, 60, 0);
         // end of initializeImHex()
