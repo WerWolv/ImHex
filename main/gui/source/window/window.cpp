@@ -995,13 +995,17 @@ namespace hex {
         glfwShowWindow(this->m_window);
     }
 
+    void Window::resize(int width, int height) {
+        glfwSetWindowSize(this->m_window, width, height);
+    }
+
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
 
         auto fonts = View::getFontAtlas();
 
         // Initialize ImGui and all other ImGui extensions
-        GImGui   = ImGui::CreateContext(fonts);
+        GImGui   = ImGui::CreateContext();
         GImPlot  = ImPlot::CreateContext();
         GImNodes = ImNodes::CreateContext();
 
@@ -1094,10 +1098,14 @@ namespace hex {
             }
         }
 
+        io.Fonts->Clear();
+
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
+        #elif defined(OS_EMSCRIPTEN)
+            ImGui_ImplOpenGL3_Init();
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif

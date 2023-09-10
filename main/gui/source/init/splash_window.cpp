@@ -372,6 +372,8 @@ namespace hex::init {
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
+        #elif defined(OS_EMSCRIPTEN)
+            ImGui_ImplOpenGL3_Init();
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif
