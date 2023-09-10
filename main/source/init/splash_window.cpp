@@ -75,11 +75,12 @@ namespace hex::init {
                         };
 
                         auto startTime = std::chrono::high_resolution_clock::now();
-                        if (!task())
-                            status = false;
+                        bool taskStatus = task();
                         auto endTime = std::chrono::high_resolution_clock::now();
 
-                        log::info("Task '{}' finished in {} ms", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count());
+                        log::info("Task '{}' finished in {} ms (success={})", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count(), taskStatus);
+                        
+                        status = status && taskStatus;
 
                         {
                             std::lock_guard guard(this->m_progressMutex);
@@ -215,7 +216,13 @@ namespace hex::init {
 
         // Check if all background tasks have finished so the splash screen can be closed
         if (this->tasksSucceeded.wait_for(0s) == std::future_status::ready) {
-            return this->tasksSucceeded.get() ? FrameResult::success : FrameResult::failure;
+            if (this->tasksSucceeded.get()) {
+                log::debug("All tasks finished with success !");
+                return FrameResult::success;
+            } else {
+                log::warn("All tasks finished, but some failed");
+                return FrameResult::failure;
+            }
         }
 
         return FrameResult::wait;

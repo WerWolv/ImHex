@@ -229,6 +229,10 @@ namespace hex::prv {
         return page;
     }
 
+    std::vector<Provider::Description> Provider::getDataDescription() const {
+        return { };
+    }
+
     void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {
         if (createUndo) {
             // Delete all patches after the current one if a modification is made while

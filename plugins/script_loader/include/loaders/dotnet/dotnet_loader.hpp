@@ -18,6 +18,7 @@ namespace hex::script::loader {
 
     private:
         std::function<bool(const std::fs::path&)> m_loadAssembly;
+        std::fs::path::string_type m_assemblyLoaderPathString;
     };
 
 }
