@@ -69,11 +69,19 @@ namespace hex::plugin::builtin {
                     }
 
                     provider->setID(id);
-                    provider->loadSettings(providerSettings.at("settings"));
-                    if (!provider->open() || !provider->isAvailable() || !provider->isReadable()) {
-                        providerWarnings[provider] = provider->getErrorMessage();
-                    } else
-                        EventManager::post<EventProviderOpened>(provider);
+                    bool loaded = false;
+                    try {
+                        provider->loadSettings(providerSettings.at("settings"));
+                        loaded = true;
+                    } catch (const std::exception &e){
+                            providerWarnings[provider] = e.what();
+                    }
+                    if (loaded) {
+                        if (!provider->open() || !provider->isAvailable() || !provider->isReadable()) {
+                            providerWarnings[provider] = provider->getErrorMessage();
+                        } else
+                            EventManager::post<EventProviderOpened>(provider);
+                    }
                 }
 
                 std::string warningMsg;
