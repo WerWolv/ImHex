@@ -156,6 +156,8 @@ namespace hex {
     }
 
     void Window::fullFrame() {
+        this->m_lastFrameTime = glfwGetTime();
+
         glfwPollEvents();
 
         // Render frame
