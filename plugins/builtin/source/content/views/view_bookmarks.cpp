@@ -39,6 +39,7 @@ namespace hex::plugin::builtin {
             ImHexApi::Provider::markDirty();
 
             EventManager::post<EventBookmarkCreated>(this->m_bookmarks->back());
+            EventManager::post<EventHighlightingChanged>();
         });
 
         // Draw hex editor background highlights for bookmarks
@@ -374,6 +375,7 @@ namespace hex::plugin::builtin {
                 // Remove the bookmark that was marked for removal
                 if (bookmarkToRemove != this->m_bookmarks->end()) {
                     this->m_bookmarks->erase(bookmarkToRemove);
+                    EventManager::post<EventHighlightingChanged>();
                 }
             }
             ImGui::EndChild();
