@@ -21,9 +21,6 @@
 
 #if defined(OS_EMSCRIPTEN)
 #include <emscripten.h>
-#endif
-
-using namespace hex;
 
 // Function used by c++ to get the size of the html canvas
 EM_JS(int, canvas_get_width, (), {
@@ -39,7 +36,9 @@ EM_JS(int, canvas_get_height, (), {
 EM_JS(void, resizeCanvas, (), {
   js_resizeCanvas();
 });
+#endif
 
+using namespace hex;
 
 namespace {
 

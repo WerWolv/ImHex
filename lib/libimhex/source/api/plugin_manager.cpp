@@ -11,13 +11,27 @@
 #include <filesystem>
 #include <system_error>
 
-namespace test {
-    #include <plugin_builtin.hpp>
-}
-
 namespace hex {
 
+    #if defined(OS_EMSCRIPTEN)
+
+    // we define a namespace because all these functions are already defined as member functions of this class
+    namespace test {
+        #include <plugin_builtin.hpp>
+    }
+
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
+        this->m_initializePluginFunction = (InitializePluginFunc) test::initializePlugin;
+        this->m_getPluginNameFunction = test::getPluginName;
+        this->m_getPluginAuthorFunction = test::getPluginAuthor;
+        this->m_getPluginDescriptionFunction = test::getPluginDescription;
+        this->m_getCompatibleVersionFunction = test::getCompatibleVersion;
+        this->m_setImGuiContextFunction = (SetImGuiContextFunc) test::setImGuiContext;
+        this->m_isBuiltinPluginFunction = test::isBuiltinPlugin;
+    }
+    #else
+    Plugin::Plugin(const std::fs::path &path) : m_path(path) {
+        
         #if defined(OS_WINDOWS)
             this->m_handle = LoadLibraryW(path.c_str());
 
@@ -26,30 +40,24 @@ namespace hex {
                 return;
             }
         #else
-            // this->m_handle = dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY);
+            this->m_handle = dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY);
 
-            // if (this->m_handle == nullptr) {
-            //     log::error("dlopen failed: {}!", dlerror());
-            //     return;
-            // }
+            if (this->m_handle == nullptr) {
+                log::error("dlopen failed: {}!", dlerror());
+                return;
+            }
         #endif
 
-        // this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
-        this->m_initializePluginFunction = (InitializePluginFunc) test::initializePlugin;
-        this->m_getPluginNameFunction = test::getPluginName;
-        this->m_getPluginAuthorFunction = test::getPluginAuthor;
-        this->m_getPluginDescriptionFunction = test::getPluginDescription;
-        this->m_getCompatibleVersionFunction = test::getCompatibleVersion;
-        this->m_setImGuiContextFunction = (SetImGuiContextFunc) test::setImGuiContext;
-        this->m_isBuiltinPluginFunction = test::isBuiltinPlugin;
-        // this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
-        // this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
-        // this->m_getPluginDescriptionFunction = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
-        // this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
-        // this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
-        // this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
-        // this->m_getSubCommandsFunction       = getPluginFunction<GetSubCommandsFunc>("getSubCommands");
+        this->m_initializePluginFunction     = getPluginFunction<InitializePluginFunc>("initializePlugin");
+        this->m_getPluginNameFunction        = getPluginFunction<GetPluginNameFunc>("getPluginName");
+        this->m_getPluginAuthorFunction      = getPluginFunction<GetPluginAuthorFunc>("getPluginAuthor");
+        this->m_getPluginDescriptionFunction = getPluginFunction<GetPluginDescriptionFunc>("getPluginDescription");
+        this->m_getCompatibleVersionFunction = getPluginFunction<GetCompatibleVersionFunc>("getCompatibleVersion");
+        this->m_setImGuiContextFunction      = getPluginFunction<SetImGuiContextFunc>("setImGuiContext");
+        this->m_isBuiltinPluginFunction      = getPluginFunction<IsBuiltinPluginFunc>("isBuiltinPlugin");
+        this->m_getSubCommandsFunction       = getPluginFunction<GetSubCommandsFunc>("getSubCommands");
     }
+    #endif
 
     Plugin::Plugin(Plugin &&other) noexcept {
         this->m_handle = other.m_handle;
@@ -188,30 +196,32 @@ namespace hex {
 
     }
 
+    #if defined(OS_EMSCRIPTEN)
     bool PluginManager::load(const std::fs::path &pluginFolder) {
         if (s_plugins.empty()) {
+            // add a bogus plugin, the argument is not used, field functions are hardcoded defined in the constructor
             s_plugins.emplace_back("nopath");
         }
+        return true;
+    }
+    #else
+    bool PluginManager::load(const std::fs::path &pluginFolder) {
+        if (!wolv::io::fs::exists(pluginFolder))
+            return false;
+
+        s_pluginFolder = pluginFolder;
+
+        for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
+            if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
+                s_plugins.emplace_back(pluginPath.path());
+        }
+
+        if (s_plugins.empty())
+            return false;
 
         return true;
-
-        // if (!wolv::io::fs::exists(pluginFolder))
-        //     return false;
-
-        // s_pluginFolder = pluginFolder;
-
-        // log::warn("Folder A: {}", pluginFolder.string());
-        // for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
-        //     log::warn("Folder B: {}", pluginPath.path().string());
-        //     if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-        //         s_plugins.emplace_back(pluginPath.path());
-        // }
-
-        // if (s_plugins.empty())
-        //     return false;
-
-        // return true;
     }
+    #endif
 
     void PluginManager::unload() {
         s_plugins.clear();
