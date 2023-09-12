@@ -447,7 +447,7 @@ namespace hex::plugin::builtin {
             AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_specific_string.name");
         else if (this->m_searchSettings.mode == SearchSettings::Mode::Value) {
             if (this->m_searchSettings.value.inputMin == "250" && this->m_searchSettings.value.inputMax == "1000")
-                AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_specific_string.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_numeric.name");
         }
 
         this->m_occurrenceTree->clear();
