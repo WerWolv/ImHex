@@ -18,6 +18,8 @@
 
 #if !defined(OS_EMSCRIPTEN)
 #include <nfd.hpp>
+#else
+#include <emscripten.h>
 #endif
 
 #include <algorithm>
@@ -95,9 +97,58 @@ namespace hex::fs {
     }
 
     #if defined(OS_EMSCRIPTEN)
+
+    std::function<void(std::fs::path)> currentCallback;
+
+    EMSCRIPTEN_KEEPALIVE
+    extern "C" void openFileCallback(char* path) {
+        currentCallback(path);
+    }
+
+    EM_JS(int, callJs_openFile, (bool multiple), {
+        let selector = document.createElement("input");
+        selector.type = "file";
+        selector.style = "display: none";
+        if (multiple) {
+            selector.multiple = true;
+        }
+        selector.onchange = () => {
+            if (selector.files.length == 0) return;
+            
+            FS.createPath("/", "openedFiles");
+            for (let file of selector.files) {
+                const fr = new FileReader();
+                fr.onload = () => {
+                    let path = "/openedFiles/"+file.name;
+                    if (FS.analyzePath(path).exists) {
+                        FS.unlink(path);
+                    }
+                    FS.createDataFile("/openedFiles/", file.name, fr.result, true, true);
+                    Module._openFileCallback(stringToNewUTF8(path));
+                };
+                fr.readAsText(file);
+                
+            }
+        };
+        selector.click();
+    });
+
     bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
-        hex::unused(mode, validExtensions, callback, defaultPath, multiple);
-        return false;
+        switch (mode) {
+            case DialogMode::Open:
+                currentCallback = callback;
+                callJs_openFile(multiple);
+                break;
+            case DialogMode::Save:
+                throw std::logic_error("TODO");
+                break;
+            case DialogMode::Folder:
+                throw std::logic_error("Selecting a folder is not implemented");
+                return false;
+            default:
+                std::unreachable();
+        }
+        return true;
     }
     #else
     bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensionsStr, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
