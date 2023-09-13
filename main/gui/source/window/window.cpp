@@ -926,6 +926,7 @@ namespace hex {
             win->processEvent();
         });
 
+        #if !defined(OS_EMSCRIPTEN)
         // Register key press callback
         glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
             hex::unused(mods);
@@ -950,6 +951,7 @@ namespace hex {
 
             win->processEvent();
         });
+        #endif
 
         // Register cursor position callback
         glfwSetCursorPosCallback(this->m_window, [](GLFWwindow *window, double x, double y) {
