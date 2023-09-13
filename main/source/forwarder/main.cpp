@@ -30,12 +30,18 @@ int main() {
     if (CreateProcessW(executableFullPath.wstring().c_str(), GetCommandLineW(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &process) == FALSE) {
         auto error = GetLastError();
 
-        std::wstring errorMessage = L"An error has occurred while trying to launch ImHex\n\nError code: 0x" + std::to_wstring(error);
+        wchar_t errorMessageString[1024];
+        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, error, 0, errorMessageString, 1024, nullptr);
 
-        std::wstring formattedErrorCode;
-        FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, nullptr, error, 0, reinterpret_cast<LPWSTR>(&formattedErrorCode), 0, nullptr);
+        std::wstring errorMessage = L"Failed to start ImHex:\n\nError code: ";
 
-        errorMessage += L"\n" + formattedErrorCode;
+        // Format error code to have 8 digits hex
+        wchar_t errorCodeString[11];
+        swprintf_s(errorCodeString, 11, L"0x%08X", error);
+
+        errorMessage += errorCodeString;
+        errorMessage += L"\n\n";
+        errorMessage += errorMessageString;
 
         MessageBoxW(nullptr, errorMessage.c_str(), L"ImHex Forwarder", MB_OK | MB_ICONERROR);
         return 1;
