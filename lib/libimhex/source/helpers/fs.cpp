@@ -101,9 +101,42 @@ namespace hex::fs {
     std::function<void(std::fs::path)> currentCallback;
 
     EMSCRIPTEN_KEEPALIVE
-    extern "C" void openFileCallback(char* path) {
+    extern "C" void fileBrowserCallback(char* path) {
         currentCallback(path);
     }
+
+    EM_JS(int, callJs_saveFile, (const char *rawFilename), {
+        let filename = UTF8ToString(rawFilename) || "file.bin";
+        FS.createPath("/", "savedFiles");
+
+        if (FS.analyzePath(filename).exists) {
+            FS.unlink(filename);
+        }
+
+        // call callback that will write the file
+        Module._fileBrowserCallback(stringToNewUTF8("/savedFiles/"+filename));
+
+        let data = FS.readFile("/savedFiles/"+filename);
+
+        const reader = Object.assign(new FileReader(), {
+            onload: () => {
+
+                // show popup to user to download
+                let saver = document.createElement('a');
+                saver.href = reader.result;
+                saver.download = filename;
+                saver.style = "display: none";
+
+                saver.click();
+
+            },
+            onerror: () => {
+                throw new Error(reader.error);
+            },
+        });
+        reader.readAsDataURL(new File([data], "", { type: "application/octet-stream" }));
+
+    });
 
     EM_JS(int, callJs_openFile, (bool multiple), {
         let selector = document.createElement("input");
@@ -124,7 +157,7 @@ namespace hex::fs {
                         FS.unlink(path);
                     }
                     FS.createDataFile("/openedFiles/", file.name, fr.result, true, true);
-                    Module._openFileCallback(stringToNewUTF8(path));
+                    Module._fileBrowserCallback(stringToNewUTF8(path));
                 };
                 fr.readAsText(file);
                 
@@ -135,16 +168,21 @@ namespace hex::fs {
 
     bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
         switch (mode) {
-            case DialogMode::Open:
+            case DialogMode::Open: {
                 currentCallback = callback;
                 callJs_openFile(multiple);
                 break;
-            case DialogMode::Save:
-                throw std::logic_error("TODO");
+            }
+            case DialogMode::Save: {
+                currentCallback = callback;
+                std::fs::path path(defaultPath);
+                callJs_saveFile(path.filename().string().c_str());
                 break;
-            case DialogMode::Folder:
+            }
+            case DialogMode::Folder: {
                 throw std::logic_error("Selecting a folder is not implemented");
                 return false;
+            }
             default:
                 std::unreachable();
         }
