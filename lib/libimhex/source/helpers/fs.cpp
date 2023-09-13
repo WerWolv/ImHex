@@ -16,6 +16,10 @@
     #include <limits.h>
 #endif
 
+#if !defined(OS_EMSCRIPTEN)
+#include <nfd.hpp>
+#endif
+
 #include <algorithm>
 #include <filesystem>
 #include <utility>
@@ -90,7 +94,17 @@ namespace hex::fs {
         #endif
     }
 
-    bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+    #if defined(OS_EMSCRIPTEN)
+    bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+        hex::unused(mode, validExtensions, callback, defaultPath, multiple);
+        return false;
+    }
+    #else
+    bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensionsStr, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+        std::vector<nfdfilteritem_t> validExtensions;
+        for (auto ext : validExtensionsStr) {
+            validExtensions.emplace_back(ext.c_str());
+        }
         NFD::ClearError();
 
         if (NFD::Init() != NFD_OKAY) {
@@ -144,6 +158,7 @@ namespace hex::fs {
 
         return result == NFD_OKAY;
     }
+    #endif
 
     std::vector<std::fs::path> getDataPaths() {
         std::vector<std::fs::path> paths;

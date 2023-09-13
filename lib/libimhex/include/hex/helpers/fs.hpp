@@ -8,8 +8,6 @@
 #include <filesystem>
 #include <functional>
 
-#include <nfd.hpp>
-
 #include <wolv/io/fs.hpp>
 
 namespace hex::fs {
@@ -21,7 +19,7 @@ namespace hex::fs {
     };
 
     void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback);
-    bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
+    bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
 
     void openFileExternal(const std::fs::path &filePath);
     void openFolderExternal(const std::fs::path &dirPath);
