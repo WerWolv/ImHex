@@ -2,8 +2,8 @@
 
 namespace hex {
 
-    std::map<void *, EventManager::EventList::iterator>& EventManager::getTokenStore() {
-        static std::map<void *, EventManager::EventList::iterator> tokenStore;
+    std::multimap<void *, EventManager::EventList::iterator>& EventManager::getTokenStore() {
+        static std::multimap<void *, EventManager::EventList::iterator> tokenStore;
 
         return tokenStore;
     }

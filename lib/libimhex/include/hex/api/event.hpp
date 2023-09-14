@@ -161,7 +161,7 @@ namespace hex {
         }
 
     private:
-        static std::map<void *, EventList::iterator>& getTokenStore();
+        static std::multimap<void *, EventList::iterator>& getTokenStore();
         static EventList& getEvents();
     };
 
