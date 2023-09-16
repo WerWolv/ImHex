@@ -206,6 +206,7 @@ namespace hex {
     EVENT_DEF(EventWindowInitialized);
     EVENT_DEF(EventBookmarkCreated, ImHexApi::Bookmarks::Entry&);
     EVENT_DEF(EventPatchCreated, u64, u8, u8);
+    EVENT_DEF(EventPatternEvaluating);
     EVENT_DEF(EventPatternExecuted, const std::string&);
     EVENT_DEF(EventPatternEditorChanged, const std::string&);
     EVENT_DEF(EventStoreContentDownloaded, const std::fs::path&);

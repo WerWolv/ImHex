@@ -66,6 +66,11 @@ namespace hex {
             }
 
             void store() {
+                // During a crash settings can be empty, causing them to be overwritten.
+                if(getSettingsData().empty()) {
+                    return;
+                }
+
                 for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
                     wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
 

@@ -20,6 +20,14 @@ namespace hex::plugin::builtin {
             this->m_patternDrawer.reset();
         });
 
+        EventManager::subscribe<EventPatternEvaluating>(this, [this]{
+            this->m_patternDrawer.reset();
+        });
+
+        EventManager::subscribe<EventPatternExecuted>(this, [this](auto){
+            this->m_patternDrawer.reset();
+        });
+
         // Handle jumping to a pattern's location when it is clicked
         this->m_patternDrawer.setSelectionCallback([](Region region){ ImHexApi::HexEditor::setSelection(region); });
     }
@@ -27,6 +35,8 @@ namespace hex::plugin::builtin {
     ViewPatternData::~ViewPatternData() {
         EventManager::unsubscribe<EventSettingsChanged>(this);
         EventManager::unsubscribe<EventProviderChanged>(this);
+        EventManager::unsubscribe<EventPatternEvaluating>(this);
+        EventManager::unsubscribe<EventPatternExecuted>(this);
     }
 
     void ViewPatternData::drawContent() {
@@ -36,20 +46,10 @@ namespace hex::plugin::builtin {
                 // Make sure the runtime has finished evaluating and produced valid patterns
                 auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                 if (!runtime.arePatternsValid()) {
-                    // If the runtime is still evaluating, reset the pattern drawer
-                    this->m_shouldReset = true;
-                    this->m_patternDrawer.reset();
                     this->m_patternDrawer.draw({ });
                 } else {
                     // If the runtime has finished evaluating, draw the patterns
                     if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                        auto runId = runtime.getRunId();
-                        if (this->m_shouldReset || this->m_lastRunId != runId) {
-                            this->m_lastRunId = runId;
-                            this->m_patternDrawer.reset();
-                            this->m_shouldReset = false;
-                        }
-
                         this->m_patternDrawer.draw(runtime.getPatterns(), &runtime);
                     }
                 }
