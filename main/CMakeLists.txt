@@ -28,11 +28,28 @@ set(LIBROMFS_PROJECT_NAME imhex)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/main/libromfs EXCLUDE_FROM_ALL)
 set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-set_target_properties(main PROPERTIES
+if (WIN32)
+    # HACK: `imhex` -> `imhex-gui` and we add a forwarder as `imhex`, so that the user can just run `imhex` and it will start the GUI
+    # Workaround for .NET plugin crashing caused by the console window being freed.
+    set(IMHEX_APPLICATION_NAME "imhex-gui") 
+    add_executable(imhex-forwarder
+        source/forwarder/main.cpp
+        ${IMHEX_ICON})
+    target_link_libraries(imhex-forwarder PRIVATE libwolv-io ${FMT_LIBRARIES})
+    set_target_properties(imhex-forwarder PROPERTIES
         OUTPUT_NAME "imhex"
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/..
         CXX_VISIBILITY_PRESET hidden
         POSITION_INDEPENDENT_CODE ON)
+else ()
+    set(IMHEX_APPLICATION_NAME "imhex")
+endif ()
+
+set_target_properties(main PROPERTIES
+    OUTPUT_NAME ${IMHEX_APPLICATION_NAME}
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/..
+    CXX_VISIBILITY_PRESET hidden
+    POSITION_INDEPENDENT_CODE ON)
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 

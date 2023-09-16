@@ -237,7 +237,6 @@ namespace hex {
         ::GetWindowThreadProcessId(consoleWindow, &processId);
         if (GetCurrentProcessId() == processId) {
             ShowWindow(consoleWindow, SW_HIDE);
-            FreeConsole();
             log::impl::redirectToFile();
         } else {
             auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
