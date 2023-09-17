@@ -21,6 +21,7 @@
 
 #if defined(OS_EMSCRIPTEN)
 #include <emscripten.h>
+#include <emscripten/html5.h>
 
 // Function used by c++ to get the size of the html canvas
 EM_JS(int, canvas_get_width, (), {
@@ -150,9 +151,17 @@ namespace {
                 handleFileOpenRequest();
 
                 // Clean up everything after the main window is closed
-                // ON_SCOPE_EXIT {
-                //     deinitializeImHex();
-                // };
+                emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData){
+                    try {
+                        deinitializeImHex();
+                        return "";
+                    } catch (const std::exception &ex) {
+                        std::string *msg = new std::string("Failed to deinitialize ImHex. This is just a message warning you of this, the application has already closed, you probably can't do anything about it. Message: ");
+                        msg->append(std::string(ex.what()));
+                        log::fatal("{}", *msg);
+                        return msg->c_str();
+                    }
+                });
 
                 // delete splash window (do it before creating the main window so glfw destroys the window)
                 delete splashWindow;
