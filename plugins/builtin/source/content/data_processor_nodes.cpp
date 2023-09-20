@@ -563,7 +563,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &input = this->getBufferOnInput(0);
 
-            float output = 0;
+            double output = 0;
             if (input.empty() || input.size() != sizeof(output))
                 throwNodeError("Buffer is empty or not the right size to fit a float");
 
