@@ -36,6 +36,7 @@ if(EMSCRIPTEN)
     target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
     target_link_options(main PRIVATE -sEXPORTED_RUNTIME_METHODS=ccall)
     target_link_options(main PRIVATE -sFETCH)
+    target_link_options(main PRIVATE -sLEGACY_GL_EMULATION)
 endif()
 
 set_target_properties(main PROPERTIES

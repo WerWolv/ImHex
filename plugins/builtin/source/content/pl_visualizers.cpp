@@ -306,7 +306,7 @@ namespace hex::plugin::builtin {
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glMatrixMode(GL_PROJECTION);
                 glLoadIdentity();
-                //glFrustum(-1.0F, 1.0F, -1.0F, 1.0F, 0.0000001F, 10000000.0F);
+                glFrustum(-1.0F, 1.0F, -1.0F, 1.0F, 0.0000001F, 10000000.0F);
 
                 if (indices.empty())
                     vertexBuffer.draw();
