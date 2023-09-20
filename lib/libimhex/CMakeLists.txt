@@ -27,6 +27,8 @@ set(LIBIMHEX_SOURCES
         source/helpers/magic.cpp
         source/helpers/crypto.cpp
         source/helpers/http_requests.cpp
+        source/helpers/http_requests_native.cpp
+        source/helpers/http_requests_emscripten.cpp
         source/helpers/opengl.cpp
         source/helpers/patches.cpp
         source/helpers/encoding_file.cpp
@@ -71,6 +73,10 @@ target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRAR
 if (EMSCRIPTEN)
     target_include_directories(libimhex PRIVATE /src/plugins/builtin/include)
     target_link_libraries(libimhex PRIVATE builtin)
+else()
+    # curl is only used in non-emscripten builds
+    target_include_directories(libimhex PUBLIC  ${CURL_INCLUDE_DIRS})
+    target_link_libraries(libimhex PUBLIC ${LIBCURL_LIBRARIES})
 endif()
 
 find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
@@ -85,7 +91,7 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
