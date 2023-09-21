@@ -159,7 +159,7 @@ namespace hex::fs {
                     FS.createDataFile("/openedFiles/", file.name, fr.result, true, true);
                     Module._fileBrowserCallback(stringToNewUTF8(path));
                 };
-                fr.readAsText(file);
+                fr.readAsBinaryString(file);
                 
             }
         };
