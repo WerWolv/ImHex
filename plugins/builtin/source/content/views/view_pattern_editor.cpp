@@ -1124,7 +1124,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(paths, std::vector<std::string>{ { "Pattern File", "hexpat" } }, false,
+                                                    PopupFileChooser::open(paths, std::vector<hex::fs::itemfilter>{ { "Pattern File", "hexpat" } }, false,
                                                                                [this, provider](const std::fs::path &path) {
                                                                                    this->loadPatternFile(path, provider);
                                                                                    AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
