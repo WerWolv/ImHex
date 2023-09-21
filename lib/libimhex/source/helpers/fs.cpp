@@ -166,7 +166,7 @@ namespace hex::fs {
         selector.click();
     });
 
-    bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+    bool openFileBrowser(DialogMode mode, const std::vector<itemfilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
         switch (mode) {
             case DialogMode::Open: {
                 currentCallback = callback;
@@ -189,10 +189,10 @@ namespace hex::fs {
         return true;
     }
     #else
-    bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensionsStr, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
-        std::vector<nfdfilteritem_t> validExtensions;
-        for (auto ext : validExtensionsStr) {
-            validExtensions.emplace_back(ext.c_str());
+    bool openFileBrowser(DialogMode mode, const std::vector<itemfilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+        std::vector<nfdfilteritem_t> validExtensionsNfd;
+        for (auto ext : validExtensions) {
+            validExtensionsNfd.emplace_back(nfdfilteritem_t{ext.name.c_str(), ext.spec.c_str()});
         }
         NFD::ClearError();
 
@@ -209,12 +209,12 @@ namespace hex::fs {
         switch (mode) {
             case DialogMode::Open:
                 if (multiple)
-                    result = NFD::OpenDialogMultiple(outPaths, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                 else
-                    result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                 break;
             case DialogMode::Save:
-                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
                 break;
             case DialogMode::Folder:
                 result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());

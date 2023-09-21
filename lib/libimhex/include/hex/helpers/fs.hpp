@@ -18,8 +18,15 @@ namespace hex::fs {
         Folder
     };
 
+    struct itemfilter {
+        // human-friendly name
+        const std::string name;
+        // extensions that constitute this filter
+        const std::string spec;
+    };
+
     void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback);
-    bool openFileBrowser(DialogMode mode, const std::vector<std::string> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
+    bool openFileBrowser(DialogMode mode, const std::vector<itemfilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
 
     void openFileExternal(const std::fs::path &filePath);
     void openFolderExternal(const std::fs::path &dirPath);
