@@ -791,7 +791,11 @@ namespace hex::plugin::builtin {
                             continue;
 
                         try {
-                            runtime.getInternals().preprocessor->preprocess(runtime, file.readString());
+                            auto &preprocessor = runtime.getInternals().preprocessor;
+                            auto ret = preprocessor->preprocess(runtime, file.readString());
+                            if (!ret.has_value()) {
+                                log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), (*preprocessor->getError()).what());
+                            }
                         } catch (pl::core::err::PreprocessorError::Exception &e) {
                             log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), e.what());
                         }
