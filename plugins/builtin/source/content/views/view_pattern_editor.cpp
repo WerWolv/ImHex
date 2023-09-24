@@ -1311,6 +1311,10 @@ namespace hex::plugin::builtin {
 
             this->m_textEditor.SetBreakpoints(breakpoints);
         });
+
+        ShortcutManager::addGlobalShortcut(Keys::F5 + AllowWhileTyping, [this] {
+            this->m_triggerAutoEvaluate = true;
+        });
     }
 
 }
