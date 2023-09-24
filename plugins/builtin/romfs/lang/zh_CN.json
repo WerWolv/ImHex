@@ -976,6 +976,7 @@
         "hex.builtin.welcome.server_contact.data_collected.version": "ImHex 版本",
         "hex.builtin.welcome.server_contact.data_collected.os": "操作系统",
         "hex.builtin.welcome.server_contact.crash_logs_only": "仅崩溃日志",
-        "hex.builtin.popup.safety_backup.report_error": "向开发者发送崩溃日志"
+        "hex.builtin.popup.safety_backup.report_error": "向开发者发送崩溃日志",
+        "hex.builtin.achievement.starting_out": "起点"
     }
 }
