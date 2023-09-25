@@ -284,13 +284,16 @@ jobs:
         with:
           dotnet-version: '7.0.x'
 
+      - name: 🏔️ Set Environment variables
+        run: |
+          echo COMMIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
+          echo COMMIT_SHA_LONG=$(git rev-parse HEAD) >> $GITHUB_ENV
+          echo COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $GITHUB_ENV
+
       # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
           git config --global --add safe.directory '*'
-          echo COMMIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
-          echo COMMIT_SHA_LONG=$(git rev-parse HEAD) >> $GITHUB_ENV
-          echo COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $GITHUB_ENV
           mkdir -p build
           cd build
           CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                       \
@@ -299,9 +302,9 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
             -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-            -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"              \
-            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
-            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
+            -DIMHEX_COMMIT_HASH_SHORT="${{ env.COMMIT_SHA_SHORT }}"   \
+            -DIMHEX_COMMIT_HASH_LONG="${{ env.COMMIT_SHA_LONG }}"     \
+            -DIMHEX_COMMIT_BRANCH="${{ env.COMMIT_BRANCH }}"          \
             -DIMHEX_ENABLE_LTO=ON                                     \
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
             -DDOTNET_EXECUTABLE="dotnet"                              \
