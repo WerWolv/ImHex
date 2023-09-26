@@ -1249,16 +1249,31 @@ namespace hex::plugin::builtin {
                                                 [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isWritable(); });
 
         /* Jump to */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, 1850, Shortcut::None,
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.hex_editor.menu.edit.jump_to" }, 1850,
                                                 [] {
-                                                    auto provider = ImHexApi::Provider::get();
-                                                    auto selection      = ImHexApi::HexEditor::getSelection();
+                                                    auto provider   = ImHexApi::Provider::get();
+                                                    auto selection  = ImHexApi::HexEditor::getSelection();
 
                                                     u64 value = 0;
                                                     provider->read(selection->getStartAddress(), &value, selection->getSize());
 
-                                                    if (value < provider->getBaseAddress() + provider->getActualSize()) {
-                                                        ImHexApi::HexEditor::setSelection(value, 1);
+                                                    auto littleEndianValue = hex::changeEndianess(value, selection->size, std::endian::little);
+                                                    auto bigEndianValue    = hex::changeEndianess(value, selection->size,  std::endian::big);
+
+                                                    auto canJumpTo = [provider](u64 value) {
+                                                        return (value >= provider->getBaseAddress()) && (value < (provider->getBaseAddress() + provider->getActualSize()));
+                                                    };
+
+                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", littleEndianValue).c_str(), "hex.builtin.common.little_endian"_lang, false, canJumpTo(littleEndianValue))) {
+                                                        if (value < provider->getBaseAddress() + provider->getActualSize()) {
+                                                            ImHexApi::HexEditor::setSelection(littleEndianValue, 1);
+                                                        }
+                                                    }
+
+                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", bigEndianValue).c_str(), "hex.builtin.common.big_endian"_lang, false, canJumpTo(bigEndianValue))) {
+                                                        if (value < provider->getBaseAddress() + provider->getActualSize()) {
+                                                            ImHexApi::HexEditor::setSelection(bigEndianValue, 1);
+                                                        }
                                                     }
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); });
