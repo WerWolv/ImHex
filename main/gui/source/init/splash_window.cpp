@@ -57,11 +57,15 @@ namespace hex::init {
     std::future<bool> WindowSplash::processTasksAsync() {
         return std::async(std::launch::async, [this] {
             bool status = true;
-
             std::atomic<u32> tasksCompleted = 0;
+
+            // Loop over all registered init tasks
             for (const auto &[name, task, async] : this->m_tasks) {
+
+                // Construct a new task callback
                 auto runTask = [&, task = task, name = name] {
                     try {
+                        // Save an iterator to the current task name
                         decltype(this->m_currTaskNames)::iterator taskNameIter;
                         {
                             std::lock_guard guard(this->m_progressMutex);
@@ -69,32 +73,43 @@ namespace hex::init {
                             taskNameIter = std::prev(this->m_currTaskNames.end());
                         }
 
+                        // When the task finished, increment the progress bar
                         ON_SCOPE_EXIT {
                             tasksCompleted++;
                             this->m_progress = float(tasksCompleted) / this->m_tasks.size();
                         };
 
+                        // Execute the actual task and track the amount of time it took to run
                         auto startTime = std::chrono::high_resolution_clock::now();
                         bool taskStatus = task();
                         auto endTime = std::chrono::high_resolution_clock::now();
 
-                        log::info("Task '{}' finished in {} ms (success={})", name, std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count(), taskStatus);
-                        
+                        log::info("Task '{}' finished {} in {} ms",
+                                  name,
+                                  taskStatus ? "successfully" : "unsuccessfully",
+                                  std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count()
+                        );
+
+                        // Track the overall status of the tasks
                         status = status && taskStatus;
 
+                        // Erase the task name from the list of running tasks
                         {
                             std::lock_guard guard(this->m_progressMutex);
                             this->m_currTaskNames.erase(taskNameIter);
                         }
-                    } catch (std::exception &e) {
+                    } catch (const std::exception &e) {
                         log::error("Init task '{}' threw an exception: {}", name, e.what());
                         status = false;
                     } catch (...) {
+                        log::error("Init task '{}' threw an unidentifiable exception", name);
                         status = false;
                     }
                 };
 
 
+                // If the task can be run asynchronously, run it in a separate thread
+                // otherwise run it in this thread and wait for it to finish
                 if (async) {
                     std::thread([runTask]{ runTask(); }).detach();
                 } else {
@@ -102,6 +117,7 @@ namespace hex::init {
                 }
             }
 
+            // Check every 100ms if all tasks have run
             while (tasksCompleted < this->m_tasks.size()) {
                 std::this_thread::sleep_for(100ms);
             }
@@ -127,10 +143,14 @@ namespace hex::init {
         auto drawList = ImGui::GetBackgroundDrawList();
         {
 
+            // Draw the splash screen background
             drawList->AddImage(this->splashBackgroundTexture, ImVec2(0, 0), this->splashBackgroundTexture.getSize() * scale);
 
             {
+
+                // Function to highlight a given number of bytes at a position in the splash screen
                 const auto highlightBytes = [&](ImVec2 start, size_t count, ImColor color, float opacity) {
+                    // Dimensions and number of bytes that are drawn. Taken from the splash screen image
                     const auto hexSize = ImVec2(29, 18) * scale;
                     const auto hexSpacing = ImVec2(17.4, 15) * scale;
                     const auto hexStart = ImVec2(27, 127) * scale;
@@ -141,22 +161,29 @@ namespace hex::init {
 
                     color.Value.w *= opacity;
 
+                    // Loop over all the bytes on the splash screen
                     for (u32 y = u32(start.y); y < u32(hexCount.y); y += 1) {
                         for (u32 x = u32(start.x); x < u32(hexCount.x); x += 1) {
                             if (count-- == 0)
                                 return;
 
+                            // Find the start position of the byte to draw
                             auto pos = hexStart + ImVec2(float(x), float(y)) * (hexSize + hexSpacing);
 
+                            // Fill the rectangle in the byte with the given color
                             drawList->AddRectFilled(pos + ImVec2(0, -hexSpacing.y / 2), pos + hexSize + ImVec2(0, hexSpacing.y / 2), color);
 
+                            // Add some extra color on the right if the current byte isn't the last byte, and we didn't reach the right side of the image
                             if (count > 0 && x != u32(hexCount.x) - 1)
                                 drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + ImVec2(hexSpacing.x, hexSpacing.y / 2), color);
 
+                            // Add some extra color on the left if this is the first byte we're highlighting
                             if (isStart) {
                                 isStart = false;
                                 drawList->AddRectFilled(pos - hexSpacing / 2, pos + ImVec2(0, hexSize.y + hexSpacing.y / 2), color);
                             }
+
+                            // Add some extra color on the right if this is the last byte
                             if (count == 0) {
                                 drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + hexSpacing / 2, color);
                             }
@@ -166,16 +193,21 @@ namespace hex::init {
                     }
                 };
 
+                // Draw all highlights, slowly fading them in as the init tasks progress
                 for (const auto &highlight : this->highlights)
                     highlightBytes(highlight.start, highlight.count, highlight.color, this->progressLerp);
             }
 
             this->progressLerp += (this->m_progress - this->progressLerp) * 0.1F;
 
+            // Draw the splash screen foreground
             drawList->AddImage(this->splashTextTexture, ImVec2(0, 0), this->splashTextTexture.getSize() * scale);
 
+            // Draw the "copyright" notice
             drawList->AddText(ImVec2(35, 85) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("WerWolv\n2020 - {0}", &__DATE__[7]).c_str());
 
+            // Draw version information
+            // In debug builds, also display the current commit hash and branch
             #if defined(DEBUG)
                 const static auto VersionInfo = hex::format("{0} : {1} {2}@{3}", ImHexApi::System::getImHexVersion(), ICON_FA_CODE_BRANCH, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
             #else
@@ -194,8 +226,11 @@ namespace hex::init {
 
             const auto progressStart = progressBackgroundStart + ImVec2(0, 20) * scale;
             const auto progressSize = ImVec2(progressBackgroundSize.x * this->m_progress, 10 * scale);
+
+            // Draw progress bar
             drawList->AddRectFilled(progressStart, progressStart + progressSize, 0xD0FFFFFF);
 
+            // Draw task names separated by | characters
             if (!this->m_currTaskNames.empty()) {
                 drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
                 drawList->AddText(progressStart + ImVec2(5, -20) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(this->m_currTaskNames, " | ")).c_str());
@@ -424,7 +459,7 @@ namespace hex::init {
     }
 
     void WindowSplash::startStartupTasks() {
-        // Launch init tasks in background
+        // Launch init tasks in the background
         this->tasksSucceeded = processTasksAsync();
     }
 

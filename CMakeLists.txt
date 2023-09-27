@@ -54,7 +54,7 @@ addBundledLibraries()
 # Add ImHex sources
 add_subdirectory(lib/libimhex)
 add_subdirectory(main)
-add_custom_target(imhex_all ALL DEPENDS main libimhex)
+add_custom_target(imhex_all ALL DEPENDS main main-forwarder libimhex)
 
 # Add unit tests
 enable_testing()
