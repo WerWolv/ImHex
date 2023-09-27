@@ -120,3 +120,5 @@ if ((NOT GIT_COMMIT_HASH_SHORT STREQUAL "") AND (NOT GIT_COMMIT_HASH_LONG STREQU
 endif ()
 
 addDefineToSource(source/api/imhex_api.cpp "IMHEX_VERSION=\"${IMHEX_VERSION_STRING}\"")
+
+add_dependencies(imhex_all libimhex)
