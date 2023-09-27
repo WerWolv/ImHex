@@ -508,6 +508,11 @@ macro(addBundledLibraries)
     endif ()
 
     if (NOT EMSCRIPTEN)
+        # curl
+        find_package(PkgConfig REQUIRED)
+        pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.60.0)
+
+        # nfd
         if (NOT USE_SYSTEM_NFD)
             add_subdirectory(${EXTERN_LIBS_FOLDER}/nativefiledialog EXCLUDE_FROM_ALL)
             set_target_properties(nfd PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -525,9 +530,6 @@ macro(addBundledLibraries)
         find_package(nlohmann_json 3.10.2 REQUIRED)
         set(NLOHMANN_JSON_LIBRARIES nlohmann_json::nlohmann_json)
     endif()
-
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.60.0)
 
     if (NOT USE_SYSTEM_LLVM)
         add_subdirectory(${EXTERN_LIBS_FOLDER}/llvm-demangle EXCLUDE_FROM_ALL)
