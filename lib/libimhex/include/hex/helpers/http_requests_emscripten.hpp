@@ -65,7 +65,7 @@ namespace hex {
         emscripten_fetch_t* fetch = emscripten_fetch(&this->m_attr, this->m_url.c_str());
 
         data.resize(fetch->numBytes);
-        std::copy(fetch->data, fetch->data + fetch->numBytes-1, data.begin());
+        std::copy(fetch->data, fetch->data + fetch->numBytes, data.begin());
 
         return Result<T>(fetch->status, { data.begin(), data.end() });
     }
