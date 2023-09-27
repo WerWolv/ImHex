@@ -37,6 +37,7 @@ if(EMSCRIPTEN)
     target_link_options(main PRIVATE -sEXPORTED_RUNTIME_METHODS=ccall)
     target_link_options(main PRIVATE -sFETCH)
     target_link_options(main PRIVATE -sLEGACY_GL_EMULATION)
+    target_link_libraries(main PRIVATE idbfs.js)
 endif()
 
 set_target_properties(main PROPERTIES

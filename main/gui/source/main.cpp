@@ -129,9 +129,32 @@ namespace {
     #if defined(OS_EMSCRIPTEN)
     using namespace hex::init;
 
+    void mountFolders() {
+        EM_ASM({
+            // save data directory
+            FS.mkdir("/home/web_user/.local");
+            FS.mount(IDBFS, {}, '/home/web_user/.local');
+            
+            FS.syncfs(true, function (err) {
+                if(!err)return;
+                alert("Failed to load permanent file system: "+err);
+            });
+        });
+    }
+
+    void saveFsData() {
+        EM_ASM({
+            FS.syncfs(function (err) {
+                if(!err)return;
+                alert("Failed to save permanent file system: "+err);
+            });
+        });
+    }
+
     WindowSplash* splashWindow;
     Window* window;
     int runImHex() {        
+        mountFolders();
         // I pasted and modified initializeImHex() here
         splashWindow = new WindowSplash();
 
@@ -153,6 +176,7 @@ namespace {
                 // Clean up everything after the main window is closed
                 emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData){
                     try {
+                        saveFsData();
                         deinitializeImHex();
                         return "";
                     } catch (const std::exception &ex) {
