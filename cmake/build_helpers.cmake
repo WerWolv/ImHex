@@ -492,6 +492,8 @@ macro(addBundledLibraries)
     set(XDGPP_INCLUDE_DIRS "${EXTERN_LIBS_FOLDER}/xdgpp")
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
+    find_package(PkgConfig REQUIRED)
+
     if(NOT USE_SYSTEM_FMT)
         add_subdirectory(${EXTERN_LIBS_FOLDER}/fmt EXCLUDE_FROM_ALL)
         set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
