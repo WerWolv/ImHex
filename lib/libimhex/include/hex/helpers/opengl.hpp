@@ -9,8 +9,13 @@
 #include <span>
 #include <string>
 
-#define GLFW_INCLUDE_ES3
-#include <GLES3/gl3.h>
+#if defined (OS_EMSCRIPTEN)
+    #define GLFW_INCLUDE_ES3
+    #include <GLES3/gl3.h>
+#else
+    #include <imgui_impl_opengl3_loader.h>
+#endif
+
 #include <GLFW/glfw3.h>
 
 namespace hex::gl {

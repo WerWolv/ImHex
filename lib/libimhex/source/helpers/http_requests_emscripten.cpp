@@ -40,15 +40,6 @@ namespace hex {
         });
     }
 
-    std::string HttpRequest::urlEncode(const std::string &input) {
-        throw std::logic_error("Not implemented");
-    }
-
-    std::string HttpRequest::urlDecode(const std::string &input) {
-        throw std::logic_error("Not implemented");
-    }
-
-
     void HttpRequest::setProxy(std::string proxy) { }
 
     void HttpRequest::checkProxyErrors() { }

@@ -46,6 +46,7 @@ verifyCompiler()
 # List plugin names here. Project name must match folder name
 set(PLUGINS
     builtin
+    windows
 )
 
 # Add various defines

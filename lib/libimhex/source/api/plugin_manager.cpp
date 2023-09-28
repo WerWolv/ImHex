@@ -115,7 +115,7 @@ namespace hex {
                 return false;
             }
         } else {
-            log::error("aaaaa");
+            log::error("Plugin '{}' does not have a proper entrypoint", pluginName);
             return false;
         }
 
