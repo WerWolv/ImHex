@@ -28,6 +28,3 @@
 [submodule "lib/external/libwolv"]
 	path = lib/external/libwolv
 	url = https://github.com/WerWolv/libwolv
-[submodule "lib/external/jthread"]
-	path = lib/external/jthread
-	url = https://github.com/josuttis/jthread

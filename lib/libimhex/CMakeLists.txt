@@ -73,13 +73,15 @@ target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRAR
 if (EMSCRIPTEN)
     target_include_directories(libimhex PRIVATE /src/plugins/builtin/include)
     target_link_libraries(libimhex PRIVATE builtin)
+
+    find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
+    target_include_directories(libimhex PRIVATE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
 else()
     # curl is only used in non-emscripten builds
     target_include_directories(libimhex PUBLIC  ${CURL_INCLUDE_DIRS})
     target_link_libraries(libimhex PUBLIC ${LIBCURL_LIBRARIES})
 endif()
 
-target_include_directories(libimhex PRIVATE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
 
 if (WIN32)
     set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
