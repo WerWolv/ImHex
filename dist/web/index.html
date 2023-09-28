@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>WebGui Demo</title>
+    <style>
+      body {
+        font-family: arial;
+        margin: 0;
+        padding: none;
+      }
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      div.emscripten { text-align: center; }
+      div.emscripten_border { border: none; }
+      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+      canvas.emscripten { border: 0px none; background-color: black; }
+    </style>
+  </head>
+  <body>
+
+    <div class="emscripten_border">
+      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    </div>
+
+    <script type='text/javascript'>
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function() {})(),
+        printErr: function(text) {},
+        canvas: (function() {
+          var canvas = document.getElementById('canvas');
+          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+          // application robust, you may want to override this behavior before shipping!
+          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
+          return canvas;
+        })(),
+        setStatus: function(text) {},
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {}
+      };
+      window.addEventListener('resize', js_resizeCanvas, false);
+      function js_resizeCanvas() {
+            document.getElementById('canvas').width = window.innerWidth;
+            document.getElementById('canvas').height = window.innerHeight;
+      }
+
+    </script>
+    <script async type="text/javascript" src="imhex.js"></script>
+  </body>
+</html>
