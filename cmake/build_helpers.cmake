@@ -546,12 +546,6 @@ macro(addBundledLibraries)
         pkg_check_modules(YARA REQUIRED IMPORTED_TARGET yara)
     endif()
 
-    if (NOT USE_SYSTEM_JOSUTTIS_JTHREAD)
-        set(JOSUTTIS_JTHREAD_INCLUDE_DIRS ${EXTERN_LIBS_FOLDER}/jthread/source)
-    else()
-        find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
-    endif()
-
     if (NOT USE_SYSTEM_MINIAUDIO)
         add_subdirectory(${EXTERN_LIBS_FOLDER}/miniaudio EXCLUDE_FROM_ALL)
         set_target_properties(miniaudio PROPERTIES POSITION_INDEPENDENT_CODE ON)
