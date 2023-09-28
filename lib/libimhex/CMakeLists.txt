@@ -79,7 +79,6 @@ else()
     target_link_libraries(libimhex PUBLIC ${LIBCURL_LIBRARIES})
 endif()
 
-find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
 target_include_directories(libimhex PRIVATE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
 
 if (WIN32)

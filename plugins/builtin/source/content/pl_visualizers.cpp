@@ -10,8 +10,13 @@
 #include <imgui.h>
 #include <implot.h>
 
-#define GLFW_INCLUDE_ES3
-#include <GLES3/gl3.h>
+#if defined (OS_EMSCRIPTEN)
+    #define GLFW_INCLUDE_ES3
+    #include <GLES3/gl3.h>
+#else
+    #include <imgui_impl_opengl3_loader.h>
+#endif
+
 #include <GLFW/glfw3.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>

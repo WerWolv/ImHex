@@ -1009,7 +1009,7 @@ namespace hex {
         auto fonts = View::getFontAtlas();
 
         // Initialize ImGui and all other ImGui extensions
-        GImGui   = ImGui::CreateContext();
+        GImGui   = ImGui::CreateContext(fonts);
         GImPlot  = ImPlot::CreateContext();
         GImNodes = ImNodes::CreateContext();
 
@@ -1102,7 +1102,6 @@ namespace hex {
             }
         }
 
-        io.Fonts->Clear();
 
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
 
