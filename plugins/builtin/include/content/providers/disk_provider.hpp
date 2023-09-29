@@ -1,4 +1,5 @@
 #pragma once
+#if !defined(OS_EMSCRIPTEN)
 
 #include <hex/providers/provider.hpp>
 
@@ -73,3 +74,4 @@ namespace hex::plugin::builtin {
     };
 
 }
+#endif

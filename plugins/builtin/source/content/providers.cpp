@@ -25,7 +25,9 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Provider::add<FileProvider>(false);
         ContentRegistry::Provider::add<NullProvider>(false);
+        #if !defined(OS_EMSCRIPTEN)
         ContentRegistry::Provider::add<DiskProvider>();
+        #endif
         ContentRegistry::Provider::add<GDBProvider>();
         ContentRegistry::Provider::add<IntelHexProvider>();
         ContentRegistry::Provider::add<MotorolaSRECProvider>();
