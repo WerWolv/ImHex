@@ -1,3 +1,4 @@
+#if !defined(OS_EMSCRIPTEN)
 #include <hex/helpers/logger.hpp>
 
 #include "content/providers/disk_provider.hpp"
@@ -449,3 +450,4 @@ namespace hex::plugin::builtin {
     }
 
 }
+#endif
