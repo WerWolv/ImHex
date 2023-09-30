@@ -5,11 +5,21 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>WebGui Demo</title>
     <style>
+      html, body, .emscripten_border {
+        height: 100%;
+        margin: 0px;
+      }
+
       body {
         font-family: arial;
-        margin: 0;
         padding: none;
       }
+
+      .emscripten_border {
+        display: flex;
+        align-items: center;
+      }
+
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
       div.emscripten { text-align: center; }
       div.emscripten_border { border: none; }
