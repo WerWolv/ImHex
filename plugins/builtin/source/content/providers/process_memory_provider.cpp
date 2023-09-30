@@ -367,27 +367,19 @@ namespace hex::plugin::builtin {
         while (std::getline(file, line)) {
             std::istringstream iss(line);
 
-            std::vector<std::string> tokens;
+            u64 start, end;
+            char hyphen;
+            std::string permissions, offset, device, inode, name;
 
-            std::string token;
-            while (tokens.size() < 5 && iss >> token)
-                tokens.push_back(token);
+            // example lines:
+            // 7fa432d93000-7fa432ef2000 r-xp 00026000 00:18 6022974                    /usr/lib/libc.so.6
+            // 7fa432ef2000-7fa432f47000 r--p 00185000 00:18 6022974                    /usr/lib/libc.so.6
+            // 7fa432f47000-7fa432fab000 r--p 001d9000 00:18 6022974                    /usr/lib/libc.so.6
+            // 7fa432fab000-7fa432fad000 rw-p 0023d000 00:18 6022974                    /usr/lib/libc.so.6
+            iss >> std::hex >> start >> hyphen >> end >> permissions >> offset >> device >> inode;
 
-            if (tokens.size() < 5)
-                continue;
-
-            std::string name;
-            if (!std::getline(iss, name))
-                continue;
+            std::getline(iss, name);
             name = wolv::util::trim(name);
-
-            std::istringstream rangeStream(tokens[0]);
-            std::string startStr, endStr;
-
-            std::getline(std::getline(rangeStream, startStr, '-'), endStr);
-
-            u64 start = std::stoull(startStr, nullptr, 16);
-            u64 end = std::stoull(endStr, nullptr, 16);
 
             this->m_memoryRegions.insert({ { start, end - start }, name });
         }
