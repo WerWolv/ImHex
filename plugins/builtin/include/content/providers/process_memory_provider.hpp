@@ -48,11 +48,11 @@ namespace hex::plugin::builtin {
 
         void save() override {}
 
-        [[nodiscard]] std::string getName() const override { return hex::format("hex.windows.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
+        [[nodiscard]] std::string getName() const override { return hex::format("hex.builtin.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
         [[nodiscard]] std::vector<Description> getDataDescription() const override {
             return {
-                    { "hex.windows.provider.process_memory.process_name"_lang, this->m_selectedProcess->name },
-                    { "hex.windows.provider.process_memory.process_id"_lang, std::to_string(this->m_selectedProcess->id) }
+                    { "hex.builtin.provider.process_memory.process_name"_lang, this->m_selectedProcess->name },
+                    { "hex.builtin.provider.process_memory.process_id"_lang, std::to_string(this->m_selectedProcess->id) }
             };
         }
 
@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override { return { }; }
 
         [[nodiscard]] std::string getTypeName() const override {
-            return "hex.windows.provider.process_memory";
+            return "hex.builtin.provider.process_memory";
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64) const override;

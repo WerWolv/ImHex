@@ -203,15 +203,15 @@ namespace hex::plugin::builtin {
         }
 
         if (this->m_enumerationFailed) {
-            ImGui::TextUnformatted("hex.windows.provider.process_memory.enumeration_failed"_lang);
+            ImGui::TextUnformatted("hex.builtin.provider.process_memory.enumeration_failed"_lang);
         } else {
             ImGui::PushItemWidth(500_scaled);
             const auto &filtered = this->m_processSearchWidget.draw(this->m_processes);
             ImGui::PopItemWidth();
             if (ImGui::BeginTable("##process_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(500_scaled, 500_scaled))) {
                 ImGui::TableSetupColumn("##icon");
-                ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_id"_lang);
-                ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_name"_lang);
+                ImGui::TableSetupColumn("hex.builtin.provider.process_memory.process_id"_lang);
+                ImGui::TableSetupColumn("hex.builtin.provider.process_memory.process_name"_lang);
                 ImGui::TableSetupScrollFreeze(0, 1);
 
                 ImGui::TableHeadersRow();
@@ -242,7 +242,7 @@ namespace hex::plugin::builtin {
     }
 
     void ProcessMemoryProvider::drawInterface() {
-        ImGui::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
+        ImGui::Header("hex.builtin.provider.process_memory.memory_regions"_lang, true);
 
         auto availableX = ImGui::GetContentRegionAvail().x;
         ImGui::PushItemWidth(availableX);
@@ -255,9 +255,9 @@ namespace hex::plugin::builtin {
         auto availableY = ImGui::GetContentRegionAvail().y;
 #endif
         if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, availableY))) {
-            ImGui::TableSetupColumn("hex.windows.common.region"_lang);
-            ImGui::TableSetupColumn("hex.windows.common.size"_lang);
-            ImGui::TableSetupColumn("hex.windows.common.name"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.name"_lang);
             ImGui::TableSetupScrollFreeze(0, 1);
 
             ImGui::TableHeadersRow();
@@ -284,9 +284,9 @@ namespace hex::plugin::builtin {
         }
 
 #ifdef _WIN32
-        ImGui::Header("hex.windows.provider.process_memory.utils"_lang);
+        ImGui::Header("hex.builtin.provider.process_memory.utils"_lang);
 
-        if (ImGui::Button("hex.windows.provider.process_memory.utils.inject_dll"_lang)) {
+        if (ImGui::Button("hex.builtin.provider.process_memory.utils.inject_dll"_lang)) {
             hex::fs::openFileBrowser(fs::DialogMode::Open, { { "DLL File", "dll" } }, [this](const std::fs::path &path) {
                 const auto &dllPath = path.native();
                 const auto dllPathLength = (dllPath.length() + 1) * sizeof(std::fs::path::value_type);
@@ -297,7 +297,7 @@ namespace hex::plugin::builtin {
                         if (loadLibraryW != nullptr) {
                             if (auto threadHandle = CreateRemoteThread(this->m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
                                 WaitForSingleObject(threadHandle, INFINITE);
-                                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.windows.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
                                 this->reloadProcessModules();
                                 CloseHandle(threadHandle);
                                 return;
@@ -306,7 +306,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.windows.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
             });
         }
 #endif
@@ -349,10 +349,10 @@ namespace hex::plugin::builtin {
             std::string name;
             if (memoryInfo.State & MEM_IMAGE)   continue;
             if (memoryInfo.State & MEM_FREE)    continue;
-            if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.commit"_lang);
-            if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.reserve"_lang);
-            if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.private"_lang);
-            if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.mapped"_lang);
+            if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
+            if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
+            if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
+            if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
 
             this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
         }
