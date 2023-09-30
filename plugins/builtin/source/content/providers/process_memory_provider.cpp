@@ -1,8 +1,16 @@
 #include <content/providers/process_memory_provider.hpp>
 
-#include <windows.h>
-#include <psapi.h>
-#include <shellapi.h>
+#ifdef _WIN32
+#  include <windows.h>
+#  include <psapi.h>
+#  include <shellapi.h>
+#elif __linux__
+#  include <filesystem>
+#  include <fstream>
+#  include <iostream>
+#  include <cerrno>
+#  include <sys/uio.h>
+#endif
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -10,16 +18,19 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/ui/view.hpp>
 
+#include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
 
-#include <nlohmann/json.hpp>
-
-namespace hex::plugin::windows {
+namespace hex::plugin::builtin {
 
     bool ProcessMemoryProvider::open() {
+#ifdef _WIN32
         this->m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, this->m_selectedProcess->id);
         if (this->m_processHandle == nullptr)
             return false;
+#elif __linux__
+        this->m_processId = this->m_selectedProcess->id;
+#endif
 
         this->reloadProcessModules();
 
@@ -27,15 +38,53 @@ namespace hex::plugin::windows {
     }
 
     void ProcessMemoryProvider::close() {
+#ifdef _WIN32
         CloseHandle(this->m_processHandle);
         this->m_processHandle = nullptr;
+#elif __linux__
+        this->m_processId = -1;
+#endif
     }
 
     void ProcessMemoryProvider::readRaw(u64 address, void *buffer, size_t size) {
-        ReadProcessMemory(this->m_processHandle, reinterpret_cast<LPCVOID>(address), buffer, size, nullptr);
+#ifdef _WIN32
+        ReadProcessMemory(this->m_processHandle, (LPCVOID)address, buffer, size, nullptr);
+#elif __linux__
+        const iovec local {
+            .iov_base = buffer,
+            .iov_len = size,
+        };
+        const iovec remote = {
+            .iov_base = (void*) address,
+            .iov_len = size,
+        };
+
+        auto read = process_vm_readv(this->m_processId, &local, 1, &remote, 1, 0);
+
+        if (read == -1) {
+            // TODO error handling strerror(errno)
+        }
+#endif
     }
     void ProcessMemoryProvider::writeRaw(u64 address, const void *buffer, size_t size) {
-        WriteProcessMemory(this->m_processHandle, reinterpret_cast<LPVOID>(address), buffer, size, nullptr);
+#ifdef _WIN32
+        WriteProcessMemory(this->m_processHandle, (LPVOID)address, buffer, size, nullptr);
+#elif __linux__
+        const iovec local {
+            .iov_base = (void*) buffer,
+            .iov_len = size,
+        };
+        const iovec remote = {
+            .iov_base = (void*) address,
+            .iov_len = size,
+        };
+
+        auto read = process_vm_writev(this->m_processId, &local, 1, &remote, 1, 0);
+
+        if (read == -1) {
+            // TODO error handling strerror(errno)
+        }
+#endif
     }
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
@@ -58,6 +107,7 @@ namespace hex::plugin::windows {
 
     bool ProcessMemoryProvider::drawLoadInterface() {
         if (this->m_processes.empty() && !this->m_enumerationFailed) {
+#ifdef _WIN32
             DWORD numProcesses = 0;
             std::vector<DWORD> processIds;
 
@@ -85,7 +135,7 @@ namespace hex::plugin::windows {
                 if (GetModuleBaseNameA(processHandle, nullptr, processName, MAX_PATH) == 0)
                     continue;
 
-                ImGuiExt::Texture texture;
+                ImGui::Texture texture;
                 {
                     HMODULE moduleHandle = nullptr;
                     DWORD numModules = 0;
@@ -115,7 +165,7 @@ namespace hex::plugin::windows {
                                             for (auto &pixel : pixels)
                                                 pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                            texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
+                                            texture = ImGui::Texture((u8*)pixels.data(), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
                                         }
                                     }
                                 }
@@ -124,17 +174,41 @@ namespace hex::plugin::windows {
                     }
                 }
 
-                this->m_processes.push_back(Process { u32(processId), processName, std::move(texture) });
+                this->m_processes.push_back({ processId, processName, std::move(texture) });
             }
+#elif __linux__
+            for (const auto& entry : std::fs::directory_iterator("/proc")) {
+                if (!std::fs::is_directory(entry)) continue;
+
+                auto path = entry.path();
+                u32 processId;
+                try {
+                    processId = std::stoi(path.filename());
+                } catch (...) {
+                    continue; // not a PID
+                }
+
+                std::ifstream file(path / "cmdline");
+                if (!file) continue;
+                std::stringstream buffer;
+                buffer << file.rdbuf();
+                file.close();
+                std::string processName = buffer.str();
+
+                ImGui::Texture texture;
+
+                this->m_processes.push_back({ processId, processName, std::move(texture) });
+            }
+#endif
         }
 
         if (this->m_enumerationFailed) {
             ImGui::TextUnformatted("hex.windows.provider.process_memory.enumeration_failed"_lang);
         } else {
-            ImGui::PushItemWidth(350_scaled);
+            ImGui::PushItemWidth(500_scaled);
             const auto &filtered = this->m_processSearchWidget.draw(this->m_processes);
             ImGui::PopItemWidth();
-            if (ImGui::BeginTable("##process_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(350_scaled, 500_scaled))) {
+            if (ImGui::BeginTable("##process_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(500_scaled, 500_scaled))) {
                 ImGui::TableSetupColumn("##icon");
                 ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_id"_lang);
                 ImGui::TableSetupColumn("hex.windows.provider.process_memory.process_name"_lang);
@@ -168,16 +242,22 @@ namespace hex::plugin::windows {
     }
 
     void ProcessMemoryProvider::drawInterface() {
-        ImGuiExt::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
+        ImGui::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
 
         auto availableX = ImGui::GetContentRegionAvail().x;
         ImGui::PushItemWidth(availableX);
         const auto &filtered = this->m_regionSearchWidget.draw(this->m_memoryRegions);
         ImGui::PopItemWidth();
-        if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, 400_scaled))) {
-            ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.name"_lang);
+#ifdef _WIN32
+        auto availableY = 400_scaled;
+#else
+        // take up full height on Linux since there are no DLL injection controls
+        auto availableY = ImGui::GetContentRegionAvail().y;
+#endif
+        if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, availableY))) {
+            ImGui::TableSetupColumn("hex.windows.common.region"_lang);
+            ImGui::TableSetupColumn("hex.windows.common.size"_lang);
+            ImGui::TableSetupColumn("hex.windows.common.name"_lang);
             ImGui::TableSetupScrollFreeze(0, 1);
 
             ImGui::TableHeadersRow();
@@ -187,7 +267,7 @@ namespace hex::plugin::windows {
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%016llX - 0x%016llX", memoryRegion->region.getStartAddress(), memoryRegion->region.getEndAddress());
+                ImGui::Text("0x%016lX - 0x%016lX", memoryRegion->region.getStartAddress(), memoryRegion->region.getEndAddress());
 
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(hex::toByteString(memoryRegion->region.getSize()).c_str());
@@ -203,7 +283,8 @@ namespace hex::plugin::windows {
             ImGui::EndTable();
         }
 
-        ImGuiExt::Header("hex.windows.provider.process_memory.utils"_lang);
+#ifdef _WIN32
+        ImGui::Header("hex.windows.provider.process_memory.utils"_lang);
 
         if (ImGui::Button("hex.windows.provider.process_memory.utils.inject_dll"_lang)) {
             hex::fs::openFileBrowser(fs::DialogMode::Open, { { "DLL File", "dll" } }, [this](const std::fs::path &path) {
@@ -228,11 +309,13 @@ namespace hex::plugin::windows {
                 EventManager::post<RequestOpenErrorPopup>(hex::format("hex.windows.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
             });
         }
+#endif
     }
 
     void ProcessMemoryProvider::reloadProcessModules() {
         this->m_memoryRegions.clear();
 
+#ifdef _WIN32
         DWORD numModules = 0;
         std::vector<HMODULE> modules;
 
@@ -260,7 +343,7 @@ namespace hex::plugin::windows {
 
         MEMORY_BASIC_INFORMATION memoryInfo;
         for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
-            if (VirtualQueryEx(this->m_processHandle, reinterpret_cast<LPCVOID>(address), &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+            if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
                 break;
 
             std::string name;
@@ -271,8 +354,46 @@ namespace hex::plugin::windows {
             if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.private"_lang);
             if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.mapped"_lang);
 
-            this->m_memoryRegions.insert({ { u64(memoryInfo.BaseAddress), u64(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
+            this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
         }
+
+#elif __linux__
+
+        std::ifstream file(std::fs::path("/proc") / std::to_string(this->m_processId) / "maps");
+
+        if (!file) return;
+
+        std::string line;
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+
+            std::vector<std::string> tokens;
+
+            std::string token;
+            while (tokens.size() < 5 && iss >> token)
+                tokens.push_back(token);
+
+            if (tokens.size() < 5)
+                continue;
+
+            std::string name;
+            if (!std::getline(iss, name))
+                continue;
+            name = wolv::util::trim(name);
+
+            std::istringstream rangeStream(tokens[0]);
+            std::string startStr, endStr;
+
+            std::getline(std::getline(rangeStream, startStr, '-'), endStr);
+
+            u64 start = std::stoull(startStr, nullptr, 16);
+            u64 end = std::stoull(endStr, nullptr, 16);
+
+            this->m_memoryRegions.insert({ { start, end - start }, name });
+        }
+
+        file.close();
+#endif
     }
 
 
@@ -301,15 +422,5 @@ namespace hex::plugin::windows {
         } else
             return Provider::queryInformation(category, argument);
     }
-
-    void ProcessMemoryProvider::loadSettings(const nlohmann::json&) {
-
-    }
-
-    nlohmann::json ProcessMemoryProvider::storeSettings(nlohmann::json) const {
-        return {};
-    }
-
-
 
 }
