@@ -71,9 +71,6 @@ target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDT
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
 if (EMSCRIPTEN)
-    target_include_directories(libimhex PRIVATE ${CMAKE_SOURCE_DIR}/plugins/builtin/include)
-    target_link_libraries(libimhex PRIVATE builtin)
-
     find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
     target_include_directories(libimhex PRIVATE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
 else()

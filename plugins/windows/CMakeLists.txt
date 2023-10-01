@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.16)
 if (WIN32)
 
     include(ImHexPlugin)
-
     add_imhex_plugin(
         NAME
             windows
