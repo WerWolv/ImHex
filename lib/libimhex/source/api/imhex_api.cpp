@@ -312,8 +312,12 @@ namespace hex {
             if (it == s_providers.end())
                 return;
 
-            if (!s_providers.empty() && it - s_providers.begin() == s_currentProvider)
-                setCurrentProvider(0);
+            if (!s_providers.empty()) {
+                if (it == s_providers.begin())
+                    setCurrentProvider(0);
+                else if (std::distance(s_providers.begin(), it) < 0)
+                    setCurrentProvider(s_currentProvider - 1);
+            }
 
             s_providers.erase(it);
             if (s_providers.empty())
