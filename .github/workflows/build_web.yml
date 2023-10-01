@@ -1,0 +1,32 @@
+name: Build for the web
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: RelWithDebInfo
+
+jobs:
+
+  build:
+    runs-on: ubuntu-22.04
+    name: Build
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: 🛠️ Build using docker
+      run: |
+        docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
+
+    - name: ⬆️ Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: Web artifacts
+        path: |
+          out/*
