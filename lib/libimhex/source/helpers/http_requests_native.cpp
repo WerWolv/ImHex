@@ -86,6 +86,19 @@ namespace hex {
         }
     }
 
+    int HttpRequest::progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
+        auto &request = *static_cast<HttpRequest *>(contents);
+
+        if (dlTotal > 0)
+            request.m_progress = float(dlNow) / dlTotal;
+        else if (ulTotal > 0)
+            request.m_progress = float(ulNow) / ulTotal;
+        else
+            request.m_progress = 0.0F;
+
+        return request.m_canceled ? CURLE_ABORTED_BY_CALLBACK : CURLE_OK;
+    }
+
 }
 
 

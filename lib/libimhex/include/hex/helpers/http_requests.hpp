@@ -19,9 +19,10 @@
 
 #if defined(OS_EMSCRIPTEN)
 #include<emscripten/fetch.h>
+#define curl_off_t long
 #else
-#endif
 #include <curl/curl.h>
+#endif
 
 namespace hex {
 
