@@ -43,6 +43,10 @@ namespace hex {
     void HttpRequest::setProxy(std::string proxy) { }
 
     void HttpRequest::checkProxyErrors() { }
+
+    int HttpRequest::progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
+        return -1;
+    }
 }
 
 #endif
