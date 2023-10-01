@@ -41,4 +41,9 @@ macro(add_imhex_plugin)
 
     # Add the new plugin to the main dependency list so it gets built by default
     add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
+
+    if (EMSCRIPTEN)
+        target_link_libraries(plugin-bundle PUBLIC ${IMHEX_PLUGIN_NAME})
+    endif ()
+
 endmacro()

@@ -10,22 +10,46 @@
 
 #include <wolv/utils/string.hpp>
 
+#if defined (OS_EMSCRIPTEN)
+    #define IMHEX_PLUGIN_VISIBILITY_PREFIX static
+    #define IMHEX_LOAD_BUNDLED_PLUGINS true
+#else
+    #define IMHEX_PLUGIN_VISIBILITY_PREFIX extern "C" [[gnu::visibility("default")]]
+    #define IMHEX_LOAD_BUNDLED_PLUGINS false
+#endif
+
 /**
  * This macro is used to define all the required entry points for a plugin.
  * Name, Author and Description will be displayed in the in the plugin list on the Welcome screen.
  */
 #define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
 
-#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                 \
-    extern "C" [[gnu::visibility("default")]] const char *getPluginName() { return name; }                 \
-    extern "C" [[gnu::visibility("default")]] const char *getPluginAuthor() { return author; }             \
-    extern "C" [[gnu::visibility("default")]] const char *getPluginDescription() { return description; }   \
-    extern "C" [[gnu::visibility("default")]] const char *getCompatibleVersion() { return IMHEX_VERSION; } \
-    extern "C" [[gnu::visibility("default")]] void setImGuiContext(ImGuiContext *ctx) {                    \
-        ImGui::SetCurrentContext(ctx);                                                                     \
-        GImGui = ctx;                                                                                      \
-    }                                                                                                      \
-    extern "C" [[gnu::visibility("default")]] void initializePlugin()
+#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                      \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                 \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }             \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }   \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getCompatibleVersion() { return IMHEX_VERSION; } \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                    \
+        ImGui::SetCurrentContext(ctx);                                                          \
+        GImGui = ctx;                                                                           \
+    }                                                                                           \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                     \
+    [[gnu::constructor]] static void setupBundledPlugin() {                                     \
+        if constexpr (!IMHEX_LOAD_BUNDLED_PLUGINS)                                              \
+            return;                                                                             \
+                                                                                                \
+        hex::PluginManager::addPlugin(hex::PluginFunctions {                                    \
+            initializePlugin,                                                                   \
+            getPluginName,                                                                      \
+            getPluginAuthor,                                                                    \
+            getPluginDescription,                                                               \
+            getCompatibleVersion,                                                               \
+            setImGuiContext,                                                                    \
+            nullptr,                                                                            \
+            nullptr                                                                             \
+        });                                                                                     \
+    }                                                                                           \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin()
 
 /**
  * This macro is used to define subcommands defined by the plugin

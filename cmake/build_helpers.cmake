@@ -86,6 +86,8 @@ endmacro()
 
 
 macro(configurePackingResources)
+    add_library(plugin-bundle INTERFACE)
+
     option (CREATE_PACKAGE "Create a package with CPack" OFF)
 
     if (APPLE)
