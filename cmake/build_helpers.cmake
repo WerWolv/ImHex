@@ -132,7 +132,7 @@ macro(configurePackingResources)
             endif()
 
             set(PLUGINS_INSTALL_LOCATION "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
-            set(CMAKE_INSTALL_LIBDIR "${IMHEX_BUNDLE_PATH}/Contents/Framework")
+            set(CMAKE_INSTALL_LIBDIR "${IMHEX_BUNDLE_PATH}/Contents/Frameworks")
         endif()
     endif()
 endmacro()
