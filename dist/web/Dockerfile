@@ -1,0 +1,60 @@
+FROM emscripten/emsdk:latest as build
+
+# Used to invalidate layer cache but not mount cache
+# See https://github.com/moby/moby/issues/41715#issuecomment-733976493
+ARG UNIQUEKEY 1
+
+RUN apt update
+RUN apt install -y git ccache autoconf automake libtool cmake pkg-config
+
+# Install vcpkg
+# Note: we are using my fork of the repository with a libmagic patch
+RUN git clone https://github.com/iTrooz/vcpkg --branch libmagic /vcpkg
+RUN /vcpkg/bootstrap-vcpkg.sh
+
+# Patch vcpkg build instructions to add -pthread
+RUN <<EOF
+set -xe
+
+echo '
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+' >> /emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
+EOF
+
+# Install dependencies with vcpkg
+RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
+RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
+RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten josuttis-jthread
+RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
+
+# Build ImHex
+ARG JOBS 4
+ENV CCACHE_DIR /cache/ccache
+
+RUN mkdir /build
+WORKDIR /build
+RUN --mount=type=cache,target=/cache \
+    --mount=type=bind,source=.,target=/imhex <<EOF
+
+set -xe
+ccache -zs
+
+cmake /imhex                                                                                            \
+    -DIMHEX_OFFLINE_BUILD=ON                                                                            \
+    -DIMHEX_STRICT_WARNINGS=OFF                                                                         \
+    -DNATIVE_CMAKE_C_COMPILER=gcc                                                                       \
+    -DNATIVE_CMAKE_CXX_COMPILER=g++                                                                     \
+    -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                                  \
+    -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                                \
+    -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake                                      \
+    -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+    -DCMAKE_BUILD_TYPE=Release
+
+make -j $JOBS
+
+ccache -s
+EOF
+
+FROM scratch
+COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js .
