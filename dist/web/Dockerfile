@@ -43,7 +43,8 @@ cmake /imhex                                                                    
 make -j $JOBS && \
 cp /imhex/dist/web/source/index.html /build/index.html && \
 cp /imhex/dist/web/source/enable-threads.js /build/enable-threads.js && \
+cp /imhex/dist/web/source/favicon.ico /build/favicon.ico && \
 ccache -s
 
 FROM scratch
-COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js /build/index.html /build/enable-threads.js .
+COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js /build/index.html /build/enable-threads.js /build/favicon.ico .
