@@ -80,6 +80,10 @@ namespace hex::init {
             }
 
             TaskManager::createBackgroundTask("Sending statistics...", [uuid, versionString](auto&) {
+                #if defined (OS_EMSCRIPTEN)
+                    return;
+                #endif
+
                 // Make telemetry request
                 nlohmann::json telemetry = {
                         { "uuid", uuid },

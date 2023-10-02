@@ -117,7 +117,8 @@ namespace {
         void saveFsData() {
             EM_ASM({
                 FS.syncfs(function (err) {
-                    if(!err)return;
+                    if (!err)
+                        return;
                     alert("Failed to save permanent file system: "+err);
                 });
             });
@@ -177,32 +178,32 @@ namespace {
 
     #else
 
-    int runImHex() {
+        int runImHex() {
 
-        bool shouldRestart = false;
-        do {
-            // Register an event handler that will make ImHex restart when requested
-            shouldRestart = false;
-            EventManager::subscribe<RequestRestartImHex>([&] {
-                shouldRestart = true;
-            });
+            bool shouldRestart = false;
+            do {
+                // Register an event handler that will make ImHex restart when requested
+                shouldRestart = false;
+                EventManager::subscribe<RequestRestartImHex>([&] {
+                    shouldRestart = true;
+                });
 
-            initializeImHex();
-            handleFileOpenRequest();
+                initializeImHex();
+                handleFileOpenRequest();
 
-            // Clean up everything after the main window is closed
-            ON_SCOPE_EXIT {
-                deinitializeImHex();
-            };
+                // Clean up everything after the main window is closed
+                ON_SCOPE_EXIT {
+                    deinitializeImHex();
+                };
 
-            // Main window
-            Window window;
-            window.loop();
+                // Main window
+                Window window;
+                window.loop();
 
-        } while (shouldRestart);
+            } while (shouldRestart);
 
-        return EXIT_SUCCESS;
-    }
+            return EXIT_SUCCESS;
+        }
 
     #endif
 
