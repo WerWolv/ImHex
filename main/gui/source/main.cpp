@@ -123,9 +123,8 @@ namespace {
             });
         }
 
-        WindowSplash* splashWindow;
         int runImHex() {
-            splashWindow = new WindowSplash();
+            auto splashWindow = new WindowSplash();
 
             log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
 
@@ -137,7 +136,9 @@ namespace {
             splashWindow->startStartupTasks();
 
             // Draw the splash window while tasks are running
-            emscripten_set_main_loop([]() {
+            emscripten_set_main_loop_arg([](void *arg) {
+                auto splashWindow = reinterpret_cast<WindowSplash*>(arg);
+
                 FrameResult res = splashWindow->fullFrame();
                 if (res == FrameResult::success) {
                     handleFileOpenRequest();
@@ -162,14 +163,12 @@ namespace {
                     emscripten_cancel_main_loop();
 
                     // Main window
-                    Window window;
-
-                    emscripten_set_main_loop_arg([](void *arg) {
-                        auto &window = *reinterpret_cast<Window*>(arg);
+                    static Window window;
+                    emscripten_set_main_loop([]() {
                         window.fullFrame();
-                    }, &window, 60, 0);
+                    }, 60, 0);
                 }
-            }, 60, 0);
+            }, splashWindow, 60, 0);
             // end of initializeImHex()
 
 

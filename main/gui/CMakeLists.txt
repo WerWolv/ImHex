@@ -31,15 +31,16 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../lib/external/libromfs ${CMAKE
 set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_dependencies(imhex_all main)
 
-if(EMSCRIPTEN)
+if (EMSCRIPTEN)
     target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1)
     target_link_options(main PRIVATE -sTOTAL_MEMORY=134217728)
     target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
     target_link_options(main PRIVATE -sEXPORTED_RUNTIME_METHODS=ccall)
     target_link_options(main PRIVATE -sFETCH)
+    target_link_options(main PRIVATE -O0)
     target_link_options(main PRIVATE -sLEGACY_GL_EMULATION)
     target_link_libraries(main PRIVATE idbfs.js)
-endif()
+endif ()
 
 set_target_properties(main PROPERTIES
     OUTPUT_NAME ${IMHEX_APPLICATION_NAME}
