@@ -42,7 +42,8 @@ cmake /imhex                                                                    
     -DCMAKE_BUILD_TYPE=Release && \
 make -j $JOBS && \
 cp /imhex/dist/web/source/index.html /build/index.html && \
+wget "https://raw.githubusercontent.com/josephrocca/clip-image-sorter/main/enable-threads.js" -O enable-threads.js -P /build && \
 ccache -s
 
 FROM scratch
-COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js /build/index.html .
+COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js /build/index.html /build/enable-threads.js .
