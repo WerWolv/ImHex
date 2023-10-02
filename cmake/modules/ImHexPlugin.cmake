@@ -12,12 +12,13 @@ macro(add_imhex_plugin)
     add_library(${IMHEX_PLUGIN_NAME} SHARED ${IMHEX_PLUGIN_SOURCES})
 
     # Add include directories and link libraries
-    target_include_directories(${IMHEX_PLUGIN_NAME} PRIVATE ${IMHEX_PLUGIN_INCLUDES})
+    target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
     target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${FMT_LIBRARIES} ${IMHEX_PLUGIN_LIBRARIES})
 
     # Add IMHEX_PROJECT_NAME and IMHEX_VERSION define
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}")
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_VERSION="${IMHEX_VERSION_STRING}")
+    target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_PLUGIN_NAME=${IMHEX_PLUGIN_NAME})
 
     # Enable required compiler flags
     set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -43,7 +44,10 @@ macro(add_imhex_plugin)
     add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
 
     if (EMSCRIPTEN)
-        target_link_libraries(plugin-bundle PUBLIC ${IMHEX_PLUGIN_NAME})
+        target_link_libraries(libimhex PUBLIC ${IMHEX_PLUGIN_NAME})
+
+        configure_file(${CMAKE_SOURCE_DIR}/dist/web/plugin-bundle.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp @ONLY)
+        target_sources(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp)
     endif ()
 
 endmacro()

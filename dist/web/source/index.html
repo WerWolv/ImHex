@@ -1,67 +1,72 @@
 <!doctype html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>WebGui Demo</title>
-    <style>
-      html, body, .emscripten_border {
-        height: 100%;
-        margin: 0px;
-      }
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ImHex Web</title>
+  <style>
+    html, body, .emscripten_border {
+      height: 100%;
+      margin: 0px;
+    }
 
-      body {
-        display: flex;
-        align-items: center;
+    body {
+      display: flex;
+      align-items: center;
 
-        background-color: black;
-      }
+      background-color: black;
+      overflow: hidden;
+    }
 
-      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
-      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-      .emscripten { border: 0px none; }
+    .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+    /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+    .emscripten { border: 0px none; }
 
-      #loading_text {
-        color: white;
-        width: 100%;
-        text-align: center;
-      }
-    </style>
-  </head>
-  <body>
+    #loading_text {
+      color: white;
+      width: 100%;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
 
-    <p id="loading_text">ImHex is loading..</p>
-    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" style="display: none"></canvas>
+<p id="loading_text">ImHex is loading...</p>
+<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" style="display: none; image-rendering: crisp-edges"></canvas>
 
-    <script type='text/javascript'>
-      var Module = {
-        preRun: [],
-        postRun: [],
-        onRuntimeInitialized: function() { // triggered when the wasm file has finished downloading
-          document.getElementById("loading_text").style.display = "none"
-          document.getElementById("canvas").style.display = "initial"
-        },
-        print: (function() {})(),
-        printErr: function(text) {},
-        canvas: (function() {
-          var canvas = document.getElementById('canvas');
-          // As a default initial behavior, pop up an alert when webgl context is lost. To make your
-          // application robust, you may want to override this behavior before shipping!
-          // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-          canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
-          return canvas;
-        })(),
-        setStatus: function(text) {},
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) {}
-      };
-      window.addEventListener('resize', js_resizeCanvas, false);
-      function js_resizeCanvas() {
-            document.getElementById('canvas').width = window.innerWidth;
-            document.getElementById('canvas').height = window.innerHeight;
-      }
+<script type='text/javascript'>
+  var Module = {
+    preRun: [],
+    postRun: [],
+    onRuntimeInitialized: function() { // triggered when the wasm file has finished downloading
+      document.getElementById("loading_text").style.display = "none"
+      document.getElementById("canvas").style.display = "initial"
+    },
+    print: (function() {})(),
+    printErr: function(text) {},
+    canvas: (function() {
+      let canvas = document.getElementById('canvas');
+      // As a default initial behavior, pop up an alert when webgl context is lost. To make your
+      // application robust, you may want to override this behavior before shipping!
+      // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
+      canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
 
-    </script>
-    <script async type="text/javascript" src="imhex.js"></script>
-  </body>
+      return canvas;
+    })(),
+    setStatus: function(text) {},
+    totalDependencies: 0,
+    monitorRunDependencies: function(left) {}
+  };
+  window.addEventListener('resize', js_resizeCanvas, false);
+  function js_resizeCanvas() {
+    document.getElementById('canvas').width  = window.innerWidth;
+    document.getElementById('canvas').height = window.innerHeight;
+  }
+
+  console.log(browserZoomLevel);
+
+</script>
+<script async type="text/javascript" src="imhex.js"></script>
+</body>
 </html>
