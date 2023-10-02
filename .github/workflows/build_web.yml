@@ -9,11 +9,14 @@ on:
 env:
   BUILD_TYPE: RelWithDebInfo
 
+permissions:
+  contents: write
+
 jobs:
 
   build:
     runs-on: ubuntu-22.04
-    name: Build
+    name: 🌍 WebAssembly
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v3
@@ -23,6 +26,7 @@ jobs:
     - name: 🛠️ Build using docker
       run: |
         docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
+        cp dist/web/index.html out/index.html
 
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v3
@@ -30,3 +34,8 @@ jobs:
         name: Web artifacts
         path: |
           out/*
+
+    - name: 🌍 Deploy
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: out
