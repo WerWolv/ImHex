@@ -10,7 +10,8 @@ env:
   BUILD_TYPE: RelWithDebInfo
 
 permissions:
-  contents: write
+  pages: write
+  id-token: write
   actions: write
 
 jobs:
@@ -30,7 +31,7 @@ jobs:
         path: cache
         key: build-web-cache-${{ secrets.CACHE_VERSION }}
     
-    - name: inject /cache into docker
+    - name: Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2
       with:
         cache-source: cache
@@ -41,16 +42,9 @@ jobs:
         docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
 
     - name: ⬆️ Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-pages-artifact@v3
       with:
-        name: Web artifacts
-        path: |
-          out/*
-
-    - name: 🌍 Deploy
-      uses: JamesIves/github-pages-deploy-action@v4
-      with:
-        folder: out
+        path: out/
 
       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
     - name: Delete old cache before uploading the new one
@@ -60,3 +54,15 @@ jobs:
       run: |
           gh extension install actions/gh-actions-cache
           gh actions-cache delete "build-web-cache-${{ secrets.CACHE_VERSION }}" --confirm
+  
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 🌍 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
