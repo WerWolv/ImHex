@@ -929,30 +929,30 @@ namespace hex {
         });
 
         #if !defined(OS_EMSCRIPTEN)
-        // Register key press callback
-        glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-            hex::unused(mods);
+            // Register key press callback
+            glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+                hex::unused(mods);
 
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
-            if (action == GLFW_RELEASE) {
-                win->m_buttonDown = false;
-            } else {
-                win->m_buttonDown = true;
-            }
+                if (action == GLFW_RELEASE) {
+                    win->m_buttonDown = false;
+                } else {
+                    win->m_buttonDown = true;
+                }
 
-            if (key == GLFW_KEY_UNKNOWN) return;
+                if (key == GLFW_KEY_UNKNOWN) return;
 
-            auto keyName = glfwGetKeyName(key, scancode);
-            if (keyName != nullptr)
-                key = std::toupper(keyName[0]);
+                auto keyName = glfwGetKeyName(key, scancode);
+                if (keyName != nullptr)
+                    key = std::toupper(keyName[0]);
 
-            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                win->m_pressedKeys.push_back(key);
-            }
+                if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                    win->m_pressedKeys.push_back(key);
+                }
 
-            win->processEvent();
-        });
+                win->processEvent();
+            });
         #endif
 
         // Register cursor position callback
@@ -1001,7 +1001,7 @@ namespace hex {
         glfwShowWindow(this->m_window);
     }
 
-    void Window::resize(int width, int height) {
+    void Window::resize(i32 width, i32 height) {
         glfwSetWindowSize(this->m_window, width, height);
     }
 

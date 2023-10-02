@@ -21,7 +21,7 @@ namespace hex {
 
     struct Region {
         u64 address;
-        size_t size;
+        u64 size;
 
         [[nodiscard]] constexpr bool isWithin(const Region &other) const {
             if (*this == Invalid() || other == Invalid())

@@ -65,12 +65,13 @@
             totalDependencies: 0,
             monitorRunDependencies: function(left) { }
         };
-        window.addEventListener('resize', () => {
-            let canvas = document.getElementById('canvas');
+        window.addEventListener('resize', js_resizeCanvas, false);
 
+        function js_resizeCanvas() {
+            let canvas = document.getElementById('canvas');
             canvas.width  = window.innerWidth;
             canvas.height = window.innerHeight;
-        }, false);
+        }
     </script>
     <script async type="text/javascript" src="imhex.js"></script>
 </body>

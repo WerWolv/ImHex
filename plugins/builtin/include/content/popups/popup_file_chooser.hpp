@@ -11,7 +11,7 @@ namespace hex::plugin::builtin {
 
     class PopupFileChooser : public Popup<PopupFileChooser> {
     public:
-        PopupFileChooser(const std::vector<std::fs::path> &files, const std::vector<hex::fs::itemfilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
+        PopupFileChooser(const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
                 : hex::Popup<PopupFileChooser>("hex.builtin.common.choose_file"),
                   m_indices({ }), m_files(files),
                   m_openCallback(callback),
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
         std::set<u32> m_indices;
         std::vector<std::fs::path> m_files;
         std::function<void(std::fs::path)> m_openCallback;
-        std::vector<hex::fs::itemfilter> m_validExtensions;
+        std::vector<hex::fs::ItemFilter> m_validExtensions;
         bool m_multiple = false;
     };
 

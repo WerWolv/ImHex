@@ -8,11 +8,13 @@ add_executable(main ${APPLICATION_TYPE}
     source/window/win_window.cpp
     source/window/macos_window.cpp
     source/window/linux_window.cpp
+    source/window/web_window.cpp
 
     source/messaging/common.cpp
     source/messaging/linux.cpp
     source/messaging/macos.cpp
     source/messaging/win.cpp
+    source/messaging/web.cpp
 
     source/init/splash_window.cpp
     source/init/tasks.cpp
@@ -31,7 +33,6 @@ add_dependencies(imhex_all main)
 
 if(EMSCRIPTEN)
     target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1)
-    target_link_options(main PRIVATE -O0)
     target_link_options(main PRIVATE -sTOTAL_MEMORY=134217728)
     target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
     target_link_options(main PRIVATE -sEXPORTED_RUNTIME_METHODS=ccall)

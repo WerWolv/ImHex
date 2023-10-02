@@ -28,7 +28,7 @@ namespace hex {
             if (std::isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
                 result += c;
             else
-                result += hex::format("%02X", c);;
+                result += hex::format("%02X", c);
         }
         return result;
     }
