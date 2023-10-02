@@ -166,7 +166,7 @@ namespace hex::fs {
         selector.click();
     });
 
-    bool openFileBrowser(DialogMode mode, const std::vector<itemfilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+    bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
         switch (mode) {
             case DialogMode::Open: {
                 currentCallback = callback;
@@ -189,7 +189,7 @@ namespace hex::fs {
         return true;
     }
     #else
-    bool openFileBrowser(DialogMode mode, const std::vector<itemfilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+    bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
         std::vector<nfdfilteritem_t> validExtensionsNfd;
         for (auto ext : validExtensions) {
             validExtensionsNfd.emplace_back(nfdfilteritem_t{ext.name.c_str(), ext.spec.c_str()});
@@ -306,7 +306,7 @@ namespace hex::fs {
             return getDataPaths();
         #elif defined(OS_MACOS)
             return getDataPaths();
-        #elif defined(OS_LINUX)
+        #elif defined(OS_LINUX) || defined(OS_EMSCRIPTEN)
             return {xdg::ConfigHomeDir() / "imhex"};
         #endif
     }

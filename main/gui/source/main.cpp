@@ -20,23 +20,8 @@
 #include <wolv/utils/guards.hpp>
 
 #if defined(OS_EMSCRIPTEN)
-#include <emscripten.h>
-#include <emscripten/html5.h>
-
-// Function used by c++ to get the size of the html canvas
-EM_JS(int, canvas_get_width, (), {
-  return Module.canvas.width;
-});
-
-// Function used by c++ to get the size of the html canvas
-EM_JS(int, canvas_get_height, (), {
-  return Module.canvas.height;
-});
-
-// Function called by javascript
-EM_JS(void, resizeCanvas, (), {
-  js_resizeCanvas();
-});
+    #include <emscripten.h>
+    #include <emscripten/html5.h>
 #endif
 
 using namespace hex;
@@ -127,100 +112,68 @@ namespace {
 
 
     #if defined(OS_EMSCRIPTEN)
-    using namespace hex::init;
+        using namespace hex::init;
 
-    void mountFolders() {
-        EM_ASM({
-            // save data directory
-            FS.mkdir("/home/web_user/.local");
-            FS.mount(IDBFS, {}, '/home/web_user/.local');
-            
-            FS.syncfs(true, function (err) {
-                if(!err)return;
-                alert("Failed to load permanent file system: "+err);
-            });
-        });
-    }
-
-    void saveFsData() {
-        EM_ASM({
-            FS.syncfs(function (err) {
-                if(!err)return;
-                alert("Failed to save permanent file system: "+err);
-            });
-        });
-    }
-
-    WindowSplash* splashWindow;
-    Window* window;
-    int runImHex() {        
-        mountFolders();
-        // I pasted and modified initializeImHex() here
-        splashWindow = new WindowSplash();
-
-        log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
-
-        // Add initialization tasks to run
-        TaskManager::init();
-        for (const auto &[name, task, async] : init::getInitTasks())
-            splashWindow->addStartupTask(name, task, async);
-
-        splashWindow->startStartupTasks();
-
-        // Draw the splash window while tasks are running
-        emscripten_set_main_loop([]() {
-            FrameResult res = splashWindow->fullFrame();
-            if (res == FrameResult::success) {
-                handleFileOpenRequest();
-
-                // Clean up everything after the main window is closed
-                emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData){
-                    try {
-                        saveFsData();
-                        deinitializeImHex();
-                        return "";
-                    } catch (const std::exception &ex) {
-                        std::string *msg = new std::string("Failed to deinitialize ImHex. This is just a message warning you of this, the application has already closed, you probably can't do anything about it. Message: ");
-                        msg->append(std::string(ex.what()));
-                        log::fatal("{}", *msg);
-                        return msg->c_str();
-                    }
+        void saveFsData() {
+            EM_ASM({
+                FS.syncfs(function (err) {
+                    if(!err)return;
+                    alert("Failed to save permanent file system: "+err);
                 });
+            });
+        }
 
-                // delete splash window (do it before creating the main window so glfw destroys the window)
-                delete splashWindow;
+        int runImHex() {
+            auto splashWindow = new WindowSplash();
 
-                emscripten_cancel_main_loop();
+            log::info("Using '{}' GPU", ImHexApi::System::getGPUVendor());
 
-                // Main window
-                window = new Window();
+            // Add initialization tasks to run
+            TaskManager::init();
+            for (const auto &[name, task, async] : init::getInitTasks())
+                splashWindow->addStartupTask(name, task, async);
 
-                resizeCanvas();
+            splashWindow->startStartupTasks();
 
-                emscripten_set_main_loop([](){
-                    static int g_width = 0;
-                    static int g_height = 0;
+            // Draw the splash window while tasks are running
+            emscripten_set_main_loop_arg([](void *arg) {
+                auto splashWindow = reinterpret_cast<WindowSplash*>(arg);
 
-                    int width = canvas_get_width();
-                    int height = canvas_get_height();
+                FrameResult res = splashWindow->fullFrame();
+                if (res == FrameResult::success) {
+                    handleFileOpenRequest();
 
-                    if(g_width != width || g_height != height) {
-                        // size has changed
+                    // Clean up everything after the main window is closed
+                    emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData){
+                        try {
+                            saveFsData();
+                            deinitializeImHex();
+                            return "";
+                        } catch (const std::exception &ex) {
+                            std::string *msg = new std::string("Failed to deinitialize ImHex. This is just a message warning you of this, the application has already closed, you probably can't do anything about it. Message: ");
+                            msg->append(std::string(ex.what()));
+                            log::fatal("{}", *msg);
+                            return msg->c_str();
+                        }
+                    });
 
-                        g_width = width;
-                        g_height = height;
-                        window->resize(g_width, g_height);
-                    }
+                    // Delete splash window (do it before creating the main window so glfw destroys the window)
+                    delete splashWindow;
 
-                    window->fullFrame();
-                }, 60, 0);
-            }
-        }, 60, 0);
-        // end of initializeImHex()
-        
+                    emscripten_cancel_main_loop();
 
-        return -1;
-    }
+                    // Main window
+                    static Window window;
+                    emscripten_set_main_loop([]() {
+                        window.fullFrame();
+                    }, 60, 0);
+                }
+            }, splashWindow, 60, 0);
+            // end of initializeImHex()
+
+
+            return -1;
+        }
 
     #else
 

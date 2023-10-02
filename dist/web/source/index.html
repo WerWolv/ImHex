@@ -65,14 +65,12 @@
             totalDependencies: 0,
             monitorRunDependencies: function(left) { }
         };
-        window.addEventListener('resize', () => {
-            let canvas = document.getElementById('canvas');
+        window.addEventListener('resize', js_resizeCanvas, false);
 
+        function js_resizeCanvas() {
+            let canvas = document.getElementById('canvas');
             canvas.width  = window.innerWidth;
             canvas.height = window.innerHeight;
-        }, false);
-        window.openLink = function(url, len) {
-            window.open(UTF8ToString(url, len), "_blank");
         }
     </script>
     <script async type="text/javascript" src="imhex.js"></script>
