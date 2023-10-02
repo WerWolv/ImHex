@@ -11,6 +11,7 @@ env:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
 
@@ -27,7 +28,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: cache
-        key: build-web-cache
+        key: build-web-cache-${{ secrets.CACHE_VERSION }}
     
     - name: inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2
@@ -50,3 +51,12 @@ jobs:
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         folder: out
+
+      # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
+    - name: Delete old cache before uploading the new one
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "build-web-cache-${{ secrets.CACHE_VERSION }}" --confirm
