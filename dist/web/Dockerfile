@@ -41,7 +41,8 @@ cmake /imhex                                                                    
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DCMAKE_BUILD_TYPE=Release && \
 make -j $JOBS && \
+cp /imhex/dist/web/source/index.html /build/index.html && \
 ccache -s
 
 FROM scratch
-COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js /imhex/dist/web/source/index.html .
+COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js /build/index.html .
