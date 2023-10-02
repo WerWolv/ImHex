@@ -12,7 +12,7 @@
 namespace hex {
 
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
-        
+
         #if defined(OS_WINDOWS)
             this->m_handle = LoadLibraryW(path.c_str());
 

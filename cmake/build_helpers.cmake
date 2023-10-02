@@ -86,7 +86,7 @@ endmacro()
 
 
 macro(configurePackingResources)
-    add_library(plugin-bundle INTERFACE)
+    set(IMHEX_FORCE_LINK_PLUGINS "")
 
     option (CREATE_PACKAGE "Create a package with CPack" OFF)
 

@@ -493,15 +493,17 @@ namespace hex::init {
 
         // ImHex requires exactly one built-in plugin
         // If no built-in plugin or more than one was found, something's wrong and we can't continue
-        if (builtinPlugins == 0) {
-            log::error("Built-in plugin not found!");
-            ImHexApi::System::impl::addInitArgument("no-builtin-plugin");
-            return false;
-        } else if (builtinPlugins > 1) {
-            log::error("Found more than one built-in plugin!");
-            ImHexApi::System::impl::addInitArgument("multiple-builtin-plugins");
-            return false;
-        }
+        #if !defined(EMSCRIPTEN)
+            if (builtinPlugins == 0) {
+                log::error("Built-in plugin not found!");
+                ImHexApi::System::impl::addInitArgument("no-builtin-plugin");
+                return false;
+            } else if (builtinPlugins > 1) {
+                log::error("Found more than one built-in plugin!");
+                ImHexApi::System::impl::addInitArgument("multiple-builtin-plugins");
+                return false;
+            }
+        #endif
 
         return true;
     }

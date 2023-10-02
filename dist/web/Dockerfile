@@ -13,14 +13,7 @@ RUN git clone https://github.com/iTrooz/vcpkg --branch libmagic /vcpkg
 RUN /vcpkg/bootstrap-vcpkg.sh
 
 # Patch vcpkg build instructions to add -pthread
-RUN <<EOF
-set -xe
-
-echo '
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
-' >> /emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
-EOF
+RUN printf 'set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread")\nset(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")' >> /emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
 
 # Install dependencies with vcpkg
 RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
@@ -29,17 +22,14 @@ RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten josuttis-jthread
 RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
 
 # Build ImHex
-ARG JOBS 4
+ARG JOBS=4
 ENV CCACHE_DIR /cache/ccache
 
 RUN mkdir /build
 WORKDIR /build
 RUN --mount=type=cache,target=/cache \
-    --mount=type=bind,source=.,target=/imhex <<EOF
-
-set -xe
-ccache -zs
-
+    --mount=type=bind,source=.,target=/imhex \
+ccache -zs && \
 cmake /imhex                                                                                            \
     -DIMHEX_OFFLINE_BUILD=ON                                                                            \
     -DIMHEX_STRICT_WARNINGS=OFF                                                                         \
@@ -49,12 +39,9 @@ cmake /imhex                                                                    
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                                \
     -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake                                      \
     -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
-    -DCMAKE_BUILD_TYPE=Release
-
-make -j $JOBS
-
+    -DCMAKE_BUILD_TYPE=Release && \
+make -j $JOBS && \
 ccache -s
-EOF
 
 FROM scratch
 COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js .

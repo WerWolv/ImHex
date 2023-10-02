@@ -31,6 +31,7 @@
 #if defined (OS_EMSCRIPTEN)
     #define GLFW_INCLUDE_ES3
     #include <GLES3/gl3.h>
+    #include <emscripten/html5.h>
 #else
     #include <imgui_impl_opengl3_loader.h>
 #endif
@@ -330,6 +331,8 @@ namespace hex::init {
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
+        glfwWindowHint(GLFW_SAMPLES, 1);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
         // Create the splash screen window
         this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
