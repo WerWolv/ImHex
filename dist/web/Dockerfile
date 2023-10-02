@@ -44,4 +44,4 @@ make -j $JOBS && \
 ccache -s
 
 FROM scratch
-COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js .
+COPY --from=build /build/imhex.wasm /build/imhex.js /build/imhex.worker.js /imhex/dist/web/source/index.html .
