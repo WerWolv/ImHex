@@ -497,26 +497,27 @@ namespace hex {
     }
 
     bool isProcessElevated() {
-#if defined(OS_WINDOWS)
-        bool elevated = false;
-        HANDLE token  = INVALID_HANDLE_VALUE;
+        #if defined(OS_WINDOWS)
+            bool elevated = false;
+            HANDLE token  = INVALID_HANDLE_VALUE;
 
-        if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
-            TOKEN_ELEVATION elevation;
-            DWORD elevationSize = sizeof(TOKEN_ELEVATION);
+            if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
+                TOKEN_ELEVATION elevation;
+                DWORD elevationSize = sizeof(TOKEN_ELEVATION);
 
-            if (::GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
-                elevated = elevation.TokenIsElevated;
-        }
+                if (::GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
+                    elevated = elevation.TokenIsElevated;
+            }
 
-        if (token != INVALID_HANDLE_VALUE)
-            ::CloseHandle(token);
+            if (token != INVALID_HANDLE_VALUE)
+                ::CloseHandle(token);
 
-        return elevated;
-
-#elif defined(OS_LINUX) || defined(OS_MACOS)
-        return getuid() == 0 || getuid() != geteuid();
-#endif
+            return elevated;
+        #elif defined(OS_LINUX) || defined(OS_MACOS)
+            return getuid() == 0 || getuid() != geteuid();
+        #else
+            return false;
+        #endif
     }
 
     std::optional<std::string> getEnvironmentVariable(const std::string &env) {

@@ -18,10 +18,11 @@
 #include <mbedtls/ssl.h>
 
 #if defined(OS_EMSCRIPTEN)
-#include<emscripten/fetch.h>
-#define curl_off_t long
+    #include <emscripten/fetch.h>
+
+    using curl_off_t = long;
 #else
-#include <curl/curl.h>
+    #include <curl/curl.h>
 #endif
 
 namespace hex {

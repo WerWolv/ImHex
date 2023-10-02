@@ -28,7 +28,7 @@ namespace hex {
 
         static void initNative();
 
-        void resize(int width, int height);
+        void resize(i32 width, i32 height);
 
     private:
         void setupNativeWindow();

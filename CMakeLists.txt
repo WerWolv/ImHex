@@ -31,10 +31,6 @@ project(imhex
         HOMEPAGE_URL "https://imhex.werwolv.net"
 )
 
-SET(ADDITIONAL_FLAGS "-Wno-c++11-narrowing -Wno-deprecated-literal-operator -pthread")
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ADDITIONAL_FLAGS}")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDITIONAL_FLAGS}")
-
 # Make sure project is configured correctly
 setDefaultBuiltTypeIfUnset()
 detectBadClone()

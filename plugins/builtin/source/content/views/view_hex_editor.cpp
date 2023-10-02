@@ -1066,7 +1066,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(paths, std::vector<hex::fs::itemfilter>{ {"Thingy Table File", "tbl"} }, false,
+                                                    PopupFileChooser::open(paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
                                                         TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
