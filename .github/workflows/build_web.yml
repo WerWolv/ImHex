@@ -26,7 +26,6 @@ jobs:
     - name: 🛠️ Build using docker
       run: |
         docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
-        cp dist/web/index.html out/index.html
 
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v3
