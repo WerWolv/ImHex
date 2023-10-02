@@ -42,7 +42,7 @@ cmake /imhex                                                                    
     -DCMAKE_BUILD_TYPE=Release && \
 make -j $JOBS && \
 cp /imhex/dist/web/source/index.html /build/index.html && \
-wget "https://raw.githubusercontent.com/josephrocca/clip-image-sorter/main/enable-threads.js" -O enable-threads.js -P /build && \
+cp /imhex/dist/web/source/enable-threads.js /build/enable-threads.js && \
 ccache -s
 
 FROM scratch
