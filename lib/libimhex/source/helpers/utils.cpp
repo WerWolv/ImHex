@@ -335,7 +335,9 @@ namespace hex {
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", url});
         #elif defined(OS_EMSCRIPTEN)
-            emscripten_run_script(hex::format("window.open('{0}', '_blank')", url).c_str());
+            EM_ASM({
+                window.open($0, '_blank');
+            }, url.c_str());
         #else
             #warning "Unknown OS, can't open webpages"
         #endif
