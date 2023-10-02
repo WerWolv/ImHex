@@ -20,6 +20,8 @@
 #elif defined(OS_MACOS)
     #include <hex/helpers/utils_macos.hpp>
     #include <unistd.h>
+#elif defined(OS_EMSCRIPTEN)
+    #include "emscripten.h"
 #endif
 
 namespace hex {
@@ -332,6 +334,8 @@ namespace hex {
             openWebpageMacos(url.c_str());
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", url});
+        #elif defined(OS_EMSCRIPTEN)
+            emscripten_run_script(hex::format("window.open('{0}', '_blank')", url).c_str());
         #else
             #warning "Unknown OS, can't open webpages"
         #endif
