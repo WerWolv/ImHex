@@ -41,10 +41,16 @@ jobs:
       run: |
         docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
 
+    - name: Fix permissions
+      run: |
+        chmod -c -R +rX "out/" | while read line; do
+          echo "::warning title=Invalid file permissions automatically fixed::$line"
+        done
+
     - name: ⬆️ Upload artifacts
       uses: actions/upload-pages-artifact@v2
       with:
-        path: out/
+        path: out/*
 
       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
     - name: Delete old cache before uploading the new one
