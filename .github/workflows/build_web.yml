@@ -42,7 +42,7 @@ jobs:
         docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
 
     - name: ⬆️ Upload artifacts
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v2
       with:
         path: out/
 
