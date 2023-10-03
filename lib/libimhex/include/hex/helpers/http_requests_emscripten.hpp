@@ -58,9 +58,6 @@ namespace hex {
         headers.push_back(nullptr);
         this->m_attr.requestHeaders = headers.data();
 
-        // TODO idk
-
-
         // send request
         emscripten_fetch_t* fetch = emscripten_fetch(&this->m_attr, this->m_url.c_str());
 
