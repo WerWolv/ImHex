@@ -21,6 +21,7 @@
 #elif defined(OS_LINUX)
 #include <fcntl.h>
 #include <unistd.h>
+#include <linux/fs.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
@@ -31,6 +32,10 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/disk.h>
+#endif
+
+#if defined(OS_LINUX)
+#define lseek lseek64
 #endif
 
 namespace hex::plugin::builtin {
@@ -82,7 +87,7 @@ namespace hex::plugin::builtin {
     #else
         int blkdev_get_sector_size(int fd, int *sector_size) {
             (void)fd;
-            *sector_size = 0;
+            *sector_size = DEFAULT_SECTOR_SIZE;
             return 0;
         }
     #endif
@@ -103,7 +108,7 @@ namespace hex::plugin::builtin {
             if (st.st_size == 0) {
                 // try BLKGETSIZE
                 unsigned long long bytes64;
-                if (ioctl(fd, 0, &bytes64) >= 0) {
+                if (ioctl(fd, BLKGETSIZE, &bytes64) >= 0) {
                     *bytes = bytes64;
                     return 0;
                 }
