@@ -34,7 +34,7 @@
 </p>
 
 <p align="center">
-  <a title="Plugins" href="https://web.imhex.werwolv.net">
+  <a title="Use the Web version of ImHex right in your browser!" href="https://web.imhex.werwolv.net">
     <img alt="Use the Web version of ImHex right in your browser!" src="resources/dist/common/try_online_banner.png">
   </a>
 </p>
