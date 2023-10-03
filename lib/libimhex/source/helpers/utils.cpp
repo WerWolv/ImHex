@@ -335,7 +335,6 @@ namespace hex {
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", url});
         #elif defined(OS_EMSCRIPTEN)
-            log::warn("{}", url);
             EM_ASM({
                 window.open(UTF8ToString($0), '_blank');
             }, url.c_str());
