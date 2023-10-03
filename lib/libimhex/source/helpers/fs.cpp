@@ -175,7 +175,15 @@ namespace hex::fs {
             }
             case DialogMode::Save: {
                 currentCallback = callback;
-                std::fs::path path(defaultPath);
+                std::fs::path path;
+
+                if (!defaultPath.empty())
+                    path = defaultPath;
+                else if (!validExtensions.empty())
+                    path = "file." + validExtensions[0].spec;
+                else
+                    path = "file.bin";
+
                 callJs_saveFile(path.filename().string().c_str());
                 break;
             }
