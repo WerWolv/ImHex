@@ -61,116 +61,13 @@
 
     <title>ImHex Web</title>
     <script src="enable-threads.js"></script>
-    <style>
-        html, body {
-            height: 100%;
-            margin: 0px;
-            user-select: none;
-        }
-
-        body {
-            display: flex;
-            align-items: center;
-            background-color: #121212;
-            overflow: hidden;
-        }
-
-        .emscripten {
-            padding-right: 0;
-            margin-left: auto;
-            margin-right: auto;
-            display: block;
-            border: 0px none;
-        }
-
-        #loading_text {
-            color: #F0F0F0;
-            font-size: 30px;
-            font-family: monospace;
-            width: 100%;
-            text-align: center;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<p id="loading_text">ImHex is loading...</p>
-<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" style="display: none; image-rendering: crisp-edges"></canvas>
+    <p id="loading_text">ImHex is loading...</p>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" style="display: none; image-rendering: crisp-edges"></canvas>
 
-<script type='text/javascript'>
-    function glfwSetCursorCustom(wnd, shape) {
-        let body = document.getElementsByTagName("body")[0]
-        switch (shape) {
-            case 0x00036001: // GLFW_ARROW_CURSOR
-                body.style.cursor = "default";
-                break;
-            case 0x00036002: // GLFW_IBEAM_CURSOR
-                body.style.cursor = "text";
-                break;
-            case 0x00036003: // GLFW_CROSSHAIR_CURSOR
-                body.style.cursor = "crosshair";
-                break;
-            case 0x00036004: // GLFW_HAND_CURSOR
-                body.style.cursor = "pointer";
-                break;
-            case 0x00036005: // GLFW_HRESIZE_CURSOR
-                body.style.cursor = "ew-resize";
-                break;
-            case 0x00036006: // GLFW_VRESIZE_CURSOR
-                body.style.cursor = "ns-resize";
-                break;
-            default:
-                body.style.cursor = "default";
-                break;
-        }
-
-    }
-
-    function glfwCreateStandardCursorCustom(shape) {
-        return shape
-    }
-
-    var Module = {
-        preRun:  [],
-        postRun: [],
-        onRuntimeInitialized: function() {
-            // Triggered when the wasm module is loaded and ready to use.
-            document.getElementById("loading_text").style.display = "none"
-            document.getElementById("canvas").style.display = "initial"
-        },
-        print:   (function() { })(),
-        printErr: function(text) { },
-        canvas: (function() {
-            let canvas = document.getElementById('canvas');
-            // As a default initial behavior, pop up an alert when webgl context is lost. To make your
-            // application robust, you may want to override this behavior before shipping!
-            // See http://www.khronos.org/registry/webgl/specs/latest/1.0/#5.15.2
-            canvas.addEventListener("webglcontextlost", function(e) { alert('WebGL context lost. You will need to reload the page.'); e.preventDefault(); }, false);
-
-            return canvas;
-        })(),
-        setStatus: function(text) { },
-        totalDependencies: 0,
-        monitorRunDependencies: function(left) { },
-        instantiateWasm: function(imports, successCallback) {
-            imports.env.glfwSetCursor = glfwSetCursorCustom
-            imports.env.glfwCreateStandardCursor = glfwCreateStandardCursorCustom
-            instantiateAsync(wasmBinary, wasmBinaryFile, imports, (result) => successCallback(result.instance, result.module));
-        }
-    };
-    window.addEventListener('resize', js_resizeCanvas, false);
-
-    function js_resizeCanvas() {
-        let canvas = document.getElementById('canvas');
-        canvas.width  = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-</script>
-<script async type="text/javascript" src="imhex.js">
-
-</script>
-
-<script>
-
-</script>
+    <script type="text/javascript" src="wasm-config.js"></script>
+    <script async type="text/javascript" src="imhex.js"></script>
 </body>
 </html>
