@@ -40,6 +40,7 @@ verifyCompiler()
 set(PLUGINS
     builtin
     windows
+    script_loader
 )
 
 # Add various defines
