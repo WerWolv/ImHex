@@ -178,11 +178,9 @@ namespace hex::fs {
                 std::fs::path path;
 
                 if (!defaultPath.empty())
-                    path = defaultPath;
+                    path = std::fs::path(defaultPath).filename();
                 else if (!validExtensions.empty())
                     path = "file." + validExtensions[0].spec;
-                else
-                    path = "file.bin";
 
                 callJs_saveFile(path.filename().string().c_str());
                 break;
