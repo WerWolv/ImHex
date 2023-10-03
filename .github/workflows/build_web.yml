@@ -25,13 +25,13 @@ jobs:
       with:
         submodules: recursive
     
-    - name: Restore docker /cache
+    - name: 📁 Restore docker /cache
       uses: actions/cache@v3
       with:
         path: cache
         key: build-web-cache-${{ secrets.CACHE_VERSION }}
     
-    - name: Inject /cache into docker
+    - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2
       with:
         cache-source: cache
@@ -41,7 +41,7 @@ jobs:
       run: |
         docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
 
-    - name: Fix permissions
+    - name: 🔨 Fix permissions
       run: |
         chmod -c -R +rX "out/" | while read line; do
           echo "::warning title=Invalid file permissions automatically fixed::$line"
@@ -53,7 +53,7 @@ jobs:
         path: out/
 
       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
-    - name: Delete old cache before uploading the new one
+    - name: 🗑️ Delete old cache
       continue-on-error: true
       env:
         GH_TOKEN: ${{ github.token }}
@@ -70,5 +70,6 @@ jobs:
     needs: build
     steps:
       - name: 🌍 Deploy to GitHub Pages
+        if: github.ref == 'refs/heads/master'
         id: deployment
         uses: actions/deploy-pages@v2
