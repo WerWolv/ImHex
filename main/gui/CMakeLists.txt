@@ -40,6 +40,8 @@ if (EMSCRIPTEN)
     target_link_options(main PRIVATE -sWASM_BIGINT)
     target_link_options(main PRIVATE -O1)
     target_link_options(main PRIVATE -sLEGACY_GL_EMULATION)
+    target_link_options(main PRIVATE -fsanitize=null)
+    target_link_options(main PRIVATE -fsanitize-minimal-runtime)
     target_link_libraries(main PRIVATE idbfs.js)
 endif ()
 
