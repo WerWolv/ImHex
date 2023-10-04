@@ -22,11 +22,18 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 ' >> /emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake
 EOF
 
+ENV VCPKG_DEFAULT_BINARY_CACHE /cache/vcpkg
+RUN --mount=type=cache,target=/cache <<EOF
 # Install dependencies with vcpkg
-RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
-RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
-RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten josuttis-jthread
-RUN /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
+set -xe
+
+mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+
+/vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
+/vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
+/vcpkg/vcpkg install --triplet=wasm32-emscripten josuttis-jthread
+/vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
+EOF
 
 # Build ImHex
 ARG JOBS=4
