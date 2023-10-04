@@ -2,7 +2,6 @@
     "code": "zh-TW",
     "country": "Taiwan",
     "language": "Chinese (Traditional)",
-
     "translations": {
         "hex.builtin.achievement.starting_out": "初來乍到",
         "hex.builtin.achievement.starting_out.docs.name": "拒當伸手牌",
@@ -58,7 +57,6 @@
         "hex.builtin.achievement.misc.download_from_store.desc": "從內容商店下載任何東西",
         "hex.builtin.achievement.misc.create_hash.name": "Hash browns",
         "hex.builtin.achievement.misc.create_hash.desc": "Create a new hash function in the Hash view by selecting the type, giving it a name and clicking on the Plus button next to it.",
-
         "hex.builtin.command.calc.desc": "計算機",
         "hex.builtin.command.cmd.desc": "命令",
         "hex.builtin.command.cmd.result": "執行命令 '{0}'",
@@ -1064,6 +1062,8 @@
         "hex.builtin.welcome.tip_of_the_day": "今日提示",
         "hex.builtin.welcome.update.desc": "ImHex {0} 發布了！點此下載。",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
-        "hex.builtin.welcome.update.title": "有可用更新！"
-    }
+        "hex.builtin.welcome.update.title": "有可用更新！",
+        "hex.builtin.provider.file.menu.into_memory": ""
+    },
+    "fallback": false
 }
