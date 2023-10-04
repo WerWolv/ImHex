@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-#include <curl/curl.h>
-
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 
@@ -18,6 +16,14 @@
 #include <wolv/utils/string.hpp>
 
 #include <mbedtls/ssl.h>
+
+#if defined(OS_WEB)
+    #include <emscripten/fetch.h>
+
+    using curl_off_t = long;
+#else
+    #include <curl/curl.h>
+#endif
 
 namespace hex {
 
@@ -67,27 +73,9 @@ namespace hex {
         HttpRequest(const HttpRequest&) = delete;
         HttpRequest& operator=(const HttpRequest&) = delete;
 
-        HttpRequest(HttpRequest &&other) noexcept {
-            this->m_curl = other.m_curl;
-            other.m_curl = nullptr;
+        HttpRequest(HttpRequest &&other) noexcept;
 
-            this->m_method = std::move(other.m_method);
-            this->m_url = std::move(other.m_url);
-            this->m_headers = std::move(other.m_headers);
-            this->m_body = std::move(other.m_body);
-        }
-
-        HttpRequest& operator=(HttpRequest &&other) noexcept {
-            this->m_curl = other.m_curl;
-            other.m_curl = nullptr;
-
-            this->m_method = std::move(other.m_method);
-            this->m_url = std::move(other.m_url);
-            this->m_headers = std::move(other.m_headers);
-            this->m_body = std::move(other.m_body);
-
-            return *this;
-        }
+        HttpRequest& operator=(HttpRequest &&other) noexcept;
 
         static void setProxy(std::string proxy);
 
@@ -120,173 +108,28 @@ namespace hex {
         }
 
         template<typename T = std::string>
-        std::future<Result<T>> downloadFile(const std::fs::path &path) {
-            return std::async(std::launch::async, [this, path] {
-                std::vector<u8> response;
+        std::future<Result<T>> downloadFile(const std::fs::path &path);
 
-                wolv::io::File file(path, wolv::io::File::Mode::Create);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToFile);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &file);
-
-                return this->executeImpl<T>(response);
-            });
-        }
-
-        std::future<Result<std::vector<u8>>> downloadFile() {
-            return std::async(std::launch::async, [this] {
-                std::vector<u8> response;
-
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &response);
-
-                return this->executeImpl<std::vector<u8>>(response);
-            });
-        }
+        std::future<Result<std::vector<u8>>> downloadFile();
 
         template<typename T = std::string>
-        std::future<Result<T>> uploadFile(const std::fs::path &path, const std::string &mimeName = "filename") {
-            return std::async(std::launch::async, [this, path, mimeName]{
-                auto fileName = wolv::util::toUTF8String(path.filename());
-
-                curl_mime *mime     = curl_mime_init(this->m_curl);
-                curl_mimepart *part = curl_mime_addpart(mime);
-
-                wolv::io::File file(path, wolv::io::File::Mode::Read);
-
-                curl_mime_data_cb(part, file.getSize(),
-                                  [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
-                                      auto file = static_cast<FILE*>(arg);
-
-                                      return fread(buffer, size, nitems, file);
-                                  },
-                                  [](void *arg, curl_off_t offset, int origin) -> int {
-                                      auto file = static_cast<FILE*>(arg);
-
-                                      if (fseek(file, offset, origin) != 0)
-                                          return CURL_SEEKFUNC_CANTSEEK;
-                                      else
-                                          return CURL_SEEKFUNC_OK;
-                                  },
-                                  [](void *arg) {
-                                      auto file = static_cast<FILE*>(arg);
-
-                                      fclose(file);
-                                  },
-                                  file.getHandle());
-                curl_mime_filename(part, fileName.c_str());
-                curl_mime_name(part, mimeName.c_str());
-
-                curl_easy_setopt(this->m_curl, CURLOPT_MIMEPOST, mime);
-
-                std::vector<u8> responseData;
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &responseData);
-
-                return this->executeImpl<T>(responseData);
-            });
-        }
-        template<typename T = std::string>
-        std::future<Result<T>> uploadFile(std::vector<u8> data, const std::string &mimeName = "filename", const std::fs::path &fileName = "data.bin") {
-            return std::async(std::launch::async, [this, data = std::move(data), mimeName, fileName]{
-                curl_mime *mime     = curl_mime_init(this->m_curl);
-                curl_mimepart *part = curl_mime_addpart(mime);
-
-                curl_mime_data(part, reinterpret_cast<const char *>(data.data()), data.size());
-                auto fileNameStr = wolv::util::toUTF8String(fileName.filename());
-                curl_mime_filename(part, fileNameStr.c_str());
-                curl_mime_name(part, mimeName.c_str());
-
-                curl_easy_setopt(this->m_curl, CURLOPT_MIMEPOST, mime);
-
-                std::vector<u8> responseData;
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &responseData);
-
-                return this->executeImpl<T>(responseData);
-            });
-        }
+        std::future<Result<T>> uploadFile(const std::fs::path &path, const std::string &mimeName = "filename");
 
         template<typename T = std::string>
-        std::future<Result<T>> execute() {
-            return std::async(std::launch::async, [this] {
+        std::future<Result<T>> uploadFile(std::vector<u8> data, const std::string &mimeName = "filename", const std::fs::path &fileName = "data.bin");
 
-                std::vector<u8> responseData;
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEFUNCTION, writeToVector);
-                curl_easy_setopt(this->m_curl, CURLOPT_WRITEDATA, &responseData);
+        template<typename T = std::string>
+        std::future<Result<T>> execute();
 
-                return this->executeImpl<T>(responseData);
-            });
-        }
+        std::string urlEncode(const std::string &input);
 
-        std::string urlEncode(const std::string &input) {
-            auto escapedString = curl_easy_escape(this->m_curl, input.c_str(), std::strlen(input.c_str()));
-
-            if (escapedString != nullptr) {
-                std::string output = escapedString;
-                curl_free(escapedString);
-
-                return output;
-            }
-
-            return {};
-        }
-
-        std::string urlDecode(const std::string &input) {
-            auto unescapedString = curl_easy_unescape(this->m_curl, input.c_str(), std::strlen(input.c_str()), nullptr);
-
-            if (unescapedString != nullptr) {
-                std::string output = unescapedString;
-                curl_free(unescapedString);
-
-                return output;
-            }
-
-            return {};
-        }
+        std::string urlDecode(const std::string &input);
 
     protected:
         void setDefaultConfig();
 
         template<typename T>
-        Result<T> executeImpl(std::vector<u8> &data) {
-            curl_easy_setopt(this->m_curl, CURLOPT_URL, this->m_url.c_str());
-            curl_easy_setopt(this->m_curl, CURLOPT_CUSTOMREQUEST, this->m_method.c_str());
-
-            setDefaultConfig();
-
-            if (!this->m_body.empty()) {
-                curl_easy_setopt(this->m_curl, CURLOPT_POSTFIELDS, this->m_body.c_str());
-            }
-
-            curl_slist *headers = nullptr;
-            headers = curl_slist_append(headers, "Cache-Control: no-cache");
-            ON_SCOPE_EXIT { curl_slist_free_all(headers); };
-
-            for (auto &[key, value] : this->m_headers) {
-                std::string header = hex::format("{}: {}", key, value);
-                headers = curl_slist_append(headers, header.c_str());
-            }
-            curl_easy_setopt(this->m_curl, CURLOPT_HTTPHEADER, headers);
-
-            {
-                std::scoped_lock lock(this->m_transmissionMutex);
-
-                auto result = curl_easy_perform(this->m_curl);
-                if (result != CURLE_OK){
-                    char *url = nullptr;
-                    curl_easy_getinfo(this->m_curl, CURLINFO_EFFECTIVE_URL, &url);
-                    log::error("Http request '{0} {1}' failed with error {2}: '{3}'", this->m_method, url, u32(result), curl_easy_strerror(result));
-                    checkProxyErrors();
-
-                    return { };
-                }
-            }
-
-            long statusCode = 0;
-            curl_easy_getinfo(this->m_curl, CURLINFO_RESPONSE_CODE, &statusCode);
-
-            return Result<T>(statusCode, { data.begin(), data.end() });
-        }
+        Result<T> executeImpl(std::vector<u8> &data);
 
         static size_t writeToVector(void *contents, size_t size, size_t nmemb, void *userdata);
         static size_t writeToFile(void *contents, size_t size, size_t nmemb, void *userdata);
@@ -296,18 +139,29 @@ namespace hex {
         static void checkProxyErrors();
 
     private:
+        #if defined(OS_WEB)
+        emscripten_fetch_attr_t m_attr;
+        #else
         CURL *m_curl;
+        #endif
 
         std::mutex m_transmissionMutex;
 
         std::string m_method;
         std::string m_url;
         std::string m_body;
+        std::promise<std::vector<u8>> m_promise;
         std::map<std::string, std::string> m_headers;
         u32 m_timeout = 1000;
 
         std::atomic<float> m_progress = 0.0F;
         std::atomic<bool> m_canceled = false;
     };
-
 }
+
+
+#if defined(OS_WEB)
+#include <hex/helpers/http_requests_emscripten.hpp>
+#else
+#include <hex/helpers/http_requests_native.hpp>
+#endif

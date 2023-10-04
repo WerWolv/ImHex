@@ -35,7 +35,7 @@ namespace hex {
         if (!this->m_valid) {
             this->m_tarOpenErrno = tar_error;
             
-            // hopefully this errno corresponds to the file open call in mtar_open
+            // Hopefully this errno corresponds to the file open call in mtar_open
             this->m_fileOpenErrno = errno;
         }
     }

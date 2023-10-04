@@ -116,11 +116,13 @@ target_compile_definitions(libyara PRIVATE
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(libyara PRIVATE -Wno-pointer-sign -Wno-tautological-constant-out-of-range-compare)
 endif ()
 
 target_include_directories(
         libyara
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include> $<INSTALL_INTERFACE:include>
+        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/yara> $<BUILD_INTERFACE:${LIBYARA_SOURCE_PATH}/include>
         PRIVATE ${LIBYARA_SOURCE_PATH} ${MBEDTLS_INCLUDE_DIR}
 )
 

@@ -33,6 +33,12 @@
   </a>
 </p>
 
+<p align="center">
+  <a title="Use the Web version of ImHex right in your browser!" href="https://web.imhex.werwolv.net">
+    <img alt="Use the Web version of ImHex right in your browser!" src="resources/dist/common/try_online_banner.png">
+  </a>
+</p>
+
 ## Supporting
 
 If you like my work, please consider supporting me on GitHub Sponsors, Patreon or PayPal. Thanks a lot!

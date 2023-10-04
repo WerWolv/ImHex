@@ -8,11 +8,13 @@ add_executable(main ${APPLICATION_TYPE}
     source/window/win_window.cpp
     source/window/macos_window.cpp
     source/window/linux_window.cpp
+    source/window/web_window.cpp
 
     source/messaging/common.cpp
     source/messaging/linux.cpp
     source/messaging/macos.cpp
     source/messaging/win.cpp
+    source/messaging/web.cpp
 
     source/init/splash_window.cpp
     source/init/tasks.cpp
@@ -28,6 +30,18 @@ set(LIBROMFS_PROJECT_NAME imhex)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/main/gui/libromfs EXCLUDE_FROM_ALL)
 set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_dependencies(imhex_all main)
+
+if (EMSCRIPTEN)
+    target_link_options(main PRIVATE -sUSE_GLFW=3 -sUSE_PTHREADS=1 -sALLOW_MEMORY_GROWTH=1)
+    target_link_options(main PRIVATE -sTOTAL_MEMORY=134217728)
+    target_link_options(main PRIVATE -sMAX_WEBGL_VERSION=2)
+    target_link_options(main PRIVATE -sEXPORTED_RUNTIME_METHODS=ccall)
+    target_link_options(main PRIVATE -sFETCH)
+    target_link_options(main PRIVATE -sWASM_BIGINT)
+    target_link_options(main PRIVATE -O1)
+    target_link_options(main PRIVATE -sLEGACY_GL_EMULATION)
+    target_link_libraries(main PRIVATE idbfs.js)
+endif ()
 
 set_target_properties(main PROPERTIES
     OUTPUT_NAME ${IMHEX_APPLICATION_NAME}

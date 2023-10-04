@@ -27,6 +27,8 @@ set(LIBIMHEX_SOURCES
         source/helpers/magic.cpp
         source/helpers/crypto.cpp
         source/helpers/http_requests.cpp
+        source/helpers/http_requests_native.cpp
+        source/helpers/http_requests_emscripten.cpp
         source/helpers/opengl.cpp
         source/helpers/patches.cpp
         source/helpers/encoding_file.cpp
@@ -58,7 +60,12 @@ endif ()
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
-add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+if (IMHEX_STATIC_LINK_PLUGINS)
+    add_library(libimhex STATIC ${LIBIMHEX_SOURCES})
+else()
+    add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+endif()
+
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 setupCompilerFlags(libimhex)
 
@@ -67,6 +74,16 @@ generate_export_header(libimhex)
 
 target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
+
+if (EMSCRIPTEN)
+    find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
+    target_include_directories(libimhex PRIVATE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
+else()
+    # curl is only used in non-emscripten builds
+    target_include_directories(libimhex PUBLIC  ${CURL_INCLUDE_DIRS})
+    target_link_libraries(libimhex PUBLIC ${LIBCURL_LIBRARIES})
+endif()
+
 
 if (WIN32)
     set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -77,7 +94,7 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${LIBCURL_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
+target_link_libraries(libimhex PUBLIC dl imgui ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 

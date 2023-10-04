@@ -16,7 +16,6 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <imgui_impl_opengl3_loader.h>
 #include <fonts/fontawesome_font.h>
 #include <GLFW/glfw3.h>
 
@@ -28,6 +27,14 @@
 #include <future>
 #include <numeric>
 #include <random>
+
+#if defined(OS_WEB)
+    #define GLFW_INCLUDE_ES3
+    #include <GLES3/gl3.h>
+    #include <emscripten/html5.h>
+#else
+    #include <imgui_impl_opengl3_loader.h>
+#endif
 
 using namespace std::literals::chrono_literals;
 
@@ -324,6 +331,8 @@ namespace hex::init {
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
+        glfwWindowHint(GLFW_SAMPLES, 1);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
         // Create the splash screen window
         this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
@@ -373,6 +382,8 @@ namespace hex::init {
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
+        #elif defined(OS_WEB)
+            ImGui_ImplOpenGL3_Init();
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif

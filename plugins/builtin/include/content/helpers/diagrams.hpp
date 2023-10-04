@@ -183,7 +183,7 @@ namespace hex {
     private:
         size_t m_sampleSize;
 
-        // The number of byte processed and the size of 
+        // The number of bytes processed and the size of
         // the file to analyze (useful for iterative analysis)
         u64 m_byteCount;
         u64 m_fileSize;
@@ -276,7 +276,7 @@ namespace hex {
     private:
         size_t m_sampleSize;
     
-        // The number of byte processed and the size of 
+        // The number of bytes processed and the size of
         // the file to analyze (useful for iterative analysis)
         u64 m_byteCount;
         u64 m_fileSize;
@@ -313,7 +313,7 @@ namespace hex {
                 ImPlot::PlotLine("##ChunkBasedAnalysisLine", this->m_xBlockEntropy.data(), this->m_yBlockEntropySampled.data(), this->m_xBlockEntropy.size());
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
-                // but just a set of bytes we won't be able to use the drag bar correctly.
+                // but just a set of bytes, we won't be able to use the drag bar correctly.
                 if (updateHandle) {
                     // Set a draggable line on the plot
                     if (ImPlot::DragLineX(1, &this->m_handlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
@@ -427,7 +427,7 @@ namespace hex {
         }
 
         // Method used to compute the entropy of a block of size `blockSize`
-        // using the bytes occurrences from `valueCounts` array.
+        // using the byte occurrences from `valueCounts` array.
         double calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
             double entropy = 0;
 
@@ -560,8 +560,8 @@ namespace hex {
         // Position of the handle inside the plot
         double m_handlePosition = 0.0; 
 
-        // Hold the number of block that have been processed
-        // during the chunk based entropy analysis
+        // Hold the number of blocks that have been processed
+        // during the chunk-based entropy analysis
         u64 m_blockCount;
         
         // Hold the number of bytes that have been processed 
@@ -572,7 +572,7 @@ namespace hex {
         // (useful for the iterative analysis)
         std::array<ImU64, 256> m_blockValueCounts;
 
-        // Variable to hold the result of the chunk based
+        // Variable to hold the result of the chunk-based
         // entropy analysis
         std::vector<double> m_xBlockEntropy;
         std::vector<double> m_yBlockEntropy, m_yBlockEntropySampled;
@@ -708,7 +708,7 @@ namespace hex {
                 }
 
                 // The parameter updateHandle is used when using the pattern language since we don't have a provider 
-                // but just a set of bytes we won't be able to use the drag bar correctly.
+                // but just a set of bytes, we won't be able to use the drag bar correctly.
                 if (updateHandle) {
                     // Set a draggable line on the plot
                     if (ImPlot::DragLineX(1, &this->m_handlePosition, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
@@ -934,8 +934,8 @@ namespace hex {
         // Position of the handle inside the plot
         double m_handlePosition = 0.0;    
 
-        // Hold the number of block that have been processed
-        // during the chunk based entropy analysis
+        // Hold the number of blocks that have been processed
+        // during the chunk-based entropy analysis
         u64 m_blockCount;
 
         // Hold the number of bytes that have been processed 
@@ -950,7 +950,7 @@ namespace hex {
         // (useful for the iterative analysis)
         std::array<ImU64, 256> m_blockValueCounts;
 
-        // The m_xBlockTypeDistributions attributes is used to specify the position of 
+        // The m_xBlockTypeDistributions attributes are used to specify the position of
         // the values in the plot when the Y axis doesn't start at 0 
         std::vector<float> m_xBlockTypeDistributions;
         // Hold the result of the byte distribution analysis 

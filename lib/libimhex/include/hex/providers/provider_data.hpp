@@ -83,18 +83,18 @@ namespace hex {
                 this->m_data.clear();
             });
 
-            // moves the data of this PerProvider instance from one provider to another
+            // Moves the data of this PerProvider instance from one provider to another
             EventManager::subscribe<MovePerProviderData>(this, [this](prv::Provider *from, prv::Provider *to) {
-                // get the value from the old provider, (removes it from the map)
+                // Get the value from the old provider, (removes it from the map)
                 auto node = m_data.extract(from);
 
-                // ensure the value existed
+                // Ensure the value existed
                 if (node.empty()) return;
 
-                // delete the value from the new provider, that we want to replace
+                // Delete the value from the new provider, that we want to replace
                 this->m_data.erase(to);
 
-                // re-insert it with the key of the new provider
+                // Re-insert it with the key of the new provider
                 node.key() = to;
                 this->m_data.insert(std::move(node));
             });

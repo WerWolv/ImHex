@@ -30,10 +30,10 @@ namespace hex::plugin::builtin::recent {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
-                // do not save to recents if the provider is part of a project
+                // Do not save to recents if the provider is part of a project
                 if (ProjectFile::hasPath()) return;
 
-                // do not save to recents if the provider doesnt want it
+                // Do not save to recents if the provider doesnt want it
                 if (!provider->isSavableAsRecent()) return;
 
                 // The recent provider is saved to every "recent" directory
@@ -57,7 +57,7 @@ namespace hex::plugin::builtin::recent {
             updateRecentEntries();
         });
 
-        // save opened projects as a "recent" shortcut
+        // Save opened projects as a "recent" shortcut
         (void)EventManager::subscribe<EventProjectOpened>([] {
              if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", 1) == 1) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
@@ -208,7 +208,7 @@ namespace hex::plugin::builtin::recent {
                         ImGui::EndPopup();
                     }
 
-                    // handle deletion from vector and on disk
+                    // Handle deletion from vector and on disk
                     if (shouldRemove) {
                         wolv::io::fs::remove(recentEntry.entryFilePath);
                         it = s_recentEntries.erase(it);

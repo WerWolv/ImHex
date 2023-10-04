@@ -156,6 +156,8 @@ namespace hex {
     }
 
     void Window::fullFrame() {
+        this->m_lastFrameTime = glfwGetTime();
+
         glfwPollEvents();
 
         // Render frame
@@ -255,7 +257,7 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-        // custom titlebar buttons implementation for borderless window mode
+        // Custom titlebar buttons implementation for borderless window mode
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
@@ -812,6 +814,8 @@ namespace hex {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+        glfwWindowHint(GLFW_SAMPLES, 1);
 
         if (restoreWindowPos) {
             int maximized = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", GLFW_FALSE);
@@ -924,30 +928,32 @@ namespace hex {
             win->processEvent();
         });
 
-        // Register key press callback
-        glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
-            hex::unused(mods);
+        #if !defined(OS_WEB)
+            // Register key press callback
+            glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+                hex::unused(mods);
 
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
 
-            if (action == GLFW_RELEASE) {
-                win->m_buttonDown = false;
-            } else {
-                win->m_buttonDown = true;
-            }
+                if (action == GLFW_RELEASE) {
+                    win->m_buttonDown = false;
+                } else {
+                    win->m_buttonDown = true;
+                }
 
-            if (key == GLFW_KEY_UNKNOWN) return;
+                if (key == GLFW_KEY_UNKNOWN) return;
 
-            auto keyName = glfwGetKeyName(key, scancode);
-            if (keyName != nullptr)
-                key = std::toupper(keyName[0]);
+                auto keyName = glfwGetKeyName(key, scancode);
+                if (keyName != nullptr)
+                    key = std::toupper(keyName[0]);
 
-            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                win->m_pressedKeys.push_back(key);
-            }
+                if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+                    win->m_pressedKeys.push_back(key);
+                }
 
-            win->processEvent();
-        });
+                win->processEvent();
+            });
+        #endif
 
         // Register cursor position callback
         glfwSetCursorPosCallback(this->m_window, [](GLFWwindow *window, double x, double y) {
@@ -993,6 +999,10 @@ namespace hex {
         glfwSetWindowSizeLimits(this->m_window, 720_scaled, 480_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         glfwShowWindow(this->m_window);
+    }
+
+    void Window::resize(i32 width, i32 height) {
+        glfwSetWindowSize(this->m_window, width, height);
     }
 
     void Window::initImGui() {
@@ -1094,10 +1104,13 @@ namespace hex {
             }
         }
 
+
         ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
+        #elif defined(OS_WEB)
+            ImGui_ImplOpenGL3_Init();
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif

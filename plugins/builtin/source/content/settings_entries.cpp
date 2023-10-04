@@ -211,7 +211,8 @@ namespace hex::plugin::builtin {
             static auto lang = std::string(setting);
 
             if (ImGui::InputText(name.data(), lang, ImGuiInputTextFlags_CharsNoBlank)) {
-                setting = std::string(lang.c_str()); // remove following zero bytes
+                // Remove trailing null bytes
+                setting = std::string(lang.c_str());
                 return true;
             }
 

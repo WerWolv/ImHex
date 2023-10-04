@@ -13,7 +13,13 @@
     #include <shlobj.h>
 #elif defined(OS_LINUX)
     #include <xdg.hpp>
-    #include <linux/limits.h>
+    #include <limits.h>
+#endif
+
+#if !defined(OS_WEB)
+#include <nfd.hpp>
+#else
+#include <emscripten.h>
 #endif
 
 #include <algorithm>
@@ -84,66 +90,173 @@ namespace hex::fs {
             ));
             system(R"(osascript -e 'tell application "Finder" to activate')");
         #elif defined(OS_LINUX)
-            // fallback to only opening the folder for now
+            // Fallback to only opening the folder for now
             // TODO actually select the file
             executeCmd({"xdg-open", wolv::util::toUTF8String(selectedFilePath.parent_path())});
         #endif
     }
 
-    bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
-        NFD::ClearError();
+    #if defined(OS_WEB)
 
-        if (NFD::Init() != NFD_OKAY) {
-            log::error("NFD init returned an error: {}", NFD::GetError());
-            if (s_fileBrowserErrorCallback != nullptr)
-                s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
-            return false;
+        std::function<void(std::fs::path)> currentCallback;
+
+        EMSCRIPTEN_KEEPALIVE
+        extern "C" void fileBrowserCallback(char* path) {
+            currentCallback(path);
         }
 
-        NFD::UniquePathU8 outPath;
-        NFD::UniquePathSet outPaths;
-        nfdresult_t result;
-        switch (mode) {
-            case DialogMode::Open:
-                if (multiple)
-                    result = NFD::OpenDialogMultiple(outPaths, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
-                else
-                    result = NFD::OpenDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
-                break;
-            case DialogMode::Save:
-                result = NFD::SaveDialog(outPath, validExtensions.data(), validExtensions.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
-                break;
-            case DialogMode::Folder:
-                result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
-                break;
-            default:
-                std::unreachable();
-        }
+        EM_JS(int, callJs_saveFile, (const char *rawFilename), {
+            let filename = UTF8ToString(rawFilename) || "file.bin";
+            FS.createPath("/", "savedFiles");
 
-        if (result == NFD_OKAY){
-            if(outPath != nullptr) {
-                callback(reinterpret_cast<char8_t*>(outPath.get()));
+            if (FS.analyzePath(filename).exists) {
+                FS.unlink(filename);
             }
-            if (outPaths != nullptr) {
-                nfdpathsetsize_t numPaths = 0;
-                if (NFD::PathSet::Count(outPaths, numPaths) == NFD_OKAY) {
-                    for (size_t i = 0; i < numPaths; i++) {
-                        NFD::UniquePathSetPath path;
-                        if (NFD::PathSet::GetPath(outPaths, i, path) == NFD_OKAY)
-                            callback(reinterpret_cast<char8_t*>(path.get()));
+
+            // Call callback that will write the file
+            Module._fileBrowserCallback(stringToNewUTF8("/savedFiles/" + filename));
+
+            let data = FS.readFile("/savedFiles/" + filename);
+
+            const reader = Object.assign(new FileReader(), {
+                onload: () => {
+
+                    // Show popup to user to download
+                    let saver = document.createElement('a');
+                    saver.href = reader.result;
+                    saver.download = filename;
+                    saver.style = "display: none";
+
+                    saver.click();
+
+                },
+                onerror: () => {
+                    throw new Error(reader.error);
+                },
+            });
+            reader.readAsDataURL(new File([data], "", { type: "application/octet-stream" }));
+
+        });
+
+        EM_JS(int, callJs_openFile, (bool multiple), {
+            let selector = document.createElement("input");
+            selector.type = "file";
+            selector.style = "display: none";
+            if (multiple) {
+                selector.multiple = true;
+            }
+            selector.onchange = () => {
+                if (selector.files.length == 0) return;
+
+                FS.createPath("/", "openedFiles");
+                for (let file of selector.files) {
+                    const fr = new FileReader();
+                    fr.onload = () => {
+                        let path = "/openedFiles/"+file.name;
+                        if (FS.analyzePath(path).exists) {
+                            FS.unlink(path);
+                        }
+                        FS.createDataFile("/openedFiles/", file.name, fr.result, true, true);
+                        Module._fileBrowserCallback(stringToNewUTF8(path));
+                    };
+
+                    fr.readAsBinaryString(file);
+                }
+            };
+            selector.click();
+        });
+
+        bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+            switch (mode) {
+                case DialogMode::Open: {
+                    currentCallback = callback;
+                    callJs_openFile(multiple);
+                    break;
+                }
+                case DialogMode::Save: {
+                    currentCallback = callback;
+                    std::fs::path path;
+
+                    if (!defaultPath.empty())
+                        path = std::fs::path(defaultPath).filename();
+                    else if (!validExtensions.empty())
+                        path = "file." + validExtensions[0].spec;
+
+                    callJs_saveFile(path.filename().string().c_str());
+                    break;
+                }
+                case DialogMode::Folder: {
+                    throw std::logic_error("Selecting a folder is not implemented");
+                    return false;
+                }
+                default:
+                    std::unreachable();
+            }
+            return true;
+        }
+
+    #else
+
+        bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
+            std::vector<nfdfilteritem_t> validExtensionsNfd;
+            for (auto ext : validExtensions) {
+                validExtensionsNfd.emplace_back(nfdfilteritem_t{ext.name.c_str(), ext.spec.c_str()});
+            }
+            NFD::ClearError();
+
+            if (NFD::Init() != NFD_OKAY) {
+                log::error("NFD init returned an error: {}", NFD::GetError());
+                if (s_fileBrowserErrorCallback != nullptr)
+                    s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
+                return false;
+            }
+
+            NFD::UniquePathU8 outPath;
+            NFD::UniquePathSet outPaths;
+            nfdresult_t result;
+            switch (mode) {
+                case DialogMode::Open:
+                    if (multiple)
+                        result = NFD::OpenDialogMultiple(outPaths, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    else
+                        result = NFD::OpenDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    break;
+                case DialogMode::Save:
+                    result = NFD::SaveDialog(outPath, validExtensionsNfd.data(), validExtensionsNfd.size(), defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    break;
+                case DialogMode::Folder:
+                    result = NFD::PickFolder(outPath, defaultPath.empty() ? nullptr : defaultPath.c_str());
+                    break;
+                default:
+                    std::unreachable();
+            }
+
+            if (result == NFD_OKAY){
+                if(outPath != nullptr) {
+                    callback(reinterpret_cast<char8_t*>(outPath.get()));
+                }
+                if (outPaths != nullptr) {
+                    nfdpathsetsize_t numPaths = 0;
+                    if (NFD::PathSet::Count(outPaths, numPaths) == NFD_OKAY) {
+                        for (size_t i = 0; i < numPaths; i++) {
+                            NFD::UniquePathSetPath path;
+                            if (NFD::PathSet::GetPath(outPaths, i, path) == NFD_OKAY)
+                                callback(reinterpret_cast<char8_t*>(path.get()));
+                        }
                     }
                 }
+            } else if (result == NFD_ERROR) {
+                log::error("Requested file dialog returned an error: {}", NFD::GetError());
+                if (s_fileBrowserErrorCallback != nullptr)
+                    s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
             }
-        } else if (result == NFD_ERROR) {
-            log::error("Requested file dialog returned an error: {}", NFD::GetError());
-            if (s_fileBrowserErrorCallback != nullptr)
-                s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
+
+            NFD::Quit();
+
+            return result == NFD_OKAY;
         }
 
-        NFD::Quit();
-
-        return result == NFD_OKAY;
-    }
+    #endif
 
     std::vector<std::fs::path> getDataPaths() {
         std::vector<std::fs::path> paths;
@@ -202,7 +315,7 @@ namespace hex::fs {
             return getDataPaths();
         #elif defined(OS_MACOS)
             return getDataPaths();
-        #elif defined(OS_LINUX)
+        #elif defined(OS_LINUX) || defined(OS_WEB)
             return {xdg::ConfigHomeDir() / "imhex"};
         #endif
     }

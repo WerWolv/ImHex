@@ -20,6 +20,8 @@ namespace hex::plugin::builtin::ui {
             this->m_formatters = pl::gen::fmt::createFormatters();
         }
 
+        virtual ~PatternDrawer() = default;
+
         void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
 
         enum class TreeStyle {

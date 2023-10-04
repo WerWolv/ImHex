@@ -20,6 +20,8 @@
 #elif defined(OS_MACOS)
     #include <hex/helpers/utils_macos.hpp>
     #include <unistd.h>
+#elif defined(OS_WEB)
+    #include "emscripten.h"
 #endif
 
 namespace hex {
@@ -319,6 +321,8 @@ namespace hex {
             hex::unused(system(hex::format("open {0}", command).c_str()));
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", command});
+        #elif defined(OS_WEB)
+            hex::unused(command);
         #endif
     }
 
@@ -332,6 +336,10 @@ namespace hex {
             openWebpageMacos(url.c_str());
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", url});
+        #elif defined(OS_WEB)
+            EM_ASM({
+                window.open(UTF8ToString($0), '_blank');
+            }, url.c_str());
         #else
             #warning "Unknown OS, can't open webpages"
         #endif
@@ -497,26 +505,27 @@ namespace hex {
     }
 
     bool isProcessElevated() {
-#if defined(OS_WINDOWS)
-        bool elevated = false;
-        HANDLE token  = INVALID_HANDLE_VALUE;
+        #if defined(OS_WINDOWS)
+            bool elevated = false;
+            HANDLE token  = INVALID_HANDLE_VALUE;
 
-        if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
-            TOKEN_ELEVATION elevation;
-            DWORD elevationSize = sizeof(TOKEN_ELEVATION);
+            if (::OpenProcessToken(::GetCurrentProcess(), TOKEN_QUERY, &token)) {
+                TOKEN_ELEVATION elevation;
+                DWORD elevationSize = sizeof(TOKEN_ELEVATION);
 
-            if (::GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
-                elevated = elevation.TokenIsElevated;
-        }
+                if (::GetTokenInformation(token, TokenElevation, &elevation, sizeof(elevation), &elevationSize))
+                    elevated = elevation.TokenIsElevated;
+            }
 
-        if (token != INVALID_HANDLE_VALUE)
-            ::CloseHandle(token);
+            if (token != INVALID_HANDLE_VALUE)
+                ::CloseHandle(token);
 
-        return elevated;
-
-#elif defined(OS_LINUX) || defined(OS_MACOS)
-        return getuid() == 0 || getuid() != geteuid();
-#endif
+            return elevated;
+        #elif defined(OS_LINUX) || defined(OS_MACOS)
+            return getuid() == 0 || getuid() != geteuid();
+        #else
+            return false;
+        #endif
     }
 
     std::optional<std::string> getEnvironmentVariable(const std::string &env) {

@@ -8,8 +8,6 @@
 #include <filesystem>
 #include <functional>
 
-#include <nfd.hpp>
-
 #include <wolv/io/fs.hpp>
 
 namespace hex::fs {
@@ -20,8 +18,15 @@ namespace hex::fs {
         Folder
     };
 
+    struct ItemFilter {
+        // Human-friendly name
+        std::string name;
+        // Extensions that constitute this filter
+        std::string spec;
+    };
+
     void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback);
-    bool openFileBrowser(DialogMode mode, const std::vector<nfdfilteritem_t> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
+    bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath = {}, bool multiple = false);
 
     void openFileExternal(const std::fs::path &filePath);
     void openFolderExternal(const std::fs::path &dirPath);
@@ -53,7 +58,7 @@ namespace hex::fs {
 
     std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting = false);
 
-    // temporarily expose these for the migration function
+    // Temporarily expose these for the migration function
     std::vector<std::fs::path> getDataPaths();
     std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder);
 }

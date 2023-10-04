@@ -1,0 +1,28 @@
+html, body {
+    height: 100%;
+    margin: 0px;
+    user-select: none;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    background-color: #121212;
+    overflow: hidden;
+}
+
+.emscripten {
+    padding-right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    border: 0px none;
+}
+
+#loading_text {
+    color: #F0F0F0;
+    font-size: 30px;
+    font-family: monospace;
+    width: 100%;
+    text-align: center;
+}

@@ -44,7 +44,7 @@ namespace hex {
             executeCmd({"zenity", "--error", "--text", message});
         } else if(isFileInPath("notify-send")) {
             executeCmd({"notify-send", "-i", "script-error", "Error", message});
-        } // hopefully one of these commands is installed
+        } // Hopefully one of these commands is installed
     }
 
     void Window::initNative() {

@@ -24,9 +24,31 @@ namespace hex {
         std::function<void(const std::vector<std::string>&)> callback;
     };
 
+    struct PluginFunctions {
+        using InitializePluginFunc     = void (*)();
+        using GetPluginNameFunc        = const char *(*)();
+        using GetPluginAuthorFunc      = const char *(*)();
+        using GetPluginDescriptionFunc = const char *(*)();
+        using GetCompatibleVersionFunc = const char *(*)();
+        using SetImGuiContextFunc      = void (*)(ImGuiContext *);
+        using IsBuiltinPluginFunc      = bool (*)();
+        using GetSubCommandsFunc       = void* (*)();
+
+        InitializePluginFunc        initializePluginFunction        = nullptr;
+        GetPluginNameFunc           getPluginNameFunction           = nullptr;
+        GetPluginAuthorFunc         getPluginAuthorFunction         = nullptr;
+        GetPluginDescriptionFunc    getPluginDescriptionFunction    = nullptr;
+        GetCompatibleVersionFunc    getCompatibleVersionFunction    = nullptr;
+        SetImGuiContextFunc         setImGuiContextFunction         = nullptr;
+        IsBuiltinPluginFunc         isBuiltinPluginFunction         = nullptr;
+        GetSubCommandsFunc          getSubCommandsFunction          = nullptr;
+    };
+
     class Plugin {
     public:
         explicit Plugin(const std::fs::path &path);
+        explicit Plugin(PluginFunctions functions);
+
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;
         ~Plugin();
@@ -46,15 +68,6 @@ namespace hex {
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
 
     private:
-        using InitializePluginFunc     = void (*)();
-        using GetPluginNameFunc        = const char *(*)();
-        using GetPluginAuthorFunc      = const char *(*)();
-        using GetPluginDescriptionFunc = const char *(*)();
-        using GetCompatibleVersionFunc = const char *(*)();
-        using SetImGuiContextFunc      = void (*)(ImGuiContext *);
-        using IsBuiltinPluginFunc      = bool (*)();
-        using GetSubCommandsFunc       = void* (*)();
-
         #if defined(OS_WINDOWS)
             HMODULE m_handle = nullptr;
         #else
@@ -64,14 +77,7 @@ namespace hex {
 
         mutable bool m_initialized = false;
 
-        InitializePluginFunc m_initializePluginFunction         = nullptr;
-        GetPluginNameFunc m_getPluginNameFunction               = nullptr;
-        GetPluginAuthorFunc m_getPluginAuthorFunction           = nullptr;
-        GetPluginDescriptionFunc m_getPluginDescriptionFunction = nullptr;
-        GetCompatibleVersionFunc m_getCompatibleVersionFunction = nullptr;
-        SetImGuiContextFunc m_setImGuiContextFunction           = nullptr;
-        IsBuiltinPluginFunc m_isBuiltinPluginFunction           = nullptr;
-        GetSubCommandsFunc m_getSubCommandsFunction             = nullptr;
+        PluginFunctions m_functions = {};
 
         template<typename T>
         [[nodiscard]] auto getPluginFunction(const std::string &symbol) {
@@ -90,7 +96,10 @@ namespace hex {
         static void unload();
         static void reload();
 
-        static const std::vector<Plugin> &getPlugins();
+        static void addPlugin(PluginFunctions functions);
+
+        static std::vector<Plugin> &getPlugins();
+        static std::vector<std::fs::path> &getPluginPaths();
     };
 
 }

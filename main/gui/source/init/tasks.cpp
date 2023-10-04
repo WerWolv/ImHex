@@ -80,6 +80,13 @@ namespace hex::init {
             }
 
             TaskManager::createBackgroundTask("Sending statistics...", [uuid, versionString](auto&) {
+                // To avoid potentially flooding our database with lots of dead users
+                // from people just visiting the website, don't send telemetry data from
+                // the web version
+                #if defined(OS_WEB)
+                    return;
+                #endif
+
                 // Make telemetry request
                 nlohmann::json telemetry = {
                         { "uuid", uuid },
@@ -145,7 +152,7 @@ namespace hex::init {
         wolv::io::File newConfigFile(newConfigPath / "settings.json", wolv::io::File::Mode::Read);
         if (!newConfigFile.isValid()) {
 
-            // find an old config
+            // Find an old config
             std::fs::path oldConfigPath;
             for (const auto &dir : hex::fs::appendPath(hex::fs::getDataPaths(), "config")) {
                 wolv::io::File oldConfigFile(dir / "settings.json", wolv::io::File::Mode::Read);
@@ -493,15 +500,17 @@ namespace hex::init {
 
         // ImHex requires exactly one built-in plugin
         // If no built-in plugin or more than one was found, something's wrong and we can't continue
-        if (builtinPlugins == 0) {
-            log::error("Built-in plugin not found!");
-            ImHexApi::System::impl::addInitArgument("no-builtin-plugin");
-            return false;
-        } else if (builtinPlugins > 1) {
-            log::error("Found more than one built-in plugin!");
-            ImHexApi::System::impl::addInitArgument("multiple-builtin-plugins");
-            return false;
-        }
+        #if !defined(EMSCRIPTEN)
+            if (builtinPlugins == 0) {
+                log::error("Built-in plugin not found!");
+                ImHexApi::System::impl::addInitArgument("no-builtin-plugin");
+                return false;
+            } else if (builtinPlugins > 1) {
+                log::error("Found more than one built-in plugin!");
+                ImHexApi::System::impl::addInitArgument("multiple-builtin-plugins");
+                return false;
+            }
+        #endif
 
         return true;
     }

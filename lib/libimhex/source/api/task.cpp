@@ -49,6 +49,8 @@ namespace hex {
             RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
         #elif defined(OS_LINUX)
             pthread_setname_np(pthread_self(), name.c_str());
+        #elif defined(OS_WEB)
+            hex::unused(name);
         #elif defined(OS_MACOS)
             pthread_setname_np(name.c_str());
         #endif

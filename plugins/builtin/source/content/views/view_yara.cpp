@@ -126,7 +126,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                PopupFileChooser::open(paths, std::vector<nfdfilteritem_t>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
+                PopupFileChooser::open(paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
                     [&](const auto &path) {
                         this->m_rules->push_back({ path.filename(), path });
                     });

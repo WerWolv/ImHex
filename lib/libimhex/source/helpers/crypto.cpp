@@ -82,7 +82,7 @@ namespace hex::crypt {
 
     template<size_t NumBits> requires (std::has_single_bit(NumBits))
     class Crc {
-        // use reflected algorithm, so we reflect only if refin / refout is FALSE
+        // Use reflected algorithm, so we reflect only if refin / refout is FALSE
         // mask values, 0b1 << 64 is UB, so use 0b10 << 63
 
     public:
@@ -396,7 +396,7 @@ namespace hex::crypt {
 
         ON_SCOPE_EXIT { mbedtls_mpi_free(&ctx); };
 
-        // read buffered
+        // Read buffered
         constexpr static auto BufferSize = 0x100;
         for (size_t offset = 0; offset < input.size(); offset += BufferSize) {
             std::string inputPart = input.substr(offset, std::min<size_t>(BufferSize, input.size() - offset));

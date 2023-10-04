@@ -1,0 +1,79 @@
+name: Build for the web
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  BUILD_TYPE: Release
+
+permissions:
+  pages: write
+  id-token: write
+  actions: write
+
+jobs:
+
+  build:
+    runs-on: ubuntu-22.04
+    name: 🌍 WebAssembly
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: 📁 Restore docker /cache
+      uses: actions/cache@v3
+      with:
+        path: cache
+        key: build-web-cache-${{ secrets.CACHE_VERSION }}
+    
+    - name: 🐳 Inject /cache into docker
+      uses: reproducible-containers/buildkit-cache-dance@v2.1.2
+      with:
+        cache-source: cache
+        cache-target: /cache
+
+    - name: 🛠️ Build using docker
+      run: |
+        docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
+
+    - name: 🔨 Fix permissions
+      run: |
+        chmod -c -R +rX "out/" | while read line; do
+          echo "::warning title=Invalid file permissions automatically fixed::$line"
+        done
+
+    - name: ⬆️ Upload artifacts
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: out/
+
+      # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
+    - name: 🗑️ Delete old cache
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "build-web-cache-${{ secrets.CACHE_VERSION }}" --confirm
+  
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+      
+    name: 📃 Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+
+    if: github.ref == 'refs/heads/master'
+    needs: build
+
+    steps:
+      - name: 🌍 Deploy
+        id: deployment
+        uses: actions/deploy-pages@v2

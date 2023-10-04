@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <!-- Primary Meta Tags -->
+    <title>ImHex - Hex Editor</title>
+    <meta name="title" content="ImHex">
+    <meta name="description" content="A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://imhex.werwolv.net/">
+    <meta property="og:title" content="ImHex Web">
+    <meta property="og:description">
+    <meta name="description" content="A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.">
+    <meta property="og:image" content="https://imhex.werwolv.net/assets/splash_wasm.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://imhex.werwolv.net/">
+    <meta property="twitter:title" content="ImHex Web">
+    <meta property="twitter:description"
+          content="A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.">
+    <meta property="twitter:image" content="https://imhex.werwolv.net/assets/splash_wasm.png">
+
+    <meta name="viewport" content="width=device-width">
+
+    <link rel="stylesheet" type="text/css" href="style.css" />
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "alumni": "WerWolv",
+            "email": "hey@werwolv.net",
+            "founder": "WerWolv",
+            "slogan": "A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.",
+            "url": "https://imhex.werwolv.net",
+            "logo": "https://imhex.werwolv.net/assets/logos/logo.png"
+        }
+    </script>
+
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "ImHex",
+            "operatingSystem": "Windows, MacOS, Linux",
+            "applicationCategory": "DeveloperApplication",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            }
+        }
+    </script>
+
+    <title>ImHex Web</title>
+    <script src="enable-threads.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <p id="loading_text">ImHex is loading...</p>
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" style="display: none; image-rendering: crisp-edges"></canvas>
+
+    <script type="text/javascript" src="wasm-config.js"></script>
+    <script async type="text/javascript" src="imhex.js"></script>
+</body>
+</html>

@@ -177,7 +177,7 @@ namespace ImGui {
     }
 
     inline void TextFormattedWrappedSelectable(const std::string &fmt, auto &&...args) {
-        //Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
+        // Manually wrap text, using the letter M (generally the widest character in non-monospaced fonts) to calculate the character width to use.
         auto text = wolv::util::wrapMonospacedString(
                 hex::format(fmt, std::forward<decltype(args)>(args)...),
                 ImGui::CalcTextSize("M").x,

@@ -66,7 +66,7 @@ namespace hex::plugin::builtin {
 
         for (const auto &handler : ProjectFile::getHandlers()) {
             bool result = true;
-            // handlers are supposed to show the error/warning popup to the user themselves, so we don't show one here 
+            // Handlers are supposed to show the error/warning popup to the user themselves, so we don't show one here
             try {
                 if (!handler.load(handler.basePath, tar)) {
                     log::warn("Project file handler for {} failed to load {}", filePath.string(), handler.basePath.string());
@@ -157,14 +157,15 @@ namespace hex::plugin::builtin {
 
         ImHexApi::Provider::resetDirty();
 
-        // if saveLocation is false, reset the project path (do not release the lock)
+        // If saveLocation is false, reset the project path (do not release the lock)
         if (updateLocation) {
             resetPath.release();
         }
 
         AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.save_project.name");
 
-        EventManager::post<RequestUpdateWindowTitle>(); // request, as this puts us into a project state
+        // Request, as this puts us into a project state
+        EventManager::post<RequestUpdateWindowTitle>();
 
         return result;
     }

@@ -156,7 +156,7 @@ namespace hex::plugin::builtin {
         bool m_syncPatternSourceCode = false;
         bool m_autoLoadPatterns = true;
 
-        std::map<prv::Provider*, std::move_only_function<void()>> m_sectionWindowDrawer;
+        std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
 
         ui::HexEditor m_sectionHexEditor;
 
@@ -175,7 +175,7 @@ namespace hex::plugin::builtin {
 
         PerProvider<bool> m_shouldAnalyze;
         PerProvider<bool> m_breakpointHit;
-        PerProvider<ui::PatternDrawer> m_debuggerDrawer;
+        PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
         int m_debuggerScopeIndex = 0;
 

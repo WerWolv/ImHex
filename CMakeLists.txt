@@ -13,6 +13,7 @@ option(IMHEX_BUNDLE_DOTNET "Bundle .NET runtime" ON)
 option(IMHEX_ENABLE_LTO "Enables Link Time Optimizations if possible" OFF)
 option(IMHEX_USE_DEFAULT_BUILD_SETTINGS "Use default build settings" OFF)
 option(IMHEX_STRICT_WARNINGS "Enable most available warnings and treat them as errors" ON)
+option(IMHEX_STATIC_LINK_PLUGINS "Statically link all plugins into the main executable" OFF)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
