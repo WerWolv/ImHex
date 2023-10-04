@@ -116,6 +116,8 @@ target_compile_definitions(libyara PRIVATE
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(libyara PRIVATE -Wno-shift-count-overflow -Wno-stringop-overflow)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(libyara PRIVATE -Wno-pointer-sign -Wno-tautological-constant-out-of-range-compare)
 endif ()
 
 target_include_directories(

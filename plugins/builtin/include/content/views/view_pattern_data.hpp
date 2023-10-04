@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        ui::PatternDrawer m_patternDrawer;
+        std::unique_ptr<ui::PatternDrawer> m_patternDrawer;
     };
 
 }

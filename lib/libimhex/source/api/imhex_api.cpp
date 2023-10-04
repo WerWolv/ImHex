@@ -547,7 +547,7 @@ namespace hex {
                 return "Linux";
             #elif defined(OS_MACOS)
                 return "macOS";
-            #elif defined(OS_EMSCRIPTEN)
+            #elif defined(OS_WEB)
                 return "Web";
             #else
                 return "Unknown";
@@ -561,7 +561,7 @@ namespace hex {
                 ::GetVersionExA(&info);
 
                 return hex::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
-            #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_EMSCRIPTEN)
+            #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_WEB)
                 struct utsname details;
 
                 if (uname(&details) != 0) {
@@ -593,7 +593,7 @@ namespace hex {
                     default:
                         return "Unknown";
                 }
-            #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_EMSCRIPTEN)
+            #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_WEB)
                 struct utsname details;
 
                 if (uname(&details) != 0) {

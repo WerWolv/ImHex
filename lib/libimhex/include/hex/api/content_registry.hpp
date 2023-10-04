@@ -16,7 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
-#if defined(OS_EMSCRIPTEN)
+#if defined(OS_WEB)
 #include <jthread.hpp>
 #endif
 

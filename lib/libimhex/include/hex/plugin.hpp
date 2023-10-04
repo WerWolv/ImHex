@@ -11,7 +11,7 @@
 #include <wolv/utils/string.hpp>
 #include <wolv/utils/preproc.hpp>
 
-#if defined (OS_EMSCRIPTEN)
+#if defined (IMHEX_STATIC_LINK_PLUGINS)
     #define IMHEX_PLUGIN_VISIBILITY_PREFIX static
 #else
     #define IMHEX_PLUGIN_VISIBILITY_PREFIX extern "C" [[gnu::visibility("default")]]

@@ -9,7 +9,7 @@
 #include <span>
 #include <string>
 
-#if defined (OS_EMSCRIPTEN)
+#if defined(OS_WEB)
     #define GLFW_INCLUDE_ES3
     #include <GLES3/gl3.h>
 #else

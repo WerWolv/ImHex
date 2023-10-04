@@ -83,7 +83,7 @@ namespace hex::init {
                 // To avoid potentially flooding our database with lots of dead users
                 // from people just visiting the website, don't send telemetry data from
                 // the web version
-                #if defined (OS_EMSCRIPTEN)
+                #if defined(OS_WEB)
                     return;
                 #endif
 

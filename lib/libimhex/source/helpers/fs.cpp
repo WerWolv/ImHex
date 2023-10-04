@@ -16,7 +16,7 @@
     #include <limits.h>
 #endif
 
-#if !defined(OS_EMSCRIPTEN)
+#if !defined(OS_WEB)
 #include <nfd.hpp>
 #else
 #include <emscripten.h>
@@ -96,7 +96,7 @@ namespace hex::fs {
         #endif
     }
 
-    #if defined(OS_EMSCRIPTEN)
+    #if defined(OS_WEB)
 
         std::function<void(std::fs::path)> currentCallback;
 
@@ -315,7 +315,7 @@ namespace hex::fs {
             return getDataPaths();
         #elif defined(OS_MACOS)
             return getDataPaths();
-        #elif defined(OS_LINUX) || defined(OS_EMSCRIPTEN)
+        #elif defined(OS_LINUX) || defined(OS_WEB)
             return {xdg::ConfigHomeDir() / "imhex"};
         #endif
     }

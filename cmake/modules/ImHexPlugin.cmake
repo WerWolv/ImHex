@@ -4,12 +4,23 @@ macro(add_imhex_plugin)
     set(oneValueArgs NAME)
     set(multiValueArgs SOURCES INCLUDES LIBRARIES)
     cmake_parse_arguments(IMHEX_PLUGIN "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-    
+
+    if (IMHEX_STATIC_LINK_PLUGINS)
+        set(IMHEX_PLUGIN_LIBRARY_TYPE STATIC)
+
+        target_link_libraries(libimhex PUBLIC ${IMHEX_PLUGIN_NAME})
+
+        configure_file(${CMAKE_SOURCE_DIR}/dist/web/plugin-bundle.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp @ONLY)
+        target_sources(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp)
+    else()
+        set(IMHEX_PLUGIN_LIBRARY_TYPE SHARED)
+    endif()
+
     # Define new project for plugin
     project(${IMHEX_PLUGIN_NAME})
 
     # Create a new shared library for the plugin source code
-    add_library(${IMHEX_PLUGIN_NAME} SHARED ${IMHEX_PLUGIN_SOURCES})
+    add_library(${IMHEX_PLUGIN_NAME} ${IMHEX_PLUGIN_LIBRARY_TYPE} ${IMHEX_PLUGIN_SOURCES})
 
     # Add include directories and link libraries
     target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
@@ -42,12 +53,4 @@ macro(add_imhex_plugin)
 
     # Add the new plugin to the main dependency list so it gets built by default
     add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
-
-    if (EMSCRIPTEN)
-        target_link_libraries(libimhex PUBLIC ${IMHEX_PLUGIN_NAME})
-
-        configure_file(${CMAKE_SOURCE_DIR}/dist/web/plugin-bundle.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp @ONLY)
-        target_sources(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp)
-    endif ()
-
 endmacro()

@@ -23,11 +23,13 @@ namespace hex {
 
     template<typename T>
     std::future<HttpRequest::Result<T>> HttpRequest::uploadFile(const std::fs::path &path, const std::string &mimeName) {
+        hex::unused(path, mimeName);
         throw std::logic_error("Not implemented");
     }
 
     template<typename T>
     std::future<HttpRequest::Result<T>> HttpRequest::uploadFile(std::vector<u8> data, const std::string &mimeName, const std::fs::path &fileName) {
+        hex::unused(data, mimeName, fileName);
         throw std::logic_error("Not implemented");
     }
 

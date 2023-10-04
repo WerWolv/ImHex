@@ -635,7 +635,7 @@ namespace hex::plugin::builtin {
                 if (this->m_resetDebuggerVariables) {
                     auto pauseLine = evaluator->getPauseLine();
 
-                    this->m_debuggerDrawer->reset();
+                    (*this->m_debuggerDrawer)->reset();
                     this->m_resetDebuggerVariables = false;
                     this->m_textEditor.SetCursorPosition(TextEditor::Coordinates(pauseLine.value_or(0) - 1, 0));
 
@@ -644,7 +644,7 @@ namespace hex::plugin::builtin {
                 }
 
                 auto &currScope = evaluator->getScope(-this->m_debuggerScopeIndex);
-                this->m_debuggerDrawer->draw(*currScope.scope, &runtime, size.y - ImGui::GetTextLineHeightWithSpacing() * 4);
+                (*this->m_debuggerDrawer)->draw(*currScope.scope, &runtime, size.y - ImGui::GetTextLineHeightWithSpacing() * 4);
             }
         }
         ImGui::EndChild();
@@ -1067,6 +1067,10 @@ namespace hex::plugin::builtin {
             } else {
                 this->m_hasUnevaluatedChanges = true;
             }
+        });
+
+        EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
+            this->m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
         });
 
         EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {

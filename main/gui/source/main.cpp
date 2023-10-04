@@ -19,7 +19,7 @@
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
 
-#if defined(OS_EMSCRIPTEN)
+#if defined(OS_WEB)
     #include <emscripten.h>
     #include <emscripten/html5.h>
 #endif
@@ -71,6 +71,7 @@ namespace {
     /**
      * @brief Displays ImHex's splash screen and runs all initialization tasks. The splash screen will be displayed until all tasks have finished.
      */
+    [[maybe_unused]]
     void initializeImHex() {
         init::WindowSplash splashWindow;
 
@@ -111,7 +112,7 @@ namespace {
     }
 
 
-    #if defined(OS_EMSCRIPTEN)
+    #if defined(OS_WEB)
         using namespace hex::init;
 
         void saveFsData() {
@@ -145,7 +146,9 @@ namespace {
                     handleFileOpenRequest();
 
                     // Clean up everything after the main window is closed
-                    emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData){
+                    emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData) {
+                        hex::unused(eventType, reserved, userData);
+
                         try {
                             saveFsData();
                             deinitializeImHex();

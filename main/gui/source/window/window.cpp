@@ -928,7 +928,7 @@ namespace hex {
             win->processEvent();
         });
 
-        #if !defined(OS_EMSCRIPTEN)
+        #if !defined(OS_WEB)
             // Register key press callback
             glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
                 hex::unused(mods);
@@ -1109,7 +1109,7 @@ namespace hex {
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
-        #elif defined(OS_EMSCRIPTEN)
+        #elif defined(OS_WEB)
             ImGui_ImplOpenGL3_Init();
         #else
             ImGui_ImplOpenGL3_Init("#version 130");

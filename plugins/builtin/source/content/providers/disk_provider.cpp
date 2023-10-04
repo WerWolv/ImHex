@@ -1,4 +1,4 @@
-#if !defined(OS_EMSCRIPTEN)
+#if !defined(OS_WEB)
 #include <hex/helpers/logger.hpp>
 
 #include "content/providers/disk_provider.hpp"

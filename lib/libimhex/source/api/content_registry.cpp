@@ -8,7 +8,7 @@
 
 #include <filesystem>
 #include <thread>
-#if defined(OS_EMSCRIPTEN)
+#if defined(OS_WEB)
 #include <jthread.hpp>
 #include <emscripten.h>
 #endif
@@ -22,7 +22,7 @@ namespace hex {
 
     namespace ContentRegistry::Settings {
 
-        constexpr auto SettingsFile = "settings.json";
+        [[maybe_unused]] constexpr auto SettingsFile = "settings.json";
 
         namespace impl {
 
@@ -53,7 +53,7 @@ namespace hex {
                 return settings;
             }
 
-            #if defined(OS_EMSCRIPTEN)
+            #if defined(OS_WEB)
                 void load() {
                     char *data = (char *) MAIN_THREAD_EM_ASM_INT({
                         let data = localStorage.getItem("config");

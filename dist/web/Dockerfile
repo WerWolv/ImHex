@@ -42,7 +42,7 @@ ccache -zs
 
 cmake /imhex                                                                                            \
     -DIMHEX_OFFLINE_BUILD=ON                                                                            \
-    -DIMHEX_STRICT_WARNINGS=OFF                                                                         \
+    -DIMHEX_STATIC_LINK_PLUGINS=ON                                                                      \
     -DNATIVE_CMAKE_C_COMPILER=gcc                                                                       \
     -DNATIVE_CMAKE_CXX_COMPILER=g++                                                                     \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                                  \

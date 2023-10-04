@@ -1,6 +1,6 @@
 #include "window.hpp"
 
-#if defined(OS_EMSCRIPTEN)
+#if defined(OS_WEB)
 
 #include <emscripten.h>
 #include <emscripten/html5.h>

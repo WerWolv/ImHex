@@ -20,7 +20,7 @@
 #elif defined(OS_MACOS)
     #include <hex/helpers/utils_macos.hpp>
     #include <unistd.h>
-#elif defined(OS_EMSCRIPTEN)
+#elif defined(OS_WEB)
     #include "emscripten.h"
 #endif
 
@@ -321,6 +321,8 @@ namespace hex {
             hex::unused(system(hex::format("open {0}", command).c_str()));
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", command});
+        #elif defined(OS_WEB)
+            hex::unused(command);
         #endif
     }
 
@@ -334,7 +336,7 @@ namespace hex {
             openWebpageMacos(url.c_str());
         #elif defined(OS_LINUX)
             executeCmd({"xdg-open", url});
-        #elif defined(OS_EMSCRIPTEN)
+        #elif defined(OS_WEB)
             EM_ASM({
                 window.open(UTF8ToString($0), '_blank');
             }, url.c_str());

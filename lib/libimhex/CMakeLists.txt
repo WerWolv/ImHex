@@ -60,7 +60,12 @@ endif ()
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
-add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+if (IMHEX_STATIC_LINK_PLUGINS)
+    add_library(libimhex STATIC ${LIBIMHEX_SOURCES})
+else()
+    add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+endif()
+
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 setupCompilerFlags(libimhex)
 

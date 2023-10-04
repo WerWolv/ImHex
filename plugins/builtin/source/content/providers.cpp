@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Provider::add<FileProvider>(false);
         ContentRegistry::Provider::add<NullProvider>(false);
-        #if !defined(OS_EMSCRIPTEN)
+        #if !defined(OS_WEB)
         ContentRegistry::Provider::add<DiskProvider>();
         #endif
         ContentRegistry::Provider::add<GDBProvider>();

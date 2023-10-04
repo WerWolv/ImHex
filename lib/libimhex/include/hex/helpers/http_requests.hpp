@@ -17,7 +17,7 @@
 
 #include <mbedtls/ssl.h>
 
-#if defined(OS_EMSCRIPTEN)
+#if defined(OS_WEB)
     #include <emscripten/fetch.h>
 
     using curl_off_t = long;
@@ -139,7 +139,7 @@ namespace hex {
         static void checkProxyErrors();
 
     private:
-        #if defined(OS_EMSCRIPTEN)
+        #if defined(OS_WEB)
         emscripten_fetch_attr_t m_attr;
         #else
         CURL *m_curl;
@@ -160,7 +160,7 @@ namespace hex {
 }
 
 
-#if defined(OS_EMSCRIPTEN)
+#if defined(OS_WEB)
 #include <hex/helpers/http_requests_emscripten.hpp>
 #else
 #include <hex/helpers/http_requests_native.hpp>

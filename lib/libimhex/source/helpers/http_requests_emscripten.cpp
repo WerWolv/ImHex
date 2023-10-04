@@ -1,4 +1,4 @@
-#if defined(OS_EMSCRIPTEN)
+#if defined(OS_WEB)
 
 #include <hex/helpers/http_requests.hpp>
 
@@ -40,11 +40,14 @@ namespace hex {
         });
     }
 
-    void HttpRequest::setProxy(std::string proxy) { }
+    void HttpRequest::setProxy(std::string proxy) {
+        hex::unused(proxy);
+    }
 
     void HttpRequest::checkProxyErrors() { }
 
     int HttpRequest::progressCallback(void *contents, curl_off_t dlTotal, curl_off_t dlNow, curl_off_t ulTotal, curl_off_t ulNow) {
+        hex::unused(contents, dlTotal, dlNow, ulTotal, ulNow);
         return -1;
     }
 }

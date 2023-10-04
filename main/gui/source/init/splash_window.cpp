@@ -28,7 +28,7 @@
 #include <numeric>
 #include <random>
 
-#if defined (OS_EMSCRIPTEN)
+#if defined(OS_WEB)
     #define GLFW_INCLUDE_ES3
     #include <GLES3/gl3.h>
     #include <emscripten/html5.h>
@@ -382,7 +382,7 @@ namespace hex::init {
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
-        #elif defined(OS_EMSCRIPTEN)
+        #elif defined(OS_WEB)
             ImGui_ImplOpenGL3_Init();
         #else
             ImGui_ImplOpenGL3_Init("#version 130");

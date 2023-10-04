@@ -446,7 +446,7 @@ namespace hex::plugin::builtin {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
 
                 // Open the telemetry popup but only on desktop versions
-                #if !defined(OS_EMSCRIPTEN)
+                #if !defined(OS_WEB)
                     PopupTelemetryRequest::open();
                 #endif
             }

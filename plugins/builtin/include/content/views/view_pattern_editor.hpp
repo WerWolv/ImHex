@@ -175,7 +175,7 @@ namespace hex::plugin::builtin {
 
         PerProvider<bool> m_shouldAnalyze;
         PerProvider<bool> m_breakpointHit;
-        PerProvider<ui::PatternDrawer> m_debuggerDrawer;
+        PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
         int m_debuggerScopeIndex = 0;
 
