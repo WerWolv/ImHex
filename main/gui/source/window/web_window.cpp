@@ -5,6 +5,8 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
+#include <hex/api/event.hpp>
+
 // Function used by c++ to get the size of the html canvas
 EM_JS(int, canvas_get_width, (), {
     return Module.canvas.width;
@@ -19,6 +21,21 @@ EM_JS(int, canvas_get_height, (), {
 EM_JS(void, resizeCanvas, (), {
     js_resizeCanvas();
 });
+
+EM_JS(void, setupThemeListener, (), {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        Module._handleThemeChange();
+    });
+});
+
+EM_JS(bool, isDarkModeEnabled, (), {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+});
+
+EMSCRIPTEN_KEEPALIVE
+extern "C" void handleThemeChange() {
+    hex::EventManager::post<hex::EventOSThemeChanged>();
+}
 
 namespace hex {
 
@@ -45,6 +62,17 @@ namespace hex {
 
     void Window::setupNativeWindow() {
         resizeCanvas();
+        setupThemeListener();
+
+        bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
+        EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem] {
+            if (!themeFollowSystem) return;
+
+            EventManager::post<RequestChangeTheme>(!isDarkModeEnabled() ? "Light" : "Dark");
+        });
+
+        if (themeFollowSystem)
+            EventManager::post<EventOSThemeChanged>();
     }
 
     void Window::beginNativeWindowFrame() {
