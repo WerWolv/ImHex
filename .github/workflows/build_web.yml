@@ -29,7 +29,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: cache
-        key: build-web-cache-${{ secrets.CACHE_VERSION }}
+        key: build-web-cache
     
     - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2
@@ -59,7 +59,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
           gh extension install actions/gh-actions-cache
-          gh actions-cache delete "build-web-cache-${{ secrets.CACHE_VERSION }}" --confirm
+          gh actions-cache delete "build-web-cache" --confirm
   
 
   deploy:

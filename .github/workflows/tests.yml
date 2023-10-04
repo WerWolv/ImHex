@@ -25,8 +25,8 @@ jobs:
     - name: 📜 Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
       with:
-        key: ${{ runner.os }}-tests-${{ secrets.CACHE_VERSION }}-build-${{ github.run_id }}
-        restore-keys: ${{ runner.os }}-tests-${{ secrets.CACHE_VERSION }}-build
+        key: ${{ runner.os }}-tests-build-${{ github.run_id }}
+        restore-keys: ${{ runner.os }}-tests-build
         max-size: 50M
 
 
@@ -35,7 +35,7 @@ jobs:
       with:
         path: |
           build/CMakeCache.txt
-        key: ${{ runner.os }}-tests-${{ secrets.CACHE_VERSION }}-build-${{ hashFiles('**/CMakeLists.txt') }}
+        key: ${{ runner.os }}-tests-build-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: ⬇️ Install dependencies
       run: |
