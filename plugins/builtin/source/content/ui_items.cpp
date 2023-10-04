@@ -142,6 +142,21 @@ namespace hex::plugin::builtin {
     }
 
     void addToolbarItems() {
+        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, []{
+            auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
+
+            if (currIndex > 0)
+                ImHexApi::Provider::setCurrentProvider(currIndex - 1);
+        });
+
+        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Right, []{
+            auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
+
+            const auto &providers = ImHexApi::Provider::getProviders();
+            if (currIndex < i64(providers.size() - 1))
+                ImHexApi::Provider::setCurrentProvider(currIndex + 1);
+        });
+
         ContentRegistry::Interface::addToolbarItem([] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = provider != nullptr;
@@ -236,13 +251,22 @@ namespace hex::plugin::builtin {
                 if (providerSelectorVisible) {
                     for (size_t i = 0; i < providers.size(); i++) {
                         auto &tabProvider = providers[i];
+                        const auto selectedProviderIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
                         bool open = true;
                         ImGui::PushID(tabProvider);
-                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, ImGuiTabItemFlags_NoTooltip | (tabProvider->isDirty() ? ImGuiTabItemFlags_UnsavedDocument : ImGuiTabItemFlags_None))) {
-                            ImHexApi::Provider::setCurrentProvider(i);
+
+                        ImGuiTabItemFlags flags = ImGuiTabItemFlags_NoTooltip;
+                        if (tabProvider->isDirty())
+                            flags |= ImGuiTabItemFlags_UnsavedDocument;
+                        if (i64(i) == selectedProviderIndex)
+                            flags |= ImGuiTabItemFlags_SetSelected;
+
+                        if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, flags)) {
                             ImGui::EndTabItem();
                         }
+                        if (ImGui::IsItemClicked())
+                            ImHexApi::Provider::setCurrentProvider(i);
 
                         if (ImGui::InfoTooltip()) {
                             ImGui::BeginTooltip();

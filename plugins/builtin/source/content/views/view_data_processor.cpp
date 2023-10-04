@@ -542,7 +542,7 @@ namespace hex::plugin::builtin {
                 // Process the end node
                 endNode->process();
             }
-        } catch (dp::Node::NodeError &e) {
+        } catch (const dp::Node::NodeError &e) {
             // Handle user errors
 
             // Add the node error to the current workspace, so it can be displayed
@@ -552,9 +552,12 @@ namespace hex::plugin::builtin {
             for (auto overlay : workspace.dataOverlays)
                 ImHexApi::Provider::get()->deleteOverlay(overlay);
             workspace.dataOverlays.clear();
-        } catch (std::runtime_error &e) {
+        } catch (const std::runtime_error &e) {
             // Handle internal errors
-            log::fatal("Node implementation bug! {}", e.what());
+            log::fatal("Data processor node implementation bug! {}", e.what());
+        } catch (const std::exception &e) {
+            // Handle other fatal errors
+            log::fatal("Unhandled exception thrown in data processor node! {}", e.what());
         }
     }
 

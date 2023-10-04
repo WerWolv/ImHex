@@ -28,9 +28,11 @@ namespace hex {
             BPF     = CS_ARCH_BPF,
             SH      = CS_ARCH_SH,
             TRICORE = CS_ARCH_TRICORE,
+            MAX   = TRICORE,
+        # else
+            MAX   = EVM,
         #endif
 
-        MAX         = TRICORE,
         MIN         = ARM
     };
 

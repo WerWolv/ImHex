@@ -255,6 +255,10 @@ namespace hex {
             }
         }
 
+        i64 getCurrentProviderIndex() {
+            return s_currentProvider;
+        }
+
         bool isValid() {
             return !s_providers.empty() && s_currentProvider >= 0 && s_currentProvider < i64(s_providers.size());
         }
@@ -308,10 +312,38 @@ namespace hex {
             if (it == s_providers.end())
                 return;
 
-            if (!s_providers.empty() && it - s_providers.begin() == s_currentProvider)
-                setCurrentProvider(0);
+            if (!s_providers.empty()) {
+                if (it == s_providers.begin()) {
+                    // If the first provider is being closed, select the one that's the first one now
+                    setCurrentProvider(0);
+                }
+                else if (std::distance(s_providers.begin(), it) == s_currentProvider) {
+                    // If the current provider is being closed, select the one that's before it
+                    setCurrentProvider(s_currentProvider - 1);
+                }
+                else {
+                    // If any other provider is being closed, find the current provider in the list again and select it again
+                    auto currentProvider = get();
+                    auto currentIt = std::find(s_providers.begin(), s_providers.end(), currentProvider);
+
+                    if (currentIt != s_providers.end()) {
+                        auto newIndex = std::distance(s_providers.begin(), currentIt);
+
+                        if (s_currentProvider == newIndex)
+                            newIndex -= 1;
+
+                        setCurrentProvider(newIndex);
+                    } else {
+                        // If the current provider is not in the list anymore, select the first one
+                        setCurrentProvider(0);
+                    }
+                }
+            }
 
             s_providers.erase(it);
+            if (s_currentProvider >= i64(s_providers.size()))
+                setCurrentProvider(0);
+
             if (s_providers.empty())
                 EventManager::post<EventProviderChanged>(provider, nullptr);
 

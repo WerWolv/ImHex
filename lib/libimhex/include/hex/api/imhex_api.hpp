@@ -262,6 +262,12 @@ namespace hex {
             void setCurrentProvider(u32 index);
 
             /**
+             * @brief Gets the index of the currently selected data provider
+             * @return Index of the selected provider
+             */
+            i64 getCurrentProviderIndex();
+
+            /**
              * @brief Checks whether the currently selected data provider is valid
              * @return Whether the currently selected data provider is valid
              */

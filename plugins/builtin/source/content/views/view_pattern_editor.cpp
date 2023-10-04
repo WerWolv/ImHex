@@ -923,6 +923,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code, prv::Provider *provider) {
+        EventManager::post<EventPatternEvaluating>();
+
         auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
         this->m_runningEvaluators++;
@@ -1308,6 +1310,27 @@ namespace hex::plugin::builtin {
             }
 
             this->m_textEditor.SetBreakpoints(breakpoints);
+        });
+
+        /* Trigger evaluation */
+        ShortcutManager::addGlobalShortcut(Keys::F5 + AllowWhileTyping, [this] {
+            this->m_triggerAutoEvaluate = true;
+        });
+
+        /* Continue debugger */
+        ShortcutManager::addGlobalShortcut(SHIFT + Keys::F9 + AllowWhileTyping, [this] {
+            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+            if (runtime.isRunning())
+                this->m_breakpointHit = false;
+        });
+
+        /* Step debugger */
+        ShortcutManager::addGlobalShortcut(SHIFT + Keys::F7 + AllowWhileTyping, [this] {
+            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+            if (runtime.isRunning()) {
+                runtime.getInternals().evaluator->pauseNextLine();
+                this->m_breakpointHit = false;
+            }
         });
     }
 

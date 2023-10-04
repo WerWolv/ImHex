@@ -71,23 +71,35 @@ namespace hex::script::loader {
             #elif  defined(OS_LINUX)
                 auto netHostLibrary = loadLibrary("libnethost.so");
             #elif defined(OS_MACOS)
-                auto netHostLibrary = loadLibrary("libnethost.dylib");
+                void *netHostLibrary = nullptr;
+                for (const auto &pluginPath : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+                    auto frameworksPath = pluginPath.parent_path().parent_path() / "Frameworks";
+
+                    netHostLibrary = loadLibrary((frameworksPath / "libnethost.dylib").c_str());
+                    if (netHostLibrary != nullptr)
+                        break;
+                }
             #endif
 
-            if (netHostLibrary == nullptr)
+            if (netHostLibrary == nullptr) {
+                log::error("Could not load libnethost!");
                 return false;
+            }
 
             auto get_hostfxr_path_ptr = getExport<get_hostfxr_path_fn>(netHostLibrary, "get_hostfxr_path");
 
             std::array<char_t, 300> buffer = { 0 };
             size_t bufferSize = buffer.size();
             if (get_hostfxr_path_ptr(buffer.data(), &bufferSize, nullptr) != 0) {
+                log::error("Could not get hostfxr path!");
                 return false;
             }
 
             void *hostfxrLibrary = loadLibrary(buffer.data());
-            if (hostfxrLibrary == nullptr)
+            if (hostfxrLibrary == nullptr) {
+                log::error("Could not load hostfxr library!");
                 return false;
+            }
 
             {
                 hostfxr_initialize_for_runtime_config

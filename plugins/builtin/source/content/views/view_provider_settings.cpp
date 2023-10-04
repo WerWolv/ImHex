@@ -43,6 +43,7 @@ namespace hex::plugin::builtin {
                         ImGui::CloseCurrentPopup();
                     }
                     else {
+                        ImGui::CloseCurrentPopup();
                         auto errorMessage = provider->getErrorMessage();
                         if (errorMessage.empty()) {
                             PopupError::open("hex.builtin.view.provider_settings.load_error"_lang);
