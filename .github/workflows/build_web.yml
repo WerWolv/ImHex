@@ -70,7 +70,7 @@ jobs:
     name: 📃 Deploy to GitHub Pages
     runs-on: ubuntu-latest
 
-    if: github.ref == 'refs/heads/master'
+    if: ${{ github.ref == 'refs/heads/master' && github.event.repository.fork == false }}
     needs: build
 
     steps:
