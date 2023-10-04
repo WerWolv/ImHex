@@ -11,15 +11,15 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shlobj.h>
-#elif defined(OS_LINUX)
+#elif defined(OS_LINUX) || defined(OS_WEB)
     #include <xdg.hpp>
     #include <limits.h>
 #endif
 
-#if !defined(OS_WEB)
-#include <nfd.hpp>
+#if defined(OS_WEB)
+    #include <emscripten.h>
 #else
-#include <emscripten.h>
+    #include <nfd.hpp>
 #endif
 
 #include <algorithm>
@@ -275,7 +275,7 @@ namespace hex::fs {
 
             paths.push_back(wolv::io::fs::getApplicationSupportDirectoryPath());
 
-        #elif defined(OS_LINUX)
+        #elif defined(OS_LINUX) || defined(OS_WEB)
 
             paths.push_back(xdg::DataHomeDir());
 
