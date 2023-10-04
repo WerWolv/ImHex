@@ -113,6 +113,7 @@ namespace {
 
 
     #if defined(OS_WEB)
+
         using namespace hex::init;
 
         void saveFsData() {
@@ -136,6 +137,12 @@ namespace {
                 splashWindow->addStartupTask(name, task, async);
 
             splashWindow->startStartupTasks();
+
+            EventManager::subscribe<RequestRestartImHex>([&] {
+                MAIN_THREAD_EM_ASM({
+                    location.reload();
+                });
+            });
 
             // Draw the splash window while tasks are running
             emscripten_set_main_loop_arg([](void *arg) {
