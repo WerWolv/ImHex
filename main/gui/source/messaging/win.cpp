@@ -22,13 +22,13 @@ namespace hex::messaging {
             // Check if the window is visible and if it's an ImHex window
             if (::IsWindowVisible(hWnd) == TRUE && length != 0) {
                 if (windowName.starts_with("ImHex")) {
-                    // it's our window, return it and stop iteration
+                    // It's our window, return it and stop iteration
                     *reinterpret_cast<HWND*>(ret) = hWnd;
                     return FALSE;
                 }
             }
 
-            // continue iteration
+            // Continue iteration
             return TRUE;
 
         }, reinterpret_cast<LPARAM>(&imhexWindow));
@@ -69,7 +69,7 @@ namespace hex::messaging {
 
         constexpr static auto UniqueMutexId = "ImHex/a477ea68-e334-4d07-a439-4f159c683763";
 
-        // check if an ImHex instance is already running by opening a global mutex
+        // Check if an ImHex instance is already running by opening a global mutex
         HANDLE globalMutex = OpenMutex(MUTEX_ALL_ACCESS, FALSE, UniqueMutexId);
         if (globalMutex == nullptr) {
             // If no ImHex instance is running, create a new global mutex

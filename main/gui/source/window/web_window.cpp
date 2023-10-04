@@ -28,7 +28,7 @@ namespace hex {
 
     void Window::initNative() {
         EM_ASM({
-            // save data directory
+            // Save data directory
             FS.mkdir("/home/web_user/.local");
             FS.mount(IDBFS, {}, '/home/web_user/.local');
 

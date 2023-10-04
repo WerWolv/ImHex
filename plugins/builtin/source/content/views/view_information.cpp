@@ -112,8 +112,8 @@ namespace hex::plugin::builtin {
 
                 u64 count = 0;
 
-                // Loop over each byte of the [part of the] file and update each analysis 
-                // one byte at the time in order to process the file only once
+                // Loop over each byte of the selection and update each analysis
+                // one byte at a time in order to process the file only once
                 for (u8 byte : reader) {
                     this->m_byteDistribution.update(byte);
                     this->m_byteTypesDistribution.update(byte);

@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
                     };
 
                     if (provider == nullptr) {
-                        // if a provider is not created, it will be overwritten when saving the project,
+                        // If a provider is not created, it will be overwritten when saving the project,
                         // so we should prevent the project from loading at all
                         showError(hex::format("hex.builtin.popup.error.project.load"_lang,
                             hex::format("hex.builtin.popup.error.project.load.create_provider"_lang, providerType)
@@ -93,7 +93,7 @@ namespace hex::plugin::builtin {
                         hex::format("\n - {} : {}", warning.first->getName(), warning.second));
                 }
 
-                // if no providers were opened, display an error with
+                // If no providers were opened, display an error with
                 // the warnings that happened when opening them 
                 if (ImHexApi::Provider::getProviders().size() == 0) {
                     showError(hex::format("hex.builtin.popup.error.project.load"_lang,
@@ -102,7 +102,7 @@ namespace hex::plugin::builtin {
                     return false;
                  } else {
 
-                    // else, if are warnings, still display them
+                    // Else, if are warnings, still display them
                     if (warningMsg.empty()) return true;
                     else {
                         showWarning(

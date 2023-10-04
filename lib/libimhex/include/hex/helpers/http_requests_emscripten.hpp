@@ -10,10 +10,10 @@ namespace hex {
         return std::async(std::launch::async, [this, path] {
             std::vector<u8> response;
 
-            // execute the request
+            // Execute the request
             auto result = this->executeImpl<T>(response);
 
-            // write the result to the file
+            // Write the result to the file
             wolv::io::File file(path, wolv::io::File::Mode::Create);
             file.writeBuffer(reinterpret_cast<const u8*>(result.getData().data()), result.getData().size());
 
@@ -58,7 +58,7 @@ namespace hex {
         headers.push_back(nullptr);
         this->m_attr.requestHeaders = headers.data();
 
-        // send request
+        // Send request
         emscripten_fetch_t* fetch = emscripten_fetch(&this->m_attr, this->m_url.c_str());
 
         data.resize(fetch->numBytes);

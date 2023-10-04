@@ -34,26 +34,26 @@ namespace hex::subcommands {
 
         auto argsIter = args.begin();
 
-        // get subcommand associated with the first argument
+        // Get subcommand associated with the first argument
         std::optional<SubCommand> currentSubCommand = findSubCommand(*argsIter);
 
         if (currentSubCommand) {
             argsIter++;
-            // if it is a valid subcommand, remove it from the argument list
+            // If it is a valid subcommand, remove it from the argument list
         } else {
-            // if no (valid) subcommand was provided, the default one is --open
+            // If no (valid) subcommand was provided, the default one is --open
             currentSubCommand = findSubCommand("--open");
         }
 
-        // arguments of the current subcommand
+        // Arguments of the current subcommand
         std::vector<std::string> currentSubCommandArgs;
 
-        // compute all subcommands to run
+        // Compute all subcommands to run
         while (argsIter != args.end()) {
             const std::string &arg = *argsIter;
 
             if (arg == "--othercmd") {
-                // save command to run
+                // Save command to run
                 if (currentSubCommand) {
                     subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
                 }
@@ -62,10 +62,10 @@ namespace hex::subcommands {
                 currentSubCommandArgs = { };
 
             } else if (currentSubCommand) {
-                // add current argument to the current command
+                // Add current argument to the current command
                 currentSubCommandArgs.push_back(arg);
             } else { 
-                // get next subcommand from current argument
+                // Get next subcommand from current argument
                 currentSubCommand = findSubCommand(arg);
                 if (!currentSubCommand) {
                     log::error("No subcommand named '{}' found", arg);
@@ -76,17 +76,17 @@ namespace hex::subcommands {
             argsIter++;
         }
 
-        // save last command to run
+        // Save last command to run
         if (currentSubCommand) {
             subCommands.emplace_back(*currentSubCommand, currentSubCommandArgs);
         }
 
-        // run the subcommands
+        // Run the subcommands
         for (auto& subCommandPair : subCommands) {
             subCommandPair.first.callback(subCommandPair.second);
         }
 
-        // exit the process if its not the main instance (the commands have been forwarded to another instance)
+        // Exit the process if its not the main instance (the commands have been forwarded to another instance)
         if (!ImHexApi::System::isMainInstance()) {
             exit(0);
         }

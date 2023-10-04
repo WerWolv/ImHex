@@ -80,6 +80,9 @@ namespace hex::init {
             }
 
             TaskManager::createBackgroundTask("Sending statistics...", [uuid, versionString](auto&) {
+                // To avoid potentially flooding our database with lots of dead users
+                // from people just visiting the website, don't send telemetry data from
+                // the web version
                 #if defined (OS_EMSCRIPTEN)
                     return;
                 #endif
@@ -149,7 +152,7 @@ namespace hex::init {
         wolv::io::File newConfigFile(newConfigPath / "settings.json", wolv::io::File::Mode::Read);
         if (!newConfigFile.isValid()) {
 
-            // find an old config
+            // Find an old config
             std::fs::path oldConfigPath;
             for (const auto &dir : hex::fs::appendPath(hex::fs::getDataPaths(), "config")) {
                 wolv::io::File oldConfigFile(dir / "settings.json", wolv::io::File::Mode::Read);

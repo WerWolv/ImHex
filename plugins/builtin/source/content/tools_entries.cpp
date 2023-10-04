@@ -1133,17 +1133,17 @@ namespace hex::plugin::builtin {
             }
         }
 
-        // Tool for converting between different number formats
-        // There are three places where input can be changed; the bit checkboxes, the hex input and the decimal input.
+        // Tool for converting between different number formats.
+        // There are three places where input can be changed; the bit checkboxes, the hex input, and the decimal input.
         // The bit checkboxes and the hex input are directly related and can be converted between each other easily.
         // The decimal input is a bit more complicated. IEEE 754 floating point numbers are represented as a sign bit,
         // an exponent and a mantissa. For details see https://en.wikipedia.org/wiki/IEEE_754.
         // Workflow is as follows:
         // From the bit checkboxes determine the integer hex value. This is straightforward.
-        // From the hex value determine the binary floating point value by extracting the sign, exponent and mantissa.
-        // From the binary floating point value determine the decimal floating point value using third party library.
+        // From the hex value determine the binary floating point value by extracting the sign, exponent, and mantissa.
+        // From the binary floating point value determine the decimal floating point value using a third party library.
         // From the decimal floating point we reconstruct the binary floating point value using internal hardware.
-        // If format is non-standard the reconstruction is done using properties of the format.
+        // If the format is non-standard, the reconstruction is done using properties of the format.
         void drawIEEE754Decoder() {
 
             constexpr static auto flags = ImGuiInputTextFlags_EnterReturnsTrue;
@@ -1235,16 +1235,16 @@ namespace hex::plugin::builtin {
             const static auto BitsToFloat = [](IEEE754 &ieee754) {
                 // Zero or denormal
                 if (ieee754.exponentBits == 0) {
-                    // result doesn't fit in 128 bits
+                    // Result doesn't fit in 128 bits
                     if ((ieee754.exponentBias - 1) > 128)
                         ieee754.exponentValue = std::pow(2.0L, static_cast<long double>(-ieee754.exponentBias + 1));
                     else {
                         if (ieee754.exponentBias == 0) {
-                            // exponent is zero
+                            // Exponent is zero
                             if (ieee754.mantissaBits == 0)
                                 ieee754.exponentValue = 1.0;
                             else
-                                // exponent is one
+                                // Exponent is one
                                 ieee754.exponentValue = 2.0;
                         }
                         else
@@ -1253,18 +1253,18 @@ namespace hex::plugin::builtin {
                 }
                     // Normal
                 else {
-                    // result doesn't fit in 128 bits
+                    // Result doesn't fit in 128 bits
                     if (std::abs(ieee754.exponentBits - ieee754.exponentBias) > 128)
                         ieee754.exponentValue = std::pow(2.0L, static_cast<long double>(ieee754.exponentBits - ieee754.exponentBias));
-                        //result fits in 128 bits
+                        // Result fits in 128 bits
                     else {
-                        // exponent is positive
+                        // Exponent is positive
                         if (ieee754.exponentBits > ieee754.exponentBias)
                             ieee754.exponentValue = static_cast<long double>(u128(1) << (ieee754.exponentBits - ieee754.exponentBias));
-                            // exponent is negative
+                            // Exponent is negative
                         else if (ieee754.exponentBits < ieee754.exponentBias)
                             ieee754.exponentValue = 1.0 / static_cast<long double>(u128(1) << (ieee754.exponentBias - ieee754.exponentBits));
-                            // exponent is zero
+                            // Exponent is zero
                         else ieee754.exponentValue = 1.0;
                     }
                 }
@@ -1275,7 +1275,7 @@ namespace hex::plugin::builtin {
 
                 // Check if all exponent bits are set.
                 if (std::popcount(static_cast<u64>(ieee754.exponentBits)) == static_cast<i64>(ieee754statics.exponentBitCount)) {
-                    // if fraction is zero number is infinity.
+                    // If fraction is zero number is infinity.
                     if (ieee754.mantissaBits == 0) {
                         if (ieee754.signBits == 0) {
 
@@ -1290,7 +1290,7 @@ namespace hex::plugin::builtin {
                         }
                         ieee754.numberType = NumberType::Infinity;
 
-                        // otherwise number is NaN.
+                        // Otherwise number is NaN.
                     } else {
                         if (ieee754.mantissaBits & (u128(1) << (ieee754statics.mantissaBitCount - 1))) {
 
@@ -1305,9 +1305,9 @@ namespace hex::plugin::builtin {
                         }
                         ieee754.numberType = NumberType::NaN;
                     }
-                    // if all exponent bits are zero, but we have a non-zero fraction
-                    // then the number is denormal which are smaller than regular numbers
-                    // but not as precise.
+                    // If all exponent bits are zero, but we have a non-zero fraction,
+                    // then the number is denormal.
+                    // These are smaller than regular numbers but not as precise.
                 } else if (ieee754.exponentBits == 0 && ieee754.mantissaBits != 0) {
 
                     ieee754.numberType = NumberType::Denormal;
@@ -1336,7 +1336,7 @@ namespace hex::plugin::builtin {
                 // Sign
                 ImGui::TableNextColumn();
 
-                // this has the effect of dimming the color of the numbers so user doesn't try
+                // This has the effect of dimming the color of the numbers so user doesn't try
                 // to interact with them.
                 ImVec4 textColor =  ImGui::GetStyleColorVec4(ImGuiCol_Text);
                 ImGui::BeginDisabled();
@@ -1350,7 +1350,7 @@ namespace hex::plugin::builtin {
                     ImGui::Text("+1");
                 ImGui::Unindent(20_scaled);
 
-                //times
+                // Times
                 ImGui::TableNextColumn();
                 ImGui::Text("x");
                 ImGui::TableNextColumn();
@@ -1376,7 +1376,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::Unindent(20_scaled);
 
-                //times
+                // Times
                 ImGui::TableNextColumn();
                 ImGui::Text("x");
                 ImGui::TableNextColumn();
@@ -1514,17 +1514,17 @@ namespace hex::plugin::builtin {
 
                 // Always obtain sign first.
                 if (decimalFloatingPointNumberString[0] == '-') {
-                    // and remove it from the string.
+                    // And remove it from the string.
                     ieee754.signBits = 1;
                     decimalFloatingPointNumberString.erase(0, 1);
                 } else
-                    //important to switch from - to +.
+                    // Important to switch from - to +.
                     ieee754.signBits = 0;
 
                 InputType inputType;
                 bool matchFound = false;
                 i32 i;
-                // detect and use special numbers.
+                // Detect and use special numbers.
                 for (i = 0; i < 12; i++) {
                     if (decimalFloatingPointNumberString == specialNumbers[i]) {
                         inputType = InputType(i/3);
@@ -1558,7 +1558,7 @@ namespace hex::plugin::builtin {
                 long double log2Result;
 
                 if (inputType != InputType::invalid) {
-                    // deal with zero first so we can use log2.
+                    // Deal with zero first so we can use log2.
                     if (ieee754statics.resultFloat == 0.0) {
                         if (ieee754.signBits == 1)
                             ieee754statics.resultFloat = -0.0;
@@ -1636,13 +1636,13 @@ namespace hex::plugin::builtin {
             };
 
             const static auto ToolMenu = [](i64 &inputFieldWidth) {
-                // we are done. The rest selects the format  if user interacts with the widgets.
-                // If precision and exponent match one of the IEEE 754 formats the format is highlighted
-                // and remains highlighted until user changes to a different format. Matching formats occur when
+                // We are done. The rest selects the format if user interacts with the widgets.
+                // If precision and exponent match one of the IEEE 754 formats, the format is highlighted
+                // and remains highlighted until the user changes to a different format. Matching formats occur when
                 // the user clicks on one of the selections or if the slider values match the format in question.
-                // when a new format is selected it may have a smaller number of digits than
+                // When a new format is selected, it may have a smaller number of digits than
                 // the previous selection. Since the largest of the hexadecimal and the decimal
-                // representation widths sets both field widths to the same value we need to
+                // representation widths set both field widths to the same value, we need to
                 // reset it here when a new choice is set.
 
                 auto exponentBitCount = ieee754statics.exponentBitCount;
@@ -1703,7 +1703,7 @@ namespace hex::plugin::builtin {
 
                 needsPop = false;
                 if (ImGui::Button("hex.builtin.tools.ieee754.clear"_lang))
-                    //this will reset all interactive widgets to zero.
+                    // This will reset all interactive widgets to zero.
                     ieee754statics.value = 0;
 
                 ImGui::Separator();
@@ -1787,11 +1787,12 @@ namespace hex::plugin::builtin {
                     ieee754.precision = std::ceil(1+(ieee754statics.mantissaBitCount + 1) * std::log10(2.0L));
 
                 // For C++ from_chars is better than strtold.
-                // the main problem is that from_chars will not process special numbers
+                // The main problem is that from_chars will not process special numbers
                 // like inf and nan, so we handle them manually
                 static std::string decimalFloatingPointNumberString;
                 static std::string_view decimalStrView;
-                // use qnan for quiet NaN and snan for signaling NaN
+
+                // Use qnan for quiet NaN and snan for signaling NaN
                 if (ieee754.numberType == NumberType::NaN) {
                     if (ieee754.valueType == ValueType::QuietNaN)
                         decimalFloatingPointNumberString = "qnan";

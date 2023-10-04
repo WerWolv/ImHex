@@ -276,9 +276,9 @@ namespace hex::plugin::builtin {
                 auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? "{0}0x{1:X}" : "{0}0o{1:o}");
 
 
-                signed long long number   = hex::crypt::decodeSleb128(buffer);
+                auto number   = hex::crypt::decodeSleb128(buffer);
                 bool negative = number < 0;
-                auto value    = hex::format(format, negative ? "-" : "", std::abs(number));
+                auto value    = hex::format(format, negative ? "-" : "", negative ? -number : number);
 
                 return [value] { ImGui::TextUnformatted(value.c_str()); return value; };
             },

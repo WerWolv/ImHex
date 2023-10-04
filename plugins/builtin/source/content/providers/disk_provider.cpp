@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
                 return -1;
 
             if (st.st_size == 0) {
-                // try BLKGETSIZE
+                // Try BLKGETSIZE
                 unsigned long long bytes64;
                 if (ioctl(fd, BLKGETSIZE, &bytes64) >= 0) {
                     *bytes = bytes64;

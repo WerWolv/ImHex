@@ -52,7 +52,7 @@ namespace hex {
 
         bool m_valid = false;
         
-        // these will be updated when the constructor is called
+        // These will be updated when the constructor is called
         int m_tarOpenErrno = MTAR_ESUCCESS;
         int m_fileOpenErrno = 0;
     };

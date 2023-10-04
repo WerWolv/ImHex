@@ -202,7 +202,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndPopup();
             }
 
-            // draw recent entries
+            // Draw recent entries
             recent::draw();
 
             if (ImHexApi::System::getInitArguments().contains("update-available")) {
@@ -440,11 +440,15 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventWindowInitialized>([] {
-            // documentation of the value above the setting definition
+            // Documentation of the value above the setting definition
             auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
             if (allowServerContact == 2) {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
-                PopupTelemetryRequest::open();
+
+                // Open the telemetry popup but only on desktop versions
+                #if !defined(OS_EMSCRIPTEN)
+                    PopupTelemetryRequest::open();
+                #endif
             }
         });
 
@@ -486,10 +490,11 @@ namespace hex::plugin::builtin {
                 bool hasBackupFile = wolv::io::fs::exists(backupFilePath);
 
                 PopupRestoreBackup::open(
-                    // path of log file
+                    // Path of log file
                     crashFileData.value("logFile", ""),
-                    // restore callback
-                    [=]{
+
+                    // Restore callback
+                    [=] {
                         if (hasBackupFile) {
                             ProjectFile::load(backupFilePath);
                             if (hasProject) {
@@ -504,8 +509,9 @@ namespace hex::plugin::builtin {
                             }
                         }
                     },
-                    // delete callback (also executed after restore)
-                    [crashFilePath, backupFilePath]{
+
+                    // Delete callback (also executed after restore)
+                    [crashFilePath, backupFilePath] {
                         wolv::io::fs::remove(crashFilePath);
                         wolv::io::fs::remove(backupFilePath);
                     }

@@ -370,7 +370,7 @@ namespace hex {
 
         namespace impl {
 
-            // default to true means we forward to ourselves by default
+            // Default to true means we forward to ourselves by default
             static bool s_isMainInstance = true;
 
             void setMainInstanceStatus(bool status) {
@@ -547,6 +547,8 @@ namespace hex {
                 return "Linux";
             #elif defined(OS_MACOS)
                 return "macOS";
+            #elif defined(OS_EMSCRIPTEN)
+                return "Web";
             #else
                 return "Unknown";
             #endif
@@ -559,7 +561,7 @@ namespace hex {
                 ::GetVersionExA(&info);
 
                 return hex::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
-            #elif defined(OS_LINUX) || defined(OS_MACOS)
+            #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_EMSCRIPTEN)
                 struct utsname details;
 
                 if (uname(&details) != 0) {
@@ -591,7 +593,7 @@ namespace hex {
                     default:
                         return "Unknown";
                 }
-            #elif defined(OS_LINUX) || defined(OS_MACOS)
+            #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_EMSCRIPTEN)
                 struct utsname details;
 
                 if (uname(&details) != 0) {

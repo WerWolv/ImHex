@@ -54,66 +54,69 @@ namespace hex {
             }
 
             #if defined(OS_EMSCRIPTEN)
-            void load() {
-                char *data = (char *) MAIN_THREAD_EM_ASM_INT({
-                    let data = localStorage.getItem("config");
-                    return data ? stringToNewUTF8(data) : null;
-                });
-                if (data == nullptr) {
-                    store();
-                } else {
-                    getSettingsData() = nlohmann::json::parse(data);
+                void load() {
+                    char *data = (char *) MAIN_THREAD_EM_ASM_INT({
+                        let data = localStorage.getItem("config");
+                        return data ? stringToNewUTF8(data) : null;
+                    });
+
+                    if (data == nullptr) {
+                        store();
+                    } else {
+                        getSettingsData() = nlohmann::json::parse(data);
+                    }
                 }
-            }
-            void store() {
-                auto data = getSettingsData().dump();
-                MAIN_THREAD_EM_ASM({
-                    localStorage.setItem("config", UTF8ToString($0));
-                }, data.c_str());
-            }
-            void clear() {
-                MAIN_THREAD_EM_ASM({
-                    localStorage.removeItem("config");
-                });
-            }
+
+                void store() {
+                    auto data = getSettingsData().dump();
+                    MAIN_THREAD_EM_ASM({
+                        localStorage.setItem("config", UTF8ToString($0));
+                    }, data.c_str());
+                }
+
+                void clear() {
+                    MAIN_THREAD_EM_ASM({
+                        localStorage.removeItem("config");
+                    });
+                }
             #else
-            void load() {
-                bool loaded = false;
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                    wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
+                void load() {
+                    bool loaded = false;
+                    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Read);
 
-                    if (file.isValid()) {
-                        getSettingsData() = nlohmann::json::parse(file.readString());
-                        loaded = true;
-                        break;
+                        if (file.isValid()) {
+                            getSettingsData() = nlohmann::json::parse(file.readString());
+                            loaded = true;
+                            break;
+                        }
+                    }
+
+                    if (!loaded)
+                        store();
+                }
+
+                void store() {
+                    // During a crash settings can be empty, causing them to be overwritten.
+                    if(getSettingsData().empty()) {
+                        return;
+                    }
+
+                    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
+
+                        if (file.isValid()) {
+                            file.writeString(getSettingsData().dump(4));
+                            break;
+                        }
                     }
                 }
 
-                if (!loaded)
-                    store();
-            }
-
-            void store() {
-                // During a crash settings can be empty, causing them to be overwritten.
-                if(getSettingsData().empty()) {
-                    return;
-                }
-
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                    wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
-
-                    if (file.isValid()) {
-                        file.writeString(getSettingsData().dump(4));
-                        break;
+                void clear() {
+                    for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
+                        wolv::io::fs::remove(dir / SettingsFile);
                     }
                 }
-            }
-
-            void clear() {
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                    wolv::io::fs::remove(dir / SettingsFile);
-                }
-            }
             #endif
 
             static auto getCategoryEntry(const std::string &unlocalizedCategory) {

@@ -58,7 +58,7 @@ namespace hex::fs {
 
     std::vector<std::fs::path> getDefaultPaths(ImHexPath path, bool listNonExisting = false);
 
-    // temporarily expose these for the migration function
+    // Temporarily expose these for the migration function
     std::vector<std::fs::path> getDataPaths();
     std::vector<std::fs::path> appendPath(std::vector<std::fs::path> paths, const std::fs::path &folder);
 }

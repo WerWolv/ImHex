@@ -79,7 +79,7 @@ namespace hex::plugin::builtin {
                         ImGui::EndTooltip();
                     }
                     ImGui::TableNextColumn();
-                    // the space makes a padding in the UI
+                    // The space makes a padding in the UI
                     ImGui::Text("%s ", wolv::util::combineStrings(entry.authors, ", ").c_str());
                     ImGui::TableNextColumn();
 
@@ -181,7 +181,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::refresh() {
-        // do not refresh if a refresh is already in progress
+        // Do not refresh if a refresh is already in progress
         if (this->m_requestStatus == RequestStatus::InProgress)
             return;
         this->m_requestStatus = RequestStatus::InProgress;
@@ -275,7 +275,7 @@ namespace hex::plugin::builtin {
             if (!fs::isPathWritable(folderPath))
                 continue;
 
-            // verify that we write the file to the right folder
+            // Verify that we write the file to the right folder
             // this is to prevent the filename from having elements like ../
             auto fullPath = std::fs::weakly_canonical(folderPath / std::fs::path(fileName));
             auto [folderIter, pathIter] = std::mismatch(folderPath.begin(), folderPath.end(), fullPath.begin());

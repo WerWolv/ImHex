@@ -170,8 +170,6 @@ namespace {
                     }, 60, 0);
                 }
             }, splashWindow, 60, 0);
-            // end of initializeImHex()
-
 
             return -1;
         }
