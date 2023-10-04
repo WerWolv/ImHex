@@ -50,6 +50,10 @@ if(typeof window === 'undefined') {
     (async function() {
         if(window.crossOriginIsolated !== false) return;
 
+        if (!('serviceWorker' in navigator)) {
+            alert("Your browser doesn't support service workers.\nIf you're using Firefox, you need to not be in a private window.")
+        }
+
         let registration = await navigator.serviceWorker.register(window.document.currentScript.src).catch(e => console.error("COOP/COEP Service Worker failed to register:", e));
         if(registration) {
             console.log("COOP/COEP Service Worker registered", registration.scope);
