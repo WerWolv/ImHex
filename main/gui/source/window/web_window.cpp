@@ -24,6 +24,9 @@ namespace hex {
 
     void nativeErrorMessage(const std::string &message) {
         log::fatal(message);
+        EM_ASM({
+            alert(UTF8ToString($0));
+        }, message.c_str());
     }
 
     void Window::initNative() {
