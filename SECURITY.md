@@ -7,4 +7,4 @@ If you built ImHex yourself and experience issues that are not present in the ve
 
 ## Reporting a Vulnerability
 
-Any critical vulnearabilities can be reported through Discord @WerWolv#1337
+Any critical vulnerabilities can be reported through Discord @WerWolv#1337
