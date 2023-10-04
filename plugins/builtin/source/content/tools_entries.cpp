@@ -1397,13 +1397,12 @@ namespace hex::plugin::builtin {
 
             const static auto IndentBoxOrLabel = [](
                                 u32 startBit, u32 bitIndex, u32 count, bool isLabel) {
-                int columnWidth = ImGui::GetColumnWidth();
                 int checkBoxWidth;
-                std::string labelString = "xx";
-                checkBoxWidth = ImGui::CalcTextSize(labelString.c_str()).x + 1;
+                std::string labelString = "#";
+                checkBoxWidth = ImGui::CalcTextSize(labelString.c_str()).x + ImGui::GetStyle().FramePadding.x * 2.0f;
                 float result = checkBoxWidth * (startBit - bitIndex) + 1;
                 if (count < 4) {
-                    result += (columnWidth - count * checkBoxWidth + 1) / 2.0f;
+                    result += (ImGui::GetStyle().FramePadding.x  + 0.5f);
                 }
                 if (isLabel) {
                      labelString = fmt::format("{}", startBit);
