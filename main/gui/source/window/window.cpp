@@ -282,7 +282,7 @@ namespace hex {
             if (ImGui::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
                 glfwMaximizeWindow(this->m_window);
         }
-        
+
 
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
@@ -298,7 +298,7 @@ namespace hex {
         ImGui::SetCursorPosX(std::max(startX, (ImGui::GetWindowWidth() - ImGui::CalcTextSize(this->m_windowTitle.c_str()).x) / 2));
         ImGui::TextUnformatted(this->m_windowTitle.c_str());
     }
-    
+
     void Window::drawTitleBarBorder() {
         auto titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
         auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
@@ -805,6 +805,7 @@ namespace hex {
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
             glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
             glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+            glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, GLFW_TRUE);
         #else
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
