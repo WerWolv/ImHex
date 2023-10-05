@@ -1,10 +1,10 @@
 #include <content/providers/process_memory_provider.hpp>
 
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
 #  include <windows.h>
 #  include <psapi.h>
 #  include <shellapi.h>
-#elif __linux__
+#elif defined(OS_LINUX)
 #  include <filesystem>
 #  include <fstream>
 #  include <iostream>
@@ -24,11 +24,11 @@
 namespace hex::plugin::builtin {
 
     bool ProcessMemoryProvider::open() {
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         this->m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, this->m_selectedProcess->id);
         if (this->m_processHandle == nullptr)
             return false;
-#elif __linux__
+#elif defined(OS_LINUX)
         this->m_processId = this->m_selectedProcess->id;
 #endif
 
@@ -38,18 +38,18 @@ namespace hex::plugin::builtin {
     }
 
     void ProcessMemoryProvider::close() {
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         CloseHandle(this->m_processHandle);
         this->m_processHandle = nullptr;
-#elif __linux__
+#elif defined(OS_LINUX)
         this->m_processId = -1;
 #endif
     }
 
     void ProcessMemoryProvider::readRaw(u64 address, void *buffer, size_t size) {
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         ReadProcessMemory(this->m_processHandle, (LPCVOID)address, buffer, size, nullptr);
-#elif __linux__
+#elif defined(OS_LINUX)
         const iovec local {
             .iov_base = buffer,
             .iov_len = size,
@@ -67,9 +67,9 @@ namespace hex::plugin::builtin {
 #endif
     }
     void ProcessMemoryProvider::writeRaw(u64 address, const void *buffer, size_t size) {
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         WriteProcessMemory(this->m_processHandle, (LPVOID)address, buffer, size, nullptr);
-#elif __linux__
+#elif defined(OS_LINUX)
         const iovec local {
             .iov_base = (void*) buffer,
             .iov_len = size,
@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
 
     bool ProcessMemoryProvider::drawLoadInterface() {
         if (this->m_processes.empty() && !this->m_enumerationFailed) {
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
             DWORD numProcesses = 0;
             std::vector<DWORD> processIds;
 
@@ -176,7 +176,7 @@ namespace hex::plugin::builtin {
 
                 this->m_processes.push_back({ processId, processName, std::move(texture) });
             }
-#elif __linux__
+#elif defined(OS_LINUX)
             for (const auto& entry : std::fs::directory_iterator("/proc")) {
                 if (!std::fs::is_directory(entry)) continue;
 
@@ -248,7 +248,7 @@ namespace hex::plugin::builtin {
         ImGui::PushItemWidth(availableX);
         const auto &filtered = this->m_regionSearchWidget.draw(this->m_memoryRegions);
         ImGui::PopItemWidth();
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         auto availableY = 400_scaled;
 #else
         // take up full height on Linux since there are no DLL injection controls
@@ -283,7 +283,7 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         ImGui::Header("hex.builtin.provider.process_memory.utils"_lang);
 
         if (ImGui::Button("hex.builtin.provider.process_memory.utils.inject_dll"_lang)) {
@@ -315,7 +315,7 @@ namespace hex::plugin::builtin {
     void ProcessMemoryProvider::reloadProcessModules() {
         this->m_memoryRegions.clear();
 
-#ifdef _WIN32
+#if defined(OS_WINDOWS)
         DWORD numModules = 0;
         std::vector<HMODULE> modules;
 
@@ -357,7 +357,7 @@ namespace hex::plugin::builtin {
             this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
         }
 
-#elif __linux__
+#elif defined(OS_LINUX)
 
         std::ifstream file(std::fs::path("/proc") / std::to_string(this->m_processId) / "maps");
 
