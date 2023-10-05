@@ -657,6 +657,18 @@ namespace hex {
                         if (ImGui::GetWindowSize().x > ImGui::GetStyle().FramePadding.x * 10)
                             sizeSet = true;
 
+                        // Reset popup position if it's outside the main window when multi-viewport is not enabled
+                        // If not done, the popup will be stuck outside the main window and cannot be accessed anymore
+                        if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) == ImGuiConfigFlags_None) {
+                            const auto currWindowPos = ImGui::GetWindowPos();
+                            const auto minWindowPos = ImHexApi::System::getMainWindowPosition() - ImGui::GetWindowSize();
+                            const auto maxWindowPos = ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize();
+                            if (currWindowPos.x > maxWindowPos.x || currWindowPos.y > maxWindowPos.y || currWindowPos.x < minWindowPos.x || currWindowPos.y < minWindowPos.y) {
+                                positionSet = false;
+                                GImGui->MovingWindow = nullptr;
+                            }
+                        }
+
                         ImGui::EndPopup();
                     } else {
                         popupDisplaying = false;
