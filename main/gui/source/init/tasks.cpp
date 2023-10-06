@@ -328,11 +328,15 @@ namespace hex::init {
     }
 
     bool loadFonts() {
-        // Check if unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
-        // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
+        // Check if unicode support is enabled in the settings
         bool shouldLoadUnicode =
                 ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.load_all_unicode_chars", false) &&
                 ImHexApi::System::getGPUVendor() != "VMware, Inc.";
+
+        // Force disable unicode support when using the mesa software renderer or any of the web renderers
+        const auto gpuVendor = ImHexApi::System::getGPUVendor();
+        if (gpuVendor == "VMware, Inc." || gpuVendor == "WebKit" || gpuVendor == "Mozilla")
+            shouldLoadUnicode = false;
 
         return loadFontsImpl(shouldLoadUnicode);
     }
