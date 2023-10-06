@@ -8,6 +8,11 @@ on:
 
 env:
   BUILD_TYPE: RelWithDebInfo
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: read
+  actions: write
 
 jobs:
 

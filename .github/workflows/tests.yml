@@ -7,6 +7,13 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+permissions:
+  contents: read
+  actions: write
+
 jobs:
   tests:
     name: 🧪 Unit Tests
