@@ -358,6 +358,8 @@ namespace hex::init {
 
             #if defined(OS_MACOS)
                 meanScale /= getBackingScaleFactor();
+            #elif defined(OS_WEB)
+                meanScale = 1.0F;
             #endif
 
             ImHexApi::System::impl::setGlobalScale(meanScale);
