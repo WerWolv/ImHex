@@ -227,6 +227,7 @@ namespace hex::init {
         cfg.SizePixels = fontSize;
 
         fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
+        fonts->TexDesiredWidth = 8096;
 
         // Configure font glyph ranges that should be loaded from the default font and unifont
         static ImVector<ImWchar> ranges;
