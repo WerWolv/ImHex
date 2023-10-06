@@ -26,10 +26,11 @@ jobs:
         submodules: recursive
     
     - name: 📁 Restore docker /cache
-      uses: actions/cache@v3
+      uses: iTrooz/cache@v3
       with:
         path: cache
         key: build-web-cache
+        update: true
     
     - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2

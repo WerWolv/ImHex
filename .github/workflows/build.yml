@@ -35,11 +35,12 @@ jobs:
         max-size: 1G
 
     - name: 📜 Restore CMakeCache
-      uses:  actions/cache@v3
+      uses:  iTrooz/cache@v3
       with:
         path: |
           build/CMakeCache.txt
         key: ${{ runner.os }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
+        update: true
 
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
@@ -154,11 +155,12 @@ jobs:
         max-size: 1G
 
     - name: 📜 Restore CMakeCache
-      uses: actions/cache@v3
+      uses: iTrooz/cache@v3
       with:
         path: |
           build/CMakeCache.txt
         key: ${{ runner.os }}-${{ matrix.suffix }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
+        update: true
 
     - name: ⬇️ Install dependencies
       run: |
@@ -268,11 +270,12 @@ jobs:
           max-size: 1G
 
       - name: 📜 Restore CMakeCache
-        uses: actions/cache@v3
+        uses: iTrooz/cache@v3
         with:
           path: |
             build/CMakeCache.txt
           key: Ubuntu-${{matrix.release_num}}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
+          update: true
 
       - name: ⬇️ Install dependencies
         run: |
@@ -346,11 +349,12 @@ jobs:
           max-size: 1G
 
       - name: 📜 Restore CMakeCache
-        uses: actions/cache@v3
+        uses: iTrooz/cache@v3
         with:
           path: |
             build-appimage/CMakeCache.txt
           key: appimage-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
+          update: true
 
       - name: ⬇️ Install dependencies
         run: |
@@ -442,11 +446,12 @@ jobs:
           max-size: 1G
 
       - name: 📜 Restore CMakeCache
-        uses: actions/cache@v3
+        uses: iTrooz/cache@v3
         with:
           path: |
             build/CMakeCache.txt
           key: archlinux-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
+          update: true
 
       # ArchLinux cmake build
       - name: 🛠️ Build
@@ -544,12 +549,11 @@ jobs:
           submodules: recursive
 
       - name: 📜 Setup DNF Cache
-        uses: actions/cache@v3
+        uses: iTrooz/cache@v3
         with:
           path: /var/cache/dnf
-          key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
-          restore-keys: |
-            ${{ matrix.mock_release }}-dnf-
+          key: ${{ matrix.mock_release }}-dnf
+          update: true
 
       - name: ⬇️ Update all packages and install dependencies
         run: |
@@ -605,12 +609,11 @@ jobs:
           EOT
 
       - name: 📜 Setup Mock Cache
-        uses: actions/cache@v3
+        uses: iTrooz/cache@v3
         with:
           path: /var/cache/mock
-          key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}
-          restore-keys: |
-            ${{ matrix.mock_release }}-mock
+          key: ${{ matrix.mock_release }}-mock
+          update: true
 
       # Fedora cmake build (in imhex.spec)
       - name: 📦 Build RPM

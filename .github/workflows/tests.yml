@@ -29,13 +29,13 @@ jobs:
         restore-keys: ${{ runner.os }}-tests-build
         max-size: 50M
 
-
     - name: 📜 Restore CMakeCache
-      uses: actions/cache@v3
+      uses: iTrooz/cache@v3
       with:
         path: |
           build/CMakeCache.txt
         key: ${{ runner.os }}-tests-build-${{ hashFiles('**/CMakeLists.txt') }}
+        update: true
 
     - name: ⬇️ Install dependencies
       run: |
