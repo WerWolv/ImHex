@@ -54,16 +54,6 @@ jobs:
       with:
         path: out/
 
-      # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
-    - name: 🗑️ Delete old cache
-      continue-on-error: true
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: |
-          gh extension install actions/gh-actions-cache
-          gh actions-cache delete "build-web-cache" --confirm
-  
-
   deploy:
     environment:
       name: github-pages
