@@ -38,8 +38,6 @@ AppDir:
     - libtinfo6:amd64
   files:
     include:
-    - /lib/x86_64-linux-gnu/libGLX.so.0
-    - /lib/x86_64-linux-gnu/libGLdispatch.so.0
     - /lib/x86_64-linux-gnu/libLLVM-13.so.1
     - /lib/x86_64-linux-gnu/libOpenGL.so.0
     - /lib/x86_64-linux-gnu/libX11.so.6
@@ -77,7 +75,6 @@ AppDir:
     - /lib/x86_64-linux-gnu/libgdk-3.so.0
     - /lib/x86_64-linux-gnu/libgdk_pixbuf-2.0.so.0
     - /lib/x86_64-linux-gnu/libgio-2.0.so.0
-    - /lib/x86_64-linux-gnu/libglapi.so.0
     - /lib/x86_64-linux-gnu/libglfw.so.3
     - /lib/x86_64-linux-gnu/libglib-2.0.so.0
     - /lib/x86_64-linux-gnu/libgmodule-2.0.so.0
