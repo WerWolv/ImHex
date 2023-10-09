@@ -332,7 +332,6 @@ namespace hex::init {
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
         glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
-        glfwWindowHint(GLFW_SAMPLES, 1);
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
         // Create the splash screen window
