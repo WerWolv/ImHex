@@ -7,10 +7,15 @@ ARG UNIQUEKEY 1
 RUN apt update
 RUN apt install -y git ccache autoconf automake libtool cmake pkg-config
 
+RUN <<EOF
 # Install vcpkg
 # Note: we are using my fork of the repository with a libmagic patch
-RUN git clone https://github.com/iTrooz/vcpkg --branch libmagic /vcpkg
-RUN /vcpkg/bootstrap-vcpkg.sh
+set -xe
+
+git clone https://github.com/iTrooz/vcpkg /vcpkg
+/vcpkg/bootstrap-vcpkg.sh
+sed -i 's/vcpkg_install_make(${EXTRA_ARGS})/vcpkg_install_make(${EXTRA_ARGS} SUBPATH src)/g' /vcpkg/ports/libmagic/portfile.cmake
+EOF
 
 # Patch vcpkg build instructions to add -pthread
 RUN <<EOF
