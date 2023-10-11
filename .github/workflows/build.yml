@@ -359,13 +359,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Linux AppImage x86_64
-          path: 'build-appimage/*.AppImage'
+          path: 'out/*.AppImage'
 
       - name: ⬆️ Upload AppImage zsync
         uses: actions/upload-artifact@v3
         with:
           name: Linux AppImage zsync x86_64
-          path: 'build-appimage/*.AppImage.zsync'
+          path: 'out/*.AppImage.zsync'
 
   # ArchLinux build
   archlinux-build:
