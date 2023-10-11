@@ -341,7 +341,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: cache
-          key: build-web-cache
+          key: appimage-ccache-${{ github.run_id }}
+          restore-keys: appimage-cache
       
       - name: 🐳 Inject /cache into docker
         uses: reproducible-containers/buildkit-cache-dance@v2.1.2
