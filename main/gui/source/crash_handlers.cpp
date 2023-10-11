@@ -76,8 +76,7 @@ namespace hex::crash {
         EventManager::post<EventAbnormalTermination>(signalNumber);
 
         // Run exit tasks
-        for (const auto &[name, task, async] : init::getExitTasks())
-            task();
+        init::runExitTasks();
 
         // Terminate all asynchronous tasks
         TaskManager::exit();

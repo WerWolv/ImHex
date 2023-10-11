@@ -95,8 +95,7 @@ namespace {
      */
     void deinitializeImHex() {
         // Run exit tasks
-        for (const auto &[name, task, async] : init::getExitTasks())
-            task();
+        init::runExitTasks();
 
         // Terminate all asynchronous tasks
         TaskManager::exit();

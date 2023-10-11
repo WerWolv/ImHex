@@ -12,6 +12,11 @@ namespace hex::init {
         bool async;
     };
 
+    /**
+     * @brief Runs the exit tasks and print them to console
+     */
+    void runExitTasks();
+
     std::vector<Task> getInitTasks();
     std::vector<Task> getExitTasks();
 }

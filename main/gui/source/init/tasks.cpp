@@ -608,6 +608,14 @@ namespace hex::init {
         return true;
     }
 
+    // run all exit taks, and print to console
+    void runExitTasks() {
+        for (const auto &[name, task, async] : init::getExitTasks()) {
+            task();
+            log::info("Finished exit task {}", name);
+        }
+    }
+
     std::vector<Task> getInitTasks() {
         return {
             { "Setting up environment",  setupEnvironment,    false },
