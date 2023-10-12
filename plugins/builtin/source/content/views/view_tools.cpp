@@ -48,6 +48,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewTools::drawAlwaysVisible() {
+        // Make sure the tool windows never get drawn over the welcome screen
+        if (!ImHexApi::Provider::isValid())
+            return;
+
         auto &tools = ContentRegistry::Tools::impl::getEntries();
 
         for (auto iter = tools.begin(); iter != tools.end(); iter++) {
