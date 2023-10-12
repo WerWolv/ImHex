@@ -666,14 +666,12 @@ namespace hex::plugin::builtin {
             static std::string resultTitle, resultExtract;
             static std::future<HttpRequest::Result<std::string>> searchProcess;
             static bool extendedSearch = false;
-
-            std::string searchString;
+            static std::string searchString;
 
             ImGui::Header("hex.builtin.tools.wiki_explain.control"_lang, true);
 
-            bool startSearch;
+            bool startSearch = ImGui::InputTextIcon("##search", ICON_VS_SYMBOL_KEY, searchString, ImGuiInputTextFlags_EnterReturnsTrue);
 
-            startSearch = ImGui::InputTextIcon("##search", ICON_VS_SYMBOL_KEY, searchString, ImGuiInputTextFlags_EnterReturnsTrue);
             ImGui::SameLine();
 
             ImGui::BeginDisabled((searchProcess.valid() && searchProcess.wait_for(0s) != std::future_status::ready) || searchString.empty());
@@ -713,11 +711,13 @@ namespace hex::plugin::builtin {
 
                         resultTitle.clear();
                         resultExtract.clear();
+                        searchString.clear();
                     } else {
                         extendedSearch = false;
                         searchString.clear();
                     }
                 } catch (...) {
+                    searchString.clear();
                     resultTitle.clear();
                     resultExtract.clear();
                     extendedSearch = false;
