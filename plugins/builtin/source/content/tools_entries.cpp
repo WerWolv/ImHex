@@ -1476,12 +1476,11 @@ namespace hex::plugin::builtin {
                 }
             };
 
-            const static auto FloatToBits = [&specialNumbers](IEEE754 &ieee754, std::string decimalFloatingPointNumberString
-                    , std::string_view decimalStrView, std::from_chars_result &res,int totalBitCount) {
+            const static auto FloatToBits = [&specialNumbers](IEEE754 &ieee754, std::string decimalFloatingPointNumberString, int totalBitCount) {
 
-                // Always obtain sign first
+                // Always obtain sign first.
                 if (decimalFloatingPointNumberString[0] == '-') {
-                    // and remove it from the string.
+                    // And remove it from the string.
                     ieee754.signBits = 1;
                     decimalFloatingPointNumberString.erase(0, 1);
                 } else
@@ -1491,7 +1490,7 @@ namespace hex::plugin::builtin {
                 InputType inputType;
                 bool matchFound = false;
                 i32 i;
-                // Detect and use special numbers (Nan, inf,...).
+                // Detect and use special numbers.
                 for (i = 0; i < 12; i++) {
                     if (decimalFloatingPointNumberString == specialNumbers[i]) {
                         inputType = InputType(i/3);
@@ -1504,10 +1503,11 @@ namespace hex::plugin::builtin {
                     inputType = InputType::regular;
 
                 if (inputType == InputType::regular) {
-                    decimalStrView = decimalFloatingPointNumberString;
-                    res = std::from_chars(decimalStrView.data(), decimalStrView.data() + decimalStrView.size(), ieee754statics.resultFloat);
-                    if (res.ec != std::errc())
+                    try {
+                        ieee754statics.resultFloat = stod(decimalFloatingPointNumberString);
+                    } catch(const std::invalid_argument& _) {
                         inputType = InputType::invalid;
+                    }
                 } else if (inputType == InputType::infinity) {
                     ieee754statics.resultFloat = std::numeric_limits<long double>::infinity();
                     ieee754statics.resultFloat *= (ieee754.signBits == 1 ? -1 : 1);
@@ -1600,7 +1600,6 @@ namespace hex::plugin::builtin {
                     ieee754statics.value = (ieee754.signBits << (totalBitCount)) | (ieee754.exponentBits << (totalBitCount - ieee754statics.exponentBitCount)) | ieee754.mantissaBits;
                 }
             };
-
 
             const static auto DisplayDecimal  = [](IEEE754 &ieee754) {
 
@@ -1819,10 +1818,9 @@ namespace hex::plugin::builtin {
 
 
                 // We allow any input in order to accept infinities and NaNs, all invalid entries
-                // are detected by from_chars. You can also enter -0 or -inf.
-                std::from_chars_result res;
+                // are detected catching exceptions. You can also enter -0 or -inf.
                 if (ImGui::InputText("##resultFloat", decimalFloatingPointNumberString, flags)) {
-                    FloatToBits(ieee754, decimalFloatingPointNumberString, decimalStrView, res, totalBitCount);
+                    FloatToBits(ieee754, decimalFloatingPointNumberString, totalBitCount);
                 }
                 ImGui::PopItemWidth();
 
