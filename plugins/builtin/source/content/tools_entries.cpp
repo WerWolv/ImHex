@@ -1802,7 +1802,7 @@ namespace hex::plugin::builtin {
                 // The main problem is that from_chars will not process special numbers
                 // like inf and nan, so we handle them manually.
                 static std::string decimalFloatingPointNumberString;
-                static std::string_view decimalStrView;
+
                 // Use qnan for quiet NaN and snan for signaling NaN.
                 if (ieee754.numberType == NumberType::NaN) {
                     if (ieee754.valueType == ValueType::QuietNaN)
