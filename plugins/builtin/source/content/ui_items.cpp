@@ -273,7 +273,7 @@ namespace hex::plugin::builtin {
 
                             ImGui::TextFormatted("{}", tabProvider->getName().c_str());
 
-                            const auto &description = provider->getDataDescription();
+                            const auto &description = tabProvider->getDataDescription();
                             if (!description.empty()) {
                                 ImGui::Separator();
                                 if (ImGui::GetIO().KeyShift && !description.empty()) {

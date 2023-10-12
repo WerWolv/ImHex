@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
         auto tooltipSize = achievementSize * ImVec2(4, 0);
 
         // Draw achievement tooltip when hovering over it
-        if (ImGui::IsMouseHoveringRect(position, position + achievementSize)) {
+        if (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(position, position + achievementSize)) {
             ImGui::SetNextWindowPos(tooltipPos);
             ImGui::SetNextWindowSize(tooltipSize);
             if (ImGui::BeginTooltip()) {
