@@ -11,6 +11,7 @@
 #include <imgui_internal.h>
 
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/concepts.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -246,4 +247,33 @@ namespace ImGui {
     bool DimmedIconToggle(const char *icon, bool *v);
 
     void TextOverlay(const char *text, ImVec2 pos);
+
+    template<typename T>
+    constexpr ImGuiDataType getImGuiDataType() {
+        if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;
+        else if constexpr (std::same_as<T, u16>)    return ImGuiDataType_U16;
+        else if constexpr (std::same_as<T, u32>)    return ImGuiDataType_U32;
+        else if constexpr (std::same_as<T, u64>)    return ImGuiDataType_U64;
+        else if constexpr (std::same_as<T, i8>)     return ImGuiDataType_S8;
+        else if constexpr (std::same_as<T, i16>)    return ImGuiDataType_S16;
+        else if constexpr (std::same_as<T, i32>)    return ImGuiDataType_S32;
+        else if constexpr (std::same_as<T, i64>)    return ImGuiDataType_S64;
+        else if constexpr (std::same_as<T, float>)  return ImGuiDataType_Float;
+        else if constexpr (std::same_as<T, double>) return ImGuiDataType_Double;
+        else static_assert(hex::always_false<T>::value, "Invalid data type!");
+    }
+
+    template<typename T>
+    constexpr const char *getFormatLengthSpecifier() {
+        if constexpr      (std::same_as<T, u8>)     return "hh";
+        else if constexpr (std::same_as<T, u16>)    return "h";
+        else if constexpr (std::same_as<T, u32>)    return "l";
+        else if constexpr (std::same_as<T, u64>)    return "ll";
+        else if constexpr (std::same_as<T, i8>)     return "hh";
+        else if constexpr (std::same_as<T, i16>)    return "h";
+        else if constexpr (std::same_as<T, i32>)    return "l";
+        else if constexpr (std::same_as<T, i64>)    return "ll";
+        else static_assert(hex::always_false<T>::value, "Invalid data type!");
+    }
+
 }

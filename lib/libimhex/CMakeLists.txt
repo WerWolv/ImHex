@@ -35,6 +35,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/logger.cpp
         source/helpers/stacktrace.cpp
         source/helpers/tar.cpp
+        source/helpers/debugging.cpp
 
         source/providers/provider.cpp
 

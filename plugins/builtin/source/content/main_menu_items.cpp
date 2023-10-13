@@ -10,6 +10,7 @@
 
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/patches.hpp>
+#include <hex/helpers/debugging.hpp>
 
 #include <content/global_actions.hpp>
 #include <content/popups/popup_notification.hpp>
@@ -441,6 +442,8 @@ namespace hex::plugin::builtin {
 
             #if defined(DEBUG)
                 ImGui::MenuItem("hex.builtin.menu.view.demo"_lang, "", &g_demoWindowOpen);
+
+                ImGui::MenuItem("hex.builtin.menu.view.debug"_lang, "", &hex::dbg::impl::getDebugWindowState());
             #endif
         });
 

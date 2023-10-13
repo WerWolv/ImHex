@@ -11,34 +11,6 @@
 
 namespace hex::plugin::builtin {
 
-    template<typename T>
-    constexpr ImGuiDataType getImGuiDataType() {
-        if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;
-        else if constexpr (std::same_as<T, u16>)    return ImGuiDataType_U16;
-        else if constexpr (std::same_as<T, u32>)    return ImGuiDataType_U32;
-        else if constexpr (std::same_as<T, u64>)    return ImGuiDataType_U64;
-        else if constexpr (std::same_as<T, i8>)     return ImGuiDataType_S8;
-        else if constexpr (std::same_as<T, i16>)    return ImGuiDataType_S16;
-        else if constexpr (std::same_as<T, i32>)    return ImGuiDataType_S32;
-        else if constexpr (std::same_as<T, i64>)    return ImGuiDataType_S64;
-        else if constexpr (std::same_as<T, float>)  return ImGuiDataType_Float;
-        else if constexpr (std::same_as<T, double>) return ImGuiDataType_Double;
-        else static_assert(hex::always_false<T>::value, "Invalid data type!");
-    }
-
-    template<typename T>
-    constexpr const char *getFormatLengthSpecifier() {
-        if constexpr      (std::same_as<T, u8>)     return "hh";
-        else if constexpr (std::same_as<T, u16>)    return "h";
-        else if constexpr (std::same_as<T, u32>)    return "l";
-        else if constexpr (std::same_as<T, u64>)    return "ll";
-        else if constexpr (std::same_as<T, i8>)     return "hh";
-        else if constexpr (std::same_as<T, i16>)    return "h";
-        else if constexpr (std::same_as<T, i32>)    return "l";
-        else if constexpr (std::same_as<T, i64>)    return "ll";
-        else static_assert(hex::always_false<T>::value, "Invalid data type!");
-    }
-
     template<std::integral T>
     class DataVisualizerHexadecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
@@ -57,7 +29,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGui::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
             }
             else
                 return false;
@@ -67,8 +39,8 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = ByteCount * 2;
 
-        const static inline auto FormattingUpperCase = hex::format("%0{}{}X", CharCount, getFormatLengthSpecifier<T>());
-        const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, getFormatLengthSpecifier<T>());
+        const static inline auto FormattingUpperCase = hex::format("%0{}{}X", CharCount, ImGui::getFormatLengthSpecifier<T>());
+        const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, ImGui::getFormatLengthSpecifier<T>());
 
         const char *getFormatString(bool upperCase) {
             if (upperCase)
@@ -110,7 +82,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_None);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGui::getImGuiDataType<u8>(), data, ImGuiInputTextFlags_None);
             }
             else
                 return false;
@@ -120,8 +92,8 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = 1;
         constexpr static inline auto CharCount = ByteCount * 2;
 
-        const static inline auto FormattingUpperCase = hex::format("%0{}{}X", CharCount, getFormatLengthSpecifier<u8>());
-        const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, getFormatLengthSpecifier<u8>());
+        const static inline auto FormattingUpperCase = hex::format("%0{}{}X", CharCount, ImGui::getFormatLengthSpecifier<u8>());
+        const static inline auto FormattingLowerCase = hex::format("%0{}{}x", CharCount, ImGui::getFormatLengthSpecifier<u8>());
 
         static const char *getFormatString(bool upperCase) {
             if (upperCase)
@@ -153,7 +125,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, upperCase, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultScalarEditingTextBox(address, FormatString.c_str(), getImGuiDataType<T>(), data, ImGuiInputTextFlags_None);
+                return drawDefaultScalarEditingTextBox(address, FormatString.c_str(), ImGui::getImGuiDataType<T>(), data, ImGuiInputTextFlags_None);
             }
             else
                 return false;
@@ -163,7 +135,7 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = std::numeric_limits<T>::digits10 + 2;
 
-        const static inline auto FormatString = hex::format("%{}{}{}", CharCount, getFormatLengthSpecifier<T>(), std::is_signed<T>::value ? "d" : "u");
+        const static inline auto FormatString = hex::format("%{}{}{}", CharCount, ImGui::getFormatLengthSpecifier<T>(), std::is_signed<T>::value ? "d" : "u");
 
         const char *getFormatString() {
             return FormatString.c_str();
@@ -190,7 +162,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, upperCase, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsScientific);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGui::getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsScientific);
             }
             else
                 return false;
