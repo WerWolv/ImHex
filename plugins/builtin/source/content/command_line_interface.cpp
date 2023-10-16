@@ -75,8 +75,12 @@ namespace hex::plugin::builtin {
             if (arg == "--" && !doubleDashFound) {
                 doubleDashFound = true;
             } else {
-                auto path = std::filesystem::weakly_canonical(arg);
-                fullPaths.push_back(wolv::util::toUTF8String(path));
+                try {
+                    auto path = std::filesystem::weakly_canonical(arg);
+                    fullPaths.push_back(wolv::util::toUTF8String(path));
+                } catch (std::exception &e) {
+                    log::error("Failed to open file '{}'\n    {}", arg, e.what());
+                }
             }
         }
 
