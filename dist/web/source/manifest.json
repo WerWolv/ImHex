@@ -1,0 +1,12 @@
+{
+    "name": "ImHex",
+    "icons": [
+        {
+            "src": "icon.png",
+            "type": "image/png",
+            "sizes": "640x640"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone"
+}
