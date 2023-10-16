@@ -53,7 +53,16 @@ namespace hex::plugin::builtin {
     protected:
         void reloadDrives();
 
-        std::set<std::string> m_availableDrives;
+        struct DriveInfo {
+            std::string path;
+            std::string friendlyName;
+
+            auto operator<=>(const DriveInfo &other) const {
+                return this->path <=> other.path;
+            }
+        };
+
+        std::set<DriveInfo> m_availableDrives;
         std::fs::path m_path;
 
 #if defined(OS_WINDOWS)

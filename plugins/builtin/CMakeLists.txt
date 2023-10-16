@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
+
 add_imhex_plugin(
     NAME
         builtin
@@ -76,3 +77,7 @@ add_imhex_plugin(
     INCLUDES
         include
 )
+
+if (WIN32)
+    target_link_libraries(builtin PRIVATE setupapi)
+endif ()
