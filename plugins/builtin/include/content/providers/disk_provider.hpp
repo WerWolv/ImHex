@@ -64,6 +64,7 @@ namespace hex::plugin::builtin {
 
         std::set<DriveInfo> m_availableDrives;
         std::fs::path m_path;
+        std::string m_friendlyName;
 
 #if defined(OS_WINDOWS)
         HANDLE m_diskHandle = INVALID_HANDLE_VALUE;

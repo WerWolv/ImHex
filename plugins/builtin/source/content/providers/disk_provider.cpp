@@ -342,12 +342,15 @@ namespace hex::plugin::builtin {
     }
 
     std::string DiskProvider::getName() const {
-        return wolv::util::toUTF8String(this->m_path);
+        if (this->m_friendlyName.empty())
+            return wolv::util::toUTF8String(this->m_path);
+        else
+            return this->m_friendlyName;
     }
 
     std::vector<DiskProvider::Description> DiskProvider::getDataDescription() const {
         return {
-                { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(this->m_path)       },
+                { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(this->m_path) },
                 { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(this->m_diskSize)    },
                 { "hex.builtin.provider.disk.sector_size"_lang,   hex::toByteString(this->m_sectorSize)  }
         };
@@ -435,8 +438,10 @@ namespace hex::plugin::builtin {
 
                 ImGui::PushID(1);
                 for (const auto &[path, friendlyName] : this->m_availableDrives) {
-                    if (ImGui::Selectable(friendlyName.c_str(), this->m_path == path))
+                    if (ImGui::Selectable(friendlyName.c_str(), this->m_path == path)) {
                         this->m_path = path;
+                        this->m_friendlyName = friendlyName;
+                    }
 
                     ImGui::InfoTooltip(path.c_str());
                 }
@@ -454,8 +459,10 @@ namespace hex::plugin::builtin {
 
         #else
 
-            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_pathBuffer))
+            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_pathBuffer)) {
                 this->m_path = this->m_pathBuffer;
+                this->m_friendlyName = this->m_pathBuffer;
+            }
 
         #endif
 
@@ -465,6 +472,8 @@ namespace hex::plugin::builtin {
     nlohmann::json DiskProvider::storeSettings(nlohmann::json settings) const {
         settings["path"] = wolv::util::toUTF8String(this->m_path);
 
+        settings["friendly_name"] = this->m_friendlyName;
+
         return Provider::storeSettings(settings);
     }
 
@@ -472,6 +481,10 @@ namespace hex::plugin::builtin {
         Provider::loadSettings(settings);
 
         auto path = settings.at("path").get<std::string>();
+
+        if (settings.contains("friendly_name"))
+            this->m_friendlyName = settings.at("friendly_name").get<std::string>();
+
         this->setPath(std::u8string(path.begin(), path.end()));
         this->reloadDrives();
     }
@@ -490,6 +503,8 @@ namespace hex::plugin::builtin {
             return wolv::util::toUTF8String(this->m_path);
         else if (category == "sector_size")
             return this->m_sectorSize;
+        else if (category == "friendly_name")
+            return this->m_friendlyName;
         else
             return Provider::queryInformation(category, argument);
     }
