@@ -1,10 +1,12 @@
 #include <hex/api/event.hpp>
 
+#include <hex/api/localization.hpp>
+#include <hex/api/project_file_manager.hpp>
+#include <hex/api/achievement_manager.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/api/localization.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/api/project_file_manager.hpp>
 
 #include <imgui.h>
 
@@ -105,8 +107,11 @@ namespace hex::plugin::builtin {
                         newProvider->setPath(path);
                         if (!newProvider->open())
                             hex::ImHexApi::Provider::remove(newProvider);
-                        else
+                        else {
                             EventManager::post<EventProviderOpened>(newProvider);
+                            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
+                        }
+
                     }
                 });
             } else if (name == "Open Project") {

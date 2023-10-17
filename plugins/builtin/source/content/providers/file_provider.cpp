@@ -265,8 +265,6 @@ namespace hex::plugin::builtin {
 
         this->m_file.close();
 
-        AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
-
         return true;
     }
 
