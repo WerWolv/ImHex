@@ -4,8 +4,11 @@ else ()
     set(IMHEX_APPLICATION_NAME "imhex")
 endif ()
 
-add_subdirectory(updater)
 add_subdirectory(gui)
 if (WIN32)
     add_subdirectory(forwarder)
+endif ()
+
+if (NOT EMSCRIPTEN)
+    add_subdirectory(updater)
 endif ()
