@@ -33,9 +33,16 @@ std::string getUpdateType() {
             return "win-msi";
     #elif defined (OS_MACOS)
         return "mac-dmg";
+    #elif defined (OS_LINUX)
+        if (hex::executeCommand("lsb_release -a | grep Ubuntu") == 0) {
+            if (hex::executeCommand("lsb_release -a | grep 22.") == 0)
+                return "linux-deb-22.04";
+            else if (hex::executeCommand("lsb_release -a | grep 23.") == 0)
+                return "linux-deb-23.04";
+        }
     #endif
 
-    return "";
+    return "linux-deb-23.04";
 }
 
 std::optional<std::fs::path> downloadUpdate(const std::string &url, const std::string &type) {
@@ -92,7 +99,7 @@ int installUpdate(const std::string &type, const std::fs::path &updatePath) {
         std::fs::rename(updatePath, newUpdatePath);
 
         // Install the update using msiexec
-        hex::runCommand(hex::format("msiexec /i {} /passive", updatePath.string()));
+        hex::executeCommand(hex::format("msiexec /fa {} /passive", newUpdatePath.string()));
 
         return EXIT_SUCCESS;
     } else if (type == "macos-dmg") {
@@ -101,7 +108,16 @@ int installUpdate(const std::string &type, const std::fs::path &updatePath) {
         std::fs::rename(updatePath, newUpdatePath);
 
         // Mount the update file for the user to drag ImHex to the Applications folder
-        hex::runCommand(hex::format("hdiutil attach {}", updatePath.string()));
+        hex::executeCommand(hex::format("hdiutil attach {}", newUpdatePath.string()));
+
+        return EXIT_SUCCESS;
+    } else if (type.starts_with("linux-deb-")) {
+        // Rename the update file to the correct extension
+        newUpdatePath.replace_extension(".deb");
+        std::fs::rename(updatePath, newUpdatePath);
+
+        // Install the update using dpkg
+        hex::executeCommand(hex::format("sudo apt update && sudo apt install -y --fix-broken {}", newUpdatePath.string()));
 
         return EXIT_SUCCESS;
     } else {
@@ -137,6 +153,7 @@ int main(int argc, char **argv) {
     // Get the url to the requested update from the ImHex API
     const auto updateUrl = getUpdateUrl(versionType, updateType);
     if (updateUrl.empty()) {
+        hex::log::error("Failed to get update URL");
         return EXIT_FAILURE;
     }
 

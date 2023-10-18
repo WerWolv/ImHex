@@ -643,9 +643,16 @@ namespace hex {
 
         bool updateImHex(UpdateType updateType) {
             // Get the path of the updater executable
-            auto executablePath = wolv::io::fs::getExecutablePath()->parent_path() / "imhex-updater.exe";
+            std::fs::path executablePath;
 
-            if (!wolv::io::fs::exists(executablePath))
+            for (const auto &entry : std::fs::directory_iterator(wolv::io::fs::getExecutablePath()->parent_path())) {
+                if (entry.path().filename().string().starts_with("imhex-updater")) {
+                    executablePath = entry.path();
+                    break;
+                }
+            }
+
+            if (executablePath.empty() || !wolv::io::fs::exists(executablePath))
                 return false;
 
             std::string updateTypeString;
@@ -659,7 +666,7 @@ namespace hex {
             }
 
             EventManager::subscribe<EventImHexClosing>([executablePath, updateTypeString] {
-                hex::runCommand(
+                hex::executeCommand(
                         hex::format("{} {}",
                                     wolv::util::toUTF8String(executablePath),
                                     updateTypeString

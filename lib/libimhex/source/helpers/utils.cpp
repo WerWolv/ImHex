@@ -313,7 +313,7 @@ namespace hex {
         return std::to_string(value).substr(0, 5) + Suffixes[suffixIndex];
     }
 
-    void runCommand(const std::string &command) {
+    void startProgram(const std::string &command) {
 
         #if defined(OS_WINDOWS)
             hex::unused(system(hex::format("start {0}", command).c_str()));
@@ -324,6 +324,10 @@ namespace hex {
         #elif defined(OS_WEB)
             hex::unused(command);
         #endif
+    }
+
+    int executeCommand(const std::string &command) {
+        return ::system(command.c_str());
     }
 
     void openWebpage(std::string url) {
