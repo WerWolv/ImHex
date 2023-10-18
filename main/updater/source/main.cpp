@@ -112,6 +112,8 @@ int installUpdate(const std::string &type, const std::fs::path &updatePath) {
 }
 
 int main(int argc, char **argv) {
+    hex::log::impl::enableColorPrinting();
+
     // Check we have the correct number of arguments
     if (argc != 2) {
         hex::log::error("Failed to start updater: Invalid arguments");

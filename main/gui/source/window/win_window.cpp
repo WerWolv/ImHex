@@ -239,14 +239,7 @@ namespace hex {
             ShowWindow(consoleWindow, SW_HIDE);
             log::impl::redirectToFile();
         } else {
-            auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
-            if (hConsole != INVALID_HANDLE_VALUE) {
-                DWORD mode = 0;
-                if (::GetConsoleMode(hConsole, &mode) == TRUE) {
-                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
-                    ::SetConsoleMode(hConsole, mode);
-                }
-            }
+            log::impl::enableColorPrinting();
         }
 
         ImHexApi::System::impl::setBorderlessWindowMode(true);

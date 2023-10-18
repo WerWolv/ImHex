@@ -19,6 +19,7 @@ namespace hex::log {
         wolv::io::File& getFile();
         bool isRedirected();
         [[maybe_unused]] void redirectToFile();
+        [[maybe_unused]] void enableColorPrinting();
 
         extern std::mutex g_loggerMutex;
 
