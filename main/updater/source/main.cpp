@@ -92,39 +92,35 @@ std::optional<std::fs::path> downloadUpdate(const std::string &url, const std::s
 int installUpdate(const std::string &type, const std::fs::path &updatePath) {
     auto newUpdatePath = updatePath;
 
-    // Install the update based on the installation type
-    if (type == "win-msi") {
-        // Rename the update file to the correct extension
-        newUpdatePath.replace_extension(".msi");
-        std::fs::rename(updatePath, newUpdatePath);
+    struct UpdateHandler {
+        const char *type;
+        const char *extension;
+        const char *command;
+    };
 
-        // Install the update using msiexec
-        hex::executeCommand(hex::format("msiexec /fa {} /passive", newUpdatePath.string()));
+    constexpr static auto UpdateHandlers = {
+        UpdateHandler { "win-msi", ".msi", "msiexec /fa {} /passive" },
+        UpdateHandler { "macos-dmg", ".dmg", "hdiutil attach {}" },
+        UpdateHandler { "linux-deb-22.04", ".deb", "sudo apt update && sudo apt install -y --fix-broken {}" },
+        UpdateHandler { "linux-deb-23.04", ".deb", "sudo apt update && sudo apt install -y --fix-broken {}" },
+    };
 
-        return EXIT_SUCCESS;
-    } else if (type == "macos-dmg") {
-        // Rename the update file to the correct extension
-        newUpdatePath.replace_extension(".dmg");
-        std::fs::rename(updatePath, newUpdatePath);
+    for (const auto &handler : UpdateHandlers) {
+        if (type == handler.type) {
+            // Rename the update file to the correct extension
+            newUpdatePath.replace_extension(handler.extension);
+            std::fs::rename(updatePath, newUpdatePath);
 
-        // Mount the update file for the user to drag ImHex to the Applications folder
-        hex::executeCommand(hex::format("hdiutil attach {}", newUpdatePath.string()));
+            // Install the update using the correct command
+            hex::executeCommand(hex::format(handler.command, newUpdatePath.string()));
 
-        return EXIT_SUCCESS;
-    } else if (type.starts_with("linux-deb-")) {
-        // Rename the update file to the correct extension
-        newUpdatePath.replace_extension(".deb");
-        std::fs::rename(updatePath, newUpdatePath);
-
-        // Install the update using dpkg
-        hex::executeCommand(hex::format("sudo apt update && sudo apt install -y --fix-broken {}", newUpdatePath.string()));
-
-        return EXIT_SUCCESS;
-    } else {
-        // If the installation type isn't handled here, the detected installation type doesn't support updates through the updater
-        hex::log::error("Install type cannot be updated");
-        return EXIT_FAILURE;
+            return EXIT_SUCCESS;
+        }
     }
+
+    // If the installation type isn't handled here, the detected installation type doesn't support updates through the updater
+    hex::log::error("Install type cannot be updated");
+    return EXIT_FAILURE;
 }
 
 int main(int argc, char **argv) {
