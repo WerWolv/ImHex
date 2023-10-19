@@ -110,7 +110,7 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
             std::fs::rename(updatePath, updatePath);
 
             // Install the update using the correct command
-            hex::executeCommand(hex::format(handler.command, updatePath.string()));
+            hex::startProgram(hex::format(handler.command, updatePath.string()));
 
             return EXIT_SUCCESS;
         }
