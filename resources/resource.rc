@@ -19,9 +19,8 @@ GLFW_ICON ICON dist/windows/icon.ico
         BEGIN
             BLOCK "080904b0"
             BEGIN
-                VALUE "FileDescription",    "🔍 A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM."
                 VALUE "CompanyName",        "WerWolv"
-                VALUE "FileDescription",    "ImHex Hex Editor"
+                VALUE "FileDescription",    "ImHex Hex Editor 🔍"
                 VALUE "LegalCopyright",     "WerWolv 2020-2023"
                 VALUE "OriginalFilename",   "imhex.exe"
                 VALUE "ProductName",        "ImHex"
