@@ -109,6 +109,10 @@ namespace hex::dp {
                 throwNodeError("Recursion detected!");
         }
 
+        void unmarkInputProcessed(u32 index) {
+            this->m_processedInputs.erase(index);
+        }
+
     protected:
         [[noreturn]] void throwNodeError(const std::string &message) {
             throw NodeError { this, message };

@@ -29,6 +29,7 @@ namespace hex::dp {
 
         markInputProcessed(index);
         attribute->getParentNode()->process();
+        unmarkInputProcessed(index);
 
         auto &outputData = attribute->getOutputData();
 
@@ -48,6 +49,7 @@ namespace hex::dp {
 
                 markInputProcessed(index);
                 attribute->getParentNode()->process();
+                unmarkInputProcessed(index);
 
                 return attribute->getOutputData();
             } else {
@@ -74,6 +76,7 @@ namespace hex::dp {
 
                 markInputProcessed(index);
                 attribute->getParentNode()->process();
+                unmarkInputProcessed(index);
 
                 return attribute->getOutputData();
             } else {
