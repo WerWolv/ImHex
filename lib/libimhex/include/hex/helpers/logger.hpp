@@ -51,8 +51,7 @@ namespace hex::log {
             fmt::print(dest, "{}", std::string(ProjectNameLength > 10 ? 0 : 10 - ProjectNameLength, ' '));
         }
 
-        template<typename... T>
-        [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto... args) {
+        [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto && ... args) {
             std::scoped_lock lock(impl::g_loggerMutex);
 
             auto dest = impl::getDestination();
@@ -67,7 +66,7 @@ namespace hex::log {
 
     }
 
-    [[maybe_unused]] void debug(const std::string &fmt, auto &&...args) {
+    [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
         #if defined(DEBUG)
             hex::log::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
         #else
@@ -75,20 +74,39 @@ namespace hex::log {
         #endif
     }
 
-    [[maybe_unused]] void info(const std::string &fmt, auto &&...args) {
+    [[maybe_unused]] void info(const std::string &fmt, auto && ... args) {
         hex::log::print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
     }
 
-    [[maybe_unused]] void warn(const std::string &fmt, auto &&...args) {
+    [[maybe_unused]] void warn(const std::string &fmt, auto && ... args) {
         hex::log::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
     }
 
-    [[maybe_unused]] void error(const std::string &fmt, auto &&...args) {
+    [[maybe_unused]] void error(const std::string &fmt, auto && ... args) {
         hex::log::print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
     }
 
-    [[maybe_unused]] void fatal(const std::string &fmt, auto &&...args) {
+    [[maybe_unused]] void fatal(const std::string &fmt, auto && ... args) {
         hex::log::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
+    }
+
+
+    [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
+        std::scoped_lock lock(impl::g_loggerMutex);
+
+        auto dest = impl::getDestination();
+        auto message = fmt::format(fmt::runtime(fmt), args...);
+        fmt::print(dest, "{}", message);
+        fflush(dest);
+    }
+
+    [[maybe_unused]] void println(const std::string &fmt, auto && ... args) {
+        std::scoped_lock lock(impl::g_loggerMutex);
+
+        auto dest = impl::getDestination();
+        auto message = fmt::format(fmt::runtime(fmt), args...);
+        fmt::println(dest, "{}", message);
+        fflush(dest);
     }
 
 }

@@ -32,7 +32,7 @@ namespace hex::crash {
     void resetCrashHandlers();
     
     static void sendNativeMessage(const std::string& message) {
-        hex::nativeErrorMessage(hex::format("ImHex crashed during its loading.\nError: {}", message));
+        hex::nativeErrorMessage(hex::format("ImHex crashed during initial setup!\nError: {}", message));
     }
 
     // Function that decides what should happen on a crash
@@ -136,15 +136,14 @@ namespace hex::crash {
         // Reset crash handlers, so we can't have a recursion if this code crashes
         resetCrashHandlers();
 
-        handleCrash("Uncaught exception!");
-
         // Print the current exception info
         try {
             std::rethrow_exception(std::current_exception());
         } catch (std::exception &ex) {
             std::string exceptionStr = hex::format("{}()::what() -> {}", llvm::itaniumDemangle(typeid(ex).name(), nullptr, nullptr, nullptr), ex.what());
-            log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
 
+            handleCrash(exceptionStr);
+            log::fatal("Program terminated with uncaught exception: {}", exceptionStr);
         }
 
         triggerSafeShutdown();
