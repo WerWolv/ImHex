@@ -397,7 +397,7 @@ namespace hex::plugin::builtin {
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
                                     if (file.isValid()) {
-                                        ViewDataProcessor::loadNodes(*this->m_mainWorkspace, file.readString());
+                                        ViewDataProcessor::loadNodes(*this->m_mainWorkspace, nlohmann::json::parse(file.readString()));
                                         this->m_updateNodePositions = true;
                                     }
                                 });
@@ -747,7 +747,6 @@ namespace hex::plugin::builtin {
         // If a node position update is pending, update the node position
         int nodeId = node.getId();
         if (this->m_updateNodePositions) {
-            this->m_updateNodePositions = false;
             ImNodes::SetNodeGridSpacePos(nodeId, node.getPosition());
         } else {
             if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Nodes, nodeId) >= 0)
@@ -881,6 +880,8 @@ namespace hex::plugin::builtin {
                     if (hasError)
                         ImNodes::PopColorStyle();
                 }
+
+                this->m_updateNodePositions = false;
 
                 // Handle removing links that are connected to attributes that don't exist anymore
                 {
@@ -1074,7 +1075,7 @@ namespace hex::plugin::builtin {
         return output;
     }
 
-    std::unique_ptr<dp::Node> ViewDataProcessor::loadNode(const nlohmann::json &node) {
+    std::unique_ptr<dp::Node> ViewDataProcessor::loadNode(nlohmann::json node) {
         try {
             auto &nodeEntries = ContentRegistry::DataProcessorNode::impl::getEntries();
 
@@ -1108,7 +1109,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewDataProcessor::loadNodes(ViewDataProcessor::Workspace &workspace, const nlohmann::json &jsonData) {
+    void ViewDataProcessor::loadNodes(ViewDataProcessor::Workspace &workspace, nlohmann::json jsonData) {
         workspace.nodes.clear();
         workspace.endNodes.clear();
         workspace.links.clear();
@@ -1194,7 +1195,7 @@ namespace hex::plugin::builtin {
             dp::Attribute::setIdCounter(maxAttrId + 1);
             dp::Link::setIdCounter(maxLinkId + 1);
 
-            ViewDataProcessor::processNodes(workspace);
+            this->m_updateNodePositions = true;
         } catch (nlohmann::json::exception &e) {
             PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
         }

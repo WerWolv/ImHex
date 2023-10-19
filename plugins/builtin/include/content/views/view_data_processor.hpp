@@ -44,8 +44,8 @@ namespace hex::plugin::builtin {
         static nlohmann::json saveNode(const dp::Node *node);
         static nlohmann::json saveNodes(const Workspace &workspace);
 
-        static std::unique_ptr<dp::Node> loadNode(const nlohmann::json &data);
-        static void loadNodes(Workspace &workspace, const nlohmann::json &data);
+        static std::unique_ptr<dp::Node> loadNode(nlohmann::json data);
+        void loadNodes(Workspace &workspace, nlohmann::json data);
 
         static void eraseLink(Workspace &workspace, int id);
         static void eraseNodes(Workspace &workspace, const std::vector<int> &ids);
