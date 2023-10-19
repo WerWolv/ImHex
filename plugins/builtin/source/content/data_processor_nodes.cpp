@@ -13,6 +13,7 @@
 
 #include <cctype>
 #include <random>
+#include <ranges>
 
 #include <nlohmann/json.hpp>
 
@@ -407,7 +408,7 @@ namespace hex::plugin::builtin {
 
     class NodeBitwiseShiftRight : public dp::Node {
     public:
-        NodeBitwiseShiftRight() : Node("hex.builtin.nodes.bitwise.shift_left.header", {
+        NodeBitwiseShiftRight() : Node("hex.builtin.nodes.bitwise.shift_right.header", {
                 dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"),
                 dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.amount"),
                 dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output")
