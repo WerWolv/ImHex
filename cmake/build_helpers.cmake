@@ -98,7 +98,7 @@ macro(configurePackingResources)
     endif()
 
     if (WIN32)
-        set(APPLICATION_TYPE)
+        set(APPLICATION_TYPE WIN32)
         set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/resource.rc")
 
         if (CREATE_PACKAGE)

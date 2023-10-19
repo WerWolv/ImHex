@@ -28,8 +28,11 @@
 
 #include <fmt/format.h>
 
-void handleConsoleWindow() {
+void setupConsoleWindow() {
+    // Get the handle of the console window
     HWND consoleWindow = ::GetConsoleWindow();
+
+    // Get console process ID
     DWORD processId = 0;
     ::GetWindowThreadProcessId(consoleWindow, &processId);
 
@@ -48,6 +51,11 @@ void handleConsoleWindow() {
                 ::SetConsoleMode(hConsole, mode);
             }
         }
+
+        // Set the __IMHEX_FORWARD_CONSOLE__ environment variable,
+        // to let ImHex know that it was launched from the forwarder
+        // and that it should forward it's console output to us
+        ::SetEnvironmentVariableA("__IMHEX_FORWARD_CONSOLE__", "1");
     }
 }
 
@@ -57,23 +65,26 @@ int launchExecutable() {
     auto executableFullPath = executablePath->parent_path() / "imhex-gui.exe";
 
     ::PROCESS_INFORMATION process = { };
-    ::STARTUPINFOW startupInfo = { };
-    startupInfo.cb = sizeof(STARTUPINFOW);
+    ::STARTUPINFOW startupInfo = { .cb = sizeof(::STARTUPINFOW) };
 
     // Create a new process for imhex-gui.exe with the same command line as the current process
     if (::CreateProcessW(executableFullPath.wstring().c_str(), ::GetCommandLineW(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &startupInfo, &process) == FALSE) {
         // Handle error if the process could not be created
 
+        // Get formatted error message from the OS
         auto errorCode = ::GetLastError();
         auto errorMessageString = std::system_category().message(errorCode);
 
+        // Generate error message
         auto errorMessage = fmt::format("Failed to start ImHex:\n\nError code: 0x{:08X}\n\n{}", errorCode, errorMessageString);
 
+        // Display a message box with the error
         ::MessageBoxA(nullptr, errorMessage.c_str(), "ImHex Forwarder", MB_OK | MB_ICONERROR);
 
         return EXIT_FAILURE;
     }
 
+    // Wait for the main ImHex process to exit
     ::WaitForSingleObject(process.hProcess, INFINITE);
     ::CloseHandle(process.hProcess);
 
@@ -81,8 +92,7 @@ int launchExecutable() {
 }
 
 int main() {
-    handleConsoleWindow();
-    auto result = launchExecutable();
+    setupConsoleWindow();
 
-    return result;
+    return launchExecutable();
 }
