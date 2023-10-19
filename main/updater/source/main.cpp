@@ -27,24 +27,6 @@ std::string getUpdateUrl(std::string_view versionType, std::string_view operatin
     return data;
 }
 
-std::string getUpdateType() {
-    #if defined (OS_WINDOWS)
-        if (!hex::ImHexApi::System::isPortableVersion())
-            return "win-msi";
-    #elif defined (OS_MACOS)
-        return "mac-dmg";
-    #elif defined (OS_LINUX)
-        if (hex::executeCommand("lsb_release -a | grep Ubuntu") == 0) {
-            if (hex::executeCommand("lsb_release -a | grep 22.") == 0)
-                return "linux-deb-22.04";
-            else if (hex::executeCommand("lsb_release -a | grep 23.") == 0)
-                return "linux-deb-23.04";
-        }
-    #endif
-
-    return "linux-deb-23.04";
-}
-
 std::optional<std::fs::path> downloadUpdate(const std::string &url, const std::string &type) {
     // Download the update
     auto response = hex::HttpRequest("GET", url).downloadFile().get();
@@ -89,9 +71,25 @@ std::optional<std::fs::path> downloadUpdate(const std::string &url, const std::s
     return filePath;
 }
 
-int installUpdate(const std::string &type, const std::fs::path &updatePath) {
-    auto newUpdatePath = updatePath;
+std::string getUpdateType() {
+    #if defined (OS_WINDOWS)
+        if (!hex::ImHexApi::System::isPortableVersion())
+            return "win-msi";
+    #elif defined (OS_MACOS)
+        return "mac-dmg";
+    #elif defined (OS_LINUX)
+        if (hex::executeCommand("lsb_release -a | grep Ubuntu") == 0) {
+            if (hex::executeCommand("lsb_release -a | grep 22.") == 0)
+                return "linux-deb-22.04";
+            else if (hex::executeCommand("lsb_release -a | grep 23.") == 0)
+                return "linux-deb-23.04";
+        }
+    #endif
 
+    return "";
+}
+
+int installUpdate(const std::string &type, std::fs::path updatePath) {
     struct UpdateHandler {
         const char *type;
         const char *extension;
@@ -99,20 +97,20 @@ int installUpdate(const std::string &type, const std::fs::path &updatePath) {
     };
 
     constexpr static auto UpdateHandlers = {
-        UpdateHandler { "win-msi", ".msi", "msiexec /fa {} /passive" },
-        UpdateHandler { "macos-dmg", ".dmg", "hdiutil attach {}" },
-        UpdateHandler { "linux-deb-22.04", ".deb", "sudo apt update && sudo apt install -y --fix-broken {}" },
-        UpdateHandler { "linux-deb-23.04", ".deb", "sudo apt update && sudo apt install -y --fix-broken {}" },
+        UpdateHandler { "win-msi",          ".msi",  "msiexec /fa {} /passive"                                  },
+        UpdateHandler { "macos-dmg",        ".dmg",  "hdiutil attach {}"                                        },
+        UpdateHandler { "linux-deb-22.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
+        UpdateHandler { "linux-deb-23.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
     };
 
     for (const auto &handler : UpdateHandlers) {
         if (type == handler.type) {
             // Rename the update file to the correct extension
-            newUpdatePath.replace_extension(handler.extension);
-            std::fs::rename(updatePath, newUpdatePath);
+            updatePath.replace_extension(handler.extension);
+            std::fs::rename(updatePath, updatePath);
 
             // Install the update using the correct command
-            hex::executeCommand(hex::format(handler.command, newUpdatePath.string()));
+            hex::executeCommand(hex::format(handler.command, updatePath.string()));
 
             return EXIT_SUCCESS;
         }
