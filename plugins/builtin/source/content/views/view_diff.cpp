@@ -112,9 +112,9 @@ namespace hex::plugin::builtin {
             // Handle the case where one provider is larger than the other one
             if (address > otherProvider->getActualSize()) {
                 if (otherIndex == 1)
-                    return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
+                    return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_DiffAdded));
                 else
-                    return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                    return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_DiffRemoved));
             }
 
             // Read the current byte from the other provider
@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
 
             // Compare the two bytes, highlight both in yellow if they are different
             if (otherByte != *data)
-                return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow));
+                return getDiffColor(ImGui::GetCustomColorU32(ImGuiCustomCol_DiffChanged));
 
             // No difference
             return std::nullopt;
@@ -304,13 +304,13 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
                             switch (diff.type) {
                                 case DifferenceType::Modified:
-                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "hex.builtin.view.diff.modified"_lang);
+                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.builtin.view.diff.modified"_lang);
                                     break;
                                 case DifferenceType::Added:
-                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen), "hex.builtin.view.diff.added"_lang);
+                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), "hex.builtin.view.diff.added"_lang);
                                     break;
                                 case DifferenceType::Removed:
-                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.diff.removed"_lang);
+                                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), "hex.builtin.view.diff.removed"_lang);
                                     break;
                             }
 

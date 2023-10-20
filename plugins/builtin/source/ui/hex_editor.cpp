@@ -131,11 +131,11 @@ namespace hex::plugin::builtin::ui {
         const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
         const ImColor color = [&]{
             if (decoded.length() == 1 && std::isalnum(decoded[0]))
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingASCII);
             else if (decoded.length() == 1 && advance == 1)
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed);
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingSingleChar);
             else if (decoded.length() > 1 && advance == 1)
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow);
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingMultiChar);
             else if (advance > 1)
                 return ImGui::GetColorU32(ImGuiCol_Text);
             else
@@ -527,7 +527,7 @@ namespace hex::plugin::builtin::ui {
 
                             if (y < this->m_encodingLineStartAddresses.size()) {
                                 if (this->m_encodingLineStartAddresses[y] >= this->m_bytesPerRow) {
-                                    encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed)));
+                                    encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
                                     this->m_encodingLineStartAddresses.push_back(0);
                                 } else {
                                     u32 offset = this->m_encodingLineStartAddresses[y];

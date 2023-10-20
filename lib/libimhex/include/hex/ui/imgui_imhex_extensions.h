@@ -28,7 +28,29 @@ enum ImGuiCustomCol {
     ImGuiCustomCol_ToolbarPurple,
     ImGuiCustomCol_ToolbarBrown,
 
+    ImGuiCustomCol_LoggerDebug,
+    ImGuiCustomCol_LoggerInfo,
+    ImGuiCustomCol_LoggerWarning,
+    ImGuiCustomCol_LoggerError,
+    ImGuiCustomCol_LoggerFatal,
+
+    ImGuiCustomCol_AchievementUnlocked,
+
+    ImGuiCustomCol_FindHighlight,
+
+    ImGuiCustomCol_DiffAdded,
+    ImGuiCustomCol_DiffRemoved,
+    ImGuiCustomCol_DiffChanged,
+
+    ImGuiCustomCol_AdvancedEncodingASCII,
+    ImGuiCustomCol_AdvancedEncodingSingleChar,
+    ImGuiCustomCol_AdvancedEncodingMultiChar,
+    ImGuiCustomCol_AdvancedEncodingUnknown,
+
     ImGuiCustomCol_Highlight,
+
+    ImGuiCustomCol_Patches,
+    ImGuiCustomCol_PatternSelected,
 
     ImGuiCustomCol_IEEEToolSign,
     ImGuiCustomCol_IEEEToolExp,

@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
 
             const auto &patches = provider->getPatches();
             if (patches.contains(offset) && patches.at(offset) != byte)
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed);
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_Patches);
             else
                 return std::nullopt;
         });

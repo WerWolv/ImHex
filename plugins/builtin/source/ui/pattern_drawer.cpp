@@ -58,7 +58,7 @@ namespace hex::plugin::builtin::ui {
             auto selected = isPatternSelected(address, size);
 
             if (selected)
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive));
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetCustomColorVec4(ImGuiCustomCol_PatternSelected));
 
             if constexpr (HasReturn) {
                 auto result = callback();

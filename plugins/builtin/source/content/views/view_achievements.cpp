@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
         // Determine achievement border color based on unlock state
         const auto borderColor = [&] {
             if (achievement.isUnlocked())
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarYellow, 1.0F);
+                return ImGui::GetCustomColorU32(ImGuiCustomCol_AchievementUnlocked, 1.0F);
             else if (node->isUnlockable())
                 return ImGui::GetColorU32(ImGuiCol_Button, 1.0F);
             else
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
                         ImGui::Separator();
                         separator = true;
 
-                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "[ {} ]", LangEntry("hex.builtin.view.achievements.click"));
+                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "[ {} ]", LangEntry("hex.builtin.view.achievements.click"));
                     }
 
                     // Draw achievement description if available
@@ -413,7 +413,7 @@ namespace hex::plugin::builtin {
                 ImGui::SetNextWindowSize(windowSize);
                 if (ImGui::Begin("##achievement_unlocked", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs)) {
                     // Draw unlock text
-                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow), "{}", "hex.builtin.view.achievements.unlocked"_lang);
+                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "{}", "hex.builtin.view.achievements.unlocked"_lang);
 
                     // Draw achievement icon
                     ImGui::Image(this->m_currAchievement->getIcon(), scaled({ 20, 20 }));
