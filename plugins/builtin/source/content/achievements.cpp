@@ -201,9 +201,11 @@ namespace hex::plugin::builtin {
 
 
             EventManager::subscribe<EventImHexStartupFinished>(AchievementManager::loadProgress);
-            EventManager::subscribe<EventImHexClosing>(AchievementManager::storeProgress);
+            EventManager::subscribe<EventAchievementUnlocked>([](const Achievement &) {
+                AchievementManager::storeProgress();
+            });
 
-            // Clear temporary achievements when last provider is closed
+            // Clear temporary achievements when the last provider is closed
             EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
                 hex::unused(oldProvider);
                 if (newProvider == nullptr) {

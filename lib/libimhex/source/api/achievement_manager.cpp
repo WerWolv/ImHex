@@ -128,6 +128,8 @@ namespace hex {
 
             if (achievement->isUnlocked())
                 EventManager::post<EventAchievementUnlocked>(*achievement);
+
+            return;
         }
     }
 
