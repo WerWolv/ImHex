@@ -276,7 +276,7 @@ namespace hex::plugin::builtin {
 
         /* Proxy */
 
-        HttpRequest::setProxy(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", ""));
+        HttpRequest::setProxy(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "").get<std::string>());
 
         ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.description");
 
@@ -284,7 +284,7 @@ namespace hex::plugin::builtin {
             auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 
             if (checkBox->isChecked()) {
-                HttpRequest::setProxy(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", ""));
+                HttpRequest::setProxy(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "").get<std::string>());
             } else {
                 HttpRequest::setProxy("");
             }
@@ -304,7 +304,7 @@ namespace hex::plugin::builtin {
     }
 
     static void loadThemeSettings() {
-        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
+        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
 
         if (theme == ThemeManager::NativeTheme)
             ImHexApi::System::enableSystemThemeDetection(true);

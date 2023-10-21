@@ -71,7 +71,7 @@ namespace hex::init {
                 ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
             // Check if there is a telemetry uuid
-            std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
+            std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
             if(uuid.empty()) {
                 // Generate a new uuid
                 uuid = wolv::hash::generateUUID();
@@ -182,7 +182,7 @@ namespace hex::init {
 
         // Load font related settings
         {
-            std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
+            std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "").get<std::string>();
             if (!fontFile.empty()) {
                 if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
                     log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));

@@ -394,7 +394,7 @@ namespace hex::plugin::builtin {
 
         (void)EventManager::subscribe<EventSettingsChanged>([]() {
             {
-                auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
+                auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
 
                 if (theme != ThemeManager::NativeTheme) {
                     static std::string lastTheme;
@@ -407,14 +407,14 @@ namespace hex::plugin::builtin {
             }
 
             {
-                auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US");
+                auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US").get<string>();
 
                 if (language != LangEntry::getSelectedLanguage())
                     LangEntry::loadLanguage(language);
             }
 
             {
-                auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 14);
+                auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 14).get<int>();
 
                 ImHexApi::System::setTargetFPS(targetFps);
             }
