@@ -197,11 +197,11 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", true);
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "Patterns", "hex.builtin.setting.general.auto_load_patterns", true);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "Patterns", "hex.builtin.setting.general.sync_pattern_source", false);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "Network", "hex.builtin.setting.general.network_interface", false);
-        ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "Network", "hex.builtin.setting.general.server_contact");
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "Network", "hex.builtin.setting.general.upload_crash_logs", true);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
+        ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
 
         /* Interface */
 
@@ -248,24 +248,30 @@ namespace hex::plugin::builtin {
         #endif
 
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault).requiresRestart();
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.restore_window_pos", false);
+
         ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
         ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.byte_padding", 0, 0, 50);
         ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.char_padding", 0, 0, 50);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.restore_window_pos", false);
 
 
         /* Fonts */
 
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "Glyphs", "hex.builtin.setting.general.load_all_unicode_chars", false);
-        ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "Font", "hex.builtin.setting.font.font_path").requiresRestart();
-        ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "Font", "hex.builtin.setting.font.font_size", 13, 0, 100).requiresRestart();
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false);
+        auto fontPathSetting = ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path").requiresRestart();
+        ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
+                .requiresRestart()
+                .setEnabledCallback([fontPathSetting]{
+                    auto &filePicker = static_cast<Widgets::FilePicker &>(fontPathSetting.getWidget());
+
+                    return !filePicker.getPath().empty();
+                });
 
 
         /* Folders */
 
-        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.folders", "hex.builtin.setting.folders");
-
+        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.folders", "hex.builtin.setting.folders.description");
         ContentRegistry::Settings::add<UserFolderWidget>("hex.builtin.setting.folders", "", "hex.builtin.setting.folders.description");
 
         /* Proxy */
