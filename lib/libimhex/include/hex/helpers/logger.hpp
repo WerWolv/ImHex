@@ -105,7 +105,7 @@ namespace hex::log {
 
         auto dest = impl::getDestination();
         auto message = fmt::format(fmt::runtime(fmt), args...);
-        fmt::println(dest, "{}", message);
+        fmt::print(dest, "{}\n", message);
         fflush(dest);
     }
 
