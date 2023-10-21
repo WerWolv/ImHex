@@ -8,7 +8,6 @@
 
 #include <filesystem>
 #include <thread>
-#include <ranges>
 
 #if defined(OS_WEB)
 #include <jthread.hpp>
@@ -27,18 +26,6 @@ namespace hex {
         [[maybe_unused]] constexpr auto SettingsFile = "settings.json";
 
         namespace impl {
-
-            std::map<Category, std::vector<Entry>> &getEntries() {
-                static std::map<Category, std::vector<Entry>> entries;
-
-                return entries;
-            }
-
-            std::map<std::string, std::string> &getCategoryDescriptions() {
-                static std::map<std::string, std::string> descriptions;
-
-                return descriptions;
-            }
 
             nlohmann::json& getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue) {
                 auto &settings = getSettingsData();
@@ -277,8 +264,10 @@ namespace hex {
 
                 bool changed = false;
                 if (ImGui::BeginCombo(name.c_str(), LangEntry(preview))) {
-                    for (const auto &[index, item] : this->m_items | std::views::enumerate) {
-                        bool selected = index == this->m_value;
+
+                    int index = 0;
+                    for (const auto &item : this->m_items) {
+                        bool selected = (index == this->m_value);
 
                         if (ImGui::Selectable(LangEntry(item), selected)) {
                             this->m_value = index;
@@ -287,6 +276,8 @@ namespace hex {
 
                         if (selected)
                             ImGui::SetItemDefaultFocus();
+
+                        index += 1;
                     }
 
                     ImGui::EndCombo();
@@ -297,11 +288,15 @@ namespace hex {
 
             void DropDown::load(const nlohmann::json &data) {
                 this->m_value = 0;
-                for (const auto &[index, item] : this->m_settingsValues | std::views::enumerate) {
+
+                int index = 0;
+                for (const auto &item : this->m_settingsValues) {
                     if (item == data) {
                         this->m_value = index;
                         break;
                     }
+
+                    index += 1;
                 }
             }
 

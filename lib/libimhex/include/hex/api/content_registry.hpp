@@ -14,6 +14,7 @@
 #include <string_view>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #if defined(OS_WEB)
@@ -159,7 +160,7 @@ namespace hex {
                     int m_value;
                     i32 m_min, m_max;
                 };
-                class SliderFloat : public Widget {
+                class SliderFloat   : public Widget {
                 public:
                     SliderFloat(float defaultValue, float min, float max) : m_value(defaultValue), m_min(min), m_max(max) { }
                     bool draw(const std::string &name) override;
@@ -206,7 +207,7 @@ namespace hex {
                 };
                 class TextBox       : public Widget {
                 public:
-                    explicit TextBox(const std::string &defaultValue) : m_value(defaultValue) { }
+                    explicit TextBox(std::string defaultValue) : m_value(std::move(defaultValue)) { }
 
                     bool draw(const std::string &name) override;
 
@@ -232,6 +233,7 @@ namespace hex {
                 private:
                     std::string m_value;
                 };
+
 
             }
 
