@@ -156,7 +156,6 @@ namespace hex {
                 entry->widget = std::move(widget);
                 entry->widget->load(getSetting(unlocalizedCategory, unlocalizedName, entry->widget->store()));
 
-
                 return entry->widget.get();
             }
 

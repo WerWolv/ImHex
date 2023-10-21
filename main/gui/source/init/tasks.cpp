@@ -586,7 +586,7 @@ namespace hex::init {
         return true;
     }
 
-    // run all exit taks, and print to console
+    // Run all exit tasks, and print to console
     void runExitTasks() {
         for (const auto &[name, task, async] : init::getExitTasks()) {
             task();

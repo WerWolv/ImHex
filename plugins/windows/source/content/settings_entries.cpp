@@ -13,7 +13,7 @@ namespace hex::plugin::windows {
 
     namespace {
 
-        /*constexpr auto ImHexContextMenuKey = R"(Software\Classes\*\shell\ImHex)";
+        constexpr auto ImHexContextMenuKey = R"(Software\Classes\*\shell\ImHex)";
 
         void addImHexContextMenuEntry() {
             // Create ImHex Root Key
@@ -21,13 +21,13 @@ namespace hex::plugin::windows {
             RegCreateKeyExA(HKEY_CURRENT_USER, ImHexContextMenuKey, 0x00, nullptr, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr, &imHexRootKey, nullptr);
             RegSetValueA(imHexRootKey, nullptr, REG_SZ, "Open with ImHex", 0x00);
 
-            // Add Icon key to use first icon embedded in exe
+            // Add 'Icon' key to use first icon embedded in exe
             std::array<char, MAX_PATH> imHexPath = { 0 };
             GetModuleFileNameA(nullptr, imHexPath.data(), imHexPath.size());
             auto iconValue = hex::format(R"("{}",0)", imHexPath.data());
             RegSetKeyValueA(imHexRootKey, nullptr, "Icon", REG_SZ, iconValue.c_str(), iconValue.size() + 1);
 
-            // Add command key to pass file path as first argument to ImHex
+            // Add 'command' key to pass the right-clicked file path as first argument to ImHex
             auto commandValue = hex::format(R"("{}" "%1")", imHexPath.data());
             RegSetValueA(imHexRootKey, "command", REG_SZ, commandValue.c_str(), commandValue.size() + 1);
             RegCloseKey(imHexRootKey);
@@ -43,7 +43,7 @@ namespace hex::plugin::windows {
             RegCloseKey(key);
 
             return keyExists;
-        }*/
+        }
 
     }
 
@@ -51,24 +51,19 @@ namespace hex::plugin::windows {
 
         /* General */
 
-        /*ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.context_menu_entry", 0, [](auto name, nlohmann::json &setting) {
-            static bool enabled = hasImHexContextMenuEntry();
+        namespace Widgets = ContentRegistry::Settings::Widgets;
 
-            if (ImGui::Checkbox(name.data(), &enabled)) {
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.context_menu_entry", false)
+                .setChangedCallback([](auto &widget) {
+                    auto checked = static_cast<Widgets::Checkbox &>(widget).isChecked();
 
-                if (enabled)
-                    addImHexContextMenuEntry();
-                else
-                    removeImHexContextMenuEntry();
+                    if (checked)
+                        addImHexContextMenuEntry();
+                    else
+                        removeImHexContextMenuEntry();
 
-                enabled = hasImHexContextMenuEntry();
-                setting = enabled;
-
-                return true;
-            }
-
-            return false;
-        });*/
+                    widget.load(hasImHexContextMenuEntry());
+                });
     }
 
 }
