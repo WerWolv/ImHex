@@ -118,6 +118,10 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
 
     // If the installation type isn't handled here, the detected installation type doesn't support updates through the updater
     hex::log::error("Install type cannot be updated");
+
+    // Open the latest release page in the default browser to allow the user to manually update
+    hex::openWebpage("https://github.com/WerWolv/ImHex/releases/latest");
+
     return EXIT_FAILURE;
 }
 
