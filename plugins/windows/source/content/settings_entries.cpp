@@ -13,7 +13,7 @@ namespace hex::plugin::windows {
 
     namespace {
 
-        constexpr auto ImHexContextMenuKey = R"(Software\Classes\*\shell\ImHex)";
+        /*constexpr auto ImHexContextMenuKey = R"(Software\Classes\*\shell\ImHex)";
 
         void addImHexContextMenuEntry() {
             // Create ImHex Root Key
@@ -43,7 +43,7 @@ namespace hex::plugin::windows {
             RegCloseKey(key);
 
             return keyExists;
-        }
+        }*/
 
     }
 
@@ -51,7 +51,7 @@ namespace hex::plugin::windows {
 
         /* General */
 
-        ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.context_menu_entry", 0, [](auto name, nlohmann::json &setting) {
+        /*ContentRegistry::Settings::add("hex.builtin.setting.general", "hex.builtin.setting.general.context_menu_entry", 0, [](auto name, nlohmann::json &setting) {
             static bool enabled = hasImHexContextMenuEntry();
 
             if (ImGui::Checkbox(name.data(), &enabled)) {
@@ -68,7 +68,7 @@ namespace hex::plugin::windows {
             }
 
             return false;
-        });
+        });*/
     }
 
 }

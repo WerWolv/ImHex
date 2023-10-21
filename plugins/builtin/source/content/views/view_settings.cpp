@@ -36,66 +36,76 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.settings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoResize)) {
             if (ImGui::BeginTabBar("settings")) {
-                auto &entries = ContentRegistry::Settings::impl::getEntries();
-
-                // Sort the categories by slot
-                auto sortedCategories = [&entries] {
-                    std::vector<std::decay_t<decltype(entries)>::const_iterator> sortedCategories;
-
-                    for (auto it = entries.cbegin(); it != entries.cend(); it++) {
-                        sortedCategories.emplace_back(it);
-                    }
-
-                    std::sort(sortedCategories.begin(), sortedCategories.end(), [](auto &item0, auto &item1) {
-                        return item0->first.slot < item1->first.slot;
-                    });
-
-                    return sortedCategories;
-                }();
-
-                // Get the description of the current category
-                const auto &descriptions = ContentRegistry::Settings::impl::getCategoryDescriptions();
+                auto &categories = ContentRegistry::Settings::impl::getSettings();
 
                 // Draw all categories
-                for (auto &iter : sortedCategories) {
-                    auto &[category, settings] = *iter;
+                for (auto &category : categories) {
+
+                    // Skip empty categories
+                    if (category.subCategories.empty())
+                        continue;
 
                     // For each category, create a new tab
-                    if (ImGui::BeginTabItem(LangEntry(category.name))) {
-                        const std::string &categoryDesc = descriptions.contains(category.name) ? descriptions.at(category.name) : category.name;
-
+                    if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
                         // Draw the category description
-                        LangEntry descriptionEntry(categoryDesc);
-                        ImGui::TextFormattedWrapped("{}", descriptionEntry);
-                        ImGui::InfoTooltip(descriptionEntry);
-                        ImGui::Separator();
+                        if (!category.unlocalizedDescription.empty()) {
+                            ImGui::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
+                            ImGui::NewLine();
+                        }
+
+                        bool firstSubCategory = true;
 
                         // Draw all settings of that category
-                        for (auto &[name, requiresRestart, callback] : settings) {
-                            // Get the current value of the setting
-                            auto &setting = ContentRegistry::Settings::impl::getSettingsData()[category.name][name];
+                        for (auto &subCategory : category.subCategories) {
 
-                            // Execute the settings drawing callback
-                            if (callback(LangEntry(name), setting)) {
-                                // Handle a setting being changed
+                            // Skip empty subcategories
+                            if (subCategory.entries.empty())
+                                continue;
 
-                                // Print a debug message
-                                log::debug("Setting [{}]: {} was changed to {}", category.name, name, [&] -> std::string {
-                                   if (setting.is_number())
-                                       return std::to_string(setting.get<int>());
-                                   else if (setting.is_string())
-                                       return setting.get<std::string>();
-                                   else
-                                       return "";
-                                }());
+                            if (!subCategory.unlocalizedName.empty())
+                                ImGui::Header(LangEntry(subCategory.unlocalizedName), firstSubCategory);
 
-                                // Post an event
-                                EventManager::post<EventSettingsChanged>();
+                            firstSubCategory = false;
 
-                                // Request a restart if the setting requires it
-                                if (requiresRestart)
-                                    this->m_restartRequested = true;
+                            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, scaled({5, 5}));
+                            if (ImGui::BeginTable("##subCategory", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame)) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+
+                                for (auto &setting : subCategory.entries) {
+                                    ImGui::BeginDisabled(!setting.widget->isEnabled());
+                                    bool settingChanged = setting.widget->draw(LangEntry(setting.unlocalizedName));
+                                    ImGui::EndDisabled();
+
+                                    if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
+                                        ImGui::InfoTooltip(LangEntry(tooltip.value()));
+
+                                    auto &widget = setting.widget;
+
+                                    // Handle a setting being changed
+                                    if (settingChanged) {
+                                        auto newValue = widget->store();
+
+                                        // Write new value to settings
+                                        ContentRegistry::Settings::write(category.unlocalizedName, setting.unlocalizedName, newValue);
+
+                                        // Print a debug message
+                                        log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName, setting.unlocalizedName, nlohmann::to_string(newValue));
+
+                                        // Signal that the setting was changed
+                                        EventManager::post<EventSettingsChanged>();
+                                        widget->onChanged();
+
+                                        // Request a restart if the setting requires it
+                                        if (widget->doesRequireRestart())
+                                            this->m_restartRequested = true;
+                                    }
+                                }
+
+                                ImGui::EndTable();
                             }
+                            ImGui::PopStyleVar();
+
                         }
 
                         ImGui::EndTabItem();

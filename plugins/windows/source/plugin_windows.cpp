@@ -51,7 +51,7 @@ static void detectSystemTheme() {
 }
 
 static void checkBorderlessWindowOverride() {
-    bool borderlessWindowForced = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.force_borderless_window_mode", 0) != 0;
+    bool borderlessWindowForced = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.force_borderless_window_mode", false);
 
     if (borderlessWindowForced)
         ImHexApi::System::impl::setBorderlessWindowMode(true);

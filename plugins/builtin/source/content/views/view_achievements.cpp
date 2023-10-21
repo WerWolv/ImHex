@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
         });
 
         // Load settings
-        this->m_showPopup = bool(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", 1));
+        this->m_showPopup = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", true);
     }
 
     ViewAchievements::~ViewAchievements() {
@@ -381,7 +381,7 @@ namespace hex::plugin::builtin {
                         ImGui::BeginGroup();
                         {
                             if (ImGui::Checkbox("Show popup", &this->m_showPopup))
-                                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", i64(this->m_showPopup));
+                                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", this->m_showPopup);
                         }
                         ImGui::EndGroup();
 

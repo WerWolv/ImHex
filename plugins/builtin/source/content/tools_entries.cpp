@@ -656,7 +656,7 @@ namespace hex::plugin::builtin {
         }*/
 
         std::string getWikipediaApiUrl() {
-            auto setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en");
+            std::string setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en");
             return "https://" + setting + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
         }
 

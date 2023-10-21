@@ -1044,13 +1044,15 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
-            this->m_syncPatternSourceCode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", 0) == 1;
-            this->m_autoLoadPatterns      = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", 1) == 1;
+            this->m_syncPatternSourceCode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", false);
+            this->m_autoLoadPatterns      = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", true);
         });
 
         EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
             this->m_shouldAnalyze.get(provider) = true;
             this->m_envVarEntries->push_back({ 0, "", 0, EnvVarType::Integer });
+
+            this->m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
         });
 
         EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
@@ -1067,10 +1069,6 @@ namespace hex::plugin::builtin {
             } else {
                 this->m_hasUnevaluatedChanges = true;
             }
-        });
-
-        EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
-            this->m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
         });
 
         EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {

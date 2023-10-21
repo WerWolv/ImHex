@@ -210,7 +210,7 @@ namespace hex::init {
             // If a custom font has been loaded now, also load the font size
             float fontSize = defaultFontSize;
             if (!fontFile.empty()) {
-                fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
+                fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13).get<int>() * ImHexApi::System::getGlobalScale();
             }
 
             ImHexApi::System::impl::setFontSize(fontSize);
@@ -361,7 +361,7 @@ namespace hex::init {
         ImHexApi::System::getCustomFontPath().clear();
         ImHexApi::Messaging::impl::getHandlers().clear();
 
-        ContentRegistry::Settings::impl::getEntries().clear();
+        ContentRegistry::Settings::impl::getSettings().clear();
         ContentRegistry::Settings::impl::getSettingsData().clear();
 
         ContentRegistry::CommandPaletteCommands::impl::getEntries().clear();
@@ -567,33 +567,11 @@ namespace hex::init {
     }
 
     bool configureUIScale() {
-        float interfaceScaling;
-        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-            default:
-            case 0:
-                interfaceScaling = ImHexApi::System::getNativeScale();
-                break;
-            case 1:
-                interfaceScaling = 0.5F;
-                break;
-            case 2:
-                interfaceScaling = 1.0F;
-                break;
-            case 3:
-                interfaceScaling = 1.5F;
-                break;
-            case 4:
-                interfaceScaling = 2.0F;
-                break;
-            case 5:
-                interfaceScaling = 3.0F;
-                break;
-            case 6:
-                interfaceScaling = 4.0F;
-                break;
-        }
+        int interfaceScaling = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0).get<float>() * 10;
+        if (interfaceScaling == 0)
+            interfaceScaling = ImHexApi::System::getNativeScale();
 
-        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
+        ImHexApi::System::impl::setGlobalScale(interfaceScaling / 10.0F);
 
         return true;
     }

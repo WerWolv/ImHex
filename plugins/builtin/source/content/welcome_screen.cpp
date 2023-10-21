@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
                 m_restoreCallback(restoreCallback),
                 m_deleteCallback(deleteCallback) {
 
-            this->m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
+            this->m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
         }
 
         void drawContent() override {
@@ -104,7 +104,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", i64(this->m_reportError));
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", this->m_reportError);
 
                 this->close();
             }
@@ -532,7 +532,7 @@ namespace hex::plugin::builtin {
             auto chosenTip = chosenCategory[random()%chosenCategory.size()];
             s_tipOfTheDay = chosenTip.get<std::string>();
 
-            bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", 1);
+            bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", true);
             if (showTipOfTheDay)
                 PopupTipOfTheDay::open();
         }
