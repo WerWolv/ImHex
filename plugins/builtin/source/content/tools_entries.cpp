@@ -25,6 +25,9 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+#include <wolv/net/socket_client.hpp>
+#include <wolv/net/socket_server.hpp>
+
 #include <charconv>
 
 namespace hex::plugin::builtin {
@@ -656,7 +659,7 @@ namespace hex::plugin::builtin {
         }*/
 
         std::string getWikipediaApiUrl() {
-            std::string setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en");
+            std::string setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en").get<std::string>();
             return "https://" + setting + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
         }
 
@@ -1888,6 +1891,157 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndChild();
         }
+
+        void drawTCPClientServer() {
+            if (ImGui::BeginTabBar("##tcpTransceiver", ImGuiTabBarFlags_None)) {
+                if (ImGui::BeginTabItem("hex.builtin.tools.tcp_client_server.client"_lang)) {
+                    static wolv::net::SocketClient client;
+
+                    static std::string ipAddress;
+                    static int port;
+
+                    static std::vector<std::string> messages;
+                    static std::string input;
+                    static std::jthread receiverThread;
+                    static std::mutex receiverMutex;
+
+                    ImGui::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.3F);
+                    ImGui::InputText("##ipAddress", ipAddress);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine(0, 0);
+                    ImGui::TextUnformatted(":");
+                    ImGui::SameLine(0, 0);
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
+                    ImGui::InputInt("##port", &port, 0, 0);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
+                    if (client.isConnected()) {
+                        if (ImGui::IconButton(ICON_VS_DEBUG_DISCONNECT, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                            client.disconnect();
+
+                            receiverThread.request_stop();
+                            receiverThread.join();
+                        }
+                    } else {
+                        if (ImGui::IconButton(ICON_VS_PLAY, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                            client.connect(ipAddress, port);
+
+                            receiverThread = std::jthread([](const std::stop_token& stopToken) {
+                                while (!stopToken.stop_requested()) {
+                                    auto message = client.readString();
+                                    if (!message.empty()) {
+                                        std::scoped_lock lock(receiverMutex);
+                                        messages.push_back(message);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    ImGui::PopItemWidth();
+
+                    if (port < 1)
+                        port = 1;
+                    else if (port > 65535)
+                        port = 65535;
+
+                    ImGui::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
+                    if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, -50_scaled))) {
+                        {
+                            std::scoped_lock lock(receiverMutex);
+                            for (const auto &message : messages) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormattedWrappedSelectable("{}", message.c_str());
+                            }
+                        }
+
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::PushItemWidth(-(50_scaled));
+                    ImGui::InputText("##input", input);
+                    ImGui::PopItemWidth();
+                    ImGui::SameLine();
+
+                    if (ImGui::IconButton(ICON_VS_DEBUG_STACKFRAME, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        client.writeString(input);
+                    }
+
+                    ImGui::EndTabItem();
+                }
+
+                if (ImGui::BeginTabItem("hex.builtin.tools.tcp_client_server.server"_lang)) {
+                    static wolv::net::SocketServer server;
+                    static int port;
+
+                    static std::vector<std::string> messages;
+                    static std::mutex receiverMutex;
+                    static std::jthread receiverThread;
+
+                    ImGui::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
+
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
+                    ImGui::InputInt("##port", &port, 0, 0);
+                    ImGui::PopItemWidth();
+
+                    ImGui::SameLine();
+
+                    if (port < 1)
+                        port = 1;
+                    else if (port > 65535)
+                        port = 65535;
+
+                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
+                    if (server.isActive()) {
+                        if (ImGui::IconButton(ICON_VS_DEBUG_DISCONNECT, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                            server.shutdown();
+
+                            receiverThread.request_stop();
+                            receiverThread.join();
+                        }
+                    } else {
+                        if (ImGui::IconButton(ICON_VS_PLAY, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                            receiverThread = std::jthread([](const std::stop_token& stopToken){
+                                server = wolv::net::SocketServer(port);
+
+                                while (!stopToken.stop_requested()) {
+                                    server.accept([](wolv::net::SocketHandle, const std::vector<u8> &data) -> std::vector<u8> {
+                                        std::scoped_lock lock(receiverMutex);
+
+                                        messages.emplace_back(data.begin(), data.end());
+
+                                        return {};
+                                    });
+                                }
+                            });
+                        }
+                    }
+                    ImGui::PopItemWidth();
+
+                    ImGui::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
+
+                    if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, -50_scaled))) {
+                        {
+                            std::scoped_lock lock(receiverMutex);
+                            for (const auto &message : messages) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGui::TextFormattedWrappedSelectable("{}", message.c_str());
+                            }
+                        }
+
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
+            }
+        }
     }
 
     void registerToolEntries() {
@@ -1904,6 +2058,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.file_tools", drawFileTools);
         ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Decoder);
         ContentRegistry::Tools::add("hex.builtin.tools.invariant_multiplication", drawInvariantMultiplicationDecoder);
+        ContentRegistry::Tools::add("hex.builtin.tools.tcp_client_server", drawTCPClientServer);
     }
 
 }
