@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
         PopupTelemetryRequest()
                 : hex::Popup<PopupTelemetryRequest>("hex.builtin.common.question", false) {
             // Check if there is a telemetry uuid
-            this->m_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
+            this->m_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
             if(this->m_uuid.empty()) {
                 // Generate a new uuid
                 this->m_uuid = wolv::hash::generateUUID();

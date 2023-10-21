@@ -516,7 +516,7 @@
         "hex.builtin.setting.general": "通用",
         "hex.builtin.setting.general.auto_load_patterns": "自动加载支持的模式",
         "hex.builtin.setting.general.server_contact": "启用更新检查和使用统计",
-        "hex.builtin.setting.general.load_all_unicode_chars": "加载所有 Unicode 字符",
+        "hex.builtin.setting.font.load_all_unicode_chars": "加载所有 Unicode 字符",
         "hex.builtin.setting.general.network_interface": "启动网络",
         "hex.builtin.setting.general.save_recent_providers": "保存最近使用的提供者",
         "hex.builtin.setting.general.show_tips": "在启动时显示每日提示",

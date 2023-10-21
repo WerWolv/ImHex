@@ -71,7 +71,7 @@ namespace hex::init {
                 ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
             // Check if there is a telemetry uuid
-            std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
+            std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
             if(uuid.empty()) {
                 // Generate a new uuid
                 uuid = wolv::hash::generateUUID();
@@ -182,7 +182,7 @@ namespace hex::init {
 
         // Load font related settings
         {
-            std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
+            std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "").get<std::string>();
             if (!fontFile.empty()) {
                 if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
                     log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));
@@ -210,7 +210,7 @@ namespace hex::init {
             // If a custom font has been loaded now, also load the font size
             float fontSize = defaultFontSize;
             if (!fontFile.empty()) {
-                fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13) * ImHexApi::System::getGlobalScale();
+                fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13).get<int>() * ImHexApi::System::getGlobalScale();
             }
 
             ImHexApi::System::impl::setFontSize(fontSize);
@@ -310,7 +310,7 @@ namespace hex::init {
                 IM_DELETE(fonts);
 
                 // Disable unicode support in settings
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.load_all_unicode_chars", false);
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.font.load_all_unicode_chars", false);
 
                 // Try to load the font atlas again
                 return loadFontsImpl(false);
@@ -331,7 +331,7 @@ namespace hex::init {
         // Check if unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
         // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
         bool shouldLoadUnicode =
-                ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.load_all_unicode_chars", false) &&
+                ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
                 ImHexApi::System::getGPUVendor() != "VMware, Inc.";
 
         return loadFontsImpl(shouldLoadUnicode);
@@ -361,7 +361,7 @@ namespace hex::init {
         ImHexApi::System::getCustomFontPath().clear();
         ImHexApi::Messaging::impl::getHandlers().clear();
 
-        ContentRegistry::Settings::impl::getEntries().clear();
+        ContentRegistry::Settings::impl::getSettings().clear();
         ContentRegistry::Settings::impl::getSettingsData().clear();
 
         ContentRegistry::CommandPaletteCommands::impl::getEntries().clear();
@@ -567,33 +567,11 @@ namespace hex::init {
     }
 
     bool configureUIScale() {
-        float interfaceScaling;
-        switch (ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0)) {
-            default:
-            case 0:
-                interfaceScaling = ImHexApi::System::getNativeScale();
-                break;
-            case 1:
-                interfaceScaling = 0.5F;
-                break;
-            case 2:
-                interfaceScaling = 1.0F;
-                break;
-            case 3:
-                interfaceScaling = 1.5F;
-                break;
-            case 4:
-                interfaceScaling = 2.0F;
-                break;
-            case 5:
-                interfaceScaling = 3.0F;
-                break;
-            case 6:
-                interfaceScaling = 4.0F;
-                break;
-        }
+        int interfaceScaling = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0).get<float>() * 10;
+        if (interfaceScaling == 0)
+            interfaceScaling = ImHexApi::System::getNativeScale();
 
-        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
+        ImHexApi::System::impl::setGlobalScale(interfaceScaling / 10.0F);
 
         return true;
     }
@@ -608,7 +586,7 @@ namespace hex::init {
         return true;
     }
 
-    // run all exit taks, and print to console
+    // Run all exit tasks, and print to console
     void runExitTasks() {
         for (const auto &[name, task, async] : init::getExitTasks()) {
             task();

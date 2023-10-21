@@ -81,6 +81,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerPatternLanguageVisualizers();
     registerPatternLanguageInlineVisualizers();
     registerCommandPaletteCommands();
+    registerThemes();
     registerSettings();
     loadSettings();
     registerDataProcessorNodes();
@@ -91,7 +92,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerViews();
     registerThemeHandlers();
     registerStyleHandlers();
-    registerThemes();
     registerBackgroundServices();
     registerNetworkEndpoints();
     registerFileHandlers();

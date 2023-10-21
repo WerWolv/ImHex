@@ -14,16 +14,18 @@
 #include <string_view>
 #include <thread>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #if defined(OS_WEB)
 #include <jthread.hpp>
 #endif
 
-#include <nlohmann/json_fwd.hpp>
+#include <nlohmann/json.hpp>
 
 using ImGuiDataType = int;
 using ImGuiInputTextFlags = int;
+struct ImColor;
 
 namespace hex {
 
@@ -47,127 +49,237 @@ namespace hex {
         /* Settings Registry. Allows adding of new entries into the ImHex preferences window. */
         namespace Settings {
 
+            namespace Widgets {
+
+                class Widget {
+                public:
+                    virtual ~Widget() = default;
+
+                    virtual bool draw(const std::string &name) = 0;
+
+                    virtual void load(const nlohmann::json &data) = 0;
+                    virtual nlohmann::json store() = 0;
+
+                    class Interface {
+                    public:
+                        friend class Widget;
+
+                        Interface& requiresRestart() {
+                            this->m_requiresRestart = true;
+
+                            return *this;
+                        }
+
+                        Interface& setEnabledCallback(std::function<bool()> callback) {
+                            this->m_enabledCallback = std::move(callback);
+
+                            return *this;
+                        }
+
+                        Interface& setChangedCallback(std::function<void(Widget&)> callback) {
+                            this->m_changedCallback = std::move(callback);
+
+                            return *this;
+                        }
+
+                        Interface& setTooltip(const std::string &tooltip) {
+                            this->m_tooltip = tooltip;
+
+                            return *this;
+                        }
+
+                        [[nodiscard]]
+                        Widget& getWidget() const {
+                            return *this->m_widget;
+                        }
+
+                    private:
+                        explicit Interface(Widget *widget) : m_widget(widget) {}
+                        Widget *m_widget;
+
+                        bool m_requiresRestart = false;
+                        std::function<bool()> m_enabledCallback;
+                        std::function<void(Widget&)> m_changedCallback;
+                        std::optional<std::string> m_tooltip;
+                    };
+
+                    [[nodiscard]]
+                    bool doesRequireRestart() const {
+                        return this->m_interface.m_requiresRestart;
+                    }
+
+                    [[nodiscard]]
+                    bool isEnabled() const {
+                        return !this->m_interface.m_enabledCallback || this->m_interface.m_enabledCallback();
+                    }
+
+                    [[nodiscard]]
+                    const std::optional<std::string>& getTooltip() const {
+                        return this->m_interface.m_tooltip;
+                    }
+
+                    void onChanged() {
+                        if (this->m_interface.m_changedCallback)
+                            this->m_interface.m_changedCallback(*this);
+                    }
+
+                    [[nodiscard]]
+                    Interface& getInterface() {
+                        return this->m_interface;
+                    }
+
+                private:
+                    Interface m_interface = Interface(this);
+                };
+
+                class Checkbox      : public Widget {
+                public:
+                    explicit Checkbox(bool defaultValue) : m_value(defaultValue) { }
+
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]] bool isChecked() const { return this->m_value; }
+
+                private:
+                    bool m_value;
+                };
+                class SliderInteger : public Widget {
+                public:
+                    SliderInteger(i32 defaultValue, i32 min, i32 max) : m_value(defaultValue), m_min(min), m_max(max) { }
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]] i32 getValue() const { return this->m_value; }
+
+                private:
+                    int m_value;
+                    i32 m_min, m_max;
+                };
+                class SliderFloat   : public Widget {
+                public:
+                    SliderFloat(float defaultValue, float min, float max) : m_value(defaultValue), m_min(min), m_max(max) { }
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]] float getValue() const { return this->m_value; }
+
+                private:
+                    float m_value;
+                    float m_min, m_max;
+                };
+                class ColorPicker   : public Widget {
+                public:
+                    explicit ColorPicker(ImColor defaultColor);
+
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]] ImColor getColor() const;
+
+                private:
+                    std::array<float, 4> m_value;
+                };
+                class DropDown      : public Widget {
+                public:
+                    explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues) : m_items(items), m_settingsValues(settingsValues) { }
+
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]]
+                    const nlohmann::json& getValue() const;
+
+                private:
+                    std::vector<std::string> m_items;
+                    std::vector<nlohmann::json> m_settingsValues;
+                    int m_value = 0;
+                };
+                class TextBox       : public Widget {
+                public:
+                    explicit TextBox(std::string defaultValue) : m_value(std::move(defaultValue)) { }
+
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]]
+                    const std::string& getValue() const { return this->m_value; }
+
+                private:
+                    std::string m_value;
+                };
+                class FilePicker    : public Widget {
+                public:
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &data) override;
+                    nlohmann::json store() override;
+
+                    [[nodiscard]]
+                    std::fs::path getPath() const { return this->m_value; }
+
+                private:
+                    std::string m_value;
+                };
+
+
+            }
+
             namespace impl {
-                using Callback = std::function<bool(const std::string &, nlohmann::json &)>;
 
                 struct Entry {
-                    std::string name;
-                    bool requiresRestart;
-                    Callback callback;
+                    std::string unlocalizedName;
+                    std::unique_ptr<Widgets::Widget> widget;
+                };
+
+                struct SubCategory {
+                    std::string unlocalizedName;
+                    std::vector<Entry> entries;
                 };
 
                 struct Category {
-                    std::string name;
-                    size_t slot = 0;
-
-                    bool operator<(const Category &other) const {
-                        return name < other.name;
-                    }
-
-                    explicit operator const std::string &() const {
-                        return name;
-                    }
+                    std::string unlocalizedName;
+                    std::string unlocalizedDescription;
+                    std::vector<SubCategory> subCategories;
                 };
 
                 void load();
                 void store();
                 void clear();
 
-                std::map<Category, std::vector<Entry>> &getEntries();
-                std::map<std::string, std::string> &getCategoryDescriptions();
-                nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
+                std::vector<Category> &getSettings();
+                nlohmann::json& getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue);
                 nlohmann::json &getSettingsData();
+
+                Widgets::Widget* add(const std::string &unlocalizedCategory, const std::string &unlocalizedSubCategory, const std::string &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
             }
 
+            template<std::derived_from<Widgets::Widget> T>
+            Widgets::Widget::Interface& add(const std::string &unlocalizedCategory, const std::string &unlocalizedSubCategory, const std::string &unlocalizedName, auto && ... args) {
+                return impl::add(
+                        unlocalizedCategory,
+                        unlocalizedSubCategory,
+                        unlocalizedName,
+                        std::make_unique<T>(std::forward<decltype(args)>(args)...)
+                    )->getInterface();
+            }
 
-            /**
-             * @brief Adds a new integer setting entry
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param defaultValue The default value of the setting
-             * @param callback The callback that will be called when the settings item in the preferences window is rendered
-             * @param requiresRestart Whether the setting requires a restart to take effect
-             */
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const impl::Callback &callback, bool requiresRestart = false);
+            void setCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedDescription);
 
-            /**
-             * @brief Adds a new string setting entry
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param defaultValue The default value of the setting
-             * @param callback The callback that will be called when the settings item in the preferences window is rendered
-             * @param requiresRestart Whether the setting requires a restart to take effect
-             */
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const impl::Callback &callback, bool requiresRestart = false);
-
-            /**
-             * @brief Adds a new string list setting entry
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param defaultValue The default value of the setting
-             * @param callback The callback that will be called when the settings item in the preferences window is rendered
-             * @param requiresRestart Whether the setting requires a restart to take effect
-             */
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const impl::Callback &callback, bool requiresRestart = false);
-
-            /**
-             * @brief Adds a description to a given category
-             * @param unlocalizedCategory The name of the category
-             * @param unlocalizedCategoryDescription The description of the category
-             */
-            void addCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription);
-
-            /**
-             * @brief Writes a integer value to the settings file
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param value The value to write
-             */
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value);
-
-            /**
-             * @brief Writes a string value to the settings file
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param value The value to write
-             */
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value);
-
-            /**
-             * @brief Writes a string list value to the settings file
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param value The value to write
-             */
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value);
-
-            /**
-             * @brief Reads an integer value from the settings file
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param defaultValue The default value of the setting
-             * @return The value of the setting
-             */
-            i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue);
-
-            /**
-             * @brief Reads a string value from the settings file
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param defaultValue The default value of the setting
-             * @return The value of the setting
-             */
-            std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue);
-
-            /**
-             * @brief Reads a string list value from the settings file
-             * @param unlocalizedCategory The category of the setting
-             * @param unlocalizedName The name of the setting
-             * @param defaultValue The default value of the setting
-             * @return The value of the setting
-             */
-            std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue = {});
-
+            nlohmann::json read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue);
+            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &value);
         }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */

@@ -8,6 +8,7 @@
 
 #include <filesystem>
 #include <thread>
+
 #if defined(OS_WEB)
 #include <jthread.hpp>
 #include <emscripten.h>
@@ -26,23 +27,14 @@ namespace hex {
 
         namespace impl {
 
-            std::map<Category, std::vector<Entry>> &getEntries() {
-                static std::map<Category, std::vector<Entry>> entries;
-
-                return entries;
-            }
-
-            std::map<std::string, std::string> &getCategoryDescriptions() {
-                static std::map<std::string, std::string> descriptions;
-
-                return descriptions;
-            }
-
-            nlohmann::json getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName) {
+            nlohmann::json& getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue) {
                 auto &settings = getSettingsData();
 
-                if (!settings.contains(unlocalizedCategory)) return {};
-                if (!settings[unlocalizedCategory].contains(unlocalizedName)) return {};
+                if (!settings.contains(unlocalizedCategory))
+                    settings[unlocalizedCategory] = {};
+
+                if (!settings[unlocalizedCategory].contains(unlocalizedName))
+                    settings[unlocalizedCategory][unlocalizedName] = defaultValue;
 
                 return settings[unlocalizedCategory][unlocalizedName];
             }
@@ -119,135 +111,258 @@ namespace hex {
                 }
             #endif
 
-            static auto getCategoryEntry(const std::string &unlocalizedCategory) {
-                auto &entries        = getEntries();
-                const size_t curSlot = entries.size();
-                auto found           = entries.find(Category { unlocalizedCategory });
-
-                if (found == entries.end()) {
-                    auto [iter, _] = entries.emplace(Category { unlocalizedCategory, curSlot }, std::vector<Entry> {});
-                    return iter;
+            template<typename T>
+            static T* insertOrGetEntry(std::vector<T> &vector, const std::string &unlocalizedName) {
+                T *foundEntry = nullptr;
+                for (auto &entry : vector) {
+                    if (entry.unlocalizedName == unlocalizedName) {
+                        foundEntry = &entry;
+                        break;
+                    }
                 }
 
-                return found;
+                if (foundEntry == nullptr) {
+                    if (unlocalizedName.empty())
+                        foundEntry = &*vector.emplace(vector.begin(), unlocalizedName);
+                    else
+                        foundEntry = &vector.emplace_back(unlocalizedName);
+                }
+
+                return foundEntry;
+            }
+
+            std::vector<Category> &getSettings() {
+                static std::vector<impl::Category> categories;
+
+                return categories;
+            }
+
+            Widgets::Widget* add(const std::string &unlocalizedCategory, const std::string &unlocalizedSubCategory, const std::string &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget) {
+                auto category    = impl::insertOrGetEntry(impl::getSettings(),     unlocalizedCategory);
+                auto subCategory = impl::insertOrGetEntry(category->subCategories, unlocalizedSubCategory);
+                auto entry       = impl::insertOrGetEntry(subCategory->entries,    unlocalizedName);
+
+                entry->widget = std::move(widget);
+                entry->widget->load(getSetting(unlocalizedCategory, unlocalizedName, entry->widget->store()));
+
+                return entry->widget.get();
             }
 
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue, const impl::Callback &callback, bool requiresRestart) {
-            log::debug("Registered new integer setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+        void setCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedDescription) {
+            auto category    = impl::insertOrGetEntry(impl::getSettings(),     unlocalizedCategory);
 
-            impl::getCategoryEntry(unlocalizedCategory)->second.emplace_back(impl::Entry { unlocalizedName, requiresRestart, callback });
-
-            auto &json = impl::getSettingsData();
-
-            if (!json.contains(unlocalizedCategory))
-                json[unlocalizedCategory] = nlohmann::json::object();
-            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_number())
-                json[unlocalizedCategory][unlocalizedName] = int(defaultValue);
+            category->unlocalizedDescription = unlocalizedDescription;
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue, const impl::Callback &callback, bool requiresRestart) {
-            log::debug("Registered new string setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
+        nlohmann::json read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue) {
+            auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
 
-            impl::getCategoryEntry(unlocalizedCategory)->second.emplace_back(impl::Entry { unlocalizedName, requiresRestart, callback });
+            if (setting.is_number() && defaultValue.is_boolean())
+                setting = setting.get<int>() != 0;
 
-            auto &json = impl::getSettingsData();
-
-            if (!json.contains(unlocalizedCategory))
-                json[unlocalizedCategory] = nlohmann::json::object();
-            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_string())
-                json[unlocalizedCategory][unlocalizedName] = std::string(defaultValue);
+            return setting;
         }
 
-        void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue, const impl::Callback &callback, bool requiresRestart) {
-            log::debug("Registered new string array setting: [{}]: {}", unlocalizedCategory, unlocalizedName);
-
-            impl::getCategoryEntry(unlocalizedCategory)->second.emplace_back(impl::Entry { unlocalizedName, requiresRestart, callback });
-
-            auto &json = impl::getSettingsData();
-
-            if (!json.contains(unlocalizedCategory))
-                json[unlocalizedCategory] = nlohmann::json::object();
-            if (!json[unlocalizedCategory].contains(unlocalizedName) || !json[unlocalizedCategory][unlocalizedName].is_array())
-                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &value) {
+            impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
         }
 
-        void addCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedCategoryDescription) {
-            impl::getCategoryDescriptions()[unlocalizedCategory] = unlocalizedCategoryDescription;
-        }
+        namespace Widgets {
 
-        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 value) {
-            auto &json = impl::getSettingsData();
+            bool Checkbox::draw(const std::string &name) {
+                return ImGui::Checkbox(name.c_str(), &this->m_value);
+            }
 
-            if (!json.contains(unlocalizedCategory))
-                json[unlocalizedCategory] = nlohmann::json::object();
+            void Checkbox::load(const nlohmann::json &data) {
+                if (data.is_number()) {
+                    this->m_value = data.get<int>() != 0;
+                } else if (data.is_boolean()) {
+                    this->m_value = data.get<bool>();
+                } else {
+                    log::warn("Invalid data type loaded from settings for checkbox!");
+                }
+            }
 
-            json[unlocalizedCategory][unlocalizedName] = value;
-        }
-
-        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &value) {
-            auto &json = impl::getSettingsData();
-
-            if (!json.contains(unlocalizedCategory))
-                json[unlocalizedCategory] = nlohmann::json::object();
-
-            json[unlocalizedCategory][unlocalizedName] = value;
-        }
-
-        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &value) {
-            auto &json = impl::getSettingsData();
-
-            if (!json.contains(unlocalizedCategory))
-                json[unlocalizedCategory] = nlohmann::json::object();
-
-            json[unlocalizedCategory][unlocalizedName] = value;
-        }
+            nlohmann::json Checkbox::store() {
+                return this->m_value;
+            }
 
 
-        i64 read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, i64 defaultValue) {
-            auto &json = impl::getSettingsData();
+            bool SliderInteger::draw(const std::string &name) {
+                return ImGui::SliderInt(name.c_str(), &this->m_value, this->m_min, this->m_max);
+            }
 
-            if (!json.contains(unlocalizedCategory))
-                return defaultValue;
-            if (!json[unlocalizedCategory].contains(unlocalizedName))
-                return defaultValue;
+            void SliderInteger::load(const nlohmann::json &data) {
+                if (data.is_number_integer()) {
+                    this->m_value = data.get<int>();
+                } else {
+                    log::warn("Invalid data type loaded from settings for slider!");
+                }
+            }
 
-            if (!json[unlocalizedCategory][unlocalizedName].is_number())
-                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            nlohmann::json SliderInteger::store() {
+                return this->m_value;
+            }
 
-            return json[unlocalizedCategory][unlocalizedName].get<i64>();
-        }
 
-        std::string read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::string &defaultValue) {
-            auto &json = impl::getSettingsData();
+            bool SliderFloat::draw(const std::string &name) {
+                return ImGui::SliderFloat(name.c_str(), &this->m_value, this->m_min, this->m_max);
+            }
 
-            if (!json.contains(unlocalizedCategory))
-                return defaultValue;
-            if (!json[unlocalizedCategory].contains(unlocalizedName))
-                return defaultValue;
+            void SliderFloat::load(const nlohmann::json &data) {
+                if (data.is_number()) {
+                    this->m_value = data.get<float>();
+                } else {
+                    log::warn("Invalid data type loaded from settings for slider!");
+                }
+            }
 
-            if (!json[unlocalizedCategory][unlocalizedName].is_string())
-                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            nlohmann::json SliderFloat::store() {
+                return this->m_value;
+            }
 
-            return json[unlocalizedCategory][unlocalizedName].get<std::string>();
-        }
 
-        std::vector<std::string> read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const std::vector<std::string> &defaultValue) {
-            auto &json = impl::getSettingsData();
+            ColorPicker::ColorPicker(ImColor defaultColor) {
+                this->m_value = {
+                        defaultColor.Value.x,
+                        defaultColor.Value.y,
+                        defaultColor.Value.z,
+                        defaultColor.Value.w
+                };
+            }
 
-            if (!json.contains(unlocalizedCategory))
-                return defaultValue;
-            if (!json[unlocalizedCategory].contains(unlocalizedName))
-                return defaultValue;
+            bool ColorPicker::draw(const std::string &name) {
+                return ImGui::ColorEdit4(name.c_str(), this->m_value.data(), ImGuiColorEditFlags_NoInputs);
+            }
 
-            if (!json[unlocalizedCategory][unlocalizedName].is_array())
-                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            void ColorPicker::load(const nlohmann::json &data) {
+                if (data.is_number()) {
+                    ImColor color(data.get<u32>());
+                    this->m_value = { color.Value.x, color.Value.y, color.Value.z, color.Value.w };
+                } else {
+                    log::warn("Invalid data type loaded from settings for color picker!");
+                }
+            }
 
-            if (!json[unlocalizedCategory][unlocalizedName].array().empty() && !json[unlocalizedCategory][unlocalizedName][0].is_string())
-                json[unlocalizedCategory][unlocalizedName] = defaultValue;
+            nlohmann::json ColorPicker::store() {
+                ImColor color(this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3]);
 
-            return json[unlocalizedCategory][unlocalizedName].get<std::vector<std::string>>();
+                return ImU32(color);
+            }
+
+            ImColor ColorPicker::getColor() const {
+                return { this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3] };
+            }
+
+
+            bool DropDown::draw(const std::string &name) {
+                const char *preview = "";
+                if (size_t(this->m_value) < this->m_items.size())
+                    preview = this->m_items[this->m_value].c_str();
+
+                bool changed = false;
+                if (ImGui::BeginCombo(name.c_str(), LangEntry(preview))) {
+
+                    int index = 0;
+                    for (const auto &item : this->m_items) {
+                        bool selected = (index == this->m_value);
+
+                        if (ImGui::Selectable(LangEntry(item), selected)) {
+                            this->m_value = index;
+                            changed = true;
+                        }
+
+                        if (selected)
+                            ImGui::SetItemDefaultFocus();
+
+                        index += 1;
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+                return changed;
+            }
+
+            void DropDown::load(const nlohmann::json &data) {
+                this->m_value = 0;
+
+                int index = 0;
+                for (const auto &item : this->m_settingsValues) {
+                    if (item == data) {
+                        this->m_value = index;
+                        break;
+                    }
+
+                    index += 1;
+                }
+            }
+
+            nlohmann::json DropDown::store() {
+                if (size_t(this->m_value) >= this->m_items.size())
+                    return nullptr;
+
+                return this->m_settingsValues[this->m_value];
+            }
+
+            const nlohmann::json& DropDown::getValue() const {
+                return this->m_settingsValues[this->m_value];
+            }
+
+
+            bool TextBox::draw(const std::string &name) {
+                return ImGui::InputText(name.c_str(), this->m_value);
+            }
+
+            void TextBox::load(const nlohmann::json &data) {
+                if (data.is_string()) {
+                    this->m_value = data.get<std::string>();
+                } else {
+                    log::warn("Invalid data type loaded from settings for text box!");
+                }
+            }
+
+            nlohmann::json TextBox::store() {
+                return this->m_value;
+            }
+
+
+            bool FilePicker::draw(const std::string &name) {
+                bool changed = false;
+                if (ImGui::InputText("##font_path", this->m_value)) {
+                    changed = true;
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
+                                               [&](const std::fs::path &path) {
+                                                   this->m_value = wolv::util::toUTF8String(path);
+                                               });
+                }
+
+                ImGui::SameLine();
+
+                ImGui::TextFormatted("{}", name);
+
+                return changed;
+            }
+
+            void FilePicker::load(const nlohmann::json &data) {
+                if (data.is_string()) {
+                    this->m_value = data.get<std::string>();
+                } else {
+                    log::warn("Invalid data type loaded from settings for file picker!");
+                }
+            }
+
+            nlohmann::json FilePicker::store() {
+                return this->m_value;
+            }
+
         }
 
     }

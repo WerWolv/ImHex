@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
 
     void registerBackgroundServices() {
         EventManager::subscribe<EventSettingsChanged>([]{
-            networkInterfaceServiceEnabled = bool(ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", 0));
+            networkInterfaceServiceEnabled = bool(ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false));
         });
 
         ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface"_lang, handleNetworkInterfaceService);
