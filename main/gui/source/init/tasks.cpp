@@ -567,11 +567,15 @@ namespace hex::init {
     }
 
     bool configureUIScale() {
-        int interfaceScaling = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0).get<float>() * 10;
-        if (interfaceScaling == 0)
-            interfaceScaling = ImHexApi::System::getNativeScale();
+        int interfaceScaleSetting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0.0F).get<float>() * 10;
 
-        ImHexApi::System::impl::setGlobalScale(interfaceScaling / 10.0F);
+        float interfaceScaling;
+        if (interfaceScaleSetting == 0)
+            interfaceScaling = ImHexApi::System::getNativeScale();
+        else
+            interfaceScaling = interfaceScaleSetting / 10.0F;
+
+        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
 
         return true;
     }
