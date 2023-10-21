@@ -25,7 +25,7 @@
 
 using ImGuiDataType = int;
 using ImGuiInputTextFlags = int;
-class ImColor;
+struct ImColor;
 
 namespace hex {
 
