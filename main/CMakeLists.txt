@@ -8,3 +8,7 @@ add_subdirectory(gui)
 if (WIN32)
     add_subdirectory(forwarder)
 endif ()
+
+if (NOT EMSCRIPTEN)
+    add_subdirectory(updater)
+endif ()

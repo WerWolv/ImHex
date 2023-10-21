@@ -536,6 +536,13 @@ namespace hex {
              * @return Git commit branch
              */
             std::string getCommitBranch();
+
+            enum class UpdateType {
+                Stable,
+                Nightly
+            };
+
+            bool updateImHex(UpdateType updateType);
         }
 
         /**

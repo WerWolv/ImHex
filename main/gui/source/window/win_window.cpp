@@ -26,6 +26,7 @@
     #include <windowsx.h>
     #include <shobjidl.h>
     #include <wrl/client.h>
+    #include <fcntl.h>
 
     #include <csignal>
     #include <cstdio>
@@ -231,22 +232,52 @@ namespace hex {
     }
 
 
+    static void reopenConsoleHandle(u32 stdHandleNumber, i32 stdFileDescriptor, FILE *stdStream) {
+        // Get the Windows handle for the standard stream
+        HANDLE handle = ::GetStdHandle(stdHandleNumber);
+
+        // Redirect the standard stream to the relevant console stream
+        if (stdFileDescriptor == STDIN_FILENO)
+            freopen("CONIN$", "rt", stdStream);
+        else
+            freopen("CONOUT$", "wt", stdStream);
+
+        // Disable buffering
+        setvbuf(stdStream, nullptr, _IONBF, 0);
+
+        // Reopen the standard stream as a file descriptor
+        auto unboundFd = [stdFileDescriptor, handle]{
+            if (stdFileDescriptor == STDIN_FILENO)
+                return _open_osfhandle(intptr_t(handle), _O_RDONLY);
+            else
+                return _open_osfhandle(intptr_t(handle), _O_WRONLY);
+        }();
+
+        // Duplicate the file descriptor to the standard stream
+        dup2(unboundFd, stdFileDescriptor);
+    }
+
+
     void Window::initNative() {
-        HWND consoleWindow = ::GetConsoleWindow();
-        DWORD processId = 0;
-        ::GetWindowThreadProcessId(consoleWindow, &processId);
-        if (GetCurrentProcessId() == processId) {
-            ShowWindow(consoleWindow, SW_HIDE);
-            log::impl::redirectToFile();
+        // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
+        // If it's present attach to its console window
+        if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
+            ::AttachConsole(ATTACH_PARENT_PROCESS);
+
+            // Reopen stdin, stdout and stderr to the console
+            reopenConsoleHandle(STD_INPUT_HANDLE,  STDIN_FILENO,  stdin);
+            reopenConsoleHandle(STD_OUTPUT_HANDLE, STDOUT_FILENO, stdout);
+
+            // Explicitly don't forward stderr because some libraries like to write to it
+            // with no way to disable it (e.g., libmagic)
+            /*
+                reopenConsoleHandle(STD_ERROR_HANDLE,  STDERR_FILENO, stderr);
+            */
+
+            // Enable ANSI colors in the console
+            log::impl::enableColorPrinting();
         } else {
-            auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
-            if (hConsole != INVALID_HANDLE_VALUE) {
-                DWORD mode = 0;
-                if (::GetConsoleMode(hConsole, &mode) == TRUE) {
-                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
-                    ::SetConsoleMode(hConsole, mode);
-                }
-            }
+            log::impl::redirectToFile();
         }
 
         ImHexApi::System::impl::setBorderlessWindowMode(true);
@@ -256,11 +287,6 @@ namespace hex {
             if (std::fs::exists(path))
                 AddDllDirectory(path.c_str());
         }
-
-        // Various libraries sadly directly print to stderr with no way to disable it
-        // We redirect stderr to NUL to prevent this
-        freopen("NUL:", "w", stderr);
-        setvbuf(stderr, nullptr, _IONBF, 0);
     }
 
     void Window::setupNativeWindow() {

@@ -52,7 +52,7 @@ namespace hex::plugin::builtin {
                 return hex::format("hex.builtin.command.cmd.result"_lang, input.data());
             },
             [](auto input) {
-                hex::runCommand(input);
+                hex::executeCommand(input);
             });
 
         ContentRegistry::CommandPaletteCommands::addHandler(

@@ -4,6 +4,10 @@
 
 #include <wolv/io/file.hpp>
 
+#if defined(OS_WINDOWS)
+    #include <Windows.h>
+#endif
+
 namespace hex::log::impl {
 
     static wolv::io::File s_loggerFile;
@@ -34,6 +38,19 @@ namespace hex::log::impl {
 
             if (s_loggerFile.isValid()) break;
         }
+    }
+
+    void enableColorPrinting() {
+        #if defined(OS_WINDOWS)
+            auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
+            if (hConsole != INVALID_HANDLE_VALUE) {
+                DWORD mode = 0;
+                if (::GetConsoleMode(hConsole, &mode) == TRUE) {
+                    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING | ENABLE_PROCESSED_OUTPUT;
+                    ::SetConsoleMode(hConsole, mode);
+                }
+            }
+        #endif
     }
 
 

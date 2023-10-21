@@ -59,7 +59,8 @@ namespace hex {
     [[nodiscard]] std::string toByteString(u64 bytes);
     [[nodiscard]] std::string makePrintable(u8 c);
 
-    void runCommand(const std::string &command);
+    void startProgram(const std::string &command);
+    int executeCommand(const std::string &command);
     void openWebpage(std::string url);
 
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);

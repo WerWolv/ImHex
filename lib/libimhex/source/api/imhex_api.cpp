@@ -5,8 +5,10 @@
 #include <hex/api/task.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <wolv/io/file.hpp>
+#include <wolv/utils/string.hpp>
 
 #include <utility>
 #include <unistd.h>
@@ -637,6 +639,44 @@ namespace hex {
             #else
                 return "Unknown";
             #endif
+        }
+
+        bool updateImHex(UpdateType updateType) {
+            // Get the path of the updater executable
+            std::fs::path executablePath;
+
+            for (const auto &entry : std::fs::directory_iterator(wolv::io::fs::getExecutablePath()->parent_path())) {
+                if (entry.path().filename().string().starts_with("imhex-updater")) {
+                    executablePath = entry.path();
+                    break;
+                }
+            }
+
+            if (executablePath.empty() || !wolv::io::fs::exists(executablePath))
+                return false;
+
+            std::string updateTypeString;
+            switch (updateType) {
+                case UpdateType::Stable:
+                    updateTypeString = "latest";
+                    break;
+                case UpdateType::Nightly:
+                    updateTypeString = "nightly";
+                    break;
+            }
+
+            EventManager::subscribe<EventImHexClosing>([executablePath, updateTypeString] {
+                hex::executeCommand(
+                        hex::format("{} {}",
+                                    wolv::util::toUTF8String(executablePath),
+                                    updateTypeString
+                                    )
+                                );
+            });
+
+            ImHexApi::System::closeImHex();
+
+            return true;
         }
 
     }

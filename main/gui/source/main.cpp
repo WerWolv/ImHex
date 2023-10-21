@@ -18,6 +18,7 @@
 
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
+#include <fcntl.h>
 
 #if defined(OS_WEB)
     #include <emscripten.h>

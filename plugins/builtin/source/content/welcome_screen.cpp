@@ -211,7 +211,7 @@ namespace hex::plugin::builtin {
                 ImGui::UnderlinedText("hex.builtin.welcome.header.update"_lang);
                 {
                     if (ImGui::DescriptionButton("hex.builtin.welcome.update.title"_lang, hex::format("hex.builtin.welcome.update.desc"_lang, ImHexApi::System::getInitArguments()["update-available"]).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                        hex::openWebpage("hex.builtin.welcome.update.link"_lang);
+                        ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
                 }
             }
 
