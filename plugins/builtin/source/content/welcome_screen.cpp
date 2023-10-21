@@ -407,7 +407,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US").get<string>();
+                auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US").get<std::string>();
 
                 if (language != LangEntry::getSelectedLanguage())
                     LangEntry::loadLanguage(language);
