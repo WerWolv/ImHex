@@ -190,7 +190,7 @@ namespace hex {
                 };
                 class DropDown      : public Widget {
                 public:
-                    explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues) : m_items(items), m_settingsValues(settingsValues) { }
+                    explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
 
                     bool draw(const std::string &name) override;
 
@@ -203,6 +203,8 @@ namespace hex {
                 private:
                     std::vector<std::string> m_items;
                     std::vector<nlohmann::json> m_settingsValues;
+                    nlohmann::json m_defaultItem;
+
                     int m_value = 0;
                 };
                 class TextBox       : public Widget {

@@ -215,7 +215,8 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.color",
                                                           themeNames,
-                                                          themeJsons).setChangedCallback([](auto &widget) {
+                                                          themeJsons,
+                                                          "Dark").setChangedCallback([](auto &widget) {
                                                               auto dropDown = static_cast<Widgets::DropDown *>(&widget);
 
                                                               if (dropDown->getValue() == ThemeManager::NativeTheme)
@@ -236,7 +237,7 @@ namespace hex::plugin::builtin {
             languageCodes.emplace_back(languageCode);
         }
 
-        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.language", languageNames, languageCodes);
+        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.language", languageNames, languageCodes, LangEntry::getFallbackLanguage());
 
         ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.wiki_explain_language", "en");
         ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.fps");

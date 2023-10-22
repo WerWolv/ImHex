@@ -289,15 +289,22 @@ namespace hex {
             void DropDown::load(const nlohmann::json &data) {
                 this->m_value = 0;
 
+                int defaultItemIndex = 0;
+
                 int index = 0;
                 for (const auto &item : this->m_settingsValues) {
+                    if (item == this->m_defaultItem)
+                        defaultItemIndex = index;
+
                     if (item == data) {
                         this->m_value = index;
-                        break;
+                        return;
                     }
 
                     index += 1;
                 }
+
+                this->m_value = defaultItemIndex;
             }
 
             nlohmann::json DropDown::store() {
