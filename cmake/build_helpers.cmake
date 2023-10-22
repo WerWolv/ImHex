@@ -658,5 +658,12 @@ function(generatePDBs)
         install(FILES ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb DESTINATION ".")
     endforeach ()
 
+endfunction()
 
+function(generateSDKDirectory)
+    set(SDK_PATH "./sdk")
+
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex/include DESTINATION "${SDK_PATH}")
+    install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
+    install(TARGETS libimhex DESTINATION "${SDK_PATH}/lib")
 endfunction()

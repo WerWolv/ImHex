@@ -65,3 +65,4 @@ add_subdirectory(tests EXCLUDE_FROM_ALL)
 # Configure packaging
 createPackage()
 generatePDBs()
+generateSDKDirectory()
