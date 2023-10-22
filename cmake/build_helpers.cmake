@@ -665,5 +665,6 @@ function(generateSDKDirectory)
 
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex/include DESTINATION "${SDK_PATH}")
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
-    install(TARGETS libimhex DESTINATION "${SDK_PATH}/lib")
+    install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
+    install(TARGETS libimhex RUNTIME DESTINATION "${SDK_PATH}/lib")
 endfunction()
