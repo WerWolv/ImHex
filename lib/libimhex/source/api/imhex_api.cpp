@@ -641,6 +641,14 @@ namespace hex {
             #endif
         }
 
+        bool isDebugBuild() {
+            #if defined DEBUG
+                return true;
+            #else
+                return false;
+            #endif
+        }
+
         bool updateImHex(UpdateType updateType) {
             // Get the path of the updater executable
             std::fs::path executablePath;
