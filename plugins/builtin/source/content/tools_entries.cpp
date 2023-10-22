@@ -1954,7 +1954,7 @@ namespace hex::plugin::builtin {
                             for (const auto &message : messages) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedWrappedSelectable("{}", message.c_str());
+                                ImGui::TextFormattedSelectable("{}", message.c_str());
                             }
                         }
 
@@ -1968,6 +1968,7 @@ namespace hex::plugin::builtin {
 
                     if (ImGui::IconButton(ICON_VS_DEBUG_STACKFRAME, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         client.writeString(input);
+                        input.clear();
                     }
 
                     ImGui::EndTabItem();
@@ -2014,7 +2015,7 @@ namespace hex::plugin::builtin {
                                         messages.emplace_back(data.begin(), data.end());
 
                                         return {};
-                                    });
+                                    }, nullptr, true);
                                 }
                             });
                         }
@@ -2029,7 +2030,7 @@ namespace hex::plugin::builtin {
                             for (const auto &message : messages) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedWrappedSelectable("{}", message.c_str());
+                                ImGui::TextFormattedSelectable("{}", message.c_str());
                             }
                         }
 
