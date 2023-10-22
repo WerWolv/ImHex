@@ -353,7 +353,7 @@ namespace hex::plugin::builtin {
 
                 bool match = true;
                 for (u32 i = 0; i < patternSize; i++) {
-                    if (settings.pattern.matchesByte(data[i], i)) {
+                    if (!settings.pattern.matchesByte(data[i], i)) {
                         match = false;
                         break;
                     }
