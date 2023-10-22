@@ -740,7 +740,7 @@ namespace hex::plugin::builtin {
                         value = wolv::util::trim(value);
 
                         return BinaryPattern(value);
-                }();
+                    }();
 
                     const auto address = [value = value] mutable -> std::optional<u64> {
                         value = wolv::util::trim(value);
@@ -761,7 +761,7 @@ namespace hex::plugin::builtin {
                             return std::nullopt;
 
                         return result;
-                }();
+                    }();
 
                     if (!address)
                         return false;
