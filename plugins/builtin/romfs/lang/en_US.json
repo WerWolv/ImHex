@@ -250,6 +250,7 @@
         "hex.builtin.menu.layout": "Layout",
         "hex.builtin.menu.layout.save": "Save Layout",
         "hex.builtin.menu.view": "View",
+        "hex.builtin.menu.view.debug": "Show Debugging View",
         "hex.builtin.menu.view.demo": "Show ImGui Demo",
         "hex.builtin.menu.view.fps": "Display FPS",
         "hex.builtin.nodes.arithmetic": "Arithmetic",
