@@ -232,6 +232,7 @@ namespace hex {
     }
 
 
+    [[maybe_unused]]
     static void reopenConsoleHandle(u32 stdHandleNumber, i32 stdFileDescriptor, FILE *stdStream) {
         // Get the Windows handle for the standard stream
         HANDLE handle = ::GetStdHandle(stdHandleNumber);
@@ -259,12 +260,17 @@ namespace hex {
 
 
     void Window::initNative() {
-        // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
-        // If it's present attach to its console window
-        if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
+        if (ImHexApi::System::isDebugBuild()) {
+            // If the application is running in debug mode, ImHex runs under the CONSOLE subsystem,
+            // so we don't need to do anything besides enabling ANSI colors
+            log::impl::enableColorPrinting();
+        } else if (hex::getEnvironmentVariable("__IMHEX_FORWARD_CONSOLE__") == "1") {
+            // Check for the __IMHEX_FORWARD_CONSOLE__ environment variable that was set by the forwarder application
+
+            // If it's present, attach to its console window
             ::AttachConsole(ATTACH_PARENT_PROCESS);
 
-            // Reopen stdin, stdout and stderr to the console
+            // Reopen stdin, stdout and stderr to the console if not in debug mode
             reopenConsoleHandle(STD_INPUT_HANDLE,  STDIN_FILENO,  stdin);
             reopenConsoleHandle(STD_OUTPUT_HANDLE, STDOUT_FILENO, stdout);
 

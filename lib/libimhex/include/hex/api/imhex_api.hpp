@@ -537,6 +537,12 @@ namespace hex {
              */
             std::string getCommitBranch();
 
+            /**
+             * @brief Checks if ImHex was built in debug mode
+             * @return True if ImHex was built in debug mode, false otherwise
+             */
+            bool isDebugBuild();
+
             enum class UpdateType {
                 Stable,
                 Nightly
