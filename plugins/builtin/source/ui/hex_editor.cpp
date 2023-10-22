@@ -160,7 +160,7 @@ namespace hex::plugin::builtin::ui {
     void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
         static DataVisualizerAscii asciiVisualizer;
 
-        if (this->m_shouldUpdateEditingValue) {
+        if (this->m_shouldUpdateEditingValue && address == this->m_editingAddress) {
             this->m_shouldUpdateEditingValue = false;
             this->m_editingBytes.resize(size);
             std::memcpy(this->m_editingBytes.data(), data, size);
