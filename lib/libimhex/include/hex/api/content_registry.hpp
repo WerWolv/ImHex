@@ -205,7 +205,7 @@ namespace hex {
                     std::vector<nlohmann::json> m_settingsValues;
                     nlohmann::json m_defaultItem;
 
-                    int m_value = 0;
+                    int m_value = -1;
                 };
                 class TextBox       : public Widget {
                 public:

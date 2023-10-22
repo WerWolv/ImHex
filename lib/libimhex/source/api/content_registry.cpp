@@ -308,8 +308,10 @@ namespace hex {
             }
 
             nlohmann::json DropDown::store() {
+                if (this->m_value == -1)
+                    return this->m_defaultItem;
                 if (size_t(this->m_value) >= this->m_items.size())
-                    return nullptr;
+                    return this->m_defaultItem;
 
                 return this->m_settingsValues[this->m_value];
             }
