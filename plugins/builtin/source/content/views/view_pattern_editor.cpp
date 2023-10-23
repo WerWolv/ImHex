@@ -269,20 +269,25 @@ namespace hex::plugin::builtin {
                 if (this->m_textEditor.IsTextChanged()) {
                     this->m_hasUnevaluatedChanges = true;
                     ImHexApi::Provider::markDirty();
+                    this->m_lastEditTime = std::chrono::steady_clock::now();
                 }
 
                 if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
-                    this->m_hasUnevaluatedChanges = false;
+                    auto now = std::chrono::steady_clock::now();
+                    auto timeSinceLastEdit = std::chrono::duration_cast<std::chrono::milliseconds>(now - this->m_lastEditTime).count();
+                    if (timeSinceLastEdit > 500) {
+                        this->m_hasUnevaluatedChanges = false;
 
-                    auto code = this->m_textEditor.GetText();
-                    EventManager::post<EventPatternEditorChanged>(code);
+                        auto code = this->m_textEditor.GetText();
+                        EventManager::post<EventPatternEditorChanged>(code);
 
-                    TaskManager::createBackgroundTask("Pattern Parsing", [this, code, provider](auto &){
-                        this->parsePattern(code, provider);
+                        TaskManager::createBackgroundTask("Pattern Parsing", [this, code, provider](auto &){
+                            this->parsePattern(code, provider);
 
-                        if (this->m_runAutomatically)
-                            this->m_triggerAutoEvaluate = true;
-                    });
+                            if (this->m_runAutomatically)
+                                this->m_triggerAutoEvaluate = true;
+                        });
+                    }
                 }
 
                 if (this->m_triggerAutoEvaluate.exchange(false)) {
