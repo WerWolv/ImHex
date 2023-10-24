@@ -113,7 +113,7 @@ namespace hex::init {
     }
     
     static bool checkForUpdates() {
-        std::thread([]{ checkForUpdatesSync(); }).detach();
+        TaskManager::createBackgroundTask("Checking for updates", [](auto&) { checkForUpdatesSync(); });
         return true;
     }
 
