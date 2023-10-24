@@ -53,6 +53,34 @@ namespace hex::plugin::builtin {
         addCategory("hex.builtin.view.store.tab.yara"_lang,         "yara",         fs::ImHexPath::Yara);
     }
 
+
+    void updateEntryMetadata(StoreEntry &storeEntry, const StoreCategory &category) {
+        // Check if file is installed already or has an update available
+        for (const auto &folder : fs::getDefaultPaths(category.path)) {
+            auto path = folder / std::fs::path(storeEntry.fileName);
+
+            if (wolv::io::fs::exists(path)) {
+                storeEntry.installed = true;
+
+                wolv::io::File file(path, wolv::io::File::Mode::Read);
+                auto bytes = file.readVector();
+
+                auto fileHash = crypt::sha256(bytes);
+
+                // Compare installed file hash with hash of repo file
+                if (std::vector(fileHash.begin(), fileHash.end()) != crypt::decode16(storeEntry.hash))
+                    storeEntry.hasUpdate = true;
+
+                storeEntry.system = !fs::isPathWritable(folder);
+                return;
+            }
+        }
+
+        storeEntry.installed = false;
+        storeEntry.hasUpdate = false;
+        storeEntry.system = false;
+    }
+
     void ViewStore::drawTab(hex::plugin::builtin::StoreCategory &category) {
         if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
             if (ImGui::BeginTable("##pattern_language", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
@@ -100,7 +128,16 @@ namespace hex::plugin::builtin {
 
                             if (entry.hasUpdate) {
                                 if (ImGui::Button("hex.builtin.view.store.update"_lang, buttonSize)) {
-                                    entry.downloading = this->download(category.path, entry.fileName, entry.link, true);
+                                    entry.downloading = this->download(category.path, entry.fileName, entry.link, !entry.system);
+                                }
+                            } else if (entry.system) {
+                                ImGui::BeginDisabled();
+                                ImGui::Button("hex.builtin.view.store.system"_lang, buttonSize);
+                                ImGui::EndDisabled();
+                                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                                    ImGui::BeginTooltip();
+                                    ImGui::TextUnformatted("hex.builtin.view.store.system.explanation"_lang);
+                                    ImGui::EndTooltip();
                                 }
                             } else if (!entry.installed) {
                                 if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
@@ -110,6 +147,8 @@ namespace hex::plugin::builtin {
                             } else {
                                 if (ImGui::Button("hex.builtin.view.store.remove"_lang, buttonSize)) {
                                     entry.installed = !this->remove(category.path, entry.fileName);
+                                    // remove() will not update the entry to mark it as a system entry, so we do it manually
+                                    updateEntryMetadata(entry, category);
                                 }
                             }
                             ImGui::PopStyleVar();
@@ -210,27 +249,9 @@ namespace hex::plugin::builtin {
                         if (entry.contains("name") && entry.contains("desc") && entry.contains("authors") && entry.contains("file") && entry.contains("url") && entry.contains("hash") && entry.contains("folder")) {
 
                             // Parse entry
-                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["authors"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false };
+                            StoreEntry storeEntry = { entry["name"], entry["desc"], entry["authors"], entry["file"], entry["url"], entry["hash"], entry["folder"], false, false, false, false };
 
-                            // Check if file is installed already or has an update available
-                            for (const auto &folder : fs::getDefaultPaths(category.path)) {
-
-                                auto path = folder / std::fs::path(storeEntry.fileName);
-
-                                if (wolv::io::fs::exists(path) && fs::isPathWritable(folder)) {
-                                    storeEntry.installed = true;
-
-                                    wolv::io::File file(path, wolv::io::File::Mode::Read);
-                                    auto bytes = file.readVector();
-
-                                    auto fileHash = crypt::sha256(bytes);
-
-                                    // Compare installed file hash with hash of repo file
-                                    if (std::vector(fileHash.begin(), fileHash.end()) != crypt::decode16(storeEntry.hash))
-                                        storeEntry.hasUpdate = true;
-                                }
-                            }
-
+                            updateEntryMetadata(storeEntry, category);
                             category.entries.push_back(storeEntry);
                         }
                     }
@@ -332,6 +353,7 @@ namespace hex::plugin::builtin {
 
             entry.installed = true;
             entry.hasUpdate = false;
+            entry.system = false;
 
             if (entry.isFolder) {
                 Tar tar(this->m_downloadPath, Tar::Mode::Read);

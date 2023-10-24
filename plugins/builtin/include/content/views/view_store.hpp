@@ -34,6 +34,7 @@ namespace hex::plugin::builtin {
         bool downloading;
         bool installed;
         bool hasUpdate;
+        bool system;
     };
 
     struct StoreCategory {
