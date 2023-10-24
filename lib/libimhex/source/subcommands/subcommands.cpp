@@ -94,9 +94,13 @@ namespace hex::subcommands {
 
     void forwardSubCommand(const std::string &cmdName, const std::vector<std::string> &args) {
         log::debug("Forwarding subcommand {} (maybe to us)", cmdName);
-        std::string dataStr = std::accumulate(args.begin(), args.end(), std::string("\0"));
 
-        std::vector<u8> data(dataStr.begin(), dataStr.end());
+        std::vector<u8> data;
+        for (const auto &arg: args) {
+            data.insert(data.end(), arg.begin(), arg.end());
+            data.push_back('\0');
+        }
+        data.erase(data.end()-1);
         
         EventManager::post<SendMessageToMainInstance>(hex::format("command/{}", cmdName), data);
     }
