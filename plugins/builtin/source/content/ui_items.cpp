@@ -157,6 +157,9 @@ namespace hex::plugin::builtin {
                 ImHexApi::Provider::setCurrentProvider(currIndex + 1);
         });
 
+        static bool providerJustChanged = true;
+        EventManager::subscribe<EventProviderChanged>([](auto, auto) { providerJustChanged = true; });
+
         ContentRegistry::Interface::addToolbarItem([] {
             auto provider      = ImHexApi::Provider::get();
             bool providerValid = provider != nullptr;
@@ -259,14 +262,23 @@ namespace hex::plugin::builtin {
                         ImGuiTabItemFlags flags = ImGuiTabItemFlags_NoTooltip;
                         if (tabProvider->isDirty())
                             flags |= ImGuiTabItemFlags_UnsavedDocument;
-                        if (i64(i) == selectedProviderIndex)
+                        if (i64(i) == selectedProviderIndex && providerJustChanged) {
                             flags |= ImGuiTabItemFlags_SetSelected;
+                            providerJustChanged = false;
+                        }
 
+                        static size_t lastSelectedProvider = 0;
+
+                        bool isSelected = false;
                         if (ImGui::BeginTabItem(tabProvider->getName().c_str(), &open, flags)) {
+                            isSelected = true;
                             ImGui::EndTabItem();
                         }
-                        if (ImGui::IsItemClicked())
+
+                        if (isSelected && lastSelectedProvider != i) {
                             ImHexApi::Provider::setCurrentProvider(i);
+                            lastSelectedProvider = i;
+                        }
 
                         if (ImGui::InfoTooltip()) {
                             ImGui::BeginTooltip();
