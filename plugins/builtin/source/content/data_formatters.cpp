@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    static std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end) {
+    static std::string formatLanguageArray(prv::Provider *provider, u64 offset, size_t size, const std::string &start, const std::string &byteFormat, const std::string &end, bool removeFinalDelimiter= false) {
         constexpr static auto NewLineIndent = "\n    ";
         constexpr static auto LineLength = 16;
 
@@ -31,8 +31,8 @@ namespace hex::plugin::builtin {
             index++;
         }
 
-        // Remove trailing comma
-        if (provider->getActualSize() > 0) {
+        // Remove trailing delimiter if required
+        if (removeFinalDelimiter && size > 0) {
             result.pop_back();
             result.pop_back();
         }
@@ -79,7 +79,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.go", [](prv::Provider *provider, u64 offset, size_t size) {
-            return formatLanguageArray(provider, offset, size, "data := [...]byte {", "0x{0:02X}, ", "}");
+            return formatLanguageArray(provider, offset, size, "data := [...]byte{", "0x{0:02X}, ", "}", false);
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.crystal", [](prv::Provider *provider, u64 offset, size_t size) {
