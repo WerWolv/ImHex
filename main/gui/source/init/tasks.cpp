@@ -34,13 +34,12 @@ namespace hex::init {
 
     using namespace std::literals::string_literals;
 
-    static bool checkForUpdates() {
+    static bool checkForUpdatesSync() {
         int checkForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
 
         // Check if we should check for updates
         if (checkForUpdates == 1){
             HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
-            request.setTimeout(500);
 
             // Query the GitHub API for the latest release version
             auto response = request.execute().get();
@@ -110,6 +109,11 @@ namespace hex::init {
                 telemetryRequest.execute();
             });
         }
+        return true;
+    }
+    
+    static bool checkForUpdates() {
+        TaskManager::createBackgroundTask("Checking for updates", [](auto&) { checkForUpdatesSync(); });
         return true;
     }
 
@@ -608,7 +612,7 @@ namespace hex::init {
             { "Loading settings",        loadSettings,        false },
             { "Configuring UI scale",    configureUIScale,    false },
             { "Loading plugins",         loadPlugins,         true  },
-            { "Checking for updates",    checkForUpdates,     true  },
+            { "Checking for updates",    checkForUpdates,     false },
             { "Loading fonts",           loadFonts,           true  },
         };
     }
