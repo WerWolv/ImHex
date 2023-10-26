@@ -81,6 +81,9 @@ namespace hex::plugin::builtin {
 
                     auto request = HttpRequest("POST", hex::format("https://api.gitbook.com/v1/spaces/{}/search/ask", space));
 
+                    // Documentation API often takes a long time to respond, so we set a timeout of 30 seconds
+                    request.setTimeout(30'000);
+
                     const nlohmann::json body = { { "query", input } };
                     request.setBody(body.dump());
                     request.addHeader("Content-Type", "application/json");
