@@ -199,15 +199,18 @@ namespace hex::fs {
 
         bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
             std::vector<nfdfilteritem_t> validExtensionsNfd;
-            for (auto ext : validExtensions) {
-                validExtensionsNfd.emplace_back(nfdfilteritem_t{ext.name.c_str(), ext.spec.c_str()});
+            for (const auto &extension : validExtensions) {
+                validExtensionsNfd.emplace_back(nfdfilteritem_t{ extension.name.c_str(), extension.spec.c_str() });
             }
             NFD::ClearError();
 
             if (NFD::Init() != NFD_OKAY) {
                 log::error("NFD init returned an error: {}", NFD::GetError());
-                if (s_fileBrowserErrorCallback != nullptr)
-                    s_fileBrowserErrorCallback(NFD::GetError() ? NFD::GetError() : "No details");
+                if (s_fileBrowserErrorCallback != nullptr) {
+                    auto error = NFD::GetError();
+                    s_fileBrowserErrorCallback(error != nullptr ? error : "No details");
+                }
+
                 return false;
             }
 
