@@ -30,14 +30,21 @@ namespace hex::magic {
 
         std::error_code error;
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
-            for (const auto &entry : std::fs::recursive_directory_iterator(dir, error)) {
+            for (const auto &entry : std::fs::directory_iterator(dir, error)) {
                 auto path = std::fs::absolute(entry.path());
 
-                if (entry.is_regular_file() && ((sourceFiles && path.extension().empty()) || (!sourceFiles && path.extension() == ".mgc"))) {
-                    magicFiles += wolv::util::toUTF8String(wolv::io::fs::toShortPath(path)) + MAGIC_PATH_SEPARATOR;
+                if (sourceFiles) {
+                    if (path.extension().empty() || entry.is_directory())
+                        magicFiles += wolv::util::toUTF8String(path) + MAGIC_PATH_SEPARATOR;
+                } else {
+                    if (path.extension() == ".mgc")
+                        magicFiles += wolv::util::toUTF8String(path) + MAGIC_PATH_SEPARATOR;
                 }
             }
         }
+
+        if (!magicFiles.empty())
+            magicFiles.pop_back();
 
         if (error)
             return std::nullopt;
@@ -46,7 +53,7 @@ namespace hex::magic {
     }
 
     bool compile() {
-        magic_t ctx = magic_open(MAGIC_NONE);
+        magic_t ctx = magic_open(MAGIC_CHECK);
         ON_SCOPE_EXIT { magic_close(ctx); };
 
         auto magicFiles = getMagicFiles(true);
@@ -75,6 +82,9 @@ namespace hex::magic {
             return false;
 
         auto result = magic_compile(ctx, magicFiles->c_str()) == 0;
+        if (!result) {
+            log::error("Failed to compile magic files \"{}\": {}", *magicFiles, magic_error(ctx));
+        }
 
         if (chdir(cwd.data()) != 0)
             return false;

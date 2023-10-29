@@ -47,6 +47,8 @@ namespace hex::plugin::builtin {
 
     void handleBorderlessWindowMode();
 
+    void extractBundledFiles();
+
 }
 
 IMHEX_PLUGIN_SUBCOMMANDS() {
@@ -107,6 +109,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerMainMenuEntries();
 
     handleBorderlessWindowMode();
+
+    extractBundledFiles();
 }
 
 // This is the default plugin

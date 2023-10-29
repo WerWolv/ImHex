@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
 
+find_file(DEFAULT_MAGIC_FILE_PATH magic.mgc HINTS ${MAGIC_INCLUDE_DIRS}/../share/misc)
+if (DEFAULT_MAGIC_FILE_PATH)
+    add_romfs_resource(${DEFAULT_MAGIC_FILE_PATH} auto_extract/magic/magic.mgc)
+endif ()
+
 add_imhex_plugin(
     NAME
         builtin
@@ -36,6 +41,7 @@ add_imhex_plugin(
         source/content/file_handlers.cpp
         source/content/project.cpp
         source/content/achievements.cpp
+        source/content/file_extraction.cpp
 
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp

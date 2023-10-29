@@ -45,7 +45,7 @@ macro(add_imhex_plugin)
     )
 
     # Setup a romfs for the plugin
-    set(LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/romfs)
+    list(APPEND LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/romfs)
     set(LIBROMFS_PROJECT_NAME ${IMHEX_PLUGIN_NAME})
     add_subdirectory(${IMHEX_BASE_FOLDER}/lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/libromfs)
     set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -53,4 +53,10 @@ macro(add_imhex_plugin)
 
     # Add the new plugin to the main dependency list so it gets built by default
     add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
+endmacro()
+
+macro(add_romfs_resource input output)
+    configure_file(${input} ${CMAKE_CURRENT_BINARY_DIR}/romfs/${output} COPYONLY)
+
+    list(APPEND LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/romfs)
 endmacro()
