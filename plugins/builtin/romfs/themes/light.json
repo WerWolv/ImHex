@@ -27,7 +27,7 @@
             "plot-histogram-hovered": "#FF7200FF",
             "plot-lines": "#636363FF",
             "plot-lines-hovered": "#FF6D59FF",
-            "popup-background": "#FFFFFFF9",
+            "popup-background": "#FFFFFFFF",
             "resize-grip": "#5959592B",
             "resize-grip-active": "#4296F9F2",
             "resize-grip-hovered": "#4296F9AA",
