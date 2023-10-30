@@ -986,7 +986,8 @@ namespace hex {
                 }
 
                 for (auto &service : getServices()) {
-                    service.thread.detach();
+                    if (service.thread.joinable())
+                        service.thread.join();
                 }
             }
 
@@ -997,7 +998,7 @@ namespace hex {
 
             impl::getServices().push_back(impl::Service {
                 unlocalizedName,
-                std::jthread([callback](const std::stop_token &stopToken){
+                std::jthread([callback = auto(callback)](const std::stop_token &stopToken){
                     while (!stopToken.stop_requested()) {
                         callback();
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
