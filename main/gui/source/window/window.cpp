@@ -845,6 +845,9 @@ namespace hex {
             std::abort();
         }
 
+        // Force window to be fully opaque by default
+        glfwSetWindowOpacity(this->m_window, 1.0F);
+
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
 

@@ -346,6 +346,9 @@ namespace hex::init {
             std::exit(EXIT_FAILURE);
         }
 
+        // Force window to be fully opaque by default
+        glfwSetWindowOpacity(this->m_window, 1.0F);
+
         // Calculate native scale factor for hidpi displays
         {
             float xScale = 0, yScale = 0;
