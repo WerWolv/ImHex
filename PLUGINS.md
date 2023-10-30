@@ -15,3 +15,5 @@ To install plugins, simply download the relevant `.hexplug` file and drop it in 
   - Adds support for Discord Rich Presence
 
 ### Third-Party Plugins
+- [Pcap Plugin](https://github.com/Professor-plum/ImHex-Plugin-Pcap)
+  - Adds support for reading packet capture files
