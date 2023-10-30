@@ -68,13 +68,16 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             // Draw basic information about ImHex and its version
-            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv - " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
+            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv   " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
 
             ImGui::SameLine();
 
             // Draw a clickable link to the current commit
             if (ImGui::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
                 hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
+
+            // Draw the build date and time
+            ImGui::TextFormatted(ICON_FA_BUILDING " {}, {}", __DATE__, __TIME__);
 
             // Draw the author of the current translation
             ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
