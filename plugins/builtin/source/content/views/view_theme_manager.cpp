@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewThemeManager::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.theme_manager.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse)) {
+        if (ImGui::Begin(View::toWindowName("hex.builtin.view.theme_manager.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking)) {
             ImGui::Header("hex.builtin.view.theme_manager.colors"_lang, true);
 
             // Draw theme handlers

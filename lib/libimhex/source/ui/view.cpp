@@ -50,6 +50,18 @@ namespace hex {
         return View::toWindowName(this->m_unlocalizedViewName);
     }
 
+    bool View::didWindowJustOpen() {
+        bool result = this->m_windowJustOpened;
+
+        this->m_windowJustOpened = false;
+
+        return result;
+    }
+
+    void View::setWindowJustOpened(bool state) {
+        this->m_windowJustOpened = state;
+    }
+
     void View::discardNavigationRequests() {
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;

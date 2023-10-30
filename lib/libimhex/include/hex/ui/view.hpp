@@ -44,6 +44,9 @@ namespace hex {
         [[nodiscard]] const std::string &getUnlocalizedName() const;
         [[nodiscard]] std::string getName() const;
 
+        [[nodiscard]] bool didWindowJustOpen();
+        void setWindowJustOpened(bool state);
+
         static void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
         static void discardNavigationRequests();
 
@@ -61,6 +64,7 @@ namespace hex {
         std::string m_unlocalizedViewName;
         bool m_windowOpen = false;
         std::map<Shortcut, std::function<void()>> m_shortcuts;
+        bool m_windowJustOpened = false;
 
         friend class ShortcutManager;
     };

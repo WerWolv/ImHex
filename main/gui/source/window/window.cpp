@@ -727,17 +727,24 @@ namespace hex {
                 view->drawContent();
             }
 
-            // Handle per-view shortcuts
             if (view->getWindowOpenState() && !popupOpen) {
                 auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused   = false;
 
                 // Get the currently focused view
-                if (hasWindow && !(window->Flags & ImGuiWindowFlags_Popup)) {
-                    ImGui::Begin(View::toWindowName(name).c_str());
+                if (hasWindow && (window->Flags & ImGuiWindowFlags_Popup) != ImGuiWindowFlags_Popup) {
+                    auto windowName = View::toWindowName(name);
+                    ImGui::Begin(windowName.c_str());
 
+                    // Detect if the window is focused
                     focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_NoPopupHierarchy);
+
+                    // Dock the window if it's not already docked
+                    if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
+                        ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+                    }
+
                     ImGui::End();
                 }
 

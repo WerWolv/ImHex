@@ -434,8 +434,12 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 1000, [] {
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
-                if (view->hasViewMenuItemEntry())
-                    ImGui::MenuItem(LangEntry(view->getUnlocalizedName()), "", &view->getWindowOpenState());
+                if (view->hasViewMenuItemEntry()) {
+                    auto &state = view->getWindowOpenState();
+
+                    if (ImGui::MenuItem(LangEntry(view->getUnlocalizedName()), "", &state))
+                        view->setWindowJustOpened(state);
+                }
             }
 
             ImGui::Separator();
