@@ -371,7 +371,7 @@ namespace hex {
                 };
 
                 struct Visualizer {
-                    u32 parameterCount;
+                    pl::api::FunctionParameterCount parameterCount;
                     VisualizerFunctionCallback callback;
                 };
 
@@ -434,7 +434,7 @@ namespace hex {
              * @param func The function callback
              * @param parameterCount The amount of parameters the function takes
              */
-            void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, u32 parameterCount);
+            void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, pl::api::FunctionParameterCount parameterCount);
 
             /**
              * @brief Adds a new inline visualizer to the pattern language
@@ -443,7 +443,7 @@ namespace hex {
              * @param func The function callback
              * @param parameterCount The amount of parameters the function takes
              */
-            void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, u32 parameterCount);
+            void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, pl::api::FunctionParameterCount parameterCount);
 
         }
 

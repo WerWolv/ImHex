@@ -60,9 +60,11 @@ namespace hex::plugin::builtin {
     }
 
     void registerPatternLanguageInlineVisualizers() {
-        ContentRegistry::PatternLanguage::addInlineVisualizer("color", drawColorInlineVisualizer, 4);
-        ContentRegistry::PatternLanguage::addInlineVisualizer("gauge", drawGaugeInlineVisualizer, 1);
-        ContentRegistry::PatternLanguage::addInlineVisualizer("button", drawButtonInlineVisualizer, 1);
+        using ParamCount = pl::api::FunctionParameterCount;
+
+        ContentRegistry::PatternLanguage::addInlineVisualizer("color",  drawColorInlineVisualizer,  ParamCount::exactly(4));
+        ContentRegistry::PatternLanguage::addInlineVisualizer("gauge",  drawGaugeInlineVisualizer,  ParamCount::exactly(1));
+        ContentRegistry::PatternLanguage::addInlineVisualizer("button", drawButtonInlineVisualizer, ParamCount::exactly(1));
     }
 
 }

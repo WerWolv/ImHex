@@ -235,15 +235,18 @@ namespace hex::plugin::builtin::ui {
 
         if (auto entry = visualizers.find(visualizerName); entry != visualizers.end()) {
             const auto &[name, visualizer] = *entry;
-            if (visualizer.parameterCount != arguments.size() - 1) {
-                ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
-            } else {
+
+            auto paramCount = arguments.size() - 1;
+            auto [minParams, maxParams] = visualizer.parameterCount;
+
+            if (paramCount >= minParams && paramCount <= maxParams) {
                 try {
                     visualizer.callback(pattern, iterable, reset, { arguments.begin() + 1, arguments.end() });
                 } catch (std::exception &e) {
                     this->m_lastVisualizerError = e.what();
                 }
-
+            } else {
+                ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
             }
         } else {
             ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.unknown"_lang);

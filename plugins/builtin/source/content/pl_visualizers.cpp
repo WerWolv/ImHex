@@ -722,17 +722,19 @@ namespace hex::plugin::builtin {
     }
 
     void registerPatternLanguageVisualizers() {
-        ContentRegistry::PatternLanguage::addVisualizer("line_plot", drawLinePlotVisualizer, 1);
-        ContentRegistry::PatternLanguage::addVisualizer("scatter_plot", drawScatterPlotVisualizer, 2);
-        ContentRegistry::PatternLanguage::addVisualizer("image", drawImageVisualizer, 1);
-        ContentRegistry::PatternLanguage::addVisualizer("bitmap", drawBitmapVisualizer, 3);
-        ContentRegistry::PatternLanguage::addVisualizer("disassembler", drawDisassemblyVisualizer, 4);
-        ContentRegistry::PatternLanguage::addVisualizer("3d", draw3DVisualizer, 2);
-        ContentRegistry::PatternLanguage::addVisualizer("sound", drawSoundVisualizer, 3);
-        ContentRegistry::PatternLanguage::addVisualizer("chunk_entropy", drawChunkBasedEntropyVisualizer, 2);
-        ContentRegistry::PatternLanguage::addVisualizer("hex_viewer", drawHexVisualizer, 1);
-        ContentRegistry::PatternLanguage::addVisualizer("coordinates", drawCoordinateVisualizer, 2);
-        ContentRegistry::PatternLanguage::addVisualizer("timestamp", drawTimestampVisualizer, 1);
+        using ParamCount = pl::api::FunctionParameterCount;
+
+        ContentRegistry::PatternLanguage::addVisualizer("line_plot",        drawLinePlotVisualizer,             ParamCount::exactly(1));
+        ContentRegistry::PatternLanguage::addVisualizer("scatter_plot",     drawScatterPlotVisualizer,          ParamCount::exactly(2));
+        ContentRegistry::PatternLanguage::addVisualizer("image",            drawImageVisualizer,                ParamCount::exactly(1));
+        ContentRegistry::PatternLanguage::addVisualizer("bitmap",           drawBitmapVisualizer,               ParamCount::exactly(3));
+        ContentRegistry::PatternLanguage::addVisualizer("disassembler",     drawDisassemblyVisualizer,          ParamCount::exactly(4));
+        ContentRegistry::PatternLanguage::addVisualizer("3d",               draw3DVisualizer,                   ParamCount::exactly(2));
+        ContentRegistry::PatternLanguage::addVisualizer("sound",            drawSoundVisualizer,                ParamCount::exactly(3));
+        ContentRegistry::PatternLanguage::addVisualizer("chunk_entropy",    drawChunkBasedEntropyVisualizer,    ParamCount::exactly(2));
+        ContentRegistry::PatternLanguage::addVisualizer("hex_viewer",       drawHexVisualizer,                  ParamCount::exactly(1));
+        ContentRegistry::PatternLanguage::addVisualizer("coordinates",      drawCoordinateVisualizer,           ParamCount::exactly(2));
+        ContentRegistry::PatternLanguage::addVisualizer("timestamp",        drawTimestampVisualizer,            ParamCount::exactly(1));
     }
 
 }

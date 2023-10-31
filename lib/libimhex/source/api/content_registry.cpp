@@ -493,12 +493,12 @@ namespace hex {
         }
 
 
-        void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, u32 parameterCount) {
+        void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount) {
             log::debug("Registered new pattern visualizer function: {}", name);
             impl::getVisualizers()[name] = impl::Visualizer { parameterCount, function };
         }
 
-        void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, u32 parameterCount) {
+        void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount) {
             log::debug("Registered new inline pattern visualizer function: {}", name);
             impl::getInlineVisualizers()[name] = impl::Visualizer { parameterCount, function };
         }
