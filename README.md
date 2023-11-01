@@ -194,7 +194,7 @@ To develop plugins for ImHex, use one of the following two templates projects to
 
 ### Contributors
 
-- [Mary](https://github.com/Thog) for her immense help porting ImHex to MacOS and help during development
+- [Mary](https://github.com/marysaka) for her immense help porting ImHex to MacOS and help during development
 - [Roblabla](https://github.com/Roblabla) for adding MSI Installer support to ImHex
 - [jam1garner](https://github.com/jam1garner) and [raytwo](https://github.com/raytwo) for their help with adding Rust support to plugins
 - [Mailaender](https://github.com/Mailaender) for getting ImHex onto Flathub

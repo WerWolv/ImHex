@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
         ImGui::NewLine();
 
         // Draw additional contributors
-        link("Mary for porting ImHex to MacOS", "", "https://github.com/Thog");
+        link("Mary for porting ImHex to MacOS", "", "https://github.com/marysaka");
         link("Roblabla for adding the MSI Windows installer", "", "https://github.com/roblabla");
         link("jam1garner for adding support for Rust plugins", "", "https://github.com/jam1garner");
 
