@@ -4,7 +4,8 @@
 
 #include <map>
 #include <vector>
-#include <expected>
+
+#include <wolv/utils/expected.hpp>
 
 namespace hex {
 
@@ -18,9 +19,9 @@ namespace hex {
         MissingEOF
     };
 
-    std::expected<std::vector<u8>, IPSError> generateIPSPatch(const Patches &patches);
-    std::expected<std::vector<u8>, IPSError> generateIPS32Patch(const Patches &patches);
+    wolv::util::Expected<std::vector<u8>, IPSError> generateIPSPatch(const Patches &patches);
+    wolv::util::Expected<std::vector<u8>, IPSError> generateIPS32Patch(const Patches &patches);
 
-    std::expected<Patches, IPSError> loadIPSPatch(const std::vector<u8> &ipsPatch);
-    std::expected<Patches, IPSError> loadIPS32Patch(const std::vector<u8> &ipsPatch);
+    wolv::util::Expected<Patches, IPSError> loadIPSPatch(const std::vector<u8> &ipsPatch);
+    wolv::util::Expected<Patches, IPSError> loadIPS32Patch(const std::vector<u8> &ipsPatch);
 }
