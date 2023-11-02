@@ -203,6 +203,7 @@ namespace hex::plugin::builtin {
             }
 
             // Draw recent entries
+            ImGui::Dummy({});
             recent::draw();
 
             if (ImHexApi::System::getInitArguments().contains("update-available")) {
@@ -324,14 +325,16 @@ namespace hex::plugin::builtin {
             if (!ImHexApi::Provider::isValid()) {
                 static std::array<char, 256> title;
                 ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
-                if (ImGui::Begin(title.data())) {
+                if (ImGui::Begin(title.data(), nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
+                    ImGui::Dummy({});
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
 
                     ImGui::SetNextWindowScroll(ImVec2(0.0F, -1.0F));
-                    if (ImGui::BeginChild("Welcome Screen", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding)) {
+                    ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
+                    if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                         drawWelcomeScreenContent();
                     }
-                    ImGui::EndChild();
+                    ImGui::End();
                     ImGui::PopStyleVar();
                 }
                 ImGui::End();
@@ -348,7 +351,9 @@ namespace hex::plugin::builtin {
             ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
             if (ImGui::Begin(title)) {
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
-                if (ImGui::BeginChild("NoViewsBackground", ImVec2(0, 0), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                if (ImGui::Begin("NoViewsBackground", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                    ImGui::Dummy({});
+
                     auto imageSize = scaled(ImVec2(350, 350));
                     auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
 
@@ -368,7 +373,7 @@ namespace hex::plugin::builtin {
                         loadDefaultLayout();
                     }
                 }
-                ImGui::EndChild();
+                ImGui::End();
                 ImGui::PopStyleVar();
             }
             ImGui::End();

@@ -7383,10 +7383,7 @@ void ImGui::BringWindowToFocusFront(ImGuiWindow* window)
     IM_ASSERT(window == window->RootWindow);
 
     const int cur_order = window->FocusOrder;
-    // IMHEX PATCH BEGIN
-    // REASON: crashes ImHex when clicking on the background on the welcome screen
-    //IM_ASSERT(g.WindowsFocusOrder[cur_order] == window);
-    // IMHEX PATCH END
+    IM_ASSERT(g.WindowsFocusOrder[cur_order] == window);
     if (g.WindowsFocusOrder.back() == window)
         return;
 
