@@ -219,8 +219,8 @@ jobs:
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
-          -DCMAKE_C_FLAGS="-target ${{matrix.target}}                                               \
-          -DCMAKE_CXX_FLAGS="-target ${{matrix.target}}                                             \
+          -DCMAKE_C_FLAGS="-target ${{matrix.target}}"                                              \
+          -DCMAKE_CXX_FLAGS="-target ${{matrix.target}}"                                            \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
