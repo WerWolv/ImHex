@@ -17,9 +17,7 @@
 #include <utility>
 #include <vector>
 
-#if defined(OS_WEB)
 #include <jthread.hpp>
-#endif
 
 #include <nlohmann/json.hpp>
 

@@ -12,9 +12,7 @@
 #include <list>
 #include <condition_variable>
 
-#if defined(OS_WEB)
 #include <jthread.hpp>
-#endif
 
 namespace hex {
 

@@ -8,9 +8,9 @@
 
 #include <filesystem>
 #include <thread>
+#include <jthread.hpp>
 
 #if defined(OS_WEB)
-#include <jthread.hpp>
 #include <emscripten.h>
 #endif
 

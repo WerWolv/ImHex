@@ -18,13 +18,18 @@
 	path = lib/external/capstone
 	url = https://github.com/capstone-engine/capstone
 	ignore = dirty
+[submodule "lib/external/jthread/jthread"]
+    path = lib/external/jthread/jthread
+    url = https://github.com/josuttis/jthread
+    ignore = dirty
+
 [submodule "lib/external/libromfs"]
 	path = lib/external/libromfs
 	url = https://github.com/WerWolv/libromfs
-	ignore = dirty
 [submodule "lib/external/pattern_language"]
 	path = lib/external/pattern_language
 	url = https://github.com/WerWolv/PatternLanguage
 [submodule "lib/external/libwolv"]
 	path = lib/external/libwolv
 	url = https://github.com/WerWolv/libwolv
+

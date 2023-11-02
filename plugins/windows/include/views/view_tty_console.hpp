@@ -6,6 +6,7 @@
 
 #include <mutex>
 #include <thread>
+#include <jthread.hpp>
 #include <vector>
 
 namespace hex::plugin::windows {
