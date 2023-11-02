@@ -331,7 +331,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::SetNextWindowScroll(ImVec2(0.0F, -1.0F));
                     ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
-                    if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+                    if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                         drawWelcomeScreenContent();
                     }
                     ImGui::End();
