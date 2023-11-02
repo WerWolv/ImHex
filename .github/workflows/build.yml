@@ -131,8 +131,13 @@ jobs:
         include:
           - suffix: "-NoGPU"
             custom_glfw: true
+            target: "x86_64-apple-macos11"
           - suffix: ""
             custom_glfw: false
+            target: "x86_64-apple-macos11"
+          - suffix: "-ARM"
+            custom_glfw: false
+            target: "arm64-apple-macos11"
 
     name: 🍎 macOS 11.0${{matrix.suffix}}
 
@@ -207,13 +212,15 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        CC=$(brew --prefix gcc@12)/bin/gcc-12                                                       \
-        CXX=$(brew --prefix gcc@12)/bin/g++-12                                                      \
+        CC=$(brew --prefix llvm)/bin/clang                                                          \
+        CXX=$(brew --prefix llvm)/bin/clang++                                                       \
         OBJC=$(brew --prefix llvm)/bin/clang                                                        \
         OBJCXX=$(brew --prefix llvm)/bin/clang++                                                    \
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
+          -DCMAKE_C_FLAGS="-target ${{matrix.target}}                                               \
+          -DCMAKE_CXX_FLAGS="-target ${{matrix.target}}                                             \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
