@@ -7,6 +7,6 @@ brew "libmagic"
 brew "pkg-config"
 brew "curl"
 brew "gcc@12"
-brew "llvm@stable"
+brew "llvm", args: ["HEAD"]
 brew "glfw"
 brew "ninja"
