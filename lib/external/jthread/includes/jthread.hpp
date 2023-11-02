@@ -1,7 +1,7 @@
 #pragma once
 
-#if __has_include(<jthread>)
-    #include <jthread>
+#if __cpp_lib_jthread >= 201911L
+    #include <thread>
 #else
     #include "../jthread/source/jthread.hpp"
 #endif

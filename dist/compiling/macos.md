@@ -1,6 +1,6 @@
 ### Compiling ImHex on macOS
 
-On macOS, ImHex is built through regular GCC and AppleClang.
+On macOS, ImHex is built through regular GCC and LLVM clang.
 
 1. Clone the repo using `git clone https://github.com/WerWolv/ImHex --recurse-submodules`
 2. Install all the dependencies using `brew bundle --no-lock --file dist/Brewfile`
