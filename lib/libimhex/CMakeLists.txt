@@ -76,10 +76,7 @@ generate_export_header(libimhex)
 target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
 target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
 
-if (EMSCRIPTEN)
-    find_path(JOSUTTIS_JTHREAD_INCLUDE_DIRS "condition_variable_any2.hpp")
-    target_include_directories(libimhex PRIVATE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
-else()
+if (NOT EMSCRIPTEN)
     # curl is only used in non-emscripten builds
     target_include_directories(libimhex PUBLIC  ${CURL_INCLUDE_DIRS})
     target_link_libraries(libimhex PUBLIC ${LIBCURL_LIBRARIES})
