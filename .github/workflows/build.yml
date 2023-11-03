@@ -132,12 +132,15 @@ jobs:
           - suffix: "-NoGPU"
             custom_glfw: true
             target: "x86_64-apple-macos12.7"
+            needs_update: false
           - suffix: ""
             custom_glfw: false
             target: "x86_64-apple-macos12.7"
+            needs_update: false
           - suffix: "-ARM"
             custom_glfw: false
             target: "arm64-apple-macos12.7"
+            needs_update: true
 
     name: 🍎 macOS 11.0${{matrix.suffix}}
 
@@ -165,9 +168,13 @@ jobs:
           build/CMakeCache.txt
         key: ${{ runner.os }}-${{ matrix.suffix }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
-    - name: ⬇️ Install dependencies
+    - name: ⬇️ Update brew packages
+      if: ${{matrix.needs_update}}
       run: |
         brew update
+
+    - name: ⬇️ Install dependencies
+      run: |
         brew bundle --no-lock --file dist/Brewfile
         rm -rf /usr/local/Cellar/capstone
 
