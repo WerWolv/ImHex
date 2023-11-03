@@ -230,6 +230,10 @@ jobs:
           -DCMAKE_OSX_ARCHITECTURES="${{matrix.target}}"                                            \
           -DCMAKE_SYSTEM_NAME="Darwin"                                                              \
           -DCMAKE_SYSTEM_PROCESSOR="${{matrix.target}}"                                             \
+          -DNATIVE_CMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang"                               \
+          -DNATIVE_CMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++"                           \
+          -DNATIVE_CMAKE_C_FLAGS=""                                                                 \
+          -DNATIVE_CMAKE_CXX_FLAGS=""                                                               \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
