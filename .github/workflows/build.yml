@@ -131,15 +131,15 @@ jobs:
         include:
           - suffix: "-NoGPU"
             custom_glfw: true
-            target: "x86_64-apple-macos12"
-            needs_update: false
+            target: "x86_64"
+            needs_update: true
           - suffix: ""
             custom_glfw: false
-            target: "x86_64-apple-macos12"
-            needs_update: false
+            target: "x86_64"
+            needs_update: true
           - suffix: "-ARM"
             custom_glfw: false
-            target: "arm64-apple-macos12"
+            target: "arm64"
             needs_update: true
 
     name: 🍎 macOS 11.0${{matrix.suffix}}
@@ -227,8 +227,9 @@ jobs:
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
-          -DCMAKE_C_FLAGS="-target ${{matrix.target}}"                                              \
-          -DCMAKE_CXX_FLAGS="-target ${{matrix.target}}"                                            \
+          -DCMAKE_OSX_ARCHITECTURES="${{matrix.target}}"                                            \
+          -DCMAKE_SYSTEM_NAME="Darwin"                                                              \
+          -DCMAKE_SYSTEM_PROCESSOR="${{matrix.target}}"                                             \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
