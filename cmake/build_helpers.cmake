@@ -297,6 +297,10 @@ macro(configureCMake)
     # Enable C and C++ languages
     enable_language(C CXX)
 
+    if (CMAKE_CROSSCOMPILING)
+        message(STATUS "ImHex is being Cross-Compiled for ${CMAKE_SYSTEM_NAME}!")
+    endif ()
+
     # Configure use of recommended build tools
     if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
         message(STATUS "Configuring CMake to use recommended build tools...")
