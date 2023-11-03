@@ -131,15 +131,15 @@ jobs:
         include:
           - suffix: "-NoGPU"
             custom_glfw: true
-            target: "x86_64"
+            toolchain_file: ""
             needs_update: true
           - suffix: ""
             custom_glfw: false
-            target: "x86_64"
+            toolchain_file: ""
             needs_update: true
           - suffix: "-ARM"
             custom_glfw: false
-            target: "arm64"
+            toolchain_file: "dist/macOS/macos_arm_toolchain.cmake"
             needs_update: true
 
     name: 🍎 macOS 11.0${{matrix.suffix}}
@@ -227,13 +227,7 @@ jobs:
         PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig"   \
         cmake -G "Ninja"                                                                            \
           -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                                                    \
-          -DCMAKE_OSX_ARCHITECTURES="${{matrix.target}}"                                            \
-          -DCMAKE_SYSTEM_NAME="Darwin"                                                              \
-          -DCMAKE_SYSTEM_PROCESSOR="${{matrix.target}}"                                             \
-          -DNATIVE_CMAKE_C_COMPILER="$(brew --prefix llvm)/bin/clang"                               \
-          -DNATIVE_CMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++"                           \
-          -DNATIVE_CMAKE_C_FLAGS=""                                                                 \
-          -DNATIVE_CMAKE_CXX_FLAGS=""                                                               \
+          -DCMAKE_TOOLCHAIN_FILE="${{matrix.toolchain_file}}"                                       \
           -DCREATE_BUNDLE=ON                                                                        \
           -DCREATE_PACKAGE=ON                                                                       \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                        \
