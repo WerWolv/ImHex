@@ -124,7 +124,7 @@ jobs:
 
   # MacOS build
   macos:
-    runs-on: macos-11
+    runs-on: macos-12
 
     strategy:
       matrix:
@@ -167,6 +167,7 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
+        brew update
         brew bundle --no-lock --file dist/Brewfile
         rm -rf /usr/local/Cellar/capstone
 
