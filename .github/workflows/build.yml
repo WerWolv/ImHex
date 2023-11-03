@@ -131,15 +131,15 @@ jobs:
         include:
           - suffix: "-NoGPU"
             custom_glfw: true
-            target: "x86_64-apple-macos12.7"
+            target: "x86_64-apple-macos12.6"
             needs_update: false
           - suffix: ""
             custom_glfw: false
-            target: "x86_64-apple-macos12.7"
+            target: "x86_64-apple-macos12.6"
             needs_update: false
           - suffix: "-ARM"
             custom_glfw: false
-            target: "arm64-apple-macos12.7"
+            target: "arm64-apple-macos12.6"
             needs_update: true
 
     name: 🍎 macOS 11.0${{matrix.suffix}}
