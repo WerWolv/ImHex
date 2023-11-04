@@ -22,9 +22,11 @@ namespace hex::plugin::builtin {
 
             static wolv::net::SocketServer networkInterfaceServer(31337);
 
-            EventManager::subscribe<EventImHexClosing>([]{
-                networkInterfaceServer.shutdown();
-            });
+            AT_FIRST_TIME {
+                EventManager::subscribe<EventImHexClosing>([]{
+                    networkInterfaceServer.shutdown();
+                });
+            };
 
             networkInterfaceServer.accept([](auto, const std::vector<u8> &data) -> std::vector<u8> {
                 nlohmann::json result;
