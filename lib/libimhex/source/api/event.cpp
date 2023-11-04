@@ -14,5 +14,11 @@ namespace hex {
         return events;
     }
 
+    std::recursive_mutex& EventManager::getEventMutex() {
+        static std::recursive_mutex mutex;
+
+        return mutex;
+    }
+
 
 }

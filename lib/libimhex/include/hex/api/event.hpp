@@ -91,6 +91,8 @@ namespace hex {
          */
         template<impl::EventType E>
         static EventList::iterator subscribe(typename E::Callback function) {
+            std::scoped_lock lock(getEventMutex());
+
             auto &events = getEvents();
             return events.insert(events.end(), std::make_pair(E::Id, std::make_unique<E>(function)));
         }
@@ -103,6 +105,8 @@ namespace hex {
          */
         template<impl::EventType E>
         static void subscribe(void *token, typename E::Callback function) {
+            std::scoped_lock lock(getEventMutex());
+
             if (getTokenStore().contains(token)) {
                 auto&& [begin, end] = getTokenStore().equal_range(token);
                 auto eventRegistered = std::any_of(begin, end, [&](auto &item) {
@@ -114,7 +118,7 @@ namespace hex {
                 }
             }
 
-            getTokenStore().insert(std::make_pair(token, subscribe<E>(function)));
+            getTokenStore().insert({ token, subscribe<E>(function) });
         }
 
         /**
@@ -122,6 +126,8 @@ namespace hex {
          * @param token Token returned by subscribe
          */
         static void unsubscribe(const EventList::iterator &token) noexcept {
+            std::scoped_lock lock(getEventMutex());
+
             getEvents().erase(token);
         }
 
@@ -132,6 +138,8 @@ namespace hex {
          */
         template<impl::EventType E>
         static void unsubscribe(void *token) noexcept {
+            std::scoped_lock lock(getEventMutex());
+
             auto &tokenStore = getTokenStore();
             auto iter = std::find_if(tokenStore.begin(), tokenStore.end(), [&](auto &item) {
                 return item.first == token && item.second->first == E::Id;
@@ -151,6 +159,8 @@ namespace hex {
          */
         template<impl::EventType E>
         static void post(auto &&...args) noexcept {
+            std::scoped_lock lock(getEventMutex());
+
             for (const auto &[id, event] : getEvents()) {
                 if (id == E::Id) {
                     (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
@@ -167,6 +177,8 @@ namespace hex {
          * @brief Unsubscribe all subscribers from all events
          */
         static void clear() noexcept {
+            std::scoped_lock lock(getEventMutex());
+
             getEvents().clear();
             getTokenStore().clear();
         }
@@ -174,6 +186,7 @@ namespace hex {
     private:
         static std::multimap<void *, EventList::iterator>& getTokenStore();
         static EventList& getEvents();
+        static std::recursive_mutex& getEventMutex();
     };
 
     /* Default Events */
