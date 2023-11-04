@@ -1961,15 +1961,22 @@ namespace hex::plugin::builtin {
                         ImGui::EndTable();
                     }
 
-                    ImGui::PushItemWidth(-(50_scaled));
-                    ImGui::InputText("##input", input);
-                    ImGui::PopItemWidth();
-                    ImGui::SameLine();
+                    ImGui::BeginDisabled(!client.isConnected());
+                    {
+                        ImGui::PushItemWidth(-(50_scaled));
+                        bool pressedEnter = ImGui::InputText("##input", input, ImGuiInputTextFlags_EnterReturnsTrue);
+                        ImGui::PopItemWidth();
+                        ImGui::SameLine();
 
-                    if (ImGui::IconButton(ICON_VS_DEBUG_STACKFRAME, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        client.writeString(input);
-                        input.clear();
+                        if (pressedEnter)
+                            ImGui::SetKeyboardFocusHere(-1);
+
+                        if (ImGui::IconButton(ICON_VS_DEBUG_STACKFRAME, ImGui::GetStyleColorVec4(ImGuiCol_Text)) || pressedEnter) {
+                            client.writeString(input);
+                            input.clear();
+                        }
                     }
+                    ImGui::EndDisabled();
 
                     ImGui::EndTabItem();
                 }
@@ -2016,6 +2023,8 @@ namespace hex::plugin::builtin {
 
                                         return {};
                                     }, nullptr, true);
+
+                                    std::this_thread::sleep_for(100ms);
                                 }
                             });
                         }
@@ -2027,10 +2036,15 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, -50_scaled))) {
                         {
                             std::scoped_lock lock(receiverMutex);
+                            u32 index = 0;
                             for (const auto &message : messages) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
+                                ImGui::PushID(index);
                                 ImGui::TextFormattedSelectable("{}", message.c_str());
+                                ImGui::PopID();
+
+                                index += 1;
                             }
                         }
 
