@@ -927,7 +927,12 @@ static void ImGui_ImplGlfw_UpdateMonitors()
         // Warning: the validity of monitor DPI information on Windows depends on the application DPI awareness settings, which generally needs to be set in the manifest or at runtime.
         float x_scale, y_scale;
         glfwGetMonitorContentScale(glfw_monitors[n], &x_scale, &y_scale);
-        monitor.DpiScale = x_scale;
+
+        // IMHEX PATCH BEGIN
+        // REASON: Prevent occasional crash when a monitor connection status is changed
+        if (x_scale > 0)
+            monitor.DpiScale = x_scale;
+        // IMHEX PATCH END
 #endif
         monitor.PlatformHandle = (void*)glfw_monitors[n]; // [...] GLFW doc states: "guaranteed to be valid only until the monitor configuration changes"
         platform_io.Monitors.push_back(monitor);
