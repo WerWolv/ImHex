@@ -235,6 +235,8 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                      \
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache                                                   \
+          -DNATIVE_CMAKE_C_COMPILER="$(brew --prefix gcc@12)/bin/gcc-12"                            \
+          -DNATIVE_CMAKE_CXX_COMPILER="$(brew --prefix gcc@12)/bin/g++-12"                          \
           -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           \
           -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"                                              \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
