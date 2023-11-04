@@ -694,12 +694,13 @@ namespace hex::plugin::builtin::ui {
                     // Page Address
                     ImGui::TableNextColumn();
                     {
-                        auto pageAddress = this->m_provider->getCurrentPageAddress();
+                        const auto pageAddress = this->m_provider->getCurrentPageAddress();
+                        const auto pageSize    = this->m_provider->getSize();
                         ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.region"_lang);
                         ImGui::SameLine();
                         ImGui::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
                                                        pageAddress,
-                                                       pageAddress + this->m_provider->getSize() - 1
+                                                       pageSize == 0 ? 0 : (pageAddress + pageSize - 1)
                        );
                     }
 
