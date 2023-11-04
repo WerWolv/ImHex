@@ -61,6 +61,29 @@ namespace hex::init {
     }
 
 
+    static void centerWindow(GLFWwindow *window) {
+        // Get the primary monitor
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        if (!monitor)
+            return;
+
+        // Get information about the monitor
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+        if (!mode)
+            return;
+
+        // Get the position of the monitor's viewport on the virtual screen
+        int monitorX, monitorY;
+        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+        // Get the window size
+        int windowWidth, windowHeight;
+        glfwGetWindowSize(window, &windowWidth, &windowHeight);
+
+        // Center the splash screen on the monitor
+        glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
+    }
+
     std::future<bool> WindowSplash::processTasksAsync() {
         return std::async(std::launch::async, [this] {
             bool status = true;
@@ -70,7 +93,7 @@ namespace hex::init {
             for (const auto &[name, task, async] : this->m_tasks) {
 
                 // Construct a new task callback
-                auto runTask = [&, task = task, name = name] {
+                auto runTask = [&, task, name] {
                     try {
                         // Save an iterator to the current task name
                         decltype(this->m_currTaskNames)::iterator taskNameIter;
@@ -137,6 +160,9 @@ namespace hex::init {
     }
 
     FrameResult WindowSplash::fullFrame() {
+        glfwSetWindowSize(this->m_window, 640_scaled, 400_scaled);
+        centerWindow(this->m_window);
+
         glfwPollEvents();
 
         // Start a new ImGui frame
@@ -279,29 +305,6 @@ namespace hex::init {
         }
     }
 
-    static void centerWindow(GLFWwindow *window) {
-        // Get the primary monitor
-        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-        if (!monitor)
-            return;
-
-        // Get information about the monitor
-        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-        if (!mode)
-            return;
-
-        // Get the position of the monitor's viewport on the virtual screen
-        int monitorX, monitorY;
-        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
-
-        // Get the window size
-        int windowWidth, windowHeight;
-        glfwGetWindowSize(window, &windowWidth, &windowHeight);
-
-        // Center the splash screen on the monitor
-        glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
-    }
-
     void WindowSplash::initGLFW() {
         glfwSetErrorCallback([](int errorCode, const char *desc) {
             lastGlfwError.errorCode = errorCode;
@@ -335,7 +338,7 @@ namespace hex::init {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
         // Create the splash screen window
-        this->m_window = glfwCreateWindow(1, 400, "Starting ImHex...", nullptr, nullptr);
+        this->m_window = glfwCreateWindow(1, 1, "Starting ImHex...", nullptr, nullptr);
         if (this->m_window == nullptr) {
             hex::nativeErrorMessage(hex::format(
                 "Failed to create GLFW window: [{}] {}.\n"
@@ -369,9 +372,6 @@ namespace hex::init {
 
             log::info("Native scaling set to: {:.1f}", meanScale);
         }
-
-        glfwSetWindowSize(this->m_window, 640_scaled, 400_scaled);
-        centerWindow(this->m_window);
 
         glfwMakeContextCurrent(this->m_window);
         glfwSwapInterval(1);
