@@ -15,7 +15,6 @@
 #include <hex/api/project_file_manager.hpp>
 
 #include <imgui.h>
-#include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <nlohmann/json.hpp>
@@ -23,25 +22,20 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
-#include <wolv/utils/guards.hpp>
 
 #include <fonts/codicons_font.h>
 
-#include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_question.hpp>
 #include <content/popups/popup_telemetry_request.hpp>
 #include <content/recent.hpp>
 
 #include <string>
 #include <list>
-#include <unordered_set>
 #include <random>
 
 namespace hex::plugin::builtin {
 
     static ImGui::Texture s_bannerTexture, s_backdropTexture;
-
-    static std::fs::path s_safetyBackupPath;
 
     static std::string s_tipOfTheDay;
 
@@ -52,9 +46,9 @@ namespace hex::plugin::builtin {
         std::function<void()> m_deleteCallback;
         bool m_reportError = true;
     public:
-        PopupRestoreBackup(const std::fs::path &logFilePath, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
+        PopupRestoreBackup(std::fs::path logFilePath, const std::function<void()> &restoreCallback, const std::function<void()> &deleteCallback)
                 : Popup("hex.builtin.popup.safety_backup.title"),
-                m_logFilePath(logFilePath),
+                m_logFilePath(std::move(logFilePath)),
                 m_restoreCallback(restoreCallback),
                 m_deleteCallback(deleteCallback) {
 
@@ -163,7 +157,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 3);
             ImGui::TableNextColumn();
 
-            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + std::min<double>(450_scaled, availableSpace.x / 2 - 50_scaled));
+            ImGui::PushTextWrapPos(ImGui::GetCursorPosX() + std::min<float>(450_scaled, availableSpace.x / 2 - 50_scaled));
             ImGui::TextFormattedWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
             ImGui::PopTextWrapPos();
 
@@ -331,6 +325,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::SetNextWindowScroll(ImVec2(0.0F, -1.0F));
                     ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
+                    ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - scaled({ 0, ImGui::GetStyle().FramePadding.y }));
                     if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                         drawWelcomeScreenContent();
                     }
@@ -343,13 +338,13 @@ namespace hex::plugin::builtin {
         ImGui::End();
     }
     /**
-     * @brief Draw some default background if there are no views avaialble in the current layout
+     * @brief Draw some default background if there are no views available in the current layout
      */
     static void drawNoViewsBackground() {
         if (ImGui::Begin("ImHexDockSpace")) {
-            static char title[256];
-            ImFormatString(title, IM_ARRAYSIZE(title), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
-            if (ImGui::Begin(title)) {
+            static std::array<char, 256> title;
+            ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
+            if (ImGui::Begin(title.data())) {
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
                 if (ImGui::Begin("NoViewsBackground", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                     ImGui::Dummy({});
@@ -421,7 +416,7 @@ namespace hex::plugin::builtin {
             {
                 auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 14).get<int>();
 
-                ImHexApi::System::setTargetFPS(targetFps);
+                ImHexApi::System::setTargetFPS(static_cast<float>(targetFps));
             }
         });
 
