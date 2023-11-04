@@ -1906,15 +1906,21 @@ namespace hex::plugin::builtin {
                     static std::mutex receiverMutex;
 
                     ImGui::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.3F);
-                    ImGui::InputText("##ipAddress", ipAddress);
-                    ImGui::PopItemWidth();
-                    ImGui::SameLine(0, 0);
-                    ImGui::TextUnformatted(":");
-                    ImGui::SameLine(0, 0);
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
-                    ImGui::InputInt("##port", &port, 0, 0);
-                    ImGui::PopItemWidth();
+
+                    ImGui::BeginDisabled(client.isConnected());
+                    {
+                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.3F);
+                        ImGui::InputText("##ipAddress", ipAddress);
+                        ImGui::PopItemWidth();
+                        ImGui::SameLine(0, 0);
+                        ImGui::TextUnformatted(":");
+                        ImGui::SameLine(0, 0);
+                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
+                        ImGui::InputInt("##port", &port, 0, 0);
+                        ImGui::PopItemWidth();
+                    }
+                    ImGui::EndDisabled();
+
                     ImGui::SameLine();
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
@@ -1991,9 +1997,13 @@ namespace hex::plugin::builtin {
 
                     ImGui::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
 
-                    ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
-                    ImGui::InputInt("##port", &port, 0, 0);
-                    ImGui::PopItemWidth();
+                    ImGui::BeginDisabled(server.isActive());
+                    {
+                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
+                        ImGui::InputInt("##port", &port, 0, 0);
+                        ImGui::PopItemWidth();
+                    }
+                    ImGui::EndDisabled();
 
                     ImGui::SameLine();
 
