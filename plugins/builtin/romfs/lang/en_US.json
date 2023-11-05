@@ -58,7 +58,6 @@
         "hex.builtin.achievement.misc.download_from_store.desc": "Download any item from the Content Store",
         "hex.builtin.achievement.misc.create_hash.name": "Hash browns",
         "hex.builtin.achievement.misc.create_hash.desc": "Create a new hash function in the Hash view by selecting the type, giving it a name and clicking on the Plus button next to it.",
-
         "hex.builtin.command.calc.desc": "Calculator",
         "hex.builtin.command.cmd.desc": "Command",
         "hex.builtin.command.cmd.result": "Run command '{0}'",
@@ -989,7 +988,7 @@
         "hex.builtin.view.store.tab.yara": "Yara Rules",
         "hex.builtin.view.store.update": "Update",
         "hex.builtin.view.store.system": "System",
-        "hex.builtin.view.store.system.explanation": "This entry is in a read-only directory, it is probably managed by the system",
+        "hex.builtin.view.store.system.explanation": "This entry is in a read-only directory, it is probably managed by the system.",
         "hex.builtin.view.store.update_count": "Update all\nAvailable Updates: {}",
         "hex.builtin.view.theme_manager.name": "Theme Manager",
         "hex.builtin.view.theme_manager.colors": "Colors",
