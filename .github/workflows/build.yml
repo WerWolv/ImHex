@@ -96,6 +96,7 @@ jobs:
     - name: ⬆️ Upload Windows Installer
       uses: actions/upload-artifact@v3
       with:
+        if-no-files-found: error
         name: Windows Installer x86_64
         path: |
           imhex-*.msi
@@ -103,6 +104,7 @@ jobs:
     - name: ⬆️ Upload Portable ZIP
       uses: actions/upload-artifact@v3
       with:
+        if-no-files-found: error
         name: Windows Portable x86_64
         path: |
           build/install/*
@@ -118,6 +120,7 @@ jobs:
     - name: ⬆️ Upload NoGPU Portable ZIP
       uses: actions/upload-artifact@v3
       with:
+        if-no-files-found: error
         name: Windows Portable NoGPU x86_64
         path: |
           build/install/*
@@ -230,6 +233,7 @@ jobs:
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v3
       with:
+        if-no-files-found: error
         name: macOS DMG${{matrix.suffix}} x86_64
         path: build/*.dmg
 
@@ -323,6 +327,7 @@ jobs:
       - name: ⬆️ Upload DEB
         uses: actions/upload-artifact@v3
         with:
+          if-no-files-found: error
           name: Ubuntu ${{ matrix.release_num }} DEB x86_64
           path: '*.deb'
 
@@ -358,12 +363,14 @@ jobs:
       - name: ⬆️ Upload AppImage
         uses: actions/upload-artifact@v3
         with:
+          if-no-files-found: error
           name: Linux AppImage x86_64
           path: 'out/*.AppImage'
 
       - name: ⬆️ Upload AppImage zsync
         uses: actions/upload-artifact@v3
         with:
+          if-no-files-found: error
           name: Linux AppImage zsync x86_64
           path: 'out/*.AppImage.zsync'
 
@@ -464,6 +471,7 @@ jobs:
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
         uses: actions/upload-artifact@v3
         with:
+          if-no-files-found: error
           name: ArchLinux .pkg.tar.zst x86_64
           path: |
             build/imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
@@ -589,6 +597,7 @@ jobs:
       - name: ⬆️ Upload RPM
         uses: actions/upload-artifact@v3
         with:
+          if-no-files-found: error
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64
           path: |
             imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
