@@ -283,7 +283,7 @@ namespace hex::plugin::builtin {
                 // Draw the line with the bold text highlighted
                 ImGui::TextUnformatted(line.substr(0, boldStart).c_str());
                 ImGui::SameLine(0, 0);
-                ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), line.substr(boldStart + 2, boldEnd - boldStart - 2).c_str());
+                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", line.substr(boldStart + 2, boldEnd - boldStart - 2).c_str());
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted(line.substr(boldEnd + 2).c_str());
             } else {
