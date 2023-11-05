@@ -1954,7 +1954,7 @@ namespace hex::plugin::builtin {
                         port = 65535;
 
                     ImGui::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
-                    if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, -50_scaled))) {
+                    if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
                         {
                             std::scoped_lock lock(receiverMutex);
                             for (const auto &message : messages) {
@@ -2043,7 +2043,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
 
-                    if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, -50_scaled))) {
+                    if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
                         {
                             std::scoped_lock lock(receiverMutex);
                             u32 index = 0;
