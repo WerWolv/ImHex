@@ -1,15 +1,18 @@
 #include "content/views/view_about.hpp"
 
+#include <hex/api_urls.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/http_requests.hpp>
 
 #include <content/popups/popup_docs_question.hpp>
 
 #include <romfs/romfs.hpp>
+#include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -65,10 +68,13 @@ namespace hex::plugin::builtin {
                 this->m_logoTexture = ImGui::Texture(romfs::get("assets/common/logo.png").span());
 
             ImGui::Image(this->m_logoTexture, scaled({ 64, 64 }));
+            if (ImGui::IsItemHovered() && ImGui::IsItemClicked()) {
+                this->m_clickCount += 1;
+            }
             ImGui::TableNextColumn();
 
             // Draw basic information about ImHex and its version
-            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv   " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
+            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv  " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
 
             ImGui::SameLine();
 
@@ -77,7 +83,7 @@ namespace hex::plugin::builtin {
                 hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
 
             // Draw the build date and time
-            ImGui::TextFormatted(ICON_FA_BUILDING " {}, {}", __DATE__, __TIME__);
+            ImGui::TextFormatted("{}, {}", __DATE__, __TIME__);
 
             // Draw the author of the current translation
             ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
@@ -221,11 +227,260 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void ViewAbout::drawReleaseNotesPage() {
+        static std::string releaseTitle;
+        static std::vector<std::string> releaseNotes;
+
+        // Set up the request to get the release notes the first time the page is opened
+        AT_FIRST_TIME {
+            static HttpRequest request("GET", GitHubApiURL + std::string("/releases/tags/v") + ImHexApi::System::getImHexVersion(false));
+
+            this->m_releaseNoteRequest = request.execute();
+        };
+
+        // Wait for the request to finish and parse the response
+        if (this->m_releaseNoteRequest.valid()) {
+            if (this->m_releaseNoteRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                auto response = this->m_releaseNoteRequest.get();
+                nlohmann::json json;
+
+                if (response.isSuccess()) {
+                    // A valid response was received, parse it
+                    try {
+                        json = nlohmann::json::parse(response.getData());
+
+                        // Get the release title
+                        releaseTitle = json["name"].get<std::string>();
+
+                        // Get the release notes and split it into lines
+                        auto body = json["body"].get<std::string>();
+                        releaseNotes = wolv::util::splitString(body, "\r\n");
+                    } catch (std::exception &e) {
+                        releaseNotes.push_back("## Error: " + std::string(e.what()));
+                    }
+                } else {
+                    // An error occurred, display it
+                    releaseNotes.push_back("## HTTP Error: " + std::to_string(response.getStatusCode()));
+                }
+            } else {
+                // Draw a spinner while the release notes are loading
+                ImGui::TextSpinner("hex.builtin.common.loading"_lang);
+            }
+        }
+
+
+        // Function to handle drawing of a regular text line
+        static const auto drawRegularLine = [](const std::string &line) {
+            ImGui::Bullet();
+            ImGui::SameLine();
+
+            // Check if the line contains bold text
+            auto boldStart = line.find("**");
+            if (boldStart != std::string::npos) {
+                // Find the end of the bold text
+                auto boldEnd = line.find("**", boldStart + 2);
+
+                // Draw the line with the bold text highlighted
+                ImGui::TextUnformatted(line.substr(0, boldStart).c_str());
+                ImGui::SameLine(0, 0);
+                ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), line.substr(boldStart + 2, boldEnd - boldStart - 2).c_str());
+                ImGui::SameLine(0, 0);
+                ImGui::TextUnformatted(line.substr(boldEnd + 2).c_str());
+            } else {
+                // Draw the line normally
+                ImGui::TextUnformatted(line.c_str());
+            }
+        };
+
+        // Draw the release title
+        if (!releaseTitle.empty()) {
+            auto title = hex::format("v{}: {}", ImHexApi::System::getImHexVersion(false), releaseTitle);
+            ImGui::Header(title.c_str(), true);
+            ImGui::Separator();
+        }
+
+        // Draw the release notes and format them using parts of the GitHub Markdown syntax
+        // This is not a full implementation of the syntax, but it's enough to make the release notes look good.
+        for (const auto &line : releaseNotes) {
+            if (line.starts_with("## ")) {
+                // Draw H2 Header
+                ImGui::Header(line.substr(3).c_str());
+            } else if (line.starts_with("### ")) {
+                // Draw H3 Header
+                ImGui::Header(line.substr(4).c_str());
+            } else if (line.starts_with("- ")) {
+                // Draw bullet point
+                drawRegularLine(line.substr(2));
+            } else if (line.starts_with("    - ")) {
+                // Draw further indented bullet point
+                ImGui::Indent();
+                ImGui::Indent();
+                drawRegularLine(line.substr(6));
+                ImGui::Unindent();
+                ImGui::Unindent();
+            }
+        }
+    }
+
+    void ViewAbout::drawCommitHistoryPage() {
+        struct Commit {
+            std::string hash;
+            std::string message;
+            std::string description;
+            std::string author;
+            std::string date;
+            std::string url;
+        };
+
+        static std::vector<Commit> commits;
+
+        // Set up the request to get the commit history the first time the page is opened
+        AT_FIRST_TIME {
+            static HttpRequest request("GET", GitHubApiURL + std::string("/commits?per_page=100"));
+            this->m_commitHistoryRequest = request.execute();
+        };
+
+        // Wait for the request to finish and parse the response
+        if (this->m_commitHistoryRequest.valid()) {
+            if (this->m_commitHistoryRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                auto response = this->m_commitHistoryRequest.get();
+                nlohmann::json json;
+
+                if (response.isSuccess()) {
+                    // A valid response was received, parse it
+                    try {
+                        json = nlohmann::json::parse(response.getData());
+
+                        for (auto &commit : json) {
+                            const auto message = commit["commit"]["message"].get<std::string>();
+
+                            // Split commit title and description. They're separated by two newlines.
+                            const auto messageEnd = message.find("\n\n");
+
+                            auto commitTitle        = messageEnd == std::string::npos ? message : message.substr(0, messageEnd);
+                            auto commitDescription  = messageEnd == std::string::npos ? "" : message.substr(commitTitle.size() + 2);
+
+                            auto url    = commit["html_url"].get<std::string>();
+                            auto sha    = commit["sha"].get<std::string>();
+                            auto date   = commit["commit"]["author"]["date"].get<std::string>();
+                            auto author = hex::format("{} <{}>",
+                                                      commit["commit"]["author"]["name"].get<std::string>(),
+                                                      commit["commit"]["author"]["email"].get<std::string>()
+                                          );
+
+                            // Move the commit data into the list of commits
+                            commits.emplace_back(
+                                std::move(sha),
+                                std::move(commitTitle),
+                                std::move(commitDescription),
+                                std::move(author),
+                                std::move(date),
+                                std::move(url)
+                            );
+                        }
+
+                    } catch (std::exception &e) {
+                        commits.emplace_back(
+                            "hex.builtin.common.error"_lang,
+                            e.what(),
+                            "",
+                            "",
+                            ""
+                        );
+                    }
+                } else {
+                    // An error occurred, display it
+                    commits.emplace_back(
+                        "hex.builtin.common.error"_lang,
+                        "HTTP " + std::to_string(response.getStatusCode()),
+                        "",
+                        "",
+                        ""
+                    );
+                }
+            } else {
+                // Draw a spinner while the commits are loading
+                ImGui::TextSpinner("hex.builtin.common.loading"_lang);
+            }
+        }
+
+        // Draw commits table
+        if (!commits.empty()) {
+            if (ImGui::BeginTable("##commits", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
+                // Draw commits
+                for (const auto &commit : commits) {
+                    ImGui::PushID(commit.hash.c_str());
+                    ImGui::TableNextRow();
+
+                    // Draw hover tooltip
+                    ImGui::TableNextColumn();
+                    if (ImGui::Selectable("##commit", false, ImGuiSelectableFlags_SpanAllColumns)) {
+                        hex::openWebpage(commit.url);
+                    }
+
+                    if (ImGui::IsItemHovered()) {
+                        if (ImGui::BeginTooltip()) {
+                            // Draw author and commit date
+                            ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.author);
+                            ImGui::SameLine();
+                            ImGui::TextFormatted("@ {}", commit.date.c_str());
+
+                            // Draw description if there is one
+                            if (!commit.description.empty()) {
+                                ImGui::Separator();
+                                ImGui::TextFormatted("{}", commit.description);
+                            }
+
+                            ImGui::EndTooltip();
+                        }
+
+                    }
+
+                    // Draw commit hash
+                    ImGui::SameLine(0, 0);
+                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.hash.substr(0, 7));
+
+                    // Draw the commit message
+                    ImGui::TableNextColumn();
+
+                    const ImColor color = [&]{
+                        if (commit.hash == ImHexApi::System::getCommitHash(true))
+                            return ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive);
+                        else
+                            return ImGui::GetStyleColorVec4(ImGuiCol_Text);
+                    }();
+                    ImGui::TextFormattedColored(color, commit.message);
+
+                    ImGui::PopID();
+                }
+
+                ImGui::EndTable();
+            }
+        }
+    }
+
     void ViewAbout::drawLicensePage() {
         ImGui::TextFormattedWrapped("{}", romfs::get("licenses/LICENSE").string());
     }
 
     void ViewAbout::drawAboutPopup() {
+        struct Tab {
+            using Function = void (ViewAbout::*)();
+
+            const char *unlocalizedName;
+            Function function;
+        };
+
+        constexpr std::array Tabs = {
+            Tab { "ImHex",                                      &ViewAbout::drawAboutMainPage       },
+            Tab { "hex.builtin.view.help.about.contributor",    &ViewAbout::drawContributorPage     },
+            Tab { "hex.builtin.view.help.about.libs",           &ViewAbout::drawLibraryCreditsPage  },
+            Tab { "hex.builtin.view.help.about.paths",          &ViewAbout::drawPathsPage           },
+            Tab { "hex.builtin.view.help.about.release_notes",  &ViewAbout::drawReleaseNotesPage    },
+            Tab { "hex.builtin.view.help.about.commits",        &ViewAbout::drawCommitHistoryPage   },
+            Tab { "hex.builtin.view.help.about.license",        &ViewAbout::drawLicensePage         },
+        };
+
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.help.about.name").c_str(), &this->m_aboutWindowOpen)) {
 
             // Allow the window to be closed by pressing ESC
@@ -233,54 +488,18 @@ namespace hex::plugin::builtin {
                 ImGui::CloseCurrentPopup();
 
             if (ImGui::BeginTabBar("about_tab_bar")) {
+                // Draw all tabs
+                for (const auto &[unlocalizedName, function] : Tabs) {
+                    if (ImGui::BeginTabItem(LangEntry(unlocalizedName))) {
+                        ImGui::NewLine();
 
-                // Draw main ImHex tab
-                if (ImGui::BeginTabItem("ImHex")) {
-                    if (ImGui::BeginChild(1)) {
-                        this->drawAboutMainPage();
-                    }
-                    ImGui::EndChild();
-                    ImGui::EndTabItem();
-                }
+                        if (ImGui::BeginChild(1)) {
+                            (this->*function)();
+                        }
+                        ImGui::EndChild();
 
-                // Draw contributor tab
-                if (ImGui::BeginTabItem("hex.builtin.view.help.about.contributor"_lang)) {
-                    ImGui::NewLine();
-                    if (ImGui::BeginChild(1)) {
-                        this->drawContributorPage();
+                        ImGui::EndTabItem();
                     }
-                    ImGui::EndChild();
-                    ImGui::EndTabItem();
-                }
-
-                // Draw libraries tab
-                if (ImGui::BeginTabItem("hex.builtin.view.help.about.libs"_lang)) {
-                    ImGui::NewLine();
-                    if (ImGui::BeginChild(1)) {
-                        this->drawLibraryCreditsPage();
-                    }
-                    ImGui::EndChild();
-                    ImGui::EndTabItem();
-                }
-
-                // Draw paths tab
-                if (ImGui::BeginTabItem("hex.builtin.view.help.about.paths"_lang)) {
-                    ImGui::NewLine();
-                    if (ImGui::BeginChild(1)) {
-                        this->drawPathsPage();
-                    }
-                    ImGui::EndChild();
-                    ImGui::EndTabItem();
-                }
-
-                // Draw license tab
-                if (ImGui::BeginTabItem("hex.builtin.view.help.about.license"_lang)) {
-                    ImGui::NewLine();
-                    if (ImGui::BeginChild(1)) {
-                        this->drawLicensePage();
-                    }
-                    ImGui::EndChild();
-                    ImGui::EndTabItem();
                 }
 
                 ImGui::EndTabBar();

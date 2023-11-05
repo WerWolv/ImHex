@@ -522,7 +522,7 @@ namespace hex {
              * @brief Gets the current ImHex version
              * @return ImHex version
              */
-            std::string getImHexVersion();
+            std::string getImHexVersion(bool withBuildType = true);
 
             /**
              * @brief Gets the current git commit hash

@@ -4,6 +4,7 @@
 
 #include <imgui.h>
 #include <hex/ui/view.hpp>
+#include <hex/helpers/http_requests.hpp>
 
 #include <vector>
 #include <tuple>
@@ -21,7 +22,7 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override {
-            return scaled({ 600, 350 });
+            return scaled({ 700, 400 });
         }
 
     private:
@@ -33,9 +34,14 @@ namespace hex::plugin::builtin {
         void drawContributorPage();
         void drawLibraryCreditsPage();
         void drawPathsPage();
+        void drawReleaseNotesPage();
+        void drawCommitHistoryPage();
         void drawLicensePage();
 
         ImGui::Texture m_logoTexture;
+
+        std::future<HttpRequest::Result<std::string>> m_releaseNoteRequest, m_commitHistoryRequest;
+        u32 m_clickCount = 0;
     };
 
 }

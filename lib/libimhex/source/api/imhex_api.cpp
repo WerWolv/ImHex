@@ -608,9 +608,14 @@ namespace hex {
             #endif
         }
 
-        std::string getImHexVersion() {
+        std::string getImHexVersion(bool withBuildType) {
             #if defined IMHEX_VERSION
-                return IMHEX_VERSION;
+                if (withBuildType)
+                    return IMHEX_VERSION;
+                else {
+                    auto version = std::string(IMHEX_VERSION);
+                    return version.substr(0, version.find('-'));
+                }
             #else
                 return "Unknown";
             #endif
