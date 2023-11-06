@@ -179,6 +179,8 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_resetDebuggerVariables;
         int m_debuggerScopeIndex = 0;
 
+        std::chrono::steady_clock::time_point m_lastEditTime;
+
     private:
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
