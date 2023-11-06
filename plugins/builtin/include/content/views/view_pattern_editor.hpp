@@ -132,6 +132,11 @@ namespace hex::plugin::builtin {
             }
         };
 
+        struct AccessData {
+            float progress;
+            u32 color;
+        };
+
         std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
 
         PerProvider<std::vector<std::fs::path>> m_possiblePatternFiles;
@@ -178,6 +183,9 @@ namespace hex::plugin::builtin {
         PerProvider<std::unique_ptr<ui::PatternDrawer>> m_debuggerDrawer;
         std::atomic<bool> m_resetDebuggerVariables;
         int m_debuggerScopeIndex = 0;
+
+        std::array<AccessData, 512> m_accessHistory;
+        u32 m_accessHistoryIndex = 0;
 
     private:
         void drawConsole(ImVec2 size);

@@ -244,6 +244,45 @@ namespace hex::plugin::builtin {
                         } else {
                             ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
                         }
+
+                        ImGui::SameLine();
+                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                        ImGui::SameLine();
+
+                        const auto padding = ImGui::GetStyle().FramePadding.y;
+
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+                        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+                        if (ImGui::BeginChild("##read_cursor", ImGui::GetContentRegionAvail() + ImVec2(0, padding), true)) {
+                            const auto startPos = ImGui::GetCursorScreenPos();
+                            const auto size    = ImGui::GetContentRegionAvail();
+
+                            const auto dataBaseAddress = runtime.getInternals().evaluator->getDataBaseAddress();
+                            const auto dataSize = runtime.getInternals().evaluator->getDataSize();
+
+                            const auto insertPos = [&, this](u64 address, u32 color) {
+                                const auto progress = (address - dataBaseAddress) / float(dataSize);
+
+                                this->m_accessHistory[this->m_accessHistoryIndex] = { progress, color };
+                                this->m_accessHistoryIndex = (this->m_accessHistoryIndex + 1) % this->m_accessHistory.size();
+                            };
+
+                            insertPos(runtime.getLastReadAddress(),         ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue));
+                            insertPos(runtime.getLastWriteAddress(),        ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                            insertPos(runtime.getLastPatternPlaceAddress(), ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
+
+                            auto drawList = ImGui::GetWindowDrawList();
+                            for (const auto &[progress, color] : this->m_accessHistory) {
+                                if (progress <= 0) continue;
+
+                                const auto linePos = startPos + ImVec2(size.x * progress, 0);
+
+                                drawList->AddLine(linePos, linePos + ImVec2(0, size.y), color, 2_scaled);
+                            }
+                        }
+                        ImGui::EndChild();
+                        ImGui::PopStyleVar(2);
+
                     } else {
                         if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
                             if (this->m_runAutomatically)
@@ -941,6 +980,9 @@ namespace hex::plugin::builtin {
 
         this->m_sectionWindowDrawer.clear();
         this->m_consoleEditor.SetText("");
+
+        this->m_accessHistory = {};
+        this->m_accessHistoryIndex = 0;
 
         EventManager::post<EventHighlightingChanged>();
 
