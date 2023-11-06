@@ -270,6 +270,9 @@ namespace ImGui {
 
     void TextOverlay(const char *text, ImVec2 pos);
 
+    bool BeginBox();
+    void EndBox();
+
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {
         if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;

@@ -67,11 +67,7 @@ namespace hex::plugin::builtin {
 
                             firstSubCategory = false;
 
-                            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, scaled({5, 5}));
-                            if (ImGui::BeginTable("##subCategory", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame)) {
-                                ImGui::TableNextRow();
-                                ImGui::TableNextColumn();
-
+                            if (ImGui::BeginBox()) {
                                 for (auto &setting : subCategory.entries) {
                                     ImGui::BeginDisabled(!setting.widget->isEnabled());
                                     bool settingChanged = setting.widget->draw(LangEntry(setting.unlocalizedName));
@@ -102,9 +98,8 @@ namespace hex::plugin::builtin {
                                     }
                                 }
 
-                                ImGui::EndTable();
+                                ImGui::EndBox();
                             }
-                            ImGui::PopStyleVar();
 
                         }
 

@@ -115,7 +115,7 @@ namespace hex::plugin::builtin {
                         this->m_mode = cs_mode(0);
 
                     // Draw sub-settings for each architecture
-                    if (ImGui::BeginChild("modes", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6), true, ImGuiWindowFlags_AlwaysAutoResize)) {
+                    if (ImGui::BeginBox()) {
 
                         // Draw endian radio buttons. This setting is available for all architectures
                         static int littleEndian = true;
@@ -374,8 +374,9 @@ namespace hex::plugin::builtin {
                                 this->m_mode = cs_mode(0);
                                 break;
                         }
+
+                        ImGui::EndBox();
                     }
-                    ImGui::EndChild();
                 }
 
                 // Draw disassemble button

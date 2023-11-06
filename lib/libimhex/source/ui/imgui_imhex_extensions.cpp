@@ -821,4 +821,18 @@ namespace ImGui {
         drawList->AddText(textPos, ImGui::GetColorU32(ImGuiCol_Text), text);
     }
 
+    bool BeginBox() {
+        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5, 5));
+        auto result = ImGui::BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame);
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+
+        return result;
+    }
+
+    void EndBox() {
+        ImGui::EndTable();
+        ImGui::PopStyleVar();
+    }
+
 }
