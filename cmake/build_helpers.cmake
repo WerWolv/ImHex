@@ -257,6 +257,9 @@ macro(createPackage)
 
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
+
+        set (CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
+        set (CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/ImHex.app/Contents/Info.plist")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         if(WIN32) # Forwarder is only needed on Windows
@@ -264,10 +267,8 @@ macro(createPackage)
         endif()
     endif()
 
-    if (IMHEX_GENERATE_PACKAGE AND WIN32)
+    if (IMHEX_GENERATE_PACKAGE)
         set (CPACK_BUNDLE_NAME "ImHex")
-        set (CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
-        set (CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/ImHex.app/Contents/Info.plist")
 
         include(CPack)
     endif()
