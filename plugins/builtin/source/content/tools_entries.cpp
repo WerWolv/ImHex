@@ -2067,6 +2067,53 @@ namespace hex::plugin::builtin {
                 ImGui::EndTabBar();
             }
         }
+
+
+        void drawEuclidianAlgorithm() {
+            static u64 a, b;
+
+            constexpr static auto gcd = [](u64 a, u64 b) {
+                while (b != 0) {
+                    u64 temp = b;
+                    b = a % b;
+                    a = temp;
+                }
+
+                return a;
+            };
+
+            static u64 gcdResult = 0;
+            static u64 lcmResult = 0;
+
+            ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.euclidean_algorithm.description"_lang);
+
+            ImGui::NewLine();
+
+            if (ImGui::BeginBox()) {
+                bool hasChanged = false;
+                hasChanged = ImGui::InputScalar("A", ImGuiDataType_U64, &a) || hasChanged;
+                hasChanged = ImGui::InputScalar("B", ImGuiDataType_U64, &b) || hasChanged;
+
+                if (hasChanged) {
+                    gcdResult = gcd(a, b);
+
+                    if (gcdResult == 0)
+                        lcmResult = 0;
+                    else
+                        lcmResult = (a * b) / gcdResult;
+                }
+
+                ImGui::Separator();
+
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().DisabledAlpha);
+                ImGui::InputScalar("gcd(A, B)", ImGuiDataType_U64, &gcdResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
+                ImGui::InputScalar("lcm(A, B)", ImGuiDataType_U64, &lcmResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
+                ImGui::PopStyleVar();
+
+                ImGui::EndBox();
+            }
+
+        }
     }
 
     void registerToolEntries() {
@@ -2084,6 +2131,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.ieee754", drawIEEE754Decoder);
         ContentRegistry::Tools::add("hex.builtin.tools.invariant_multiplication", drawInvariantMultiplicationDecoder);
         ContentRegistry::Tools::add("hex.builtin.tools.tcp_client_server", drawTCPClientServer);
+        ContentRegistry::Tools::add("hex.builtin.tools.euclidean_algorithm", drawEuclidianAlgorithm);
     }
 
 }
