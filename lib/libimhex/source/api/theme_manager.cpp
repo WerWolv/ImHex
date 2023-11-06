@@ -122,7 +122,7 @@ namespace hex {
             }
         }
 
-        if (theme.contains("colors")) {
+        if (theme.contains("colors") && !s_themeHandlers.empty()) {
             for (const auto&[type, content] : theme["colors"].items()) {
                 if (!s_themeHandlers.contains(type)) {
                     log::warn("No theme handler found for '{}'", type);
@@ -147,7 +147,7 @@ namespace hex {
             }
         }
 
-        if (theme.contains("styles")) {
+        if (theme.contains("styles") && !s_styleHandlers.empty()) {
             for (const auto&[type, content] : theme["styles"].items()) {
                 if (!s_styleHandlers.contains(type)) {
                     log::warn("No style handler found for '{}'", type);

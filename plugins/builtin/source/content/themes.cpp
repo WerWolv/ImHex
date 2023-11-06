@@ -8,7 +8,6 @@
 #include <TextEditor.h>
 #include <romfs/romfs.hpp>
 
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <hex/api/event.hpp>
