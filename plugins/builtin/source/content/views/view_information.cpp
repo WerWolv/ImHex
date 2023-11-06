@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
                 u64 count = 0;
 
                 // Loop over each byte of the selection and update each analysis
-                // one byte at a time in order to process the file only once
+                // one byte at a time to process the file only once
                 for (u8 byte : reader) {
                     this->m_byteDistribution.update(byte);
                     this->m_byteTypesDistribution.update(byte);
@@ -228,10 +228,12 @@ namespace hex::plugin::builtin {
 
                                 ImGui::EndTable();
                             }
+
+                            ImGui::NewLine();
                         }
 
                         // Information analysis
-                        {
+                        if (this->m_analyzedRegion.getSize() > 0) {
 
                             ImGui::Header("hex.builtin.view.information.info_analysis"_lang);
 
@@ -253,7 +255,7 @@ namespace hex::plugin::builtin {
                                     true
                             );
 
-                            // Display chunk based entropy analysis
+                            // Display chunk-based entropy analysis
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
                             this->m_chunkBasedEntropy.draw(
                                 ImVec2(-1, 0), 
@@ -283,7 +285,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
                             ImGui::TableNextColumn();
                             if (this->m_averageEntropy < 0) ImGui::TextUnformatted("???");
-                            else ImGui::TextFormatted("{:.5f}", this->m_averageEntropy);
+                            else ImGui::TextFormatted("{:.5f}", std::abs(this->m_averageEntropy));
 
                             ImGui::TableNextColumn();
                             ImGui::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);

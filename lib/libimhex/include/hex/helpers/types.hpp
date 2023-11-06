@@ -44,7 +44,12 @@ namespace hex {
         }
 
         [[nodiscard]] constexpr u64 getStartAddress() const { return this->address; }
-        [[nodiscard]] constexpr u64 getEndAddress() const { return this->address + this->size - 1;}
+        [[nodiscard]] constexpr u64 getEndAddress() const {
+            if (this->size == 0)
+                return this->address;
+            else
+                return this->address + this->size - 1;
+        }
         [[nodiscard]] constexpr size_t getSize() const { return this->size; }
 
         [[nodiscard]] constexpr bool operator==(const Region &other) const {
