@@ -18,6 +18,7 @@
 #include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_question.hpp>
 #include <content/popups/popup_tasks_waiting.hpp>
+#include <content/popups/popup_unsaved_changes.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -36,13 +37,15 @@ namespace hex::plugin::builtin {
 
     void registerEventHandlers() {
 
+        static bool imhexClosing = false;
         EventManager::subscribe<EventWindowClosing>([](GLFWwindow *window) {
-            if (ImHexApi::Provider::isDirty()) {
+            if (ImHexApi::Provider::isDirty() && !imhexClosing) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
-                    []{
-                        ImHexApi::Provider::resetDirty();
-                        ImHexApi::System::closeImHex();
+                    [] {
+                        imhexClosing = true;
+                        for (const auto &provider : auto(ImHexApi::Provider::getProviders()))
+                            ImHexApi::Provider::remove(provider);
                     },
                     [] { }
                 );
@@ -59,11 +62,15 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventProviderClosing>([](hex::prv::Provider *provider, bool *shouldClose) {
             if (provider->isDirty()) {
                 *shouldClose = false;
-                PopupQuestion::open("hex.builtin.popup.close_provider.desc"_lang,
+                PopupUnsavedChanges::open("hex.builtin.popup.close_provider.desc"_lang,
                                     []{
-                                        ImHexApi::Provider::remove(ImHexApi::Provider::impl::getClosingProvider(), true);
+                                        for (auto &provider : ImHexApi::Provider::impl::getClosingProviders())
+                                            ImHexApi::Provider::remove(provider, true);
                                     },
-                                    [] { }
+                                    [] {
+                                        ImHexApi::Provider::impl::resetClosingProvider();
+                                        imhexClosing = false;
+                                    }
                 );
             }
         });

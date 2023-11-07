@@ -224,13 +224,13 @@ namespace hex {
 
         namespace impl {
 
-            static prv::Provider *s_closingProvider = nullptr;
+            static std::vector<prv::Provider*> s_closingProviders;
             void resetClosingProvider() {
-                s_closingProvider = nullptr;
+                s_closingProviders.clear();
             }
 
-            prv::Provider* getClosingProvider() {
-                return s_closingProvider;
+            const std::vector<prv::Provider*>& getClosingProviders() {
+                return s_closingProviders;
             }
 
         }
@@ -302,7 +302,7 @@ namespace hex {
                 return;
 
             if (!noQuestions) {
-                impl::s_closingProvider = provider;
+                impl::s_closingProviders.push_back(provider);
 
                 bool shouldClose = true;
                 EventManager::post<EventProviderClosing>(provider, &shouldClose);

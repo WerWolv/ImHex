@@ -454,7 +454,7 @@
         "hex.builtin.pl_visualizer.coordinates.query": "Find address",
         "hex.builtin.pl_visualizer.coordinates.querying": "Querying address...",
         "hex.builtin.pl_visualizer.coordinates.querying_no_address": "No address found",
-        "hex.builtin.popup.close_provider.desc": "There are unsaved changes made to this Provider\nthat haven't been saved to a Project yet.\n\nAre you sure you want to close it?",
+        "hex.builtin.popup.close_provider.desc": "There are unsaved changes made to one or more Providers\nthat haven't been saved to a Project yet.\n\nAre you sure you want to close them?",
         "hex.builtin.popup.close_provider.title": "Close Provider?",
         "hex.builtin.popup.docs_question.title": "Documentation query",
         "hex.builtin.popup.docs_question.no_answer": "The documentation didn't have an answer for this question",

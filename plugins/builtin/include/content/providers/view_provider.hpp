@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
         explicit ViewProvider() {
             EventManager::subscribe<EventProviderClosing>(this, [this](prv::Provider *provider, bool*) {
                 if (this->m_provider == provider)
-                    ImHexApi::Provider::remove(this, true);
+                    ImHexApi::Provider::remove(this, false);
             });
         }
         ~ViewProvider() override {

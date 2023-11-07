@@ -447,7 +447,7 @@
         "hex.builtin.pl_visualizer.coordinates.query": "Adresse finden",
         "hex.builtin.pl_visualizer.coordinates.querying": "Adresse abfragen...",
         "hex.builtin.pl_visualizer.coordinates.querying_no_address": "Keine Adresse gefunden",
-        "hex.builtin.popup.close_provider.desc": "Es wurden ungespeicherte Änderungen an diesem Provider vorgenommen.\nBist du sicher, dass du ihn schliessen willst?",
+        "hex.builtin.popup.close_provider.desc": "Es wurden ungespeicherte Änderungen an einem oder mehreren Provider vorgenommen.\nBist du sicher, dass du diese schliessen willst?",
         "hex.builtin.popup.close_provider.title": "Provider schliessen?",
         "hex.builtin.popup.docs_question.title": "Dokumentationsabfrage",
         "hex.builtin.popup.docs_question.no_answer": "Die Dokumentation enthielt keine Antwort auf diese Frage",

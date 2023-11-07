@@ -447,7 +447,7 @@
         "hex.builtin.pl_visualizer.coordinates.query": "查詢地址",
         "hex.builtin.pl_visualizer.coordinates.querying": "正在查詢地址...",
         "hex.builtin.pl_visualizer.coordinates.querying_no_address": "找不到地址",
-        "hex.builtin.popup.close_provider.desc": "您對此提供者有未儲存的更動。\n您確定要關閉嗎？",
+        "hex.builtin.popup.close_provider.desc": "",
         "hex.builtin.popup.close_provider.title": "關閉提供者？",
         "hex.builtin.popup.docs_question.title": "說明文件查詢",
         "hex.builtin.popup.docs_question.no_answer": "說明文件回答不了此問題",

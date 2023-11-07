@@ -447,7 +447,7 @@
         "hex.builtin.pl_visualizer.coordinates.query": "주소 찾기",
         "hex.builtin.pl_visualizer.coordinates.querying": "주소 쿼리 중...",
         "hex.builtin.pl_visualizer.coordinates.querying_no_address": "찾은 주소가 없습니다",
-        "hex.builtin.popup.close_provider.desc": "이 공급자에 대해 아직 프로젝트에\n저장되지 않은 변경 사항이 있습니다.\n\n정말 종료하시겠습니까?",
+        "hex.builtin.popup.close_provider.desc": "",
         "hex.builtin.popup.close_provider.title": "공급자를 종료하시겠습니까?",
         "hex.builtin.popup.docs_question.title": "설명서 쿼리",
         "hex.builtin.popup.docs_question.no_answer": "설명서에 이 질문에 대한 답변이 없습니다",

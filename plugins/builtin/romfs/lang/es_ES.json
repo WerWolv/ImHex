@@ -447,7 +447,7 @@
         "hex.builtin.pl_visualizer.coordinates.query": "",
         "hex.builtin.pl_visualizer.coordinates.querying": "",
         "hex.builtin.pl_visualizer.coordinates.querying_no_address": "",
-        "hex.builtin.popup.close_provider.desc": "Hay cambios sin guardar en este Proveedor.\nque aún no han sido guardados en un Proyecto.\n\n¿Está seguro de que quiera cerrarlo?",
+        "hex.builtin.popup.close_provider.desc": "",
         "hex.builtin.popup.close_provider.title": "¿Cerrar Proveedor?",
         "hex.builtin.popup.docs_question.title": "Búsqueda de Documentación",
         "hex.builtin.popup.docs_question.no_answer": "La documentación no tuvo una respuesta esta pregunta",

@@ -447,7 +447,7 @@
         "hex.builtin.pl_visualizer.coordinates.query": "",
         "hex.builtin.pl_visualizer.coordinates.querying": "",
         "hex.builtin.pl_visualizer.coordinates.querying_no_address": "",
-        "hex.builtin.popup.close_provider.desc": "変更がプロジェクトとして保存されていません。\nファイルを閉じてもよろしいですか？",
+        "hex.builtin.popup.close_provider.desc": "",
         "hex.builtin.popup.close_provider.title": "タブを閉じますか？",
         "hex.builtin.popup.docs_question.title": "",
         "hex.builtin.popup.docs_question.no_answer": "",
