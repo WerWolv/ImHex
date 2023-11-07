@@ -333,6 +333,14 @@ namespace hex {
         }
     }
 
+    static bool isAnyViewOpen() {
+        const auto &views = ContentRegistry::Views::impl::getEntries();
+        return std::any_of(views.begin(), views.end(),
+                           [](const auto &entry) {
+                               return entry.second->getWindowOpenState();
+                           });
+    }
+
     void Window::frameBegin() {
         // Start new ImGui Frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -357,7 +365,7 @@ namespace hex {
             auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
             auto sidebarPos   = ImGui::GetCursorPos();
-            auto sidebarWidth = ContentRegistry::Interface::impl::getSidebarItems().empty() ? 0 : 30_scaled;
+            auto sidebarWidth = ContentRegistry::Interface::impl::getSidebarItems().empty() ? 0 : 20_scaled;
 
             ImGui::SetCursorPosX(sidebarWidth);
 
@@ -393,7 +401,7 @@ namespace hex {
                 ImGui::SetCursorPos(sidebarPos);
 
                 static i32 openWindow = -1;
-                u32 index             = 0;
+                u32 index = 0;
                 ImGui::PushID("SideBarWindows");
                 for (const auto &[icon, callback] : ContentRegistry::Interface::impl::getSidebarItems()) {
                     ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
@@ -417,11 +425,11 @@ namespace hex {
 
                     bool open = static_cast<u32>(openWindow) == index;
                     if (open) {
-                        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 2_scaled, 0));
+                        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, 0));
                         ImGui::SetNextWindowSize(ImVec2(250_scaled, dockSpaceSize.y + ImGui::GetStyle().FramePadding.y + 2_scaled));
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
-                        if (ImGui::Begin("Window", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
+                        if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
                             callback();
                         }
                         ImGui::End();
@@ -501,8 +509,10 @@ namespace hex {
 
             this->beginNativeWindowFrame();
 
-            drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth - 2, 0), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 2, footerHeight - ImGui::GetStyle().FramePadding.y - 2), ImGui::GetColorU32(ImGuiCol_Separator));
-            drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetWindowPos() + ImVec2(ImGui::GetWindowSize().x, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetColorU32(ImGuiCol_Separator));
+            if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
+                drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth - 1_scaled, 0), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator));
+                drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetWindowPos() + ImVec2(ImGui::GetWindowSize().x, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetColorU32(ImGuiCol_Separator));
+            }
         }
         ImGui::End();
         ImGui::PopStyleVar(2);

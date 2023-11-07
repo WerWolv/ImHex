@@ -345,10 +345,13 @@ namespace hex::plugin::builtin {
             static std::array<char, 256> title;
             ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
             if (ImGui::Begin(title.data())) {
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10_scaled, 10_scaled));
-                if (ImGui::Begin("NoViewsBackground", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                    ImGui::Dummy({});
+                ImGui::Dummy({});
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 10, 10 }));
 
+                ImGui::SetNextWindowScroll({ 0.0F, -1.0F });
+                ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
+                ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
+                if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                     auto imageSize = scaled(ImVec2(350, 350));
                     auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
 
@@ -368,6 +371,7 @@ namespace hex::plugin::builtin {
                         loadDefaultLayout();
                     }
                 }
+
                 ImGui::End();
                 ImGui::PopStyleVar();
             }
