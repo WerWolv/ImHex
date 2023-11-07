@@ -130,6 +130,7 @@ jobs:
     runs-on: macos-12
 
     strategy:
+      fail-fast: false
       matrix:
         include:
           - suffix: "-NoGPU"
@@ -240,6 +241,7 @@ jobs:
   # Ubuntu build
   ubuntu:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: Ubuntu
@@ -479,6 +481,7 @@ jobs:
   # RPM distro builds
   rpm-build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: Fedora
