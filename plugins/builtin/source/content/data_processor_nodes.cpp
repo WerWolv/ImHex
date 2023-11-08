@@ -709,7 +709,7 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticAverage : public dp::Node {
     public:
-        NodeArithmeticAverage() : Node("hex.builtin.nodes.arithmetic.average.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticAverage() : Node("hex.builtin.nodes.arithmetic.average.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
 
         void process() override {
             const auto &input = this->getBufferOnInput(0);
@@ -722,7 +722,7 @@ namespace hex::plugin::builtin {
 
     class NodeArithmeticMedian : public dp::Node {
     public:
-        NodeArithmeticMedian() : Node("hex.builtin.nodes.arithmetic.median.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.output") }) { }
+        NodeArithmeticMedian() : Node("hex.builtin.nodes.arithmetic.median.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Float, "hex.builtin.nodes.common.output") }) { }
 
         void process() override {
             auto input = this->getBufferOnInput(0);
@@ -738,7 +738,7 @@ namespace hex::plugin::builtin {
                 median = input[medianIndex];
             }
 
-            this->setIntegerOnOutput(1, median);
+            this->setFloatOnOutput(1, median);
         }
     };
 
