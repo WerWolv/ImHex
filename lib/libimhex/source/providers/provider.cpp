@@ -185,6 +185,8 @@ namespace hex::prv {
     void Provider::setPageSize(size_t pageSize) {
         if (pageSize > MaxPageSize)
             pageSize = MaxPageSize;
+        if (pageSize == 0)
+            return;
 
         this->m_pageSize = pageSize;
     }
