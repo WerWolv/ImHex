@@ -2102,23 +2102,25 @@ namespace hex::plugin::builtin {
                 hasChanged = ImGui::InputScalar("A", ImGuiDataType_U64, &a) || hasChanged;
                 hasChanged = ImGui::InputScalar("B", ImGuiDataType_U64, &b) || hasChanged;
 
-                // Detect overflow
-                const u64 multiplicationResult = a * b;
-                if (a != 0 && multiplicationResult / a != b) {
-                    gcdResult = 0;
-                    lcmResult = 0;
-                    p = 0;
-                    q = 0;
+                // Update results when input changed
+                if (hasChanged) {
 
-                    overflow = true;
-                } else {
-                    if (hasChanged) {
+                    // Detect overflow
+                    const u64 multiplicationResult = a * b;
+                    if (a != 0 && multiplicationResult / a != b) {
+                        gcdResult = 0;
+                        lcmResult = 0;
+                        p = 0;
+                        q = 0;
+
+                        overflow = true;
+                    } else {
                         gcdResult       = std::gcd<i128, i128>(a, b);
                         lcmResult       = std::lcm<i128, i128>(a, b);
                         std::tie(p, q)  = extendedGcd(a, b);
-                    }
 
-                    overflow = false;
+                        overflow = false;
+                    }
                 }
 
                 ImGui::Separator();
