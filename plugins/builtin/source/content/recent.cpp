@@ -31,10 +31,12 @@ namespace hex::plugin::builtin::recent {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
                 // Do not save to recents if the provider is part of a project
-                if (ProjectFile::hasPath()) return;
+                if (ProjectFile::hasPath())
+                    return;
 
-                // Do not save to recents if the provider doesnt want it
-                if (!provider->isSavableAsRecent()) return;
+                // Do not save to recents if the provider doesn't want it
+                if (!provider->isSavableAsRecent())
+                    return;
 
                 // The recent provider is saved to every "recent" directory
                 for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
