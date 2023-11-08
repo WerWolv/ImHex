@@ -278,10 +278,16 @@ namespace hex::plugin::builtin::ui {
 
         const auto bytesPerCell    = this->m_currDataVisualizer->getBytesPerCell();
         const u16 columnCount      = this->m_bytesPerRow / bytesPerCell;
-        const auto byteColumnCount = columnCount + getByteColumnSeparatorCount(columnCount);
+        auto byteColumnCount = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
+
+        if (byteColumnCount >= IMGUI_TABLE_MAX_COLUMNS) {
+            this->m_bytesPerRow = 64;
+            ContentRegistry::Settings::write("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", this->m_bytesPerRow);
+            return;
+        }
 
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
-        if (ImGui::BeginTable("##hex", 2 + byteColumnCount + 2 + 2 , ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
+        if (ImGui::BeginTable("##hex", byteColumnCount, ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
             View::discardNavigationRequests();
             ImGui::TableSetupScrollFreeze(0, 2);
 
