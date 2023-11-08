@@ -2070,11 +2070,12 @@ namespace hex::plugin::builtin {
 
 
         void drawEuclidianAlgorithm() {
-            static i64 a, b;
+            static u64 a, b;
 
             static i64 gcdResult = 0;
             static i64 lcmResult = 0;
             static i64 p = 0, q = 0;
+            static bool overflow = false;
 
             constexpr static auto extendedGcd = []<typename T>(T a, T b) -> std::pair<T, T> {
                 T x = 1, y = 0;
@@ -2101,10 +2102,23 @@ namespace hex::plugin::builtin {
                 hasChanged = ImGui::InputScalar("A", ImGuiDataType_U64, &a) || hasChanged;
                 hasChanged = ImGui::InputScalar("B", ImGuiDataType_U64, &b) || hasChanged;
 
-                if (hasChanged) {
-                    gcdResult       = std::gcd(a, b);
-                    lcmResult       = std::lcm(a, b);
-                    std::tie(p, q)  = extendedGcd(a, b);
+                // Detect overflow
+                const u64 multiplicationResult = a * b;
+                if (a != 0 && multiplicationResult / a != b) {
+                    gcdResult = 0;
+                    lcmResult = 0;
+                    p = 0;
+                    q = 0;
+
+                    overflow = true;
+                } else {
+                    if (hasChanged) {
+                        gcdResult       = std::gcd<i128, i128>(a, b);
+                        lcmResult       = std::lcm<i128, i128>(a, b);
+                        std::tie(p, q)  = extendedGcd(a, b);
+                    }
+
+                    overflow = false;
                 }
 
                 ImGui::Separator();
@@ -2121,6 +2135,11 @@ namespace hex::plugin::builtin {
 
                 ImGui::EndBox();
             }
+
+            if (overflow)
+                ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.tools.euclidean_algorithm.overflow"_lang);
+            else
+                ImGui::NewLine();
 
         }
     }
