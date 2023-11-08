@@ -364,7 +364,9 @@ namespace hex {
         if (ImGui::Begin("ImHexDockSpace", nullptr, windowFlags)) {
             auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
-            auto sidebarPos   = ImGui::GetCursorPos();
+
+            const auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+            auto sidebarPos   = ImGui::GetCursorPos() + ImVec2(0, menuBarHeight);
             auto sidebarWidth = ContentRegistry::Interface::impl::getSidebarItems().empty() ? 0 : 20_scaled;
 
             ImGui::SetCursorPosX(sidebarWidth);
@@ -423,14 +425,20 @@ namespace hex {
 
                     ImGui::PopStyleColor(3);
 
+                    auto sideBarFocused = ImGui::IsWindowFocused();
+
                     bool open = static_cast<u32>(openWindow) == index;
                     if (open) {
-                        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, 0));
-                        ImGui::SetNextWindowSize(ImVec2(250_scaled, dockSpaceSize.y + ImGui::GetStyle().FramePadding.y + 2_scaled));
+                        ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
+                        ImGui::SetNextWindowSize(ImVec2(250_scaled, dockSpaceSize.y + 11_scaled - footerHeight));
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
                         if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
                             callback();
+
+                            if (!ImGui::IsWindowFocused() && !sideBarFocused) {
+                                openWindow = -1;
+                            }
                         }
                         ImGui::End();
                         ImGui::PopStyleVar();
@@ -448,7 +456,6 @@ namespace hex {
             if (ImGui::BeginMainMenuBar()) {
 
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
-                    auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
                     ImGui::SetCursorPosX(5);
 
                     ImGui::Image(this->m_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
@@ -510,8 +517,10 @@ namespace hex {
             this->beginNativeWindowFrame();
 
             if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
-                drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth - 1_scaled, 0), ImGui::GetWindowPos() + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator));
-                drawList->AddLine(ImGui::GetWindowPos() + ImVec2(sidebarWidth, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetWindowPos() + ImVec2(ImGui::GetWindowSize().x, ImGui::GetCurrentWindow()->MenuBarHeight()), ImGui::GetColorU32(ImGuiCol_Separator));
+                drawList->AddLine(
+                        ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -2_scaled),
+                        ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled + menuBarHeight * 2),
+                        ImGui::GetColorU32(ImGuiCol_Separator));
             }
         }
         ImGui::End();
