@@ -2070,20 +2070,27 @@ namespace hex::plugin::builtin {
 
 
         void drawEuclidianAlgorithm() {
-            static u64 a, b;
+            static i64 a, b;
 
-            constexpr static auto gcd = [](u64 a, u64 b) {
-                while (b != 0) {
-                    u64 temp = b;
-                    b = a % b;
-                    a = temp;
+            static i64 gcdResult = 0;
+            static i64 lcmResult = 0;
+            static i64 p = 0, q = 0;
+
+            constexpr static auto extendedGcd = []<typename T>(T a, T b) -> std::pair<T, T> {
+                T x = 1, y = 0;
+
+                T xLast = 0, yLast = 1;
+
+                while (b > 0) {
+                    T quotient = a / b;
+
+                    std::tie(x, xLast)  = std::tuple { xLast, x - quotient * xLast };
+                    std::tie(y, yLast)  = std::tuple { yLast, y - quotient * yLast };
+                    std::tie(a, b)      = std::tuple { b, a - quotient * b };
                 }
 
-                return a;
+                return { x, y };
             };
-
-            static u64 gcdResult = 0;
-            static u64 lcmResult = 0;
 
             ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.euclidean_algorithm.description"_lang);
 
@@ -2095,19 +2102,21 @@ namespace hex::plugin::builtin {
                 hasChanged = ImGui::InputScalar("B", ImGuiDataType_U64, &b) || hasChanged;
 
                 if (hasChanged) {
-                    gcdResult = gcd(a, b);
-
-                    if (gcdResult == 0)
-                        lcmResult = 0;
-                    else
-                        lcmResult = (a * b) / gcdResult;
+                    gcdResult       = std::gcd(a, b);
+                    lcmResult       = std::lcm(a, b);
+                    std::tie(p, q)  = extendedGcd(a, b);
                 }
 
                 ImGui::Separator();
 
                 ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().DisabledAlpha);
-                ImGui::InputScalar("gcd(A, B)", ImGuiDataType_U64, &gcdResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
-                ImGui::InputScalar("lcm(A, B)", ImGuiDataType_U64, &lcmResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
+                ImGui::InputScalar("gcd(A, B)", ImGuiDataType_S64, &gcdResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
+
+                ImGui::Indent();
+                ImGui::TextFormatted(ICON_VS_ARROW_RIGHT " a \u00D7 p  +  b \u00D7 q  =  ({0}) \u00D7 ({1})  +  ({2}) \u00D7 ({3})", a, p, b, q);
+                ImGui::Unindent();
+
+                ImGui::InputScalar("lcm(A, B)", ImGuiDataType_S64, &lcmResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
                 ImGui::PopStyleVar();
 
                 ImGui::EndBox();
