@@ -2139,7 +2139,7 @@ namespace hex::plugin::builtin {
             }
 
             if (overflow)
-                ImGui::TextColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.tools.euclidean_algorithm.overflow"_lang);
+                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "{}", "hex.builtin.tools.euclidean_algorithm.overflow"_lang);
             else
                 ImGui::NewLine();
 
