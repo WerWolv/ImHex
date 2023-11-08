@@ -5,6 +5,8 @@
     "fallback": true,
     "translations": {
         "hex.builtin.achievement.starting_out": "Starting out",
+        "hex.builtin.achievement.starting_out.crash.name": "Yes Rico, Kaboom!",
+        "hex.builtin.achievement.starting_out.crash.desc": "Crash ImHex for the first time.",
         "hex.builtin.achievement.starting_out.docs.name": "RTFM",
         "hex.builtin.achievement.starting_out.docs.desc": "Open the documentation by selecting Help -> Documentation from the menu bar.",
         "hex.builtin.achievement.starting_out.open_file.name": "The inner workings",

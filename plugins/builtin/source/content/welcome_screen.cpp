@@ -542,7 +542,9 @@ namespace hex::plugin::builtin {
         }
 
         if (hasCrashed) {
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.crash.name");
+            TaskManager::doLater([]{
+                AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.crash.name");
+            });
         }
     }
 
