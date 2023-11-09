@@ -157,6 +157,7 @@ namespace hex::plugin::builtin {
                 "        .offsetcolumn { color:#0000A0 }\n"
                 "        .hexcolumn { color:#000000 }\n"
                 "        .textcolumn { color:#000000 }\n"
+                "        .zerobyte { color:#808080 }\n"
                 "    </style>\n\n"
                 "    <code>\n"
                 "        <span class=\"offsetheader\">Hex View&nbsp&nbsp00 01 02 03 04 05 06 07&nbsp 08 09 0A 0B 0C 0D 0E 0F</span>";
@@ -185,7 +186,13 @@ namespace hex::plugin::builtin {
                     result += "</span>";
                 }
 
-                result += hex::format("{0:02X} ", byte);
+                std::string tagStart, tagEnd;
+                if (byte == 0x00) {
+                    tagStart = "<span class=\"zerobyte\">";
+                    tagEnd = "</span>";
+                }
+
+                result += hex::format("{0}{2:02X}{1} ", tagStart, tagEnd, byte);
                 asciiRow += std::isprint(byte) ? char(byte) : '.';
                 if ((address % 0x10) == 0x07)
                     result += "&nbsp";
@@ -193,8 +200,9 @@ namespace hex::plugin::builtin {
                 address++;
             }
 
-            for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
-                result += "&nbsp&nbsp&nbsp";
+            if (address % 0x10 != 0x00)
+                for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
+                    result += "&nbsp&nbsp&nbsp";
             result += asciiRow;
 
             result +=
