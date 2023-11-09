@@ -830,7 +830,7 @@ namespace hex::plugin::builtin {
             u64 visibleByteCount = this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount();
             if (cursor >= visibleByteCount) {
                 auto pos = cursor - visibleByteCount;
-                this->setSelection(pos, pos + this->m_hexEditor.getBytesPerCell());
+                this->setSelection(pos, (pos + this->m_hexEditor.getBytesPerCell()) - 1);
                 this->m_hexEditor.scrollToSelection();
                 this->m_hexEditor.jumpIfOffScreen();
             }
@@ -840,7 +840,7 @@ namespace hex::plugin::builtin {
             auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
             auto pos = cursor + (this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount());
-            this->setSelection(pos, pos + this->m_hexEditor.getBytesPerCell());
+            this->setSelection(pos, (pos + this->m_hexEditor.getBytesPerCell()) - 1);
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
@@ -914,22 +914,37 @@ namespace hex::plugin::builtin {
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
-        ShortcutManager::addShortcut(this, Keys::PageUp, [this] {
+        ShortcutManager::addShortcut(this, SHIFT + Keys::PageUp, [this] {
             auto selection = getSelection();
-            u64 visibleByteCount = this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
 
-            if (selection.getEndAddress() >= visibleByteCount) {
-                auto pos = selection.getEndAddress() - visibleByteCount;
-                this->setSelection(pos, selection.getEndAddress());
-                this->m_hexEditor.scrollToSelection();
-                this->m_hexEditor.jumpIfOffScreen();
+            if (cursor != selection.getStartAddress()) {
+                auto newCursor = std::max<u64>(cursor, this->m_hexEditor.getBytesPerRow()) - this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount();
+                setSelection(selection.getStartAddress(), newCursor);
+                this->m_hexEditor.setCursorPosition(newCursor);
+            } else {
+                auto newCursor = std::max<u64>(cursor, this->m_hexEditor.getBytesPerRow()) - this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount();
+                setSelection(newCursor, selection.getEndAddress());
+                this->m_hexEditor.setCursorPosition(newCursor);
             }
-        });
-        ShortcutManager::addShortcut(this, Keys::PageDown, [this] {
-            auto selection = getSelection();
-            auto pos = selection.getEndAddress() + (this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount());
 
-            this->setSelection(pos, selection.getEndAddress());
+            this->m_hexEditor.scrollToSelection();
+            this->m_hexEditor.jumpIfOffScreen();
+        });
+        ShortcutManager::addShortcut(this, SHIFT + Keys::PageDown, [this] {
+            auto selection = getSelection();
+            auto cursor = this->m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
+
+            if (cursor != selection.getStartAddress()) {
+                auto newCursor = cursor + (this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount());
+                setSelection(selection.getStartAddress(), newCursor);
+                this->m_hexEditor.setCursorPosition(newCursor);
+            } else {
+                auto newCursor = cursor + (this->m_hexEditor.getBytesPerRow() * this->m_hexEditor.getVisibleRowCount());
+                setSelection(newCursor, selection.getEndAddress());
+                this->m_hexEditor.setCursorPosition(newCursor);
+            }
+
             this->m_hexEditor.scrollToSelection();
             this->m_hexEditor.jumpIfOffScreen();
         });
