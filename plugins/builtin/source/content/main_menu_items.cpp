@@ -218,6 +218,36 @@ namespace hex::plugin::builtin {
             });
         }
 
+        void drawExportLanguageMenu() {
+            for (const auto &formatter : ContentRegistry::DataFormatter::impl::getEntries()) {
+                if (ImGui::MenuItem(LangEntry(formatter.unlocalizedName))) {
+                    fs::openFileBrowser(fs::DialogMode::Save, {}, [&formatter](const auto &path) {
+                        TaskManager::createTask("Exporting data", TaskManager::NoProgress, [&formatter, path](auto&){
+                            auto provider = ImHexApi::Provider::get();
+                            auto selection = ImHexApi::HexEditor::getSelection()
+                                    .value_or(
+                                            ImHexApi::HexEditor::ProviderRegion {
+                                                { provider->getBaseAddress(), provider->getSize() },
+                                                provider
+                                            });
+
+                            auto result = formatter.callback(provider, selection.getStartAddress(), selection.getSize());
+
+                            wolv::io::File file(path, wolv::io::File::Mode::Create);
+                            if (!file.isValid()) {
+                                TaskManager::doLater([] {
+                                    PopupError::open("hex.builtin.menu.file.export.as_language.popup.export_error"_lang);
+                                });
+                                return;
+                            }
+
+                            file.writeString(result);
+                        });
+                    });
+                }
+            }
+        }
+
         void exportIPSPatch() {
             auto provider = ImHexApi::Provider::get();
 
@@ -382,6 +412,10 @@ namespace hex::plugin::builtin {
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.base64" }, 6000,
                                                     Shortcut::None,
                                                     exportBase64,
+                                                    isProviderDumpable);
+
+            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.as_language" }, 6010,
+                                                    drawExportLanguageMenu,
                                                     isProviderDumpable);
 
             ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, 6050);
