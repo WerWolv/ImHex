@@ -132,18 +132,19 @@ namespace hex {
             }
 
             std::vector<Category> &getSettings() {
-                static std::vector<impl::Category> categories;
+                static std::vector<Category> categories;
 
                 return categories;
             }
 
             Widgets::Widget* add(const std::string &unlocalizedCategory, const std::string &unlocalizedSubCategory, const std::string &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget) {
-                auto category    = impl::insertOrGetEntry(impl::getSettings(),     unlocalizedCategory);
-                auto subCategory = impl::insertOrGetEntry(category->subCategories, unlocalizedSubCategory);
-                auto entry       = impl::insertOrGetEntry(subCategory->entries,    unlocalizedName);
+                const auto category    = insertOrGetEntry(getSettings(),     unlocalizedCategory);
+                const auto subCategory = insertOrGetEntry(category->subCategories, unlocalizedSubCategory);
+                const auto entry       = insertOrGetEntry(subCategory->entries,    unlocalizedName);
 
                 entry->widget = std::move(widget);
                 entry->widget->load(getSetting(unlocalizedCategory, unlocalizedName, entry->widget->store()));
+                entry->widget->onChanged();
 
                 return entry->widget.get();
             }
@@ -151,7 +152,7 @@ namespace hex {
         }
 
         void setCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedDescription) {
-            auto category    = impl::insertOrGetEntry(impl::getSettings(),     unlocalizedCategory);
+            const auto category = insertOrGetEntry(impl::getSettings(),     unlocalizedCategory);
 
             category->unlocalizedDescription = unlocalizedDescription;
         }
@@ -247,9 +248,9 @@ namespace hex {
             }
 
             nlohmann::json ColorPicker::store() {
-                ImColor color(this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3]);
+                const ImColor color(this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3]);
 
-                return ImU32(color);
+                return static_cast<ImU32>(color);
             }
 
             ImColor ColorPicker::getColor() const {
@@ -259,7 +260,7 @@ namespace hex {
 
             bool DropDown::draw(const std::string &name) {
                 const char *preview = "";
-                if (size_t(this->m_value) < this->m_items.size())
+                if (static_cast<size_t>(this->m_value) < this->m_items.size())
                     preview = this->m_items[this->m_value].c_str();
 
                 bool changed = false;
@@ -267,7 +268,7 @@ namespace hex {
 
                     int index = 0;
                     for (const auto &item : this->m_items) {
-                        bool selected = (index == this->m_value);
+                        const bool selected = index == this->m_value;
 
                         if (ImGui::Selectable(LangEntry(item), selected)) {
                             this->m_value = index;
@@ -310,7 +311,7 @@ namespace hex {
             nlohmann::json DropDown::store() {
                 if (this->m_value == -1)
                     return this->m_defaultItem;
-                if (size_t(this->m_value) >= this->m_items.size())
+                if (static_cast<size_t>(this->m_value) >= this->m_items.size())
                     return this->m_defaultItem;
 
                 return this->m_settingsValues[this->m_value];
@@ -382,13 +383,13 @@ namespace hex {
         void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const impl::DisplayCallback &displayCallback, const impl::ExecuteCallback &executeCallback) {
             log::debug("Registered new command palette command: {}", command);
 
-            impl::getEntries().push_back(ContentRegistry::CommandPaletteCommands::impl::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
+            impl::getEntries().push_back(impl::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
         }
 
         void addHandler(Type type, const std::string &command, const impl::QueryCallback &queryCallback, const impl::DisplayCallback &displayCallback) {
             log::debug("Registered new command palette command handler: {}", command);
 
-            impl::getHandlers().push_back(ContentRegistry::CommandPaletteCommands::impl::Handler { type, command, queryCallback, displayCallback });
+            impl::getHandlers().push_back(impl::Handler { type, command, queryCallback, displayCallback });
         }
 
         namespace impl {
@@ -451,11 +452,11 @@ namespace hex {
 
             runtime.setIncludePaths(fs::getDefaultPaths(fs::ImHexPath::PatternsInclude) | fs::getDefaultPaths(fs::ImHexPath::Patterns));
 
-            for (const auto &func : impl::getFunctions()) {
-                if (func.dangerous)
-                    runtime.addDangerousFunction(func.ns, func.name, func.parameterCount, func.callback);
+            for (const auto &[ns, name, paramCount, callback, dangerous] : impl::getFunctions()) {
+                if (dangerous)
+                    runtime.addDangerousFunction(ns, name, paramCount, callback);
                 else
-                    runtime.addFunction(func.ns, func.name, func.parameterCount, func.callback);
+                    runtime.addFunction(ns, name, paramCount, callback);
             }
 
             for (const auto &[name, callback] : impl::getPragmas()) {
@@ -506,14 +507,14 @@ namespace hex {
 
         namespace impl {
 
-            std::map<std::string, impl::Visualizer> &getVisualizers() {
-                static std::map<std::string, impl::Visualizer> visualizers;
+            std::map<std::string, Visualizer> &getVisualizers() {
+                static std::map<std::string, Visualizer> visualizers;
 
                 return visualizers;
             }
 
-            std::map<std::string, impl::Visualizer> &getInlineVisualizers() {
-                static std::map<std::string, impl::Visualizer> visualizers;
+            std::map<std::string, Visualizer> &getInlineVisualizers() {
+                static std::map<std::string, Visualizer> visualizers;
 
                 return visualizers;
             }
@@ -524,8 +525,8 @@ namespace hex {
                 return pragmas;
             }
 
-            std::vector<impl::FunctionDefinition> &getFunctions() {
-                static std::vector<impl::FunctionDefinition> functions;
+            std::vector<FunctionDefinition> &getFunctions() {
+                static std::vector<FunctionDefinition> functions;
 
                 return functions;
             }
@@ -551,7 +552,7 @@ namespace hex {
         void impl::add(std::unique_ptr<View> &&view) {
             log::debug("Registered new view: {}", view->getUnlocalizedName());
 
-            impl::getEntries().insert({ view->getUnlocalizedName(), std::move(view) });
+            getEntries().insert({ view->getUnlocalizedName(), std::move(view) });
         }
 
         View* getViewByName(const std::string &unlocalizedName) {
@@ -601,8 +602,8 @@ namespace hex {
 
         namespace impl {
 
-            std::vector<impl::Entry> &getEntries() {
-                static std::vector<impl::Entry> entries;
+            std::vector<Entry> &getEntries() {
+                static std::vector<Entry> entries;
 
                 return entries;
             }
@@ -614,7 +615,7 @@ namespace hex {
 
     namespace ContentRegistry::DataProcessorNode {
 
-        void impl::add(const impl::Entry &entry) {
+        void impl::add(const Entry &entry) {
             log::debug("Registered new data processor node type: [{}]: {}", entry.category, entry.name);
 
             getEntries().push_back(entry);
@@ -626,8 +627,8 @@ namespace hex {
 
         namespace impl {
 
-            std::vector<impl::Entry> &getEntries() {
-                static std::vector<impl::Entry> nodes;
+            std::vector<Entry> &getEntries() {
+                static std::vector<Entry> nodes;
 
                 return nodes;
             }
@@ -757,39 +758,39 @@ namespace hex {
 
         namespace impl {
 
-            std::multimap<u32, impl::MainMenuItem> &getMainMenuItems() {
-                static std::multimap<u32, impl::MainMenuItem> items;
+            std::multimap<u32, MainMenuItem> &getMainMenuItems() {
+                static std::multimap<u32, MainMenuItem> items;
 
                 return items;
             }
-            std::multimap<u32, impl::MenuItem> &getMenuItems() {
-                static std::multimap<u32, impl::MenuItem> items;
+            std::multimap<u32, MenuItem> &getMenuItems() {
+                static std::multimap<u32, MenuItem> items;
 
                 return items;
             }
 
-            std::vector<impl::DrawCallback> &getWelcomeScreenEntries() {
-                static std::vector<impl::DrawCallback> entries;
+            std::vector<DrawCallback> &getWelcomeScreenEntries() {
+                static std::vector<DrawCallback> entries;
 
                 return entries;
             }
-            std::vector<impl::DrawCallback> &getFooterItems() {
-                static std::vector<impl::DrawCallback> items;
+            std::vector<DrawCallback> &getFooterItems() {
+                static std::vector<DrawCallback> items;
 
                 return items;
             }
-            std::vector<impl::DrawCallback> &getToolbarItems() {
-                static std::vector<impl::DrawCallback> items;
+            std::vector<DrawCallback> &getToolbarItems() {
+                static std::vector<DrawCallback> items;
 
                 return items;
             }
-            std::vector<impl::SidebarItem> &getSidebarItems() {
-                static std::vector<impl::SidebarItem> items;
+            std::vector<SidebarItem> &getSidebarItems() {
+                static std::vector<SidebarItem> items;
 
                 return items;
             }
-            std::vector<impl::TitleBarButton> &getTitleBarButtons() {
-                static std::vector<impl::TitleBarButton> buttons;
+            std::vector<TitleBarButton> &getTitleBarButtons() {
+                static std::vector<TitleBarButton> buttons;
 
                 return buttons;
             }
@@ -830,8 +831,8 @@ namespace hex {
 
         namespace impl {
 
-            std::vector<impl::Entry> &getEntries() {
-                static std::vector<impl::Entry> entries;
+            std::vector<Entry> &getEntries() {
+                static std::vector<Entry> entries;
 
                 return entries;
             }
@@ -851,8 +852,8 @@ namespace hex {
 
         namespace impl {
 
-            std::vector<impl::Entry> &getEntries() {
-                static std::vector<impl::Entry> entries;
+            std::vector<Entry> &getEntries() {
+                static std::vector<Entry> entries;
 
                 return entries;
             }
@@ -882,7 +883,7 @@ namespace hex {
 
             ImGui::PushID(reinterpret_cast<void*>(address));
             ImGui::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
-                auto &userData = *reinterpret_cast<UserData*>(data->UserData);
+                auto &userData = *static_cast<UserData*>(data->UserData);
 
                 if (data->BufTextLen >= userData.maxChars)
                     userData.editingDone = true;
@@ -911,7 +912,7 @@ namespace hex {
 
             ImGui::PushID(reinterpret_cast<void*>(address));
             ImGui::InputText("##editing_input", data.data(), data.size() + 1, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
-                auto &userData = *reinterpret_cast<UserData*>(data->UserData);
+                auto &userData = *static_cast<UserData*>(data->UserData);
 
                 userData.data->resize(data->BufSize);
 
@@ -1025,6 +1026,57 @@ namespace hex {
             log::debug("Registered new network endpoint: {}", endpoint);
 
             impl::getNetworkEndpoints().insert({ endpoint, callback });
+        }
+
+    }
+
+    namespace ContentRegistry::Experiments {
+
+        namespace impl {
+
+            std::map<std::string, Experiment> &getExperiments() {
+                static std::map<std::string, Experiment> experiments;
+
+                return experiments;
+            }
+
+        }
+
+        void addExperiment(const std::string &experimentName, const std::string &unlocalizedName, const std::string &unlocalizedDescription) {
+            auto &experiments = impl::getExperiments();
+
+            if (experiments.contains(experimentName)) {
+                log::error("Experiment with name '{}' already exists!", experimentName);
+                return;
+            }
+
+            experiments[experimentName] = impl::Experiment {
+                .unlocalizedName = unlocalizedName,
+                .unlocalizedDescription = unlocalizedDescription,
+                .enabled = false
+            };
+        }
+
+        void enableExperiement(const std::string &experimentName, bool enabled) {
+            auto &experiments = impl::getExperiments();
+
+            if (!experiments.contains(experimentName)) {
+                log::error("Experiment with name '{}' does not exist!", experimentName);
+                return;
+            }
+
+            experiments[experimentName].enabled = enabled;
+        }
+
+        [[nodiscard]] bool isExperimentEnabled(const std::string &experimentName) {
+            auto &experiments = impl::getExperiments();
+
+            if (!experiments.contains(experimentName)) {
+                log::error("Experiment with name '{}' does not exist!", experimentName);
+                return false;
+            }
+
+            return experiments[experimentName].enabled;
         }
 
     }

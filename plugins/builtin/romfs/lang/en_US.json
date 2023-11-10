@@ -516,6 +516,8 @@
         "hex.builtin.provider.motorola_srec": "Motorola SREC Provider",
         "hex.builtin.provider.motorola_srec.name": "Motorola SREC {0}",
         "hex.builtin.provider.view": "View",
+        "hex.builtin.setting.experiments": "Experiments",
+        "hex.builtin.setting.experiments.description": "Experiments are features that are still in development and may not work correctly yet.\n\nFeel free to try them out and report any issues you encounter!",
         "hex.builtin.setting.folders": "Folders",
         "hex.builtin.setting.folders.add_folder": "Add new folder",
         "hex.builtin.setting.folders.description": "Specify additional search paths for patterns, scripts, Yara rules and more",

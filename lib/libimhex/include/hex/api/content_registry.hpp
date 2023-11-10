@@ -11,9 +11,7 @@
 #include <map>
 #include <span>
 #include <string>
-#include <string_view>
 #include <thread>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -184,7 +182,7 @@ namespace hex {
                     [[nodiscard]] ImColor getColor() const;
 
                 private:
-                    std::array<float, 4> m_value;
+                    std::array<float, 4> m_value{};
                 };
                 class DropDown      : public Widget {
                 public:
@@ -316,8 +314,8 @@ namespace hex {
                     DisplayCallback displayCallback;
                 };
 
-                std::vector<impl::Entry> &getEntries();
-                std::vector<impl::Handler> &getHandlers();
+                std::vector<Entry> &getEntries();
+                std::vector<Handler> &getHandlers();
 
             }
 
@@ -340,7 +338,6 @@ namespace hex {
              * @brief Adds a new command handler to the command palette
              * @param type The type of the command
              * @param command The command to add
-             * @param unlocalizedDescription The description of the command
              * @param queryCallback The callback that will be called when the command palette wants to load the name and callback items
              * @param displayCallback The callback that will be called when the command is displayed in the command palette
              */
@@ -376,7 +373,7 @@ namespace hex {
                 std::map<std::string, Visualizer> &getVisualizers();
                 std::map<std::string, Visualizer> &getInlineVisualizers();
                 std::map<std::string, pl::api::PragmaHandler> &getPragmas();
-                std::vector<impl::FunctionDefinition> &getFunctions();
+                std::vector<FunctionDefinition> &getFunctions();
 
             }
 
@@ -429,19 +426,19 @@ namespace hex {
              * @brief Adds a new visualizer to the pattern language
              * @note Visualizers are extensions to the [[hex::visualize]] attribute, used to visualize data
              * @param name The name of the visualizer
-             * @param func The function callback
+             * @param function The function callback
              * @param parameterCount The amount of parameters the function takes
              */
-            void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, pl::api::FunctionParameterCount parameterCount);
+            void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount);
 
             /**
              * @brief Adds a new inline visualizer to the pattern language
              * @note Inline visualizers are extensions to the [[hex::inline_visualize]] attribute, used to visualize data
              * @param name The name of the visualizer
-             * @param func The function callback
+             * @param function The function callback
              * @param parameterCount The amount of parameters the function takes
              */
-            void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &func, pl::api::FunctionParameterCount parameterCount);
+            void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount);
 
         }
 
@@ -487,7 +484,7 @@ namespace hex {
                     bool detached;
                 };
 
-                std::vector<impl::Entry> &getEntries();
+                std::vector<Entry> &getEntries();
 
             }
 
@@ -519,11 +516,11 @@ namespace hex {
                     std::string unlocalizedName;
                     size_t requiredSize;
                     size_t maxSize;
-                    impl::GeneratorFunction generatorFunction;
-                    std::optional<impl::EditingFunction> editingFunction;
+                    GeneratorFunction generatorFunction;
+                    std::optional<EditingFunction> editingFunction;
                 };
 
-                std::vector<impl::Entry> &getEntries();
+                std::vector<Entry> &getEntries();
 
             }
 
@@ -562,7 +559,7 @@ namespace hex {
 
                 void add(const Entry &entry);
 
-                std::vector<impl::Entry> &getEntries();
+                std::vector<Entry> &getEntries();
             }
 
 
@@ -647,14 +644,14 @@ namespace hex {
                 constexpr static auto SeparatorValue = "$SEPARATOR$";
                 constexpr static auto SubMenuValue = "$SUBMENU$";
 
-                std::multimap<u32, impl::MainMenuItem> &getMainMenuItems();
-                std::multimap<u32, impl::MenuItem> &getMenuItems();
+                std::multimap<u32, MainMenuItem> &getMainMenuItems();
+                std::multimap<u32, MenuItem> &getMenuItems();
 
-                std::vector<impl::DrawCallback> &getWelcomeScreenEntries();
-                std::vector<impl::DrawCallback> &getFooterItems();
-                std::vector<impl::DrawCallback> &getToolbarItems();
-                std::vector<impl::SidebarItem> &getSidebarItems();
-                std::vector<impl::TitleBarButton> &getTitleBarButtons();
+                std::vector<DrawCallback> &getWelcomeScreenEntries();
+                std::vector<DrawCallback> &getFooterItems();
+                std::vector<DrawCallback> &getToolbarItems();
+                std::vector<SidebarItem> &getSidebarItems();
+                std::vector<TitleBarButton> &getTitleBarButtons();
 
             }
 
@@ -682,7 +679,6 @@ namespace hex {
              * @param priority The priority of the entry. Lower values are displayed first
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
-             * @param view The view to use for the entry. If nullptr, the shortcut will work globally
              */
             void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
 
@@ -745,16 +741,16 @@ namespace hex {
              * @tparam T The provider type that extends hex::prv::Provider
              * @param addToList Whether to display the provider in the Other Providers list in the welcome screen and File menu
              */
-            template<std::derived_from<hex::prv::Provider> T>
+            template<std::derived_from<prv::Provider> T>
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, bool skipLoadInterface, bool selectProvider, hex::prv::Provider **provider) {
+                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, bool skipLoadInterface, bool selectProvider, prv::Provider **provider) {
                     if (name != expectedName) return;
 
                     prv::Provider *newProvider = new T();
 
-                    hex::ImHexApi::Provider::add(newProvider, skipLoadInterface, selectProvider);
+                    ImHexApi::Provider::add(newProvider, skipLoadInterface, selectProvider);
 
                     if (provider != nullptr)
                         *provider = newProvider;
@@ -777,7 +773,7 @@ namespace hex {
                     Callback callback;
                 };
 
-                std::vector<impl::Entry> &getEntries();
+                std::vector<Entry> &getEntries();
 
             }
 
@@ -802,7 +798,7 @@ namespace hex {
                     Callback callback;
                 };
 
-                std::vector<impl::Entry> &getEntries();
+                std::vector<Entry> &getEntries();
 
             }
 
@@ -858,7 +854,6 @@ namespace hex {
             /**
              * @brief Adds a new cell data visualizer
              * @tparam T The data visualizer type that extends hex::DataVisualizer
-             * @param unlocalizedName The unlocalized name of the data visualizer
              * @param args The arguments to pass to the constructor of the data visualizer
              */
             template<std::derived_from<DataVisualizer> T, typename... Args>
@@ -955,6 +950,7 @@ namespace hex {
 
         }
 
+        /* Background Service Registry. Allows adding new background services */
         namespace BackgroundServices {
 
             namespace impl {
@@ -972,6 +968,7 @@ namespace hex {
             void registerService(const std::string &unlocalizedName, const impl::Callback &callback);
         }
 
+        /* Network Communication Interface Registry. Allows adding new communication interface endpoints */
         namespace CommunicationInterface {
 
             namespace impl {
@@ -982,6 +979,25 @@ namespace hex {
 
             void registerNetworkEndpoint(const std::string &endpoint, const impl::NetworkCallback &callback);
 
+        }
+
+        /* Experiments Registry. Allows adding new experiments */
+        namespace Experiments {
+
+            namespace impl {
+
+                struct Experiment {
+                    std::string unlocalizedName, unlocalizedDescription;
+                    bool enabled;
+                };
+
+                std::map<std::string, Experiment> &getExperiments();
+            }
+
+            void addExperiment(const std::string &experimentName, const std::string &unlocalizedName, const std::string &unlocalizedDescription = "");
+            void enableExperiement(const std::string &experimentName, bool enabled);
+
+            [[nodiscard]] bool isExperimentEnabled(const std::string &experimentName);
         }
     }
 
