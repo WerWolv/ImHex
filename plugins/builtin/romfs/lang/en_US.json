@@ -639,6 +639,7 @@
         "hex.builtin.tools.format.programmer": "Programmer",
         "hex.builtin.tools.format.scientific": "Scientific",
         "hex.builtin.tools.format.standard": "Standard",
+        "hex.builtin.tools.graphing": "Graphing Calculator",
         "hex.builtin.tools.history": "History",
         "hex.builtin.tools.ieee754": "IEEE 754 Floating Point Encoder and Decoder",
         "hex.builtin.tools.ieee754.clear": "Clear",

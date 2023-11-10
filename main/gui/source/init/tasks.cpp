@@ -597,7 +597,7 @@ namespace hex::init {
     void runExitTasks() {
         for (const auto &[name, task, async] : init::getExitTasks()) {
             bool result = task();
-            log::info("Exit task '{0}' finished {1}", result ? "successfully" : "unsuccessfully");
+            log::info("Exit task '{0}' finished {1}", name, result ? "successfully" : "unsuccessfully");
         }
     }
 

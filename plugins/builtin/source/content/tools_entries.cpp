@@ -19,6 +19,8 @@
 #include <content/helpers/math_evaluator.hpp>
 
 #include <imgui.h>
+#include <implot.h>
+
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <content/popups/popup_notification.hpp>
 #include <nlohmann/json.hpp>
@@ -440,6 +442,51 @@ namespace hex::plugin::builtin {
                     lastMathError = e.what();
                 }
             }
+        }
+
+        void drawGraphingCalculator() {
+            static std::array<long double, 1000> x, y;
+            static std::string mathInput;
+            static ImPlotRect limits;
+            static double prevPos = 0;
+            static long double stepSize = 0.1;
+
+            if (ImPlot::BeginPlot("Function", ImVec2(-1, 0), ImPlotFlags_NoTitle | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect | ImPlotFlags_NoMouseText | ImPlotFlags_NoFrame)) {
+                ImPlot::SetupAxesLimits(-10, 10, -5, 5, ImPlotCond_Once);
+
+                limits = ImPlot::GetPlotLimits(ImAxis_X1, ImAxis_Y1);
+
+                ImPlot::PlotLine("f(x)", x.data(), y.data(), x.size());
+                ImPlot::EndPlot();
+            }
+
+            ImGui::PushItemWidth(-1);
+            ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
+            ImGui::PopItemWidth();
+
+            if ((prevPos != limits.X.Min && (ImGui::IsMouseReleased(ImGuiMouseButton_Left) || ImGui::GetIO().MouseWheel != 0)) || (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
+                MathEvaluator<long double> evaluator;
+
+                evaluator.registerStandardVariables();
+                evaluator.registerStandardFunctions();
+
+                stepSize = (limits.X.Size()) / x.size();
+
+                for (u32 i = 0; i < x.size(); i++) {
+                    evaluator.setVariable("x", limits.X.Min + i * stepSize);
+                    x[i] = limits.X.Min + i * stepSize;
+                    y[i] = evaluator.evaluate(mathInput).value_or(0);
+
+                    if (y[i] < limits.Y.Min)
+                        limits.Y.Min = y[i];
+                    if (y[i] > limits.Y.Max)
+                        limits.X.Max = y[i];
+                }
+
+                limits.X.Max = limits.X.Min + x.size() * stepSize;
+                prevPos = limits.X.Min;
+            }
+
         }
 
         void drawBaseConverter() {
@@ -2148,6 +2195,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.regex_replacer", drawRegexReplacer);
         ContentRegistry::Tools::add("hex.builtin.tools.color", drawColorPicker);
         ContentRegistry::Tools::add("hex.builtin.tools.calc", drawMathEvaluator);
+        ContentRegistry::Tools::add("hex.builtin.tools.graphing", drawGraphingCalculator);
         ContentRegistry::Tools::add("hex.builtin.tools.base_converter", drawBaseConverter);
         ContentRegistry::Tools::add("hex.builtin.tools.byte_swapper", drawByteSwapper);
         ContentRegistry::Tools::add("hex.builtin.tools.permissions", drawPermissionsCalculator);
