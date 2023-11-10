@@ -642,7 +642,7 @@ void TextEditor::HandleKeyboardInputs() {
             SetSelection(wordStart, wordEnd);
             Backspace();
         }
-        else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace)))
+        else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace)))
             Backspace();
         else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Backspace))) {
             auto wordEnd = GetCursorPosition();
