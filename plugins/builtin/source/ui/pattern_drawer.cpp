@@ -154,28 +154,52 @@ namespace hex::plugin::builtin::ui {
             }
         }
 
-        std::vector<std::string> parseRValueFilter(const std::string &filter) {
-            std::vector<std::string> result;
+    }
 
-            if (filter.empty()) {
-                return result;
-            }
+    std::optional<PatternDrawer::Filter> PatternDrawer::parseRValueFilter(const std::string &filter) const {
+        Filter result;
 
-            result.emplace_back();
-            for (char c : filter) {
-                if (c == '.')
-                    result.emplace_back();
-                else if (c == '[') {
-                    result.emplace_back();
-                    result.back() += c;
-                } else {
-                    result.back() += c;
-                }
-            }
-
+        if (filter.empty()) {
             return result;
         }
 
+        result.path.emplace_back();
+        for (size_t i = 0; i < filter.size(); i += 1) {
+            char c = filter[i];
+
+            if (i < filter.size() - 1 && c == '=' && filter[i + 1] == '=') {
+                try {
+                    pl::core::Lexer lexer;
+
+                    auto source = filter.substr(i + 2);
+                    auto tokens = lexer.lex(filter.substr(i + 2), filter.substr(i + 2));
+
+                    if (!tokens.has_value() || tokens->size() != 2)
+                        return std::nullopt;
+
+                    auto literal = std::get_if<pl::core::Token::Literal>(&tokens->front().value);
+                    if (literal == nullptr)
+                        return std::nullopt;
+
+                    result.value = *literal;
+                } catch (pl::core::err::LexerError &error) {
+                    return std::nullopt;
+                }
+
+                break;
+            } else if (c == '.')
+                result.path.emplace_back();
+            else if (c == '[') {
+                result.path.emplace_back();
+                result.path.back() += c;
+            } else if (c == ' ') {
+                continue;
+            } else {
+                result.path.back() += c;
+            }
+        }
+
+        return result;
     }
 
     bool PatternDrawer::isEditingPattern(const pl::ptrn::Pattern& pattern) const {
@@ -813,8 +837,21 @@ namespace hex::plugin::builtin::ui {
         this->m_currPatternPath.push_back(pattern.getVariableName());
         ON_SCOPE_EXIT { this->m_currPatternPath.pop_back(); };
 
-        if (matchesFilter(this->m_filter, this->m_currPatternPath, false))
-            pattern.accept(*this);
+        if (matchesFilter(this->m_filter.path, this->m_currPatternPath, false)) {
+            if (this->m_filter.value.has_value()) {
+                auto patternValue = pattern.getValue();
+                if (patternValue == this->m_filter.value)
+                    pattern.accept(*this);
+                else if (!matchesFilter(this->m_filter.path, this->m_currPatternPath, true))
+                    pattern.accept(*this);
+                else if (patternValue.isPattern() && this->m_filter.value->isString()) {
+                    if (patternValue.toString(true) == this->m_filter.value->toString(false))
+                        pattern.accept(*this);
+                }
+            } else {
+                pattern.accept(*this);
+            }
+        }
     }
 
     void PatternDrawer::drawArray(pl::ptrn::Pattern& pattern, pl::ptrn::IIterable &iterable, bool isInlined) {
@@ -1062,7 +1099,8 @@ namespace hex::plugin::builtin::ui {
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 9.5);
         if (ImGui::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
-            this->m_filter = parseRValueFilter(this->m_filterText);
+            if (auto result = parseRValueFilter(this->m_filterText); result.has_value())
+                this->m_filter = *result;
         }
         ImGui::PopItemWidth();
 

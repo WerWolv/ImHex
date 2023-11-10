@@ -3,6 +3,7 @@
 #include <hex/api/task.hpp>
 #include <hex/api/content_registry.hpp>
 
+#include <pl/core/lexer.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
 
@@ -81,6 +82,13 @@ namespace hex::plugin::builtin::ui {
         void traversePatternTree(pl::ptrn::Pattern &pattern, std::vector<std::string> &patternPath, const std::function<void(pl::ptrn::Pattern&)> &callback);
         std::string getDisplayName(const pl::ptrn::Pattern& pattern) const;
 
+        struct Filter {
+            std::vector<std::string> path;
+            std::optional<pl::core::Token::Literal> value;
+        };
+
+        std::optional<Filter> parseRValueFilter(const std::string &filter) const;
+
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
         std::vector<pl::ptrn::Pattern*> m_sortedPatterns;
@@ -95,7 +103,7 @@ namespace hex::plugin::builtin::ui {
         std::string m_lastVisualizerError;
 
         std::string m_filterText;
-        std::vector<std::string> m_filter;
+        Filter m_filter;
         std::vector<std::string> m_currPatternPath;
         std::map<std::vector<std::string>, std::unique_ptr<pl::ptrn::Pattern>> m_favorites;
         std::map<std::string, std::vector<std::unique_ptr<pl::ptrn::Pattern>>> m_groups;
