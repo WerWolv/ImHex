@@ -597,7 +597,7 @@ namespace hex::init {
     void runExitTasks() {
         for (const auto &[name, task, async] : init::getExitTasks()) {
             bool result = task();
-            log::info("Finished exit task {} {}", name, result ? "successfully" : "unsuccessfully");
+            log::info("Exit task '{0}' finished {1}", result ? "successfully" : "unsuccessfully");
         }
     }
 
@@ -618,10 +618,10 @@ namespace hex::init {
 
     std::vector<Task> getExitTasks() {
         return {
-            { "Saving settings...",         storeSettings,    false },
-            { "Cleaning up shared data...", deleteSharedData, false },
-            { "Unloading plugins...",       unloadPlugins,    false },
-            { "Clearing old logs...",       clearOldLogs,     false },
+            { "Saving settings",         storeSettings,    false },
+            { "Cleaning up shared data", deleteSharedData, false },
+            { "Unloading plugins",       unloadPlugins,    false },
+            { "Clearing old logs",       clearOldLogs,     false },
         };
     }
 
