@@ -43,7 +43,7 @@ namespace hex::script::loader {
             T getExport(void *h, const char *name) {
                 try {
                     FARPROC f = ::GetProcAddress(static_cast<HMODULE>(h), name);
-                    return *reinterpret_cast<T*>(&f);
+                    return reinterpret_cast<T>(reinterpret_cast<uintptr_t>(f));
                 } catch (...) {
                     return nullptr;
                 }
