@@ -6,6 +6,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <hex/api/imhex_api.hpp>
