@@ -49,7 +49,7 @@ namespace hex::plugin::builtin::ui {
                 ImGui::PushID(reinterpret_cast<void*>(address));
                 char buffer[2] = { std::isprint(data[0]) ? char(data[0]) : '.', 0x00 };
                 ImGui::InputText("##editing_input", buffer, 2, TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
-                    auto &userData = *reinterpret_cast<UserData*>(data->UserData);
+                    auto &userData = *static_cast<UserData*>(data->UserData);
 
                     if (data->BufTextLen >= userData.maxChars) {
                         userData.editingDone = true;
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin::ui {
         return ImGui::GetCursorScreenPos() - ImGui::GetStyle().CellPadding;
     }
 
-    void HexEditor::drawTooltip(u64 address, const u8 *data, size_t size) {
+    void HexEditor::drawTooltip(u64 address, const u8 *data, size_t size) const {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled(ImVec2(5, 5)));
 
         this->m_tooltipCallback(address, data, size);
@@ -157,7 +157,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PopStyleVar();
     }
 
-    void HexEditor::drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType) {
+    void HexEditor::drawCell(u64 address, const u8 *data, size_t size, bool hovered, CellType cellType) {
         static DataVisualizerAscii asciiVisualizer;
 
         if (this->m_shouldUpdateEditingValue && address == this->m_editingAddress) {
@@ -344,7 +344,7 @@ namespace hex::plugin::builtin::ui {
 
                 ImGuiListClipper clipper;
 
-                u64 numRows = std::ceil(this->m_provider->getSize() / (long double)(this->m_bytesPerRow));
+                u64 numRows = std::ceil(this->m_provider->getSize() / static_cast<long double>(this->m_bytesPerRow));
                 clipper.Begin(numRows + size.y / CharacterSize.y - 3, CharacterSize.y);
                 while (clipper.Step()) {
                     this->m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
@@ -525,13 +525,13 @@ namespace hex::plugin::builtin::ui {
 
                         // Draw Custom encoding column
                         if (this->m_showCustomEncoding && this->m_currCustomEncoding.has_value()) {
-                            std::vector<std::pair<u64, CustomEncodingData>> encodingData;
-
                             if (this->m_encodingLineStartAddresses.empty()) {
                                 this->m_encodingLineStartAddresses.push_back(0);
                             }
 
                             if (y < this->m_encodingLineStartAddresses.size()) {
+                                std::vector<std::pair<u64, CustomEncodingData>> encodingData;
+
                                 if (this->m_encodingLineStartAddresses[y] >= this->m_bytesPerRow) {
                                     encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
                                     this->m_encodingLineStartAddresses.push_back(0);

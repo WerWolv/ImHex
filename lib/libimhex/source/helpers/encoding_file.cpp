@@ -19,7 +19,7 @@ namespace hex {
         this->m_name = other.m_name;
     }
 
-    EncodingFile::EncodingFile(EncodingFile &&other) {
+    EncodingFile::EncodingFile(EncodingFile &&other) noexcept {
         this->m_mapping = std::move(other.m_mapping);
         this->m_tableContent = std::move(other.m_tableContent);
         this->m_longestSequence = other.m_longestSequence;
@@ -72,7 +72,7 @@ namespace hex {
         return *this;
     }
 
-    EncodingFile &EncodingFile::operator=(EncodingFile &&other) {
+    EncodingFile &EncodingFile::operator=(EncodingFile &&other) noexcept {
         this->m_mapping = std::move(other.m_mapping);
         this->m_tableContent = std::move(other.m_tableContent);
         this->m_longestSequence = other.m_longestSequence;
@@ -90,7 +90,7 @@ namespace hex {
 
             if (size > buffer.size()) continue;
 
-            std::vector<u8> key(buffer.begin(), buffer.begin() + size);
+            std::vector key(buffer.begin(), buffer.begin() + size);
             if (mapping.contains(key))
                 return { mapping.at(key), size };
         }
@@ -104,7 +104,7 @@ namespace hex {
 
             if (size > buffer.size()) continue;
 
-            std::vector<u8> key(buffer.begin(), buffer.begin() + size);
+            std::vector key(buffer.begin(), buffer.begin() + size);
             if (mapping.contains(key))
                 return size;
         }

@@ -4,7 +4,6 @@
 
 #include <cstring>
 #include <string_view>
-#include <type_traits>
 
 namespace hex {
 
@@ -123,7 +122,8 @@ namespace hex {
         if (ipsPatch.size() < (5 + 3))
             return wolv::util::Unexpected(IPSError::InvalidPatchHeader);
 
-        if (std::memcmp(ipsPatch.data(), "PATCH", 5) != 0)
+        const char *header = "PATCH";
+        if (std::memcmp(ipsPatch.data(), header, 5) != 0)
             return wolv::util::Unexpected(IPSError::InvalidPatchHeader);
 
         Patches result;
@@ -160,7 +160,8 @@ namespace hex {
                 ipsOffset += 1;
             }
 
-            if (std::memcmp(ipsPatch.data() + ipsOffset, "EOF", 3) == 0)
+            const char *footer = "EOF";
+            if (std::memcmp(ipsPatch.data() + ipsOffset, footer, 3) == 0)
                 foundEOF = true;
         }
 
@@ -174,7 +175,8 @@ namespace hex {
         if (ipsPatch.size() < (5 + 4))
             return wolv::util::Unexpected(IPSError::InvalidPatchHeader);
 
-        if (std::memcmp(ipsPatch.data(), "IPS32", 5) != 0)
+        const char *header = "IPS32";
+        if (std::memcmp(ipsPatch.data(), header, 5) != 0)
             return wolv::util::Unexpected(IPSError::InvalidPatchHeader);
 
         Patches result;
@@ -211,7 +213,8 @@ namespace hex {
                 ipsOffset += 1;
             }
 
-            if (std::memcmp(ipsPatch.data() + ipsOffset, "EEOF", 4) == 0)
+            const char *footer = "EEOF";
+            if (std::memcmp(ipsPatch.data() + ipsOffset, footer, 4) == 0)
                 foundEEOF = true;
         }
 

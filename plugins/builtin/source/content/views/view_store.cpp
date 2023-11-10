@@ -300,7 +300,7 @@ namespace hex::plugin::builtin {
             // this is to prevent the filename from having elements like ../
             auto fullPath = std::fs::weakly_canonical(folderPath / std::fs::path(fileName));
             auto [folderIter, pathIter] = std::mismatch(folderPath.begin(), folderPath.end(), fullPath.begin());
-            if(folderIter != folderPath.end()) {
+            if (folderIter != folderPath.end()) {
                 log::warn("The destination file name '{}' is invalid", fileName);
                 return false;
             }

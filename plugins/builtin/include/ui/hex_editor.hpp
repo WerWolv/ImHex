@@ -7,14 +7,7 @@
 #include <hex/helpers/encoding_file.hpp>
 
 #include <imgui.h>
-#include <imgui_internal.h>
-#include <hex/ui/imgui_imhex_extensions.h>
-#include <fonts/codicons_font.h>
-#include <content/helpers/math_evaluator.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/crypto.hpp>
-#include <hex/providers/provider.hpp>
-#include <hex/providers/buffered_reader.hpp>
 
 namespace hex::plugin::builtin::ui {
 
@@ -32,11 +25,11 @@ namespace hex::plugin::builtin::ui {
     private:
         enum class CellType { None, Hex, ASCII };
 
-        void drawCell(u64 address, u8 *data, size_t size, bool hovered, CellType cellType);
+        void drawCell(u64 address, const u8 *data, size_t size, bool hovered, CellType cellType);
         void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize) const;
         void drawEditor(const ImVec2 &size);
         void drawFooter(const ImVec2 &size);
-        void drawTooltip(u64 address, const u8 *data, size_t size);
+        void drawTooltip(u64 address, const u8 *data, size_t size) const;
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
         std::optional<color_t> applySelectionColor(u64 byteAddress, std::optional<color_t> color);
@@ -266,8 +259,8 @@ namespace hex::plugin::builtin::ui {
 
         std::pair<Region, bool> m_currValidRegion = { Region::Invalid(), false };
 
-        static inline std::optional<color_t> defaultColorCallback(u64, const u8 *, size_t) { return std::nullopt; }
-        static inline void defaultTooltipCallback(u64, const u8 *, size_t) {  }
+        static std::optional<color_t> defaultColorCallback(u64, const u8 *, size_t) { return std::nullopt; }
+        static void defaultTooltipCallback(u64, const u8 *, size_t) {  }
         std::function<std::optional<color_t>(u64, const u8 *, size_t)> m_foregroundColorCallback = defaultColorCallback, m_backgroundColorCallback = defaultColorCallback;
         std::function<void(u64, const u8 *, size_t)> m_tooltipCallback = defaultTooltipCallback;
     };

@@ -105,7 +105,7 @@ namespace hex::init {
 
                         // When the task finished, increment the progress bar
                         ON_SCOPE_EXIT {
-                            tasksCompleted++;
+                            tasksCompleted += 1;
                             this->m_progress = float(tasksCompleted) / this->m_tasks.size();
                         };
 
@@ -141,7 +141,7 @@ namespace hex::init {
                 // If the task can be run asynchronously, run it in a separate thread
                 // otherwise run it in this thread and wait for it to finish
                 if (async) {
-                    std::thread([runTask]{ runTask(); }).detach();
+                    std::thread([runTask = std::move(runTask)]{ runTask(); }).detach();
                 } else {
                     runTask();
                 }
@@ -188,15 +188,15 @@ namespace hex::init {
                     const auto hexSpacing = ImVec2(17.4, 15) * scale;
                     const auto hexStart = ImVec2(27, 127) * scale;
 
-                    const auto hexCount = ImVec2(13, 7);
+                    constexpr auto HexCount = ImVec2(13, 7);
 
                     bool isStart = true;
 
                     color.Value.w *= opacity;
 
                     // Loop over all the bytes on the splash screen
-                    for (u32 y = u32(start.y); y < u32(hexCount.y); y += 1) {
-                        for (u32 x = u32(start.x); x < u32(hexCount.x); x += 1) {
+                    for (u32 y = u32(start.y); y < u32(HexCount.y); y += 1) {
+                        for (u32 x = u32(start.x); x < u32(HexCount.x); x += 1) {
                             if (count-- == 0)
                                 return;
 
@@ -207,7 +207,7 @@ namespace hex::init {
                             drawList->AddRectFilled(pos + ImVec2(0, -hexSpacing.y / 2), pos + hexSize + ImVec2(0, hexSpacing.y / 2), color);
 
                             // Add some extra color on the right if the current byte isn't the last byte, and we didn't reach the right side of the image
-                            if (count > 0 && x != u32(hexCount.x) - 1)
+                            if (count > 0 && x != u32(HexCount.x) - 1)
                                 drawList->AddRectFilled(pos + ImVec2(hexSize.x, -hexSpacing.y / 2), pos + hexSize + ImVec2(hexSpacing.x, hexSpacing.y / 2), color);
 
                             // Add some extra color on the left if this is the first byte we're highlighting

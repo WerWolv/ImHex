@@ -56,15 +56,15 @@ namespace hex::plugin::builtin {
 
         }
 
-        void sendAck(wolv::net::SocketClient &socket) {
+        void sendAck(const wolv::net::SocketClient &socket) {
             socket.writeString("+");
         }
 
-        void continueExecution(wolv::net::SocketClient &socket) {
+        void continueExecution(const wolv::net::SocketClient &socket) {
             socket.writeString(createPacket("vCont;c"));
         }
 
-        std::vector<u8> readMemory(wolv::net::SocketClient &socket, u64 address, size_t size) {
+        std::vector<u8> readMemory(const wolv::net::SocketClient &socket, u64 address, size_t size) {
             std::string packet = createPacket(hex::format("m{:X},{:X}", address, size));
 
             socket.writeString(packet);
@@ -88,7 +88,7 @@ namespace hex::plugin::builtin {
             return data;
         }
 
-        void writeMemory(wolv::net::SocketClient &socket, u64 address, const void *buffer, size_t size) {
+        void writeMemory(const wolv::net::SocketClient &socket, u64 address, const void *buffer, size_t size) {
             std::vector<u8> bytes(size);
             std::memcpy(bytes.data(), buffer, size);
 
@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
             auto receivedPacket = socket.readString(6);
         }
 
-        bool enableNoAckMode(wolv::net::SocketClient &socket) {
+        bool enableNoAckMode(const wolv::net::SocketClient &socket) {
             socket.writeString(createPacket("QStartNoAckMode"));
 
             auto ack = socket.readString(1);
@@ -123,7 +123,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    GDBProvider::GDBProvider() : Provider(), m_size(0xFFFF'FFFF) {
+    GDBProvider::GDBProvider() : m_size(0xFFFF'FFFF) {
     }
 
     bool GDBProvider::isAvailable() const {
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
         if (overlays) {
             for (u64 i = 0; i < size; i++)
                 if (getPatches().contains(offset + i))
-                    reinterpret_cast<u8 *>(buffer)[i] = getPatches()[offset + this->getPageSize() * this->m_currPage + i];
+                    static_cast<u8 *>(buffer)[i] = getPatches()[offset + this->getPageSize() * this->m_currPage + i];
 
             this->applyOverlays(offset, buffer, size);
         }
@@ -255,7 +255,7 @@ namespace hex::plugin::builtin {
         if (this->m_socket.isConnected()) {
             gdb::continueExecution(this->m_socket);
 
-            this->m_cacheUpdateThread = std::thread([this]() {
+            this->m_cacheUpdateThread = std::thread([this] {
                 auto cacheLine = this->m_cache.begin();
                 while (this->isConnected()) {
                     {
@@ -281,7 +281,7 @@ namespace hex::plugin::builtin {
                         if (cacheLine == this->m_cache.end())
                             cacheLine = this->m_cache.begin();
                         else
-                            cacheLine++;
+                            ++cacheLine;
                     }
                     std::this_thread::sleep_for(10ms);
                 }

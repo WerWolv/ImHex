@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.tools.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
             // Draw all tools
-            for (auto iter = tools.begin(); iter != tools.end(); iter++) {
+            for (auto iter = tools.begin(); iter != tools.end(); ++iter) {
                 auto &[name, function, detached] = *iter;
 
                 // If the tool has been detached from the main window, don't draw it here anymore
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
 
         auto &tools = ContentRegistry::Tools::impl::getEntries();
 
-        for (auto iter = tools.begin(); iter != tools.end(); iter++) {
+        for (auto iter = tools.begin(); iter != tools.end(); ++iter) {
             auto &[name, function, detached] = *iter;
 
             // If the tool is still attached to the main window, don't draw it here

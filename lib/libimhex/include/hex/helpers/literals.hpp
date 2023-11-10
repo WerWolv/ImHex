@@ -4,19 +4,19 @@ namespace hex::literals {
 
     /* Byte literals */
 
-    constexpr static inline unsigned long long operator""_Bytes(unsigned long long bytes) noexcept {
+    constexpr static unsigned long long operator""_Bytes(unsigned long long bytes) noexcept {
         return bytes;
     }
 
-    constexpr static inline unsigned long long operator""_KiB(unsigned long long kiB) noexcept {
+    constexpr static unsigned long long operator""_KiB(unsigned long long kiB) noexcept {
         return operator""_Bytes(kiB * 1024);
     }
 
-    constexpr static inline unsigned long long operator""_MiB(unsigned long long MiB) noexcept {
+    constexpr static unsigned long long operator""_MiB(unsigned long long MiB) noexcept {
         return operator""_KiB(MiB * 1024);
     }
 
-    constexpr static inline unsigned long long operator""_GiB(unsigned long long GiB) noexcept {
+    constexpr static unsigned long long operator""_GiB(unsigned long long GiB) noexcept {
         return operator""_MiB(GiB * 1024);
     }
 

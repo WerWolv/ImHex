@@ -4,7 +4,6 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/concepts.hpp>
-#include <hex/helpers/encoding_file.hpp>
 
 #include <ui/hex_editor.hpp>
 
@@ -42,11 +41,11 @@ namespace hex::plugin::builtin {
             this->m_currPopup.reset();
         }
 
-        bool isSelectionValid() {
+        bool isSelectionValid() const {
             return this->m_hexEditor.isSelectionValid();
         }
 
-        Region getSelection() {
+        Region getSelection() const {
             return this->m_hexEditor.getSelection();
         }
 

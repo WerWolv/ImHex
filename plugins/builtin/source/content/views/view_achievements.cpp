@@ -337,7 +337,7 @@ namespace hex::plugin::builtin {
 
                         const auto cursorPos = ImGui::GetCursorPos();
                         const auto windowPos = ImGui::GetWindowPos() + ImVec2(0, cursorPos.y);
-                        const auto windowSize = ImGui::GetWindowSize() - ImVec2(0, cursorPos.y);;
+                        const auto windowSize = ImGui::GetWindowSize() - ImVec2(0, cursorPos.y);
                         const float borderSize = 20.0_scaled;
 
                         const auto windowPadding = ImGui::GetStyle().WindowPadding;

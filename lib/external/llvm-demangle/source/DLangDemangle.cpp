@@ -14,16 +14,17 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Demangle/Demangle.h"
-#include "llvm/Demangle/StringView.h"
+#include "llvm/Demangle/StringViewExtras.h"
 #include "llvm/Demangle/Utility.h"
 
 #include <cctype>
 #include <cstring>
 #include <limits>
+#include <string_view>
 
 using namespace llvm;
 using llvm::itanium_demangle::OutputBuffer;
-using llvm::itanium_demangle::StringView;
+using llvm::itanium_demangle::starts_with;
 
 namespace {
 
@@ -32,7 +33,7 @@ struct Demangler {
   /// Initialize the information structure we use to pass around information.
   ///
   /// \param Mangled String to demangle.
-  Demangler(const char *Mangled);
+  Demangler(std::string_view Mangled);
 
   /// Extract and demangle the mangled symbol and append it to the output
   /// string.
@@ -52,46 +53,42 @@ private:
   /// \param Demangled output buffer to write the demangled name.
   /// \param Mangled mangled symbol to be demangled.
   ///
-  /// \return The remaining string on success or nullptr on failure.
-  ///
   /// \see https://dlang.org/spec/abi.html#name_mangling .
   /// \see https://dlang.org/spec/abi.html#MangledName .
-  const char *parseMangle(OutputBuffer *Demangled, const char *Mangled);
+  void parseMangle(OutputBuffer *Demangled, std::string_view &Mangled);
 
   /// Extract the number from a given string.
   ///
   /// \param Mangled string to extract the number.
   /// \param Ret assigned result value.
   ///
-  /// \return The remaining string on success or nullptr on failure.
-  ///
-  /// \note A result larger than UINT_MAX is considered a failure.
+  /// \note Ret larger than UINT_MAX is considered a failure.
   ///
   /// \see https://dlang.org/spec/abi.html#Number .
-  const char *decodeNumber(const char *Mangled, unsigned long &Ret);
+  void decodeNumber(std::string_view &Mangled, unsigned long &Ret);
 
   /// Extract the back reference position from a given string.
   ///
   /// \param Mangled string to extract the back reference position.
   /// \param Ret assigned result value.
   ///
-  /// \return the remaining string on success or nullptr on failure.
+  /// \return true on success, false on error.
   ///
   /// \note Ret is always >= 0 on success, and unspecified on failure
   ///
   /// \see https://dlang.org/spec/abi.html#back_ref .
   /// \see https://dlang.org/spec/abi.html#NumberBackRef .
-  const char *decodeBackrefPos(const char *Mangled, long &Ret);
+  bool decodeBackrefPos(std::string_view &Mangled, long &Ret);
 
   /// Extract the symbol pointed by the back reference form a given string.
   ///
   /// \param Mangled string to extract the back reference position.
   /// \param Ret assigned result value.
   ///
-  /// \return the remaining string on success or nullptr on failure.
+  /// \return true on success, false on error.
   ///
   /// \see https://dlang.org/spec/abi.html#back_ref .
-  const char *decodeBackref(const char *Mangled, const char *&Ret);
+  bool decodeBackref(std::string_view &Mangled, std::string_view &Ret);
 
   /// Extract and demangle backreferenced symbol from a given mangled symbol
   /// and append it to the output string.
@@ -99,22 +96,18 @@ private:
   /// \param Demangled output buffer to write the demangled name.
   /// \param Mangled mangled symbol to be demangled.
   ///
-  /// \return the remaining string on success or nullptr on failure.
-  ///
   /// \see https://dlang.org/spec/abi.html#back_ref .
   /// \see https://dlang.org/spec/abi.html#IdentifierBackRef .
-  const char *parseSymbolBackref(OutputBuffer *Demangled, const char *Mangled);
+  void parseSymbolBackref(OutputBuffer *Demangled, std::string_view &Mangled);
 
   /// Extract and demangle backreferenced type from a given mangled symbol
   /// and append it to the output string.
   ///
   /// \param Mangled mangled symbol to be demangled.
   ///
-  /// \return the remaining string on success or nullptr on failure.
-  ///
   /// \see https://dlang.org/spec/abi.html#back_ref .
   /// \see https://dlang.org/spec/abi.html#TypeBackRef .
-  const char *parseTypeBackref(const char *Mangled);
+  void parseTypeBackref(std::string_view &Mangled);
 
   /// Check whether it is the beginning of a symbol name.
   ///
@@ -123,7 +116,7 @@ private:
   /// \return true on success, false otherwise.
   ///
   /// \see https://dlang.org/spec/abi.html#SymbolName .
-  bool isSymbolName(const char *Mangled);
+  bool isSymbolName(std::string_view Mangled);
 
   /// Extract and demangle an identifier from a given mangled symbol append it
   /// to the output string.
@@ -131,10 +124,8 @@ private:
   /// \param Demangled Output buffer to write the demangled name.
   /// \param Mangled Mangled symbol to be demangled.
   ///
-  /// \return The remaining string on success or nullptr on failure.
-  ///
   /// \see https://dlang.org/spec/abi.html#SymbolName .
-  const char *parseIdentifier(OutputBuffer *Demangled, const char *Mangled);
+  void parseIdentifier(OutputBuffer *Demangled, std::string_view &Mangled);
 
   /// Extract and demangle the plain identifier from a given mangled symbol and
   /// prepend/append it to the output string, with a special treatment for some
@@ -144,11 +135,9 @@ private:
   /// \param Mangled Mangled symbol to be demangled.
   /// \param Len Length of the mangled symbol name.
   ///
-  /// \return The remaining string on success or nullptr on failure.
-  ///
   /// \see https://dlang.org/spec/abi.html#LName .
-  const char *parseLName(OutputBuffer *Demangled, const char *Mangled,
-                         unsigned long Len);
+  void parseLName(OutputBuffer *Demangled, std::string_view &Mangled,
+                  unsigned long Len);
 
   /// Extract and demangle the qualified symbol from a given mangled symbol
   /// append it to the output string.
@@ -156,33 +145,38 @@ private:
   /// \param Demangled Output buffer to write the demangled name.
   /// \param Mangled Mangled symbol to be demangled.
   ///
-  /// \return The remaining string on success or nullptr on failure.
-  ///
   /// \see https://dlang.org/spec/abi.html#QualifiedName .
-  const char *parseQualified(OutputBuffer *Demangled, const char *Mangled);
+  void parseQualified(OutputBuffer *Demangled, std::string_view &Mangled);
 
   /// Extract and demangle a type from a given mangled symbol append it to
   /// the output string.
   ///
   /// \param Mangled mangled symbol to be demangled.
   ///
-  /// \return the remaining string on success or nullptr on failure.
+  /// \return true on success, false on error.
   ///
   /// \see https://dlang.org/spec/abi.html#Type .
-  const char *parseType(const char *Mangled);
+  bool parseType(std::string_view &Mangled);
 
-  /// The string we are demangling.
-  const char *Str;
+  /// An immutable view of the string we are demangling.
+  const std::string_view Str;
   /// The index of the last back reference.
   int LastBackref;
 };
 
 } // namespace
 
-const char *Demangler::decodeNumber(const char *Mangled, unsigned long &Ret) {
-  // Return nullptr if trying to extract something that isn't a digit.
-  if (Mangled == nullptr || !std::isdigit(*Mangled))
-    return nullptr;
+void Demangler::decodeNumber(std::string_view &Mangled, unsigned long &Ret) {
+  // Clear Mangled if trying to extract something that isn't a digit.
+  if (Mangled.empty()) {
+    Mangled = {};
+    return;
+  }
+
+  if (!std::isdigit(Mangled.front())) {
+    Mangled = {};
+    return;
+  }
 
   unsigned long Val = 0;
 
@@ -190,25 +184,29 @@ const char *Demangler::decodeNumber(const char *Mangled, unsigned long &Ret) {
     unsigned long Digit = Mangled[0] - '0';
 
     // Check for overflow.
-    if (Val > (std::numeric_limits<unsigned int>::max() - Digit) / 10)
-      return nullptr;
+    if (Val > (std::numeric_limits<unsigned int>::max() - Digit) / 10) {
+      Mangled = {};
+      return;
+    }
 
     Val = Val * 10 + Digit;
-    ++Mangled;
-  } while (std::isdigit(*Mangled));
+    Mangled.remove_prefix(1);
+  } while (!Mangled.empty() && std::isdigit(Mangled.front()));
 
-  if (*Mangled == '\0')
-    return nullptr;
+  if (Mangled.empty()) {
+    Mangled = {};
+    return;
+  }
 
   Ret = Val;
-  return Mangled;
 }
 
-const char *Demangler::decodeBackrefPos(const char *Mangled, long &Ret) {
+bool Demangler::decodeBackrefPos(std::string_view &Mangled, long &Ret) {
   // Return nullptr if trying to extract something that isn't a digit
-  if (Mangled == nullptr || !std::isalpha(*Mangled))
-    return nullptr;
-
+  if (Mangled.empty()) {
+    Mangled = {};
+    return false;
+  }
   // Any identifier or non-basic type that has been emitted to the mangled
   // symbol before will not be emitted again, but is referenced by a special
   // sequence encoding the relative position of the original occurrence in the
@@ -221,7 +219,7 @@ const char *Demangler::decodeBackrefPos(const char *Mangled, long &Ret) {
   //        ^
   unsigned long Val = 0;
 
-  while (std::isalpha(*Mangled)) {
+  while (!Mangled.empty() && std::isalpha(Mangled.front())) {
     // Check for overflow
     if (Val > (std::numeric_limits<unsigned long>::max() - 25) / 26)
       break;
@@ -233,116 +231,133 @@ const char *Demangler::decodeBackrefPos(const char *Mangled, long &Ret) {
       if ((long)Val <= 0)
         break;
       Ret = Val;
-      return Mangled + 1;
+      Mangled.remove_prefix(1);
+      return true;
     }
 
     Val += Mangled[0] - 'A';
-    ++Mangled;
+    Mangled.remove_prefix(1);
   }
 
-  return nullptr;
+  Mangled = {};
+  return false;
 }
 
-const char *Demangler::decodeBackref(const char *Mangled, const char *&Ret) {
-  assert(Mangled != nullptr && *Mangled == 'Q' && "Invalid back reference!");
-  Ret = nullptr;
+bool Demangler::decodeBackref(std::string_view &Mangled,
+                              std::string_view &Ret) {
+  assert(!Mangled.empty() && Mangled.front() == 'Q' &&
+         "Invalid back reference!");
+  Ret = {};
 
   // Position of 'Q'
-  const char *Qpos = Mangled;
+  const char *Qpos = Mangled.data();
   long RefPos;
-  ++Mangled;
+  Mangled.remove_prefix(1);
 
-  Mangled = decodeBackrefPos(Mangled, RefPos);
-  if (Mangled == nullptr)
-    return nullptr;
+  if (!decodeBackrefPos(Mangled, RefPos)) {
+    Mangled = {};
+    return false;
+  }
 
-  if (RefPos > Qpos - Str)
-    return nullptr;
+  if (RefPos > Qpos - Str.data()) {
+    Mangled = {};
+    return false;
+  }
 
   // Set the position of the back reference.
   Ret = Qpos - RefPos;
 
-  return Mangled;
+  return true;
 }
 
-const char *Demangler::parseSymbolBackref(OutputBuffer *Demangled,
-                                          const char *Mangled) {
+void Demangler::parseSymbolBackref(OutputBuffer *Demangled,
+                                   std::string_view &Mangled) {
   // An identifier back reference always points to a digit 0 to 9.
   //    IdentifierBackRef:
   //        Q NumberBackRef
   //        ^
-  const char *Backref;
   unsigned long Len;
 
   // Get position of the back reference
-  Mangled = decodeBackref(Mangled, Backref);
+  std::string_view Backref;
+  if (!decodeBackref(Mangled, Backref)) {
+    Mangled = {};
+    return;
+  }
 
   // Must point to a simple identifier
-  Backref = decodeNumber(Backref, Len);
-  if (Backref == nullptr || strlen(Backref) < Len)
-    return nullptr;
+  decodeNumber(Backref, Len);
+  if (Backref.empty() || Backref.length() < Len) {
+    Mangled = {};
+    return;
+  }
 
-  Backref = parseLName(Demangled, Backref, Len);
-  if (Backref == nullptr)
-    return nullptr;
-
-  return Mangled;
+  parseLName(Demangled, Backref, Len);
+  if (Backref.empty())
+    Mangled = {};
 }
 
-const char *Demangler::parseTypeBackref(const char *Mangled) {
+void Demangler::parseTypeBackref(std::string_view &Mangled) {
   // A type back reference always points to a letter.
   //    TypeBackRef:
   //        Q NumberBackRef
   //        ^
-  const char *Backref;
 
   // If we appear to be moving backwards through the mangle string, then
   // bail as this may be a recursive back reference.
-  if (Mangled - Str >= LastBackref)
-    return nullptr;
+  if (Mangled.data() - Str.data() >= LastBackref) {
+    Mangled = {};
+    return;
+  }
 
   int SaveRefPos = LastBackref;
-  LastBackref = Mangled - Str;
+  LastBackref = Mangled.data() - Str.data();
 
   // Get position of the back reference.
-  Mangled = decodeBackref(Mangled, Backref);
+  std::string_view Backref;
+  if (!decodeBackref(Mangled, Backref)) {
+    Mangled = {};
+    return;
+  }
 
   // Can't decode back reference.
-  if (Backref == nullptr)
-    return nullptr;
+  if (Backref.empty()) {
+    Mangled = {};
+    return;
+  }
 
   // TODO: Add support for function type back references.
-  Backref = parseType(Backref);
+  if (!parseType(Backref))
+    Mangled = {};
 
   LastBackref = SaveRefPos;
 
-  if (Backref == nullptr)
-    return nullptr;
-
-  return Mangled;
+  if (Backref.empty())
+    Mangled = {};
 }
 
-bool Demangler::isSymbolName(const char *Mangled) {
+bool Demangler::isSymbolName(std::string_view Mangled) {
   long Ret;
-  const char *Qref = Mangled;
+  const char *Qref = Mangled.data();
 
-  if (std::isdigit(*Mangled))
+  if (std::isdigit(Mangled.front()))
     return true;
 
   // TODO: Handle template instances.
 
-  if (*Mangled != 'Q')
+  if (Mangled.front() != 'Q')
     return false;
 
-  Mangled = decodeBackrefPos(Mangled + 1, Ret);
-  if (Mangled == nullptr || Ret > Qref - Str)
+  Mangled.remove_prefix(1);
+  bool Valid = decodeBackrefPos(Mangled, Ret);
+  if (!Valid || Ret > Qref - Str.data())
     return false;
 
   return std::isdigit(Qref[-Ret]);
 }
 
-const char *Demangler::parseMangle(OutputBuffer *Demangled,
-                                   const char *Mangled) {
+void Demangler::parseMangle(OutputBuffer *Demangled,
+                            std::string_view &Mangled) {
   // A D mangled symbol is comprised of both scope and type information.
   //    MangleName:
   //        _D QualifiedName Type
@@ -352,24 +367,24 @@ const char *Demangler::parseMangle(OutputBuffer *Demangled,
   // above location.
   // Note that type is never a function type, but only the return type of
   // a function or the type of a variable.
-  Mangled += 2;
+  Mangled.remove_prefix(2);
 
-  Mangled = parseQualified(Demangled, Mangled);
+  parseQualified(Demangled, Mangled);
 
-  if (Mangled != nullptr) {
-    // Artificial symbols end with 'Z' and have no type.
-    if (*Mangled == 'Z')
-      ++Mangled;
-    else {
-      Mangled = parseType(Mangled);
-    }
+  if (Mangled.empty()) {
+    Mangled = {};
+    return;
   }
 
-  return Mangled;
+  // Artificial symbols end with 'Z' and have no type.
+  if (Mangled.front() == 'Z') {
+    Mangled.remove_prefix(1);
+  } else if (!parseType(Mangled))
+    Mangled = {};
 }
 
-const char *Demangler::parseQualified(OutputBuffer *Demangled,
-                                      const char *Mangled) {
+void Demangler::parseQualified(OutputBuffer *Demangled,
+                               std::string_view &Mangled) {
   // Qualified names are identifiers separated by their encoded length.
   // Nested functions also encode their argument types without specifying
   // what they return.
@@ -388,10 +403,10 @@ const char *Demangler::parseQualified(OutputBuffer *Demangled,
   size_t NotFirst = false;
   do {
     // Skip over anonymous symbols.
-    if (*Mangled == '0') {
+    if (!Mangled.empty() && Mangled.front() == '0') {
       do
-        ++Mangled;
-      while (*Mangled == '0');
+        Mangled.remove_prefix(1);
+      while (!Mangled.empty() && Mangled.front() == '0');
 
       continue;
     }
@@ -400,62 +415,63 @@ const char *Demangler::parseQualified(OutputBuffer *Demangled,
       *Demangled << '.';
     NotFirst = true;
 
-    Mangled = parseIdentifier(Demangled, Mangled);
-
-  } while (Mangled && isSymbolName(Mangled));
-
-  return Mangled;
+    parseIdentifier(Demangled, Mangled);
+  } while (!Mangled.empty() && isSymbolName(Mangled));
 }
 
-const char *Demangler::parseIdentifier(OutputBuffer *Demangled,
-                                       const char *Mangled) {
-  unsigned long Len;
+void Demangler::parseIdentifier(OutputBuffer *Demangled,
+                                std::string_view &Mangled) {
+  if (Mangled.empty()) {
+    Mangled = {};
+    return;
+  }
 
-  if (Mangled == nullptr || *Mangled == '\0')
-    return nullptr;
-
-  if (*Mangled == 'Q')
+  if (Mangled.front() == 'Q')
     return parseSymbolBackref(Demangled, Mangled);
 
   // TODO: Parse lengthless template instances.
 
-  const char *Endptr = decodeNumber(Mangled, Len);
+  unsigned long Len;
+  decodeNumber(Mangled, Len);
 
-  if (Endptr == nullptr || Len == 0)
-    return nullptr;
-
-  if (strlen(Endptr) < Len)
-    return nullptr;
-
-  Mangled = Endptr;
+  if (Mangled.empty()) {
+    Mangled = {};
+    return;
+  }
+  if (!Len || Mangled.length() < Len) {
+    Mangled = {};
+    return;
+  }
 
   // TODO: Parse template instances with a length prefix.
 
   // There can be multiple different declarations in the same function that
   // have the same mangled name.  To make the mangled names unique, a fake
   // parent in the form `__Sddd' is added to the symbol.
-  if (Len >= 4 && Mangled[0] == '_' && Mangled[1] == '_' && Mangled[2] == 'S') {
-    const char *NumPtr = Mangled + 3;
-    while (NumPtr < (Mangled + Len) && std::isdigit(*NumPtr))
-      ++NumPtr;
-
-    if (Mangled + Len == NumPtr) {
+  if (Len >= 4 && starts_with(Mangled, "__S")) {
+    const size_t SuffixLen = Mangled.length() - Len;
+    std::string_view P = Mangled.substr(3);
+    while (P.length() > SuffixLen && std::isdigit(P.front()))
+      P.remove_prefix(1);
+    if (P.length() == SuffixLen) {
       // Skip over the fake parent.
-      Mangled += Len;
+      Mangled.remove_prefix(Len);
       return parseIdentifier(Demangled, Mangled);
     }
 
     // Else demangle it as a plain identifier.
   }
 
-  return parseLName(Demangled, Mangled, Len);
+  parseLName(Demangled, Mangled, Len);
 }
 
-const char *Demangler::parseType(const char *Mangled) {
-  if (*Mangled == '\0')
-    return nullptr;
+bool Demangler::parseType(std::string_view &Mangled) {
+  if (Mangled.empty()) {
+    Mangled = {};
+    return false;
+  }
 
-  switch (*Mangled) {
+  switch (Mangled.front()) {
   // TODO: Parse type qualifiers.
   // TODO: Parse function types.
   // TODO: Parse compound types.
@@ -464,102 +480,102 @@ const char *Demangler::parseType(const char *Mangled) {
 
   // Basic types.
   case 'i':
-    ++Mangled;
+    Mangled.remove_prefix(1);
     // TODO: Add type name dumping
-    return Mangled;
+    return true;
 
     // TODO: Add support for the rest of the basic types.
 
   // Back referenced type.
-  case 'Q':
-    return parseTypeBackref(Mangled);
+  case 'Q': {
+    parseTypeBackref(Mangled);
+    return true;
+  }
 
   default: // unhandled.
-    return nullptr;
+    Mangled = {};
+    return false;
   }
 }
 
-const char *Demangler::parseLName(OutputBuffer *Demangled, const char *Mangled,
-                                  unsigned long Len) {
+void Demangler::parseLName(OutputBuffer *Demangled, std::string_view &Mangled,
+                           unsigned long Len) {
   switch (Len) {
   case 6:
-    if (strncmp(Mangled, "__initZ", Len + 1) == 0) {
+    if (starts_with(Mangled, "__initZ")) {
       // The static initializer for a given symbol.
       Demangled->prepend("initializer for ");
       Demangled->setCurrentPosition(Demangled->getCurrentPosition() - 1);
-      Mangled += Len;
-      return Mangled;
+      Mangled.remove_prefix(Len);
+      return;
     }
-    if (strncmp(Mangled, "__vtblZ", Len + 1) == 0) {
+    if (starts_with(Mangled, "__vtblZ")) {
       // The vtable symbol for a given class.
       Demangled->prepend("vtable for ");
       Demangled->setCurrentPosition(Demangled->getCurrentPosition() - 1);
-      Mangled += Len;
-      return Mangled;
+      Mangled.remove_prefix(Len);
+      return;
     }
     break;
 
   case 7:
-    if (strncmp(Mangled, "__ClassZ", Len + 1) == 0) {
+    if (starts_with(Mangled, "__ClassZ")) {
       // The classinfo symbol for a given class.
       Demangled->prepend("ClassInfo for ");
       Demangled->setCurrentPosition(Demangled->getCurrentPosition() - 1);
-      Mangled += Len;
-      return Mangled;
+      Mangled.remove_prefix(Len);
+      return;
     }
     break;
 
   case 11:
-    if (strncmp(Mangled, "__InterfaceZ", Len + 1) == 0) {
+    if (starts_with(Mangled, "__InterfaceZ")) {
       // The interface symbol for a given class.
       Demangled->prepend("Interface for ");
       Demangled->setCurrentPosition(Demangled->getCurrentPosition() - 1);
-      Mangled += Len;
-      return Mangled;
+      Mangled.remove_prefix(Len);
+      return;
     }
     break;
 
   case 12:
-    if (strncmp(Mangled, "__ModuleInfoZ", Len + 1) == 0) {
+    if (starts_with(Mangled, "__ModuleInfoZ")) {
       // The ModuleInfo symbol for a given module.
       Demangled->prepend("ModuleInfo for ");
       Demangled->setCurrentPosition(Demangled->getCurrentPosition() - 1);
-      Mangled += Len;
-      return Mangled;
+      Mangled.remove_prefix(Len);
+      return;
     }
     break;
   }
 
-  *Demangled << StringView(Mangled, Len);
-  Mangled += Len;
-
-  return Mangled;
+  *Demangled << Mangled.substr(0, Len);
+  Mangled.remove_prefix(Len);
 }
 
-Demangler::Demangler(const char *Mangled)
-    : Str(Mangled), LastBackref(strlen(Mangled)) {}
+Demangler::Demangler(std::string_view Mangled)
+    : Str(Mangled), LastBackref(Mangled.length()) {}
 
 const char *Demangler::parseMangle(OutputBuffer *Demangled) {
-  return parseMangle(Demangled, this->Str);
+  std::string_view M(this->Str);
+  parseMangle(Demangled, M);
+  return M.data();
 }
 
-char *llvm::dlangDemangle(const char *MangledName) {
-  if (MangledName == nullptr || strncmp(MangledName, "_D", 2) != 0)
+char *llvm::dlangDemangle(std::string_view MangledName) {
+  if (MangledName.empty() || !starts_with(MangledName, "_D"))
     return nullptr;
 
   OutputBuffer Demangled;
-  if (!initializeOutputBuffer(nullptr, nullptr, Demangled, 1024))
-    return nullptr;
-
-  if (strcmp(MangledName, "_Dmain") == 0) {
+  if (MangledName == "_Dmain") {
     Demangled << "D main";
   } else {
 
-    Demangler D = Demangler(MangledName);
-    MangledName = D.parseMangle(&Demangled);
+    Demangler D(MangledName);
+    const char *M = D.parseMangle(&Demangled);
 
     // Check that the entire symbol was successfully demangled.
-    if (MangledName == nullptr || *MangledName != '\0') {
+    if (M == nullptr || *M != '\0') {
       std::free(Demangled.getBuffer());
       return nullptr;
     }

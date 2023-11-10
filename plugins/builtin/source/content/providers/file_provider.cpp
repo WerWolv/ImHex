@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
         if (overlays) [[likely]] {
             for (const auto&[patchOffset, patchData] : getPatches()) {
                 if (patchOffset >= offset && patchOffset < (offset + size))
-                    reinterpret_cast<u8 *>(buffer)[patchOffset - offset] = patchData;
+                    static_cast<u8 *>(buffer)[patchOffset - offset] = patchData;
             }
 
             this->applyOverlays(offset, buffer, size);
@@ -88,8 +88,8 @@ namespace hex::plugin::builtin {
             if (file.isValid()) {
                 GetSystemTime(&st);
                 if (SystemTimeToFileTime(&st, &ft)) {
-                    auto fileHandle = (HANDLE)_get_osfhandle(_fileno(file.getHandle()));
-                    SetFileTime(fileHandle, (LPFILETIME) NULL, (LPFILETIME) NULL, &ft);
+                    auto fileHandle = HANDLE(_get_osfhandle(_fileno(file.getHandle())));
+                    SetFileTime(fileHandle, nullptr, nullptr, &ft);
                 }
             }
         #endif

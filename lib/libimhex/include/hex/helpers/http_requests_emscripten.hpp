@@ -1,6 +1,6 @@
 #pragma once
 
-#include<future>
+#include <future>
 
 #include <emscripten/fetch.h>
 

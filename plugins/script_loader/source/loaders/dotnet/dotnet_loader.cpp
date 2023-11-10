@@ -27,13 +27,13 @@ namespace hex::script::loader {
 
     namespace {
 
-        using get_hostfxr_path_fn = int(*)(char_t * buffer, size_t * buffer_size, const struct get_hostfxr_parameters *parameters);
+        using get_hostfxr_path_fn = int(*)(char_t * buffer, size_t * buffer_size, const get_hostfxr_parameters *parameters);
 
         #if defined(OS_WINDOWS)
             void *loadLibrary(const char_t *path) {
                 try {
                     HMODULE h = ::LoadLibraryW(path);
-                    return (void*)h;
+                    return h;
                 } catch (...) {
                     return nullptr;
                 }
@@ -42,8 +42,8 @@ namespace hex::script::loader {
             template<typename T>
             T getExport(void *h, const char *name) {
                 try {
-                    FARPROC f = ::GetProcAddress((HMODULE)h, name);
-                    return reinterpret_cast<T>((void*)f);
+                    FARPROC f = ::GetProcAddress(static_cast<HMODULE>(h), name);
+                    return *reinterpret_cast<T*>(&f);
                 } catch (...) {
                     return nullptr;
                 }
@@ -134,7 +134,7 @@ namespace hex::script::loader {
             result = hostfxr_get_runtime_delegate(
                 ctx,
                 hostfxr_delegate_type::hdt_load_assembly_and_get_function_pointer,
-                (void**)&loadAssemblyFunction
+                reinterpret_cast<void**>(&loadAssemblyFunction)
             );
 
             if (result != 0 || loadAssemblyFunction == nullptr) {
@@ -171,7 +171,7 @@ namespace hex::script::loader {
                     dotnetTypeMethod,
                     nullptr,
                     nullptr,
-                    (void**)&entryPoint
+                    reinterpret_cast<void**>(&entryPoint)
             );
 
             if (result != 0 || entryPoint == nullptr) {
@@ -212,7 +212,7 @@ namespace hex::script::loader {
                     continue;
 
                 this->addScript(entry.path().stem().string(), [this, scriptPath] {
-                    this->m_loadAssembly(scriptPath);
+                    hex::unused(this->m_loadAssembly(scriptPath));
                 });
             }
         }

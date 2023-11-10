@@ -6,11 +6,7 @@
 #include "content/helpers/diagrams.hpp"
 #include <ui/widgets.hpp>
 
-#include <array>
-#include <atomic>
-#include <cstdio>
 #include <string>
-#include <vector>
 
 namespace hex::plugin::builtin {
 

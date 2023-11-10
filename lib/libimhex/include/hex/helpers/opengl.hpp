@@ -20,7 +20,7 @@
 
 namespace hex::gl {
 
-    namespace {
+    namespace impl {
 
         template<typename T>
         GLuint getType() {
@@ -28,8 +28,10 @@ namespace hex::gl {
                 return GL_FLOAT;
             else if constexpr (std::is_same_v<T, u32>)
                 return GL_UNSIGNED_INT;
-            else
+            else {
                 static_assert(hex::always_false<T>::value, "Unsupported type");
+                return 0;
+            }
         }
 
     }
@@ -48,30 +50,30 @@ namespace hex::gl {
 
         [[nodiscard]] size_t size() const { return this->m_data.size(); }
 
-        auto operator+(const Vector<T, Size>& other) {
+        auto operator+(const Vector& other) {
             auto copy = *this;
             for (size_t i = 0; i < Size; i++)
                 copy[i] += other[i];
             return copy;
         }
 
-        auto operator-(const Vector<T, Size>& other) {
+        auto operator-(const Vector& other) {
             auto copy = *this;
             for (size_t i = 0; i < Size; i++)
                 copy[i] -= other[i];
             return copy;
         }
 
-        auto dot(const Vector<T, Size>& other) {
+        auto dot(const Vector& other) {
             T result = 0;
             for (size_t i = 0; i < Size; i++)
                 result += this->m_data[i] * other[i];
             return result;
         }
 
-        auto cross(const Vector<T, Size>& other) {
+        auto cross(const Vector& other) {
             static_assert(Size == 3, "Cross product is only defined for 3D vectors");
-            return Vector<T, Size>({ this->m_data[1] * other[2] - this->m_data[2] * other[1], this->m_data[2] * other[0] - this->m_data[0] * other[2], this->m_data[0] * other[1] - this->m_data[1] * other[0] });
+            return Vector({ this->m_data[1] * other[2] - this->m_data[2] * other[1], this->m_data[2] * other[0] - this->m_data[0] * other[2], this->m_data[0] * other[1] - this->m_data[1] * other[0] });
         }
 
         auto normalize() {
@@ -82,7 +84,7 @@ namespace hex::gl {
             return copy;
         }
 
-        auto operator==(const Vector<T, Size>& other) {
+        auto operator==(const Vector& other) {
             for (size_t i = 0; i < Size; i++)
                 if (this->m_data[i] != other[i])
                     return false;
@@ -167,7 +169,7 @@ namespace hex::gl {
         void addBuffer(u32 index, const Buffer<T> &buffer) const {
             glEnableVertexAttribArray(index);
             buffer.bind();
-            glVertexAttribPointer(index, 3, getType<T>(), GL_FALSE, 3 * sizeof(T), nullptr);
+            glVertexAttribPointer(index, 3, impl::getType<T>(), GL_FALSE, 3 * sizeof(T), nullptr);
             buffer.unbind();
         }
 
@@ -175,7 +177,7 @@ namespace hex::gl {
         void unbind() const;
 
     private:
-        GLuint m_array;
+        GLuint m_array = 0;
     };
 
     class Texture {

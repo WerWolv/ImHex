@@ -5,15 +5,11 @@
 
 #include <windows.h>
 
-#include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/ui/widgets.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <array>
-#include <mutex>
 #include <string_view>
-#include <thread>
 
 namespace hex::plugin::windows {
 

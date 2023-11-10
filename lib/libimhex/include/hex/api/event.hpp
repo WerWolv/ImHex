@@ -56,7 +56,7 @@ namespace hex {
         };
 
         template<typename... Params>
-        struct Event : public EventBase {
+        struct Event : EventBase {
             using Callback = std::function<void(Params...)>;
 
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }

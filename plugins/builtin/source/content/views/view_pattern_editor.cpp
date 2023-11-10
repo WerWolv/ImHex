@@ -375,14 +375,14 @@ namespace hex::plugin::builtin {
         static u32 envVarCounter = 1;
 
         if (ImGui::BeginChild("##env_vars", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-            int index = 0;
             if (ImGui::BeginTable("##env_vars_table", 4, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH)) {
                 ImGui::TableSetupColumn("Type", ImGuiTableColumnFlags_WidthStretch, 0.1F);
                 ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.4F);
                 ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.38F);
                 ImGui::TableSetupColumn("Remove", ImGuiTableColumnFlags_WidthStretch, 0.12F);
 
-                for (auto iter = envVars.begin(); iter != envVars.end(); iter++) {
+                int index = 0;
+                for (auto iter = envVars.begin(); iter != envVars.end(); ++iter) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
@@ -534,7 +534,7 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
-    void ViewPatternEditor::drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections) {
+    void ViewPatternEditor::drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections) {
         auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
         if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
@@ -745,7 +745,7 @@ namespace hex::plugin::builtin {
                 auto mimeType = magic::getMIMEType(provider);
 
                 bool foundCorrectType = false;
-                runtime.addPragma("MIME", [&mimeType, &foundCorrectType](pl::PatternLanguage &runtime, const std::string &value) {
+                runtime.addPragma("MIME", [&mimeType, &foundCorrectType](const pl::PatternLanguage &runtime, const std::string &value) {
                     hex::unused(runtime);
 
                     if (!magic::isValidMIMEType(value))
@@ -833,7 +833,7 @@ namespace hex::plugin::builtin {
                             auto &preprocessor = runtime.getInternals().preprocessor;
                             auto ret = preprocessor->preprocess(runtime, file.readString());
                             if (!ret.has_value()) {
-                                log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), (*preprocessor->getError()).what());
+                                log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), preprocessor->getError()->what());
                             }
                         } catch (pl::core::err::PreprocessorError::Exception &e) {
                             log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), e.what());
@@ -928,7 +928,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::parsePattern(const std::string &code, prv::Provider *provider) {
-        this->m_runningParsers++;
+        this->m_runningParsers += 1;
 
         ContentRegistry::PatternLanguage::configureRuntime(*this->m_parserRuntime, nullptr);
         auto ast = this->m_parserRuntime->parseString(code);
@@ -940,7 +940,7 @@ namespace hex::plugin::builtin {
         if (ast) {
             for (auto &node : *ast) {
                 if (auto variableDecl = dynamic_cast<pl::core::ast::ASTNodeVariableDecl *>(node.get())) {
-                    auto type = dynamic_cast<pl::core::ast::ASTNodeTypeDecl *>(variableDecl->getType().get());
+                    auto type = variableDecl->getType().get();
                     if (type == nullptr) continue;
 
                     auto builtinType = dynamic_cast<pl::core::ast::ASTNodeBuiltinType *>(type->getType().get());
@@ -962,7 +962,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        this->m_runningParsers--;
+        this->m_runningParsers -= 1;
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code, prv::Provider *provider) {
@@ -970,7 +970,7 @@ namespace hex::plugin::builtin {
 
         auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
-        this->m_runningEvaluators++;
+        this->m_runningEvaluators += 1;
         *this->m_executionDone = false;
 
 
@@ -1047,7 +1047,7 @@ namespace hex::plugin::builtin {
                 *this->m_lastEvaluationOutVars = runtime.getOutVariables();
                 *this->m_sections              = runtime.getSections();
 
-                this->m_runningEvaluators--;
+                this->m_runningEvaluators -= 1;
 
                 this->m_lastEvaluationProcessed = false;
 

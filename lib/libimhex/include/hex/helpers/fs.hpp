@@ -2,7 +2,6 @@
 
 #include <hex.hpp>
 
-#include <optional>
 #include <string>
 #include <vector>
 #include <filesystem>

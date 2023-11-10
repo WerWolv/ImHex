@@ -1,11 +1,7 @@
 #pragma once
 
-#include <hex.hpp>
-
-#include <hex/api/content_registry.hpp>
 #include <hex/ui/view.hpp>
 
-#include <array>
 #include <string>
 
 namespace hex::plugin::builtin {

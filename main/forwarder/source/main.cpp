@@ -73,7 +73,7 @@ int launchExecutable() {
 
         // Get formatted error message from the OS
         auto errorCode = ::GetLastError();
-        auto errorMessageString = std::system_category().message(errorCode);
+        auto errorMessageString = std::system_category().message(int(errorCode));
 
         // Generate error message
         auto errorMessage = fmt::format("Failed to start ImHex:\n\nError code: 0x{:08X}\n\n{}", errorCode, errorMessageString);

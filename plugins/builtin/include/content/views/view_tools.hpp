@@ -1,12 +1,9 @@
 #pragma once
 
-#include <hex.hpp>
-
 #include <hex/api/content_registry.hpp>
 #include <hex/ui/view.hpp>
 
-#include <array>
-#include <string>
+#include <vector>
 
 namespace hex::plugin::builtin {
 

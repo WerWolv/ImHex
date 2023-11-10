@@ -15,14 +15,14 @@
 
 namespace hex {
 
-    namespace {
+    namespace impl {
 
-        int IntegerAxisFormatter(double value, char* buffer, int size, void *userData) {
+        inline int IntegerAxisFormatter(double value, char* buffer, int size, void *userData) {
             u64 integer = static_cast<u64>(value);
             return snprintf(buffer, size, static_cast<const char*>(userData), integer);
         }
 
-        std::vector<u8> getSampleSelection(prv::Provider *provider, u64 address, size_t size, size_t sampleSize) {
+        inline std::vector<u8> getSampleSelection(prv::Provider *provider, u64 address, size_t size, size_t sampleSize) {
             const size_t sequenceCount = std::ceil(std::sqrt(sampleSize));
 
             std::vector<u8> buffer;
@@ -60,7 +60,7 @@ namespace hex {
             return buffer;
         }
 
-        std::vector<u8> getSampleSelection(const std::vector<u8> &inputBuffer, size_t sampleSize) {
+        inline std::vector<u8> getSampleSelection(const std::vector<u8> &inputBuffer, size_t sampleSize) {
             const size_t sequenceCount = std::ceil(std::sqrt(sampleSize));
 
             std::vector<u8> buffer;
@@ -77,7 +77,7 @@ namespace hex {
 
                     std::vector<u8> sequence;
                     sequence.reserve(sampleSize);
-                    std::copy(inputBuffer.begin() + offset, inputBuffer.begin() + offset + std::min<size_t>(sequenceCount, inputBuffer.size() - offset), std::back_inserter(sequence));
+                    std::copy_n(inputBuffer.begin() + offset, std::min<size_t>(sequenceCount, inputBuffer.size() - offset), std::back_inserter(sequence));
 
                     orderedData.insert({ offset, sequence });
                 }
@@ -101,7 +101,7 @@ namespace hex {
 
     class DiagramDigram {
     public:
-        DiagramDigram(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
+        explicit DiagramDigram(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
 
         void draw(ImVec2 size) {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
@@ -128,14 +128,14 @@ namespace hex {
 
         void process(prv::Provider *provider, u64 address, size_t size) {
             this->m_processing = true;
-            this->m_buffer = getSampleSelection(provider, address, size, this->m_sampleSize);
+            this->m_buffer = impl::getSampleSelection(provider, address, size, this->m_sampleSize);
             processImpl();
             this->m_processing = false;
         }
 
         void process(const std::vector<u8> &buffer) {
             this->m_processing = true;
-            this->m_buffer = getSampleSelection(buffer, this->m_sampleSize);
+            this->m_buffer = impl::getSampleSelection(buffer, this->m_sampleSize);
             processImpl();
             this->m_processing = false;
         }
@@ -154,7 +154,7 @@ namespace hex {
                 this->m_buffer[this->m_byteCount] = byte;
                 ++this->m_byteCount;
                 if (this->m_byteCount == this->m_fileSize) {
-                    this->m_buffer = getSampleSelection(this->m_buffer, this->m_sampleSize);
+                    this->m_buffer = impl::getSampleSelection(this->m_buffer, this->m_sampleSize);
                     processImpl();                    
                     this->m_processing = false;
                 }
@@ -181,12 +181,12 @@ namespace hex {
         }
 
     private:
-        size_t m_sampleSize;
+        size_t m_sampleSize = 0;
 
         // The number of bytes processed and the size of
         // the file to analyze (useful for iterative analysis)
-        u64 m_byteCount;
-        u64 m_fileSize;
+        u64 m_byteCount = 0;
+        u64 m_fileSize = 0;
         std::vector<u8> m_buffer;
         std::vector<float> m_glowBuffer;
         float m_opacity = 0.0F;
@@ -196,7 +196,7 @@ namespace hex {
 
     class DiagramLayeredDistribution {
     public:
-        DiagramLayeredDistribution(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
+        explicit DiagramLayeredDistribution(size_t sampleSize = 0x9000) : m_sampleSize(sampleSize) { }
 
         void draw(ImVec2 size) {
             ImGui::PushStyleColor(ImGuiCol_ChildBg, ImU32(ImColor(0, 0, 0)));
@@ -223,14 +223,14 @@ namespace hex {
 
         void process(prv::Provider *provider, u64 address, size_t size) {
             this->m_processing = true;
-            this->m_buffer = getSampleSelection(provider, address, size, this->m_sampleSize);
+            this->m_buffer = impl::getSampleSelection(provider, address, size, this->m_sampleSize);
             processImpl();
             this->m_processing = false;
         }
 
         void process(const std::vector<u8> &buffer) {
             this->m_processing = true;
-            this->m_buffer = getSampleSelection(buffer, this->m_sampleSize);
+            this->m_buffer = impl::getSampleSelection(buffer, this->m_sampleSize);
             processImpl();
             this->m_processing = false;
         }
@@ -249,7 +249,7 @@ namespace hex {
                 this->m_buffer[this->m_byteCount] = byte;
                 ++this->m_byteCount;
                 if (this->m_byteCount == this->m_fileSize) {
-                    this->m_buffer = getSampleSelection(this->m_buffer, this->m_sampleSize);
+                    this->m_buffer = impl::getSampleSelection(this->m_buffer, this->m_sampleSize);
                     processImpl();                    
                     this->m_processing = false;
                 }
@@ -274,12 +274,12 @@ namespace hex {
             this->m_opacity = (log10(float(this->m_sampleSize)) / log10(float(m_highestCount))) / 10.0F;
         }
     private:
-        size_t m_sampleSize;
+        size_t m_sampleSize = 0;
     
         // The number of bytes processed and the size of
         // the file to analyze (useful for iterative analysis)
-        u64 m_byteCount;
-        u64 m_fileSize;
+        u64 m_byteCount = 0;
+        u64 m_fileSize = 0;
 
         std::vector<u8> m_buffer;
         std::vector<float> m_glowBuffer;
@@ -290,7 +290,7 @@ namespace hex {
 
     class DiagramChunkBasedEntropyAnalysis {
     public:
-        DiagramChunkBasedEntropyAnalysis(u64 blockSize = 256, size_t sampleSize = 0x1000) : m_blockSize(blockSize), m_sampleSize(sampleSize) { }
+        explicit DiagramChunkBasedEntropyAnalysis(u64 blockSize = 256, size_t sampleSize = 0x1000) : m_blockSize(blockSize), m_sampleSize(sampleSize) { }
 
         void draw(ImVec2 size, ImPlotFlags flags, bool updateHandle = false) {
 
@@ -298,7 +298,7 @@ namespace hex {
                 ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
-                ImPlot::SetupAxisFormat(ImAxis_X1, IntegerAxisFormatter, (void*)"0x%04llX");
+                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%04llX"));
                 ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
                 // Set the axis limit to [first block : last block]
@@ -358,7 +358,7 @@ namespace hex {
             this->m_processing = false;
         }
 
-        void process(std::vector<u8> buffer, u64 chunkSize) {
+        void process(const std::vector<u8> &buffer, u64 chunkSize) {
             this->m_processing = true;
 
             // Update attributes (use buffer size as end address) 
@@ -428,11 +428,11 @@ namespace hex {
 
         // Method used to compute the entropy of a block of size `blockSize`
         // using the byte occurrences from `valueCounts` array.
-        double calculateEntropy(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
+        double calculateEntropy(const std::array<ImU64, 256> &valueCounts, size_t blockSize) const {
             double entropy = 0;
 
             u8 processedValueCount = 0;
-            for (auto count : valueCounts) {
+            for (const auto count : valueCounts) {
                 if (count == 0) [[unlikely]]
                     continue;
 
@@ -482,12 +482,12 @@ namespace hex {
         }
 
         // Return the number of blocks that have been processed
-        u64 getSize() {
+        u64 getSize() const {
             return this->m_yBlockEntropySampled.size();
         }
     
         // Return the size of the chunk used for this analysis
-        u64 getChunkSize() {
+        u64 getChunkSize() const {
             return this->m_chunkSize;
         } 
 
@@ -497,7 +497,7 @@ namespace hex {
 
     private: 
         // Private method used to factorize the process public method 
-        void processImpl(std::vector<u8> bytes) {
+        void processImpl(const std::vector<u8> &bytes) {
             this->m_blockValueCounts = { 0 };
 
             // Reset and resize the array
@@ -586,6 +586,7 @@ namespace hex {
 
     class DiagramByteDistribution {
     public:
+        DiagramByteDistribution() = default;
 
         void draw(ImVec2 size, ImPlotFlags flags) {
 
@@ -595,7 +596,7 @@ namespace hex {
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
                 ImPlot::SetupAxesLimits(-1, 256, 1, double(*std::max_element(this->m_valueCounts.begin(), this->m_valueCounts.end())) * 1.1F, ImGuiCond_Always);
-                ImPlot::SetupAxisFormat(ImAxis_X1, IntegerAxisFormatter, (void*)"0x%02llX");
+                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%02llX"));
                 ImPlot::SetupAxisTicks(ImAxis_X1, 0, 255, 17);
                 ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
@@ -626,7 +627,7 @@ namespace hex {
             this->m_processing = false;
         }
 
-        void process(std::vector<u8> buffer) {
+        void process(const std::vector<u8> &buffer) {
             this->m_processing = true;
 
             // Update attributes  
@@ -659,7 +660,7 @@ namespace hex {
 
     private:
         // Private method used to factorize the process public method 
-        void processImpl(std::vector<u8> bytes) {
+        void processImpl(const std::vector<u8> &bytes) {
             // Reset the array
             this->m_valueCounts.fill(0);
             // Loop over each byte of the file (or a part of it)
@@ -670,8 +671,8 @@ namespace hex {
 
     private:
         // Variables used to store the parameters to process 
-        u64 m_startAddress;
-        u64 m_endAddress;
+        u64 m_startAddress = 0;
+        u64 m_endAddress = 0;
 
         // Hold the result of the byte distribution analysis 
         std::array<ImU64, 256> m_valueCounts;
@@ -680,7 +681,7 @@ namespace hex {
 
     class DiagramByteTypesDistribution {
     public:
-        DiagramByteTypesDistribution(u64 blockSize = 256, size_t sampleSize = 0x1000) : m_blockSize(blockSize), m_sampleSize(sampleSize){ }
+        explicit DiagramByteTypesDistribution(u64 blockSize = 256, size_t sampleSize = 0x1000) : m_blockSize(blockSize), m_sampleSize(sampleSize){ }
 
         void draw(ImVec2 size, ImPlotFlags flags, bool updateHandle = false) {
             // Draw the result of the analysis
@@ -695,7 +696,7 @@ namespace hex {
                         100.1F,
                         ImGuiCond_Always);
                 ImPlot::SetupLegend(ImPlotLocation_South, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
-                ImPlot::SetupAxisFormat(ImAxis_X1, IntegerAxisFormatter, (void*)"0x%04llX");
+                ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%04llX"));
                 ImPlot::SetupMouseText(ImPlotLocation_NorthEast);
 
                 constexpr static std::array Names = { "iscntrl", "isprint", "isspace", "isblank", 
@@ -751,7 +752,7 @@ namespace hex {
             this->m_processing = false;
         }
 
-        void process(std::vector<u8> buffer, u64 baseAddress, u64 fileSize) {
+        void process(const std::vector<u8> &buffer, u64 baseAddress, u64 fileSize) {
             this->m_processing = true;
 
             // Update attributes  
@@ -831,7 +832,7 @@ namespace hex {
         }
 
     private:
-        std::array<float, 12> calculateTypeDistribution(std::array<ImU64, 256> &valueCounts, size_t blockSize) {
+        std::array<float, 12> calculateTypeDistribution(const std::array<ImU64, 256> &valueCounts, size_t blockSize) const {
             std::array<ImU64, 12> counts = {};
 
             for (u16 value = 0x00; value < u16(valueCounts.size()); value++) {
@@ -874,7 +875,7 @@ namespace hex {
         }
 
         // Private method used to factorize the process public method 
-        void processImpl(std::vector<u8> bytes) {
+        void processImpl(const std::vector<u8> &bytes) {
             this->m_blockValueCounts = { 0 };
 
             this->m_yBlockTypeDistributions.fill({});
@@ -924,27 +925,27 @@ namespace hex {
         // Variables used to store the parameters to process
 
         // The size of the block we are considering for the analysis
-        u64 m_blockSize; 
-        u64 m_startAddress;
-        u64 m_endAddress;
+        u64 m_blockSize = 0;
+        u64 m_startAddress = 0;
+        u64 m_endAddress = 0;
         // Start / size of the file
-        u64 m_baseAddress;
-        u64 m_fileSize; 
+        u64 m_baseAddress = 0;
+        u64 m_fileSize = 0;
  
         // Position of the handle inside the plot
         double m_handlePosition = 0.0;    
 
         // Hold the number of blocks that have been processed
         // during the chunk-based entropy analysis
-        u64 m_blockCount;
+        u64 m_blockCount = 0;
 
         // Hold the number of bytes that have been processed 
         // during the analysis (useful for the iterative analysis)
-        u64 m_byteCount;
+        u64 m_byteCount = 0;
  
         // Sampling size, number of elements displayed in the plot,
         // avoid showing to many data because it decreased the frame rate
-        size_t m_sampleSize;
+        size_t m_sampleSize = 0;
 
         // Array used to hold the occurrences of each byte
         // (useful for the iterative analysis)

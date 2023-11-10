@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
 
                                    try {
                                        // Set up the display function using the pattern's formatter
-                                       auto displayFunction = [value = pattern->getFormattedValue()]() {
+                                       auto displayFunction = [value = pattern->getFormattedValue()] {
                                            ImGui::TextUnformatted(value.c_str());
                                            return value;
                                        };

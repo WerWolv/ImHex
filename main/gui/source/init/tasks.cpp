@@ -49,7 +49,7 @@ namespace hex::init {
             nlohmann::json releases;
             try {
                 releases = nlohmann::json::parse(response.getData());
-            } catch (std::exception &e) {
+            } catch (const std::exception &) {
                 return false;
             }
 
@@ -71,7 +71,7 @@ namespace hex::init {
 
             // Check if there is a telemetry uuid
             std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
-            if(uuid.empty()) {
+            if (uuid.empty()) {
                 // Generate a new uuid
                 uuid = wolv::hash::generateUUID();
                 // Save
@@ -522,9 +522,9 @@ namespace hex::init {
 
     bool clearOldLogs() {
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs)) {
-            std::vector<std::filesystem::directory_entry> files;
-
             try {
+                std::vector<std::filesystem::directory_entry> files;
+
                 for (const auto& file : std::filesystem::directory_iterator(path))
                     files.push_back(file);
 
@@ -535,11 +535,10 @@ namespace hex::init {
                     return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
                 });
 
-                for (auto it = files.begin() + 10; it != files.end(); it++)
+                for (auto it = files.begin() + 10; it != files.end(); it += 1)
                     std::filesystem::remove(it->path());
             } catch (std::filesystem::filesystem_error &e) {
                 log::error("Failed to clear old log! {}", e.what());
-                continue;
             }
         }
 
@@ -597,8 +596,8 @@ namespace hex::init {
     // Run all exit tasks, and print to console
     void runExitTasks() {
         for (const auto &[name, task, async] : init::getExitTasks()) {
-            task();
-            log::info("Finished exit task {}", name);
+            bool result = task();
+            log::info("Finished exit task {} {}", name, result ? "successfully" : "unsuccessfully");
         }
     }
 

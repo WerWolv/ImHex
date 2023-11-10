@@ -13,10 +13,10 @@
 #ifndef LLVM_DEMANGLE_MICROSOFTDEMANGLENODES_H
 #define LLVM_DEMANGLE_MICROSOFTDEMANGLENODES_H
 
-#include "llvm/Demangle/StringView.h"
 #include <array>
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 namespace llvm {
 namespace itanium_demangle {
@@ -25,7 +25,6 @@ class OutputBuffer;
 }
 
 using llvm::itanium_demangle::OutputBuffer;
-using llvm::itanium_demangle::StringView;
 
 namespace llvm {
 namespace ms_demangle {
@@ -384,7 +383,7 @@ struct NamedIdentifierNode : public IdentifierNode {
 
   void output(OutputBuffer &OB, OutputFlags Flags) const override;
 
-  StringView Name;
+  std::string_view Name;
 };
 
 struct IntrinsicFunctionIdentifierNode : public IdentifierNode {
@@ -403,7 +402,7 @@ struct LiteralOperatorIdentifierNode : public IdentifierNode {
 
   void output(OutputBuffer &OB, OutputFlags Flags) const override;
 
-  StringView Name;
+  std::string_view Name;
 };
 
 struct LocalStaticGuardIdentifierNode : public IdentifierNode {
@@ -516,7 +515,8 @@ struct NodeArrayNode : public Node {
 
   void output(OutputBuffer &OB, OutputFlags Flags) const override;
 
-  void output(OutputBuffer &OB, OutputFlags Flags, StringView Separator) const;
+  void output(OutputBuffer &OB, OutputFlags Flags,
+              std::string_view Separator) const;
 
   Node **Nodes = nullptr;
   size_t Count = 0;
@@ -601,7 +601,7 @@ struct EncodedStringLiteralNode : public SymbolNode {
 
   void output(OutputBuffer &OB, OutputFlags Flags) const override;
 
-  StringView DecodedString;
+  std::string_view DecodedString;
   bool IsTruncated = false;
   CharKind Char = CharKind::Char;
 };

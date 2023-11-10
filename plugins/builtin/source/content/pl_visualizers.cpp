@@ -23,7 +23,6 @@
 #include <fonts/codicons_font.h>
 
 #include <pl/patterns/pattern.hpp>
-#include <pl/patterns/pattern_padding.hpp>
 
 #include <miniaudio.h>
 
@@ -510,7 +509,7 @@ namespace hex::plugin::builtin {
                 dataProvider = std::make_unique<MemoryFileProvider>();
                 try {
                     data = pattern->getBytes();
-                } catch (const std::exception &e) {
+                } catch (const std::exception &) {
                     dataProvider->resize(0);
                     throw;
                 }
@@ -605,7 +604,7 @@ namespace hex::plugin::builtin {
                                                       jsonAddr["state"].get<std::string>(),
                                                       jsonAddr["country"].get<std::string>());
                             }
-                        } catch (std::exception &e) {
+                        } catch (std::exception &) {
                             address = std::string("hex.builtin.pl_visualizer.coordinates.querying_no_address"_lang);
                         }
                     });

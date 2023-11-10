@@ -11,7 +11,6 @@
 
 #include <cmath>
 #include <filesystem>
-#include <span>
 
 #include <implot.h>
 
@@ -22,7 +21,7 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     ViewInformation::ViewInformation() : View("hex.builtin.view.information.name") {
-        EventManager::subscribe<EventDataChanged>(this, [this]() {
+        EventManager::subscribe<EventDataChanged>(this, [this] {
             this->m_dataValid = false;
             this->m_plainTextCharacterPercentage = -1.0;
             this->m_averageEntropy = -1.0;

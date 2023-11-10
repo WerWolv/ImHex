@@ -1,6 +1,6 @@
 #if defined(OS_LINUX)
 
-#include<stdexcept>
+#include <stdexcept>
 
 #include <hex/helpers/intrinsics.hpp>
 #include <hex/helpers/logger.hpp>

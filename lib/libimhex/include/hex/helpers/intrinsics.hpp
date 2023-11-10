@@ -2,7 +2,7 @@
 
 namespace hex {
 
-    inline void unused(auto && ... x) {
+    void unused(auto && ... x) {
         ((void)x, ...);
     }
 

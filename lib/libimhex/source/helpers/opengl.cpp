@@ -116,7 +116,7 @@ namespace hex::gl {
     }
 
     template<typename T>
-    Buffer<T>::Buffer(Buffer<T> &&other) noexcept {
+    Buffer<T>::Buffer(Buffer &&other) noexcept {
         this->m_buffer = other.m_buffer;
         this->m_size = other.m_size;
         this->m_type = other.m_type;
@@ -124,7 +124,7 @@ namespace hex::gl {
     }
 
     template<typename T>
-    Buffer<T>& Buffer<T>::operator=(Buffer<T> &&other) noexcept {
+    Buffer<T>& Buffer<T>::operator=(Buffer &&other) noexcept {
         this->m_buffer = other.m_buffer;
         this->m_size = other.m_size;
         this->m_type = other.m_type;
@@ -154,7 +154,7 @@ namespace hex::gl {
                 glDrawArrays(GL_TRIANGLES, 0, this->m_size);
                 break;
             case GL_ELEMENT_ARRAY_BUFFER:
-                glDrawElements(GL_TRIANGLES, this->m_size, getType<T>(), nullptr);
+                glDrawElements(GL_TRIANGLES, this->m_size, impl::getType<T>(), nullptr);
                 break;
         }
     }
@@ -211,6 +211,9 @@ namespace hex::gl {
     Texture::Texture(Texture &&other) noexcept {
         this->m_texture = other.m_texture;
         other.m_texture = -1;
+
+        this->m_width = other.m_width;
+        this->m_height = other.m_height;
     }
 
     Texture& Texture::operator=(Texture &&other) noexcept {

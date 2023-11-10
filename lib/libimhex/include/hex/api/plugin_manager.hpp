@@ -1,8 +1,5 @@
 #pragma once
 
-#include <hex.hpp>
-
-#include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <span>
@@ -84,8 +81,7 @@ namespace hex {
             return reinterpret_cast<T>(this->getPluginFunction(symbol));
         }
 
-    private:
-        [[nodiscard]] void *getPluginFunction(const std::string &symbol);
+        [[nodiscard]] void *getPluginFunction(const std::string &symbol) const;
     };
 
     class PluginManager {

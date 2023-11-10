@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hex.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/api/achievement_manager.hpp>
 

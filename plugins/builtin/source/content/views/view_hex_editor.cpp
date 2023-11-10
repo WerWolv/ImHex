@@ -16,8 +16,6 @@
 
 #include <imgui_internal.h>
 
-#include <thread>
-
 using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
@@ -51,7 +49,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndTabItem();
                 }
 
-                if(this->m_requestFocus){
+                if (this->m_requestFocus){
                     ImGui::SetKeyboardFocusHere();
                     this->m_requestFocus = false;
                 }
@@ -223,8 +221,6 @@ namespace hex::plugin::builtin {
                                 if (this->m_nextSearchPosition.has_value())
                                     this->m_searchPosition = this->m_nextSearchPosition.value();
                                 this->m_nextSearchPosition.reset();
-
-                                continue;
                             } else {
                                 TaskManager::doLater([editor, region]{
                                     editor->setSelection(region->getStartAddress(), region->getEndAddress());
@@ -419,13 +415,13 @@ namespace hex::plugin::builtin {
 
             ImGui::InputHexadecimal("##resize", &this->m_size);
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
-                resize(static_cast<size_t>(this->m_size));
+                this->resize(this->m_size);
                 editor->closePopup();
             }
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
-                    resize(static_cast<size_t>(this->m_size));
+                    this->resize(this->m_size);
                     editor->closePopup();
                 },
                 [&]{
@@ -455,7 +451,7 @@ namespace hex::plugin::builtin {
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
-                    insert(this->m_address, static_cast<size_t>(this->m_size));
+                    insert(this->m_address, this->m_size);
                     editor->closePopup();
                 },
                 [&]{
@@ -486,7 +482,7 @@ namespace hex::plugin::builtin {
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
-                    remove(this->m_address, static_cast<size_t>(this->m_size));
+                    remove(this->m_address, this->m_size);
                     editor->closePopup();
                 },
                 [&]{
@@ -521,7 +517,7 @@ namespace hex::plugin::builtin {
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
             [&, this] {
-                fill(this->m_address, static_cast<size_t>(this->m_size), this->m_input);
+                fill(this->m_address, this->m_size, this->m_input);
                 editor->closePopup();
             },
             [&] {
@@ -653,7 +649,7 @@ namespace hex::plugin::builtin {
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImGui::GetWindowContentRegionMin() - ImGui::GetStyle().WindowPadding, ImGuiCond_Appearing);
         if (ImGui::BeginPopup("##hex_editor_popup", ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_NoTitleBar)) {
             // Force close the popup when user is editing an input
-            if(ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))){
+            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))){
                 ImGui::CloseCurrentPopup();
             }
 
@@ -760,7 +756,7 @@ namespace hex::plugin::builtin {
 
             string += result;
             offset += size;
-        };
+        }
 
         ImGui::SetClipboardText(string.c_str());
     }

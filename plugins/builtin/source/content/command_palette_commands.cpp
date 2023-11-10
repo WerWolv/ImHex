@@ -22,9 +22,7 @@ namespace hex::plugin::builtin {
                 evaluator.registerStandardVariables();
                 evaluator.registerStandardFunctions();
 
-                std::optional<long double> result;
-
-                result = evaluator.evaluate(input);
+                std::optional<long double> result = evaluator.evaluate(input);
                 if (result.has_value())
                     return hex::format("#{0} = {1}", input.data(), result.value());
                 else if (evaluator.hasError())

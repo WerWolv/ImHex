@@ -4,7 +4,6 @@
 
 #include <hex/helpers/concepts.hpp>
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/intrinsics.hpp>
 
 #include <array>
 #include <bit>
@@ -66,7 +65,7 @@ namespace hex {
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
     [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);
 
-    [[nodiscard]] constexpr inline u64 extract(u8 from, u8 to, const std::unsigned_integral auto &value) {
+    [[nodiscard]] constexpr u64 extract(u8 from, u8 to, const std::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);
 
         using ValueType = std::remove_cvref_t<decltype(value)>;
@@ -90,13 +89,13 @@ namespace hex {
         return (value & mask) >> to;
     }
 
-    [[nodiscard]] constexpr inline i128 signExtend(size_t numBits, i128 value) {
+    [[nodiscard]] constexpr i128 signExtend(size_t numBits, i128 value) {
         i128 mask = 1ULL << (numBits - 1);
         return (value ^ mask) - mask;
     }
 
     template<std::integral T>
-    [[nodiscard]] constexpr inline T swapBitOrder(size_t numBits, T value) {
+    [[nodiscard]] constexpr T swapBitOrder(size_t numBits, T value) {
         T result = 0x00;
 
         for (size_t bit = 0; bit < numBits; bit++) {
@@ -107,14 +106,14 @@ namespace hex {
         return result;
     }
 
-    [[nodiscard]] constexpr inline size_t strnlen(const char *s, size_t n) {
+    [[nodiscard]] constexpr size_t strnlen(const char *s, size_t n) {
         size_t i = 0;
         while (i < n && s[i] != '\x00') i++;
 
         return i;
     }
 
-    template<size_t Size>
+    template<size_t>
     struct SizeTypeImpl { };
 
     template<>
@@ -215,7 +214,7 @@ namespace hex {
 
     [[nodiscard]] inline std::vector<u8> parseByteString(const std::string &string) {
         auto byteString = std::string(string);
-        byteString.erase(std::remove(byteString.begin(), byteString.end(), ' '), byteString.end());
+        std::erase(byteString, ' ');
 
         if ((byteString.length() % 2) != 0) return {};
 
@@ -230,11 +229,11 @@ namespace hex {
         return result;
     }
 
-    [[nodiscard]] inline std::string toBinaryString(std::unsigned_integral auto number) {
+    [[nodiscard]] std::string toBinaryString(std::unsigned_integral auto number) {
         if (number == 0) return "0";
 
         std::string result;
-        for (i16 bit = hex::bit_width(number) - 1; bit >= 0; bit--)
+        for (i16 bit = hex::bit_width(number) - 1; bit >= 0; bit -= 1)
             result += (number & (0b1 << bit)) == 0 ? '0' : '1';
 
         return result;

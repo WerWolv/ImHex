@@ -31,7 +31,11 @@ namespace hex::plugin::builtin::ui {
                 *region = { provider->getBaseAddress(), provider->getActualSize() };
                 break;
             case RegionType::Selection:
-                *region = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion { { 0, 1 }, provider });
+                *region = ImHexApi::HexEditor::getSelection().value_or(
+                    ImHexApi::HexEditor::ProviderRegion {
+                        { 0, 1 },
+                        provider }
+                        ).getRegion();
                 break;
             case RegionType::Region:
                 ImGui::SameLine();

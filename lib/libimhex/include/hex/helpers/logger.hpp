@@ -30,12 +30,8 @@ namespace hex::log {
         };
 
         std::vector<LogEntry>& getLogEntries();
-    }
 
-    namespace {
-
-
-        [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
+        [[maybe_unused]] inline void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
             const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
             fmt::print(dest, "[{0:%H:%M:%S}] ", now);
@@ -68,26 +64,26 @@ namespace hex::log {
 
     [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
         #if defined(DEBUG)
-            hex::log::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
+            hex::log::impl::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
         #else
             impl::getLogEntries().push_back({ IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...) });
         #endif
     }
 
     [[maybe_unused]] void info(const std::string &fmt, auto && ... args) {
-        hex::log::print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
+        hex::log::impl::print(fg(fmt::color::cadet_blue) | fmt::emphasis::bold, "[INFO] ", fmt, args...);
     }
 
     [[maybe_unused]] void warn(const std::string &fmt, auto && ... args) {
-        hex::log::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
+        hex::log::impl::print(fg(fmt::color::orange) | fmt::emphasis::bold, "[WARN] ", fmt, args...);
     }
 
     [[maybe_unused]] void error(const std::string &fmt, auto && ... args) {
-        hex::log::print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
+        hex::log::impl::print(fg(fmt::color::red) | fmt::emphasis::bold, "[ERROR]", fmt, args...);
     }
 
     [[maybe_unused]] void fatal(const std::string &fmt, auto && ... args) {
-        hex::log::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
+        hex::log::impl::print(fg(fmt::color::purple) | fmt::emphasis::bold, "[FATAL]", fmt, args...);
     }
 
 

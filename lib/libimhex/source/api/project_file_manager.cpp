@@ -1,12 +1,7 @@
 #include <hex/api/project_file_manager.hpp>
 
-#include <hex/helpers/tar.hpp>
-#include <hex/helpers/fmt.hpp>
-#include <hex/helpers/logger.hpp>
-
 #include <hex/providers/provider.hpp>
 
-#include <wolv/utils/guards.hpp>
 #include <wolv/io/fs.hpp>
 
 namespace hex {
@@ -37,7 +32,7 @@ namespace hex {
     }
 
     bool ProjectFile::store(std::optional<std::fs::path> filePath, bool updateLocation) {
-       return s_storeProjectFunction(filePath, updateLocation);
+       return s_storeProjectFunction(std::move(filePath), updateLocation);
     }
 
     bool ProjectFile::hasPath() {

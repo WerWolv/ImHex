@@ -43,10 +43,6 @@
 
 namespace hex::plugin::builtin {
 
-    DiskProvider::DiskProvider() : Provider() {
-
-    }
-
     bool DiskProvider::isAvailable() const {
 #if defined(OS_WINDOWS)
 
@@ -150,9 +146,9 @@ namespace hex::plugin::builtin {
 
         const auto &path = this->m_path.native();
 
-            this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+            this->m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
             if (this->m_diskHandle == INVALID_HANDLE_VALUE) {
-                this->m_diskHandle = reinterpret_cast<HANDLE>(CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+                this->m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
                 this->m_writable   = false;
 
                 if (this->m_diskHandle == INVALID_HANDLE_VALUE)
@@ -244,7 +240,7 @@ namespace hex::plugin::builtin {
             while (size > 0) {
                 LARGE_INTEGER seekPosition;
                 seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
-                seekPosition.HighPart = offset >> 32;
+                seekPosition.HighPart = LONG(offset >> 32);
 
                 if (this->m_sectorBufferAddress != static_cast<u64>(seekPosition.QuadPart)) {
                     ::SetFilePointer(this->m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
@@ -252,7 +248,7 @@ namespace hex::plugin::builtin {
                     this->m_sectorBufferAddress = seekPosition.QuadPart;
                 }
 
-                std::memcpy(reinterpret_cast<u8 *>(buffer) + (offset - startOffset), this->m_sectorBuffer.data() + (offset & (this->m_sectorSize - 1)), std::min(this->m_sectorSize, size));
+                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), this->m_sectorBuffer.data() + (offset & (this->m_sectorSize - 1)), std::min(this->m_sectorSize, size));
 
                 size = std::max<ssize_t>(static_cast<ssize_t>(size) - this->m_sectorSize, 0);
                 offset += this->m_sectorSize;
@@ -406,7 +402,7 @@ namespace hex::plugin::builtin {
             DWORD size = 0;
             DWORD propertyRegDataType = SPDRP_PHYSICAL_DEVICE_OBJECT_NAME;
             SetupDiGetDeviceRegistryProperty(hDevInfo, &deviceInfoData, SPDRP_FRIENDLYNAME,
-                                             &propertyRegDataType, (BYTE*)description.data(),
+                                             &propertyRegDataType, reinterpret_cast<BYTE*>(description.data()),
                                              sizeof(description),
                                              &size);
 

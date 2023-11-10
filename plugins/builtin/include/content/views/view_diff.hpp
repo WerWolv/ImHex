@@ -2,12 +2,10 @@
 
 #include <hex.hpp>
 
-#include <imgui.h>
 #include <hex/ui/view.hpp>
 #include <hex/api/task.hpp>
 
 #include <array>
-#include <string>
 #include <vector>
 
 #include "ui/hex_editor.hpp"
@@ -40,7 +38,7 @@ namespace hex::plugin::builtin {
         };
 
     private:
-        std::function<std::optional<color_t>(u64, const u8*, size_t)> createCompareFunction(size_t otherIndex);
+        std::function<std::optional<color_t>(u64, const u8*, size_t)> createCompareFunction(size_t otherIndex) const;
         void analyze(prv::Provider *providerA, prv::Provider *providerB);
 
     private:

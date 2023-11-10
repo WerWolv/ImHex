@@ -2,14 +2,11 @@
 
 #include <hex.hpp>
 
-#include <list>
 #include <optional>
 #include <string>
 #include <vector>
-#include <variant>
 #include <map>
 
-#include <hex/helpers/concepts.hpp>
 #include <hex/api/keybinding.hpp>
 
 #include <wolv/io/fs.hpp>
@@ -58,7 +55,7 @@ namespace hex {
                 color_t m_color = 0x00;
             };
 
-            struct ProviderRegion : public Region {
+            struct ProviderRegion : Region {
                 prv::Provider *provider;
 
                 [[nodiscard]] prv::Provider *getProvider() const { return this->provider; }
@@ -320,6 +317,7 @@ namespace hex {
              * @brief Creates a new provider using its unlocalized name and add it to the list of providers
              * @param unlocalizedName The unlocalized name of the provider to create
              * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
+             * @param select Whether to select the provider after adding it
              */
             prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface = false, bool select = true);
 

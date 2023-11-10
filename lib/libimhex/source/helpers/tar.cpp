@@ -1,6 +1,5 @@
 #include <hex/helpers/tar.hpp>
 #include <hex/helpers/literals.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 
@@ -97,7 +96,7 @@ namespace hex {
         return mtar_find(&this->m_ctx, fixedPath.c_str(), &header) == MTAR_ESUCCESS;
     }
 
-    std::string Tar::getOpenErrorString(){
+    std::string Tar::getOpenErrorString() const {
         return hex::format("{}: {}", mtar_strerror(this->m_tarOpenErrno), std::strerror(this->m_fileOpenErrno));
     }
 
@@ -119,7 +118,7 @@ namespace hex {
             std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
         #endif
         int ret = mtar_find(&this->m_ctx, fixedPath.c_str(), &header);
-        if(ret != MTAR_ESUCCESS){
+        if (ret != MTAR_ESUCCESS){
             log::debug("Failed to read vector from path {} in tarred file {}: {}",
                 path.string(), this->m_path.string(), mtar_strerror(ret));
             return {};
@@ -162,7 +161,7 @@ namespace hex {
         this->writeVector(path, { data.begin(), data.end() });
     }
 
-    static void writeFile(mtar_t *ctx, mtar_header_t *header, const std::fs::path &path) {
+    static void writeFile(mtar_t *ctx, const mtar_header_t *header, const std::fs::path &path) {
         constexpr static u64 BufferSize = 1_MiB;
 
         wolv::io::File outputFile(path, wolv::io::File::Mode::Create);

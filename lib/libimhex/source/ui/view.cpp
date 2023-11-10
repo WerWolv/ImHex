@@ -4,7 +4,6 @@
 
 #include <functional>
 #include <string>
-#include <vector>
 
 namespace hex {
 
@@ -82,6 +81,6 @@ namespace hex {
     void View::setFontAtlas(ImFontAtlas *atlas) { s_fontAtlas = atlas; }
 
     ImFontConfig View::getFontConfig() { return s_fontConfig; }
-    void View::setFontConfig(ImFontConfig config) { s_fontConfig = config; }
+    void View::setFontConfig(ImFontConfig config) { s_fontConfig = std::move(config); }
 
 }

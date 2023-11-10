@@ -26,7 +26,7 @@ namespace hex {
 
     class View {
     public:
-        explicit View(std::string unlocalizedViewName);
+        explicit View(std::string unlocalizedName);
         virtual ~View() = default;
 
         virtual void drawContent() = 0;

@@ -2,10 +2,7 @@
 
 #include <hex.hpp>
 
-#include <imgui.h>
 #include <hex/ui/view.hpp>
-
-#include <optional>
 
 namespace hex::plugin::builtin {
 

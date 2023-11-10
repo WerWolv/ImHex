@@ -76,7 +76,7 @@ namespace hex::plugin::builtin {
                     while (clipper.Step()) {
                         auto iter = patches.begin();
                         for (auto i = 0; i < clipper.DisplayStart; i++)
-                            iter++;
+                            ++iter;
 
                         for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                             const auto &[address, patch] = *iter;

@@ -119,7 +119,7 @@ namespace hex::prv {
         this->markDirty();
     }
 
-    void Provider::applyOverlays(u64 offset, void *buffer, size_t size) {
+    void Provider::applyOverlays(u64 offset, void *buffer, size_t size) const {
         for (auto &overlay : this->m_overlays) {
             auto overlayOffset = overlay->getAddress();
             auto overlaySize   = overlay->getSize();
@@ -246,7 +246,7 @@ namespace hex::prv {
         }
 
         for (u64 i = 0; i < size; i++) {
-            u8 patch         = reinterpret_cast<const u8 *>(buffer)[i];
+            u8 patch         = static_cast<const u8 *>(buffer)[i];
             u8 originalValue = 0x00;
             this->readRaw((offset + i) - this->getBaseAddress(), &originalValue, sizeof(u8));
 
@@ -269,12 +269,12 @@ namespace hex::prv {
 
     void Provider::undo() {
         if (canUndo())
-            this->m_currPatches--;
+            --this->m_currPatches;
     }
 
     void Provider::redo() {
         if (canRedo())
-            this->m_currPatches++;
+            ++this->m_currPatches;
     }
 
     bool Provider::canUndo() const {

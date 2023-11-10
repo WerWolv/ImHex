@@ -72,7 +72,7 @@ namespace hex::plugin::builtin {
 
             // Draw the results
             if (ImGui::BeginChild("##results", ImGui::GetContentRegionAvail(), false, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_NavFlattened)) {
-                for (const auto &[displayResult, matchedCommand, callback] : this->m_lastResults) {;
+                for (const auto &[displayResult, matchedCommand, callback] : this->m_lastResults) {
                     ImGui::PushTabStop(true);
                     ON_SCOPE_EXIT { ImGui::PopTabStop(); };
 

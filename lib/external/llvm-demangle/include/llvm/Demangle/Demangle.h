@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <string>
+#include <string_view>
 
 namespace llvm {
 /// This is a llvm local version of __cxa_demangle. Other than the name and
@@ -28,8 +29,10 @@ enum : int {
   demangle_success = 0,
 };
 
-char *itaniumDemangle(const char *mangled_name, char *buf, size_t *n,
-                      int *status);
+/// Returns a non-NULL pointer to a NUL-terminated C style string
+/// that should be explicitly freed, if successful. Otherwise, may return
+/// nullptr if mangled_name is not a valid mangling or is nullptr.
+char *itaniumDemangle(std::string_view mangled_name);
 
 enum MSDemangleFlags {
   MSDF_None = 0,
@@ -46,31 +49,25 @@ enum MSDemangleFlags {
 /// success, or nullptr on error.
 /// If n_read is non-null and demangling was successful, it receives how many
 /// bytes of the input string were consumed.
-/// buf can point to a *n_buf bytes large buffer where the demangled name is
-/// stored. If the buffer is too small, it is grown with realloc(). If buf is
-/// nullptr, then this malloc()s memory for the result.
-/// *n_buf stores the size of buf on input if buf is non-nullptr, and it
-/// receives the size of the demangled string on output if n_buf is not nullptr.
 /// status receives one of the demangle_ enum entries above if it's not nullptr.
 /// Flags controls various details of the demangled representation.
-char *microsoftDemangle(const char *mangled_name, size_t *n_read, char *buf,
-                        size_t *n_buf, int *status,
-                        MSDemangleFlags Flags = MSDF_None);
+char *microsoftDemangle(std::string_view mangled_name, size_t *n_read,
+                        int *status, MSDemangleFlags Flags = MSDF_None);
 
 // Demangles a Rust v0 mangled symbol.
-char *rustDemangle(const char *MangledName);
+char *rustDemangle(std::string_view MangledName);
 
 // Demangles a D mangled symbol.
-char *dlangDemangle(const char *MangledName);
+char *dlangDemangle(std::string_view MangledName);
 
 /// Attempt to demangle a string using different demangling schemes.
 /// The function uses heuristics to determine which demangling scheme to use.
 /// \param MangledName - reference to string to demangle.
 /// \returns - the demangled string, or a copy of the input string if no
 /// demangling occurred.
-std::string demangle(const std::string &MangledName);
+std::string demangle(std::string_view MangledName);
 
-bool nonMicrosoftDemangle(const char *MangledName, std::string &Result);
+bool nonMicrosoftDemangle(std::string_view MangledName, std::string &Result);
 
 /// "Partial" demangler. This supports demangling a string into an AST
 /// (typically an intermediate stage in itaniumDemangle) and querying certain
@@ -87,7 +84,7 @@ struct ItaniumPartialDemangler {
   bool partialDemangle(const char *MangledName);
 
   /// Just print the entire mangled name into Buf. Buf and N behave like the
-  /// second and third parameters to itaniumDemangle.
+  /// second and third parameters to __cxa_demangle.
   char *finishDemangle(char *Buf, size_t *N) const;
 
   /// Get the base name of a function. This doesn't include trailing template

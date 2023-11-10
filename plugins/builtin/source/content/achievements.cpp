@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
             });
 
             // Clear temporary achievements when the last provider is closed
-            EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
+            EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
                 hex::unused(oldProvider);
                 if (newProvider == nullptr) {
                     AchievementManager::clearTemporary();

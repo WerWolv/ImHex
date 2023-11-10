@@ -7,11 +7,9 @@
 #include <hex/helpers/binary_pattern.hpp>
 #include <ui/widgets.hpp>
 
-#include <atomic>
 #include <vector>
 
 #include <wolv/container/interval_tree.hpp>
-#include <imgui.h>
 
 namespace hex::plugin::builtin {
 
@@ -97,7 +95,7 @@ namespace hex::plugin::builtin {
 
         } m_searchSettings, m_decodeSettings;
 
-        using OccurrenceTree = wolv::container::IntervalTree<Occurrence, u64>;
+        using OccurrenceTree = wolv::container::IntervalTree<Occurrence>;
 
         PerProvider<std::vector<Occurrence>> m_foundOccurrences, m_sortedOccurrences;
         PerProvider<OccurrenceTree> m_occurrenceTree;
@@ -120,7 +118,7 @@ namespace hex::plugin::builtin {
         static std::tuple<bool, std::variant<u64, i64, float, double>, size_t> parseNumericValueInput(const std::string &input, SearchSettings::Value::Type type);
 
         void runSearch();
-        std::string decodeValue(prv::Provider *provider, Occurrence occurrence, size_t maxBytes = 0xFFFF'FFFF) const;
+        std::string decodeValue(prv::Provider *provider, const Occurrence &occurrence, size_t maxBytes = 0xFFFF'FFFF) const;
     };
 
 }

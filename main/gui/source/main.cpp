@@ -238,4 +238,4 @@ int main(int argc, char **argv) {
     ImHexApi::System::impl::setPortableVersion(isPortableVersion());
 
     return runImHex();
-};
+}

@@ -7,8 +7,6 @@
 #include <vector>
 #include <span>
 
-#include <hex/helpers/fs.hpp>
-
 #include <wolv/io/file.hpp>
 
 namespace hex {
@@ -22,12 +20,12 @@ namespace hex {
 
         EncodingFile();
         EncodingFile(const EncodingFile &other);
-        EncodingFile(EncodingFile &&other);
+        EncodingFile(EncodingFile &&other) noexcept;
         EncodingFile(Type type, const std::fs::path &path);
-        EncodingFile(Type type, const std::string &path);
+        EncodingFile(Type type, const std::string &content);
 
         EncodingFile& operator=(const EncodingFile &other);
-        EncodingFile& operator=(EncodingFile &&other);
+        EncodingFile& operator=(EncodingFile &&other) noexcept;
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
         [[nodiscard]] size_t getEncodingLengthFor(std::span<u8> buffer) const;

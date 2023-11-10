@@ -14,8 +14,8 @@
 
 namespace hex::plugin::builtin {
 
-    constexpr static auto MetadataHeaderMagic = "HEX";
-    constexpr static auto MetadataPath = "IMHEX_METADATA";
+    constexpr static auto MetadataHeaderMagic   = "HEX";
+    constexpr static auto MetadataPath          = "IMHEX_METADATA";
 
     bool load(const std::fs::path &filePath) {
         if (!wolv::io::fs::exists(filePath) || !wolv::io::fs::isRegularFile(filePath)) {

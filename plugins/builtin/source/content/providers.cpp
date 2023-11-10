@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<FileProvider>(false);
         ContentRegistry::Provider::add<NullProvider>(false);
         #if !defined(OS_WEB)
-        ContentRegistry::Provider::add<DiskProvider>();
+            ContentRegistry::Provider::add<DiskProvider>();
         #endif
         ContentRegistry::Provider::add<GDBProvider>();
         ContentRegistry::Provider::add<IntelHexProvider>();
@@ -87,7 +87,7 @@ namespace hex::plugin::builtin {
                 }
 
                 std::string warningMsg;
-                for(const auto &warning : providerWarnings){
+                for (const auto &warning : providerWarnings){
                     ImHexApi::Provider::remove(warning.first);
                     warningMsg.append(
                         hex::format("\n - {} : {}", warning.first->getName(), warning.second));

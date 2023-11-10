@@ -9,7 +9,6 @@
 
 #include <cstring>
 #include <codecvt>
-#include <locale>
 #include <string>
 #include <vector>
 
@@ -474,7 +473,7 @@ namespace hex::plugin::builtin {
             std::string value;
             try {
                 value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
-            } catch (fmt::format_error &e) {
+            } catch (fmt::format_error &) {
                 value = "Invalid";
             }
 
@@ -489,7 +488,7 @@ namespace hex::plugin::builtin {
             std::string value;
             try {
                 value = hex::format("{0:%a, %d.%m.%Y %H:%M:%S}", fmt::localtime(endianAdjustedTime));
-            } catch (fmt::format_error &e) {
+            } catch (fmt::format_error &) {
                 value = "Invalid";
             }
 

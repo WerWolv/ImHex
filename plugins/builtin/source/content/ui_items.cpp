@@ -12,29 +12,28 @@
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <content/popups/popup_tasks_waiting.hpp>
 #include <content/popups/popup_notification.hpp>
 
 namespace hex::plugin::builtin {
 
     void addTitleBarButtons() {
-#if defined(DEBUG)
-        ContentRegistry::Interface::addTitleBarButton(ICON_VS_DEBUG, "hex.builtin.title_bar_button.debug_build", []{
-            if (ImGui::GetIO().KeyCtrl) {
-                // Explicitly trigger a segfault by writing to an invalid memory location
-                // Used for debugging crashes
-                *reinterpret_cast<u8 *>(0x10) = 0x10;
-                std::unreachable();
-            } else if (ImGui::GetIO().KeyShift) {
-                // Explicitly trigger an abort by throwing an uncaught exception
-                // Used for debugging exception errors
-                throw std::runtime_error("Debug Error");
-                std::unreachable();
-            } else {
-                hex::openWebpage("https://imhex.werwolv.net/debug");
-            }
-        });
-#endif
+        #if defined(DEBUG)
+            ContentRegistry::Interface::addTitleBarButton(ICON_VS_DEBUG, "hex.builtin.title_bar_button.debug_build", []{
+                if (ImGui::GetIO().KeyCtrl) {
+                    // Explicitly trigger a segfault by writing to an invalid memory location
+                    // Used for debugging crashes
+                    *reinterpret_cast<u8 *>(0x10) = 0x10;
+                    std::unreachable();
+                } else if (ImGui::GetIO().KeyShift) {
+                    // Explicitly trigger an abort by throwing an uncaught exception
+                    // Used for debugging exception errors
+                    throw std::runtime_error("Debug Error");
+                    std::unreachable();
+                } else {
+                    hex::openWebpage("https://imhex.werwolv.net/debug");
+                }
+            });
+        #endif
 
         ContentRegistry::Interface::addTitleBarButton(ICON_VS_SMILEY, "hex.builtin.title_bar_button.feedback", []{
             hex::openWebpage("https://github.com/WerWolv/ImHex/discussions/categories/feedback");

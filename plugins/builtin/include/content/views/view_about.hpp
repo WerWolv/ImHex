@@ -6,10 +6,6 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/http_requests.hpp>
 
-#include <vector>
-#include <tuple>
-#include <cstdio>
-
 namespace hex::plugin::builtin {
 
     class ViewAbout : public View {

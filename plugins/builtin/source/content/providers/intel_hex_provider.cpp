@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
             u8 checksum = 0x00;
             u64 offset = 0x00;
 
-            u8 byteCount = 0x00;
+            u8  byteCount = 0x00;
             u32 segmentAddress = 0x0000'0000;
             u32 extendedLinearAddress = 0x0000'0000;
             u16 address = 0x0000;
@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
                 StartLinearAddress      = 0x05
             } recordType;
 
-            auto c = [&]() {
+            auto c = [&] {
                 while (std::isspace(string[offset]) && offset < string.length())
                     offset++;
 
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin {
                         offset++;
                 }
 
-            } catch (const std::runtime_error &e) {
+            } catch (const std::runtime_error &) {
                 return { };
             }
 
@@ -176,7 +176,7 @@ namespace hex::plugin::builtin {
         auto intervals = this->m_data.overlapping({ offset, (offset + size) - 1 });
 
         std::memset(buffer, 0x00, size);
-        auto bytes = reinterpret_cast<u8*>(buffer);
+        auto bytes = static_cast<u8*>(buffer);
         for (const auto &[interval, data] : intervals) {
             for (u32 i = std::max(interval.start, offset); i <= interval.end && (i - offset) < size; i++) {
                 bytes[i - offset] = (*data)[i - interval.start];

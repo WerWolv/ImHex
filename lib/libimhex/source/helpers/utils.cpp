@@ -1,7 +1,6 @@
 #include <hex/helpers/utils.hpp>
 
 #include <cstdio>
-#include <codecvt>
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
@@ -88,7 +87,7 @@ namespace hex {
             return { };
 
         // Remove all whitespace
-        string.erase(std::remove_if(string.begin(), string.end(), [](char c) { return std::isspace(c); }), string.end());
+        std::erase_if(string, [](char c) { return std::isspace(c); });
 
         // Only parse whole bytes
         if (string.length() % 2 != 0)
@@ -257,7 +256,6 @@ namespace hex {
 
     std::vector<std::string> splitString(const std::string &string, const std::string &delimiter) {
         size_t start = 0, end = 0;
-        std::string token;
         std::vector<std::string> res;
 
         while ((end = string.find(delimiter, start)) != std::string::npos) {
@@ -265,7 +263,7 @@ namespace hex {
             if (start + size > string.length())
                 break;
 
-            token = string.substr(start, end - start);
+            std::string token = string.substr(start, end - start);
             start = end + delimiter.length();
             res.push_back(token);
         }

@@ -57,7 +57,6 @@ namespace hex::plugin::builtin {
                     }
                 } catch (...) {
                     log::error("Failed to parse constants file {}", wolv::util::toUTF8String(file.path()));
-                    continue;
                 }
             }
         }
@@ -95,7 +94,7 @@ namespace hex::plugin::builtin {
 
                 // Handle table sorting
                 if (sortSpecs->SpecsDirty) {
-                    std::sort(this->m_constants.begin(), this->m_constants.end(), [&sortSpecs](Constant &left, Constant &right) -> bool {
+                    std::sort(this->m_constants.begin(), this->m_constants.end(), [&sortSpecs](const Constant &left, const Constant &right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("category")) {
                             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                 return left.category > right.category;

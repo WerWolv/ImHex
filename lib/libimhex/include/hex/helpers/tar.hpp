@@ -30,7 +30,7 @@ namespace hex {
          * @brief get the error string explaining the error that occured when opening the file.
          * This error is a combination of the tar error and the native file open error
          */
-        std::string getOpenErrorString();
+        std::string getOpenErrorString() const;
 
         [[nodiscard]] std::vector<u8> readVector(const std::fs::path &path);
         [[nodiscard]] std::string readString(const std::fs::path &path);

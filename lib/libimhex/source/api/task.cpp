@@ -45,8 +45,8 @@ namespace hex {
             info.dwThreadID = ::GetCurrentThreadId();
             info.dwFlags = 0;
 
-            const DWORD MS_VC_EXCEPTION = 0x406D1388;
-            RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+            constexpr static DWORD MS_VC_EXCEPTION = 0x406D1388;
+            RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), reinterpret_cast<ULONG_PTR*>(&info));
         #elif defined(OS_LINUX)
             pthread_setname_np(pthread_self(), name.c_str());
         #elif defined(OS_WEB)
@@ -57,7 +57,7 @@ namespace hex {
     }
 
     Task::Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
-    : m_unlocalizedName(std::move(unlocalizedName)), m_currValue(0), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
+    : m_unlocalizedName(std::move(unlocalizedName)), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
 
     Task::Task(hex::Task &&other) noexcept {
         {
@@ -195,7 +195,7 @@ namespace hex {
         return !task->wasInterrupted();
     }
 
-    void TaskHolder::interrupt() {
+    void TaskHolder::interrupt() const {
         if (this->m_task.expired())
             return;
 
@@ -208,7 +208,7 @@ namespace hex {
             return 0;
 
         auto task = this->m_task.lock();
-        return (u32)((task->getValue() * 100) / task->getMaxValue());
+        return u32((task->getValue() * 100) / task->getMaxValue());
     }
 
 
@@ -251,6 +251,7 @@ namespace hex {
             try {
                 setThreadName(LangEntry(task->m_unlocalizedName));
                 task->m_function(*task);
+                setThreadName("Idle Task");
                 log::debug("Finished task {}", task->m_unlocalizedName);
             } catch (const Task::TaskInterruptor &) {
                 task->interruption();

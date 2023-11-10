@@ -1,3 +1,5 @@
+#pragma once
+
 #include <hex/ui/popup.hpp>
 
 #include <hex/api/localization.hpp>

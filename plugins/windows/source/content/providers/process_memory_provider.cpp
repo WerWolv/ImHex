@@ -31,10 +31,10 @@ namespace hex::plugin::windows {
     }
 
     void ProcessMemoryProvider::readRaw(u64 address, void *buffer, size_t size) {
-        ReadProcessMemory(this->m_processHandle, (LPCVOID)address, buffer, size, nullptr);
+        ReadProcessMemory(this->m_processHandle, reinterpret_cast<LPCVOID>(address), buffer, size, nullptr);
     }
     void ProcessMemoryProvider::writeRaw(u64 address, const void *buffer, size_t size) {
-        WriteProcessMemory(this->m_processHandle, (LPVOID)address, buffer, size, nullptr);
+        WriteProcessMemory(this->m_processHandle, reinterpret_cast<LPVOID>(address), buffer, size, nullptr);
     }
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
@@ -114,7 +114,7 @@ namespace hex::plugin::windows {
                                             for (auto &pixel : pixels)
                                                 pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                            texture = ImGui::Texture((u8*)pixels.data(), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
+                                            texture = ImGui::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
                                         }
                                     }
                                 }
@@ -123,7 +123,7 @@ namespace hex::plugin::windows {
                     }
                 }
 
-                this->m_processes.push_back({ processId, processName, std::move(texture) });
+                this->m_processes.push_back(Process { u32(processId), processName, std::move(texture) });
             }
         }
 
@@ -259,7 +259,7 @@ namespace hex::plugin::windows {
 
         MEMORY_BASIC_INFORMATION memoryInfo;
         for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
-            if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+            if (VirtualQueryEx(this->m_processHandle, reinterpret_cast<LPCVOID>(address), &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
                 break;
 
             std::string name;
@@ -270,7 +270,7 @@ namespace hex::plugin::windows {
             if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.windows.provider.process_memory.region.private"_lang);
             if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.windows.provider.process_memory.region.mapped"_lang);
 
-            this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
+            this->m_memoryRegions.insert({ { u64(memoryInfo.BaseAddress), u64(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
         }
     }
 

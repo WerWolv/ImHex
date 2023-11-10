@@ -2,7 +2,6 @@
 
 #include <hex.hpp>
 
-#include <imgui.h>
 #include <hex/ui/view.hpp>
 
 #include <hex/api/task.hpp>

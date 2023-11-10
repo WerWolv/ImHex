@@ -11,7 +11,7 @@ namespace hex::messaging {
 
     std::optional<HWND> getImHexWindow() {
 
-        HWND imhexWindow = 0;
+        HWND imhexWindow = nullptr;
         
         ::EnumWindows([](HWND hWnd, LPARAM ret) -> BOOL {
             // Get the window name
@@ -33,11 +33,13 @@ namespace hex::messaging {
 
         }, reinterpret_cast<LPARAM>(&imhexWindow));
 
-        if (imhexWindow == 0) return { };
-        else return imhexWindow;
+        if (imhexWindow == nullptr)
+            return { };
+        else
+            return imhexWindow;
     }
 
-    void sendToOtherInstance(const std::string &eventName, const std::vector<u8> &eventData) {
+    void sendToOtherInstance(const std::string &eventName, const std::vector<u8> &args) {
         log::debug("Sending event {} to another instance (not us)", eventName);
 
         // Get the window we want to send it to
@@ -49,10 +51,10 @@ namespace hex::messaging {
         std::vector<u8> fulleventData(eventName.begin(), eventName.end());
         fulleventData.push_back('\0');
 
-        fulleventData.insert(fulleventData.end(), eventData.begin(), eventData.end());
+        fulleventData.insert(fulleventData.end(), args.begin(), args.end());
         
         u8 *data = &fulleventData[0];
-        DWORD dataSize = static_cast<DWORD>(fulleventData.size());
+        DWORD dataSize = fulleventData.size();
 
         COPYDATASTRUCT message = {
             .dwData = 0,

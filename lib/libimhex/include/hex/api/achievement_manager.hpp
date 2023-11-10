@@ -5,7 +5,6 @@
 #include <utility>
 #include <memory>
 #include <vector>
-#include <set>
 #include <span>
 
 #include <hex/api/event.hpp>
@@ -148,7 +147,7 @@ namespace hex {
             if (this->m_icon.isValid())
                 return m_icon;
 
-            this->m_icon = ImGui::Texture(reinterpret_cast<const u8*>(this->m_iconData.data()), this->m_iconData.size());
+            this->m_icon = ImGui::Texture(this->m_iconData.data(), this->m_iconData.size());
 
             return this->m_icon;
         }
@@ -350,7 +349,7 @@ namespace hex {
          */
         template<std::derived_from<Achievement> T = Achievement>
         static Achievement& addTemporaryAchievement(auto && ... args) {
-            auto &achievement = addAchievement(std::forward<decltype(args)>(args)...);
+            auto &achievement = addAchievement<T>(std::forward<decltype(args)>(args)...);
 
             achievement.m_temporary = true;
 

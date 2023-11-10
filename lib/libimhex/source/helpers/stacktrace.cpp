@@ -21,8 +21,7 @@
             HANDLE process = GetCurrentProcess();
             HANDLE thread = GetCurrentThread();
 
-            CONTEXT context;
-            memset(&context, 0, sizeof(CONTEXT));
+            CONTEXT context = {};
             context.ContextFlags = CONTEXT_FULL;
             RtlCaptureContext(&context);
 
@@ -52,7 +51,7 @@
                     break;
 
                 std::array<char, sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)> buffer = {};
-                auto symbol = (PSYMBOL_INFO)buffer.data();
+                auto symbol = reinterpret_cast<PSYMBOL_INFO>(buffer.data());
                 symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
                 symbol->MaxNameLen = MAX_SYM_NAME;
 
@@ -71,7 +70,7 @@
 
                 DWORD displacementLine = 0;
 
-                u32 lineNumber;
+                u32 lineNumber = 0;
                 const char *fileName;
                 if (SymGetLineFromAddr64(process, stackFrame.AddrPC.Offset, &displacementLine, &line) == TRUE) {
                     lineNumber = line.LineNumber;

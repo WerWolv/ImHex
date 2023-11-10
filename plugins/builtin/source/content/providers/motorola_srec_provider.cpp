@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
             u32 address = 0x0000'0000;
             std::vector<u8> data;
 
-            auto c = [&]() {
+            auto c = [&] {
                 while (std::isspace(string[offset]) && offset < string.length())
                     offset++;
 
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
 
                     byteCount -= 1;
 
-                    auto readData = [&byteCount, &parseValue]() {
+                    auto readData = [&byteCount, &parseValue] {
                         std::vector<u8> bytes;
                         bytes.resize(byteCount);
                         for (u8 i = 0; i < byteCount; i++) {
@@ -161,7 +161,7 @@ namespace hex::plugin::builtin {
                     while (std::isspace(string[offset]) && offset < string.length())
                         offset++;
                 }
-            } catch (const std::runtime_error &e) {
+            } catch (const std::runtime_error &) {
                 return { };
             }
 

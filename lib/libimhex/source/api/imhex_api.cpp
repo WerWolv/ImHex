@@ -7,7 +7,6 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <wolv/io/file.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <utility>
@@ -72,7 +71,7 @@ namespace hex {
 
             static std::optional<ProviderRegion> s_currentSelection;
             void setCurrentSelection(std::optional<ProviderRegion> region) {
-                s_currentSelection = region;
+                s_currentSelection = std::move(region);
             }
 
         }

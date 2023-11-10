@@ -25,12 +25,10 @@
 
 #include <fonts/codicons_font.h>
 
-#include <content/popups/popup_question.hpp>
 #include <content/popups/popup_telemetry_request.hpp>
 #include <content/recent.hpp>
 
 #include <string>
-#include <list>
 #include <random>
 
 namespace hex::plugin::builtin {
@@ -396,7 +394,7 @@ namespace hex::plugin::builtin {
                 drawNoViewsBackground();
         });
 
-        (void)EventManager::subscribe<EventSettingsChanged>([]() {
+        (void)EventManager::subscribe<EventSettingsChanged>([] {
             {
                 auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
 
@@ -457,7 +455,7 @@ namespace hex::plugin::builtin {
         });
 
         // Clear project context if we go back to the welcome screen
-        EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
+        EventManager::subscribe<EventProviderChanged>([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
             hex::unused(oldProvider);
             if (newProvider == nullptr) {
                 ProjectFile::clearPath();

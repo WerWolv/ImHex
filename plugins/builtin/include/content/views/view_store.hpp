@@ -7,7 +7,6 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/api/task.hpp>
 
-#include <array>
 #include <future>
 #include <string>
 #include <filesystem>

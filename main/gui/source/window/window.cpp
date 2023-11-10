@@ -17,9 +17,6 @@
 
 #include <chrono>
 #include <csignal>
-#include <set>
-#include <thread>
-#include <cassert>
 
 #include <romfs/romfs.hpp>
 
@@ -117,7 +114,7 @@ namespace hex {
         });
 
         // Handle updating the window title
-        EventManager::subscribe<RequestUpdateWindowTitle>(this, [this]() {
+        EventManager::subscribe<RequestUpdateWindowTitle>(this, [this] {
             std::string title = "ImHex";
 
             if (ProjectFile::hasPath()) {
@@ -247,7 +244,7 @@ namespace hex {
         }
     }
 
-    void Window::drawTitleBarBorderless() {
+    void Window::drawTitleBarBorderless() const {
         auto startX = ImGui::GetCursorPosX();
         auto titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
         auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
@@ -261,8 +258,8 @@ namespace hex {
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
-        if(!titleBarButtons.empty()) {
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (4 + titleBarButtons.size()));
+        if (!titleBarButtons.empty()) {
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * float(4 + titleBarButtons.size()));
             for (const auto &[icon, tooltip, callback]: titleBarButtons) {
                 if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
                     callback();
@@ -311,8 +308,8 @@ namespace hex {
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
-        if(!titleBarButtons.empty()) {
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (titleBarButtons.size() + 0.5));
+        if (!titleBarButtons.empty()) {
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (titleBarButtons.size() + 0.5F));
             for (const auto &[icon, tooltip, callback]: titleBarButtons) {
                 if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
                     callback();
@@ -528,7 +525,7 @@ namespace hex {
 
         // Plugin load error popups. These are not translated because they should always be readable, no matter if any localization could be loaded or not
         {
-            auto drawPluginFolderTable = []() {
+            auto drawPluginFolderTable = [] {
                 ImGui::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);

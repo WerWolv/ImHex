@@ -1,5 +1,6 @@
 #include "content/views/view_logs.hpp"
 
+#include <hex/api/content_registry.hpp>
 #include <hex/helpers/logger.hpp>
 
 namespace hex::plugin::builtin {

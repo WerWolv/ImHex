@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
 
     std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
         return {
-            MenuEntry { LangEntry("hex.builtin.provider.mem_file.rename"), [this]() { this->renameFile(); } }
+            MenuEntry { LangEntry("hex.builtin.provider.mem_file.rename"), [this] { this->renameFile(); } }
         };
     }
 

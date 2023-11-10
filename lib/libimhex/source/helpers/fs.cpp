@@ -24,7 +24,6 @@
 
 #include <algorithm>
 #include <filesystem>
-#include <utility>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
@@ -245,7 +244,7 @@ namespace hex::fs {
                 // Handle the path if the dialog was opened in single mode
                 if (outPath != nullptr) {
                     // Call the provided callback with the path
-                    callback(reinterpret_cast<char8_t*>(outPath.get()));
+                    callback(outPath.get());
                 }
 
                 // Handle multiple paths if the dialog was opened in multiple mode
@@ -256,7 +255,7 @@ namespace hex::fs {
                         for (size_t i = 0; i < numPaths; i++) {
                             NFD::UniquePathSetPath path;
                             if (NFD::PathSet::GetPath(outPaths, i, path) == NFD_OKAY)
-                                callback(reinterpret_cast<char8_t*>(path.get()));
+                                callback(path.get());
                         }
                     }
                 }
@@ -425,9 +424,9 @@ namespace hex::fs {
 
         // Remove all paths that don't exist if requested
         if (!listNonExisting) {
-            result.erase(std::remove_if(result.begin(), result.end(), [](const auto &path) {
-                return !wolv::io::fs::isDirectory(path);
-            }), result.end());
+            std::erase_if(result, [](const auto &entryPath) {
+                return !wolv::io::fs::isDirectory(entryPath);
+            });
         }
 
         return result;

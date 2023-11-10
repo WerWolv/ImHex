@@ -3,14 +3,10 @@
 #include <imgui.h>
 
 #include <pl/patterns/pattern.hpp>
-#include <pl/patterns/pattern_padding.hpp>
 
 #include <hex/helpers/fmt.hpp>
 
 #include <fonts/codicons_font.h>
-
-
-#include <romfs/romfs.hpp>
 
 namespace hex::plugin::builtin {
 

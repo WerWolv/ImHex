@@ -136,7 +136,7 @@ namespace hex::plugin::builtin {
             if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                 if (this->m_selectedRule < this->m_rules->size()) {
                     this->m_rules->erase(this->m_rules->begin() + this->m_selectedRule);
-                    this->m_selectedRule = std::min(this->m_selectedRule, (u32)this->m_rules->size() - 1);
+                    this->m_selectedRule = std::min(this->m_selectedRule, u32(this->m_rules->size() - 1));
                 }
             }
 
@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
                         return &match;
                     });
 
-                    std::sort(this->m_sortedMatches->begin(), this->m_sortedMatches->end(), [&sortSpecs](YaraMatch *left, YaraMatch *right) -> bool {
+                    std::sort(this->m_sortedMatches->begin(), this->m_sortedMatches->end(), [&sortSpecs](const YaraMatch *left, const YaraMatch *right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
                             return left->identifier < right->identifier;
                         else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
@@ -393,10 +393,10 @@ namespace hex::plugin::builtin {
                                 {
                                     auto rule = static_cast<YR_RULE *>(data);
 
-                                    YR_STRING *string;
-                                    YR_MATCH *match;
 
                                     if (rule->strings != nullptr) {
+                                        YR_STRING *string = nullptr;
+                                        YR_MATCH  *match  = nullptr;
                                         yr_rule_strings_foreach(rule, string) {
                                             yr_string_matches_foreach(context, string, match) {
                                                     results.newMatches.push_back({ rule->identifier, string->identifier, u64(match->offset), size_t(match->match_length), false, 0, 0 });

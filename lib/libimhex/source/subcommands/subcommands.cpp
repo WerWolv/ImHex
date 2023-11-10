@@ -1,8 +1,6 @@
-#include<iostream>
-#include<numeric>
-#include<string_view>
-#include<ranges>
-#include<stdlib.h>
+#include <numeric>
+#include <string_view>
+#include <ranges>
 
 #include "hex/subcommands/subcommands.hpp"
 
@@ -10,6 +8,7 @@
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/fmt.hpp>
 
 namespace hex::subcommands {
 
@@ -38,7 +37,7 @@ namespace hex::subcommands {
         std::optional<SubCommand> currentSubCommand = findSubCommand(*argsIter);
 
         if (currentSubCommand) {
-            argsIter++;
+            argsIter += 1;
             // If it is a valid subcommand, remove it from the argument list
         } else {
             // If no (valid) subcommand was provided, the default one is --open
@@ -73,7 +72,7 @@ namespace hex::subcommands {
                 }
             }
 
-            argsIter++;
+            argsIter += 1;
         }
 
         // Save last command to run
@@ -109,7 +108,7 @@ namespace hex::subcommands {
         log::debug("Registered new forward command handler: {}", cmdName);
 
         ImHexApi::Messaging::impl::getHandlers().insert({ hex::format("command/{}", cmdName), [handler](const std::vector<u8> &eventData){
-            std::string str((const char*) eventData.data(), eventData.size());
+            std::string str(reinterpret_cast<const char *>(eventData.data()), eventData.size());
 
             std::vector<std::string> args;
 

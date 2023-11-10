@@ -164,7 +164,7 @@ namespace hex::prv {
         virtual void saveAs(const std::fs::path &path);
 
 
-        void applyOverlays(u64 offset, void *buffer, size_t size);
+        void applyOverlays(u64 offset, void *buffer, size_t size) const;
 
         [[nodiscard]] std::map<u64, u8> &getPatches();
         [[nodiscard]] const std::map<u64, u8> &getPatches() const;

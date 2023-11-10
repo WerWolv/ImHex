@@ -1,8 +1,9 @@
+#pragma once
+
 #include <hex/ui/popup.hpp>
 
 #include <hex/api/localization.hpp>
 
-#include <functional>
 #include <string>
 
 namespace hex::plugin::builtin {

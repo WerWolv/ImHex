@@ -9,7 +9,6 @@
 #include <regex>
 #include <string>
 #include <utility>
-#include <charconv>
 
 #include <llvm/Demangle/Demangle.h>
 
@@ -393,13 +392,13 @@ namespace hex::plugin::builtin {
         for (u64 address = searchRegion.getStartAddress(); address < searchRegion.getEndAddress(); address += advance) {
             task.update(address);
 
-            auto result = std::visit([&](auto tag) {
-                using T = std::remove_cvref_t<std::decay_t<decltype(tag)>>;
+            auto result = std::visit([&]<typename T>(T) {
+                using DecayedType = std::remove_cvref_t<std::decay_t<T>>;
 
-                auto minValue = std::get<T>(min);
-                auto maxValue = std::get<T>(max);
+                auto minValue = std::get<DecayedType>(min);
+                auto maxValue = std::get<DecayedType>(max);
 
-                T value = 0;
+                DecayedType value = 0;
                 reader.read(address, reinterpret_cast<u8*>(&value), size);
                 value = hex::changeEndianess(value, size, settings.endian);
 
@@ -486,7 +485,7 @@ namespace hex::plugin::builtin {
         });
     }
 
-    std::string ViewFind::decodeValue(prv::Provider *provider, Occurrence occurrence, size_t maxBytes) const {
+    std::string ViewFind::decodeValue(prv::Provider *provider, const Occurrence &occurrence, size_t maxBytes) const {
         std::vector<u8> bytes(std::min<size_t>(occurrence.region.getSize(), maxBytes));
         provider->read(occurrence.region.getStartAddress(), bytes.data(), bytes.size());
 
@@ -693,7 +692,7 @@ namespace hex::plugin::builtin {
                         try {
                             std::regex regex(settings.pattern);
                             this->m_settingsValid = true;
-                        } catch (std::regex_error &e) {
+                        } catch (const std::regex_error &) {
                             this->m_settingsValid = false;
                         }
 
@@ -853,12 +852,12 @@ namespace hex::plugin::builtin {
                 if (!this->m_currFilter->empty()) {
                     this->m_filterTask = TaskManager::createTask("Filtering", currOccurrences.size(), [this, provider, &currOccurrences](Task &task) {
                         u64 progress = 0;
-                        currOccurrences.erase(std::remove_if(currOccurrences.begin(), currOccurrences.end(), [this, provider, &task, &progress](const auto &region) {
+                        std::erase_if(currOccurrences, [this, provider, &task, &progress](const auto &region) {
                             task.update(progress);
                             progress += 1;
 
                             return !hex::containsIgnoreCase(this->decodeValue(provider, region), this->m_currFilter.get(provider));
-                        }), currOccurrences.end());
+                        });
                     });
                 }
             }
@@ -873,7 +872,7 @@ namespace hex::plugin::builtin {
                 auto sortSpecs = ImGui::TableGetSortSpecs();
 
                 if (sortSpecs->SpecsDirty) {
-                    std::sort(currOccurrences.begin(), currOccurrences.end(), [this, &sortSpecs, provider](Occurrence &left, Occurrence &right) -> bool {
+                    std::sort(currOccurrences.begin(), currOccurrences.end(), [this, &sortSpecs, provider](const Occurrence &left, const Occurrence &right) -> bool {
                         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("offset")) {
                             if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                                 return left.region.getStartAddress() > right.region.getStartAddress();

@@ -4,7 +4,6 @@
 #include <GLFW/glfw3.h>
 
 #include <functional>
-#include <map>
 #include <memory>
 #include <set>
 #include <string>
@@ -161,7 +160,7 @@ namespace hex {
         Shortcut() = default;
         Shortcut(Keys key) : m_keys({ key }) { }
 
-        const static inline auto None = Keys(0);
+        constexpr static inline auto None = Keys(0);
 
         Shortcut operator+(const Key &other) const {
             Shortcut result = *this;

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <hex.hpp>
 
 #include <hex/helpers/intrinsics.hpp>

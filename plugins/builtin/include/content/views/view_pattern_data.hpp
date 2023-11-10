@@ -1,13 +1,8 @@
 #pragma once
 
-#include <hex.hpp>
 #include <hex/ui/view.hpp>
 
 #include <ui/pattern_drawer.hpp>
-#include <hex/providers/provider.hpp>
-
-#include <vector>
-#include <tuple>
 
 namespace hex::plugin::builtin {
 

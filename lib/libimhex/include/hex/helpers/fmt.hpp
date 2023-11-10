@@ -7,7 +7,7 @@
 namespace hex {
 
     template<typename... Args>
-    inline std::string format(std::string_view format, Args... args) {
+    std::string format(std::string_view format, Args... args) {
         return fmt::format(fmt::runtime(format), args...);
     }
 

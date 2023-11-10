@@ -7,7 +7,6 @@
 #include <pl/patterns/pattern_character.hpp>
 #include <pl/patterns/pattern_enum.hpp>
 #include <pl/patterns/pattern_float.hpp>
-#include <pl/patterns/pattern_padding.hpp>
 #include <pl/patterns/pattern_pointer.hpp>
 #include <pl/patterns/pattern_signed.hpp>
 #include <pl/patterns/pattern_string.hpp>
@@ -30,7 +29,6 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
-#include <fonts/fontawesome_font.h>
 
 
 namespace hex::plugin::builtin::ui {
@@ -94,7 +92,7 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
         }
 
-        inline void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
+        void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             if (pattern.isPatternLocal()) {
                 ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
                 ImGui::TableNextColumn();
@@ -132,7 +130,7 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
         }
 
-        inline void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
+        void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             if (pattern.getBitSize() == 1)
                 ImGui::TextFormatted("1 bit");
             else
@@ -182,7 +180,7 @@ namespace hex::plugin::builtin::ui {
                         return std::nullopt;
 
                     result.value = *literal;
-                } catch (pl::core::err::LexerError &error) {
+                } catch (pl::core::err::LexerError &) {
                     return std::nullopt;
                 }
 
@@ -193,7 +191,7 @@ namespace hex::plugin::builtin::ui {
                 result.path.emplace_back();
                 result.path.back() += c;
             } else if (c == ' ') {
-                continue;
+                // Skip whitespace
             } else {
                 result.path.back() += c;
             }
@@ -211,7 +209,7 @@ namespace hex::plugin::builtin::ui {
         this->m_editingPatternOffset = 0x00;
     }
 
-    bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) {
+    bool PatternDrawer::matchesFilter(const std::vector<std::string> &filterPath, const std::vector<std::string> &patternPath, bool fullMatch) const {
         if (fullMatch) {
             if (patternPath.size() != filterPath.size())
                 return false;
@@ -378,7 +376,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PopID();
     }
 
-    void PatternDrawer::createDefaultEntry(pl::ptrn::Pattern &pattern) {
+    void PatternDrawer::createDefaultEntry(const pl::ptrn::Pattern &pattern) {
         ImGui::TableNextRow();
         ImGui::TableNextColumn();
         createTreeNode(pattern, true);
@@ -393,7 +391,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::TableNextColumn();
     }
 
-    void PatternDrawer::closeTreeNode(bool inlined) {
+    void PatternDrawer::closeTreeNode(bool inlined) const {
         if (!inlined && this->m_treeStyle != TreeStyle::Flattened)
             ImGui::TreePop();
     }
@@ -1016,7 +1014,7 @@ namespace hex::plugin::builtin::ui {
         return false;
     }
 
-    bool PatternDrawer::beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) {
+    bool PatternDrawer::beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) const {
         if (!ImGui::BeginTable("##Patterntable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             return false;
         }
@@ -1047,7 +1045,7 @@ namespace hex::plugin::builtin::ui {
             return pattern.get();
         });
 
-        std::sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](pl::ptrn::Pattern *left, pl::ptrn::Pattern *right) -> bool {
+        std::sort(sortedPatterns.begin(), sortedPatterns.end(), [this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right) -> bool {
             return this->sortPatterns(sortSpecs, left, right);
         });
 
@@ -1073,7 +1071,7 @@ namespace hex::plugin::builtin::ui {
         }
     }
 
-    void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime, float height) {
+    void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime, float height) {
         std::scoped_lock lock(s_resetDrawMutex);
 
         const auto treeStyleButton = [this](auto icon, TreeStyle style, const char *tooltip) {
@@ -1099,8 +1097,7 @@ namespace hex::plugin::builtin::ui {
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 9.5);
         if (ImGui::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
-            if (auto result = parseRValueFilter(this->m_filterText); result.has_value())
-                this->m_filter = *result;
+            this->m_filter = parseRValueFilter(this->m_filterText).value_or(Filter{ });
         }
         ImGui::PopItemWidth();
 
@@ -1162,7 +1159,7 @@ namespace hex::plugin::builtin::ui {
 
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
-                        traversePatternTree(*pattern, patternPath, [&, this](pl::ptrn::Pattern &pattern) {
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &pattern) {
                             if (pattern.hasAttribute("hex::favorite"))
                                 this->m_favorites.insert({ patternPath, pattern.clone() });
 
@@ -1181,7 +1178,7 @@ namespace hex::plugin::builtin::ui {
                         task.update();
 
                         patternPath.clear();
-                        traversePatternTree(*pattern, patternPath, [&, this](pl::ptrn::Pattern &pattern) {
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &pattern) {
                             for (auto &[path, favoritePattern] : this->m_favorites) {
                                 if (updatedFavorites == this->m_favorites.size())
                                     task.interrupt();
@@ -1239,7 +1236,7 @@ namespace hex::plugin::builtin::ui {
 
                 if (!this->m_groups.empty() && !patterns.empty()) {
                     for (auto &[groupName, groupPatterns]: this->m_groups) {
-                        if(doTableNextRow) {
+                        if (doTableNextRow) {
                             ImGui::TableNextRow();
                         }
 

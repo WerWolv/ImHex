@@ -1,9 +1,11 @@
 #pragma once
 
-#include<string>
-#include<future>
+#include <string>
+#include <future>
 
 #include <curl/curl.h>
+
+#include <hex/helpers/logger.hpp>
 
 namespace hex {
 

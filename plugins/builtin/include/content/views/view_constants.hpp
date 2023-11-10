@@ -2,7 +2,6 @@
 
 #include <hex/ui/view.hpp>
 
-#include <cstdio>
 #include <string>
 
 namespace hex::plugin::builtin {

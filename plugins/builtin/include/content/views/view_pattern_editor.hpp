@@ -16,8 +16,6 @@
 #include <cstring>
 #include <filesystem>
 #include <string_view>
-#include <thread>
-#include <vector>
 #include <functional>
 
 #include <TextEditor.h>
@@ -191,7 +189,7 @@ namespace hex::plugin::builtin {
         void drawConsole(ImVec2 size);
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
-        void drawSectionSelector(ImVec2 size, std::map<u64, pl::api::Section> &sections);
+        void drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections);
         void drawDebugger(ImVec2 size);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);

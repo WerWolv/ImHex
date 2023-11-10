@@ -5,7 +5,7 @@
 namespace hex {
 
     size_t HttpRequest::writeToVector(void *contents, size_t size, size_t nmemb, void *userdata) {
-        auto &response = *reinterpret_cast<std::vector<u8>*>(userdata);
+        auto &response = *static_cast<std::vector<u8>*>(userdata);
         auto startSize = response.size();
 
         response.resize(startSize + size * nmemb);
@@ -15,9 +15,9 @@ namespace hex {
     }
 
     size_t HttpRequest::writeToFile(void *contents, size_t size, size_t nmemb, void *userdata) {
-        auto &file = *reinterpret_cast<wolv::io::File*>(userdata);
+        auto &file = *static_cast<wolv::io::File*>(userdata);
 
-        file.writeBuffer(reinterpret_cast<const u8*>(contents), size * nmemb);
+        file.writeBuffer(static_cast<const u8*>(contents), size * nmemb);
 
         return size * nmemb;
     }

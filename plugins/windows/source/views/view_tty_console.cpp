@@ -174,7 +174,7 @@ namespace hex::plugin::windows {
         ImGui::End();
     }
 
-    std::vector<std::pair<std::string, std::string>> ViewTTYConsole::getAvailablePorts() {
+    std::vector<std::pair<std::string, std::string>> ViewTTYConsole::getAvailablePorts() const {
         std::vector<std::pair<std::string, std::string>> result;
         std::vector<char> buffer(0xFFF, 0x00);
 
@@ -273,8 +273,7 @@ namespace hex::plugin::windows {
                     }
                 } else {
                     byte     = 0;
-                    auto res = ::WaitForSingleObject(overlapped.hEvent, 500);
-                    switch (res) {
+                    switch (::WaitForSingleObject(overlapped.hEvent, 500)) {
                         case WAIT_OBJECT_0:
                             if (::GetOverlappedResult(this->m_portHandle, &overlapped, &bytesRead, false)) {
                                 addByte(byte);

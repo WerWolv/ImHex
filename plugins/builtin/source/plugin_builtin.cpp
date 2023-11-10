@@ -2,7 +2,6 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/subcommands/subcommands.hpp>
 
 #include <romfs/romfs.hpp>
 #include <nlohmann/json.hpp>

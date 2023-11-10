@@ -21,7 +21,7 @@ namespace hex::plugin::windows {
     private:
         std::vector<std::pair<std::string, std::string>> m_comPorts;
 
-        std::vector<std::pair<std::string, std::string>> getAvailablePorts();
+        std::vector<std::pair<std::string, std::string>> getAvailablePorts() const;
         bool connect();
         bool disconnect();
 

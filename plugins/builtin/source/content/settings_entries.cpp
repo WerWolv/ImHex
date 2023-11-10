@@ -3,7 +3,6 @@
 #include <hex/api/localization.hpp>
 #include <hex/api/theme_manager.hpp>
 
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/http_requests.hpp>
 
 #include <imgui.h>
@@ -302,6 +301,22 @@ namespace hex::plugin::builtin {
 
             HttpRequest::setProxy(textBox->getValue());
         });
+
+
+        /* Experiments */
+        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.experiments", "hex.builtin.setting.experiments.description");
+        EventManager::subscribe<EventImHexStartupFinished>([]{
+            for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
+                        .setTooltip(LangEntry(experiment.unlocalizedDescription))
+                        .setChangedCallback([name](Widgets::Widget &widget) {
+                            auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
+
+                            ContentRegistry::Experiments::enableExperiement(name, checkBox->isChecked());
+                        });
+            }
+        });
+
     }
 
     static void loadThemeSettings() {

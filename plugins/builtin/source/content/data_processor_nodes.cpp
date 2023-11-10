@@ -1044,7 +1044,7 @@ namespace hex::plugin::builtin {
         void process() override {
             auto input = this->getBufferOnInput(0);
 
-            input.erase(std::remove_if(input.begin(), input.end(), [](u8 c) { return std::isspace(c); }), input.end());
+            std::erase_if(input, [](u8 c) { return std::isspace(c); });
 
             if (input.size() % 2 != 0)
                 throwNodeError("Can't decode odd number of hex characters");
@@ -1288,7 +1288,7 @@ namespace hex::plugin::builtin {
                     0x1, 0x9, 0x5, 0xD, 0x3, 0xB, 0x7, 0xF, };
             auto data = this->getBufferOnInput(0);
 
-            for(u8 &b : data)
+            for (u8 &b : data)
                 b = BitFlipLookup[b & 0xf] << 4 | BitFlipLookup[b >> 4];
 
             std::reverse(data.begin(), data.end());

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <span>
-#include <vector>
-
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/literals.hpp>
 
@@ -20,7 +17,7 @@ namespace hex::prv {
     public:
         using BufferedReader::BufferedReader;
 
-        ProviderReader(Provider *provider, size_t bufferSize = 0x100000) : BufferedReader(provider, provider->getActualSize(), bufferSize) {
+        explicit ProviderReader(Provider *provider, size_t bufferSize = 0x100000) : BufferedReader(provider, provider->getActualSize(), bufferSize) {
             this->setEndAddress(provider->getBaseAddress() + provider->getActualSize() - 1);
             this->seek(provider->getBaseAddress());
         }

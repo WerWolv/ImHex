@@ -21,7 +21,7 @@ namespace ImGui {
             if (width * height * 4 > size)
                 return;
 
-            imageData = (unsigned char*) STBI_MALLOC(size);
+            imageData = static_cast<unsigned char *>(STBI_MALLOC(size));
             std::memcpy(imageData, buffer, size);
             this->m_width = width;
             this->m_height = height;

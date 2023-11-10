@@ -21,12 +21,12 @@ namespace hex::plugin::builtin::recent {
     constexpr static auto MaxRecentEntries = 5;
     constexpr static auto BackupFileName = "crash_backup.hexproj";
 
-    static std::atomic<bool> s_recentEntriesUpdating = false;
+    static std::atomic_bool s_recentEntriesUpdating = false;
     static std::list<RecentEntry> s_recentEntries;
 
     void registerEventHandlers() {
         // Save every opened provider as a "recent" shortcut
-        (void)EventManager::subscribe<EventProviderOpened>([](prv::Provider *provider) {
+        (void)EventManager::subscribe<EventProviderOpened>([](const prv::Provider *provider) {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
@@ -215,7 +215,7 @@ namespace hex::plugin::builtin::recent {
                         wolv::io::fs::remove(recentEntry.entryFilePath);
                         it = s_recentEntries.erase(it);
                     } else {
-                        it++;
+                        ++it;
                     }
                 }
             }

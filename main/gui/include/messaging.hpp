@@ -1,9 +1,9 @@
 #pragma once
 
-#include<string>
-#include<vector>
+#include <string>
+#include <vector>
 
-#include<hex/helpers/types.hpp>
+#include <hex/helpers/types.hpp>
 
 /**
  * Cross-instance (cross-process) messaging system

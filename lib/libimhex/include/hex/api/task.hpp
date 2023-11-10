@@ -5,7 +5,6 @@
 #include <cstdio>
 #include <thread>
 #include <functional>
-#include <cstdint>
 #include <mutex>
 #include <chrono>
 #include <memory>
@@ -112,7 +111,7 @@ namespace hex {
 
         [[nodiscard]] u32 getProgress() const;
 
-        void interrupt();
+        void interrupt() const;
     private:
         std::weak_ptr<Task> m_task;
     };

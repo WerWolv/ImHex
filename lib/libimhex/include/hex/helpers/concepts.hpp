@@ -1,7 +1,5 @@
 #pragma once
 
-#include <hex.hpp>
-
 #include <type_traits>
 #include <memory>
 
@@ -18,6 +16,7 @@ namespace hex {
     template<typename T>
     class ICloneable {
     public:
+        virtual ~ICloneable() = default;
         [[nodiscard]] virtual std::unique_ptr<T> clone() const = 0;
     };
 

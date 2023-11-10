@@ -1,10 +1,11 @@
 #pragma once
 
-#include<vector>
-#include<string>
-#include<functional>
+#include <vector>
+#include <string>
+#include <functional>
 
 namespace hex::subcommands {
+
     /**
      * @brief Internal method - takes all the arguments ImHex received from the command line,
      * and determine which subcommands to run, with which arguments.
@@ -27,4 +28,5 @@ namespace hex::subcommands {
      * @brief Register the handler for this specific command name
      */
     void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler);
+
 }

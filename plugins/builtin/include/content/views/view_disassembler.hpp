@@ -7,7 +7,6 @@
 
 #include <hex/helpers/disassembler.hpp>
 
-#include <cstdio>
 #include <string>
 #include <vector>
 

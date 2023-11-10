@@ -4,10 +4,6 @@
 
 #include <hex/ui/view.hpp>
 
-#include <array>
-#include <utility>
-#include <cstdio>
-
 namespace hex::plugin::builtin {
 
     class ViewHashes : public View {

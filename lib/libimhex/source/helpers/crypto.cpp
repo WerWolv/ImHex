@@ -89,7 +89,7 @@ namespace hex::crypt {
         constexpr Crc(u64 polynomial, u64 init, u64 xorOut, bool reflectInput, bool reflectOutput)
             : m_value(0x00), m_init(init & ((0b10ull << (NumBits - 1)) - 1)), m_xorOut(xorOut & ((0b10ull << (NumBits - 1)) - 1)),
               m_reflectInput(reflectInput), m_reflectOutput(reflectOutput),
-              m_table([polynomial]() {
+              m_table([polynomial] {
                 auto reflectedPoly = reflect(polynomial & ((0b10ull << (NumBits - 1)) - 1), NumBits);
                 std::array<uint64_t, 256> table = { 0 };
 
@@ -107,7 +107,7 @@ namespace hex::crypt {
                 return table;
          }()) {
             reset();
-        };
+        }
 
         constexpr void reset() {
             this->m_value = reflect(m_init, NumBits);
@@ -363,9 +363,9 @@ namespace hex::crypt {
     std::vector<u8> decode64(const std::vector<u8> &input) {
 
         size_t written = 0;
-        mbedtls_base64_decode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
+        mbedtls_base64_decode(nullptr, 0, &written, input.data(), input.size());
         std::vector<u8> output(written, 0x00);
-        if (mbedtls_base64_decode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
+        if (mbedtls_base64_decode(output.data(), output.size(), &written, input.data(), input.size()))
             return {};
 
         output.resize(written);
@@ -376,10 +376,10 @@ namespace hex::crypt {
     std::vector<u8> encode64(const std::vector<u8> &input) {
 
         size_t written = 0;
-        mbedtls_base64_encode(nullptr, 0, &written, reinterpret_cast<const unsigned char *>(input.data()), input.size());
+        mbedtls_base64_encode(nullptr, 0, &written, input.data(), input.size());
 
         std::vector<u8> output(written, 0x00);
-        if (mbedtls_base64_encode(output.data(), output.size(), &written, reinterpret_cast<const unsigned char *>(input.data()), input.size()))
+        if (mbedtls_base64_encode(output.data(), output.size(), &written, input.data(), input.size()))
             return {};
 
         output.resize(written);
@@ -447,7 +447,7 @@ namespace hex::crypt {
                 break;
             }
         }
-        if constexpr(std::is_signed<T>::value) {
+        if constexpr(std::signed_integral<T>) {
             if ((b & 0x40) != 0) {
                 value |= safeLeftShift(~static_cast<T>(0), shift);
             }
@@ -470,7 +470,7 @@ namespace hex::crypt {
         while (true) {
             byte = value & 0x7F;
             value >>= 7;
-            if constexpr(std::is_signed<T>::value) {
+            if constexpr(std::signed_integral<T>) {
                 if (value == 0 && (byte & 0x40) == 0) {
                     break;
                 }
@@ -509,7 +509,7 @@ namespace hex::crypt {
 
 
         mbedtls_cipher_setup(&ctx, cipherInfo);
-        mbedtls_cipher_setkey(&ctx, key.data(), static_cast<int>(key.size() * 8), operation);
+        mbedtls_cipher_setkey(&ctx, key.data(), key.size() * 8, operation);
 
         std::array<u8, 16> nonceCounter = { 0 };
         std::copy(nonce.begin(), nonce.end(), nonceCounter.begin());

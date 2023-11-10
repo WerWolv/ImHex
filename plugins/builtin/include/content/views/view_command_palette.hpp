@@ -1,13 +1,10 @@
 #pragma once
 
-#include <hex.hpp>
 #include <hex/ui/view.hpp>
 
 #include <imgui.h>
 
 #include <vector>
-#include <tuple>
-#include <cstdio>
 
 namespace hex::plugin::builtin {
 
@@ -52,7 +49,7 @@ namespace hex::plugin::builtin {
             this->m_focusInputTextBox = true;
         }
 
-        std::vector<CommandResult> getCommandResults(const std::string &command);
+        std::vector<CommandResult> getCommandResults(const std::string &input);
     };
 
 }

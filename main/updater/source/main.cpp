@@ -27,7 +27,7 @@ std::string getUpdateUrl(std::string_view versionType, std::string_view operatin
     return data;
 }
 
-std::optional<std::fs::path> downloadUpdate(const std::string &url, const std::string &type) {
+std::optional<std::fs::path> downloadUpdate(const std::string &url) {
     // Download the update
     auto response = hex::HttpRequest("GET", url).downloadFile().get();
 
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     hex::log::info("Update URL found: {}", updateUrl);
 
     // Download the update file
-    auto updatePath = downloadUpdate(updateUrl, updateType);
+    auto updatePath = downloadUpdate(updateUrl);
     if (!updatePath.has_value())
         return EXIT_FAILURE;
 

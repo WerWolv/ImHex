@@ -4,7 +4,6 @@
 #include <hex/helpers/fmt.hpp>
 
 #include <cstring>
-#include <thread>
 
 using namespace std::literals::string_literals;
 

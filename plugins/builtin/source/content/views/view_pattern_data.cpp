@@ -12,9 +12,9 @@ namespace hex::plugin::builtin {
         this->m_patternDrawer = std::make_unique<ui::PatternDrawer>();
 
         // Handle tree style setting changes
-        EventManager::subscribe<EventSettingsChanged>(this, [this]() {
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
             auto patternStyle = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0);
-            this->m_patternDrawer->setTreeStyle(static_cast<ui::PatternDrawer::TreeStyle>(patternStyle));
+            this->m_patternDrawer->setTreeStyle(patternStyle);
         });
 
         // Reset the pattern drawer when the provider changes

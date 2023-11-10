@@ -4,7 +4,6 @@
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
 
-#include <concepts>
 #include <map>
 #include <utility>
 

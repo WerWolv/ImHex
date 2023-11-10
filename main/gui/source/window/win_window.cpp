@@ -9,11 +9,8 @@
     #include <hex/helpers/utils.hpp>
     #include <hex/helpers/logger.hpp>
 
-    #include <wolv/utils/string.hpp>
-
     #include <imgui.h>
     #include <imgui_internal.h>
-    #include <fonts/codicons_font.h>
 
     #include <GLFW/glfw3.h>
     #define GLFW_EXPOSE_NATIVE_WIN32
@@ -31,8 +28,6 @@
     #include <csignal>
     #include <cstdio>
 
-    #include <imgui_impl_glfw.h>
-
 namespace hex {
 
     template<typename T>
@@ -44,7 +39,7 @@ namespace hex {
 
     void nativeErrorMessage(const std::string &message) {
         log::fatal(message);
-        MessageBox(NULL, message.c_str(), "Error", MB_ICONERROR | MB_OK);
+        MessageBox(nullptr, message.c_str(), "Error", MB_ICONERROR | MB_OK);
     }
 
     // Custom Window procedure for receiving OS events
@@ -58,7 +53,7 @@ namespace hex {
 
                 ssize_t nullIndex = -1;
 
-                char* messageData = reinterpret_cast<char*>(message->lpData);
+                auto messageData = static_cast<const char*>(message->lpData);
                 size_t messageSize = message->cbData;
 
                 for (size_t i = 0; i < messageSize; i++) {

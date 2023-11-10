@@ -59,9 +59,9 @@ namespace hex::log::impl {
         return logEntries;
     }
 
-    void assertionHandler(bool expr, const char* expr_str, const char* file, int line) {
+    void assertionHandler(bool expr, const char* exprString, const char* file, int line) {
         if (!expr) {
-            log::error("Assertion failed: {} at {}:{}", expr_str, file, line);
+            log::error("Assertion failed: {} at {}:{}", exprString, file, line);
 
             #if defined (DEBUG)
                 std::abort();

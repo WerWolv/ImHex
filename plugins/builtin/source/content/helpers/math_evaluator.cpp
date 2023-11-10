@@ -7,7 +7,6 @@
 #include <queue>
 #include <stack>
 #include <cmath>
-#include <cstdint>
 #include <optional>
 #include <numbers>
 
@@ -15,7 +14,7 @@ namespace hex {
 
     template<typename T>
     i16 MathEvaluator<T>::comparePrecedence(const Operator &a, const Operator &b) {
-        return static_cast<i16>((static_cast<i8>(a) & 0x0F0) - (static_cast<i8>(b) & 0x0F0));
+        return (static_cast<i8>(a) & 0x0F0) - (static_cast<i8>(b) & 0x0F0);
     }
 
     template<typename T>

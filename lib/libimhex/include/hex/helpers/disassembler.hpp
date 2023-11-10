@@ -42,11 +42,11 @@ namespace hex {
             return static_cast<cs_arch>(architecture);
         }
 
-        static inline bool isSupported(Architecture architecture) {
+        static bool isSupported(Architecture architecture) {
             return cs_support(toCapstoneArchitecture(architecture));
         }
 
-        constexpr static auto ArchitectureNames = [](){
+        constexpr static auto ArchitectureNames = []{
             std::array<const char *, static_cast<u32>(Architecture::MAX) + 1> names = { };
 
             names[CS_ARCH_ARM]          = "ARM";
@@ -74,7 +74,7 @@ namespace hex {
             return names;
         }();
 
-        static inline i32 getArchitectureSupportedCount() {
+        static i32 getArchitectureSupportedCount() {
             static i32 supportedCount = -1;
 
             if (supportedCount != -1) {

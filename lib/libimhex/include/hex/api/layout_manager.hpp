@@ -1,13 +1,10 @@
 #pragma once
 
-#include <hex.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <string>
-#include <variant>
 
 #include <nlohmann/json_fwd.hpp>
-#include <imgui.h>
 
 namespace hex {
 

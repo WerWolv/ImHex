@@ -1,7 +1,5 @@
 #pragma once
 
-#include <hex.hpp>
-
 #include <imgui.h>
 #include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
@@ -9,7 +7,6 @@
 
 #include <imnodes_internal.h>
 
-#include <array>
 #include <string>
 
 namespace hex::plugin::builtin {
@@ -57,7 +54,7 @@ namespace hex::plugin::builtin {
 
     private:
         void drawContextMenus(ViewDataProcessor::Workspace &workspace);
-        void drawNode(dp::Node &node);
+        void drawNode(dp::Node &node) const;
 
     private:
         bool m_updateNodePositions = false;

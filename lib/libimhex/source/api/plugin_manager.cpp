@@ -3,6 +3,7 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/fmt.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -41,7 +42,7 @@ namespace hex {
 
     Plugin::Plugin(hex::PluginFunctions functions) {
         this->m_handle = nullptr;
-        this->m_functions = functions;
+        this->m_functions = std::move(functions);
     }
 
 
@@ -146,13 +147,13 @@ namespace hex {
     std::span<SubCommand> Plugin::getSubCommands() const {
         if (this->m_functions.getSubCommandsFunction != nullptr) {
             auto result = this->m_functions.getSubCommandsFunction();
-            return *reinterpret_cast<std::vector<SubCommand>*>(result);
+            return *static_cast<std::vector<SubCommand>*>(result);
         } else
             return { };
     }
 
 
-    void *Plugin::getPluginFunction(const std::string &symbol) {
+    void *Plugin::getPluginFunction(const std::string &symbol) const {
         #if defined(OS_WINDOWS)
             return reinterpret_cast<void *>(GetProcAddress(this->m_handle, symbol.c_str()));
         #else

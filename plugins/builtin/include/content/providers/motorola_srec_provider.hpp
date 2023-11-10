@@ -20,9 +20,6 @@ namespace hex::plugin::builtin {
         }
 
         bool handleFilePicker() override;
-
-    private:
-
     };
 
 }

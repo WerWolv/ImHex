@@ -6,7 +6,6 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/logger.hpp>
 
 #include <imgui.h>
 
@@ -59,12 +58,12 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderClosing>([](hex::prv::Provider *provider, bool *shouldClose) {
+        EventManager::subscribe<EventProviderClosing>([](const hex::prv::Provider *provider, bool *shouldClose) {
             if (provider->isDirty()) {
                 *shouldClose = false;
                 PopupUnsavedChanges::open("hex.builtin.popup.close_provider.desc"_lang,
                                     []{
-                                        for (auto &provider : ImHexApi::Provider::impl::getClosingProviders())
+                                        for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
                                             ImHexApi::Provider::remove(provider, true);
                                     },
                                     [] {

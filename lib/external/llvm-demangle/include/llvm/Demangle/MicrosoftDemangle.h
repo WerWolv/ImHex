@@ -10,8 +10,9 @@
 #define LLVM_DEMANGLE_MICROSOFTDEMANGLE_H
 
 #include "llvm/Demangle/MicrosoftDemangleNodes.h"
-#include "llvm/Demangle/StringView.h"
 
+#include <cassert>
+#include <string_view>
 #include <utility>
 
 namespace llvm {
@@ -100,7 +101,7 @@ public:
     if (Head->Used <= Head->Capacity)
       return new (PP) T(std::forward<Args>(ConstructorArgs)...);
 
-    static_assert(Size < AllocUnit, "");
+    static_assert(Size < AllocUnit);
     addNode(AllocUnit);
     Head->Used = Size;
     return new (Head->Buf) T(std::forward<Args>(ConstructorArgs)...);
@@ -142,9 +143,9 @@ public:
 
   // You are supposed to call parse() first and then check if error is true.  If
   // it is false, call output() to write the formatted name to the given stream.
-  SymbolNode *parse(StringView &MangledName);
+  SymbolNode *parse(std::string_view &MangledName);
 
-  TagTypeNode *parseTagUniqueName(StringView &MangledName);
+  TagTypeNode *parseTagUniqueName(std::string_view &MangledName);
 
   // True if an error occurred.
   bool Error = false;
@@ -152,104 +153,112 @@ public:
   void dumpBackReferences();
 
 private:
-  SymbolNode *demangleEncodedSymbol(StringView &MangledName,
+  SymbolNode *demangleEncodedSymbol(std::string_view &MangledName,
                                     QualifiedNameNode *QN);
-  SymbolNode *demangleDeclarator(StringView &MangledName);
-  SymbolNode *demangleMD5Name(StringView &MangledName);
-  SymbolNode *demangleTypeinfoName(StringView &MangledName);
+  SymbolNode *demangleDeclarator(std::string_view &MangledName);
+  SymbolNode *demangleMD5Name(std::string_view &MangledName);
+  SymbolNode *demangleTypeinfoName(std::string_view &MangledName);
 
-  VariableSymbolNode *demangleVariableEncoding(StringView &MangledName,
+  VariableSymbolNode *demangleVariableEncoding(std::string_view &MangledName,
                                                StorageClass SC);
-  FunctionSymbolNode *demangleFunctionEncoding(StringView &MangledName);
+  FunctionSymbolNode *demangleFunctionEncoding(std::string_view &MangledName);
 
-  Qualifiers demanglePointerExtQualifiers(StringView &MangledName);
+  Qualifiers demanglePointerExtQualifiers(std::string_view &MangledName);
 
   // Parser functions. This is a recursive-descent parser.
-  TypeNode *demangleType(StringView &MangledName, QualifierMangleMode QMM);
-  PrimitiveTypeNode *demanglePrimitiveType(StringView &MangledName);
-  CustomTypeNode *demangleCustomType(StringView &MangledName);
-  TagTypeNode *demangleClassType(StringView &MangledName);
-  PointerTypeNode *demanglePointerType(StringView &MangledName);
-  PointerTypeNode *demangleMemberPointerType(StringView &MangledName);
-  FunctionSignatureNode *demangleFunctionType(StringView &MangledName,
+  TypeNode *demangleType(std::string_view &MangledName,
+                         QualifierMangleMode QMM);
+  PrimitiveTypeNode *demanglePrimitiveType(std::string_view &MangledName);
+  CustomTypeNode *demangleCustomType(std::string_view &MangledName);
+  TagTypeNode *demangleClassType(std::string_view &MangledName);
+  PointerTypeNode *demanglePointerType(std::string_view &MangledName);
+  PointerTypeNode *demangleMemberPointerType(std::string_view &MangledName);
+  FunctionSignatureNode *demangleFunctionType(std::string_view &MangledName,
                                               bool HasThisQuals);
 
-  ArrayTypeNode *demangleArrayType(StringView &MangledName);
+  ArrayTypeNode *demangleArrayType(std::string_view &MangledName);
 
-  NodeArrayNode *demangleFunctionParameterList(StringView &MangledName,
+  NodeArrayNode *demangleFunctionParameterList(std::string_view &MangledName,
                                                bool &IsVariadic);
-  NodeArrayNode *demangleTemplateParameterList(StringView &MangledName);
+  NodeArrayNode *demangleTemplateParameterList(std::string_view &MangledName);
 
-  std::pair<uint64_t, bool> demangleNumber(StringView &MangledName);
-  uint64_t demangleUnsigned(StringView &MangledName);
-  int64_t demangleSigned(StringView &MangledName);
+  std::pair<uint64_t, bool> demangleNumber(std::string_view &MangledName);
+  uint64_t demangleUnsigned(std::string_view &MangledName);
+  int64_t demangleSigned(std::string_view &MangledName);
 
-  void memorizeString(StringView s);
+  void memorizeString(std::string_view s);
   void memorizeIdentifier(IdentifierNode *Identifier);
 
   /// Allocate a copy of \p Borrowed into memory that we own.
-  StringView copyString(StringView Borrowed);
+  std::string_view copyString(std::string_view Borrowed);
 
-  QualifiedNameNode *demangleFullyQualifiedTypeName(StringView &MangledName);
-  QualifiedNameNode *demangleFullyQualifiedSymbolName(StringView &MangledName);
+  QualifiedNameNode *
+  demangleFullyQualifiedTypeName(std::string_view &MangledName);
+  QualifiedNameNode *
+  demangleFullyQualifiedSymbolName(std::string_view &MangledName);
 
-  IdentifierNode *demangleUnqualifiedTypeName(StringView &MangledName,
+  IdentifierNode *demangleUnqualifiedTypeName(std::string_view &MangledName,
                                               bool Memorize);
-  IdentifierNode *demangleUnqualifiedSymbolName(StringView &MangledName,
+  IdentifierNode *demangleUnqualifiedSymbolName(std::string_view &MangledName,
                                                 NameBackrefBehavior NBB);
 
-  QualifiedNameNode *demangleNameScopeChain(StringView &MangledName,
+  QualifiedNameNode *demangleNameScopeChain(std::string_view &MangledName,
                                             IdentifierNode *UnqualifiedName);
-  IdentifierNode *demangleNameScopePiece(StringView &MangledName);
+  IdentifierNode *demangleNameScopePiece(std::string_view &MangledName);
 
-  NamedIdentifierNode *demangleBackRefName(StringView &MangledName);
-  IdentifierNode *demangleTemplateInstantiationName(StringView &MangledName,
-                                                    NameBackrefBehavior NBB);
+  NamedIdentifierNode *demangleBackRefName(std::string_view &MangledName);
+  IdentifierNode *
+  demangleTemplateInstantiationName(std::string_view &MangledName,
+                                    NameBackrefBehavior NBB);
   IntrinsicFunctionKind
   translateIntrinsicFunctionCode(char CH, FunctionIdentifierCodeGroup Group);
-  IdentifierNode *demangleFunctionIdentifierCode(StringView &MangledName);
+  IdentifierNode *demangleFunctionIdentifierCode(std::string_view &MangledName);
   IdentifierNode *
-  demangleFunctionIdentifierCode(StringView &MangledName,
+  demangleFunctionIdentifierCode(std::string_view &MangledName,
                                  FunctionIdentifierCodeGroup Group);
-  StructorIdentifierNode *demangleStructorIdentifier(StringView &MangledName,
-                                                     bool IsDestructor);
+  StructorIdentifierNode *
+  demangleStructorIdentifier(std::string_view &MangledName, bool IsDestructor);
   ConversionOperatorIdentifierNode *
-  demangleConversionOperatorIdentifier(StringView &MangledName);
+  demangleConversionOperatorIdentifier(std::string_view &MangledName);
   LiteralOperatorIdentifierNode *
-  demangleLiteralOperatorIdentifier(StringView &MangledName);
+  demangleLiteralOperatorIdentifier(std::string_view &MangledName);
 
-  SymbolNode *demangleSpecialIntrinsic(StringView &MangledName);
+  SymbolNode *demangleSpecialIntrinsic(std::string_view &MangledName);
   SpecialTableSymbolNode *
-  demangleSpecialTableSymbolNode(StringView &MangledName,
+  demangleSpecialTableSymbolNode(std::string_view &MangledName,
                                  SpecialIntrinsicKind SIK);
   LocalStaticGuardVariableNode *
-  demangleLocalStaticGuard(StringView &MangledName, bool IsThread);
+  demangleLocalStaticGuard(std::string_view &MangledName, bool IsThread);
   VariableSymbolNode *demangleUntypedVariable(ArenaAllocator &Arena,
-                                              StringView &MangledName,
-                                              StringView VariableName);
+                                              std::string_view &MangledName,
+                                              std::string_view VariableName);
   VariableSymbolNode *
   demangleRttiBaseClassDescriptorNode(ArenaAllocator &Arena,
-                                      StringView &MangledName);
-  FunctionSymbolNode *demangleInitFiniStub(StringView &MangledName,
+                                      std::string_view &MangledName);
+  FunctionSymbolNode *demangleInitFiniStub(std::string_view &MangledName,
                                            bool IsDestructor);
 
-  NamedIdentifierNode *demangleSimpleName(StringView &MangledName,
+  NamedIdentifierNode *demangleSimpleName(std::string_view &MangledName,
                                           bool Memorize);
-  NamedIdentifierNode *demangleAnonymousNamespaceName(StringView &MangledName);
-  NamedIdentifierNode *demangleLocallyScopedNamePiece(StringView &MangledName);
-  EncodedStringLiteralNode *demangleStringLiteral(StringView &MangledName);
-  FunctionSymbolNode *demangleVcallThunkNode(StringView &MangledName);
+  NamedIdentifierNode *
+  demangleAnonymousNamespaceName(std::string_view &MangledName);
+  NamedIdentifierNode *
+  demangleLocallyScopedNamePiece(std::string_view &MangledName);
+  EncodedStringLiteralNode *
+  demangleStringLiteral(std::string_view &MangledName);
+  FunctionSymbolNode *demangleVcallThunkNode(std::string_view &MangledName);
 
-  StringView demangleSimpleString(StringView &MangledName, bool Memorize);
+  std::string_view demangleSimpleString(std::string_view &MangledName,
+                                        bool Memorize);
 
-  FuncClass demangleFunctionClass(StringView &MangledName);
-  CallingConv demangleCallingConvention(StringView &MangledName);
-  StorageClass demangleVariableStorageClass(StringView &MangledName);
-  bool demangleThrowSpecification(StringView &MangledName);
-  wchar_t demangleWcharLiteral(StringView &MangledName);
-  uint8_t demangleCharLiteral(StringView &MangledName);
+  FuncClass demangleFunctionClass(std::string_view &MangledName);
+  CallingConv demangleCallingConvention(std::string_view &MangledName);
+  StorageClass demangleVariableStorageClass(std::string_view &MangledName);
+  bool demangleThrowSpecification(std::string_view &MangledName);
+  wchar_t demangleWcharLiteral(std::string_view &MangledName);
+  uint8_t demangleCharLiteral(std::string_view &MangledName);
 
-  std::pair<Qualifiers, bool> demangleQualifiers(StringView &MangledName);
+  std::pair<Qualifiers, bool> demangleQualifiers(std::string_view &MangledName);
 
   // Memory allocator.
   ArenaAllocator Arena;

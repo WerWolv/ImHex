@@ -1,3 +1,5 @@
+#pragma once
+
 #include <hex/ui/popup.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>

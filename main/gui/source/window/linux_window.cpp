@@ -42,7 +42,7 @@ namespace hex {
         log::fatal(message);
         if (isFileInPath("zenity")) {
             executeCmd({"zenity", "--error", "--text", message});
-        } else if(isFileInPath("notify-send")) {
+        } else if (isFileInPath("notify-send")) {
             executeCmd({"notify-send", "-i", "script-error", "Error", message});
         } // Hopefully one of these commands is installed
     }

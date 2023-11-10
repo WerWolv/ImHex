@@ -305,7 +305,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::vector<dp::Attribute> findAttributes() {
+        std::vector<dp::Attribute> findAttributes() const {
             std::vector<dp::Attribute> result;
 
             // Search through all nodes in the workspace and add all input and output nodes to the result
@@ -319,7 +319,7 @@ namespace hex::plugin::builtin {
             return result;
         }
 
-        NodeCustomInput* findInput(const std::string &name) {
+        NodeCustomInput* findInput(const std::string &name) const {
             for (auto &node : this->m_workspace.nodes) {
                 if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr && inputNode->getName() == name)
                     return inputNode;
@@ -328,7 +328,7 @@ namespace hex::plugin::builtin {
             return nullptr;
         }
 
-        NodeCustomOutput* findOutput(const std::string &name) {
+        NodeCustomOutput* findOutput(const std::string &name) const {
             for (auto &node : this->m_workspace.nodes) {
                 if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr && outputNode->getName() == name)
                     return outputNode;
@@ -581,8 +581,7 @@ namespace hex::plugin::builtin {
                     // Add the loaded node to the list of custom nodes
                     this->m_customNodes.push_back(CustomNode { LangEntry(nodeJson.at("name")), nodeJson });
                 } catch (nlohmann::json::exception &e) {
-                    log::warn("Failed to load custom node {}", entry.path().string());
-                    continue;
+                    log::warn("Failed to load custom node '{}': {}", entry.path().string(), e.what());
                 }
             }
         }
@@ -743,7 +742,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewDataProcessor::drawNode(dp::Node &node) {
+    void ViewDataProcessor::drawNode(dp::Node &node) const {
         // If a node position update is pending, update the node position
         int nodeId = node.getId();
         if (this->m_updateNodePositions) {
@@ -1075,47 +1074,48 @@ namespace hex::plugin::builtin {
         return output;
     }
 
-    std::unique_ptr<dp::Node> ViewDataProcessor::loadNode(nlohmann::json node) {
+    std::unique_ptr<dp::Node> ViewDataProcessor::loadNode(nlohmann::json data) {
         try {
             auto &nodeEntries = ContentRegistry::DataProcessorNode::impl::getEntries();
 
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
-                if (node.contains("name") && entry.name == node["type"].get<std::string>())
+                if (data.contains("name") && entry.name == data["type"].get<std::string>())
                     newNode = entry.creatorFunction();
             }
 
             if (newNode == nullptr)
                 return nullptr;
 
-            if (node.contains("id"))
-                newNode->setId(node["id"]);
+            if (data.contains("id"))
+                newNode->setId(data["id"]);
 
-            if (node.contains("name"))
-                newNode->setUnlocalizedTitle(node["name"]);
+            if (data.contains("name"))
+                newNode->setUnlocalizedTitle(data["name"]);
 
             u32 attrIndex  = 0;
             for (auto &attr : newNode->getAttributes()) {
-                attr.setId(node["attrs"][attrIndex]);
+                attr.setId(data["attrs"][attrIndex]);
                 attrIndex++;
             }
 
-            if (!node["data"].is_null())
-                newNode->load(node["data"]);
+            if (!data["data"].is_null())
+                newNode->load(data["data"]);
 
             return newNode;
         } catch (nlohmann::json::exception &e) {
+            log::error("Failed to load node: {}", e.what());
             return nullptr;
         }
     }
 
-    void ViewDataProcessor::loadNodes(ViewDataProcessor::Workspace &workspace, nlohmann::json jsonData) {
+    void ViewDataProcessor::loadNodes(ViewDataProcessor::Workspace &workspace, nlohmann::json data) {
         workspace.nodes.clear();
         workspace.endNodes.clear();
         workspace.links.clear();
 
         try {
-            for (auto &node : jsonData["nodes"]) {
+            for (auto &node : data["nodes"]) {
                 auto newNode = loadNode(node);
                 if (newNode == nullptr)
                     continue;
@@ -1146,7 +1146,7 @@ namespace hex::plugin::builtin {
             }
 
             int maxLinkId = 0;
-            for (auto &link : jsonData["links"]) {
+            for (auto &link : data["links"]) {
                 dp::Link newLink(link["from"], link["to"]);
 
                 int linkId = link["id"];

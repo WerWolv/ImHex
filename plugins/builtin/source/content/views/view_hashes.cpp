@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
 
     class PopupTextHash : public Popup<PopupTextHash> {
     public:
-        explicit PopupTextHash(ContentRegistry::Hashes::Hash::Function hash)
+        explicit PopupTextHash(const ContentRegistry::Hashes::Hash::Function &hash)
                 : hex::Popup<PopupTextHash>(hash.getName(), true, false),
                   m_hash(hash) { }
 

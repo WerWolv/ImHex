@@ -1,15 +1,10 @@
 #pragma once
 
-#include <list>
-#include <string>
-#include <string_view>
-
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/concepts.hpp>
 #include <hex/helpers/tar.hpp>
 
 /**

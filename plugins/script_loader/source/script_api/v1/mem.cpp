@@ -15,7 +15,7 @@ SCRIPT_API(void readMemory, u64 address, size_t size, void *buffer) {
     provider->read(address, buffer, size);
 }
 
-SCRIPT_API(void writeMemory, u64 address, size_t size, void *buffer) {
+SCRIPT_API(void writeMemory, u64 address, size_t size, const void *buffer) {
     auto provider = hex::ImHexApi::Provider::get();
 
     if (provider == nullptr) {

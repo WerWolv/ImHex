@@ -1,10 +1,10 @@
 #if defined(OS_LINUX)
 
-#include<hex/helpers/logger.hpp>
+#include <hex/helpers/logger.hpp>
 
-#include<vector>
-#include<string>
-#include<unistd.h>
+#include <vector>
+#include <string>
+#include <unistd.h>
 
 namespace hex {
 

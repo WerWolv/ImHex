@@ -3,12 +3,13 @@
 #include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/fmt.hpp>
+#include <hex/providers/buffered_reader.hpp>
 
 namespace hex::plugin::builtin {
 
     namespace {
 
-        u32 getDiffColor(u32 color) {
+        constexpr u32 getDiffColor(u32 color) {
             return (color & 0x00FFFFFF) | 0x40000000;
         }
 
@@ -93,7 +94,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    std::function<std::optional<color_t>(u64, const u8*, size_t)> ViewDiff::createCompareFunction(size_t otherIndex) {
+    std::function<std::optional<color_t>(u64, const u8*, size_t)> ViewDiff::createCompareFunction(size_t otherIndex) const {
         // Create a function that will handle highlighting the differences between the two providers
         // This is a stupidly simple diffing implementation. It will highlight bytes that are different in yellow
         // and if one provider is larger than the other it will highlight the extra bytes in green or red depending on which provider is larger
@@ -140,7 +141,7 @@ namespace hex::plugin::builtin {
             auto readerB = prv::ProviderReader(providerB);
 
             // Iterate over both providers and compare the bytes
-            for (auto itA = readerA.begin(), itB = readerB.begin(); itA < readerA.end() && itB < readerB.end(); itA++, itB++) {
+            for (auto itA = readerA.begin(), itB = readerB.begin(); itA < readerA.end() && itB < readerB.end(); ++itA, ++itB) {
                 // Stop comparing if the diff task was canceled
                 if (task.wasInterrupted())
                     break;
@@ -151,9 +152,9 @@ namespace hex::plugin::builtin {
                     size_t end = 0;
 
                     while (itA != readerA.end() && itB != readerB.end() && *itA != *itB) {
-                        itA++;
-                        itB++;
-                        end++;
+                        ++itA;
+                        ++itB;
+                        ++end;
                     }
 
                     // Add the difference to the list

@@ -28,8 +28,6 @@
 #include <wolv/net/socket_client.hpp>
 #include <wolv/net/socket_server.hpp>
 
-#include <charconv>
-
 namespace hex::plugin::builtin {
 
     namespace {
@@ -557,7 +555,7 @@ namespace hex::plugin::builtin {
 
             ImGui::NewLine();
 
-            static const auto WarningColor = ImColor(0.92F, 0.25F, 0.2F, 1.0F);
+            constexpr static auto WarningColor = ImColor(0.92F, 0.25F, 0.2F, 1.0F);
             if (setuid && !x[0])
                 ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.setuid_error"_lang);
             if (setgid && !x[1])
@@ -857,14 +855,14 @@ namespace hex::plugin::builtin {
 
         void drawFileToolSplitter() {
             std::array sizeText = {
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.5_75_floppy"_lang,
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.3_5_floppy"_lang,
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.zip100"_lang,
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.zip200"_lang,
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.cdrom650"_lang,
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.cdrom700"_lang,
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.fat32"_lang,
-                (const char *)"hex.builtin.tools.file_tools.splitter.sizes.custom"_lang
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.5_75_floppy"_lang),
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.3_5_floppy"_lang),
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.zip100"_lang),
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.zip200"_lang),
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.cdrom650"_lang),
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.cdrom700"_lang),
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.fat32"_lang),
+                static_cast<const char*>("hex.builtin.tools.file_tools.splitter.sizes.custom"_lang)
             };
             std::array<u64, sizeText.size()> sizes = {
                 1200_KiB,
@@ -1161,8 +1159,8 @@ namespace hex::plugin::builtin {
                 }
 
                 u128 value;
-                int exponentBitCount;
-                int mantissaBitCount;
+                i32 exponentBitCount;
+                i32 mantissaBitCount;
                 long double resultFloat;
             };
 
@@ -1178,12 +1176,12 @@ namespace hex::plugin::builtin {
             };
 
             enum class InputType {
-                infinity,
-                notANumber,
-                quietNotANumber,
-                signalingNotANumber,
-                regular,
-                invalid
+                Infinity,
+                NotANumber,
+                QuietNotANumber,
+                SignalingNotANumber,
+                Regular,
+                Invalid
             };
 
             enum class ValueType {
@@ -1206,7 +1204,7 @@ namespace hex::plugin::builtin {
                 i64 exponentBits;
                 i64 mantissaBits;
                 i64 precision;
-            } ieee754;
+            } ieee754 = {};
 
             std::string specialNumbers[] = {
                     "inf" , "Inf", "INF" , "nan" , "Nan" , "NAN",
@@ -1246,9 +1244,8 @@ namespace hex::plugin::builtin {
             auto tableFlags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible |
                                      ImGuiTableFlags_ScrollX | ImGuiTableFlags_NoPadInnerX;
 
-            const static auto IndentBoxOrLabel = [](
-                    u32 startBit, u32 bitIndex, u32 count, bool isLabel) {
-                int checkBoxWidth = ImGui::CalcTextSize("0").x + ImGui::GetStyle().FramePadding.x * 2.0f;
+            const static auto IndentBoxOrLabel = [](u32 startBit, u32 bitIndex, u32 count, bool isLabel) {
+                auto checkBoxWidth = ImGui::CalcTextSize("0").x + ImGui::GetStyle().FramePadding.x * 2.0f;
                 auto columnWidth = ImGui::GetColumnWidth();
                 float boxesPerColumn=columnWidth/checkBoxWidth;
                 float result;
@@ -1260,7 +1257,7 @@ namespace hex::plugin::builtin {
                        leadingBoxes = 0.0f;
                     result = checkBoxWidth*(leadingBoxes + startBit - bitIndex + 0.5f)-labelWidth/2.0f;
                 } else {
-                    if(count < boxesPerColumn)
+                    if (count < boxesPerColumn)
                         result = (columnWidth - count * checkBoxWidth) / 2.0f;
                     else
                         result = 0.0;
@@ -1271,8 +1268,8 @@ namespace hex::plugin::builtin {
             };
 
             const static auto DisplayBitLabels = [](int startBit, int count) {
-                static int lastLabelAdded = -1;
-                int labelIndex;
+                static i32 lastLabelAdded = -1;
+                i32 labelIndex;
                 if (lastLabelAdded == -1 || count < 4)
                     labelIndex = startBit - (count >> 1);
                 else
@@ -1289,7 +1286,7 @@ namespace hex::plugin::builtin {
                 }
             };
 
-            const static auto FormatBitLabels = [](int totalBitCount, int exponentBitPosition, int mantissaBitPosition) {
+            const static auto FormatBitLabels = [](i32 totalBitCount, i32 exponentBitPosition, i32 mantissaBitPosition) {
                 // Row for bit labels. Due to font size constrains each bit cannot have its own label.
                 // Instead, we label each 4 bits and then use the bit position to determine the bit label.
                 // Result.
@@ -1336,7 +1333,7 @@ namespace hex::plugin::builtin {
                 }
             };
 
-            const static auto FormatBits = [](int signBitPosition, int exponentBitPosition, int mantissaBitPosition) {
+            const static auto FormatBits = [](i32 signBitPosition, i32 exponentBitPosition, i32 mantissaBitPosition) {
 
                 // Sign.
                 ImGui::TableNextColumn();
@@ -1490,11 +1487,11 @@ namespace hex::plugin::builtin {
                     // Important to switch from - to +.
                     ieee754.signBits = 0;
 
-                InputType inputType;
+                InputType inputType = InputType::Regular;
                 bool matchFound = false;
-                i32 i;
+
                 // Detect and use special numbers.
-                for (i = 0; i < 12; i++) {
+                for (u32 i = 0; i < 12; i++) {
                     if (decimalFloatingPointNumberString == specialNumbers[i]) {
                         inputType = InputType(i/3);
                         matchFound = true;
@@ -1503,30 +1500,29 @@ namespace hex::plugin::builtin {
                 }
 
                 if (!matchFound)
-                    inputType = InputType::regular;
+                    inputType = InputType::Regular;
 
-                if (inputType == InputType::regular) {
+                if (inputType == InputType::Regular) {
                     try {
                         ieee754statics.resultFloat = stod(decimalFloatingPointNumberString);
                     } catch(const std::invalid_argument& _) {
-                        inputType = InputType::invalid;
+                        inputType = InputType::Invalid;
                     }
-                } else if (inputType == InputType::infinity) {
+                } else if (inputType == InputType::Infinity) {
                     ieee754statics.resultFloat = std::numeric_limits<long double>::infinity();
                     ieee754statics.resultFloat *= (ieee754.signBits == 1 ? -1 : 1);
 
-                } else if (inputType == InputType::notANumber)
+                } else if (inputType == InputType::NotANumber)
                     ieee754statics.resultFloat = std::numeric_limits<long double>::quiet_NaN();
 
-                else if (inputType == InputType::quietNotANumber)
+                else if (inputType == InputType::QuietNotANumber)
                     ieee754statics.resultFloat = std::numeric_limits<long double>::quiet_NaN();
 
-                else if (inputType == InputType::signalingNotANumber)
+                else if (inputType == InputType::SignalingNotANumber)
                     ieee754statics.resultFloat = std::numeric_limits<long double>::signaling_NaN();
 
-                long double log2Result;
 
-                if (inputType != InputType::invalid) {
+                if (inputType != InputType::Invalid) {
                     // Deal with zero first so we can use log2.
                     if (ieee754statics.resultFloat == 0.0) {
                         if (ieee754.signBits == 1)
@@ -1539,10 +1535,10 @@ namespace hex::plugin::builtin {
                         ieee754.mantissaBits = 0;
 
                     } else {
-                        log2Result = std::log2(ieee754statics.resultFloat);
+                        long double log2Result = std::log2(ieee754statics.resultFloat);
                         // 2^(bias+1)-2^(bias-prec) is the largest number that can be represented.
                         // If the number entered is larger than this then the input is set to infinity.
-                        if (ieee754statics.resultFloat > (std::pow(2.0L, ieee754.exponentBias + 1) - std::pow(2.0L, ieee754.exponentBias - ieee754statics.mantissaBitCount)) || inputType == InputType::infinity ) {
+                        if (ieee754statics.resultFloat > (std::pow(2.0L, ieee754.exponentBias + 1) - std::pow(2.0L, ieee754.exponentBias - ieee754statics.mantissaBitCount)) || inputType == InputType::Infinity ) {
 
                             ieee754statics.resultFloat = std::numeric_limits<long double>::infinity();
                             ieee754.numberType = NumberType::Infinity;
@@ -1564,7 +1560,7 @@ namespace hex::plugin::builtin {
                             ieee754.exponentBits = 0;
                             ieee754.mantissaBits = 0;
 
-                        } else if (inputType == InputType::signalingNotANumber) {
+                        } else if (inputType == InputType::SignalingNotANumber) {
 
                             ieee754statics.resultFloat = std::numeric_limits<long double>::signaling_NaN();
                             ieee754.valueType = ValueType::SignalingNaN;
@@ -1572,7 +1568,7 @@ namespace hex::plugin::builtin {
                             ieee754.exponentBits = (u128(1) << ieee754statics.exponentBitCount) - 1;
                             ieee754.mantissaBits = 1;
 
-                        } else if (inputType == InputType::quietNotANumber || inputType == InputType::notANumber ) {
+                        } else if (inputType == InputType::QuietNotANumber || inputType == InputType::NotANumber ) {
 
                             ieee754statics.resultFloat = std::numeric_limits<long double>::quiet_NaN();
                             ieee754.valueType = ValueType::QuietNaN;
@@ -1848,7 +1844,7 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
 
             if (ImGui::BeginChild("##calculator", ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5), true)) {
-                static const u64 min = 1, max = 64;
+                constexpr static u64 min = 1, max = 64;
                 ImGui::SliderScalar("hex.builtin.tools.invariant_multiplication.num_bits"_lang, ImGuiDataType_U64, &numBits, &min, &max);
                 ImGui::NewLine();
 

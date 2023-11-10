@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
     template<std::integral T>
     class DataVisualizerHexadecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerHexadecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerHexadecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
@@ -106,13 +106,13 @@ namespace hex::plugin::builtin {
     template<std::integral T>
     class DataVisualizerDecimal : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerDecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerDecimal(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address, upperCase);
 
             if (size == ByteCount) {
-                if (std::is_signed<T>::value)
+                if (std::is_signed_v<T>)
                     ImGui::Text(getFormatString(), static_cast<i64>(*reinterpret_cast<const T*>(data)));
                 else
                     ImGui::Text(getFormatString(), static_cast<u64>(*reinterpret_cast<const T*>(data)));
@@ -135,7 +135,7 @@ namespace hex::plugin::builtin {
         constexpr static inline auto ByteCount = sizeof(T);
         constexpr static inline auto CharCount = std::numeric_limits<T>::digits10 + 2;
 
-        const static inline auto FormatString = hex::format("%{}{}{}", CharCount, ImGui::getFormatLengthSpecifier<T>(), std::is_signed<T>::value ? "d" : "u");
+        const static inline auto FormatString = hex::format("%{}{}{}", CharCount, ImGui::getFormatLengthSpecifier<T>(), std::is_signed_v<T> ? "d" : "u");
 
         const char *getFormatString() {
             return FormatString.c_str();
@@ -147,7 +147,7 @@ namespace hex::plugin::builtin {
     template<typename T>
     class DataVisualizerFloatingPoint : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);
@@ -175,7 +175,7 @@ namespace hex::plugin::builtin {
         const static inline auto FormatStringUpperCase = hex::format("%{}G", CharCount);
         const static inline auto FormatStringLowerCase = hex::format("%{}g", CharCount);
 
-        const char *getFormatString(bool upperCase) {
+        const char *getFormatString(bool upperCase) const {
             if (upperCase)
                 return FormatStringUpperCase.c_str();
             else
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
     template<>
     class DataVisualizerFloatingPoint<Float16> : public hex::ContentRegistry::HexEditor::DataVisualizer {
     public:
-        DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
+        explicit DataVisualizerFloatingPoint(const std::string &name) : DataVisualizer(name, ByteCount, CharCount) { }
 
         void draw(u64 address, const u8 *data, size_t size, bool upperCase) override {
             hex::unused(address);

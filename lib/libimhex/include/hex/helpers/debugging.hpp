@@ -1,6 +1,5 @@
 #pragma once
 
-#include <wolv/types/static_string.hpp>
 #include <wolv/utils/preproc.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
