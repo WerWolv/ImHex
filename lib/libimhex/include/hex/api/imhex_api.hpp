@@ -74,7 +74,7 @@ namespace hex {
                 std::map<u32, Tooltip> &getTooltips();
                 std::map<u32, TooltipFunction> &getTooltipFunctions();
 
-                void setCurrentSelection(std::optional<ProviderRegion> region);
+                void setCurrentSelection(const std::optional<ProviderRegion> &region);
             }
 
             /**

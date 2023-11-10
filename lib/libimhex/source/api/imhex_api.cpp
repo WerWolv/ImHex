@@ -70,8 +70,8 @@ namespace hex {
             }
 
             static std::optional<ProviderRegion> s_currentSelection;
-            void setCurrentSelection(std::optional<ProviderRegion> region) {
-                s_currentSelection = std::move(region);
+            void setCurrentSelection(const std::optional<ProviderRegion> &region) {
+                s_currentSelection = region;
             }
 
         }
@@ -353,6 +353,7 @@ namespace hex {
 
             TaskManager::runWhenTasksFinished([provider] {
                 EventManager::post<EventProviderDeleted>(provider);
+                std::erase(impl::s_closingProviders, provider);
                 delete provider;
             });
         }
