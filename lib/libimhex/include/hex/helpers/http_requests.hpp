@@ -73,7 +73,8 @@ namespace hex {
 
         HttpRequest& operator=(HttpRequest &&other) noexcept;
 
-        static void setProxy(std::string proxy);
+        static void setProxyState(bool enabled);
+        static void setProxyUrl(std::string proxy);
 
         void setMethod(std::string method) {
             this->m_method = std::move(method);

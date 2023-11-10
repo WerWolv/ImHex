@@ -276,18 +276,14 @@ namespace hex::plugin::builtin {
 
         /* Proxy */
 
-        HttpRequest::setProxy(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "").get<std::string>());
+        HttpRequest::setProxyUrl(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "").get<std::string>());
 
         ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.description");
 
         auto proxyEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.enable", false).setChangedCallback([](Widgets::Widget &widget) {
             auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 
-            if (checkBox->isChecked()) {
-                HttpRequest::setProxy(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "").get<std::string>());
-            } else {
-                HttpRequest::setProxy("");
-            }
+            HttpRequest::setProxyState(checkBox->isChecked());
         });
 
         ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.url", "")
@@ -299,7 +295,7 @@ namespace hex::plugin::builtin {
         .setChangedCallback([](Widgets::Widget &widget) {
             auto textBox = static_cast<Widgets::TextBox *>(&widget);
 
-            HttpRequest::setProxy(textBox->getValue());
+            HttpRequest::setProxyUrl(textBox->getValue());
         });
 
 

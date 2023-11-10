@@ -5,7 +5,10 @@
 namespace hex {
 
     namespace {
+
         std::string s_proxyUrl;
+        bool s_proxyState;
+
     }
 
     HttpRequest::HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
@@ -60,7 +63,9 @@ namespace hex {
         curl_easy_setopt(this->m_curl, CURLOPT_NOPROGRESS, 0L);
         curl_easy_setopt(this->m_curl, CURLOPT_XFERINFODATA, this);
         curl_easy_setopt(this->m_curl, CURLOPT_XFERINFOFUNCTION, progressCallback);
-        curl_easy_setopt(this->m_curl, CURLOPT_PROXY, s_proxyUrl.c_str());
+
+        if (s_proxyState)
+            curl_easy_setopt(this->m_curl, CURLOPT_PROXY, s_proxyUrl.c_str());
     }
 
     std::future<HttpRequest::Result<std::vector<u8>>> HttpRequest::downloadFile() {
@@ -76,12 +81,16 @@ namespace hex {
 
 
 
-    void HttpRequest::setProxy(std::string proxy) {
+    void HttpRequest::setProxyUrl(std::string proxy) {
         s_proxyUrl = std::move(proxy);
     }
 
+    void HttpRequest::setProxyState(bool state) {
+        s_proxyState = state;
+    }
+
     void HttpRequest::checkProxyErrors() {
-        if (!s_proxyUrl.empty()){
+        if (s_proxyState && !s_proxyUrl.empty()){
             log::info("A custom proxy '{0}' is in use. Is it working correctly?", s_proxyUrl);
         }
     }

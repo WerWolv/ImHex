@@ -40,8 +40,12 @@ namespace hex {
         });
     }
 
-    void HttpRequest::setProxy(std::string proxy) {
+    void HttpRequest::setProxyUrl(std::string proxy) {
         hex::unused(proxy);
+    }
+
+    void HttpRequest::setProxyState(bool state) {
+        hex::unused(state);
     }
 
     void HttpRequest::checkProxyErrors() { }
