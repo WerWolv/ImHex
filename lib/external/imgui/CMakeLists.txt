@@ -37,4 +37,4 @@ target_compile_options(imgui PRIVATE -Wno-unknown-warning-option)
 
 target_include_directories(imgui PUBLIC include ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
 target_link_directories(imgui PUBLIC ${GLFW_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
-target_link_libraries(imgui PUBLIC Freetype::Freetype ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})
+target_link_libraries(imgui PUBLIC Freetype::Freetype ${FREETYPE_LIBRARIES} ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})

@@ -24,6 +24,12 @@ if(CMAKE_GENERATOR)
 	return()
 endif()
 
+# IMHEX PATCH BEGIN
+# The function defined above doesn't keep in mind that if we are cross-compiling to MacOS, APPLE must be 1,
+# so we force it here (where else would this script be run anyway ? This seems to be MacOS-specific code)
+SET(APPLE 1)
+# IMHEX PATCHE END
+
 get_filename_component(BUNDLE_PATH "${BUNDLE_PATH}" ABSOLUTE)
 message(STATUS "Fixing up application bundle: ${BUNDLE_PATH}")
 
