@@ -6,7 +6,7 @@
 
 #include <fonts/codicons_font.h>
 #include <imgui.h>
-#include <thread>
+#include <jthread.hpp>
 
 #include <string>
 #include <vector>
