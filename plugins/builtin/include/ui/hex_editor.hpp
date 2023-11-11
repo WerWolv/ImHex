@@ -45,6 +45,9 @@ namespace hex::plugin::builtin::ui {
             if (!ImHexApi::Provider::isValid())
                 return;
 
+            if (start > this->m_provider->getBaseAddress() + this->m_provider->getActualSize())
+                return;
+
             const size_t maxAddress = this->m_provider->getActualSize() + this->m_provider->getBaseAddress() - 1;
 
             constexpr static auto alignDown = [](u128 value, u128 alignment) {
