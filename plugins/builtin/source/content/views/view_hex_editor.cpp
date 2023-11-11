@@ -1113,8 +1113,8 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.select" }, 1650,
                                                 CTRLCMD + SHIFT + Keys::A,
                                                 [this] {
-                                                    auto selection = ImHexApi::HexEditor::getSelection();
-                                                    this->openPopup<PopupSelect>(selection->getStartAddress(), selection->getSize());
+                                                    auto selection = ImHexApi::HexEditor::getSelection().value_or(ImHexApi::HexEditor::ProviderRegion{ { 0, 1 }, nullptr });
+                                                    this->openPopup<PopupSelect>(selection.getStartAddress(), selection.getSize());
                                                 },
                                                 ImHexApi::Provider::isValid);
 
