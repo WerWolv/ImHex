@@ -144,6 +144,9 @@ namespace hex {
                 auto [op, width] = toOperator(pos);
 
                 if (op != Operator::Invalid) {
+                    if (inputQueue.empty() || inputQueue.back().type == TokenType::Bracket || inputQueue.back().type == TokenType::Operator)
+                        inputQueue.push(Token { .type = TokenType::Number, .number = 0, .name = "", .arguments = { } });
+
                     inputQueue.push(Token { .type = TokenType::Operator, .op = op, .name = "", .arguments = { } });
                     pos += width;
                 } else {
@@ -239,14 +242,7 @@ namespace hex {
             else if (front.type == TokenType::Operator) {
                 T rightOperand, leftOperand;
                 if (evaluationStack.size() < 2) {
-                    if ((front.op == Operator::Addition || front.op == Operator::Subtraction || front.op == Operator::Not || front.op == Operator::BitwiseNot) && evaluationStack.size() == 1) {
-                        rightOperand = evaluationStack.top();
-                        evaluationStack.pop();
-                        leftOperand = 0;
-                    } else {
-                        this->setError("Not enough operands for operator!");
-                        return std::nullopt;
-                    }
+                    this->setError("Not enough operands for operator!");
                 } else {
                     rightOperand = evaluationStack.top();
                     evaluationStack.pop();
