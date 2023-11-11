@@ -1,3 +1,5 @@
+#include <hex/helpers/literals.hpp>
+
 namespace hex::plugin::builtin {
     namespace impl {
         using namespace std::literals::string_literals;
