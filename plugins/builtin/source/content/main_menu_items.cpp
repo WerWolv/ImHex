@@ -220,7 +220,7 @@ namespace hex::plugin::builtin {
 
         void drawExportLanguageMenu() {
             for (const auto &formatter : ContentRegistry::DataFormatter::impl::getEntries()) {
-                if (ImGui::MenuItem(LangEntry(formatter.unlocalizedName))) {
+                if (ImGui::MenuItem(LangEntry(formatter.unlocalizedName), nullptr, false, ImHexApi::Provider::get()->getActualSize() > 0)) {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&formatter](const auto &path) {
                         TaskManager::createTask("Exporting data", TaskManager::NoProgress, [&formatter, path](auto&){
                             auto provider = ImHexApi::Provider::get();
