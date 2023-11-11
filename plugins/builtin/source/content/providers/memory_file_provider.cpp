@@ -22,7 +22,8 @@ namespace hex::plugin::builtin {
     }
 
     void MemoryFileProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
+        auto actualSize = this->getActualSize();
+        if (actualSize == 0 || (offset + size) > actualSize || buffer == nullptr || size == 0)
             return;
 
         std::memcpy(buffer, &this->m_data.front() + offset, size);
