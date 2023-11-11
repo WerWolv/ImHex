@@ -447,7 +447,7 @@
         "hex.builtin.pl_visualizer.coordinates.query": "주소 찾기",
         "hex.builtin.pl_visualizer.coordinates.querying": "주소 쿼리 중...",
         "hex.builtin.pl_visualizer.coordinates.querying_no_address": "찾은 주소가 없습니다",
-        "hex.builtin.popup.close_provider.desc": "",
+        "hex.builtin.popup.close_provider.desc": "이 공급자에 대해 아직 프로젝트에\n저장되지 않은 변경 사항이 있습니다.\n\n정말 종료하시겠습니까?",
         "hex.builtin.popup.close_provider.title": "공급자를 종료하시겠습니까?",
         "hex.builtin.popup.docs_question.title": "설명서 쿼리",
         "hex.builtin.popup.docs_question.no_answer": "설명서에 이 질문에 대한 답변이 없습니다",
@@ -1066,7 +1066,7 @@
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
         "hex.builtin.welcome.update.title": "새 업데이트를 사용할 수 있습니다!",
         "hex.builtin.view.store.system": "시스템",
-        "hex.builtin.view.store.system.explanation": "이 항목은 읽기 전용 디렉터리에 있으며 시스템에서 관리할 수 있습니다",
+        "hex.builtin.view.store.system.explanation": "이 항목은 읽기 전용 디렉터리에 있으며 시스템에서 관리할 수 있습니다.",
         "hex.builtin.setting.font.glyphs": "글리프",
         "hex.builtin.tools.tcp_client_server.client": "클라이언트",
         "hex.builtin.tools.tcp_client_server.server": "서버",
@@ -1081,6 +1081,19 @@
         "hex.builtin.setting.font.custom_font": "사용자 정의 글꼴",
         "hex.builtin.setting.general.patterns": "패턴",
         "hex.builtin.setting.general.network": "네트워크",
-        "hex.builtin.nodes.common.amount": "양"
+        "hex.builtin.nodes.common.amount": "양",
+        "hex.builtin.menu.file.export.as_language.popup.export_error": "파일로 바이트를 내보내지 못했습니다!",
+        "hex.builtin.tools.euclidean_algorithm.description": "유클리드 호제법은 두 숫자의 최대공약수(GCD)를 계산하는 효율적인 방법입니다.\n\n더 나아가 두 숫자의 최소공배수(LCM)를 계산하는 효율적인 방법도 제공합니다.",
+        "hex.builtin.tools.euclidean_algorithm": "유클리드 호제법",
+        "hex.builtin.setting.experiments": "실험",
+        "hex.builtin.setting.experiments.description": "실험은 아직 개발 중인 기능으로 아직 제대로 작동하지 않을 수 있습니다.\n\n자유롭게 사용해 보고 문제가 발생하면 보고해 주세요!",
+        "hex.builtin.tools.euclidean_algorithm.overflow": "오버플로가 감지되었습니다! a와 b의 값이 너무 큽니다.",
+        "hex.builtin.achievement.starting_out.crash.desc": "처음으로 ImHex를 충돌시킵니다.",
+        "hex.builtin.achievement.starting_out.crash.name": "그래 리코, 콰광!",
+        "hex.builtin.tools.graphing": "그래프 계산기",
+        "hex.builtin.view.help.about.release_notes": "릴리스 노트",
+        "hex.builtin.menu.file.export.as_language": "텍스트 형식 바이트",
+        "hex.builtin.view.help.about.commits": "커밋 기록",
+        "hex.builtin.common.loading": "불러오는 중..."
     }
 }
