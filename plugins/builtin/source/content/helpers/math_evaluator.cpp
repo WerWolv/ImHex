@@ -243,6 +243,7 @@ namespace hex {
                 T rightOperand, leftOperand;
                 if (evaluationStack.size() < 2) {
                     this->setError("Not enough operands for operator!");
+                    return std::nullopt;
                 } else {
                     rightOperand = evaluationStack.top();
                     evaluationStack.pop();
