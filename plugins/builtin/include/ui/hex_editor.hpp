@@ -51,6 +51,9 @@ namespace hex::plugin::builtin::ui {
             if (start < this->m_provider->getBaseAddress())
                 return;
 
+            if (this->m_provider->getActualSize() == 0)
+                return;
+
             const size_t maxAddress = this->m_provider->getActualSize() + this->m_provider->getBaseAddress() - 1;
 
             constexpr static auto alignDown = [](u128 value, u128 alignment) {
