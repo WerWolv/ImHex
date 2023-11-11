@@ -61,8 +61,12 @@ namespace hex::plugin::builtin {
             if (!detached) continue;
 
             // Create a new window for the tool
-            ImGui::SetNextWindowSize(scaled(ImVec2(600, 0)));
             if (ImGui::Begin(View::toWindowName(name).c_str(), &detached, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
+                if (!ImGui::IsWindowDocked())
+                    ImGui::SetWindowSize(scaled(ImVec2(600, 0)));
+
+                ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
+
                 // Draw the tool
                 function();
 

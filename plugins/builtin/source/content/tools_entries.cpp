@@ -508,8 +508,8 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
 
                 if (ImGui::BeginTable("##mathHistory", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 300))) {
-                    ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.tools.history"_lang);
+                    ImGui::TableSetupScrollFreeze(0, 1);
 
                     ImGuiListClipper clipper;
                     clipper.Begin(mathHistory.size());
@@ -552,9 +552,9 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
                 if (ImGui::BeginTable("##mathVariables", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 300))) {
-                    ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("hex.builtin.tools.name"_lang);
                     ImGui::TableSetupColumn("hex.builtin.tools.value"_lang);
+                    ImGui::TableSetupScrollFreeze(0, 1);
 
                     ImGui::TableHeadersRow();
                     for (const auto &[name, variable] : mathEvaluator.getVariables()) {
@@ -745,11 +745,11 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             if (ImGui::BeginTable("Permissions", 4, ImGuiTableFlags_Borders)) {
-                ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("Special", ImGuiTableColumnFlags_NoSort);
                 ImGui::TableSetupColumn("User", ImGuiTableColumnFlags_NoSort);
                 ImGui::TableSetupColumn("Group", ImGuiTableColumnFlags_NoSort);
                 ImGui::TableSetupColumn("Other", ImGuiTableColumnFlags_NoSort);
+                ImGui::TableSetupScrollFreeze(0, 1);
 
                 ImGui::TableHeadersRow();
 
@@ -828,10 +828,10 @@ namespace hex::plugin::builtin {
             ImGui::Header("hex.builtin.tools.file_uploader.recent"_lang);
 
             if (ImGui::BeginTable("##links", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg, ImVec2(0, 200))) {
-                ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.common.file"_lang);
                 ImGui::TableSetupColumn("hex.builtin.common.link"_lang);
                 ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
+                ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableHeadersRow();
 
                 ImGuiListClipper clipper;
