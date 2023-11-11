@@ -109,6 +109,7 @@ namespace hex::plugin::builtin {
             static auto replacePattern = [] { std::string s; s.reserve(0xFFF); return s; }();
             static auto regexOutput    = [] { std::string s; s.reserve(0xFFF); return s; }();
 
+            ImGui::PushItemWidth(-150_scaled);
             bool changed1 = ImGui::InputTextIcon("hex.builtin.tools.regex_replacer.pattern"_lang, ICON_VS_REGEX, regexPattern);
             bool changed2 = ImGui::InputTextIcon("hex.builtin.tools.regex_replacer.replace"_lang, ICON_VS_REGEX, replacePattern);
             bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput, ImVec2(0, 0));
@@ -120,6 +121,8 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.output"_lang, regexOutput.data(), regexOutput.size(), ImVec2(0, 0), ImGuiInputTextFlags_ReadOnly);
+
+            ImGui::PopItemWidth();
         }
 
         void drawColorPicker() {
@@ -141,10 +144,12 @@ namespace hex::plugin::builtin {
                 BitValue{ 8, 0.00F, 0.0F, 'A', 3 }
             };
 
-            if (ImGui::BeginTable("##color_picker_table", 3)) {
-                ImGui::TableSetupColumn("##picker", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 300_scaled);
-                ImGui::TableSetupColumn("##sliders", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 80_scaled);
-                ImGui::TableSetupColumn("##output", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize);
+            if (ImGui::BeginTable("##color_picker_table", 3, ImGuiTableFlags_BordersInnerV)) {
+                ImGui::TableSetupColumn(" Color Picker", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 300_scaled);
+                ImGui::TableSetupColumn(" Components", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 105_scaled);
+                ImGui::TableSetupColumn(" Formats", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize);
+
+                ImGui::TableHeadersRow();
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
@@ -154,7 +159,7 @@ namespace hex::plugin::builtin {
                 {
                     ImGui::PushItemWidth(-1);
                     startCursor = ImGui::GetCursorPos();
-                    ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(), ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
+                    ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(), ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
                     endCursor = ImGui::GetCursorPos();
                     ImGui::ColorButton("##color_button", ImColor(pickedColor[0], pickedColor[1], pickedColor[2], pickedColor[3]), ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(300_scaled, 0));
                     ImGui::PopItemWidth();
@@ -166,6 +171,8 @@ namespace hex::plugin::builtin {
 
                 // Draw color bit count sliders
                 {
+                    ImGui::Indent();
+
                     static auto drawBitsSlider = [&](BitValue *bitValue) {
                         // Change slider color
                         ImGui::PushStyleColor(ImGuiCol_FrameBg,         ImColor::HSV(bitValue->color, 0.5f * bitValue->saturationMultiplier, 0.5f).Value);
@@ -221,6 +228,8 @@ namespace hex::plugin::builtin {
                     ImGui::TextFormatted("{}", colorName);
 
                     ImGui::PopStyleVar();
+
+                    ImGui::Unindent();
                 }
 
                 ImGui::TableNextColumn();
@@ -238,7 +247,10 @@ namespace hex::plugin::builtin {
                     }
 
                     // Draw a table with the color values
-                    if (ImGui::BeginTable("##value_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(0, 0))) {
+                    if (ImGui::BeginTable("##value_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX , ImVec2(0, 0))) {
+                        ImGui::TableSetupColumn("name",  ImGuiTableColumnFlags_WidthFixed);
+                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+
                         const static auto drawValue = [](const char *name, auto formatter) {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
@@ -627,12 +639,23 @@ namespace hex::plugin::builtin {
             if ((prevPos != limits.X.Min && (ImGui::IsMouseReleased(ImGuiMouseButton_Left) || ImGui::GetIO().MouseWheel != 0)) || (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
                 MathEvaluator<long double> evaluator;
 
+                y = {};
+
+                u32 i = 0;
+                evaluator.setFunction("y", [&](auto args) -> std::optional<long double> {
+                    i32 index = i + args[0];
+                    if (index < 0 || u32(index) >= y.size())
+                        return 0;
+                    else
+                        return y[index];
+                }, 1, 1);
+
                 evaluator.registerStandardVariables();
                 evaluator.registerStandardFunctions();
 
                 stepSize = (limits.X.Size()) / x.size();
 
-                for (u32 i = 0; i < x.size(); i++) {
+                for (i = 0; i < x.size(); i++) {
                     evaluator.setVariable("x", limits.X.Min + i * stepSize);
                     x[i] = limits.X.Min + i * stepSize;
                     y[i] = evaluator.evaluate(mathInput).value_or(0);
@@ -641,6 +664,7 @@ namespace hex::plugin::builtin {
                         limits.Y.Min = y[i];
                     if (y[i] > limits.Y.Max)
                         limits.X.Max = y[i];
+
                 }
 
                 limits.X.Max = limits.X.Min + x.size() * stepSize;
