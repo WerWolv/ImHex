@@ -621,7 +621,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::PushItemWidth(-1);
-            ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
+            ImGui::InputTextIcon("##graphing_math_input", ICON_VS_SYMBOL_OPERATOR, mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
             ImGui::PopItemWidth();
 
             if ((prevPos != limits.X.Min && (ImGui::IsMouseReleased(ImGuiMouseButton_Left) || ImGui::GetIO().MouseWheel != 0)) || (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
