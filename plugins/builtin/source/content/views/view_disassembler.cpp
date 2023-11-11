@@ -96,8 +96,7 @@ namespace hex::plugin::builtin {
 
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-                ImGui::TextUnformatted("hex.builtin.view.disassembler.position"_lang);
-                ImGui::Separator();
+                ImGui::Header("hex.builtin.view.disassembler.position"_lang, true);
 
                 // Draw base address input
                 ImGui::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);

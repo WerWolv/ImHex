@@ -101,8 +101,7 @@ namespace hex::plugin::builtin {
     void ViewYara::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.yara.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            ImGui::TextUnformatted("hex.builtin.view.yara.header.rules"_lang);
-            ImGui::Separator();
+            ImGui::Header("hex.builtin.view.yara.header.rules"_lang, true);
 
             if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                 for (u32 i = 0; i < this->m_rules->size(); i++) {
@@ -149,9 +148,7 @@ namespace hex::plugin::builtin {
                 ImGui::TextSpinner("hex.builtin.view.yara.matching"_lang);
             }
 
-            ImGui::NewLine();
-            ImGui::TextUnformatted("hex.builtin.view.yara.header.matches"_lang);
-            ImGui::Separator();
+            ImGui::Header("hex.builtin.view.yara.header.matches"_lang);
 
             auto matchesTableSize = ImGui::GetContentRegionAvail();
             matchesTableSize.y *= 3.75 / 5.0;

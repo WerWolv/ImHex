@@ -308,8 +308,7 @@ namespace ImGui {
     void Header(const char *label, bool firstEntry) {
         if (!firstEntry)
             ImGui::NewLine();
-        ImGui::TextUnformatted(label);
-        ImGui::Separator();
+        ImGui::SeparatorText(label);
     }
 
     void HeaderColored(const char *label, ImColor color, bool firstEntry) {
