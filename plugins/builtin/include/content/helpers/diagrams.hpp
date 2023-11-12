@@ -6,6 +6,7 @@
 #include <implot.h>
 
 #include <hex/providers/provider.hpp>
+#include <hex/api/localization.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 #include <imgui_internal.h>
