@@ -50,6 +50,25 @@ add_imhex_plugin(
         source/content/providers/motorola_srec_provider.cpp
         source/content/providers/memory_file_provider.cpp
 
+        source/content/tools/ascii_table.cpp
+        source/content/tools/base_converter.cpp
+        source/content/tools/byte_swapper.cpp
+        source/content/tools/color_picker.cpp
+        source/content/tools/demangler.cpp
+        source/content/tools/euclidean_alg.cpp
+        source/content/tools/file_tool_shredder.cpp
+        source/content/tools/file_tool_splitter.cpp
+        source/content/tools/file_tool_combiner.cpp
+        source/content/tools/file_uploader.cpp
+        source/content/tools/graphing_calc.cpp
+        source/content/tools/ieee_decoder.cpp
+        source/content/tools/math_eval.cpp
+        source/content/tools/multiplication_decoder.cpp
+        source/content/tools/perms_calc.cpp
+        source/content/tools/regex_replacer.cpp
+        source/content/tools/tcp_client_server.cpp
+        source/content/tools/wiki_explainer.cpp
+
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
         source/content/views/view_pattern_data.cpp
