@@ -1,25 +1,25 @@
 [submodule "lib/external/nativefiledialog"]
-	path = lib/external/nativefiledialog
+	path = lib/third_party/nativefiledialog
 	url = https://github.com/btzy/nativefiledialog-extended
 	ignore = dirty
 [submodule "lib/external/yara/yara"]
-	path = lib/external/yara/yara
+	path = lib/third_party/yara/yara
 	url = https://github.com/VirusTotal/yara
 	ignore = dirty
 [submodule "lib/external/xdgpp"]
-	path = lib/external/xdgpp
+	path = lib/third_party/xdgpp
 	url = https://git.sr.ht/~danyspin97/xdgpp
 	ignore = dirty
 [submodule "lib/external/fmt"]
-	path = lib/external/fmt
+	path = lib/third_party/fmt
 	url = https://github.com/fmtlib/fmt
 	ignore = dirty
 [submodule "lib/external/capstone"]
-	path = lib/external/capstone
+	path = lib/third_party/capstone
 	url = https://github.com/capstone-engine/capstone
 	ignore = dirty
 [submodule "lib/external/jthread/jthread"]
-    path = lib/external/jthread/jthread
+	path = lib/third_party/jthread/jthread
     url = https://github.com/josuttis/jthread
     ignore = dirty
 
