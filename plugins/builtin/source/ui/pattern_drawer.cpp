@@ -279,7 +279,13 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
-        const auto value = pattern.getFormattedValue();
+        std::string value;
+
+        try {
+            value = pattern.getFormattedValue();
+        } catch (const std::exception &e) {
+            value = e.what();
+        }
 
         const auto width = ImGui::GetColumnWidth();
         if (const auto &visualizeArgs = pattern.getAttributeArguments("hex::visualize"); !visualizeArgs.empty()) {
