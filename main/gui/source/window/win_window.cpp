@@ -194,6 +194,8 @@ namespace hex {
                     break;
                 }
 
+                std::string_view hoveredWindowName = GImGui->HoveredWindow == nullptr ? "" : GImGui->HoveredWindow->Name;
+
                 switch (result) {
                     case RegionLeft:
                         return HTLEFT;
@@ -213,9 +215,10 @@ namespace hex {
                         return HTBOTTOMRIGHT;
                     case RegionClient:
                     default:
-                        if ((cursor.y < (window.top + g_titleBarHeight * 2)) && !(ImGui::IsAnyItemHovered() || ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)))
+                        if ((cursor.y < (window.top + g_titleBarHeight * 2)) && !ImGui::IsAnyItemHovered() && (hoveredWindowName == "##MainMenuBar" || hoveredWindowName == "ImHexDockSpace"))
                             return HTCAPTION;
-                        else break;
+                        else
+                            break;
                 }
                 break;
             }
