@@ -162,7 +162,7 @@ namespace hex::plugin::builtin {
             hex::unused(address, upperCase, startedEditing);
 
             if (size == ByteCount) {
-                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGui::getImGuiDataType<u8>(), data, ImGuiInputTextFlags_CharsScientific);
+                return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGui::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsScientific);
             }
             else
                 return false;

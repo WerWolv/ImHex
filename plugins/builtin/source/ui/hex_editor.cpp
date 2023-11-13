@@ -162,8 +162,11 @@ namespace hex::plugin::builtin::ui {
 
         if (this->m_shouldUpdateEditingValue && address == this->m_editingAddress) {
             this->m_shouldUpdateEditingValue = false;
-            this->m_editingBytes.resize(size);
-            std::memcpy(this->m_editingBytes.data(), data, size);
+
+            if (this->m_editingBytes.size() < size) {
+                this->m_editingBytes.resize(size);
+                std::memcpy(this->m_editingBytes.data(), data, size);
+            }
         }
 
         if (this->m_editingAddress != address || this->m_editingCellType != cellType) {
