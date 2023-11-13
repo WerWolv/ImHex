@@ -15,12 +15,14 @@
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
 
+#include <content/providers/undo_operations/operation_bookmark.hpp>
+
 namespace hex::plugin::builtin {
 
     ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name") {
 
         // Handle bookmark add requests sent by the API
-        EventManager::subscribe<RequestAddBookmark>(this, [this](Region region, std::string name, std::string comment, color_t color) {
+        EventManager::subscribe<RequestAddBookmark>(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
             if (name.empty()) {
                 name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
             }
@@ -28,18 +30,34 @@ namespace hex::plugin::builtin {
             if (color == 0x00)
                 color = ImGui::GetColorU32(ImGuiCol_Header);
 
-            this->m_bookmarks->push_back({
+            this->m_currBookmarkId += 1;
+            u64 bookmarkId = this->m_currBookmarkId;
+            if (id != nullptr)
+                *id = bookmarkId;
+
+            auto bookmark = ImHexApi::Bookmarks::Entry{
                 region,
                 name,
                 std::move(comment),
                 color,
-                false
-            });
+                false,
+                bookmarkId
+            };
+
+            ImHexApi::Provider::get()->addUndoableOperation<undo::OperationBookmark>(std::move(bookmark));
+
 
             ImHexApi::Provider::markDirty();
 
             EventManager::post<EventBookmarkCreated>(this->m_bookmarks->back());
             EventManager::post<EventHighlightingChanged>();
+
+        });
+
+        EventManager::subscribe<RequestRemoveBookmark>([this](u64 id) {
+            std::erase_if(this->m_bookmarks.get(), [id](const auto &bookmark) {
+                return bookmark.id == id;
+            });
         });
 
         // Draw hex editor background highlights for bookmarks
@@ -242,9 +260,9 @@ namespace hex::plugin::builtin {
             int id = 1;
             auto bookmarkToRemove = this->m_bookmarks->end();
 
-            // Draw all bookmarks
-            for (auto iter = this->m_bookmarks->begin(); iter != this->m_bookmarks->end(); iter++) {
-                auto &[region, name, comment, color, locked] = *iter;
+                // Draw all bookmarks
+                for (auto iter = this->m_bookmarks->begin(); iter != this->m_bookmarks->end(); iter++) {
+                    auto &[region, name, comment, color, locked, bookmarkId] = *iter;
 
                 // Apply filter
                 if (!this->m_currFilter.empty()) {
@@ -424,12 +442,18 @@ namespace hex::plugin::builtin {
                 continue;
 
             this->m_bookmarks.get(provider).push_back({
-                .region = { region["address"], region["size"] },
-                .name = bookmark["name"],
-                .comment = bookmark["comment"],
-                .color = bookmark["color"],
-                .locked = bookmark["locked"]
+                .region     = { region["address"], region["size"] },
+                .name       = bookmark["name"],
+                .comment    = bookmark["comment"],
+                .color      = bookmark["color"],
+                .locked     = bookmark["locked"],
+                .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : *this->m_currBookmarkId
             });
+
+            if (bookmark.contains("id"))
+                this->m_currBookmarkId = std::max<u64>(this->m_currBookmarkId, bookmark["id"].get<i64>() + 1);
+            else
+                this->m_currBookmarkId += 1;
         }
 
         return true;
@@ -440,15 +464,16 @@ namespace hex::plugin::builtin {
         size_t index = 0;
         for (const auto &bookmark : this->m_bookmarks.get(provider)) {
             json["bookmarks"][index] = {
-                    { "name", bookmark.name },
-                    { "comment", bookmark.comment },
-                    { "color", bookmark.color },
+                    { "name",       bookmark.name },
+                    { "comment",    bookmark.comment },
+                    { "color",      bookmark.color },
                     { "region", {
-                            { "address", bookmark.region.address },
-                            { "size", bookmark.region.size }
+                            { "address",    bookmark.region.address },
+                            { "size",       bookmark.region.size }
                         }
                     },
-                    { "locked", bookmark.locked }
+                    { "locked",     bookmark.locked },
+                    { "id",         bookmark.id }
             };
             index++;
         }

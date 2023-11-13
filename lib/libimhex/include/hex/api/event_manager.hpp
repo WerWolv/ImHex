@@ -254,7 +254,8 @@ namespace hex {
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);
-    EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t);
+    EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t, u64*);
+    EVENT_DEF(RequestRemoveBookmark, u64);
     EVENT_DEF(RequestSetPatternLanguageCode, std::string);
     EVENT_DEF(RequestLoadPatternLanguageFile, std::fs::path);
     EVENT_DEF(RequestSavePatternLanguageFile, std::fs::path);

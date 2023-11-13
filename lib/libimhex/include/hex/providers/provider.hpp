@@ -14,6 +14,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <hex/providers/undo_redo/stack.hpp>
+
 namespace hex::prv {
 
     /**
@@ -226,12 +228,20 @@ namespace hex::prv {
         void setErrorMessage(const std::string &errorMessage) { this->m_errorMessage = errorMessage; }
         [[nodiscard]] const std::string& getErrorMessage() const { return this->m_errorMessage; }
 
+        template<std::derived_from<undo::Operation> T>
+        void addUndoableOperation(auto && ... args) {
+            this->m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
+        }
+
     protected:
         u32 m_currPage    = 0;
         u64 m_baseAddress = 0;
 
         std::list<std::map<u64, u8>> m_patches;
         decltype(m_patches)::iterator m_currPatches;
+
+        undo::Stack m_undoRedoStack;
+
         std::list<std::unique_ptr<Overlay>> m_overlays;
 
         u32 m_id;

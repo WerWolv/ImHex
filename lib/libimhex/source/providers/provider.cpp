@@ -11,6 +11,10 @@
 #include <hex/helpers/magic.hpp>
 #include <wolv/io/file.hpp>
 
+#include <hex/providers/undo_redo/operations/operation_write.hpp>
+#include <hex/providers/undo_redo/operations/operation_remove.hpp>
+#include <hex/providers/undo_redo/operations/operation_insert.hpp>
+
 namespace hex::prv {
 
     namespace {
@@ -20,7 +24,7 @@ namespace hex::prv {
     }
 
 
-    Provider::Provider() : m_id(s_idCounter++) {
+    Provider::Provider() : m_undoRedoStack(this), m_id(s_idCounter++) {
         this->m_patches.emplace_back();
         this->m_currPatches = this->m_patches.begin();
     }
@@ -39,7 +43,10 @@ namespace hex::prv {
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
-        this->writeRaw(offset - this->getBaseAddress(), buffer, size);
+        std::vector<u8> oldData(size, 0x00);
+        this->read(offset, oldData.data(), size);
+
+        this->m_undoRedoStack.add<undo::OperationWrite>(offset, size, oldData.data(), static_cast<const u8*>(buffer));
         this->markDirty();
     }
 
@@ -78,12 +85,19 @@ namespace hex::prv {
     }
 
     void Provider::resize(size_t newSize) {
-        hex::unused(newSize);
+        i64 difference = newSize - this->getActualSize();
+
+        if (difference > 0)
+            this->m_undoRedoStack.add<undo::OperationInsert>(this->getActualSize(), difference);
+        else if (difference < 0)
+            this->m_undoRedoStack.add<undo::OperationRemove>(this->getActualSize(), -difference);
 
         this->markDirty();
     }
 
     void Provider::insert(u64 offset, size_t size) {
+        this->m_undoRedoStack.add<undo::OperationInsert>(offset, size);
+
         auto &patches = getPatches();
 
         std::vector<std::pair<u64, u8>> patchesToMove;
@@ -102,6 +116,8 @@ namespace hex::prv {
     }
 
     void Provider::remove(u64 offset, size_t size) {
+        this->m_undoRedoStack.add<undo::OperationRemove>(offset, size);
+
         auto &patches = getPatches();
 
         std::vector<std::pair<u64, u8>> patchesToMove;
@@ -268,21 +284,19 @@ namespace hex::prv {
     }
 
     void Provider::undo() {
-        if (canUndo())
-            --this->m_currPatches;
+        this->m_undoRedoStack.undo();
     }
 
     void Provider::redo() {
-        if (canRedo())
-            ++this->m_currPatches;
+        this->m_undoRedoStack.redo();
     }
 
     bool Provider::canUndo() const {
-        return this->m_currPatches != this->m_patches.begin();
+        return this->m_undoRedoStack.canUndo();
     }
 
     bool Provider::canRedo() const {
-        return std::next(this->m_currPatches) != this->m_patches.end();
+        return this->m_undoRedoStack.canRedo();
     }
 
     bool Provider::hasFilePicker() const {

@@ -205,12 +205,19 @@ namespace hex {
 
     namespace ImHexApi::Bookmarks {
 
-        void add(Region region, const std::string &name, const std::string &comment, u32 color) {
-            EventManager::post<RequestAddBookmark>(region, name, comment, color);
+        u64 add(Region region, const std::string &name, const std::string &comment, u32 color) {
+            u64 id = 0;
+            EventManager::post<RequestAddBookmark>(region, name, comment, color, &id);
+
+            return id;
         }
 
-        void add(u64 address, size_t size, const std::string &name, const std::string &comment, u32 color) {
-            add(Region { address, size }, name, comment, color);
+        u64 add(u64 address, size_t size, const std::string &name, const std::string &comment, u32 color) {
+            return add(Region { address, size }, name, comment, color);
+        }
+
+        void remove(u64 id) {
+            EventManager::post<RequestRemoveBookmark>(id);
         }
 
     }

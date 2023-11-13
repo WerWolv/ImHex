@@ -38,6 +38,7 @@ set(LIBIMHEX_SOURCES
         source/helpers/debugging.cpp
 
         source/providers/provider.cpp
+        source/providers/undo/stack.cpp
 
         source/ui/imgui_imhex_extensions.cpp
         source/ui/view.cpp

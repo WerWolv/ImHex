@@ -42,27 +42,6 @@ namespace hex::plugin::builtin {
         return !this->getPatches().empty();
     }
 
-
-    void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-        this->readRaw(offset - this->getBaseAddress(), buffer, size);
-
-        if (overlays) [[likely]] {
-            for (const auto&[patchOffset, patchData] : getPatches()) {
-                if (patchOffset >= offset && patchOffset < (offset + size))
-                    static_cast<u8 *>(buffer)[patchOffset - offset] = patchData;
-            }
-
-            this->applyOverlays(offset, buffer, size);
-        }
-    }
-
-    void FileProvider::write(u64 offset, const void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
-            return;
-
-        addPatch(offset, buffer, size, true);
-    }
-
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
         auto actualSize = this->getActualSize();
         if (actualSize == 0 || (offset + size) > actualSize || buffer == nullptr || size == 0)
@@ -162,7 +141,6 @@ namespace hex::plugin::builtin {
 
         this->resize(newSize);
 
-        Provider::insert(offset, size);
         Provider::remove(offset, size);
     }
 
