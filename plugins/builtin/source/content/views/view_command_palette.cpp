@@ -12,6 +12,12 @@ namespace hex::plugin::builtin {
             this->m_commandPaletteOpen = true;
             this->m_justOpened         = true;
         });
+
+        EventManager::subscribe<EventSearchBoxClicked>([this] {
+            EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
+            this->m_commandPaletteOpen = true;
+            this->m_justOpened         = true;
+        });
     }
 
     void ViewCommandPalette::drawContent() {

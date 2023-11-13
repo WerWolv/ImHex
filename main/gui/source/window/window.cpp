@@ -245,7 +245,6 @@ namespace hex {
     }
 
     void Window::drawTitleBarBorderless() const {
-        auto startX = ImGui::GetCursorPosX();
         auto titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
         auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
@@ -292,8 +291,30 @@ namespace hex {
         ImGui::PopStyleColor(5);
         ImGui::PopStyleVar();
 
-        ImGui::SetCursorPosX(std::max(startX, (ImGui::GetWindowWidth() - ImGui::CalcTextSize(this->m_windowTitle.c_str()).x) / 2));
-        ImGui::TextUnformatted(this->m_windowTitle.c_str());
+        {
+            const auto windowSize = ImHexApi::System::getMainWindowSize();
+            const auto searchBoxSize = ImVec2(std::sqrt(windowSize.x) * 14_scaled, titleBarHeight - 3_scaled);
+            const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 3_scaled);
+
+            const auto buttonColor = [](float alpha) {
+                return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
+            };
+
+            ImGui::PushStyleColor(ImGuiCol_Button, buttonColor(0.5F));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, buttonColor(0.7F));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, buttonColor(0.9F));
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, scaled({ 1, 1 }));
+
+            ImGui::SetCursorPos(searchBoxPos);
+            if (ImGui::Button(this->m_windowTitle.c_str(), searchBoxSize)) {
+                EventManager::post<EventSearchBoxClicked>();
+            }
+
+            ImGui::PopStyleVar(3);
+            ImGui::PopStyleColor(3);
+        }
     }
 
     void Window::drawTitleBarBorder() {
@@ -481,17 +502,29 @@ namespace hex {
                     ImGui::EndPopup();
                 }
 
-                for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
-                    ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
-                    if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
+                const static auto drawMenu = [] {
+                    for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
+                        ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
+                        if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
+                            ImGui::EndMenu();
+                        }
+                        ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
+                    }
+
+                    for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                        const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
+                        createNestedMenu(unlocalizedNames, shortcut, callback, enabledCallback);
+                    }
+                };
+
+                const auto windowWidth = ImHexApi::System::getMainWindowSize().x;
+                if (windowWidth > 1200_scaled) {
+                    drawMenu();
+                } else {
+                    if (ImGui::BeginMenu(ICON_VS_MENU)) {
+                        drawMenu();
                         ImGui::EndMenu();
                     }
-                    ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
-                }
-
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                    const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
-                    createNestedMenu(unlocalizedNames, shortcut, callback, enabledCallback);
                 }
 
                 this->drawTitleBar();

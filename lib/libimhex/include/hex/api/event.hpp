@@ -237,6 +237,7 @@ namespace hex {
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
     EVENT_DEF(EventImHexClosing);
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
+    EVENT_DEF(EventSearchBoxClicked);
 
     /**
      * @brief Called when a project has been loaded
