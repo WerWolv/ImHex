@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
 
     };
     
-    void registerLogicDPNs() {
+    void registerLogicDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeBitwiseADD>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.add");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseAND>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.and");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseOR>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.or");
@@ -176,4 +176,5 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeBitwiseShiftRight>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.shift_right");
         ContentRegistry::DataProcessorNode::add<NodeBitwiseSwap>("hex.builtin.nodes.bitwise", "hex.builtin.nodes.bitwise.swap");   
     }
+
 }

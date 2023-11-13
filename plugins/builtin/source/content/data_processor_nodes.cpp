@@ -3,12 +3,13 @@
 namespace hex::plugin::builtin {
 
     void registerDataProcessorNodes() {
-        registerBasicDPNs();
-        registerVisualDPNs();
-        registerLogicDPNs();
-        registerControlDPNs();
-        registerDecodeDPNs();
-        registerMathDPNs();
-        registerOtherDPNs();
+        registerBasicDataProcessorNodes();
+        registerVisualDataProcessorNodes();
+        registerLogicDataProcessorNodes();
+        registerControlDataProcessorNodes();
+        registerDecodeDataProcessorNodes();
+        registerMathDataProcessorNodes();
+        registerOtherDataProcessorNodes();
     }
+    
 }

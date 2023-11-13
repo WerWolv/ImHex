@@ -427,7 +427,7 @@ namespace hex::plugin::builtin {
 
     };
 
-    void registerOtherDPNs() {
+    void registerOtherDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeReadData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.read");
         ContentRegistry::DataProcessorNode::add<NodeWriteData>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.write");
         ContentRegistry::DataProcessorNode::add<NodeDataSize>("hex.builtin.nodes.data_access", "hex.builtin.nodes.data_access.size");
@@ -453,4 +453,5 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::DataProcessorNode::add<NodePatternLanguageOutVariable>("hex.builtin.nodes.pattern_language", "hex.builtin.nodes.pattern_language.out_var");
     }
+
 }

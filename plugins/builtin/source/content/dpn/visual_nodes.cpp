@@ -173,11 +173,12 @@ namespace hex::plugin::builtin {
         std::string m_display = "???";
     };
 
-    void registerVisualDPNs() {
+    void registerVisualDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeDisplayInteger>("hex.builtin.nodes.display", "hex.builtin.nodes.display.int");
         ContentRegistry::DataProcessorNode::add<NodeDisplayFloat>("hex.builtin.nodes.display", "hex.builtin.nodes.display.float");
         ContentRegistry::DataProcessorNode::add<NodeDisplayBuffer>("hex.builtin.nodes.display", "hex.builtin.nodes.display.buffer");
         ContentRegistry::DataProcessorNode::add<NodeDisplayString>("hex.builtin.nodes.display", "hex.builtin.nodes.display.string");
         ContentRegistry::DataProcessorNode::add<NodeDisplayBits>("hex.builtin.nodes.display", "hex.builtin.nodes.display.bits");
     }
+
 }

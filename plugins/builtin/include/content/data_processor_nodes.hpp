@@ -1,11 +1,13 @@
 #include <hex/data_processor/node.hpp>
 
 namespace hex::plugin::builtin {
-    void registerBasicDPNs();
-    void registerVisualDPNs();
-    void registerLogicDPNs();
-    void registerControlDPNs();
-    void registerDecodeDPNs();
-    void registerMathDPNs();
-    void registerOtherDPNs();
+
+    void registerBasicDataProcessorNodes();
+    void registerVisualDataProcessorNodes();
+    void registerLogicDataProcessorNodes();
+    void registerControlDataProcessorNodes();
+    void registerDecodeDataProcessorNodes();
+    void registerMathDataProcessorNodes();
+    void registerOtherDataProcessorNodes();
+
 }

@@ -115,9 +115,10 @@ namespace hex::plugin::builtin {
         }
     };
 
-    void registerDecodeDPNs() {
+    void registerDecodeDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeDecodingBase64>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.base64");
         ContentRegistry::DataProcessorNode::add<NodeDecodingHex>("hex.builtin.nodes.decoding", "hex.builtin.nodes.decoding.hex");
         ContentRegistry::DataProcessorNode::add<NodeCryptoAESDecrypt>("hex.builtin.nodes.crypto", "hex.builtin.nodes.crypto.aes");
     }
+
 }

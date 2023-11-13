@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
         }
     };
         
-    void registerMathDPNs() {
+    void registerMathDataProcessorNodes() {
         ContentRegistry::DataProcessorNode::add<NodeArithmeticAdd>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.add");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticSubtract>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.sub");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticMultiply>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.mul");
@@ -163,4 +163,5 @@ namespace hex::plugin::builtin {
         ContentRegistry::DataProcessorNode::add<NodeArithmeticFloor>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.floor");
         ContentRegistry::DataProcessorNode::add<NodeArithmeticRound>("hex.builtin.nodes.arithmetic", "hex.builtin.nodes.arithmetic.round");
     }
+
 }
