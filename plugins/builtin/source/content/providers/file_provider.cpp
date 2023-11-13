@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
     }
 
     bool FileProvider::isSavable() const {
-        return !this->getPatches().empty();
+        return this->m_undoRedoStack.canUndo();
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
@@ -58,8 +58,6 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::save() {
-        this->applyPatches();
-
         #if defined(OS_WINDOWS)
             FILETIME ft;
             SYSTEMTIME st;

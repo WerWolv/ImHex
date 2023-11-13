@@ -18,13 +18,17 @@ namespace hex::plugin::builtin {
             .required = false,
             .load = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 auto json = nlohmann::json::parse(tar.readString(basePath));
-                provider->getPatches() = json.at("patches").get<std::map<u64, u8>>();
+                auto patches = json.at("patches").get<std::map<u64, u8>>();
+
+                for (const auto &[address, value] : patches) {
+                    provider->write(address, &value, sizeof(value));
+                }
+
+                provider->getUndoStack().groupOperations(patches.size());
+
                 return true;
             },
-            .store = [](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                nlohmann::json json;
-                json["patches"] = provider->getPatches();
-                tar.writeString(basePath, json.dump(4));
+            .store = [](prv::Provider *, const std::fs::path &, Tar &) {
 
                 return true;
             }
@@ -41,11 +45,14 @@ namespace hex::plugin::builtin {
             u8 byte = 0x00;
             provider->read(offset, &byte, sizeof(u8), false);
 
-            const auto &patches = provider->getPatches();
-            if (patches.contains(offset) && patches.at(offset) != byte)
-                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
-            else
-                return std::nullopt;
+                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+            const auto &undoStack = provider->getUndoStack();
+            for (const auto &operation : undoStack.getOperations()) {
+                if (offset >= operation->getRegion().getStartAddress() && offset <= operation->getRegion().getEndAddress())
+                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
+            }
+
+            return std::nullopt;
         });
 
         EventManager::subscribe<EventProviderSaved>([](auto *) {
@@ -58,59 +65,57 @@ namespace hex::plugin::builtin {
 
         if (ImHexApi::Provider::isValid() && provider->isReadable()) {
 
-            if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
-                ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.builtin.view.patches.offset"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.patches.orig"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.patches.patch"_lang);
+                if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+                    ImGui::TableSetupScrollFreeze(0, 1);
+                    ImGui::TableSetupColumn("hex.builtin.view.patches.id"_lang);
+                    ImGui::TableSetupColumn("hex.builtin.view.patches.offset"_lang);
+                    ImGui::TableSetupColumn("hex.builtin.view.patches.patch"_lang);
 
                 ImGui::TableHeadersRow();
 
-                auto &patches = provider->getPatches();
-                u32 index     = 0;
+                    auto &operations = provider->getUndoStack().getOperations();
+                    u32 index     = 0;
 
                 ImGuiListClipper clipper;
 
-                clipper.Begin(patches.size());
-                while (clipper.Step()) {
-                    auto iter = patches.begin();
-                    for (auto i = 0; i < clipper.DisplayStart; i++)
-                        ++iter;
+                    clipper.Begin(operations.size());
+                    while (clipper.Step()) {
+                        auto iter = operations.begin();
+                        for (auto i = 0; i < clipper.DisplayStart; i++)
+                            ++iter;
 
-                    for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        const auto &[address, patch] = *iter;
+                        for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                            const auto &operation = *iter;
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        if (ImGui::Selectable(("##patchLine" + std::to_string(index)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            ImHexApi::HexEditor::setSelection(address, 1);
+                            ImGui::TextFormatted("{}", index);
+
+                            ImGui::TableNextColumn();
+
+                            const auto [address, size] = operation->getRegion();
+
+                            if (ImGui::Selectable(("##patchLine" + std::to_string(index)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                                ImHexApi::HexEditor::setSelection(address, size);
+                            }
+                            if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
+                                ImGui::OpenPopup("PatchContextMenu");
+                                this->m_selectedPatch = address;
+                            }
+                            ImGui::SameLine();
+                            ImGuiExt::TextFormatted("0x{0:08X}", address);
+
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormatted("{}", operation->format());
+                            index += 1;
+
+                            ++iter;
                         }
-                        if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
-                            ImGui::OpenPopup("PatchContextMenu");
-                            this->m_selectedPatch = address;
-                        }
-                        ImGui::SameLine();
-                        ImGuiExt::TextFormatted("0x{0:08X}", address);
-
-                        ImGui::TableNextColumn();
-                        u8 previousValue = 0x00;
-                        provider->readRaw(address, &previousValue, sizeof(u8));
-                        ImGuiExt::TextFormatted("0x{0:02X}", previousValue);
-
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("0x{0:02X}", patch);
-                        index += 1;
-
-                        iter++;
                     }
                 }
 
-                if (ImGui::BeginPopup("PatchContextMenu")) {
-                    if (ImGui::MenuItem("hex.builtin.view.patches.remove"_lang)) {
-                        patches.erase(this->m_selectedPatch);
-                    }
-                    ImGui::EndPopup();
+                    ImGui::EndTable();
                 }
 
                 ImGui::EndTable();
@@ -120,9 +125,9 @@ namespace hex::plugin::builtin {
 
     void ViewPatches::drawAlwaysVisibleContent() {
         if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
-            const auto &patches = provider->getPatches();
-            if (this->m_numPatches.get(provider) != patches.size()) {
-                this->m_numPatches.get(provider) = patches.size();
+            const auto &operations = provider->getUndoStack().getOperations();
+            if (this->m_numOperations.get(provider) != operations.size()) {
+                this->m_numOperations.get(provider) = operations.size();
                 EventManager::post<EventHighlightingChanged>();
             }
         }

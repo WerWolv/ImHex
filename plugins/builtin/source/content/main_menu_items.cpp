@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
-                    auto patch     = hex::loadIPSPatch(patchData);
+                    auto patch = Patches::fromIPSPatch(patchData);
                     if (!patch.has_value()) {
                         handleIPSError(patch.error());
                         return;
@@ -117,14 +117,14 @@ namespace hex::plugin::builtin {
 
                     auto provider = ImHexApi::Provider::get();
 
-                    u64 progress = 0;
+                    u64 count = 0;
                     for (auto &[address, value] : *patch) {
-                        provider->addPatch(address, &value, 1);
-                        progress++;
-                        task.update(progress);
+                        provider->write(address, &value, sizeof(value));
+                        count += 1;
+                        task.update(count);
                     }
 
-                    provider->createUndoPoint();
+                    provider->getUndoStack().groupOperations(count);
                 });
             });
         }
@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
-                    auto patch = hex::loadIPS32Patch(patchData);
+                    auto patch = Patches::fromIPS32Patch(patchData);
                     if (!patch.has_value()) {
                         handleIPSError(patch.error());
                         return;
@@ -143,14 +143,14 @@ namespace hex::plugin::builtin {
 
                     auto provider = ImHexApi::Provider::get();
 
-                    u64 progress = 0;
+                    u64 count = 0;
                     for (auto &[address, value] : *patch) {
-                        provider->addPatch(address, &value, 1);
-                        progress++;
-                        task.update(progress);
+                        provider->write(address, &value, sizeof(value));
+                        count += 1;
+                        task.update(count);
                     }
 
-                    provider->createUndoPoint();
+                    provider->getUndoStack().groupOperations(count);
                 });
             });
         }
@@ -179,14 +179,14 @@ namespace hex::plugin::builtin {
 
                     task.setMaxValue(patches.size());
 
-                    u64 progress = 0;
+                    u64 count = 0;
                     for (auto &[address, value] : patches) {
-                        provider->addPatch(address, &value, 1);
-                        progress++;
-                        task.update(progress);
+                        provider->write(address, &value, sizeof(value));
+                        count += 1;
+                        task.update(count);
                     }
 
-                    provider->createUndoPoint();
+                    provider->getUndoStack().groupOperations(count);
                 });
             });
         }
@@ -281,17 +281,21 @@ namespace hex::plugin::builtin {
         void exportIPSPatch() {
             auto provider = ImHexApi::Provider::get();
 
-            Patches patches = provider->getPatches();
+            auto patches = Patches::fromProvider(provider);
+            if (!patches.has_value()) {
+                handleIPSError(patches.error());
+                return;
+            }
 
             // Make sure there's no patch at address 0x00454F46 because that would cause the patch to contain the sequence "EOF" which signals the end of the patch
-            if (!patches.contains(0x00454F45) && patches.contains(0x00454F46)) {
+            if (!patches->contains(0x00454F45) && patches->contains(0x00454F46)) {
                 u8 value = 0;
                 provider->read(0x00454F45, &value, sizeof(u8));
-                patches[0x00454F45] = value;
+                patches->at(0x00454F45) = value;
             }
 
             TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {
-                auto data = generateIPSPatch(patches);
+                auto data = patches->toIPSPatch();
 
                 TaskManager::doLater([data] {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
@@ -316,17 +320,21 @@ namespace hex::plugin::builtin {
         void exportIPS32Patch() {
             auto provider = ImHexApi::Provider::get();
 
-            Patches patches = provider->getPatches();
+            auto patches = Patches::fromProvider(provider);
+            if (!patches.has_value()) {
+                handleIPSError(patches.error());
+                return;
+            }
 
             // Make sure there's no patch at address 0x45454F46 because that would cause the patch to contain the sequence "*EOF" which signals the end of the patch
-            if (!patches.contains(0x45454F45) && patches.contains(0x45454F46)) {
+            if (!patches->contains(0x45454F45) && patches->contains(0x45454F46)) {
                 u8 value = 0;
                 provider->read(0x45454F45, &value, sizeof(u8));
-                patches[0x45454F45] = value;
+                patches->at(0x45454F45) = value;
             }
 
             TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {
-                auto data = generateIPS32Patch(patches);
+                auto data = patches->toIPS32Patch();
 
                 TaskManager::doLater([data] {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {

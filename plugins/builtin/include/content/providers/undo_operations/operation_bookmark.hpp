@@ -29,6 +29,14 @@ namespace hex::plugin::builtin::undo {
             return hex::format("Bookmark {} created", this->m_entry.name);
         }
 
+        std::unique_ptr<Operation> clone() const override {
+            return std::make_unique<OperationBookmark>(*this);
+        }
+
+        [[nodiscard]] Region getRegion() const override {
+            return this->m_entry.region;
+        }
+
     private:
         ImHexApi::Bookmarks::Entry m_entry;
     };

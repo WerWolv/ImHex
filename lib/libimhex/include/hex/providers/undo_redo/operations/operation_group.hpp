@@ -11,6 +11,11 @@ namespace hex::prv::undo {
     public:
         OperationGroup() = default;
 
+        OperationGroup(const OperationGroup &other) {
+            for (const auto &operation : other.m_operations)
+                this->m_operations.emplace_back(operation->clone());
+        }
+
         void undo(Provider *provider) override {
             for (auto &operation : this->m_operations)
                 operation->undo(provider);
@@ -27,6 +32,24 @@ namespace hex::prv::undo {
 
         [[nodiscard]] std::string format() const override {
             return hex::format("Group of {} operations", this->m_operations.size());
+        }
+
+        [[nodiscard]] Region getRegion() const override {
+            u64 minAddress = std::numeric_limits<u64>::max();
+            u64 maxAddress = std::numeric_limits<u64>::min();
+
+            for (const auto &operation : this->m_operations) {
+                const auto [address, size] = operation->getRegion();
+
+                minAddress = std::min(minAddress, address);
+                maxAddress = std::max(maxAddress, address + size);
+            }
+
+            return { minAddress, (maxAddress - minAddress) + 1 };
+        }
+
+        std::unique_ptr<Operation> clone() const override {
+            return std::make_unique<OperationGroup>(*this);
         }
 
     private:

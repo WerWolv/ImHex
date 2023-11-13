@@ -8,16 +8,23 @@
 
 namespace hex::prv::undo {
 
+    namespace {
+
+        std::atomic_bool s_locked;
+        std::mutex s_mutex;
+
+    }
+
     Stack::Stack(Provider *provider) : m_provider(provider) {
 
     }
 
 
     void Stack::undo(u32 count) {
-        std::scoped_lock lock(this->m_mutex);
+        std::scoped_lock lock(s_mutex);
 
-        this->m_locked = true;
-        ON_SCOPE_EXIT { this->m_locked = false; };
+        s_locked = true;
+        ON_SCOPE_EXIT { s_locked = false; };
 
         // If there are no operations, we can't undo anything.
         if (this->m_undoStack.empty())
@@ -37,10 +44,10 @@ namespace hex::prv::undo {
     }
 
     void Stack::redo(u32 count) {
-        std::scoped_lock lock(this->m_mutex);
+        std::scoped_lock lock(s_mutex);
 
-        this->m_locked = true;
-        ON_SCOPE_EXIT { this->m_locked = false; };
+        s_locked = true;
+        ON_SCOPE_EXIT { s_locked = false; };
 
         // If there are no operations, we can't redo anything.
         if (this->m_redoStack.empty())
@@ -76,16 +83,23 @@ namespace hex::prv::undo {
         this->add(std::move(operation));
     }
 
+    void Stack::apply(const Stack &otherStack) {
+        for (const auto &operation : otherStack.m_undoStack) {
+            this->add(operation->clone());
+        }
+    }
+
+
 
     void Stack::add(std::unique_ptr<Operation> &&operation) {
         // If we're already inside of an undo/redo operation, ignore new operations being added
-        if (this->m_locked)
+        if (s_locked)
             return;
 
-        this->m_locked = true;
-        ON_SCOPE_EXIT { this->m_locked = false; };
+        s_locked = true;
+        ON_SCOPE_EXIT { s_locked = false; };
 
-        std::scoped_lock lock(this->m_mutex);
+        std::scoped_lock lock(s_mutex);
 
         // Clear the redo stack
         this->m_redoStack.clear();

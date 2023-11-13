@@ -21,7 +21,15 @@ namespace hex::prv::undo {
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("Inserted {} at 0x{:04x}", this->m_offset, hex::toByteString(this->m_size));
+            return hex::format("Removed {} at 0x{:04x}", hex::toByteString(this->m_size), this->m_offset);
+        }
+
+        std::unique_ptr<Operation> clone() const override {
+            return std::make_unique<OperationInsert>(*this);
+        }
+
+        [[nodiscard]] Region getRegion() const override {
+            return { this->m_offset, this->m_size };
         }
 
     private:

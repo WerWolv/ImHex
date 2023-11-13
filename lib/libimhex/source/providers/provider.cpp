@@ -5,7 +5,6 @@
 
 #include <cmath>
 #include <cstring>
-#include <map>
 #include <optional>
 
 #include <hex/helpers/magic.hpp>
@@ -25,8 +24,7 @@ namespace hex::prv {
 
 
     Provider::Provider() : m_undoRedoStack(this), m_id(s_idCounter++) {
-        this->m_patches.emplace_back();
-        this->m_currPatches = this->m_patches.begin();
+
     }
 
     Provider::~Provider() {
@@ -75,11 +73,6 @@ namespace hex::prv {
                 file.writeBuffer(buffer.data(), bufferSize);
             }
 
-            for (auto &[patchAddress, patch] : getPatches()) {
-                file.seek(patchAddress - this->getBaseAddress());
-                file.writeBuffer(&patch, 1);
-            }
-
             EventManager::post<EventProviderSaved>(this);
         }
     }
@@ -98,39 +91,11 @@ namespace hex::prv {
     void Provider::insert(u64 offset, size_t size) {
         this->m_undoRedoStack.add<undo::OperationInsert>(offset, size);
 
-        auto &patches = getPatches();
-
-        std::vector<std::pair<u64, u8>> patchesToMove;
-
-        for (auto &[address, value] : patches) {
-            if (address > offset)
-                patchesToMove.emplace_back(address, value);
-        }
-
-        for (const auto &[address, value] : patchesToMove)
-            patches.erase(address);
-        for (const auto &[address, value] : patchesToMove)
-            patches.insert({ address + size, value });
-
         this->markDirty();
     }
 
     void Provider::remove(u64 offset, size_t size) {
         this->m_undoRedoStack.add<undo::OperationRemove>(offset, size);
-
-        auto &patches = getPatches();
-
-        std::vector<std::pair<u64, u8>> patchesToMove;
-
-        for (auto &[address, value] : patches) {
-            if (address > offset)
-                patchesToMove.emplace_back(address, value);
-        }
-
-        for (const auto &[address, value] : patchesToMove)
-            patches.erase(address);
-        for (const auto &[address, value] : patchesToMove)
-            patches.insert({ address - size, value });
 
         this->markDirty();
     }
@@ -146,38 +111,6 @@ namespace hex::prv {
                 std::memcpy(static_cast<u8 *>(buffer) + std::max<i128>(0, overlapMin - offset), overlay->getData().data() + std::max<i128>(0, overlapMin - overlayOffset), overlapMax - overlapMin);
         }
     }
-
-
-    std::map<u64, u8> &Provider::getPatches() {
-        return *this->m_currPatches;
-    }
-
-    const std::map<u64, u8> &Provider::getPatches() const {
-        return *this->m_currPatches;
-    }
-
-    void Provider::applyPatches() {
-        if (!this->isWritable())
-            return;
-
-        this->m_patches.emplace_back();
-
-        for (auto &[patchAddress, patch] : getPatches()) {
-            u8 value = 0x00;
-            this->readRaw(patchAddress - this->getBaseAddress(), &value, 1);
-            this->m_patches.back().insert({ patchAddress, value });
-        }
-
-        for (auto &[patchAddress, patch] : getPatches()) {
-            this->writeRaw(patchAddress - this->getBaseAddress(), &patch, 1);
-        }
-
-        this->markDirty();
-
-        this->m_patches.emplace_back();
-        this->m_currPatches = std::prev(this->m_patches.end());
-    }
-
 
     Overlay *Provider::newOverlay() {
         return this->m_overlays.emplace_back(std::make_unique<Overlay>()).get();
@@ -251,38 +184,6 @@ namespace hex::prv {
         return { };
     }
 
-    void Provider::addPatch(u64 offset, const void *buffer, size_t size, bool createUndo) {
-        if (createUndo) {
-            // Delete all patches after the current one if a modification is made while
-            // the current patch list is not at the end of the undo stack
-            if (std::next(this->m_currPatches) != this->m_patches.end())
-                this->m_patches.erase(std::next(this->m_currPatches), this->m_patches.end());
-
-            createUndoPoint();
-        }
-
-        for (u64 i = 0; i < size; i++) {
-            u8 patch         = static_cast<const u8 *>(buffer)[i];
-            u8 originalValue = 0x00;
-            this->readRaw((offset + i) - this->getBaseAddress(), &originalValue, sizeof(u8));
-
-            if (patch == originalValue)
-                getPatches().erase(offset + i);
-            else
-                getPatches()[offset + i] = patch;
-
-            EventManager::post<EventPatchCreated>(offset, originalValue, patch);
-        }
-
-        this->markDirty();
-
-    }
-
-    void Provider::createUndoPoint() {
-        this->m_patches.push_back(getPatches());
-        this->m_currPatches = std::prev(this->m_patches.end());
-    }
-
     void Provider::undo() {
         this->m_undoRedoStack.undo();
     }
@@ -353,14 +254,6 @@ namespace hex::prv {
             if (Region { address, 1 }.overlaps(overlayRegion)) {
                 insideValidRegion = true;
             }
-        }
-
-        for (const auto &[patchAddress, value] : this->m_patches.back()) {
-            if (!nextRegionAddress.has_value() || patchAddress < nextRegionAddress)
-                nextRegionAddress = patchAddress;
-
-            if (address == patchAddress)
-                insideValidRegion = true;
         }
 
         if (!nextRegionAddress.has_value())

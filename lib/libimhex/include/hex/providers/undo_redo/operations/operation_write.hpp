@@ -26,6 +26,14 @@ namespace hex::prv::undo {
             return hex::format("Written {} at 0x{:04X}", hex::toByteString(this->m_newData.size()), this->m_offset);
         }
 
+        std::unique_ptr<Operation> clone() const override {
+            return std::make_unique<OperationWrite>(*this);
+        }
+
+        [[nodiscard]] Region getRegion() const override {
+            return { this->m_offset, this->m_oldData.size() };
+        }
+
     private:
         u64 m_offset;
         std::vector<u8> m_oldData, m_newData;

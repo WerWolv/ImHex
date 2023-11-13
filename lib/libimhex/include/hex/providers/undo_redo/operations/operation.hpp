@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <hex/helpers/concepts.hpp>
 
 namespace hex::prv {
     class Provider;
@@ -8,7 +9,7 @@ namespace hex::prv {
 
 namespace hex::prv::undo {
 
-    class Operation {
+    class Operation : public ICloneable<Operation> {
     public:
         virtual ~Operation() = default;
 
@@ -16,6 +17,7 @@ namespace hex::prv::undo {
         virtual void redo(Provider *provider) = 0;
 
         [[nodiscard]] virtual std::string format() const = 0;
+        [[nodiscard]] virtual Region getRegion() const = 0;
     };
 
 }

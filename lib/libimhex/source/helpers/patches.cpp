@@ -2,22 +2,108 @@
 
 #include <hex/helpers/utils.hpp>
 
+#include <hex/providers/provider.hpp>
+
 #include <cstring>
 #include <string_view>
 
+
 namespace hex {
 
-    static void pushStringBack(std::vector<u8> &buffer, const std::string &string) {
-        std::copy(string.begin(), string.end(), std::back_inserter(buffer));
+    namespace {
+
+        class PatchesGenerator : public hex::prv::Provider {
+        public:
+            explicit PatchesGenerator() = default;
+            ~PatchesGenerator() override = default;
+
+            [[nodiscard]] bool isAvailable() const override { return true; }
+            [[nodiscard]] bool isReadable()  const override { return true; }
+            [[nodiscard]] bool isWritable()  const override { return true; }
+            [[nodiscard]] bool isResizable() const override { return true; }
+            [[nodiscard]] bool isSavable()   const override { return false; }
+            [[nodiscard]] bool isSavableAsRecent() const override { return false; }
+
+            [[nodiscard]] bool open() override { return true; }
+            void close() override { }
+
+            void readRaw(u64 offset, void *buffer, size_t size) override {
+                hex::unused(offset, buffer, size);
+            }
+
+            void writeRaw(u64 offset, const void *buffer, size_t size) override {
+                for (u64 i = 0; i < size; i += 1)
+                    this->m_patches[offset] = static_cast<const u8*>(buffer)[i];
+            }
+
+            [[nodiscard]] size_t getActualSize() const override {
+                if (this->m_patches.empty())
+                    return 0;
+                else
+                    return this->m_patches.rbegin()->first;
+            }
+
+            void resize(size_t newSize) override {
+                hex::unused(newSize);
+            }
+
+            void insert(u64 offset, size_t size) override {
+                std::vector<std::pair<u64, u8>> patchesToMove;
+
+                for (auto &[address, value] : this->m_patches) {
+                    if (address > offset)
+                        patchesToMove.emplace_back(address, value);
+                }
+
+                for (const auto &[address, value] : patchesToMove)
+                    this->m_patches.erase(address);
+                for (const auto &[address, value] : patchesToMove)
+                    this->m_patches.insert({ address + size, value });
+            }
+
+            void remove(u64 offset, size_t size) override {
+                std::vector<std::pair<u64, u8>> patchesToMove;
+
+                for (auto &[address, value] : this->m_patches) {
+                    if (address > offset)
+                        patchesToMove.emplace_back(address, value);
+                }
+
+                for (const auto &[address, value] : patchesToMove)
+                    this->m_patches.erase(address);
+                for (const auto &[address, value] : patchesToMove)
+                    this->m_patches.insert({ address - size, value });
+            }
+
+            [[nodiscard]] std::string getName() const override {
+                return "";
+            }
+
+            [[nodiscard]] std::string getTypeName() const override { return ""; }
+
+            const std::map<u64, u8>& getPatches() const {
+                return this->m_patches;
+            }
+        private:
+            std::map<u64, u8> m_patches;
+        };
+
+
+        void pushStringBack(std::vector<u8> &buffer, const std::string &string) {
+            std::copy(string.begin(), string.end(), std::back_inserter(buffer));
+        }
+
+        template<typename T>
+        void pushBytesBack(std::vector<u8> &buffer, T bytes) {
+            buffer.resize(buffer.size() + sizeof(T));
+            std::memcpy((&buffer.back() - sizeof(T)) + 1, &bytes, sizeof(T));
+        }
+
     }
 
-    template<typename T>
-    static void pushBytesBack(std::vector<u8> &buffer, T bytes) {
-        buffer.resize(buffer.size() + sizeof(T));
-        std::memcpy((&buffer.back() - sizeof(T)) + 1, &bytes, sizeof(T));
-    }
 
-    wolv::util::Expected<std::vector<u8>, IPSError> generateIPSPatch(const Patches &patches) {
+
+    wolv::util::Expected<std::vector<u8>, IPSError> Patches::toIPSPatch() const {
         std::vector<u8> result;
 
         pushStringBack(result, "PATCH");
@@ -25,7 +111,7 @@ namespace hex {
         std::vector<u64> addresses;
         std::vector<u8> values;
 
-        for (const auto &[address, value] : patches) {
+        for (const auto &[address, value] : *this) {
             addresses.push_back(address);
             values.push_back(value);
         }
@@ -67,7 +153,7 @@ namespace hex {
         return result;
     }
 
-    wolv::util::Expected<std::vector<u8>, IPSError> generateIPS32Patch(const Patches &patches) {
+    wolv::util::Expected<std::vector<u8>, IPSError> Patches::toIPS32Patch() const {
         std::vector<u8> result;
 
         pushStringBack(result, "IPS32");
@@ -75,7 +161,7 @@ namespace hex {
         std::vector<u64> addresses;
         std::vector<u8> values;
 
-        for (const auto &[address, value] : patches) {
+        for (const auto &[address, value] : *this) {
             addresses.push_back(address);
             values.push_back(value);
         }
@@ -118,7 +204,21 @@ namespace hex {
         return result;
     }
 
-    wolv::util::Expected<Patches, IPSError> loadIPSPatch(const std::vector<u8> &ipsPatch) {
+    wolv::util::Expected<Patches, IPSError> Patches::fromProvider(hex::prv::Provider* provider) {
+        PatchesGenerator generator;
+
+        generator.getUndoStack().apply(provider->getUndoStack());
+
+        if (generator.getActualSize() > 0xFFFF'FFFF)
+            return wolv::util::Unexpected(IPSError::PatchTooLarge);
+
+        auto patches = generator.getPatches();
+
+        return Patches { { patches } };
+    }
+
+
+    wolv::util::Expected<Patches, IPSError> Patches::fromIPSPatch(const std::vector<u8> &ipsPatch) {
         if (ipsPatch.size() < (5 + 3))
             return wolv::util::Unexpected(IPSError::InvalidPatchHeader);
 
@@ -171,7 +271,7 @@ namespace hex {
             return wolv::util::Unexpected(IPSError::MissingEOF);
     }
 
-    wolv::util::Expected<Patches, IPSError> loadIPS32Patch(const std::vector<u8> &ipsPatch) {
+    wolv::util::Expected<Patches, IPSError> Patches::fromIPS32Patch(const std::vector<u8> &ipsPatch) {
         if (ipsPatch.size() < (5 + 4))
             return wolv::util::Unexpected(IPSError::InvalidPatchHeader);
 

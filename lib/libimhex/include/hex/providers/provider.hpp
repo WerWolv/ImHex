@@ -156,8 +156,6 @@ namespace hex::prv {
          */
         [[nodiscard]] virtual std::string getName() const = 0;
 
-
-
         virtual void resize(size_t newSize);
         virtual void insert(u64 offset, size_t size);
         virtual void remove(u64 offset, size_t size);
@@ -165,15 +163,9 @@ namespace hex::prv {
         virtual void save();
         virtual void saveAs(const std::fs::path &path);
 
-
-        void applyOverlays(u64 offset, void *buffer, size_t size) const;
-
-        [[nodiscard]] std::map<u64, u8> &getPatches();
-        [[nodiscard]] const std::map<u64, u8> &getPatches() const;
-        void applyPatches();
-
         [[nodiscard]] Overlay *newOverlay();
         void deleteOverlay(Overlay *overlay);
+        void applyOverlays(u64 offset, void *buffer, size_t size) const;
         [[nodiscard]] const std::list<std::unique_ptr<Overlay>> &getOverlays() const;
 
         [[nodiscard]] size_t getPageSize() const;
@@ -191,9 +183,6 @@ namespace hex::prv {
 
         [[nodiscard]] virtual std::vector<Description> getDataDescription() const;
         [[nodiscard]] virtual std::variant<std::string, i128> queryInformation(const std::string &category, const std::string &argument);
-
-        void addPatch(u64 offset, const void *buffer, size_t size, bool createUndo = false);
-        void createUndoPoint();
 
         void undo();
         void redo();
@@ -233,12 +222,11 @@ namespace hex::prv {
             this->m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
         }
 
+        [[nodiscard]] undo::Stack& getUndoStack() { return this->m_undoRedoStack; }
+
     protected:
         u32 m_currPage    = 0;
         u64 m_baseAddress = 0;
-
-        std::list<std::map<u64, u8>> m_patches;
-        decltype(m_patches)::iterator m_currPatches;
 
         undo::Stack m_undoRedoStack;
 

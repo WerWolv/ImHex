@@ -4,6 +4,7 @@
 #include <hex/providers/undo_redo/operations/operation.hpp>
 
 #include <atomic>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -14,6 +15,8 @@ namespace hex::prv {
 
 namespace hex::prv::undo {
 
+    using Patches = std::map<u64, u8>;
+
     class Stack {
     public:
         explicit Stack(Provider *provider);
@@ -22,6 +25,7 @@ namespace hex::prv::undo {
         void redo(u32 count = 1);
 
         void groupOperations(u32 count);
+        void apply(const Stack &otherStack);
 
         [[nodiscard]] bool canUndo() const;
         [[nodiscard]] bool canRedo() const;
@@ -32,8 +36,11 @@ namespace hex::prv::undo {
         }
 
         void add(std::unique_ptr<Operation> &&operation);
-    private:
 
+        const std::vector<std::unique_ptr<Operation>> &getOperations() const {
+            return this->m_undoStack;
+        }
+    private:
         [[nodiscard]] Operation* getLastOperation() const {
             return this->m_undoStack.back().get();
         }
@@ -41,9 +48,6 @@ namespace hex::prv::undo {
     private:
         std::vector<std::unique_ptr<Operation>> m_undoStack, m_redoStack;
         Provider *m_provider;
-
-        std::atomic_bool m_locked;
-        std::mutex m_mutex;
     };
 
 }
