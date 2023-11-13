@@ -114,8 +114,9 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Yara);
                 std::vector<std::fs::path> paths;
-                for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
+                for (const auto &path : basePaths) {
                     std::error_code error;
                     for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
                         if (!entry.is_regular_file()) continue;
@@ -125,7 +126,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                PopupFileChooser::open(paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
+                PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
                     [&](const auto &path) {
                         this->m_rules->push_back({ path.filename(), path });
                     });

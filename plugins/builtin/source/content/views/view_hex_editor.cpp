@@ -1067,8 +1067,9 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.custom_encoding" }, 5050,
                                                 Shortcut::None,
                                                 [this]{
+                                                    const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Encodings);
                                                     std::vector<std::fs::path> paths;
-                                                    for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Encodings)) {
+                                                    for (const auto &path : basePaths) {
                                                         std::error_code error;
                                                         for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
                                                             if (!entry.is_regular_file()) continue;
@@ -1077,7 +1078,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
+                                                    PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
                                                         TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);

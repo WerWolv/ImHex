@@ -1159,9 +1159,10 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, 4050, Shortcut::None,
                                                 [this] {
                                                     auto provider = ImHexApi::Provider::get();
+                                                    const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Patterns);
                                                     std::vector<std::fs::path> paths;
 
-                                                    for (const auto &imhexPath : fs::getDefaultPaths(fs::ImHexPath::Patterns)) {
+                                                    for (const auto &imhexPath : basePaths) {
                                                         if (!wolv::io::fs::exists(imhexPath)) continue;
 
                                                         std::error_code error;
@@ -1172,7 +1173,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+                                                    PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
                                                                                [this, provider](const std::fs::path &path) {
                                                                                    this->loadPatternFile(path, provider);
                                                                                    AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
