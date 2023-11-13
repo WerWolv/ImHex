@@ -43,6 +43,14 @@ add_imhex_plugin(
         source/content/achievements.cpp
         source/content/file_extraction.cpp
 
+        source/content/dpn/basic_nodes.cpp
+        source/content/dpn/control_nodes.cpp
+        source/content/dpn/decode_nodes.cpp
+        source/content/dpn/logic_nodes.cpp
+        source/content/dpn/math_nodes.cpp
+        source/content/dpn/other_nodes.cpp
+        source/content/dpn/visual_nodes.cpp
+
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp
         source/content/providers/disk_provider.cpp
