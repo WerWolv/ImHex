@@ -21,7 +21,9 @@ namespace hex::plugin::builtin {
             // Draw theme handlers
             ImGui::PushID(1);
 
+
             // Loop over each theme handler
+            bool anyColorHovered = false;
             for (auto &[name, handler] : ThemeManager::getThemeHandlers()) {
                 // Create a new collapsable header for each category
                 if (ImGui::CollapsingHeader(name.c_str())) {
@@ -37,6 +39,32 @@ namespace hex::plugin::builtin {
                             handler.setFunction(colorId, color);
                             EventManager::post<EventThemeChanged>();
                         }
+
+                        if (ImGui::IsItemHovered()) {
+                            anyColorHovered = true;
+
+                            if (!this->m_hoveredColorId.has_value()) {
+                                this->m_hoveredColorId      = colorId;
+                                this->m_startingColor       = color;
+                                this->m_hoveredHandlerName  = name;
+                            }
+                        }
+                    }
+                }
+
+                if (this->m_hoveredHandlerName == name && this->m_startingColor.has_value() && this->m_hoveredColorId.has_value()) {
+                    auto flashingColor = this->m_startingColor.value();
+
+                    const float flashProgress = std::min(1.0F, (1.0F + sinf(ImGui::GetTime() * 6) / 2.0F));
+                    flashingColor.Value.x = std::lerp(flashingColor.Value.x, 1.0F, flashProgress);
+                    flashingColor.Value.y = std::lerp(flashingColor.Value.y, 1.0F, flashProgress);;
+
+                    handler.setFunction(*this->m_hoveredColorId, flashingColor);
+
+                    if (!anyColorHovered) {
+                        handler.setFunction(this->m_hoveredColorId.value(), this->m_startingColor.value());
+                        this->m_startingColor.reset();
+                        this->m_hoveredColorId.reset();
                     }
                 }
             }
