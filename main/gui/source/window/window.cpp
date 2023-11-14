@@ -383,9 +383,19 @@ namespace hex {
             auto drawList = ImGui::GetWindowDrawList();
             ImGui::PopStyleVar();
 
+            bool shouldDrawSidebar = [] {
+                if (const auto &items = ContentRegistry::Interface::impl::getSidebarItems(); items.empty())
+                    return false;
+                else {
+                    return std::any_of(items.begin(), items.end(), [](const auto &item) {
+                        return item.enabledCallback();
+                    });
+                }
+            }();
+
             const auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
             auto sidebarPos   = ImGui::GetCursorPos() + ImVec2(0, menuBarHeight);
-            auto sidebarWidth = ContentRegistry::Interface::impl::getSidebarItems().empty() ? 0 : 20_scaled;
+            auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 
             ImGui::SetCursorPosX(sidebarWidth);
 
@@ -417,7 +427,7 @@ namespace hex {
             }
 
             // Render sidebar
-            {
+            if (shouldDrawSidebar) {
                 ImGui::SetCursorPos(sidebarPos);
 
                 static i32 openWindow = -1;
