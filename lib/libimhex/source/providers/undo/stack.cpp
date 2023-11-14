@@ -91,10 +91,10 @@ namespace hex::prv::undo {
 
 
 
-    void Stack::add(std::unique_ptr<Operation> &&operation) {
+    bool Stack::add(std::unique_ptr<Operation> &&operation) {
         // If we're already inside of an undo/redo operation, ignore new operations being added
         if (s_locked)
-            return;
+            return false;
 
         s_locked = true;
         ON_SCOPE_EXIT { s_locked = false; };
@@ -109,6 +109,8 @@ namespace hex::prv::undo {
 
         // Do the operation
         this->getLastOperation()->redo(this->m_provider);
+
+        return true;
     }
 
     bool Stack::canUndo() const {

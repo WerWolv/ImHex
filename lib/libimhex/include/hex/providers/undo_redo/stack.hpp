@@ -31,11 +31,11 @@ namespace hex::prv::undo {
         [[nodiscard]] bool canRedo() const;
 
         template<std::derived_from<Operation> T>
-        void add(auto && ... args) {
-            this->add(std::make_unique<T>(std::forward<decltype(args)>(args)...));
+        bool add(auto && ... args) {
+            return this->add(std::make_unique<T>(std::forward<decltype(args)>(args)...));
         }
 
-        void add(std::unique_ptr<Operation> &&operation);
+        bool add(std::unique_ptr<Operation> &&operation);
 
         const std::vector<std::unique_ptr<Operation>> &getOperations() const {
             return this->m_undoStack;

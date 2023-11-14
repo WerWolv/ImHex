@@ -218,8 +218,8 @@ namespace hex::prv {
         [[nodiscard]] const std::string& getErrorMessage() const { return this->m_errorMessage; }
 
         template<std::derived_from<undo::Operation> T>
-        void addUndoableOperation(auto && ... args) {
-            this->m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
+        bool addUndoableOperation(auto && ... args) {
+            return this->m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
         }
 
         [[nodiscard]] undo::Stack& getUndoStack() { return this->m_undoRedoStack; }

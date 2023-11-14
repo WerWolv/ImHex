@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
                     return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
             const auto &undoStack = provider->getUndoStack();
             for (const auto &operation : undoStack.getOperations()) {
-                if (offset >= operation->getRegion().getStartAddress() && offset <= operation->getRegion().getEndAddress())
+                if (operation->getRegion().overlaps(Region { offset, 1}))
                     return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
             }
 

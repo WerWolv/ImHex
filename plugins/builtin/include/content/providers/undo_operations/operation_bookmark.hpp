@@ -34,7 +34,7 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] Region getRegion() const override {
-            return this->m_entry.region;
+            return Region::Invalid();
         }
 
     private:
