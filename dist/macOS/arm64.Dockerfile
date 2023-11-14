@@ -146,18 +146,6 @@ RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/
     ccache -s
 EOF
 
-# package ImHex
-## install genisoimage
-RUN --mount=type=cache,target=/var/lib/apt/lists/ apt install -y genisoimage
-## Move everything that need to be packaged inside a directory
-RUN <<EOF
-set -xe
-cd /mnt/ImHex/build
-mkdir installDir
-mv imhex.app installDir
-EOF
-## generate dmg file
-RUN cd /mnt/ImHex/build && genisoimage -V imhex.app -D -R -apple -no-pad -o imhex.dmg installDir
 
 FROM scratch
-COPY --from=build /mnt/ImHex/build/imhex.dmg .
+COPY --from=build /mnt/ImHex/build/imhex.app .
