@@ -239,7 +239,7 @@ jobs:
         path: build/*.dmg
 
   macos-arm64:
-    runs-on: macos-12
+    runs-on: ubuntu-22.04
     name: 🍎 macOS 12.1 arm64
     steps:
     - name: 🧰 Checkout
