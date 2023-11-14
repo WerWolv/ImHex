@@ -32,18 +32,23 @@ RUN git clone https://github.com/file/file /mnt/file
 RUN --mount=type=cache,target=/var/lib/apt/lists/ apt install -y libtool autoconf
 
 # -- DOWNLOADING + BUILDING STUFF
-## Install libcurl dep
-RUN vcpkg install --triplet=arm-osx-mytriplet curl
-## Install mbedtls dep
-RUN vcpkg install --triplet=arm-osx-mytriplet mbedtls
-## Install freetype dep
-RUN vcpkg install --triplet=arm-osx-mytriplet freetype
-## Install jthread external library
-RUN vcpkg install --triplet=arm-osx-mytriplet josuttis-jthread
+
+ENV VCPKG_DEFAULT_BINARY_CACHE /cache/vcpkg
+RUN --mount=type=cache,target=/cache <<EOF
+## Install dependencies with vcpkg
+set -xe
+
+mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+
+vcpkg install --triplet=arm-osx-mytriplet curl
+vcpkg install --triplet=arm-osx-mytriplet mbedtls
+vcpkg install --triplet=arm-osx-mytriplet freetype
+vcpkg install --triplet=arm-osx-mytriplet josuttis-jthread
+EOF
 
 ## Install glfw3 dep
 ARG CUSTOM_GLFW
-RUN <<EOF
+RUN --mount=type=cache,target=/cache <<EOF
 set -xe
 if [ "$CUSTOM_GLFW" ]; then
     echo "Flag confirmation: using custom GLFW for software rendering"
