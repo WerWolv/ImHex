@@ -48,6 +48,7 @@ set -xe
 if [ "$CUSTOM_GLFW" ]; then
     echo "Flag confirmation: using custom GLFW for software rendering"
 else
+    echo "Flag confirmation: using system GLFW"
     vcpkg install --triplet=arm-osx-mytriplet glfw3
 fi
 EOF
