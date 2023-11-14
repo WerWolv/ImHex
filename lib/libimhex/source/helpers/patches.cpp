@@ -214,7 +214,7 @@ namespace hex {
 
         auto patches = generator.getPatches();
 
-        return Patches { { patches } };
+        return Patches(patches);
     }
 
 
