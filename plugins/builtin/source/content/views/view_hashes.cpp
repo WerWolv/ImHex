@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
                   m_hash(hash) { }
 
         void drawContent() override {
-            ImGui::Header(this->getUnlocalizedName().c_str(), true);
+            ImGuiExt::Header(this->getUnlocalizedName().c_str(), true);
 
             ImGui::PushItemWidth(-1);
             if (ImGui::InputTextMultiline("##input", this->m_input)) {
@@ -85,14 +85,14 @@ namespace hex::plugin::builtin {
                             for (auto &function : hashFunctions) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("{}", function.getName());
+                                ImGuiExt::TextFormatted("{}", function.getName());
 
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("    ");
+                                ImGuiExt::TextFormatted("    ");
 
                                 ImGui::TableNextColumn();
                                 if (provider != nullptr)
-                                    ImGui::TextFormatted("{}", crypt::encode16(function.get(*selection, provider)));
+                                    ImGuiExt::TextFormatted("{}", crypt::encode16(function.get(*selection, provider)));
                             }
 
                             ImGui::EndTable();
@@ -166,18 +166,18 @@ namespace hex::plugin::builtin {
 
                     // Check if no elements have been added
                     if (startPos == ImGui::GetCursorPosY()) {
-                        ImGui::TextFormattedCentered("hex.builtin.view.hashes.no_settings"_lang);
+                        ImGuiExt::TextFormattedCentered("hex.builtin.view.hashes.no_settings"_lang);
                     }
                 }
             }
             ImGui::EndChild();
 
 
-            ImGui::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, this->m_newHashName);
+            ImGuiExt::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, this->m_newHashName);
             ImGui::SameLine();
 
             ImGui::BeginDisabled(this->m_newHashName.empty() || this->m_selectedHash == nullptr);
-            if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                 if (this->m_selectedHash != nullptr) {
                     this->m_hashFunctions->push_back(this->m_selectedHash->create(this->m_newHashName));
                     AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.create_hash.name");
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
 
             ImGui::SameLine();
-            ImGui::HelpHover("hex.builtin.view.hashes.hover_info"_lang);
+            ImGuiExt::HelpHover("hex.builtin.view.hashes.hover_info"_lang);
 
             if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
                 ImGui::TableSetupColumn("hex.builtin.view.hashes.table.name"_lang);
@@ -215,7 +215,7 @@ namespace hex::plugin::builtin {
                     ImGui::PopStyleColor(3);
 
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{}", LangEntry(function.getType()->getUnlocalizedName()));
+                    ImGuiExt::TextFormatted("{}", LangEntry(function.getType()->getUnlocalizedName()));
 
                     ImGui::TableNextColumn();
                     std::string result;
@@ -230,11 +230,11 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    if (ImGuiExt::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         PopupTextHash::open(function);
                     }
                     ImGui::SameLine();
-                    if (ImGui::IconButton(ICON_VS_X, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                    if (ImGuiExt::IconButton(ICON_VS_X, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                         indexToRemove = i;
                     }
 

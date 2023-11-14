@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
         // Determine achievement border color based on unlock state
         const auto borderColor = [&] {
             if (achievement.isUnlocked())
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_AchievementUnlocked, 1.0F);
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AchievementUnlocked, 1.0F);
             else if (node->isUnlockable())
                 return ImGui::GetColorU32(ImGuiCol_Button, 1.0F);
             else
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
                         ImGui::Separator();
                         separator = true;
 
-                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "[ {} ]", LangEntry("hex.builtin.view.achievements.click"));
+                        ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "[ {} ]", LangEntry("hex.builtin.view.achievements.click"));
                     }
 
                     // Draw achievement description if available
@@ -128,7 +128,7 @@ namespace hex::plugin::builtin {
                         else
                             ImGui::NewLine();
 
-                        ImGui::TextFormattedWrapped("{}", LangEntry(desc));
+                        ImGuiExt::TextFormattedWrapped("{}", LangEntry(desc));
                     }
                     ImGui::EndDisabled();
                 }
@@ -415,7 +415,7 @@ namespace hex::plugin::builtin {
                     ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
 
                     // Draw unlock text
-                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "{}", "hex.builtin.view.achievements.unlocked"_lang);
+                    ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "{}", "hex.builtin.view.achievements.unlocked"_lang);
 
                     // Draw achievement icon
                     ImGui::Image(this->m_currAchievement->getIcon(), scaled({ 20, 20 }));
@@ -425,7 +425,7 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
 
                     // Draw name of achievement
-                    ImGui::TextFormattedWrapped("{}", LangEntry(this->m_currAchievement->getUnlocalizedName()));
+                    ImGuiExt::TextFormattedWrapped("{}", LangEntry(this->m_currAchievement->getUnlocalizedName()));
 
                     // Handle clicking on the popup
                     if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {

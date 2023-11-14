@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
 
             bool uploading = uploadProcess.valid() && uploadProcess.wait_for(0s) != std::future_status::ready;
 
-            ImGui::Header("hex.builtin.tools.file_uploader.control"_lang, true);
+            ImGuiExt::Header("hex.builtin.tools.file_uploader.control"_lang, true);
             if (!uploading) {
                 if (ImGui::Button("hex.builtin.tools.file_uploader.upload"_lang)) {
                     fs::openFileBrowser(fs::DialogMode::Open, {}, [&](auto path) {
@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
 
             ImGui::ProgressBar(request.getProgress(), ImVec2(0, 0), uploading ? nullptr : "Done!");
 
-            ImGui::Header("hex.builtin.tools.file_uploader.recent"_lang);
+            ImGuiExt::Header("hex.builtin.tools.file_uploader.recent"_lang);
 
             if (ImGui::BeginTable("##links", 3, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg, ImVec2(0, 200))) {
                 ImGui::TableSetupColumn("hex.builtin.common.file"_lang);
@@ -52,14 +52,14 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted(fileName.c_str());
 
                         ImGui::TableNextColumn();
-                        if (ImGui::Hyperlink(link.c_str())) {
+                        if (ImGuiExt::Hyperlink(link.c_str())) {
                             if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl))
                                 hex::openWebpage(link);
                             else
                                 ImGui::SetClipboardText(link.c_str());
                         }
 
-                        ImGui::InfoTooltip("hex.builtin.tools.file_uploader.tooltip"_lang);
+                        ImGuiExt::InfoTooltip("hex.builtin.tools.file_uploader.tooltip"_lang);
 
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(size.c_str());

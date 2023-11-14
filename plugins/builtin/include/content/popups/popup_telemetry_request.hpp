@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
 
         void drawContent() override {
             static std::string message = "hex.builtin.welcome.server_contact_text"_lang;
-            ImGui::TextFormattedWrapped("{}", message.c_str());
+            ImGuiExt::TextFormattedWrapped("{}", message.c_str());
             ImGui::NewLine();
 
             if(ImGui::CollapsingHeader("hex.builtin.welcome.server_contact.data_collected_title"_lang)) {
@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.version"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormattedWrapped("{}\n{}@{}\n{}",
+                    ImGuiExt::TextFormattedWrapped("{}\n{}@{}\n{}",
                                                 ImHexApi::System::getImHexVersion(),
                                                 ImHexApi::System::getCommitHash(true),
                                                 ImHexApi::System::getCommitBranch(),
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.os"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormattedWrapped("{}\n{}\n{}\n{}",
+                    ImGuiExt::TextFormattedWrapped("{}\n{}\n{}\n{}",
                                                 ImHexApi::System::getOSName(),
                                                 ImHexApi::System::getOSVersion(),
                                                 ImHexApi::System::getArchitecture(),

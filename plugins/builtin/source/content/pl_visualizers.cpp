@@ -96,14 +96,14 @@ namespace hex::plugin::builtin {
         }
 
         void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-            static ImGui::Texture texture;
+            static ImGuiExt::Texture texture;
             static float scale = 1.0F;
 
             if (shouldReset) {
                 auto pattern  = arguments[0].toPattern();
 
                 auto data = pattern->getBytes();
-                texture = ImGui::Texture(data.data(), data.size());
+                texture = ImGuiExt::Texture(data.data(), data.size());
                 scale = 200_scaled / texture.getSize().x;
             }
 
@@ -120,7 +120,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawBitmapVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-            static ImGui::Texture texture;
+            static ImGuiExt::Texture texture;
             static float scale = 1.0F;
 
             if (shouldReset) {
@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
                 auto height = arguments[2].toUnsigned();
 
                 auto data = pattern->getBytes();
-                texture = ImGui::Texture(data.data(), data.size(), width, height);
+                texture = ImGuiExt::Texture(data.data(), data.size(), width, height);
             }
 
             if (texture.isValid())
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
                 for (auto &entry : disassembly) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("0x{0:08X}", entry.address);
+                    ImGuiExt::TextFormatted("0x{0:08X}", entry.address);
                     ImGui::TableNextColumn();
                     std::string bytes;
                     for (auto byte : entry.bytes)
@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
             auto verticesPattern = arguments[0].toPattern();
             auto indicesPattern  = arguments[1].toPattern();
 
-            static ImGui::Texture texture;
+            static ImGuiExt::Texture texture;
 
             static gl::Vector<float, 3> translation;
             static gl::Vector<float, 3> rotation = { { 1.0F, -1.0F, 0.0F } };
@@ -321,7 +321,7 @@ namespace hex::plugin::builtin {
                 shader.unbind();
                 frameBuffer.unbind();
 
-                texture = ImGui::Texture(renderTexture.release(), renderTexture.getWidth(), renderTexture.getHeight());
+                texture = ImGuiExt::Texture(renderTexture.release(), renderTexture.getWidth(), renderTexture.getHeight());
             }
 
             auto textureSize = texture.getSize();
@@ -457,7 +457,7 @@ namespace hex::plugin::builtin {
 
             bool playing = ma_device_is_started(&audioDevice);
 
-            if (ImGui::IconButton(playing ? ICON_VS_DEBUG_PAUSE : ICON_VS_PLAY, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+            if (ImGuiExt::IconButton(playing ? ICON_VS_DEBUG_PAUSE : ICON_VS_PLAY, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                 if (playing)
                     ma_device_stop(&audioDevice);
                 else
@@ -466,7 +466,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                 index = 0;
                 ma_device_stop(&audioDevice);
             }
@@ -476,9 +476,9 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
 
             if (resetTask.isRunning())
-                ImGui::TextSpinner("");
+                ImGuiExt::TextSpinner("");
             else
-                ImGui::TextFormatted("{:02d}:{:02d} / {:02d}:{:02d}",
+                ImGuiExt::TextFormatted("{:02d}:{:02d} / {:02d}:{:02d}",
                                      (index / sampleRate) / 60, (index / sampleRate) % 60,
                                      (waveData.size() / sampleRate) / 60, (waveData.size() / sampleRate) % 60);
         }
@@ -535,7 +535,7 @@ namespace hex::plugin::builtin {
             static std::mutex addressMutex;
             static TaskHolder addressTask;
 
-            static auto mapTexture = ImGui::Texture(romfs::get("assets/common/map.jpg").span());
+            static auto mapTexture = ImGuiExt::Texture(romfs::get("assets/common/map.jpg").span());
             static ImVec2 mapSize = scaled(ImVec2(500, 500 / mapTexture.getAspectRatio()));
 
             if (shouldReset) {
@@ -557,7 +557,7 @@ namespace hex::plugin::builtin {
 
             // Draw Longitude / Latitude text below image
             ImGui::PushTextWrapPos(startPos.x + mapSize.x);
-            ImGui::TextFormattedWrapped("{}: {:.0f}° {:.0f}' {:.4f}\" {}  |  {}: {:.0f}° {:.0f}' {:.4f}\" {}",
+            ImGuiExt::TextFormattedWrapped("{}: {:.0f}° {:.0f}' {:.4f}\" {}  |  {}: {:.0f}° {:.0f}' {:.4f}\" {}",
                                  "hex.builtin.pl_visualizer.coordinates.latitude"_lang,
                                  std::floor(std::abs(latitude)),
                                  std::floor(std::abs(latitude - std::floor(latitude)) * 60),
@@ -572,9 +572,9 @@ namespace hex::plugin::builtin {
             ImGui::PopTextWrapPos();
 
             if (addressTask.isRunning()) {
-                ImGui::TextSpinner("hex.builtin.pl_visualizer.coordinates.querying"_lang);
+                ImGuiExt::TextSpinner("hex.builtin.pl_visualizer.coordinates.querying"_lang);
             } else if (address.empty()) {
-                if (ImGui::DimmedButton("hex.builtin.pl_visualizer.coordinates.query"_lang)) {
+                if (ImGuiExt::DimmedButton("hex.builtin.pl_visualizer.coordinates.query"_lang)) {
                     addressTask = TaskManager::createBackgroundTask("hex.builtin.pl_visualizer.coordinates.querying"_lang, [lat = latitude, lon = longitude](auto &) {
                         constexpr static auto ApiURL = "https://geocode.maps.co/reverse?lat={}&lon={}&format=jsonv2";
 
@@ -611,7 +611,7 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 ImGui::PushTextWrapPos(startPos.x + mapSize.x);
-                ImGui::TextFormattedWrapped("{}", address);
+                ImGuiExt::TextFormattedWrapped("{}", address);
                 ImGui::PopTextWrapPos();
             }
 
@@ -644,7 +644,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
 
                 // Draw centered month name and year
-                ImGui::TextFormattedCenteredHorizontal("{:%B %Y}", tm);
+                ImGuiExt::TextFormattedCenteredHorizontal("{:%B %Y}", tm);
 
                 if (ImGui::BeginTable("##days_table", 7, ImGuiTableFlags_Borders | ImGuiTableFlags_NoHostExtendX, ImVec2(160, 120) * scale)) {
                     constexpr static auto ColumnFlags = ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide;
@@ -667,10 +667,10 @@ namespace hex::plugin::builtin {
                     // Draw days
                     for (u8 i = 1; i <= u32(lastMonthDay.day()); ++i) {
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted("{:02}", i);
+                        ImGuiExt::TextFormatted("{:02}", i);
 
                         if (std::chrono::day(i) == date.day())
-                            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                            ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
 
                         if (std::chrono::weekday(std::chrono::year_month_day(date.year(), date.month(), std::chrono::day(i))) == std::chrono::Sunday)
                             ImGui::TableNextRow();
@@ -685,7 +685,7 @@ namespace hex::plugin::builtin {
                 const auto size = ImVec2(120, 120) * scale;
                 if (ImGui::BeginChild("##clock", size + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()))) {
                     // Draw centered digital hour, minute and seconds
-                    ImGui::TextFormattedCenteredHorizontal("{:%H:%M:%S}", tm);
+                    ImGuiExt::TextFormattedCenteredHorizontal("{:%H:%M:%S}", tm);
                     auto drawList = ImGui::GetWindowDrawList();
                     const auto center = ImGui::GetWindowPos() + ImVec2(0, ImGui::GetTextLineHeightWithSpacing()) + size / 2;
 
@@ -710,7 +710,7 @@ namespace hex::plugin::builtin {
                     drawList->AddLine(center, center + sectionPos((float(tm.tm_min) / 5.0F) - 3)  * size / 2.5, ImGui::GetColorU32(ImGuiCol_TextDisabled), 3_scaled);
 
                     // Draw second hand
-                    drawList->AddLine(center, center + sectionPos((float(tm.tm_sec) / 5.0F) - 3)  * size / 2.5, ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed), 2_scaled);
+                    drawList->AddLine(center, center + sectionPos((float(tm.tm_sec) / 5.0F) - 3)  * size / 2.5, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed), 2_scaled);
                 }
                 ImGui::EndChild();
 

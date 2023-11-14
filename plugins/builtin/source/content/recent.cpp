@@ -172,7 +172,7 @@ namespace hex::plugin::builtin::recent {
     void draw() {
         ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
         ImGui::TableNextColumn();
-        ImGui::UnderlinedText(s_recentEntries.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
+        ImGuiExt::UnderlinedText(s_recentEntries.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
         ImGui::Dummy({0, 0});
         ImGui::SameLine(0, 0);
@@ -192,7 +192,7 @@ namespace hex::plugin::builtin::recent {
                     } else {
                         icon = ICON_VS_FILE_BINARY;
                     }
-                    if (ImGui::BulletHyperlink(hex::format("{} {}", icon, recentEntry.displayName).c_str())) {
+                    if (ImGuiExt::BulletHyperlink(hex::format("{} {}", icon, recentEntry.displayName).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }

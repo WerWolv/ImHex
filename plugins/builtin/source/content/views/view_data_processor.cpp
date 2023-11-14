@@ -181,7 +181,7 @@ namespace hex::plugin::builtin {
             bool editing = false;
             if (this->m_editable) {
                 // Draw name input field
-                ImGui::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, this->m_name);
+                ImGuiExt::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, this->m_name);
 
                 // Prevent editing mode from deactivating when the input field is focused
                 editing = ImGui::IsItemActive();
@@ -906,13 +906,13 @@ namespace hex::plugin::builtin {
 
                 // Draw the help text if no nodes have been placed yet
                 if (workspace.nodes.empty())
-                    ImGui::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
+                    ImGuiExt::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
 
                 // Draw a close button if there is more than one workspace on the stack
                 if (this->m_workspaceStack->size() > 1) {
                     ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.5F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0F, 4.0F));
-                    if (ImGui::DimmedIconButton(ICON_VS_CLOSE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                         popWorkspace = true;
                     }
                     ImGui::PopStyleVar();
@@ -924,7 +924,7 @@ namespace hex::plugin::builtin {
 
             // Draw the control bar at the bottom
             {
-                if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_continuousEvaluation)
+                if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_continuousEvaluation)
                     this->processNodes(workspace);
 
                 ImGui::SameLine();

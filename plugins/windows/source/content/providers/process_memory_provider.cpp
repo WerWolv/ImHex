@@ -84,7 +84,7 @@ namespace hex::plugin::windows {
                 if (GetModuleBaseNameA(processHandle, nullptr, processName, MAX_PATH) == 0)
                     continue;
 
-                ImGui::Texture texture;
+                ImGuiExt::Texture texture;
                 {
                     HMODULE moduleHandle = nullptr;
                     DWORD numModules = 0;
@@ -114,7 +114,7 @@ namespace hex::plugin::windows {
                                             for (auto &pixel : pixels)
                                                 pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                            texture = ImGui::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
+                                            texture = ImGuiExt::Texture(reinterpret_cast<u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
                                         }
                                     }
                                 }
@@ -167,7 +167,7 @@ namespace hex::plugin::windows {
     }
 
     void ProcessMemoryProvider::drawInterface() {
-        ImGui::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
+        ImGuiExt::Header("hex.windows.provider.process_memory.memory_regions"_lang, true);
 
         auto availableX = ImGui::GetContentRegionAvail().x;
         ImGui::PushItemWidth(availableX);
@@ -202,7 +202,7 @@ namespace hex::plugin::windows {
             ImGui::EndTable();
         }
 
-        ImGui::Header("hex.windows.provider.process_memory.utils"_lang);
+        ImGuiExt::Header("hex.windows.provider.process_memory.utils"_lang);
 
         if (ImGui::Button("hex.windows.provider.process_memory.utils.inject_dll"_lang)) {
             hex::fs::openFileBrowser(fs::DialogMode::Open, { { "DLL File", "dll" } }, [this](const std::fs::path &path) {

@@ -15,7 +15,7 @@
 namespace hex::plugin::builtin {
 
     ViewFind::ViewFind() : View("hex.builtin.view.find.name") {
-        const static auto HighlightColor = [] { return (ImGui::GetCustomColorU32(ImGuiCustomCol_FindHighlight) & 0x00FFFFFF) | 0x70000000; };
+        const static auto HighlightColor = [] { return (ImGuiExt::GetCustomColorU32(ImGuiCustomCol_FindHighlight) & 0x00FFFFFF) | 0x70000000; };
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
             hex::unused(data, size);
@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::ColorButton("##color", ImColor(HighlightColor()));
                         ImGui::SameLine(0, 10);
-                        ImGui::TextFormatted("{} ", value);
+                        ImGuiExt::TextFormatted("{} ", value);
 
                         if (ImGui::GetIO().KeyShift) {
                             ImGui::Indent();
@@ -61,18 +61,18 @@ namespace hex::plugin::builtin {
 
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang);
+                                ImGuiExt::TextFormatted("{}: ", "hex.builtin.common.region"_lang);
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
+                                ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
 
                                 auto demangledValue = llvm::demangle(value);
 
                                 if (value != demangledValue) {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormatted("{}: ", "hex.builtin.view.find.demangled"_lang);
+                                    ImGuiExt::TextFormatted("{}: ", "hex.builtin.view.find.demangled"_lang);
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormatted("{}", demangledValue);
+                                    ImGuiExt::TextFormatted("{}", demangledValue);
                                 }
 
                                 ImGui::EndTable();
@@ -549,7 +549,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginMenu("hex.builtin.view.find.context.replace"_lang)) {
                 if (ImGui::BeginTabBar("##replace_tabs")) {
                     if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.hex"_lang)) {
-                        ImGui::InputTextIcon("##replace_input", ICON_VS_SYMBOL_NAMESPACE, this->m_replaceBuffer);
+                        ImGuiExt::InputTextIcon("##replace_input", ICON_VS_SYMBOL_NAMESPACE, this->m_replaceBuffer);
 
                         ImGui::BeginDisabled(this->m_replaceBuffer.empty());
                         if (ImGui::Button("hex.builtin.view.find.context.replace"_lang)) {
@@ -569,7 +569,7 @@ namespace hex::plugin::builtin {
                     }
 
                     if (ImGui::BeginTabItem("hex.builtin.view.find.context.replace.ascii"_lang)) {
-                        ImGui::InputTextIcon("##replace_input", ICON_VS_SYMBOL_KEY, this->m_replaceBuffer);
+                        ImGuiExt::InputTextIcon("##replace_input", ICON_VS_SYMBOL_KEY, this->m_replaceBuffer);
 
                         ImGui::BeginDisabled(this->m_replaceBuffer.empty());
                         if (ImGui::Button("hex.builtin.view.find.context.replace"_lang)) {
@@ -639,7 +639,7 @@ namespace hex::plugin::builtin {
                         if (ImGui::CollapsingHeader("hex.builtin.view.find.strings.match_settings"_lang)) {
                             ImGui::Checkbox("hex.builtin.view.find.strings.null_term"_lang, &settings.nullTermination);
 
-                            ImGui::Header("hex.builtin.view.find.strings.chars"_lang);
+                            ImGuiExt::Header("hex.builtin.view.find.strings.chars"_lang);
                             ImGui::Checkbox(hex::format("{} [a-z]", "hex.builtin.view.find.strings.lower_case"_lang.get()).c_str(), &settings.lowerCaseLetters);
                             ImGui::Checkbox(hex::format("{} [A-Z]", "hex.builtin.view.find.strings.upper_case"_lang.get()).c_str(), &settings.upperCaseLetters);
                             ImGui::Checkbox(hex::format("{} [0-9]", "hex.builtin.view.find.strings.numbers"_lang.get()).c_str(), &settings.numbers);
@@ -658,7 +658,7 @@ namespace hex::plugin::builtin {
 
                         mode = SearchSettings::Mode::Sequence;
 
-                        ImGui::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_KEY, settings.sequence);
+                        ImGuiExt::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_KEY, settings.sequence);
 
                         this->m_settingsValid = !settings.sequence.empty() && !hex::decodeByteString(settings.sequence).empty();
 
@@ -687,7 +687,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::NewLine();
 
-                        ImGui::InputTextIcon("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, settings.pattern);
+                        ImGuiExt::InputTextIcon("hex.builtin.view.find.regex.pattern"_lang, ICON_VS_REGEX, settings.pattern);
 
                         try {
                             std::regex regex(settings.pattern);
@@ -708,7 +708,7 @@ namespace hex::plugin::builtin {
 
                         mode = SearchSettings::Mode::BinaryPattern;
 
-                        ImGui::InputTextIcon("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, settings.input);
+                        ImGuiExt::InputTextIcon("hex.builtin.view.find.binary_pattern"_lang, ICON_VS_SYMBOL_NAMESPACE, settings.input);
 
                         constexpr static u32 min = 1, max = 0x1000;
                         ImGui::SliderScalar("hex.builtin.view.find.binary_pattern.alignment"_lang, ImGuiDataType_U32, &settings.alignment, &min, &max);
@@ -726,16 +726,16 @@ namespace hex::plugin::builtin {
                         bool edited = false;
 
                         if (settings.range) {
-                            if (ImGui::InputTextIcon("hex.builtin.view.find.value.min"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) edited = true;
-                            if (ImGui::InputTextIcon("hex.builtin.view.find.value.max"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMax)) edited = true;
+                            if (ImGuiExt::InputTextIcon("hex.builtin.view.find.value.min"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) edited = true;
+                            if (ImGuiExt::InputTextIcon("hex.builtin.view.find.value.max"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMax)) edited = true;
                         } else {
-                            if (ImGui::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) {
+                            if (ImGuiExt::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) {
                                 edited = true;
                                 settings.inputMax = settings.inputMin;
                             }
 
                             ImGui::BeginDisabled();
-                            ImGui::InputTextIcon("##placeholder_value", ICON_VS_SYMBOL_NUMERIC, settings.inputMax);
+                            ImGuiExt::InputTextIcon("##placeholder_value", ICON_VS_SYMBOL_NUMERIC, settings.inputMax);
                             ImGui::EndDisabled();
                         }
 
@@ -818,7 +818,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndDisabled();
 
                 ImGui::SameLine();
-                ImGui::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundOccurrences->size());
+                ImGuiExt::TextFormatted("hex.builtin.view.find.search.entries"_lang, this->m_foundOccurrences->size());
 
                 ImGui::BeginDisabled(this->m_foundOccurrences->empty());
                 {
@@ -842,7 +842,7 @@ namespace hex::plugin::builtin {
 
             ImGui::PushItemWidth(-1);
             auto prevFilterLength = this->m_currFilter->length();
-            if (ImGui::InputTextIcon("##filter", ICON_VS_FILTER, *this->m_currFilter)) {
+            if (ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, *this->m_currFilter)) {
                 if (prevFilterLength > this->m_currFilter->length())
                     *this->m_sortedOccurrences = *this->m_foundOccurrences;
 
@@ -908,15 +908,15 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::TextFormatted("0x{:08X}", foundItem.region.getStartAddress());
+                        ImGuiExt::TextFormatted("0x{:08X}", foundItem.region.getStartAddress());
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted("{}", hex::toByteString(foundItem.region.getSize()));
+                        ImGuiExt::TextFormatted("{}", hex::toByteString(foundItem.region.getSize()));
                         ImGui::TableNextColumn();
 
                         ImGui::PushID(i);
 
                         auto value = this->decodeValue(provider, foundItem, 256);
-                        ImGui::TextFormatted("{}", value);
+                        ImGuiExt::TextFormatted("{}", value);
                         ImGui::SameLine();
                         if (ImGui::Selectable("##line", foundItem.selected, ImGuiSelectableFlags_SpanAllColumns)) {
                             if (ImGui::GetIO().KeyCtrl) {

@@ -67,7 +67,7 @@ namespace hex::plugin::windows {
         struct Process {
             u32 id;
             std::string name;
-            ImGui::Texture icon;
+            ImGuiExt::Texture icon;
         };
 
         struct MemoryRegion {

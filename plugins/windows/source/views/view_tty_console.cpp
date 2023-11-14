@@ -19,7 +19,7 @@ namespace hex::plugin::windows {
     void ViewTTYConsole::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.windows.view.tty_console.name").c_str(), &this->getWindowOpenState())) {
 
-            ImGui::Header("hex.windows.view.tty_console.config"_lang, true);
+            ImGuiExt::Header("hex.windows.view.tty_console.config"_lang, true);
 
             bool connected = this->m_portHandle != INVALID_HANDLE_VALUE;
 
@@ -106,7 +106,7 @@ namespace hex::plugin::windows {
 
             ImGui::Checkbox("hex.windows.view.tty_console.auto_scroll"_lang, &this->m_shouldAutoScroll);
 
-            ImGui::Header("hex.windows.view.tty_console.console"_lang);
+            ImGuiExt::Header("hex.windows.view.tty_console.console"_lang);
 
             auto consoleSize = ImGui::GetContentRegionAvail();
             consoleSize.y -= ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 4;

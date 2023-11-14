@@ -56,7 +56,7 @@ namespace hex::plugin::builtin::ui {
             auto selected = isPatternSelected(address, size);
 
             if (selected)
-                ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetCustomColorVec4(ImGuiCustomCol_PatternSelected));
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_PatternSelected));
 
             if constexpr (HasReturn) {
                 auto result = callback();
@@ -79,7 +79,7 @@ namespace hex::plugin::builtin::ui {
         }
 
         void drawTypenameColumn(const pl::ptrn::Pattern& pattern, const std::string& pattern_name) {
-            ImGui::TextFormattedColored(ImColor(0xFFD69C56), pattern_name);
+            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), pattern_name);
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
             ImGui::TableNextColumn();
@@ -94,14 +94,14 @@ namespace hex::plugin::builtin::ui {
 
         void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             if (pattern.isPatternLocal()) {
-                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
                 ImGui::TableNextColumn();
             } else {
-                ImGui::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
+                ImGuiExt::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset() + pattern.getSize(), pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
+                ImGuiExt::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset() + pattern.getSize(), pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
                 ImGui::TableNextColumn();
             }
         }
@@ -114,17 +114,17 @@ namespace hex::plugin::builtin::ui {
             }
             
             if (pattern.isPatternLocal()) {
-                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
             } else {
-                ImGui::TextFormatted("0x{0:08X}", pattern.getOffset());
+                ImGuiExt::TextFormatted("0x{0:08X}", pattern.getOffset());
             }
 
             ImGui::TableNextColumn();
 
             if (pattern.isPatternLocal()) {
-                ImGui::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
             } else {
-                ImGui::TextFormatted("0x{0:08X}", pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
+                ImGuiExt::TextFormatted("0x{0:08X}", pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
             }
 
             ImGui::TableNextColumn();
@@ -132,23 +132,23 @@ namespace hex::plugin::builtin::ui {
 
         void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             if (pattern.getBitSize() == 1)
-                ImGui::TextFormatted("1 bit");
+                ImGuiExt::TextFormatted("1 bit");
             else
-                ImGui::TextFormatted("{0} bits", pattern.getBitSize());
+                ImGuiExt::TextFormatted("{0} bits", pattern.getBitSize());
         }
 
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
             if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else
-                ImGui::TextFormatted("0x{0:04X}", pattern.getSize());
+                ImGuiExt::TextFormatted("0x{0:04X}", pattern.getSize());
 
             ImGui::TableNextColumn();
         }
 
         void drawCommentTooltip(const pl::ptrn::Pattern &pattern) {
             if (auto comment = pattern.getComment(); !comment.empty()) {
-                ImGui::InfoTooltip(comment.c_str());
+                ImGuiExt::InfoTooltip(comment.c_str());
             }
         }
 
@@ -237,12 +237,12 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
         if (this->m_favorites.contains(this->m_currPatternPath)) {
-            if (ImGui::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram))) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_DELETE, ImGui::GetStyleColorVec4(ImGuiCol_PlotHistogram))) {
                 this->m_favorites.erase(this->m_currPatternPath);
             }
         }
         else {
-            if (ImGui::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled))) {
+            if (ImGuiExt::DimmedIconButton(ICON_VS_STAR_ADD, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled))) {
                 this->m_favorites.insert({ this->m_currPatternPath, pattern.clone() });
             }
         }
@@ -319,11 +319,11 @@ namespace hex::plugin::builtin::ui {
         } else if (const auto &inlineVisualizeArgs = pattern.getAttributeArguments("hex::inline_visualize"); !inlineVisualizeArgs.empty()) {
             drawVisualizer(ContentRegistry::PatternLanguage::impl::getInlineVisualizers(), inlineVisualizeArgs, pattern, dynamic_cast<pl::ptrn::IIterable&>(pattern), true);
         } else {
-            ImGui::TextFormatted("{}", value);
+            ImGuiExt::TextFormatted("{}", value);
         }
 
         if (ImGui::CalcTextSize(value.c_str()).x > width) {
-            ImGui::InfoTooltip(value.c_str());
+            ImGuiExt::InfoTooltip(value.c_str());
         }
     }
 
@@ -393,7 +393,7 @@ namespace hex::plugin::builtin::ui {
         drawColorColumn(pattern);
         drawOffsetColumn(pattern);
         drawSizeColumn(pattern);
-        ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
+        ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
         ImGui::TableNextColumn();
     }
 
@@ -423,7 +423,7 @@ namespace hex::plugin::builtin::ui {
         drawOffsetColumnForBitfieldMember(pattern);
         drawSizeColumnForBitfieldMember(pattern);
         ImGui::TableNextColumn();
-        ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
+        ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
         ImGui::TableNextColumn();
 
         if (!this->isEditingPattern(pattern)) {
@@ -639,7 +639,7 @@ namespace hex::plugin::builtin::ui {
             drawColorColumn(pattern);
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
             ImGui::TableNextColumn();
             drawValueColumn(pattern);
         }
@@ -878,12 +878,12 @@ namespace hex::plugin::builtin::ui {
                 ImGui::TableNextColumn();
             drawOffsetColumn(pattern);
             drawSizeColumn(pattern);
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
             ImGui::SameLine(0, 0);
 
             ImGui::TextUnformatted("[");
             ImGui::SameLine(0, 0);
-            ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", iterable.getEntryCount());
+            ImGuiExt::TextFormattedColored(ImColor(0xFF00FF00), "{0}", iterable.getEntryCount());
             ImGui::SameLine(0, 0);
             ImGui::TextUnformatted("]");
 
@@ -933,19 +933,19 @@ namespace hex::plugin::builtin::ui {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
                 drawOffsetColumn(pattern);
-                ImGui::TextFormatted("0x{0:04X}", chunkSize);
+                ImGuiExt::TextFormatted("0x{0:04X}", chunkSize);
                 ImGui::TableNextColumn();
-                ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
+                ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
                 ImGui::SameLine(0, 0);
 
                 ImGui::TextUnformatted("[");
                 ImGui::SameLine(0, 0);
-                ImGui::TextFormattedColored(ImColor(0xFF00FF00), "{0}", endIndex - i);
+                ImGuiExt::TextFormattedColored(ImColor(0xFF00FF00), "{0}", endIndex - i);
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted("]");
 
                 ImGui::TableNextColumn();
-                ImGui::TextFormatted("[ ... ]");
+                ImGuiExt::TextFormatted("[ ... ]");
             }
 
 
@@ -1088,13 +1088,13 @@ namespace hex::plugin::builtin::ui {
                 pushed = true;
             }
 
-            if (ImGui::DimmedIconButton(icon, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+            if (ImGuiExt::DimmedIconButton(icon, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                 this->m_treeStyle = style;
 
             if (pushed)
                 ImGui::PopStyleColor();
 
-            ImGui::InfoTooltip(tooltip);
+            ImGuiExt::InfoTooltip(tooltip);
         };
 
         if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered()) {
@@ -1102,15 +1102,15 @@ namespace hex::plugin::builtin::ui {
         }
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 9.5);
-        if (ImGui::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
+        if (ImGuiExt::InputTextIcon("##Search", ICON_VS_FILTER, this->m_filterText)) {
             this->m_filter = parseRValueFilter(this->m_filterText).value_or(Filter{ });
         }
         ImGui::PopItemWidth();
 
         ImGui::SameLine();
 
-        ImGui::DimmedIconToggle(ICON_VS_BOOK, &this->m_showSpecName);
-        ImGui::InfoTooltip("hex.builtin.pattern_drawer.spec_name"_lang);
+        ImGuiExt::DimmedIconToggle(ICON_VS_BOOK, &this->m_showSpecName);
+        ImGuiExt::InfoTooltip("hex.builtin.pattern_drawer.spec_name"_lang);
 
         ImGui::SameLine();
 
@@ -1125,12 +1125,12 @@ namespace hex::plugin::builtin::ui {
         const auto startPos = ImGui::GetCursorPos();
 
         ImGui::BeginDisabled(runtime == nullptr);
-        if (ImGui::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+        if (ImGuiExt::DimmedIconButton(ICON_VS_EXPORT, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             ImGui::OpenPopup("ExportPatterns");
         }
         ImGui::EndDisabled();
 
-        ImGui::InfoTooltip("hex.builtin.pattern_drawer.export"_lang);
+        ImGuiExt::InfoTooltip("hex.builtin.pattern_drawer.export"_lang);
 
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportPatterns")) {
@@ -1285,7 +1285,7 @@ namespace hex::plugin::builtin::ui {
         }
 
         if (this->m_favoritesUpdateTask.isRunning()) {
-            ImGui::TextOverlay("hex.builtin.pattern_drawer.updating"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2);
+            ImGuiExt::TextOverlay("hex.builtin.pattern_drawer.updating"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2);
         }
     }
 

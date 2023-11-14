@@ -329,7 +329,7 @@ namespace hex::plugin::builtin {
                 hex::unused(endian, style);
 
                 auto value = makePrintable(*reinterpret_cast<char8_t *>(buffer.data()));
-                return [value] { ImGui::TextFormatted("'{0}'", value.c_str()); return value; };
+                return [value] { ImGuiExt::TextFormatted("'{0}'", value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
@@ -352,7 +352,7 @@ namespace hex::plugin::builtin {
                 std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
 
                 auto value = hex::format("{0}", c <= 255 ? makePrintable(c) : converter.to_bytes(c));
-                return [value] { ImGui::TextFormatted("'{0}'", value.c_str()); return value; };
+                return [value] { ImGuiExt::TextFormatted("'{0}'", value.c_str()); return value; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 std::wstring_convert<std::codecvt_utf8<wchar_t>> converter("Invalid");
@@ -414,7 +414,7 @@ namespace hex::plugin::builtin {
                     copyValue = "";
                 }
 
-                return [value, copyValue] { ImGui::TextFormatted("\"{0}\"", value.c_str()); return copyValue; };
+                return [value, copyValue] { ImGuiExt::TextFormatted("\"{0}\"", value.c_str()); return copyValue; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);
@@ -454,7 +454,7 @@ namespace hex::plugin::builtin {
                     copyValue = "";
                 }
 
-                return [value, copyValue] { ImGui::TextFormatted("L\"{0}\"", value.c_str()); return copyValue; };
+                return [value, copyValue] { ImGuiExt::TextFormatted("L\"{0}\"", value.c_str()); return copyValue; };
             },
             [](const std::string &value, std::endian endian) -> std::vector<u8> {
                 hex::unused(endian);

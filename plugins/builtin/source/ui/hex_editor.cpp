@@ -131,15 +131,15 @@ namespace hex::plugin::builtin::ui {
         const auto [decoded, advance] = encodingFile.getEncodingFor(buffer);
         const ImColor color = [&]{
             if (decoded.length() == 1 && std::isalnum(decoded[0]))
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingASCII);
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingASCII);
             else if (decoded.length() == 1 && advance == 1)
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingSingleChar);
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingSingleChar);
             else if (decoded.length() > 1 && advance == 1)
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingMultiChar);
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingMultiChar);
             else if (advance > 1)
                 return ImGui::GetColorU32(ImGuiCol_Text);
             else
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue);
         }();
 
         return { std::string(decoded), advance, color };
@@ -357,7 +357,7 @@ namespace hex::plugin::builtin::ui {
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted(this->m_upperCaseHex ? "{:08X}: " : "{:08x}: ", y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress());
+                        ImGuiExt::TextFormatted(this->m_upperCaseHex ? "{:08X}: " : "{:08x}: ", y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress());
                         ImGui::TableNextColumn();
 
                         const u8 validBytes = std::min<u64>(this->m_bytesPerRow, this->m_provider->getSize() - y * this->m_bytesPerRow);
@@ -457,7 +457,7 @@ namespace hex::plugin::builtin::ui {
                                 if (isCurrRegionValid(byteAddress))
                                     this->drawCell(byteAddress, &bytes[x * bytesPerCell], bytesPerCell, cellHovered, CellType::Hex);
                                 else
-                                    ImGui::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
+                                    ImGuiExt::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
                                 ImGui::PopItemWidth();
                                 ImGui::PopStyleVar();
 
@@ -510,7 +510,7 @@ namespace hex::plugin::builtin::ui {
                                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                         ImGui::PushItemWidth(CharacterSize.x);
                                         if (!isCurrRegionValid(byteAddress))
-                                            ImGui::TextFormattedDisabled("{}", this->m_unknownDataCharacter);
+                                            ImGuiExt::TextFormattedDisabled("{}", this->m_unknownDataCharacter);
                                         else
                                             this->drawCell(byteAddress, &bytes[x], 1, cellHovered, CellType::ASCII);
                                         ImGui::PopItemWidth();
@@ -536,7 +536,7 @@ namespace hex::plugin::builtin::ui {
                                 std::vector<std::pair<u64, CustomEncodingData>> encodingData;
 
                                 if (this->m_encodingLineStartAddresses[y] >= this->m_bytesPerRow) {
-                                    encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGui::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
+                                    encodingData.emplace_back(y * this->m_bytesPerRow + this->m_provider->getBaseAddress() + this->m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
                                     this->m_encodingLineStartAddresses.push_back(0);
                                 } else {
                                     u32 offset = this->m_encodingLineStartAddresses[y];
@@ -581,7 +581,7 @@ namespace hex::plugin::builtin::ui {
                                             }
 
                                             auto startPos = ImGui::GetCursorPos();
-                                            ImGui::TextFormattedColored(data.color, "{}", data.displayValue);
+                                            ImGuiExt::TextFormattedColored(data.color, "{}", data.displayValue);
                                             ImGui::SetCursorPosX(startPos.x + cellSize.x);
                                             ImGui::SameLine(0, 0);
                                             ImGui::Dummy({ 0, 0 });
@@ -689,7 +689,7 @@ namespace hex::plugin::builtin::ui {
                     {
                         u32 page = this->m_provider->getCurrentPage() + 1;
 
-                        ImGui::TextFormatted("{}: ", "hex.builtin.hex_editor.page"_lang);
+                        ImGuiExt::TextFormatted("{}: ", "hex.builtin.hex_editor.page"_lang);
                         ImGui::SameLine();
 
                         ImGui::BeginDisabled(pageCount <= 1);
@@ -705,9 +705,9 @@ namespace hex::plugin::builtin::ui {
                     {
                         const auto pageAddress = this->m_provider->getCurrentPageAddress();
                         const auto pageSize    = this->m_provider->getSize();
-                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.region"_lang);
+                        ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.region"_lang);
                         ImGui::SameLine();
-                        ImGui::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
+                        ImGuiExt::TextFormattedSelectable("0x{0:08X} - 0x{1:08X} ({0} - {1})",
                                                        pageAddress,
                                                        pageSize == 0 ? 0 : (pageAddress + pageSize - 1)
                        );
@@ -733,17 +733,17 @@ namespace hex::plugin::builtin::ui {
                         else
                             value = std::string("hex.builtin.hex_editor.selection.none"_lang);
 
-                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.selection"_lang);
+                        ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.selection"_lang);
                         ImGui::SameLine();
-                        ImGui::TextFormattedSelectable(value);
+                        ImGuiExt::TextFormattedSelectable(value);
                     }
 
                     // Loaded data size
                     ImGui::TableNextColumn();
                     {
-                        ImGui::TextFormatted("{}:", "hex.builtin.hex_editor.data_size"_lang);
+                        ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.data_size"_lang);
                         ImGui::SameLine();
-                        ImGui::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
+                        ImGuiExt::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
                                                        this->m_provider->getActualSize(),
                                                        this->m_provider->getActualSize(),
                                                        this->m_showHumanReadableUnits
@@ -757,35 +757,35 @@ namespace hex::plugin::builtin::ui {
                     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 2_scaled);
 
                     // Upper/lower case hex
-                    ImGui::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &this->m_upperCaseHex);
-                    ImGui::InfoTooltip("hex.builtin.hex_editor.uppercase_hex"_lang);
+                    ImGuiExt::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &this->m_upperCaseHex);
+                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.uppercase_hex"_lang);
 
                     ImGui::SameLine();
 
                     // Grayed out zeros
-                    ImGui::DimmedIconToggle(ICON_VS_LIGHTBULB, &this->m_grayOutZero);
-                    ImGui::InfoTooltip("hex.builtin.hex_editor.gray_out_zero"_lang);
+                    ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &this->m_grayOutZero);
+                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.gray_out_zero"_lang);
 
                     ImGui::SameLine();
 
                     // ASCII view
-                    ImGui::DimmedIconToggle(ICON_VS_SYMBOL_KEY, &this->m_showAscii);
-                    ImGui::InfoTooltip("hex.builtin.hex_editor.ascii_view"_lang);
+                    ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_KEY, &this->m_showAscii);
+                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.ascii_view"_lang);
 
                     ImGui::SameLine(0, 1_scaled);
 
                     // Custom encoding view
                     ImGui::BeginDisabled(!this->m_currCustomEncoding.has_value());
-                    ImGui::DimmedIconToggle(ICON_VS_WHITESPACE, &this->m_showCustomEncoding);
+                    ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &this->m_showCustomEncoding);
                     ImGui::EndDisabled();
 
-                    ImGui::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
+                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
 
                     ImGui::SameLine();
 
                     // Human-readable units
-                    ImGui::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &this->m_showHumanReadableUnits);
-                    ImGui::InfoTooltip("hex.builtin.hex_editor.human_readable_units_footer"_lang);
+                    ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &this->m_showHumanReadableUnits);
+                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.human_readable_units_footer"_lang);
 
                     ImGui::TableNextColumn();
 
@@ -793,7 +793,7 @@ namespace hex::plugin::builtin::ui {
                     {
                         auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
 
-                        ImGui::TextFormatted("{}: ", "hex.builtin.hex_editor.visualizer"_lang);
+                        ImGuiExt::TextFormatted("{}: ", "hex.builtin.hex_editor.visualizer"_lang);
 
                         ImGui::SameLine(0, 0);
 

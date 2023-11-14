@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
                     static std::jthread receiverThread;
                     static std::mutex receiverMutex;
 
-                    ImGui::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
+                    ImGuiExt::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
 
                     ImGui::BeginDisabled(client.isConnected());
                     {
@@ -48,14 +48,14 @@ namespace hex::plugin::builtin {
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
                     if (client.isConnected()) {
-                        if (ImGui::IconButton(ICON_VS_DEBUG_DISCONNECT, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_DISCONNECT, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                             client.disconnect();
 
                             receiverThread.request_stop();
                             receiverThread.join();
                         }
                     } else {
-                        if (ImGui::IconButton(ICON_VS_PLAY, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                        if (ImGuiExt::IconButton(ICON_VS_PLAY, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                             client.connect(ipAddress, port);
 
                             receiverThread = std::jthread([](const std::stop_token& stopToken) {
@@ -76,14 +76,14 @@ namespace hex::plugin::builtin {
                     else if (port > 65535)
                         port = 65535;
 
-                    ImGui::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
+                    ImGuiExt::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
                     if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
                         {
                             std::scoped_lock lock(receiverMutex);
                             for (const auto &message : messages) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedSelectable("{}", message.c_str());
+                                ImGuiExt::TextFormattedSelectable("{}", message.c_str());
                             }
                         }
 
@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
                         if (pressedEnter)
                             ImGui::SetKeyboardFocusHere(-1);
 
-                        if (ImGui::IconButton(ICON_VS_DEBUG_STACKFRAME, ImGui::GetStyleColorVec4(ImGuiCol_Text)) || pressedEnter) {
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_STACKFRAME, ImGui::GetStyleColorVec4(ImGuiCol_Text)) || pressedEnter) {
                             client.writeString(input);
                             input.clear();
                         }
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
                     static std::mutex receiverMutex;
                     static std::jthread receiverThread;
 
-                    ImGui::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
+                    ImGuiExt::Header("hex.builtin.tools.tcp_client_server.settings"_lang, true);
 
                     ImGui::BeginDisabled(server.isActive());
                     {
@@ -137,14 +137,14 @@ namespace hex::plugin::builtin {
 
                     ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.2F);
                     if (server.isActive()) {
-                        if (ImGui::IconButton(ICON_VS_DEBUG_DISCONNECT, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_DISCONNECT, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                             server.shutdown();
 
                             receiverThread.request_stop();
                             receiverThread.join();
                         }
                     } else {
-                        if (ImGui::IconButton(ICON_VS_PLAY, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                        if (ImGuiExt::IconButton(ICON_VS_PLAY, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                             receiverThread = std::jthread([](const std::stop_token& stopToken){
                                 server = wolv::net::SocketServer(port);
 
@@ -164,7 +164,7 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::PopItemWidth();
 
-                    ImGui::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
+                    ImGuiExt::Header("hex.builtin.tools.tcp_client_server.messages"_lang);
 
                     if (ImGui::BeginTable("##response", 1, ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders, ImVec2(0, 200_scaled))) {
                         {
@@ -174,7 +174,7 @@ namespace hex::plugin::builtin {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
                                 ImGui::PushID(index);
-                                ImGui::TextFormattedSelectable("{}", message.c_str());
+                                ImGuiExt::TextFormattedSelectable("{}", message.c_str());
                                 ImGui::PopID();
 
                                 index += 1;

@@ -85,7 +85,7 @@ namespace {
                 }
 
                 if (updaterTask.isRunning()) {
-                    ImGui::TextSpinner("hex.script_loader.menu.loading"_lang);
+                    ImGuiExt::TextSpinner("hex.script_loader.menu.loading"_lang);
                 } else if (scripts.empty()) {
                     ImGui::TextUnformatted("hex.script_loader.menu.no_scripts"_lang);
                 }

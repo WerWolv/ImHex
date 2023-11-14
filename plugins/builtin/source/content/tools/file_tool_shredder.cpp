@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
             ImGui::EndChild();
 
             if (shredderTask.isRunning())
-                ImGui::TextSpinner("hex.builtin.tools.file_tools.shredder.shredding"_lang);
+                ImGuiExt::TextSpinner("hex.builtin.tools.file_tools.shredder.shredding"_lang);
             else {
                 ImGui::BeginDisabled(selectedFile.empty());
                 {

@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
                         // Draw bookmark header
                         ImGui::ColorButton("##color", ImColor(bookmark.color));
                         ImGui::SameLine(0, 10);
-                        ImGui::TextFormatted("{} ", bookmark.name);
+                        ImGuiExt::TextFormatted("{} ", bookmark.name);
 
                         // Draw extra information table when holding down shift
                         if (ImGui::GetIO().KeyShift) {
@@ -90,18 +90,18 @@ namespace hex::plugin::builtin {
                                 // Draw region
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
+                                ImGuiExt::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+                                ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
                                 // Draw comment if it's not empty
                                 if (!bookmark.comment.empty() && bookmark.comment[0] != '\x00') {
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
+                                    ImGuiExt::TextFormatted("{}: ", "hex.builtin.view.bookmarks.header.comment"_lang.get());
                                     ImGui::TableNextColumn();
                                     ImGui::PushTextWrapPos(ImGui::CalcTextSize("X").x * 40);
-                                    ImGui::TextFormattedWrapped("{}", bookmark.comment);
+                                    ImGuiExt::TextFormattedWrapped("{}", bookmark.comment);
                                     ImGui::PopTextWrapPos();
                                 }
 
@@ -199,14 +199,14 @@ namespace hex::plugin::builtin {
 
             // Draw filter input
             ImGui::PushItemWidth(-1);
-            ImGui::InputTextIcon("##filter", ICON_VS_FILTER, this->m_currFilter);
+            ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, this->m_currFilter);
             ImGui::PopItemWidth();
 
             ImGui::NewLine();
 
             if (ImGui::BeginChild("##bookmarks")) {
                 if (this->m_bookmarks->empty()) {
-                    ImGui::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
+                    ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
                 }
 
                 int id = 1;
@@ -272,11 +272,11 @@ namespace hex::plugin::builtin {
 
                             // Draw lock/unlock button
                             if (locked) {
-                                if (ImGui::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
-                                ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
+                                if (ImGuiExt::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
+                                ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
                             } else {
-                                if (ImGui::IconButton(ICON_VS_UNLOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = true;
-                                ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.lock"_lang);
+                                if (ImGuiExt::IconButton(ICON_VS_UNLOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = true;
+                                ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.lock"_lang);
                             }
 
                             ImGui::SameLine();
@@ -286,7 +286,7 @@ namespace hex::plugin::builtin {
                                 if (!locked)
                                     ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
                             }
-                            ImGui::InfoTooltip("hex.builtin.view.bookmarks.header.color"_lang);
+                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.header.color"_lang);
 
                             // Draw color picker
                             if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
@@ -314,14 +314,14 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextColumn();
 
                             // Draw jump to address button
-                            if (ImGui::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                                 ImHexApi::HexEditor::setSelection(region);
-                            ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
+                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
 
                             ImGui::SameLine();
 
                             // Draw open in new view button
-                            if (ImGui::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                            if (ImGuiExt::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                                 TaskManager::doLater([region, provider]{
                                     auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
                                     if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
@@ -333,12 +333,12 @@ namespace hex::plugin::builtin {
                                     }
                                 });
                             }
-                            ImGui::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
+                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
 
                             ImGui::SameLine();
 
                             // Draw the address of the bookmark
-                            ImGui::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.getStartAddress(), region.getEndAddress());
+                            ImGuiExt::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.getStartAddress(), region.getEndAddress());
 
                             ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
                             ImGui::TableNextColumn();
@@ -347,7 +347,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted("hex.builtin.common.size"_lang);
                             ImGui::TableNextColumn();
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted(hex::toByteString(region.size));
+                            ImGuiExt::TextFormatted(hex::toByteString(region.size));
 
                             ImGui::EndTable();
                         }
@@ -355,12 +355,12 @@ namespace hex::plugin::builtin {
                         // Draw comment if the bookmark is locked or an input text box if it's unlocked
                         if (locked) {
                             if (!comment.empty()) {
-                                ImGui::Header("hex.builtin.view.bookmarks.header.comment"_lang);
-                                ImGui::TextFormattedWrapped("{}", comment.data());
+                                ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
+                                ImGuiExt::TextFormattedWrapped("{}", comment.data());
                             }
                         }
                         else {
-                            ImGui::Header("hex.builtin.view.bookmarks.header.comment"_lang);
+                            ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
                             ImGui::InputTextMultiline("##commentInput", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled));
                         }
 

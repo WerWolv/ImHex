@@ -128,7 +128,7 @@ namespace hex::plugin::builtin {
                     ImGui::NewLine();
 
                     // Draw color name below sliders
-                    ImGui::TextFormatted("{}", colorFormatName);
+                    ImGuiExt::TextFormatted("{}", colorFormatName);
 
                     ImGui::PopStyleVar();
 
@@ -165,7 +165,7 @@ namespace hex::plugin::builtin {
 
                             // Draw value
                             ImGui::PushID(name);
-                            ImGui::TextFormattedSelectable("{}", formatter());
+                            ImGuiExt::TextFormattedSelectable("{}", formatter());
                             ImGui::PopID();
                         };
 

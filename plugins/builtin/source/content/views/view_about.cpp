@@ -40,20 +40,20 @@ namespace hex::plugin::builtin {
 
     static void link(const std::string &name, const std::string &author, const std::string &url) {
         // Draw the hyperlink and open the URL if clicked
-        if (ImGui::BulletHyperlink(name.c_str()))
+        if (ImGuiExt::BulletHyperlink(name.c_str()))
             hex::openWebpage(url);
 
         // Show the URL as a tooltip
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
-            ImGui::TextFormatted("{}", url);
+            ImGuiExt::TextFormatted("{}", url);
             ImGui::EndTooltip();
         }
 
         // Show the author if there is one
         if (!author.empty()) {
             ImGui::SameLine(0, 0);
-            ImGui::TextFormatted("by {}", author);
+            ImGuiExt::TextFormatted("by {}", author);
         }
     }
 
@@ -65,7 +65,7 @@ namespace hex::plugin::builtin {
 
             // Draw the ImHex icon
             if (!this->m_logoTexture.isValid())
-                this->m_logoTexture = ImGui::Texture(romfs::get("assets/common/logo.png").span());
+                this->m_logoTexture = ImGuiExt::Texture(romfs::get("assets/common/logo.png").span());
 
             ImGui::Image(this->m_logoTexture, scaled({ 64, 64 }));
             if (ImGui::IsItemHovered() && ImGui::IsItemClicked()) {
@@ -74,16 +74,16 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             // Draw basic information about ImHex and its version
-            ImGui::TextFormatted("ImHex Hex Editor v{} by WerWolv  " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
+            ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv  " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
 
             ImGui::SameLine();
 
             // Draw a clickable link to the current commit
-            if (ImGui::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
+            if (ImGuiExt::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
                 hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
 
             // Draw the build date and time
-            ImGui::TextFormatted("{}, {}", __DATE__, __TIME__);
+            ImGuiExt::TextFormatted("{}, {}", __DATE__, __TIME__);
 
             // Draw the author of the current translation
             ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
@@ -94,7 +94,7 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
 
             // Draw a clickable link to the GitHub repository
-            if (ImGui::Hyperlink("WerWolv/ImHex"))
+            if (ImGuiExt::Hyperlink("WerWolv/ImHex"))
                 hex::openWebpage("https://github.com/WerWolv/ImHex");
 
             ImGui::EndTable();
@@ -108,18 +108,18 @@ namespace hex::plugin::builtin {
 
         constexpr std::array Links = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };
 
-        ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
+        ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
 
         ImGui::NewLine();
 
         for (auto &link : Links) {
-            if (ImGui::Hyperlink(link))
+            if (ImGuiExt::Hyperlink(link))
                 hex::openWebpage(link);
         }
     }
 
     void ViewAbout::drawContributorPage() {
-        ImGui::TextFormattedWrapped("These amazing people have contributed to ImHex in the past. If you'd like to become part of them, please submit a PR to the GitHub Repository!");
+        ImGuiExt::TextFormattedWrapped("These amazing people have contributed to ImHex in the past. If you'd like to become part of them, please submit a PR to the GitHub Repository!");
         ImGui::NewLine();
 
         // Draw main ImHex contributors
@@ -214,11 +214,11 @@ namespace hex::plugin::builtin {
                 for (auto &path : fs::getDefaultPaths(type, true)){
                     // Draw hyperlink to paths that exist or red text if they don't
                     if (wolv::io::fs::isDirectory(path)){
-                        if (ImGui::Hyperlink(wolv::util::toUTF8String(path).c_str())) {
+                        if (ImGuiExt::Hyperlink(wolv::util::toUTF8String(path).c_str())) {
                             fs::openFolderExternal(path);
                         }
                     } else {
-                        ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path));
+                        ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path));
                     }
                 }
             }
@@ -264,7 +264,7 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 // Draw a spinner while the release notes are loading
-                ImGui::TextSpinner("hex.builtin.common.loading"_lang);
+                ImGuiExt::TextSpinner("hex.builtin.common.loading"_lang);
             }
         }
 
@@ -283,7 +283,7 @@ namespace hex::plugin::builtin {
                 // Draw the line with the bold text highlighted
                 ImGui::TextUnformatted(line.substr(0, boldStart).c_str());
                 ImGui::SameLine(0, 0);
-                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", line.substr(boldStart + 2, boldEnd - boldStart - 2).c_str());
+                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", line.substr(boldStart + 2, boldEnd - boldStart - 2).c_str());
                 ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted(line.substr(boldEnd + 2).c_str());
             } else {
@@ -295,7 +295,7 @@ namespace hex::plugin::builtin {
         // Draw the release title
         if (!releaseTitle.empty()) {
             auto title = hex::format("v{}: {}", ImHexApi::System::getImHexVersion(false), releaseTitle);
-            ImGui::Header(title.c_str(), true);
+            ImGuiExt::Header(title.c_str(), true);
             ImGui::Separator();
         }
 
@@ -304,10 +304,10 @@ namespace hex::plugin::builtin {
         for (const auto &line : releaseNotes) {
             if (line.starts_with("## ")) {
                 // Draw H2 Header
-                ImGui::Header(line.substr(3).c_str());
+                ImGuiExt::Header(line.substr(3).c_str());
             } else if (line.starts_with("### ")) {
                 // Draw H3 Header
-                ImGui::Header(line.substr(4).c_str());
+                ImGuiExt::Header(line.substr(4).c_str());
             } else if (line.starts_with("- ")) {
                 // Draw bullet point
                 drawRegularLine(line.substr(2));
@@ -400,7 +400,7 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 // Draw a spinner while the commits are loading
-                ImGui::TextSpinner("hex.builtin.common.loading"_lang);
+                ImGuiExt::TextSpinner("hex.builtin.common.loading"_lang);
             }
         }
 
@@ -421,14 +421,14 @@ namespace hex::plugin::builtin {
                     if (ImGui::IsItemHovered()) {
                         if (ImGui::BeginTooltip()) {
                             // Draw author and commit date
-                            ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.author);
+                            ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.author);
                             ImGui::SameLine();
-                            ImGui::TextFormatted("@ {}", commit.date.c_str());
+                            ImGuiExt::TextFormatted("@ {}", commit.date.c_str());
 
                             // Draw description if there is one
                             if (!commit.description.empty()) {
                                 ImGui::Separator();
-                                ImGui::TextFormatted("{}", commit.description);
+                                ImGuiExt::TextFormatted("{}", commit.description);
                             }
 
                             ImGui::EndTooltip();
@@ -438,7 +438,7 @@ namespace hex::plugin::builtin {
 
                     // Draw commit hash
                     ImGui::SameLine(0, 0);
-                    ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.hash.substr(0, 7));
+                    ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.hash.substr(0, 7));
 
                     // Draw the commit message
                     ImGui::TableNextColumn();
@@ -449,7 +449,7 @@ namespace hex::plugin::builtin {
                         else
                             return ImGui::GetStyleColorVec4(ImGuiCol_Text);
                     }();
-                    ImGui::TextFormattedColored(color, commit.message);
+                    ImGuiExt::TextFormattedColored(color, commit.message);
 
                     ImGui::PopID();
                 }
@@ -460,7 +460,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAbout::drawLicensePage() {
-        ImGui::TextFormattedWrapped("{}", romfs::get("licenses/LICENSE").string());
+        ImGuiExt::TextFormattedWrapped("{}", romfs::get("licenses/LICENSE").string());
     }
 
     void ViewAbout::drawAboutPopup() {

@@ -312,7 +312,7 @@ namespace hex::plugin::builtin {
 
         ImGui::Separator();
 
-        ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size, ImGuiInputTextFlags_CharsHexadecimal);
+        ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size, ImGuiInputTextFlags_CharsHexadecimal);
 
         if (this->m_port < 0)
             this->m_port = 0;

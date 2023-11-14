@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
 
 
             static i64 inputFieldWidth = 0;
-            ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.ieee754.description"_lang);
+            ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.tools.ieee754.description"_lang);
             ImGui::NewLine();
 
             static i64 displayMode = ContentRegistry::Settings::read("hex.builtin.tools.ieee754.settings", "display_mode", 0);
@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
                 while (labelIndex + count > startBit) {
                     auto indentSize = IndentBoxOrLabel(startBit, labelIndex, count, true);
                     ImGui::Indent(indentSize );
-                    ImGui::TextFormatted("{}", labelIndex);
+                    ImGuiExt::TextFormatted("{}", labelIndex);
                     lastLabelAdded = labelIndex;
                     ImGui::Unindent(indentSize );
                     labelIndex -= 4;
@@ -191,7 +191,7 @@ namespace hex::plugin::builtin {
                 bool checkbox = false;
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
                 checkbox = (ieee754statics.value & (u128(1) << bit)) != 0;
-                ImGui::BitCheckbox("##checkbox", &checkbox);
+                ImGuiExt::BitCheckbox("##checkbox", &checkbox);
                 ieee754statics.value = (ieee754statics.value & ~(u128(1) << bit)) | (u128(checkbox) << bit);
                 ImGui::PopStyleVar();
             };
@@ -211,9 +211,9 @@ namespace hex::plugin::builtin {
                 // Sign.
                 ImGui::TableNextColumn();
 
-                ImVec4 signColor = ImGui::GetCustomColorVec4(ImGuiCustomCol_IEEEToolSign);
-                ImVec4 expColor = ImGui::GetCustomColorVec4(ImGuiCustomCol_IEEEToolExp);
-                ImVec4 mantColor = ImGui::GetCustomColorVec4(ImGuiCustomCol_IEEEToolMantissa);
+                ImVec4 signColor = ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_IEEEToolSign);
+                ImVec4 expColor = ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_IEEEToolExp);
+                ImVec4 mantColor = ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_IEEEToolMantissa);
                 ImVec4 black = ImVec4(0.0, 0.0, 0.0, 1.0);
 
                 float indent = IndentBoxOrLabel(signBitPosition,signBitPosition, 1, false);
@@ -475,9 +475,9 @@ namespace hex::plugin::builtin {
 
             const static auto DisplayDecimal  = [](IEEE754 &ieee754) {
 
-                unsigned signColorU32 = ImGui::GetCustomColorU32(ImGuiCustomCol_IEEEToolSign);
-                unsigned expColorU32 = ImGui::GetCustomColorU32(ImGuiCustomCol_IEEEToolExp);
-                unsigned mantColorU32 = ImGui::GetCustomColorU32(ImGuiCustomCol_IEEEToolMantissa);
+                unsigned signColorU32 = ImGuiExt::GetCustomColorU32(ImGuiCustomCol_IEEEToolSign);
+                unsigned expColorU32 = ImGuiExt::GetCustomColorU32(ImGuiCustomCol_IEEEToolExp);
+                unsigned mantColorU32 = ImGuiExt::GetCustomColorU32(ImGuiCustomCol_IEEEToolMantissa);
 
                 ImGui::TableNextColumn();
 
@@ -520,9 +520,9 @@ namespace hex::plugin::builtin {
                 else if (ieee754.numberType == NumberType::Zero)
                     ImGui::Text("0");
                 else if (ieee754.numberType == NumberType::Denormal)
-                    ImGui::TextFormatted("2^{0}", 1 - ieee754.exponentBias);
+                    ImGuiExt::TextFormatted("2^{0}", 1 - ieee754.exponentBias);
                 else
-                    ImGui::TextFormatted("2^{0}", ieee754.exponentBits - ieee754.exponentBias);
+                    ImGuiExt::TextFormatted("2^{0}", ieee754.exponentBits - ieee754.exponentBias);
 
                 ImGui::Unindent(20_scaled);
 
@@ -534,7 +534,7 @@ namespace hex::plugin::builtin {
                 // Mantissa.
                 ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, mantColorU32);
                 ImGui::Indent(20_scaled);
-                ImGui::TextFormatted("{:.{}}", ieee754.mantissaValue,ieee754.precision);
+                ImGuiExt::TextFormatted("{:.{}}", ieee754.mantissaValue,ieee754.precision);
                 ImGui::Unindent(20_scaled);
 
                 ImGui::PopStyleColor();
@@ -645,7 +645,7 @@ namespace hex::plugin::builtin {
                 ImGui::PushItemWidth(inputFieldWidth);
 
                 u64 newValue = ieee754statics.value & mask;
-                if (ImGui::InputHexadecimal("##hex", &newValue, flags))
+                if (ImGuiExt::InputHexadecimal("##hex", &newValue, flags))
                     ieee754statics.value = newValue;
                 ImGui::PopItemWidth();
 

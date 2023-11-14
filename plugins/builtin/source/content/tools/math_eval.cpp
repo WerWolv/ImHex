@@ -209,9 +209,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::Button(".", buttonSize)) mathInput += ".";
                 ImGui::SameLine();
 
-                ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButtonHovered));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButton));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetCustomColorVec4(ImGuiCustomCol_DescButtonActive));
+                ImGui::PushStyleColor(ImGuiCol_Button, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DescButtonHovered));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DescButton));
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DescButtonActive));
                 if (ImGui::Button("=", buttonSize)) evaluate = true;
                 ImGui::SameLine();
                 ImGui::PopStyleColor(3);
@@ -238,16 +238,16 @@ namespace hex::plugin::builtin {
 
                             switch (mathDisplayType) {
                                 case MathDisplayType::Standard:
-                                    ImGui::TextFormatted("{0:.3Lf}", mathHistory[(mathHistory.size() - 1) - i]);
+                                    ImGuiExt::TextFormatted("{0:.3Lf}", mathHistory[(mathHistory.size() - 1) - i]);
                                     break;
                                 case MathDisplayType::Scientific:
-                                    ImGui::TextFormatted("{0:.6Lg}", mathHistory[(mathHistory.size() - 1) - i]);
+                                    ImGuiExt::TextFormatted("{0:.6Lg}", mathHistory[(mathHistory.size() - 1) - i]);
                                     break;
                                 case MathDisplayType::Engineering:
-                                    ImGui::TextFormatted("{0}", hex::toEngineeringString(mathHistory[(mathHistory.size() - 1) - i]).c_str());
+                                    ImGuiExt::TextFormatted("{0}", hex::toEngineeringString(mathHistory[(mathHistory.size() - 1) - i]).c_str());
                                     break;
                                 case MathDisplayType::Programmer:
-                                    ImGui::TextFormatted("0x{0:X} ({1})",
+                                    ImGuiExt::TextFormatted("0x{0:X} ({1})",
                                         u64(mathHistory[(mathHistory.size() - 1) - i]),
                                         u64(mathHistory[(mathHistory.size() - 1) - i]));
                                     break;
@@ -283,16 +283,16 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         switch (mathDisplayType) {
                             case MathDisplayType::Standard:
-                                ImGui::TextFormatted("{0:.3Lf}", value);
+                                ImGuiExt::TextFormatted("{0:.3Lf}", value);
                                 break;
                             case MathDisplayType::Scientific:
-                                ImGui::TextFormatted("{0:.6Lg}", value);
+                                ImGuiExt::TextFormatted("{0:.6Lg}", value);
                                 break;
                             case MathDisplayType::Engineering:
-                                ImGui::TextFormatted("{}", hex::toEngineeringString(value));
+                                ImGuiExt::TextFormatted("{}", hex::toEngineeringString(value));
                                 break;
                             case MathDisplayType::Programmer:
-                                ImGui::TextFormatted("0x{0:X} ({1})", u64(value), u64(value));
+                                ImGuiExt::TextFormatted("0x{0:X} ({1})", u64(value), u64(value));
                                 break;
                         }
                     }
@@ -304,14 +304,14 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-            if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+            if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, mathInput, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                 ImGui::SetKeyboardFocusHere();
                 evaluate = true;
             }
             ImGui::PopItemWidth();
 
             if (!lastMathError.empty())
-                ImGui::TextFormattedColored(ImColor(0xA00040FF), "hex.builtin.tools.error"_lang, lastMathError);
+                ImGuiExt::TextFormattedColored(ImColor(0xA00040FF), "hex.builtin.tools.error"_lang, lastMathError);
             else
                 ImGui::NewLine();
 

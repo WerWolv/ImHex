@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
 
             const auto &patches = provider->getPatches();
             if (patches.contains(offset) && patches.at(offset) != byte)
-                return ImGui::GetCustomColorU32(ImGuiCustomCol_Patches);
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
             else
                 return std::nullopt;
         });
@@ -92,15 +92,15 @@ namespace hex::plugin::builtin {
                                 this->m_selectedPatch = address;
                             }
                             ImGui::SameLine();
-                            ImGui::TextFormatted("0x{0:08X}", address);
+                            ImGuiExt::TextFormatted("0x{0:08X}", address);
 
                             ImGui::TableNextColumn();
                             u8 previousValue = 0x00;
                             provider->readRaw(address, &previousValue, sizeof(u8));
-                            ImGui::TextFormatted("0x{0:02X}", previousValue);
+                            ImGuiExt::TextFormatted("0x{0:02X}", previousValue);
 
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("0x{0:02X}", patch);
+                            ImGuiExt::TextFormatted("0x{0:02X}", patch);
                             index += 1;
 
                             iter++;

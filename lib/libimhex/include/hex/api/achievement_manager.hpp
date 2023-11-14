@@ -140,14 +140,14 @@ namespace hex {
          * @brief Returns the icon of the achievement
          * @return Icon of the achievement
          */
-        [[nodiscard]] const ImGui::Texture &getIcon() const {
+        [[nodiscard]] const ImGuiExt::Texture &getIcon() const {
             if (this->m_iconData.empty())
                 return this->m_icon;
 
             if (this->m_icon.isValid())
                 return m_icon;
 
-            this->m_icon = ImGui::Texture(this->m_iconData.data(), this->m_iconData.size());
+            this->m_icon = ImGuiExt::Texture(this->m_iconData.data(), this->m_iconData.size());
 
             return this->m_icon;
         }
@@ -280,7 +280,7 @@ namespace hex {
         std::function<void(Achievement &)> m_clickCallback;
 
         std::vector<u8> m_iconData;
-        mutable ImGui::Texture m_icon;
+        mutable ImGuiExt::Texture m_icon;
 
         u32 m_progress = 0;
         u32 m_maxProgress = 1;

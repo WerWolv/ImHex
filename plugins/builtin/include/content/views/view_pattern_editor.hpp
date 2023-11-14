@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
             void drawContent() override {
                 auto* provider = ImHexApi::Provider::get();
 
-                ImGui::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
+                ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
                 std::vector<std::string> entries;
                 entries.resize(this->m_view->m_possiblePatternFiles.get(provider).size());
@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
                             this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles.get(provider)[this->m_selectedPatternFile], provider);
 
-                        ImGui::InfoTooltip(wolv::util::toUTF8String(path).c_str());
+                        ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                         index++;
                     }

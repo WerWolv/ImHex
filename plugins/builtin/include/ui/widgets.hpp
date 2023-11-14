@@ -17,7 +17,7 @@ namespace hex::plugin::builtin::ui {
 
     inline void regionSelectionPicker(Region *region, prv::Provider *provider, RegionType *type, bool showHeader = true, bool firstEntry = false) {
         if (showHeader)
-            ImGui::Header("hex.builtin.common.range"_lang, firstEntry);
+            ImGuiExt::Header("hex.builtin.common.range"_lang, firstEntry);
 
         if (ImGui::RadioButton("hex.builtin.common.range.entire_data"_lang, *type == RegionType::EntireData))
             *type = RegionType::EntireData;
@@ -44,13 +44,13 @@ namespace hex::plugin::builtin::ui {
                 u64 start = region->getStartAddress(), end = region->getEndAddress();
 
                 ImGui::PushItemWidth(width);
-                ImGui::InputHexadecimal("##start", &start);
+                ImGuiExt::InputHexadecimal("##start", &start);
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
                 ImGui::TextUnformatted(" - ");
                 ImGui::SameLine();
                 ImGui::PushItemWidth(width);
-                ImGui::InputHexadecimal("##end", &end);
+                ImGuiExt::InputHexadecimal("##end", &end);
                 ImGui::PopItemWidth();
 
                 *region = { start, (end - start) + 1 };

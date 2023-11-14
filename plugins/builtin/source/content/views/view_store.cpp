@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::drawStore() {
-        ImGui::Header("hex.builtin.view.store.desc"_lang, true);
+        ImGuiExt::Header("hex.builtin.view.store.desc"_lang, true);
 
         bool reloading = false;
         if (this->m_apiRequest.valid()) {
@@ -184,13 +184,13 @@ namespace hex::plugin::builtin {
 
         if (reloading) {
             ImGui::SameLine();
-            ImGui::TextSpinner("hex.builtin.view.store.loading"_lang);
+            ImGuiExt::TextSpinner("hex.builtin.view.store.loading"_lang);
         }
 
         // Align the button to the right
         ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 25_scaled);
         ImGui::BeginDisabled(this->m_updateAllTask.isRunning() || this->m_updateCount == 0);
-        if (ImGui::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+        if (ImGuiExt::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             this->m_updateAllTask = TaskManager::createTask("Update All...", this->m_updateCount, [this](auto &task) {
                 u32 progress = 0;
                 for (auto &category : this->m_categories) {
@@ -205,7 +205,7 @@ namespace hex::plugin::builtin {
                 }
             });
         }
-        ImGui::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, this->m_updateCount.load()).c_str());
+        ImGuiExt::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, this->m_updateCount.load()).c_str());
 
         ImGui::EndDisabled();
 
@@ -280,7 +280,7 @@ namespace hex::plugin::builtin {
     void ViewStore::drawContent() {
         if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.store.name").c_str(), &this->getWindowOpenState())) {
             if (this->m_requestStatus == RequestStatus::Failed)
-                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
+                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
             
             this->drawStore();            
 

@@ -58,11 +58,11 @@ namespace hex::plugin::builtin {
 
             constexpr static auto WarningColor = ImColor(0.92F, 0.25F, 0.2F, 1.0F);
             if (setuid && !x[0])
-                ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.setuid_error"_lang);
+                ImGuiExt::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.setuid_error"_lang);
             if (setgid && !x[1])
-                ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.setgid_error"_lang);
+                ImGuiExt::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.setgid_error"_lang);
             if (sticky && !x[2])
-                ImGui::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.sticky_error"_lang);
+                ImGuiExt::TextFormattedColored(WarningColor, "{}", "hex.builtin.tools.permissions.sticky_error"_lang);
         }
     }
 }

@@ -143,7 +143,7 @@ namespace hex::plugin::builtin {
                 if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                     ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
                     {
-                        ImGui::Header("hex.builtin.common.settings"_lang, true);
+                        ImGuiExt::Header("hex.builtin.common.settings"_lang, true);
 
                         ui::regionSelectionPicker(&this->m_analysisRegion, provider, &this->m_selectionType, false);
                         ImGui::NewLine();
@@ -156,7 +156,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndDisabled();
 
                     if (this->m_analyzerTask.isRunning()) {
-                        ImGui::TextSpinner("hex.builtin.view.information.analyzing"_lang);
+                        ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
                     } else {
                         ImGui::NewLine();
                     }
@@ -164,7 +164,7 @@ namespace hex::plugin::builtin {
                     if (!this->m_analyzerTask.isRunning() && this->m_dataValid) {
 
                         // Provider information
-                        ImGui::Header("hex.builtin.view.information.provider_information"_lang, true);
+                        ImGuiExt::Header("hex.builtin.view.information.provider_information"_lang, true);
 
                         if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
                             ImGui::TableSetupColumn("type");
@@ -174,22 +174,22 @@ namespace hex::plugin::builtin {
 
                             for (auto &[name, value] : provider->getDataDescription()) {
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("{}", name);
+                                ImGuiExt::TextFormatted("{}", name);
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedWrapped("{}", value);
+                                ImGuiExt::TextFormattedWrapped("{}", value);
                             }
 
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{}", "hex.builtin.view.information.region"_lang);
+                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.region"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("0x{:X} - 0x{:X}", this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getEndAddress());
+                            ImGuiExt::TextFormatted("0x{:X} - 0x{:X}", this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getEndAddress());
 
                             ImGui::EndTable();
                         }
 
                         // Magic information
                         if (!(this->m_dataDescription.empty() && this->m_dataMimeType.empty())) {
-                            ImGui::Header("hex.builtin.view.information.magic"_lang);
+                            ImGuiExt::Header("hex.builtin.view.information.magic"_lang);
 
                             if (ImGui::BeginTable("magic", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
                                 ImGui::TableSetupColumn("type");
@@ -203,9 +203,9 @@ namespace hex::plugin::builtin {
                                     ImGui::TableNextColumn();
 
                                     if (this->m_dataDescription == "data") {
-                                        ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataDescription);
+                                        ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataDescription);
                                     } else {
-                                        ImGui::TextFormattedWrapped("{}", this->m_dataDescription);
+                                        ImGuiExt::TextFormattedWrapped("{}", this->m_dataDescription);
                                     }
                                 }
 
@@ -215,13 +215,13 @@ namespace hex::plugin::builtin {
                                     ImGui::TableNextColumn();
 
                                     if (this->m_dataMimeType == "application/octet-stream") {
-                                        ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataMimeType);
+                                        ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataMimeType);
                                         ImGui::SameLine();
                                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                                        ImGui::HelpHover("hex.builtin.view.information.octet_stream_warning"_lang);
+                                        ImGuiExt::HelpHover("hex.builtin.view.information.octet_stream_warning"_lang);
                                         ImGui::PopStyleVar();
                                     } else {
-                                        ImGui::TextFormatted("{}", this->m_dataMimeType);
+                                        ImGuiExt::TextFormatted("{}", this->m_dataMimeType);
                                     }
                                 }
 
@@ -234,7 +234,7 @@ namespace hex::plugin::builtin {
                         // Information analysis
                         if (this->m_analyzedRegion.getSize() > 0) {
 
-                            ImGui::Header("hex.builtin.view.information.info_analysis"_lang);
+                            ImGuiExt::Header("hex.builtin.view.information.info_analysis"_lang);
 
                             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
                             ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
@@ -276,20 +276,20 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow();
 
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{}", "hex.builtin.view.information.block_size"_lang);
+                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.block_size"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("hex.builtin.view.information.block_size.desc"_lang, this->m_chunkBasedEntropy.getSize(), this->m_chunkBasedEntropy.getChunkSize());
+                            ImGuiExt::TextFormatted("hex.builtin.view.information.block_size.desc"_lang, this->m_chunkBasedEntropy.getSize(), this->m_chunkBasedEntropy.getChunkSize());
 
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
+                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
                             ImGui::TableNextColumn();
                             if (this->m_averageEntropy < 0) ImGui::TextUnformatted("???");
-                            else ImGui::TextFormatted("{:.5f}", std::abs(this->m_averageEntropy));
+                            else ImGuiExt::TextFormatted("{:.5f}", std::abs(this->m_averageEntropy));
 
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
+                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{:.5f} @", this->m_highestBlockEntropy);
+                            ImGuiExt::TextFormatted("{:.5f} @", this->m_highestBlockEntropy);
                             ImGui::SameLine();
                             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -300,9 +300,9 @@ namespace hex::plugin::builtin {
                             ImGui::PopStyleVar();
 
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{}", "hex.builtin.view.information.lowest_entropy"_lang);
+                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.lowest_entropy"_lang);
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{:.5f} @", this->m_lowestBlockEntropy);
+                            ImGuiExt::TextFormatted("{:.5f} @", this->m_lowestBlockEntropy);
                             ImGui::SameLine();
                             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                             ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
@@ -313,10 +313,10 @@ namespace hex::plugin::builtin {
                             ImGui::PopStyleVar();
 
                             ImGui::TableNextColumn();
-                            ImGui::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
+                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
                             ImGui::TableNextColumn();
                             if (this->m_plainTextCharacterPercentage < 0) ImGui::TextUnformatted("???");
-                            else ImGui::TextFormatted("{:.2f}%", this->m_plainTextCharacterPercentage);
+                            else ImGuiExt::TextFormatted("{:.2f}%", this->m_plainTextCharacterPercentage);
 
                             ImGui::EndTable();
                         }
@@ -330,12 +330,12 @@ namespace hex::plugin::builtin {
 
                             if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
+                                ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
                             }
 
                             if (this->m_plainTextCharacterPercentage > 95) {
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.plain_text"_lang);
+                                ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.plain_text"_lang);
                             }
 
                             ImGui::EndTable();

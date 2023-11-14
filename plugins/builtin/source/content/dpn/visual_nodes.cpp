@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
             if (this->m_value.has_value())
-                ImGui::TextFormatted("0x{0:X}", this->m_value.value());
+                ImGuiExt::TextFormatted("0x{0:X}", this->m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();
@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
             if (this->m_value.has_value())
-                ImGui::TextFormatted("{0}", this->m_value.value());
+                ImGuiExt::TextFormatted("{0}", this->m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();

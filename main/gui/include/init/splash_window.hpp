@@ -53,8 +53,8 @@ namespace hex::init {
 
         std::string m_gpuVendor;
     
-        ImGui::Texture splashBackgroundTexture;
-        ImGui::Texture splashTextTexture;
+        ImGuiExt::Texture splashBackgroundTexture;
+        ImGuiExt::Texture splashTextTexture;
         std::future<bool> tasksSucceeded;
         std::array<Highlight, 3> highlights;
         float progressLerp = 0.0F;

@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
                         // Draw the category description
                         if (!category.unlocalizedDescription.empty()) {
-                            ImGui::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
+                            ImGuiExt::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
                             ImGui::NewLine();
                         }
 
@@ -63,18 +63,18 @@ namespace hex::plugin::builtin {
                                 continue;
 
                             if (!subCategory.unlocalizedName.empty())
-                                ImGui::Header(LangEntry(subCategory.unlocalizedName), firstSubCategory);
+                                ImGuiExt::Header(LangEntry(subCategory.unlocalizedName), firstSubCategory);
 
                             firstSubCategory = false;
 
-                            if (ImGui::BeginBox()) {
+                            if (ImGuiExt::BeginBox()) {
                                 for (auto &setting : subCategory.entries) {
                                     ImGui::BeginDisabled(!setting.widget->isEnabled());
                                     bool settingChanged = setting.widget->draw(LangEntry(setting.unlocalizedName));
                                     ImGui::EndDisabled();
 
                                     if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
-                                        ImGui::InfoTooltip(LangEntry(tooltip.value()));
+                                        ImGuiExt::InfoTooltip(LangEntry(tooltip.value()));
 
                                     auto &widget = setting.widget;
 
@@ -98,7 +98,7 @@ namespace hex::plugin::builtin {
                                     }
                                 }
 
-                                ImGui::EndBox();
+                                ImGuiExt::EndBox();
                             }
 
                         }
