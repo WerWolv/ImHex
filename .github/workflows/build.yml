@@ -256,7 +256,7 @@ jobs:
     - name: Copy SDK
       run: |
         mkdir SDK
-        cp /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk SDK/MacOSX14.0.sdk # It's not the 14.0 SDK but hopefully it works ?
+        cp -r /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk SDK/MacOSX14.0.sdk # It's not the 14.0 SDK but hopefully it works ?
     
     - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2
