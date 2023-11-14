@@ -1,6 +1,7 @@
 #include "content/views/view_provider_settings.hpp"
 
 #include <content/popups/popup_notification.hpp>
+#include <hex/api/content_registry.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -9,6 +10,18 @@ namespace hex::plugin::builtin {
             if (provider->hasLoadInterface() && !provider->shouldSkipLoadInterface())
                 EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
         });
+
+        ContentRegistry::Interface::addSidebarItem(ICON_VS_SERVER_PROCESS, [] {
+            auto provider = hex::ImHexApi::Provider::get();
+
+            if (provider != nullptr)
+                provider->drawInterface();
+        },
+        [] {
+            auto provider = hex::ImHexApi::Provider::get();
+
+            return provider != nullptr && provider->hasInterface() && provider->isAvailable();
+        });
     }
 
     ViewProviderSettings::~ViewProviderSettings() {
@@ -16,13 +29,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewProviderSettings::drawContent() {
-        if (ImGui::Begin(this->getName().c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            auto provider = hex::ImHexApi::Provider::get();
 
-            if (provider != nullptr)
-                provider->drawInterface();
-        }
-        ImGui::End();
     }
 
     void ViewProviderSettings::drawAlwaysVisible() {
@@ -68,13 +75,11 @@ namespace hex::plugin::builtin {
     }
 
     bool ViewProviderSettings::hasViewMenuItemEntry() const {
-        return this->isAvailable();
+        return false;
     }
 
     bool ViewProviderSettings::isAvailable() const {
-        auto provider = hex::ImHexApi::Provider::get();
-
-        return provider != nullptr && provider->hasInterface() && provider->isAvailable();
+        return false;
     }
 
 }
