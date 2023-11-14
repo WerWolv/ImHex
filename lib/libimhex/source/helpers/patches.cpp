@@ -111,7 +111,7 @@ namespace hex {
         std::vector<u64> addresses;
         std::vector<u8> values;
 
-        for (const auto &[address, value] : *this) {
+        for (const auto &[address, value] : this->m_patches) {
             addresses.push_back(address);
             values.push_back(value);
         }
@@ -161,7 +161,7 @@ namespace hex {
         std::vector<u64> addresses;
         std::vector<u8> values;
 
-        for (const auto &[address, value] : *this) {
+        for (const auto &[address, value] : this->m_patches) {
             addresses.push_back(address);
             values.push_back(value);
         }
@@ -214,7 +214,7 @@ namespace hex {
 
         auto patches = generator.getPatches();
 
-        return Patches(patches);
+        return Patches(std::move(patches));
     }
 
 
@@ -242,7 +242,7 @@ namespace hex {
                     return wolv::util::Unexpected(IPSError::InvalidPatchFormat);
 
                 for (u16 i = 0; i < size; i++)
-                    result[offset + i] = ipsPatch[ipsOffset + i];
+                    result.get()[offset + i] = ipsPatch[ipsOffset + i];
                 ipsOffset += size;
             }
             // Handle RLE record
@@ -255,7 +255,7 @@ namespace hex {
                 ipsOffset += 2;
 
                 for (u16 i = 0; i < rleSize; i++)
-                    result[offset + i] = ipsPatch[ipsOffset + 0];
+                    result.get()[offset + i] = ipsPatch[ipsOffset + 0];
 
                 ipsOffset += 1;
             }
@@ -295,7 +295,7 @@ namespace hex {
                     return wolv::util::Unexpected(IPSError::InvalidPatchFormat);
 
                 for (u16 i = 0; i < size; i++)
-                    result[offset + i] = ipsPatch[ipsOffset + i];
+                    result.get()[offset + i] = ipsPatch[ipsOffset + i];
                 ipsOffset += size;
             }
             // Handle RLE record
@@ -308,7 +308,7 @@ namespace hex {
                 ipsOffset += 2;
 
                 for (u16 i = 0; i < rleSize; i++)
-                    result[offset + i] = ipsPatch[ipsOffset + 0];
+                    result.get()[offset + i] = ipsPatch[ipsOffset + 0];
 
                 ipsOffset += 1;
             }

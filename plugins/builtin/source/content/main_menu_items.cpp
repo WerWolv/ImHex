@@ -113,12 +113,12 @@ namespace hex::plugin::builtin {
                         return;
                     }
 
-                    task.setMaxValue(patch->size());
+                    task.setMaxValue(patch->get().size());
 
                     auto provider = ImHexApi::Provider::get();
 
                     u64 count = 0;
-                    for (auto &[address, value] : *patch) {
+                    for (auto &[address, value] : patch->get()) {
                         provider->write(address, &value, sizeof(value));
                         count += 1;
                         task.update(count);
@@ -139,12 +139,12 @@ namespace hex::plugin::builtin {
                         return;
                     }
 
-                    task.setMaxValue(patch->size());
+                    task.setMaxValue(patch->get().size());
 
                     auto provider = ImHexApi::Provider::get();
 
                     u64 count = 0;
-                    for (auto &[address, value] : *patch) {
+                    for (auto &[address, value] : patch->get()) {
                         provider->write(address, &value, sizeof(value));
                         count += 1;
                         task.update(count);
@@ -288,10 +288,10 @@ namespace hex::plugin::builtin {
             }
 
             // Make sure there's no patch at address 0x00454F46 because that would cause the patch to contain the sequence "EOF" which signals the end of the patch
-            if (!patches->contains(0x00454F45) && patches->contains(0x00454F46)) {
+            if (!patches->get().contains(0x00454F45) && patches->get().contains(0x00454F46)) {
                 u8 value = 0;
                 provider->read(0x00454F45, &value, sizeof(u8));
-                patches->at(0x00454F45) = value;
+                patches->get().at(0x00454F45) = value;
             }
 
             TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {
@@ -327,10 +327,10 @@ namespace hex::plugin::builtin {
             }
 
             // Make sure there's no patch at address 0x45454F46 because that would cause the patch to contain the sequence "*EOF" which signals the end of the patch
-            if (!patches->contains(0x45454F45) && patches->contains(0x45454F46)) {
+            if (!patches->get().contains(0x45454F45) && patches->get().contains(0x45454F46)) {
                 u8 value = 0;
                 provider->read(0x45454F45, &value, sizeof(u8));
-                patches->at(0x45454F45) = value;
+                patches->get().at(0x45454F45) = value;
             }
 
             TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {

@@ -21,9 +21,10 @@ namespace hex {
         MissingEOF
     };
 
-    class Patches : public std::map<u64, u8> {
+    class Patches {
     public:
-        using std::map<u64, u8>::map;
+        Patches() = default;
+        Patches(std::map<u64, u8> &&patches) : m_patches(std::move(patches)) {}
 
         static wolv::util::Expected<Patches, IPSError> fromProvider(hex::prv::Provider *provider);
         static wolv::util::Expected<Patches, IPSError> fromIPSPatch(const std::vector<u8> &ipsPatch);
@@ -31,5 +32,11 @@ namespace hex {
 
         wolv::util::Expected<std::vector<u8>, IPSError> toIPSPatch() const;
         wolv::util::Expected<std::vector<u8>, IPSError> toIPS32Patch() const;
+
+        const auto& get() const { return this->m_patches; }
+        auto& get() { return this->m_patches; }
+
+    private:
+        std::map<u64, u8> m_patches;
     };
 }
