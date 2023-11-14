@@ -1,14 +1,11 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/literals.hpp>
-#include <hex/helpers/fs.hpp>
+
 #include <hex/api/localization.hpp>
 
-#include <hex/ui/view.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -20,15 +17,13 @@
 #include <content/tools_entries.hpp>
 
 #include <imgui.h>
-#include <implot.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <content/popups/popup_notification.hpp>
 #include <nlohmann/json.hpp>
+#include <romfs/romfs.hpp>
 
 #include <wolv/io/file.hpp>
-#include <wolv/utils/guards.hpp>
-#include <wolv/net/socket_client.hpp>
+
 #include <wolv/net/socket_server.hpp>
 
 namespace hex::plugin::builtin {
@@ -75,7 +70,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableNextColumn();
 
-                const auto colorName = hex::format("{}{}{}{}", bitValues[0].name, bitValues[1].name, bitValues[2].name, bitValues[3].name);
+                const auto colorFormatName = hex::format("{}{}{}{}", bitValues[0].name, bitValues[1].name, bitValues[2].name, bitValues[3].name);
 
                 // Draw color bit count sliders
                 {
@@ -133,7 +128,7 @@ namespace hex::plugin::builtin {
                     ImGui::NewLine();
 
                     // Draw color name below sliders
-                    ImGui::TextFormatted("{}", colorName);
+                    ImGui::TextFormatted("{}", colorFormatName);
 
                     ImGui::PopStyleVar();
 
@@ -189,8 +184,8 @@ namespace hex::plugin::builtin {
                             return hex::format("#{0:0{1}X}", hexValue, bitCount / 4);
                         });
 
-                        drawValue(colorName.c_str(), [&] {
-                            return hex::format("{}({}, {}, {}, {})", colorName, intColor[0], intColor[1], intColor[2], intColor[3]);
+                        drawValue(colorFormatName.c_str(), [&] {
+                            return hex::format("{}({}, {}, {}, {})", colorFormatName, intColor[0], intColor[1], intColor[2], intColor[3]);
                         });
 
                         drawValue("Vector4f", [&] {
@@ -199,6 +194,40 @@ namespace hex::plugin::builtin {
 
                         drawValue("Percentage", [&] {
                             return hex::format("{{ {}%, {}%, {}%, {}% }}", u32(floatColor[0] * 100), u32(floatColor[1] * 100), u32(floatColor[2] * 100), u32(floatColor[3] * 100));
+                        });
+
+                        drawValue("Color Name", [&] -> std::string {
+                            const static auto ColorTable = [] {
+                                auto colorMap = nlohmann::json::parse(romfs::get("assets/common/color_names.json").string()).get<std::map<std::string, std::string>>();
+
+                                std::map<u8, std::map<u8, std::map<u8, std::string>>> result;
+                                for (const auto &[colorValue, colorName] : colorMap) {
+                                    result
+                                    [hex::parseHexString(colorValue.substr(0, 2))[0]]
+                                    [hex::parseHexString(colorValue.substr(2, 2))[0]]
+                                    [hex::parseHexString(colorValue.substr(4, 2))[0]] = colorName;
+                                }
+
+                                return result;
+                            }();
+
+                            const auto r = pickedColor[0] * 0xFF;
+                            const auto g = pickedColor[1] * 0xFF;
+                            const auto b = pickedColor[2] * 0xFF;
+
+                            auto gTable = ColorTable.lower_bound(r);
+                            if (gTable == ColorTable.end())
+                                return "???";
+
+                            auto bTable = gTable->second.lower_bound(g);
+                            if (bTable == gTable->second.end())
+                                return "???";
+
+                            auto name = bTable->second.lower_bound(b);
+                            if (name == bTable->second.end())
+                                return "???";
+
+                            return name->second;
                         });
 
                         ImGui::EndTable();
