@@ -314,7 +314,7 @@ namespace hex::init {
                 IM_DELETE(fonts);
 
                 // Disable unicode support in settings
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.font.load_all_unicode_chars", false);
+                ContentRegistry::Settings::write("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false);
 
                 // Try to load the font atlas again
                 return loadFontsImpl(false);
