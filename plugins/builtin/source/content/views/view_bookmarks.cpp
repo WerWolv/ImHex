@@ -44,14 +44,12 @@ namespace hex::plugin::builtin {
                 bookmarkId
             };
 
-            ImHexApi::Provider::get()->addUndoableOperation<undo::OperationBookmark>(std::move(bookmark));
-
+            this->m_bookmarks->push_back(std::move(bookmark));
 
             ImHexApi::Provider::markDirty();
 
             EventManager::post<EventBookmarkCreated>(this->m_bookmarks->back());
             EventManager::post<EventHighlightingChanged>();
-
         });
 
         EventManager::subscribe<RequestRemoveBookmark>([this](u64 id) {
