@@ -22,8 +22,16 @@ if [ "$CUSTOM_GLFW" ]; then
 fi
 EOF
 
-## Assume the SDK has been removed from the image, and copy it again
-COPY SDK /osxcross/target/SDK
+RUN --mount=type=cache,target=/cache <<EOF
+## Download SDK is missing (it may have been removed from the image)
+set -xe
+if [ ! -d /osxcross/target/SDK/MacOSX14.0.sdk ]; then
+    wget https://github.com/joseluisq/macosx-sdks/releases/download/14.0/MacOSX14.0.sdk.tar.xz -O /cache/MacOSX14.0.sdk.tar.xz -nc || true
+    mkdir -p /osxcross/target/SDK
+    tar -C /osxcross/target/SDK -xf /cache/MacOSX14.0.sdk.tar.xz
+fi
+EOF
+
 
 ## Download libmagic
 ### Clone libmagic

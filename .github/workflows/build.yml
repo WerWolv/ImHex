@@ -252,14 +252,7 @@ jobs:
       with:
         path: cache
         key: build-macos-arm64-cache
-    
-    - name: Setup SDK
-      run: |
-        mkdir SDK
-        cd SDK
-        wget https://github.com/joseluisq/macosx-sdks/releases/download/14.0/MacOSX14.0.sdk.tar.xz
-        tar -xf MacOSX14.0.sdk.tar.xz    
-    
+
     - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2
       with:
