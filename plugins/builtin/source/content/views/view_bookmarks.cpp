@@ -171,8 +171,11 @@ namespace hex::plugin::builtin {
             return result;
         }();
 
+        bool colorChanged = false;
+
         // Draw default color picker
-        ImGui::ColorPicker4("##picker", (float*)&color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview);
+        if (ImGui::ColorPicker4("##picker", (float*)&color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview))
+            colorChanged = true;
 
         ImGui::Separator();
 
@@ -186,11 +189,15 @@ namespace hex::plugin::builtin {
             constexpr static ImGuiColorEditFlags flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoDragDrop;
             if (ImGui::ColorButton("##palette", paletteColor.Value, flags, ImVec2(20, 20))) {
                 color = paletteColor;
+                colorChanged = true;
             }
 
             ImGui::PopID();
             id++;
         }
+
+        if (colorChanged)
+            EventManager::post<EventHighlightingChanged>();
     }
 
     void ViewBookmarks::drawContent() {
