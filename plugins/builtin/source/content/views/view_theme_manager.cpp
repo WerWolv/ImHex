@@ -55,7 +55,7 @@ namespace hex::plugin::builtin {
                 if (this->m_hoveredHandlerName == name && this->m_startingColor.has_value() && this->m_hoveredColorId.has_value()) {
                     auto flashingColor = this->m_startingColor.value();
 
-                    const float flashProgress = std::min(1.0F, (1.0F + sinf(ImGui::GetTime() * 6) / 2.0F));
+                    const float flashProgress = std::min(1.0F, (1.0F + sinf(ImGui::GetTime() * 6)) / 2.0F);
                     flashingColor.Value.x = std::lerp(flashingColor.Value.x, 1.0F, flashProgress);
                     flashingColor.Value.y = std::lerp(flashingColor.Value.y, 1.0F, flashProgress);;
 
