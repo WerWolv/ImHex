@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
                 while (clipper.Step()) {
                     auto end = 0;
                     for (size_t i = clipper.DisplayStart; i < std::min<size_t>(clipper.DisplayEnd + end, logs.size()); i++) {
-                        const auto &log = logs[i];
+                        const auto &log = logs[logs.size() - 1 - i];
 
                         if (!shouldDisplay(log.level, this->m_logLevel)) {
                             end++;
