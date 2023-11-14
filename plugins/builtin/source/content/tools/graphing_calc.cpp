@@ -2,7 +2,6 @@
 
 #include <hex/ui/view.hpp>
 
-#include <algorithm>
 #include <regex>
 
 #include <llvm/Demangle/Demangle.h>

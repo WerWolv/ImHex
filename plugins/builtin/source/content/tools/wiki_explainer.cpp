@@ -5,9 +5,6 @@
 
 #include <hex/ui/view.hpp>
 
-#include <chrono>
-
-#include <llvm/Demangle/Demangle.h>
 #include <content/tools_entries.hpp>
 
 #include <imgui.h>

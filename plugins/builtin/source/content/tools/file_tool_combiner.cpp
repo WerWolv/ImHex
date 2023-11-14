@@ -6,8 +6,6 @@
 #include <algorithm>
 #include <random>
 
-#include <llvm/Demangle/Demangle.h>
-
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>

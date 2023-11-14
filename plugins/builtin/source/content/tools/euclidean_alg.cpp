@@ -1,35 +1,18 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
-
-#include <hex/helpers/http_requests.hpp>
-#include <hex/helpers/utils.hpp>
-#include <hex/helpers/fmt.hpp>
-#include <hex/helpers/literals.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/api/localization.hpp>
 
+#include <hex/helpers/http_requests.hpp>
 #include <hex/ui/view.hpp>
 
-#include <algorithm>
-#include <chrono>
-#include <random>
-#include <regex>
-
-#include <llvm/Demangle/Demangle.h>
-#include <content/helpers/math_evaluator.hpp>
 #include <content/tools_entries.hpp>
 
-#include <imgui.h>
-#include <implot.h>
+#include <regex>
 
+#include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <content/popups/popup_notification.hpp>
+
 #include <nlohmann/json.hpp>
 
-#include <wolv/io/file.hpp>
-#include <wolv/utils/guards.hpp>
-#include <wolv/net/socket_client.hpp>
-#include <wolv/net/socket_server.hpp>
 
 namespace hex::plugin::builtin {
     namespace impl {

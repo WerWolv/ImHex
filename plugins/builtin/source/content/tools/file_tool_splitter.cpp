@@ -8,18 +8,13 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/api/localization.hpp>
 
-#include <hex/ui/view.hpp>
-
 #include <algorithm>
-#include <chrono>
 #include <random>
 #include <regex>
 
 #include <llvm/Demangle/Demangle.h>
-#include <content/helpers/math_evaluator.hpp>
 
 #include <imgui.h>
-#include <implot.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <content/popups/popup_notification.hpp>
@@ -27,7 +22,6 @@
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
-#include <wolv/net/socket_client.hpp>
 #include <wolv/net/socket_server.hpp>
 
 namespace hex::plugin::builtin {

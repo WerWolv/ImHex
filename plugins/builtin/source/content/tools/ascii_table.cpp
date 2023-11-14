@@ -7,8 +7,6 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <wolv/net/socket_client.hpp>
-
 namespace hex::plugin::builtin {
     namespace impl {
         void drawASCIITable() {

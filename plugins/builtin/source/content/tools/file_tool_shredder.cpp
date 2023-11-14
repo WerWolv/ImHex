@@ -4,9 +4,6 @@
 #include <algorithm>
 #include <random>
 
-#include <llvm/Demangle/Demangle.h>
-#include <content/helpers/math_evaluator.hpp>
-
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>

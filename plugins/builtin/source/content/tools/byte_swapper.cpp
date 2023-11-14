@@ -4,7 +4,6 @@
 
 #include <algorithm>
 
-#include <llvm/Demangle/Demangle.h>
 #include <content/tools_entries.hpp>
 
 #include <imgui.h>

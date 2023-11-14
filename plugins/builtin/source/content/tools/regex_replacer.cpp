@@ -6,14 +6,11 @@
 
 #include <regex>
 
-#include <llvm/Demangle/Demangle.h>
 #include <content/tools_entries.hpp>
 
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-
-#include <wolv/net/socket_server.hpp>
 
 namespace hex::plugin::builtin {
     namespace impl {

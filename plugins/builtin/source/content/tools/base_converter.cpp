@@ -4,10 +4,6 @@
 
 #include <hex/ui/view.hpp>
 
-#include <algorithm>
-
-#include <llvm/Demangle/Demangle.h>
-#include <content/helpers/math_evaluator.hpp>
 #include <content/tools_entries.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
