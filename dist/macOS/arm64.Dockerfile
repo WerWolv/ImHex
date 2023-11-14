@@ -162,4 +162,4 @@ EOF
 
 
 FROM scratch
-COPY --from=build /mnt/ImHex/build/imhex.app .
+COPY --from=build /mnt/ImHex/build/imhex.app imhex.app
