@@ -1,5 +1,5 @@
-# see arm64.crosscompile.Dockerfile
-FROM crosscompile as build
+# This base image is also known as "crosscompile". See arm64.crosscompile.Dockerfile
+FROM ghcr.io/itrooz/macos-crosscompile:clang17-nosdk as build
 
 ENV MACOSX_DEPLOYMENT_TARGET 12.1
 
