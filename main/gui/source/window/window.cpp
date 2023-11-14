@@ -423,14 +423,14 @@ namespace hex {
                 static i32 openWindow = -1;
                 u32 index = 0;
                 ImGui::PushID("SideBarWindows");
-                for (const auto &[icon, callback] : ContentRegistry::Interface::impl::getSidebarItems()) {
+                for (const auto &[icon, callback, enabledCallback] : ContentRegistry::Interface::impl::getSidebarItems()) {
                     ImGui::SetCursorPosY(sidebarPos.y + sidebarWidth * index);
 
                     ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                     ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
                     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-                    ImGui::BeginDisabled(!ImHexApi::Provider::isValid());
+                    ImGui::BeginDisabled(!(ImHexApi::Provider::isValid() && enabledCallback()));
                     {
                         if (ImGui::Button(icon.c_str(), ImVec2(sidebarWidth, sidebarWidth))) {
                             if (static_cast<u32>(openWindow) == index)
@@ -447,14 +447,48 @@ namespace hex {
 
                     bool open = static_cast<u32>(openWindow) == index;
                     if (open) {
+                        static float width = 200_scaled;
+
                         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
-                        ImGui::SetNextWindowSize(ImVec2(250_scaled, dockSpaceSize.y + 11_scaled - footerHeight));
+                        ImGui::SetNextWindowSize(ImVec2(width, dockSpaceSize.y + 11_scaled - footerHeight));
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
-                        if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar)) {
-                            callback();
+                        if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                            if (ImGui::BeginTable("##Table", 2)) {
+                                ImGui::TableSetupColumn("Main", ImGuiTableColumnFlags_WidthStretch, 1.0F);
+                                ImGui::TableSetupColumn("Slider", ImGuiTableColumnFlags_WidthFixed, 1);
 
-                            if (!ImGui::IsWindowFocused() && !sideBarFocused) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+
+                                callback();
+
+                                ImGui::TableNextColumn();
+
+                                static bool dragging = false;
+                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                                ImGui::Button("##Resize", ImGui::GetContentRegionAvail());
+                                ImGui::PopStyleVar();
+
+                                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
+                                    if (ImGui::IsItemHovered())
+                                        dragging = true;
+                                } else {
+                                    dragging = false;
+                                }
+                                if (ImGui::IsItemHovered()) {
+                                    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+                                }
+
+                                if (dragging) {
+                                    width += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).x;
+                                    ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+                                }
+
+                                ImGui::EndTable();
+                            }
+
+                            if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !sideBarFocused) {
                                 openWindow = -1;
                             }
                         }
