@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
             // Handle giving back focus to the input text box
             if (this->m_focusInputTextBox) {
                 ImGui::SetKeyboardFocusHere(-1);
-                ImGui::ActivateItem(ImGui::GetID("##command_input"));
+                ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
 
                 auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
                 if (textState != nullptr) {

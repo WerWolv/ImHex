@@ -362,7 +362,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushID(static_cast<int>(pattern.getOffset()));
         ImGui::PushID(pattern.getVariableName().c_str());
 
-        if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+        if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
             this->m_selectionCallback(Region { pattern.getOffset(), pattern.getSize() });
 
             if (this->m_editingPattern != &pattern) {
