@@ -1184,10 +1184,26 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
     } else if (aChar == '\t') {
         auto &line  = mLines[coord.mLine];
         auto cindex = GetCharacterIndex(coord);
-        auto spacesToInsert = mTabSize - (cindex % mTabSize);
-        for (int j = 0; j < spacesToInsert; j++)
-            line.insert(line.begin() + cindex, Glyph(' ', PaletteIndex::Background));
-        SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + spacesToInsert)));
+
+        if (!aShift) {
+            auto spacesToInsert = mTabSize - (cindex % mTabSize);
+            for (int j = 0; j < spacesToInsert; j++)
+                line.insert(line.begin() + cindex, Glyph(' ', PaletteIndex::Background));
+            SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, cindex + spacesToInsert)));
+        } else {
+            auto spacesToRemove = (cindex % mTabSize);
+            if (spacesToRemove == 0) spacesToRemove = 4;
+
+            for (int j = 0; j < spacesToRemove; j++) {
+                if ((line.begin() + cindex - 1)->mChar == ' ') {
+                    line.erase(line.begin() + cindex - 1);
+                    cindex -= 1;
+                }
+            }
+
+            SetCursorPosition(Coordinates(coord.mLine, GetCharacterColumn(coord.mLine, std::max(0, cindex))));
+        }
+
     } else {
         char buf[7];
         int e = ImTextCharToUtf8(buf, 7, aChar);
