@@ -834,4 +834,21 @@ namespace ImGui {
         ImGui::PopStyleVar();
     }
 
+    void BeginSubWindow(const char *label, ImVec2 size) {
+        const bool hasMenuBar = !std::string_view(label).empty();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+            if (hasMenuBar && ImGui::BeginMenuBar()) {
+                ImGui::TextUnformatted(label);
+                ImGui::EndMenuBar();
+            }
+        }
+    }
+
+    void EndSubWindow() {
+        ImGui::EndChild();
+        ImGui::PopStyleVar();
+    }
+
 }

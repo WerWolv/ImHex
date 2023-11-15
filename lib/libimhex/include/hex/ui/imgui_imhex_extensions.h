@@ -269,6 +269,9 @@ namespace ImGui {
     bool BeginBox();
     void EndBox();
 
+    void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0));
+    void EndSubWindow();
+
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {
         if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;
