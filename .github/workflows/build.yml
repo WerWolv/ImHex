@@ -238,6 +238,46 @@ jobs:
         name: macOS DMG${{matrix.suffix}} x86_64
         path: build/*.dmg
 
+  macos-arm64:
+    runs-on: ubuntu-22.04
+    name: 🍎 macOS 12.1 arm64
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - name: 📁 Restore docker /cache
+      uses: actions/cache@v3
+      with:
+        path: cache
+        key: build-macos-arm64-cache
+
+    - name: 🐳 Inject /cache into docker
+      uses: reproducible-containers/buildkit-cache-dance@v2.1.2 # Doesn't work with a MacOS runner ?
+      with:
+        cache-source: cache
+        cache-target: /cache
+
+    - name: 🛠️ Build using docker
+      run: |
+        docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
+
+    - name: ⬆️ Upload artifacts
+      uses: actions/upload-pages-artifact@v2
+      with:
+        name: macOS ZIP arm64
+        path: out/
+
+      # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
+    - name: 🗑️ Delete old cache
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+          gh extension install actions/gh-actions-cache
+          gh actions-cache delete "build-macos-arm64-cache" --confirm
+  
   # Ubuntu build
   ubuntu:
     strategy:

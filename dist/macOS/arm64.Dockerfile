@@ -1,5 +1,5 @@
-# see arm64.crosscompile.Dockerfile
-FROM crosscompile as build
+# This base image is also known as "crosscompile". See arm64.crosscompile.Dockerfile
+FROM ghcr.io/itrooz/macos-crosscompile:clang17-nosdk as build
 
 ENV MACOSX_DEPLOYMENT_TARGET 12.1
 
@@ -22,8 +22,16 @@ if [ "$CUSTOM_GLFW" ]; then
 fi
 EOF
 
-## Assume the SDK has been removed from the image, and copy it again
-COPY SDK /osxcross/target/SDK
+RUN --mount=type=cache,target=/cache <<EOF
+## Download SDK is missing (it may have been removed from the image)
+set -xe
+if [ ! -d /osxcross/target/SDK/MacOSX14.0.sdk ]; then
+    wget https://github.com/joseluisq/macosx-sdks/releases/download/14.0/MacOSX14.0.sdk.tar.xz -O /cache/MacOSX14.0.sdk.tar.xz -nc || true
+    mkdir -p /osxcross/target/SDK
+    tar -C /osxcross/target/SDK -xf /cache/MacOSX14.0.sdk.tar.xz
+fi
+EOF
+
 
 ## Download libmagic
 ### Clone libmagic
@@ -32,22 +40,28 @@ RUN git clone https://github.com/file/file /mnt/file
 RUN --mount=type=cache,target=/var/lib/apt/lists/ apt install -y libtool autoconf
 
 # -- DOWNLOADING + BUILDING STUFF
-## Install libcurl dep
-RUN vcpkg install --triplet=arm-osx-mytriplet curl
-## Install mbedtls dep
-RUN vcpkg install --triplet=arm-osx-mytriplet mbedtls
-## Install freetype dep
-RUN vcpkg install --triplet=arm-osx-mytriplet freetype
-## Install jthread external library
-RUN vcpkg install --triplet=arm-osx-mytriplet josuttis-jthread
+
+ENV VCPKG_DEFAULT_BINARY_CACHE /cache/vcpkg
+RUN --mount=type=cache,target=/cache <<EOF
+## Install dependencies with vcpkg
+set -xe
+
+mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+
+vcpkg install --triplet=arm-osx-mytriplet curl
+vcpkg install --triplet=arm-osx-mytriplet mbedtls
+vcpkg install --triplet=arm-osx-mytriplet freetype
+vcpkg install --triplet=arm-osx-mytriplet josuttis-jthread
+EOF
 
 ## Install glfw3 dep
 ARG CUSTOM_GLFW
-RUN <<EOF
+RUN --mount=type=cache,target=/cache <<EOF
 set -xe
 if [ "$CUSTOM_GLFW" ]; then
     echo "Flag confirmation: using custom GLFW for software rendering"
 else
+    echo "Flag confirmation: using system GLFW"
     vcpkg install --triplet=arm-osx-mytriplet glfw3
 fi
 EOF
@@ -146,18 +160,6 @@ RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/
     ccache -s
 EOF
 
-# package ImHex
-## install genisoimage
-RUN --mount=type=cache,target=/var/lib/apt/lists/ apt install -y genisoimage
-## Move everything that need to be packaged inside a directory
-RUN <<EOF
-set -xe
-cd /mnt/ImHex/build
-mkdir installDir
-mv imhex.app installDir
-EOF
-## generate dmg file
-RUN cd /mnt/ImHex/build && genisoimage -V imhex.app -D -R -apple -no-pad -o imhex.dmg installDir
 
 FROM scratch
-COPY --from=build /mnt/ImHex/build/imhex.dmg .
+COPY --from=build /mnt/ImHex/build/imhex.app imhex.app
