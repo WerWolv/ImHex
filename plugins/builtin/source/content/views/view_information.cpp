@@ -243,14 +243,14 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
                             this->m_byteDistribution.draw(
                                 ImVec2(-1, 0), 
-                                ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect
+                                ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect
                             );
 
                             // Display byte types distribution analysis
                             ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
                             this->m_byteTypesDistribution.draw(
                                     ImVec2(-1, 0), 
-                                    ImPlotFlags_NoChild | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
+                                    ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
                                     true
                             );
 
@@ -258,7 +258,7 @@ namespace hex::plugin::builtin {
                             ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
                             this->m_chunkBasedEntropy.draw(
                                 ImVec2(-1, 0), 
-                                ImPlotFlags_NoChild | ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
+                                ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
                                 true
                             );
 

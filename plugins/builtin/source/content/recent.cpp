@@ -170,41 +170,40 @@ namespace hex::plugin::builtin::recent {
 
 
     void draw() {
-        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
-        ImGui::TableNextColumn();
-        ImGui::UnderlinedText(s_recentEntries.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-        ImGui::Dummy({0, 0});
-        ImGui::SameLine(0, 0);
+        ImGui::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
         {
             if (!s_recentEntriesUpdating) {
-                auto it = s_recentEntries.begin();
-                while (it != s_recentEntries.end()) {
+
+                for (auto it = s_recentEntries.begin(); it != s_recentEntries.end();) {
                     const auto &recentEntry = *it;
                     bool shouldRemove = false;
+
+                    const bool isProject = recentEntry.type == "project";
 
                     ImGui::PushID(&recentEntry);
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
                     const char* icon;
-                    if (recentEntry.type == "project") {
+                    if (isProject) {
                         icon = ICON_VS_PROJECT;
                     } else {
                         icon = ICON_VS_FILE_BINARY;
                     }
-                    if (ImGui::BulletHyperlink(hex::format("{} {}", icon, recentEntry.displayName).c_str())) {
+                    if (ImGui::Hyperlink(hex::format("{} {}", icon, hex::limitStringLength(recentEntry.displayName, 32)).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }
+                    if (!isProject)
+                        ImGui::SetItemTooltip("%s", LangEntry(recentEntry.type).get().c_str());
 
                     // Detect right click on recent provider
-                    std::string popupID = std::string("RecentEntryMenu.")+std::to_string(recentEntry.getHash());
+                    std::string popupID = hex::format("RecentEntryMenu.{}", recentEntry.getHash());
                     if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                         ImGui::OpenPopup(popupID.c_str());
                     }
 
                     if (ImGui::BeginPopup(popupID.c_str())) {
-                        if (ImGui::MenuItem("Remove")) {
+                        if (ImGui::MenuItem("hex.builtin.common.remove"_lang)) {
                             shouldRemove = true;
                         }
                         ImGui::EndPopup();
@@ -220,6 +219,7 @@ namespace hex::plugin::builtin::recent {
                 }
             }
         }
+        ImGui::EndSubWindow();
     }
 
     void drawFileMenuItem() {

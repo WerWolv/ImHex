@@ -63,7 +63,7 @@ jobs:
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.0.x'
+        dotnet-version: '8.0.100'
 
     - name: 📜 Set version variable
       run: |
@@ -177,7 +177,7 @@ jobs:
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '7.0.x'
+        dotnet-version: '8.0.100'
 
     - name: 🧰 Checkout glfw
       if: ${{matrix.custom_glfw}}
@@ -327,7 +327,7 @@ jobs:
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.100'
 
       - name: 🏔️ Set Environment variables
         run: |
@@ -445,7 +445,7 @@ jobs:
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.100'
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -576,7 +576,7 @@ jobs:
       - name: ⬇️ Install .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '8.0.100'
 
       - name: 📜 Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2.5

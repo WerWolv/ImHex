@@ -1,6 +1,6 @@
 // MIT License
 
-// Copyright (c) 2022 Evan Pezent
+// Copyright (c) 2023 Evan Pezent
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// ImPlot v0.14
+// ImPlot v0.17
 
 // You may use this file to debug, understand or extend ImPlot features but we
 // don't provide any guarantee of forward compatibility!
@@ -907,8 +907,9 @@ struct ImPlotAxis
     }
 
     void PullLinks() {
-        if (LinkedMin) { SetMin(*LinkedMin,true); }
-        if (LinkedMax) { SetMax(*LinkedMax,true); }
+        if (LinkedMin && LinkedMax) { SetRange(*LinkedMin, *LinkedMax); }
+        else if (LinkedMin) { SetMin(*LinkedMin,true); }
+        else if (LinkedMax) { SetMax(*LinkedMax,true); }
     }
 };
 
@@ -965,9 +966,11 @@ struct ImPlotLegend
     ImPlotLegendFlags PreviousFlags;
     ImPlotLocation    Location;
     ImPlotLocation    PreviousLocation;
+    ImVec2            Scroll;
     ImVector<int>     Indices;
     ImGuiTextBuffer   Labels;
     ImRect            Rect;
+    ImRect            RectClamped;
     bool              Hovered;
     bool              Held;
     bool              CanGoInside;
@@ -977,6 +980,7 @@ struct ImPlotLegend
         CanGoInside  = true;
         Hovered      = Held = false;
         Location     = PreviousLocation = ImPlotLocation_NorthWest;
+        Scroll       = ImVec2(0,0);
     }
 
     void Reset() { Indices.shrink(0); Labels.Buf.shrink(0); }
@@ -1136,7 +1140,6 @@ struct ImPlotSubplot {
         ID                          = 0;
         Flags = PreviousFlags       = ImPlotSubplotFlags_None;
         Rows = Cols = CurrentIdx    = 0;
-        FrameHovered                = false;
         Items.Legend.Location       = ImPlotLocation_North;
         Items.Legend.Flags          = ImPlotLegendFlags_Horizontal|ImPlotLegendFlags_Outside;
         Items.Legend.CanGoInside    = false;
@@ -1214,9 +1217,6 @@ struct ImPlotContext {
     // Annotation and Tabs
     ImPlotAnnotationCollection Annotations;
     ImPlotTagCollection        Tags;
-
-    // Flags
-    bool ChildWindowMade;
 
     // Style and Colormaps
     ImPlotStyle                 Style;
@@ -1414,13 +1414,15 @@ IMPLOT_API void ShowAxisContextMenu(ImPlotAxis& axis, ImPlotAxis* equal_axis, bo
 
 // Gets the position of an inner rect that is located inside of an outer rect according to an ImPlotLocation and padding amount.
 IMPLOT_API ImVec2 GetLocationPos(const ImRect& outer_rect, const ImVec2& inner_size, ImPlotLocation location, const ImVec2& pad = ImVec2(0,0));
-// Calculates the bounding box size of a legend
+// Calculates the bounding box size of a legend _before_ clipping.
 IMPLOT_API ImVec2 CalcLegendSize(ImPlotItemGroup& items, const ImVec2& pad, const ImVec2& spacing, bool vertical);
+// Clips calculated legend size
+IMPLOT_API bool ClampLegendRect(ImRect& legend_rect, const ImRect& outer_rect, const ImVec2& pad);      
 // Renders legend entries into a bounding box
 IMPLOT_API bool ShowLegendEntries(ImPlotItemGroup& items, const ImRect& legend_bb, bool interactable, const ImVec2& pad, const ImVec2& spacing, bool vertical, ImDrawList& DrawList);
-// Shows an alternate legend for the plot identified by #title_id, outside of the plot frame (can be called before or after of Begin/EndPlot but must occur in the same ImGui window!).
+// Shows an alternate legend for the plot identified by #title_id, outside of the plot frame (can be called before or after of Begin/EndPlot but must occur in the same ImGui window! This is not thoroughly tested nor scrollable!).
 IMPLOT_API void ShowAltLegend(const char* title_id, bool vertical = true, const ImVec2 size = ImVec2(0,0), bool interactable = true);
-// Shows an legends's context menu.
+// Shows a legend's context menu.
 IMPLOT_API bool ShowLegendContextMenu(ImPlotLegend& legend, bool visible);
 
 //-----------------------------------------------------------------------------
