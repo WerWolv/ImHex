@@ -322,6 +322,8 @@ namespace hex::plugin::builtin {
                     if (result.has_value()) {
                         mathHistory.push_back(result.value());
                         lastMathError.clear();
+                    } else {
+                        lastMathError = mathEvaluator.getLastError().value_or("");
                     }
                 } catch (std::invalid_argument &e) {
                     lastMathError = e.what();
