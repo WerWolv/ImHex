@@ -47,7 +47,7 @@
         "hex.builtin.achievement.data_processor.place_node.desc": "작업 공간을 마우스 오른쪽 버튼으로 클릭하고 컨텍스트 메뉴에서 노드를 선택하여 데이터 프로세서에 내장된 노드를 배치합니다.",
         "hex.builtin.achievement.data_processor.create_connection.name": "이거 관련 있는 거 같은데",
         "hex.builtin.achievement.data_processor.create_connection.desc": "한 노드에서 다른 노드로 연결을 드래그하여 두 노드를 연결합니다.",
-        "hex.builtin.achievement.data_processor.modify_data.name": "디코드해 보자",
+        "hex.builtin.achievement.data_processor.modify_data.name": "디코딩해 보자",
         "hex.builtin.achievement.data_processor.modify_data.desc": "내장된 읽기 및 쓰기 데이터 액세스 노드를 사용하여 표시된 바이트를 전처리합니다.",
         "hex.builtin.achievement.data_processor.custom_node.name": "나만의 것을 만들어보자!",
         "hex.builtin.achievement.data_processor.custom_node.desc": "컨텍스트 메뉴에서 '사용자 정의 -> 새 노드'를 선택하여 사용자 정의 노드를 생성하고 노드를 이동하여 기존 패턴을 단순화합니다.",
