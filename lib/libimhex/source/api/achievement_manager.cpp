@@ -157,6 +157,22 @@ namespace hex {
         getAchievementNodes(false).clear();
     }
 
+    std::pair<u32, u32> AchievementManager::getProgress() {
+        u32 unlocked = 0;
+        u32 total = 0;
+
+        for (auto &[categoryName, achievements] : getAchievements()) {
+            for (auto &[achievementName, achievement] : achievements) {
+                total += 1;
+                if (achievement->isUnlocked()) {
+                    unlocked += 1;
+                }
+            }
+        }
+
+        return { unlocked, total };
+    }
+
     void AchievementManager::achievementAdded() {
         getAchievementStartNodes(false).clear();
         getAchievementNodes(false).clear();

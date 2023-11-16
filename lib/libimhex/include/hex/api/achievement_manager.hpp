@@ -404,6 +404,12 @@ namespace hex {
          */
         static void clearTemporary();
 
+        /**
+         * \brief Returns the current progress of all achievements
+         * \return A pair containing the number of unlocked achievements and the total number of achievements
+         */
+        static std::pair<u32, u32> getProgress();
+
     private:
         static void achievementAdded();
     };

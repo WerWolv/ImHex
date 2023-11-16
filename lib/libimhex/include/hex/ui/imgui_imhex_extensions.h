@@ -113,6 +113,7 @@ namespace ImGui {
     bool Hyperlink(const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool BulletHyperlink(const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
+    bool DescriptionButtonProgress(const char *label, const char *description, float fraction, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
     void HelpHover(const char *text);
 

@@ -178,19 +178,23 @@ namespace hex::plugin::builtin::recent {
                     const auto &recentEntry = *it;
                     bool shouldRemove = false;
 
+                    const bool isProject = recentEntry.type == "project";
+
                     ImGui::PushID(&recentEntry);
                     ON_SCOPE_EXIT { ImGui::PopID(); };
 
                     const char* icon;
-                    if (recentEntry.type == "project") {
+                    if (isProject) {
                         icon = ICON_VS_PROJECT;
                     } else {
                         icon = ICON_VS_FILE_BINARY;
                     }
-                    if (ImGui::BulletHyperlink(hex::format("{} {}", icon, hex::limitStringLength(recentEntry.displayName, 32)).c_str())) {
+                    if (ImGui::Hyperlink(hex::format("{} {}", icon, hex::limitStringLength(recentEntry.displayName, 32)).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }
+                    if (!isProject)
+                        ImGui::SetItemTooltip("%s", LangEntry(recentEntry.type).get().c_str());
 
                     // Detect right click on recent provider
                     std::string popupID = hex::format("RecentEntryMenu.{}", recentEntry.getHash());
@@ -199,7 +203,7 @@ namespace hex::plugin::builtin::recent {
                     }
 
                     if (ImGui::BeginPopup(popupID.c_str())) {
-                        if (ImGui::MenuItem("Remove")) {
+                        if (ImGui::MenuItem("hex.builtin.common.remove"_lang)) {
                             shouldRemove = true;
                         }
                         ImGui::EndPopup();
