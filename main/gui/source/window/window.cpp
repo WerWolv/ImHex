@@ -164,6 +164,7 @@ namespace hex {
     }
 
     void Window::loop() {
+        u64 frameCount = 0;
         while (!glfwWindowShouldClose(this->m_window)) {
             this->m_lastFrameTime = glfwGetTime();
 
@@ -179,7 +180,8 @@ namespace hex {
                             TaskManager::getRunningTaskCount() > 0 ||
                             this->m_buttonDown ||
                             this->m_hadEvent ||
-                            !this->m_pressedKeys.empty();
+                            !this->m_pressedKeys.empty() ||
+                            frameCount < 100;
 
                     // Calculate the time until the next frame
                     const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
@@ -204,6 +206,7 @@ namespace hex {
             }
 
             this->fullFrame();
+            frameCount += 1;
 
             // Limit frame rate
             // If the target FPS are below 15, use the monitor refresh rate, if it's above 200, don't limit the frame rate
