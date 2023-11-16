@@ -878,6 +878,23 @@ namespace ImGuiExt {
         PopStyleVar();
     }
 
+    void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
+        const bool hasMenuBar = !std::string_view(label).empty();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+            if (hasMenuBar && ImGui::BeginMenuBar()) {
+                ImGui::TextUnformatted(label);
+                ImGui::EndMenuBar();
+            }
+        }
+        ImGui::PopStyleVar();
+    }
+
+    void EndSubWindow() {
+        ImGui::EndChild();
+    }
+
 }
 
 namespace ImGui {
@@ -896,23 +913,6 @@ namespace ImGui {
 
     bool InputTextWithHint(const char *label, const char *hint, std::string &buffer, ImGuiInputTextFlags flags) {
         return ImGui::InputTextWithHint(label, hint, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGuiExt::UpdateStringSizeCallback, &buffer);
-    }
-
-  void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
-        const bool hasMenuBar = !std::string_view(label).empty();
-
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
-            if (hasMenuBar && ImGui::BeginMenuBar()) {
-                ImGui::TextUnformatted(label);
-                ImGui::EndMenuBar();
-            }
-        }
-        ImGui::PopStyleVar();
-    }
-
-    void EndSubWindow() {
-        ImGui::EndChild();
     }
 
 }

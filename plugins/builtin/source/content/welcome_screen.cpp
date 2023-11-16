@@ -169,23 +169,23 @@ namespace hex::plugin::builtin {
 
             {
                 auto startPos = ImGui::GetCursorPos();
-                ImGui::BeginSubWindow("hex.builtin.welcome.header.start"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
+                ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.start"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
                 {
-                    if (ImGui::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
+                    if (ImGuiExt::IconHyperlink(ICON_VS_NEW_FILE, "hex.builtin.welcome.start.create_file"_lang)) {
                         auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
                         if (newProvider != nullptr && !newProvider->open())
                             hex::ImHexApi::Provider::remove(newProvider);
                         else
                             EventManager::post<EventProviderOpened>(newProvider);
                     }
-                    if (ImGui::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
+                    if (ImGuiExt::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
                         EventManager::post<RequestOpenWindow>("Open File");
-                    if (ImGui::IconHyperlink(ICON_VS_NOTEBOOK, "hex.builtin.welcome.start.open_project"_lang))
+                    if (ImGuiExt::IconHyperlink(ICON_VS_NOTEBOOK, "hex.builtin.welcome.start.open_project"_lang))
                         EventManager::post<RequestOpenWindow>("Open Project");
-                    if (ImGui::IconHyperlink(ICON_VS_TELESCOPE, "hex.builtin.welcome.start.open_other"_lang))
+                    if (ImGuiExt::IconHyperlink(ICON_VS_TELESCOPE, "hex.builtin.welcome.start.open_other"_lang))
                         otherProvidersVisible = !otherProvidersVisible;
                 }
-                ImGui::EndSubWindow();
+                ImGuiExt::EndSubWindow();
                 auto endPos = ImGui::GetCursorPos();
 
                 if (otherProvidersVisible) {
@@ -194,14 +194,14 @@ namespace hex::plugin::builtin {
                     ImGui::TextUnformatted(ICON_VS_ARROW_RIGHT);
                     ImGui::SameLine(0, 2_scaled);
 
-                    ImGui::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX);
+                    ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX);
                     for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                        if (ImGui::Hyperlink(LangEntry(unlocalizedProviderName))) {
+                        if (ImGuiExt::Hyperlink(LangEntry(unlocalizedProviderName))) {
                             ImHexApi::Provider::createProvider(unlocalizedProviderName);
                             otherProvidersVisible = false;
                         }
                     }
-                    ImGui::EndSubWindow();
+                    ImGuiExt::EndSubWindow();
                 }
             }
 
@@ -223,19 +223,19 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-            ImGui::BeginSubWindow("hex.builtin.welcome.header.help"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
+            ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.help"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
             {
                 if (ImGuiExt::IconHyperlink(ICON_VS_GITHUB, "hex.builtin.welcome.help.repo"_lang)) hex::openWebpage("hex.builtin.welcome.help.repo.link"_lang);
                 if (ImGuiExt::IconHyperlink(ICON_VS_ORGANIZATION, "hex.builtin.welcome.help.gethelp"_lang)) hex::openWebpage("hex.builtin.welcome.help.gethelp.link"_lang);
                 if (ImGuiExt::IconHyperlink(ICON_VS_COMMENT_DISCUSSION, "hex.builtin.welcome.help.discord"_lang)) hex::openWebpage("hex.builtin.welcome.help.discord.link"_lang);
             }
-            ImGui::EndSubWindow();
+            ImGuiExt::EndSubWindow();
 
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
           
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-            ImGui::BeginSubWindow("hex.builtin.welcome.header.plugins"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
+            ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.plugins"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
             {
                 const auto &plugins = PluginManager::getPlugins();
 
@@ -274,7 +274,7 @@ namespace hex::plugin::builtin {
                     }
                 }
             }
-            ImGui::EndSubWindow();
+            ImGuiExt::EndSubWindow();
             ImGui::PopStyleVar();
 
             ImGui::EndTable();
@@ -286,48 +286,48 @@ namespace hex::plugin::builtin {
 
             auto windowPadding = ImGui::GetStyle().WindowPadding.x * 3;
 
-            ImGui::BeginSubWindow("hex.builtin.welcome.header.customize"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX);
+            ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.customize"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX);
             {
-                if (ImGui::DescriptionButton("hex.builtin.welcome.customize.settings.title"_lang, "hex.builtin.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                if (ImGuiExt::DescriptionButton("hex.builtin.welcome.customize.settings.title"_lang, "hex.builtin.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
                     EventManager::post<RequestOpenWindow>("Settings");
             }
-            ImGui::EndSubWindow();
+            ImGuiExt::EndSubWindow();
             ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
             ImGui::TableNextColumn();
           
-            ImGui::BeginSubWindow("hex.builtin.welcome.header.learn"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX);
+            ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.learn"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX);
             {
                 const auto size = ImVec2(ImGui::GetContentRegionAvail().x, 0);
-                if (ImGui::DescriptionButton("hex.builtin.welcome.learn.latest.title"_lang, "hex.builtin.welcome.learn.latest.desc"_lang, size))
+                if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.latest.title"_lang, "hex.builtin.welcome.learn.latest.desc"_lang, size))
                     hex::openWebpage("hex.builtin.welcome.learn.latest.link"_lang);
-                if (ImGui::DescriptionButton("hex.builtin.welcome.learn.imhex.title"_lang, "hex.builtin.welcome.learn.imhex.desc"_lang, size)) {
+                if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.imhex.title"_lang, "hex.builtin.welcome.learn.imhex.desc"_lang, size)) {
                     AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
                     hex::openWebpage("hex.builtin.welcome.learn.imhex.link"_lang);
                 }
-                if (ImGui::DescriptionButton("hex.builtin.welcome.learn.pattern.title"_lang, "hex.builtin.welcome.learn.pattern.desc"_lang, size))
+                if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.pattern.title"_lang, "hex.builtin.welcome.learn.pattern.desc"_lang, size))
                     hex::openWebpage("hex.builtin.welcome.learn.pattern.link"_lang);
-                if (ImGui::DescriptionButton("hex.builtin.welcome.learn.plugins.title"_lang, "hex.builtin.welcome.learn.plugins.desc"_lang, size))
+                if (ImGuiExt::DescriptionButton("hex.builtin.welcome.learn.plugins.title"_lang, "hex.builtin.welcome.learn.plugins.desc"_lang, size))
                     hex::openWebpage("hex.builtin.welcome.learn.plugins.link"_lang);
 
                 if (auto [unlocked, total] = AchievementManager::getProgress(); unlocked != total) {
-                    if (ImGui::DescriptionButtonProgress("hex.builtin.welcome.learn.achievements.title"_lang, "hex.builtin.welcome.learn.achievements.desc"_lang, float(unlocked) / float(total), size)) {
+                    if (ImGuiExt::DescriptionButtonProgress("hex.builtin.welcome.learn.achievements.title"_lang, "hex.builtin.welcome.learn.achievements.desc"_lang, float(unlocked) / float(total), size)) {
                         EventManager::post<RequestOpenWindow>("Achievements");
                     }
                 }
             }
-            ImGui::EndSubWindow();
+            ImGuiExt::EndSubWindow();
 
             auto extraWelcomeScreenEntries = ContentRegistry::Interface::impl::getWelcomeScreenEntries();
             if (!extraWelcomeScreenEntries.empty()) {
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
                 ImGui::TableNextColumn();
 
-                ImGui::BeginSubWindow("hex.builtin.welcome.header.various"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0));
+                ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.various"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0));
                 {
                     for (const auto &callback : extraWelcomeScreenEntries)
                         callback();
                 }
-                ImGui::EndSubWindow();
+                ImGuiExt::EndSubWindow();
             }
 
 

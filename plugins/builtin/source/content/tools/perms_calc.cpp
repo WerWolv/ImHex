@@ -11,7 +11,7 @@ namespace hex::plugin::builtin {
             static bool setuid, setgid, sticky;
             static bool r[3], w[3], x[3];
 
-            ImGui::Header("hex.builtin.tools.permissions.perm_bits"_lang, true);
+            ImGuiExt::Header("hex.builtin.tools.permissions.perm_bits"_lang, true);
 
             if (ImGui::BeginTable("Permissions", 4, ImGuiTableFlags_Borders)) {
                 ImGui::TableSetupColumn("Special", ImGuiTableColumnFlags_NoSort);
@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGui::Header("hex.builtin.tools.permissions.absolute"_lang);
+            ImGuiExt::Header("hex.builtin.tools.permissions.absolute"_lang);
 
             auto result = hex::format("{}{}{}{}",
                 (setuid << 2) | (setgid << 1) | (sticky << 0),

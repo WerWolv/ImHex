@@ -170,7 +170,7 @@ namespace hex::plugin::builtin::recent {
 
 
     void draw() {
-        ImGui::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
+        ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
         {
             if (!s_recentEntriesUpdating) {
 
@@ -220,7 +220,7 @@ namespace hex::plugin::builtin::recent {
                 }
             }
         }
-        ImGui::EndSubWindow();
+        ImGuiExt::EndSubWindow();
     }
 
     void drawFileMenuItem() {
