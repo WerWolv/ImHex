@@ -264,7 +264,7 @@ jobs:
         docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
 
     - name: ⬆️ Upload artifacts
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: macOS ZIP arm64
         path: out/
