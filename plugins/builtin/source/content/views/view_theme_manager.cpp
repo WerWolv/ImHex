@@ -30,6 +30,12 @@ namespace hex::plugin::builtin {
 
                     // Loop over all the individual theme settings
                     for (auto &[colorName, colorId] : handler.colorMap) {
+                        if (this->m_startingColor.has_value()) {
+                            if (this->m_hoveredColorId == colorId && this->m_hoveredHandlerName == name) {
+                                handler.setFunction(colorId, this->m_startingColor.value());
+                            }
+                        }
+
                         // Get the current color value
                         auto color = handler.getFunction(colorId);
 
@@ -56,8 +62,10 @@ namespace hex::plugin::builtin {
                     auto flashingColor = this->m_startingColor.value();
 
                     const float flashProgress = std::min(1.0F, (1.0F + sinf(ImGui::GetTime() * 6)) / 2.0F);
-                    flashingColor.Value.x = std::lerp(flashingColor.Value.x, 1.0F, flashProgress);
-                    flashingColor.Value.y = std::lerp(flashingColor.Value.y, 1.0F, flashProgress);;
+                    flashingColor.Value.x = std::lerp(flashingColor.Value.x / 2, 1.0F, flashProgress);
+                    flashingColor.Value.y = std::lerp(flashingColor.Value.y / 2, 1.0F, flashProgress);
+                    flashingColor.Value.z = flashingColor.Value.z / 2;
+                    flashingColor.Value.w = 1.0F;
 
                     handler.setFunction(*this->m_hoveredColorId, flashingColor);
 
