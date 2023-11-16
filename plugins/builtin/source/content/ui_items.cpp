@@ -66,11 +66,11 @@ namespace hex::plugin::builtin {
         #if defined(DEBUG)
             ContentRegistry::Interface::addFooterItem([] {
                 static float framerate = 0;
-                if (ImGui::HasSecondPassed()) {
+                if (ImGuiExt::HasSecondPassed()) {
                     framerate = 1.0F / ImGui::GetIO().DeltaTime;
                 }
 
-                ImGui::TextFormatted("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
+                ImGuiExt::TextFormatted("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
             });
         #endif
 
@@ -88,9 +88,9 @@ namespace hex::plugin::builtin {
 
                 auto widgetStart = ImGui::GetCursorPos();
 
-                ImGui::TextSpinner(hex::format("({})", taskCount).c_str());
+                ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
                 ImGui::SameLine();
-                ImGui::SmallProgressBar(progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
+                ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
                 ImGui::SameLine();
 
                 auto widgetEnd = ImGui::GetCursorPos();
@@ -98,7 +98,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindow()->MenuBarHeight()));
                 ImGui::SetCursorPos(widgetEnd);
 
-                ImGui::InfoTooltip(LangEntry(frontTask->getUnlocalizedName()).get().c_str());
+                ImGuiExt::InfoTooltip(LangEntry(frontTask->getUnlocalizedName()).get().c_str());
 
                 if (ImGui::BeginPopupContextItem("FrontTask", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
@@ -106,15 +106,15 @@ namespace hex::plugin::builtin {
                             continue;
 
                         ImGui::PushID(&task);
-                        ImGui::TextFormatted("{}", LangEntry(task->getUnlocalizedName()));
+                        ImGuiExt::TextFormatted("{}", LangEntry(task->getUnlocalizedName()));
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
-                        ImGui::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : (float(frontTask->getValue()) / frontTask->getMaxValue()), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
+                        ImGuiExt::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : (float(frontTask->getValue()) / frontTask->getMaxValue()), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
                         ImGui::SameLine();
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-                        if (ImGui::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                        if (ImGuiExt::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                             task->interrupt();
                         ImGui::PopStyleVar();
 
@@ -126,7 +126,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, scaled(ImVec2(1, 2)));
-                if (ImGui::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                if (ImGuiExt::ToolBarButton(ICON_VS_DEBUG_STOP, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
                     frontTask->interrupt();
                 ImGui::PopStyleVar();
 
@@ -167,7 +167,7 @@ namespace hex::plugin::builtin {
             // Undo
             ImGui::BeginDisabled(!providerValid || !provider->canUndo());
             {
-                if (ImGui::ToolBarButton(ICON_VS_DISCARD, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
+                if (ImGuiExt::ToolBarButton(ICON_VS_DISCARD, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->undo();
             }
             ImGui::EndDisabled();
@@ -175,7 +175,7 @@ namespace hex::plugin::builtin {
             // Redo
             ImGui::BeginDisabled(!providerValid || !provider->canRedo());
             {
-                if (ImGui::ToolBarButton(ICON_VS_REDO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
+                if (ImGuiExt::ToolBarButton(ICON_VS_REDO, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->redo();
             }
             ImGui::EndDisabled();
@@ -185,7 +185,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(tasksRunning);
             {
                 // Create new file
-                if (ImGui::ToolBarButton(ICON_VS_FILE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
+                if (ImGuiExt::ToolBarButton(ICON_VS_FILE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
                     auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
                     if (newProvider != nullptr && !newProvider->open())
                         hex::ImHexApi::Provider::remove(newProvider);
@@ -194,7 +194,7 @@ namespace hex::plugin::builtin {
                 }
 
                 // Open file
-                if (ImGui::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
+                if (ImGuiExt::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
                     EventManager::post<RequestOpenWindow>("Open File");
             }
             ImGui::EndDisabled();
@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
             // Save file
             ImGui::BeginDisabled(!providerValid || !provider->isWritable() || !provider->isSavable());
             {
-                if (ImGui::ToolBarButton(ICON_VS_SAVE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
+                if (ImGuiExt::ToolBarButton(ICON_VS_SAVE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     provider->save();
             }
             ImGui::EndDisabled();
@@ -212,7 +212,7 @@ namespace hex::plugin::builtin {
             // Save file as
             ImGui::BeginDisabled(!providerValid || !provider->isSavable());
             {
-                if (ImGui::ToolBarButton(ICON_VS_SAVE_AS, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
+                if (ImGuiExt::ToolBarButton(ICON_VS_SAVE_AS, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&provider](auto path) {
                         provider->saveAs(path);
                     });
@@ -226,7 +226,7 @@ namespace hex::plugin::builtin {
             // Create bookmark
             ImGui::BeginDisabled(!providerValid || !provider->isReadable() || !ImHexApi::HexEditor::isSelectionValid());
             {
-                if (ImGui::ToolBarButton(ICON_VS_BOOKMARK, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
+                if (ImGuiExt::ToolBarButton(ICON_VS_BOOKMARK, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
                     auto region = ImHexApi::HexEditor::getSelection();
 
                     if (region.has_value())
@@ -279,10 +279,10 @@ namespace hex::plugin::builtin {
                             lastSelectedProvider = i;
                         }
 
-                        if (ImGui::InfoTooltip()) {
+                        if (ImGuiExt::InfoTooltip()) {
                             ImGui::BeginTooltip();
 
-                            ImGui::TextFormatted("{}", tabProvider->getName().c_str());
+                            ImGuiExt::TextFormatted("{}", tabProvider->getName().c_str());
 
                             const auto &description = tabProvider->getDataDescription();
                             if (!description.empty()) {
@@ -297,15 +297,15 @@ namespace hex::plugin::builtin {
 
                                         for (auto &[name, value] : description) {
                                             ImGui::TableNextColumn();
-                                            ImGui::TextFormatted("{}", name);
+                                            ImGuiExt::TextFormatted("{}", name);
                                             ImGui::TableNextColumn();
-                                            ImGui::TextFormattedWrapped("{}", value);
+                                            ImGuiExt::TextFormattedWrapped("{}", value);
                                         }
 
                                         ImGui::EndTable();
                                     }
                                 } else {
-                                    ImGui::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
+                                    ImGuiExt::TextFormattedDisabled("hex.builtin.provider.tooltip.show_more"_lang);
                                 }
                             }
 

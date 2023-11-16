@@ -347,7 +347,7 @@ namespace hex {
 
                 ImGui::SameLine();
 
-                if (ImGui::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                if (ImGuiExt::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
                                                [&](const std::fs::path &path) {
                                                    this->m_value = wolv::util::toUTF8String(path);
@@ -356,7 +356,7 @@ namespace hex {
 
                 ImGui::SameLine();
 
-                ImGui::TextFormatted("{}", name);
+                ImGuiExt::TextFormatted("{}", name);
 
                 return changed;
             }
@@ -882,7 +882,7 @@ namespace hex {
             };
 
             ImGui::PushID(reinterpret_cast<void*>(address));
-            ImGui::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
+            ImGuiExt::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                 auto &userData = *static_cast<UserData*>(data->UserData);
 
                 if (data->BufTextLen >= userData.maxChars)

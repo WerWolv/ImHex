@@ -20,9 +20,9 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            ImGui::Header("hex.builtin.tools.demangler.demangled"_lang);
+            ImGuiExt::Header("hex.builtin.tools.demangler.demangled"_lang);
             if (ImGui::BeginChild("demangled", ImVec2(0, 200_scaled), true)) {
-                ImGui::TextFormattedWrappedSelectable("{}", demangledName);
+                ImGuiExt::TextFormattedWrappedSelectable("{}", demangledName);
             }
             ImGui::EndChild();
         }

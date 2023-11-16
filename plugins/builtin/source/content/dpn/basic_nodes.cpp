@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::InputHexadecimal("##integer_value", &this->m_value);
+            ImGuiExt::InputHexadecimal("##integer_value", &this->m_value);
             ImGui::PopItemWidth();
         }
 

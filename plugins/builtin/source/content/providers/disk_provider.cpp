@@ -439,7 +439,7 @@ namespace hex::plugin::builtin {
                         this->m_friendlyName = friendlyName;
                     }
 
-                    ImGui::InfoTooltip(path.c_str());
+                    ImGuiExt::InfoTooltip(path.c_str());
                 }
                 ImGui::PopID();
 
@@ -455,7 +455,7 @@ namespace hex::plugin::builtin {
 
         #else
 
-            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGui::UpdateStringSizeCallback, &this->m_pathBuffer)) {
+            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGuiExt::UpdateStringSizeCallback, &this->m_pathBuffer)) {
                 this->m_path = this->m_pathBuffer;
                 this->m_friendlyName = this->m_pathBuffer;
             }

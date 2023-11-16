@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
         void drawCommitHistoryPage();
         void drawLicensePage();
 
-        ImGui::Texture m_logoTexture;
+        ImGuiExt::Texture m_logoTexture;
 
         std::future<HttpRequest::Result<std::string>> m_releaseNoteRequest, m_commitHistoryRequest;
         u32 m_clickCount = 0;

@@ -14,15 +14,15 @@ namespace hex::plugin::builtin {
 
     static ImColor getColor(std::string_view level) {
         if (level.contains("DEBUG"))
-            return ImGui::GetCustomColorVec4(ImGuiCustomCol_LoggerDebug);
+            return ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerDebug);
         else if (level.contains("INFO"))
-            return ImGui::GetCustomColorVec4(ImGuiCustomCol_LoggerInfo);
+            return ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerInfo);
         else if (level.contains("WARN"))
-            return ImGui::GetCustomColorVec4(ImGuiCustomCol_LoggerWarning);
+            return ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerWarning);
         else if (level.contains("ERROR"))
-            return ImGui::GetCustomColorVec4(ImGuiCustomCol_LoggerError);
+            return ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerError);
         else if (level.contains("FATAL"))
-            return ImGui::GetCustomColorVec4(ImGuiCustomCol_LoggerFatal);
+            return ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerFatal);
         return ImGui::GetStyleColorVec4(ImGuiCol_Text);
     }
 

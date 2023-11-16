@@ -216,19 +216,19 @@ namespace hex::plugin::builtin {
                     auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
                     if (runtime.isRunning()) {
                         if (this->m_breakpointHit) {
-                            if (ImGui::IconButton(ICON_VS_DEBUG_CONTINUE, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow)))
+                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_CONTINUE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow)))
                                 this->m_breakpointHit = false;
                             ImGui::SameLine();
-                            if (ImGui::IconButton(ICON_VS_DEBUG_STEP_INTO, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow))) {
+                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_INTO, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow))) {
                                 runtime.getInternals().evaluator->pauseNextLine();
                                 this->m_breakpointHit = false;
                             }
                         } else {
-                            if (ImGui::IconButton(ICON_VS_DEBUG_STOP, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
+                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
                                 runtime.abort();
                         }
                     } else {
-                        if (ImGui::IconButton(ICON_VS_DEBUG_START, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
                             this->m_triggerEvaluation = false;
                             this->evaluatePattern(this->m_textEditor.GetText(), provider);
                         }
@@ -240,9 +240,9 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
                     if (this->m_runningEvaluators > 0) {
                         if (this->m_breakpointHit) {
-                            ImGui::TextFormatted("hex.builtin.view.pattern_editor.breakpoint_hit"_lang, runtime.getInternals().evaluator->getPauseLine().value_or(0));
+                            ImGuiExt::TextFormatted("hex.builtin.view.pattern_editor.breakpoint_hit"_lang, runtime.getInternals().evaluator->getPauseLine().value_or(0));
                         } else {
-                            ImGui::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
+                            ImGuiExt::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
                         }
 
                         ImGui::SameLine();
@@ -267,9 +267,9 @@ namespace hex::plugin::builtin {
                                 this->m_accessHistoryIndex = (this->m_accessHistoryIndex + 1) % this->m_accessHistory.size();
                             };
 
-                            insertPos(runtime.getLastReadAddress(),         ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue));
-                            insertPos(runtime.getLastWriteAddress(),        ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                            insertPos(runtime.getLastPatternPlaceAddress(), ImGui::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
+                            insertPos(runtime.getLastReadAddress(),         ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue));
+                            insertPos(runtime.getLastWriteAddress(),        ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                            insertPos(runtime.getLastPatternPlaceAddress(), ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
 
                             auto drawList = ImGui::GetWindowDrawList();
                             for (const auto &[progress, color] : this->m_accessHistory) {
@@ -294,11 +294,11 @@ namespace hex::plugin::builtin {
                         ImGui::SameLine();
 
                         if (auto max = runtime.getMaximumPatternCount(); max >= std::numeric_limits<u32>::max()) {
-                            ImGui::TextFormatted("{} / {}",
+                            ImGuiExt::TextFormatted("{} / {}",
                                                  runtime.getCreatedPatternCount(),
                                                  ICON_FA_INFINITY);
                         } else {
-                            ImGui::TextFormatted("{} / {}",
+                            ImGuiExt::TextFormatted("{} / {}",
                                                  runtime.getCreatedPatternCount(),
                                                  runtime.getMaximumPatternCount());
                         }
@@ -447,7 +447,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         envVars.insert(std::next(iter), { envVarCounter++, "", i128(0), EnvVarType::Integer });
                     }
 
@@ -455,7 +455,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::BeginDisabled(envVars.size() <= 1);
                     {
-                        if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                             bool isFirst = iter == envVars.begin();
                             bool isLast  = std::next(iter) == envVars.end();
                             envVars.erase(iter);
@@ -478,7 +478,7 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables) {
         if (ImGui::BeginChild("##settings", size, true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
             if (patternVariables.empty()) {
-                ImGui::TextFormattedCentered("hex.builtin.view.pattern_editor.no_in_out_vars"_lang);
+                ImGuiExt::TextFormattedCentered("hex.builtin.view.pattern_editor.no_in_out_vars"_lang);
             } else {
                 if (ImGui::BeginTable("##in_out_vars_table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg)) {
                     ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 0.25F);
@@ -557,9 +557,9 @@ namespace hex::plugin::builtin {
 
                     ImGui::TextUnformatted(section.name.c_str());
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
+                    ImGuiExt::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
                     ImGui::TableNextColumn();
-                    if (ImGui::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    if (ImGuiExt::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         auto dataProvider = std::make_shared<MemoryFileProvider>();
                         dataProvider->resize(section.data.size());
                         dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
@@ -628,17 +628,17 @@ namespace hex::plugin::builtin {
             auto line = this->m_textEditor.GetCursorPosition().mLine + 1;
 
             if (!breakpoints.contains(line)) {
-                if (ImGui::IconButton(ICON_VS_DEBUG_BREAKPOINT, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                if (ImGuiExt::IconButton(ICON_VS_DEBUG_BREAKPOINT, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                     evaluator->addBreakpoint(line);
                     this->m_textEditor.SetBreakpoints(breakpoints);
                 }
-                ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.add_tooltip"_lang);
+                ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.add_tooltip"_lang);
             } else {
-                if (ImGui::IconButton(ICON_VS_DEBUG_BREAKPOINT_UNVERIFIED, ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                if (ImGuiExt::IconButton(ICON_VS_DEBUG_BREAKPOINT_UNVERIFIED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
                     evaluator->removeBreakpoint(line);
                     this->m_textEditor.SetBreakpoints(breakpoints);
                 }
-                ImGui::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
+                ImGuiExt::InfoTooltip("hex.builtin.view.pattern_editor.debugger.remove_tooltip"_lang);
             }
 
             ImGui::SameLine();
@@ -859,13 +859,13 @@ namespace hex::plugin::builtin {
         {
             ImGui::ColorButton(pattern->getVariableName().c_str(), ImColor(pattern->getColor()));
             ImGui::SameLine(0, 10);
-            ImGui::TextFormattedColored(ImColor(0xFF9BC64D), "{} ", pattern->getFormattedName());
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{} ", pattern->getFormattedName());
             ImGui::SameLine(0, 5);
-            ImGui::TextFormatted("{}", pattern->getDisplayName());
+            ImGuiExt::TextFormatted("{}", pattern->getDisplayName());
             ImGui::SameLine();
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
-            ImGui::TextFormatted("{} ", hex::limitStringLength(pattern->getFormattedValue(), 64));
+            ImGuiExt::TextFormatted("{} ", hex::limitStringLength(pattern->getFormattedValue(), 64));
 
             if (ImGui::GetIO().KeyShift) {
                 ImGui::Indent();
@@ -875,32 +875,32 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{} ", "hex.builtin.common.type"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.type"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted(" {}", pattern->getTypeName());
+                    ImGuiExt::TextFormatted(" {}", pattern->getTypeName());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{} ", "hex.builtin.common.address"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.address"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted(" 0x{:08X}", pattern->getOffset());
+                    ImGuiExt::TextFormatted(" 0x{:08X}", pattern->getOffset());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{} ", "hex.builtin.common.size"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.size"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted(" {}", hex::toByteString(pattern->getSize()));
+                    ImGuiExt::TextFormatted(" {}", hex::toByteString(pattern->getSize()));
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{} ", "hex.builtin.common.endian"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.endian"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
+                    ImGuiExt::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
 
                     if (const auto &comment = pattern->getComment(); !comment.empty()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted("{} ", "hex.builtin.common.comment"_lang);
+                        ImGuiExt::TextFormatted("{} ", "hex.builtin.common.comment"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TextWrapped(" \"%s\"", comment.c_str());
                     }

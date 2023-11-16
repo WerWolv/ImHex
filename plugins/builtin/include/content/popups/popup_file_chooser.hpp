@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
                         doubleClicked = true;
 
-                    ImGui::InfoTooltip(wolv::util::toUTF8String(path).c_str());
+                    ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
                     ImGui::PopID();
                     index++;

@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(files.empty() || outputPath.empty());
             {
                 if (combinerTask.isRunning())
-                    ImGui::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
+                    ImGuiExt::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
                 else {
                     if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
                         combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {

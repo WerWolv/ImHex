@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
                     ImGui::SetKeyboardFocusHere();
                     this->m_requestFocus = false;
                 }
-                if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_OPERATOR, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                     if (auto result = this->m_evaluator.evaluate(this->m_input); result.has_value()) {
                         const auto inputResult = result.value();
                         u64 newAddress = 0x00;
@@ -115,8 +115,8 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.region"_lang)) {
                     u64 inputA = this->m_region.getStartAddress();
                     u64 inputB = this->m_region.getEndAddress();
-                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
-                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.end"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
+                    ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
+                    ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.end"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
 
                     if (inputB < inputA)
                         inputB = inputA;
@@ -129,8 +129,8 @@ namespace hex::plugin::builtin {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.select.offset.size"_lang)) {
                     u64 inputA = this->m_region.getStartAddress();
                     u64 inputB = this->m_region.getSize();
-                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
-                    ImGui::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.size"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
+                    ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.begin"_lang, &inputA, ImGuiInputTextFlags_AutoSelectAll);
+                    ImGuiExt::InputHexadecimal("hex.builtin.view.hex_editor.select.offset.size"_lang, &inputB, ImGuiInputTextFlags_AutoSelectAll);
 
                     if (inputB <= 0)
                         inputB = 1;
@@ -171,7 +171,7 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
             if (ImGui::BeginTabBar("##find_tabs")) {
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
-                    if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_NUMERIC, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
+                    if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_NUMERIC, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
                         if (!this->m_input.empty()) {
                             this->m_shouldSearch = true;
                             this->m_backwards = false;
@@ -188,7 +188,7 @@ namespace hex::plugin::builtin {
                 }
 
                 if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.string"_lang)) {
-                    if (ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                    if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, this->m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                         if (!this->m_input.empty()) {
                             this->m_shouldSearch = true;
                             this->m_backwards = false;
@@ -253,7 +253,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(this->m_searchTask.isRunning());
             {
                 ImGui::SameLine();
-                if (ImGui::IconButton(ICON_VS_SEARCH "##search", ButtonColor, ButtonSize)) {
+                if (ImGuiExt::IconButton(ICON_VS_SEARCH "##search", ButtonColor, ButtonSize)) {
                     this->m_shouldSearch = true;
                     this->m_backwards = false;
                     this->m_reachedEnd = false;
@@ -265,7 +265,7 @@ namespace hex::plugin::builtin {
                 {
                     ImGui::BeginDisabled(this->m_reachedEnd && this->m_backwards);
                     {
-                        if (ImGui::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
+                        if (ImGuiExt::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
                             this->m_shouldSearch = true;
                             this->m_backwards = true;
                             this->m_reachedEnd = false;
@@ -277,7 +277,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::BeginDisabled(this->m_reachedEnd && !this->m_backwards);
                     {
-                        if (ImGui::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
+                        if (ImGuiExt::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
                             this->m_shouldSearch = true;
                             this->m_backwards = false;
                             this->m_reachedEnd = false;
@@ -341,7 +341,7 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.set_base"_lang);
 
-            ImGui::InputHexadecimal("##base_address", &this->m_baseAddress);
+            ImGuiExt::InputHexadecimal("##base_address", &this->m_baseAddress);
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 setBaseAddress(this->m_baseAddress);
                 editor->closePopup();
@@ -375,7 +375,7 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.set_page_size"_lang);
 
-            ImGui::InputHexadecimal("##page_size", &this->m_pageSize);
+            ImGuiExt::InputHexadecimal("##page_size", &this->m_pageSize);
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 setPageSize(this->m_pageSize);
                 editor->closePopup();
@@ -413,7 +413,7 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.resize"_lang);
 
-            ImGui::InputHexadecimal("##resize", &this->m_size);
+            ImGuiExt::InputHexadecimal("##resize", &this->m_size);
             if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
                 this->resize(this->m_size);
                 editor->closePopup();
@@ -446,8 +446,8 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.insert"_lang);
 
-            ImGui::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
-            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
+            ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
+            ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
@@ -477,8 +477,8 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.remove"_lang);
 
-            ImGui::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
-            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
+            ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
+            ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
@@ -508,12 +508,12 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.fill"_lang);
 
-            ImGui::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
-            ImGui::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
+            ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
+            ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
 
             ImGui::Separator();
 
-            ImGui::InputTextIcon("hex.builtin.common.bytes"_lang, ICON_VS_SYMBOL_NAMESPACE, this->m_input);
+            ImGuiExt::InputTextIcon("hex.builtin.common.bytes"_lang, ICON_VS_SYMBOL_NAMESPACE, this->m_input);
 
             View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
             [&, this] {

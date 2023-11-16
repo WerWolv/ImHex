@@ -67,7 +67,7 @@ enum ImGuiCustomStyle {
     ImGuiCustomStyle_COUNT
 };
 
-namespace ImGui {
+namespace ImGuiExt {
 
     class Texture {
     public:
@@ -236,7 +236,9 @@ namespace ImGui {
 
         ImGui::SetCursorPos(((availableSpace - textSize) / 2.0F));
 
-        ImGui::TextFormatted("{}", text);
+        ImGui::PushTextWrapPos(availableSpace.x * 0.75F);
+        ImGuiExt::TextFormattedWrapped("{}", text);
+        ImGui::PopTextWrapPos();
     }
 
     inline void TextFormattedCenteredHorizontal(const std::string &fmt, auto &&...args) {
@@ -246,14 +248,12 @@ namespace ImGui {
 
         ImGui::SetCursorPosX(((availableSpace - textSize) / 2.0F).x);
 
-        ImGui::TextFormattedWrapped("{}", text);
+        ImGui::PushTextWrapPos(availableSpace.x * 0.75F);
+        ImGuiExt::TextFormattedWrapped("{}", text);
+        ImGui::PopTextWrapPos();
     }
 
-    bool InputText(const char* label, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
     bool InputTextIcon(const char* label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
-    bool InputText(const char *label, std::u8string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
-    bool InputTextMultiline(const char* label, std::string &buffer, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
-    bool InputTextWithHint(const char *label, const char *hint, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
     bool InputScalarCallback(const char* label, ImGuiDataType data_type, void* p_data, const char* format, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data);
 
@@ -300,5 +300,14 @@ namespace ImGui {
         else if constexpr (std::same_as<T, i64>)    return "ll";
         else static_assert(hex::always_false<T>::value, "Invalid data type!");
     }
+
+}
+
+// these functions are exception because they just allow conversion from string to char*, they do not really add anything
+namespace ImGui {
+    bool InputText(const char* label, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+    bool InputText(const char *label, std::u8string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+    bool InputTextMultiline(const char* label, std::string &buffer, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
+    bool InputTextWithHint(const char *label, const char *hint, std::string &buffer, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
 }

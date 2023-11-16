@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
         void drawByteSwapper() {
             static std::string input, buffer, output;
 
-            if (ImGui::InputTextIcon("hex.builtin.tools.input"_lang, ICON_VS_SYMBOL_NUMERIC, input, ImGuiInputTextFlags_CharsHexadecimal)) {
+            if (ImGuiExt::InputTextIcon("hex.builtin.tools.input"_lang, ICON_VS_SYMBOL_NUMERIC, input, ImGuiInputTextFlags_CharsHexadecimal)) {
                 auto nextAlignedSize = std::max<size_t>(2, std::bit_ceil(input.size()));
 
                 buffer.clear();
@@ -30,7 +30,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().DisabledAlpha);
-            ImGui::InputTextIcon("hex.builtin.tools.output"_lang, ICON_VS_SYMBOL_NUMERIC, output, ImGuiInputTextFlags_ReadOnly);
+            ImGuiExt::InputTextIcon("hex.builtin.tools.output"_lang, ICON_VS_SYMBOL_NUMERIC, output, ImGuiInputTextFlags_ReadOnly);
             ImGui::PopStyleVar();
         }
     }

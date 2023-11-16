@@ -28,9 +28,9 @@ namespace hex::plugin::builtin {
             static bool extendedSearch = false;
             static std::string searchString;
 
-            ImGui::Header("hex.builtin.tools.wiki_explain.control"_lang, true);
+            ImGuiExt::Header("hex.builtin.tools.wiki_explain.control"_lang, true);
 
-            bool startSearch = ImGui::InputTextIcon("##search", ICON_VS_SYMBOL_KEY, searchString, ImGuiInputTextFlags_EnterReturnsTrue);
+            bool startSearch = ImGuiExt::InputTextIcon("##search", ICON_VS_SYMBOL_KEY, searchString, ImGuiInputTextFlags_EnterReturnsTrue);
 
             ImGui::SameLine();
 
@@ -43,12 +43,12 @@ namespace hex::plugin::builtin {
                 searchProcess = request.execute();
             }
 
-            ImGui::Header("hex.builtin.tools.wiki_explain.results"_lang);
+            ImGuiExt::Header("hex.builtin.tools.wiki_explain.results"_lang);
 
             if (ImGui::BeginChild("##summary", ImVec2(0, 300), true)) {
                 if (!resultTitle.empty() && !resultExtract.empty()) {
-                    ImGui::HeaderColored(resultTitle.c_str(), ImGui::GetCustomColorVec4(ImGuiCustomCol_Highlight), true);
-                    ImGui::TextFormattedWrapped("{}", resultExtract.c_str());
+                    ImGuiExt::HeaderColored(resultTitle.c_str(), ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), true);
+                    ImGuiExt::TextFormattedWrapped("{}", resultExtract.c_str());
                 }
             }
             ImGui::EndChild();

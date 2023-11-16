@@ -14,7 +14,7 @@ namespace hex::plugin::builtin {
             static u64 multiplier = 1;
             static u64 numBits = 32;
 
-            ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.invariant_multiplication.description"_lang);
+            ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.tools.invariant_multiplication.description"_lang);
 
             ImGui::NewLine();
 
@@ -44,14 +44,14 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
                     ImGui::TextUnformatted("( X *");
                     ImGui::SameLine();
-                    if (ImGui::InputHexadecimal("##multiplier", &multiplier)) {
+                    if (ImGuiExt::InputHexadecimal("##multiplier", &multiplier)) {
                         if (multiplier == 0)
                             multiplier = 1;
                         divisor = ((1LLU << (numBits + 1)) / multiplier) + 1;
                     }
 
                     ImGui::SameLine();
-                    ImGui::TextFormatted(") >> {}", numBits + 1);
+                    ImGuiExt::TextFormatted(") >> {}", numBits + 1);
 
                     ImGui::PopItemWidth();
                 }

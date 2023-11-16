@@ -170,7 +170,7 @@ namespace hex::plugin::builtin::recent {
 
 
     void draw() {
-        ImGui::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
+        ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
         {
             if (!s_recentEntriesUpdating) {
 
@@ -189,7 +189,8 @@ namespace hex::plugin::builtin::recent {
                     } else {
                         icon = ICON_VS_FILE_BINARY;
                     }
-                    if (ImGui::Hyperlink(hex::format("{} {}", icon, hex::limitStringLength(recentEntry.displayName, 32)).c_str())) {
+                  
+                    if (ImGuiExt::Hyperlink(hex::format("{} {}", icon, hex::limitStringLength(recentEntry.displayName, 32)).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }
@@ -219,7 +220,7 @@ namespace hex::plugin::builtin::recent {
                 }
             }
         }
-        ImGui::EndSubWindow();
+        ImGuiExt::EndSubWindow();
     }
 
     void drawFileMenuItem() {

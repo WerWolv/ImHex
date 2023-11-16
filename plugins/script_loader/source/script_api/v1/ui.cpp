@@ -20,7 +20,7 @@ public:
               m_message(std::move(message)) { }
 
     void drawContent() override {
-        ImGui::TextFormattedWrapped("{}", this->m_message.c_str());
+        ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
         ImGui::NewLine();
         ImGui::Separator();
 
@@ -63,7 +63,7 @@ public:
               m_message(std::move(message)), m_maxSize(maxSize) { }
 
     void drawContent() override {
-        ImGui::TextFormattedWrapped("{}", this->m_message.c_str());
+        ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
         ImGui::NewLine();
 
         ImGui::SetItemDefaultFocus();

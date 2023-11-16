@@ -13,8 +13,11 @@
 
 #include <fonts/codicons_font.h>
 
-namespace ImGui {
 
+namespace ImGuiExt {
+
+    using namespace ImGui;
+    
     Texture::Texture(const ImU8 *buffer, int size, int width, int height) {
         unsigned char *imageData = stbi_load_from_memory(buffer, size, &this->m_width, &this->m_height, nullptr, 4);
         if (imageData == nullptr) {
@@ -321,26 +324,26 @@ namespace ImGui {
     }
 
     void HelpHover(const char *text) {
-        const auto iconColor = ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive);
+        const auto iconColor = GetStyleColorVec4(ImGuiCol_ButtonActive);
 
-        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, ImGui::GetStyle().FramePadding.y));
+        PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+        PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0, 0, 0));
+        PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0, 0, 0, 0));
+        PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, GetStyle().FramePadding.y));
 
-        ImGui::PushStyleColor(ImGuiCol_Text, iconColor);
-        ImGui::Button(ICON_VS_INFO);
-        ImGui::PopStyleColor();
+        PushStyleColor(ImGuiCol_Text, iconColor);
+        Button(ICON_VS_INFO);
+        PopStyleColor();
 
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            ImGui::SetNextWindowSizeConstraints(ImVec2(ImGui::GetTextLineHeight() * 25, 0), ImVec2(ImGui::GetTextLineHeight() * 25, FLT_MAX));
-            ImGui::BeginTooltip();
-            ImGui::TextFormattedWrapped("{}", text);
-            ImGui::EndTooltip();
+        if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+            SetNextWindowSizeConstraints(ImVec2(GetTextLineHeight() * 25, 0), ImVec2(GetTextLineHeight() * 25, FLT_MAX));
+            BeginTooltip();
+            TextFormattedWrapped("{}", text);
+            EndTooltip();
         }
 
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor(3);
+        PopStyleVar();
+        PopStyleColor(3);
     }
 
     void UnderlinedText(const char *label, ImColor color, const ImVec2 &size_arg) {
@@ -358,28 +361,28 @@ namespace ImGui {
     }
 
     void TextSpinner(const char *label) {
-        ImGui::Text("[%c] %s", "|/-\\"[ImU32(ImGui::GetTime() * 20) % 4], label);
+        Text("[%c] %s", "|/-\\"[ImU32(GetTime() * 20) % 4], label);
     }
 
     void Header(const char *label, bool firstEntry) {
         if (!firstEntry)
-            ImGui::NewLine();
-        ImGui::SeparatorText(label);
+            NewLine();
+        SeparatorText(label);
     }
 
     void HeaderColored(const char *label, ImColor color, bool firstEntry) {
         if (!firstEntry)
-            ImGui::NewLine();
-        ImGui::TextFormattedColored(color, "{}", label);
-        ImGui::Separator();
+            NewLine();
+        TextFormattedColored(color, "{}", label);
+        Separator();
     }
 
     bool InfoTooltip(const char *text) {
         static double lastMoveTime;
         static ImGuiID lastHoveredID;
 
-        double currTime   = ImGui::GetTime();
-        ImGuiID hoveredID = ImGui::GetHoveredID();
+        double currTime   = GetTime();
+        ImGuiID hoveredID = GetHoveredID();
 
         bool result = false;
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
@@ -498,10 +501,10 @@ namespace ImGui {
     }
 
     void OpenPopupInWindow(const char *window_name, const char *popup_name) {
-        if (ImGui::Begin(window_name)) {
-            ImGui::OpenPopup(popup_name);
+        if (Begin(window_name)) {
+            OpenPopup(popup_name);
         }
-        ImGui::End();
+        End();
     }
 
 
@@ -556,7 +559,7 @@ namespace ImGui {
 
         ImVec2 pos = window->DC.CursorPos;
 
-        ImVec2 size = CalcItemSize(ImVec2(1, 1) * ImGui::GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
+        ImVec2 size = CalcItemSize(ImVec2(1, 1) * GetCurrentWindow()->MenuBarHeight(), label_size.x + style.FramePadding.x * 2.0f, label_size.y + style.FramePadding.y * 2.0f);
 
         const ImRect bb(pos, pos + size);
         ItemSize(size, style.FramePadding.y);
@@ -629,7 +632,7 @@ namespace ImGui {
     }
 
     bool InputIntegerPrefix(const char *label, const char *prefix, void *value, ImGuiDataType type, const char *format, ImGuiInputTextFlags flags) {
-        auto window             = ImGui::GetCurrentWindow();
+        auto window             = GetCurrentWindow();
         const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
 
@@ -638,7 +641,7 @@ namespace ImGui {
         const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), CalcTextSize(prefix).x, label_size.y + style.FramePadding.y * 2.0f);
         const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
 
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
+        SetCursorPosX(GetCursorPosX() + frame_size.x);
 
         char buf[64];
         DataTypeFormatString(buf, IM_ARRAYSIZE(buf), type, value, format);
@@ -653,9 +656,9 @@ namespace ImGui {
         RenderNavHighlight(frame_bb, id);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
+        PushStyleVar(ImGuiStyleVar_Alpha, 0.6F);
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), prefix);
-        ImGui::PopStyleVar();
+        PopStyleVar();
 
         return value_changed;
     }
@@ -690,12 +693,9 @@ namespace ImGui {
         RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
     }
 
-    bool InputText(const char *label, std::string &buffer, ImGuiInputTextFlags flags) {
-        return ImGui::InputText(label, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
-    }
-
+    
     bool InputTextIcon(const char *label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags) {
-        auto window             = ImGui::GetCurrentWindow();
+        auto window             = GetCurrentWindow();
         const ImGuiID id        = window->GetID(label);
         const ImGuiStyle &style = GImGui->Style;
 
@@ -705,9 +705,9 @@ namespace ImGui {
         const ImVec2 frame_size = CalcItemSize(ImVec2(0, 0), icon_frame_size.x, label_size.y + style.FramePadding.y * 2.0f);
         const ImRect frame_bb(window->DC.CursorPos, window->DC.CursorPos + frame_size);
 
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + frame_size.x);
+        SetCursorPosX(GetCursorPosX() + frame_size.x);
 
-        bool value_changed = ImGui::InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0f), ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
+        bool value_changed = InputTextEx(label, nullptr, buffer.data(), buffer.size() + 1, ImVec2(CalcItemWidth(), label_size.y + style.FramePadding.y * 2.0f), ImGuiInputTextFlags_CallbackResize | flags, UpdateStringSizeCallback, &buffer);
 
         if (value_changed)
             MarkItemEdited(GImGui->LastItemData.ID);
@@ -719,18 +719,6 @@ namespace ImGui {
         RenderText(ImVec2(frame_bb.Min.x + style.FramePadding.x, frame_bb.Min.y + style.FramePadding.y), icon);
 
         return value_changed;
-    }
-
-    bool InputTextWithHint(const char *label, const char *hint, std::string &buffer, ImGuiInputTextFlags flags) {
-        return ImGui::InputTextWithHint(label, hint, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
-    }
-
-    bool InputText(const char *label, std::u8string &buffer, ImGuiInputTextFlags flags) {
-        return ImGui::InputText(label, reinterpret_cast<char *>(buffer.data()), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
-    }
-
-    bool InputTextMultiline(const char *label, std::string &buffer, const ImVec2 &size, ImGuiInputTextFlags flags) {
-        return ImGui::InputTextMultiline(label, buffer.data(), buffer.size() + 1, size, ImGuiInputTextFlags_CallbackResize | flags, ImGui::UpdateStringSizeCallback, &buffer);
     }
 
     bool InputScalarCallback(const char* label, ImGuiDataType data_type, void* p_data, const char* format, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data) {
@@ -752,7 +740,7 @@ namespace ImGui {
         flags |= ImGuiInputTextFlags_AutoSelectAll;
         flags |= ImGuiInputTextFlags_NoMarkEdited;  // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
 
-        if (InputText(label, buf, IM_ARRAYSIZE(buf), flags, callback, user_data))
+        if (ImGui::InputText(label, buf, IM_ARRAYSIZE(buf), flags, callback, user_data))
             value_changed = DataTypeApplyFromText(buf, data_type, p_data, format);
 
         if (value_changed)
@@ -814,31 +802,31 @@ namespace ImGui {
     }
 
     bool DimmedButton(const char* label){
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
-        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButton));
-        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_ButtonActive));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+        PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
+        PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
+        PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
+        PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-        bool res = ImGui::Button(label);
+        bool res = Button(label);
 
-        ImGui::PopStyleColor(4);
-        ImGui::PopStyleVar(1);
+        PopStyleColor(4);
+        PopStyleVar(1);
 
         return res;
     }
 
     bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size_arg){
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
-        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButton));
-        ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_ButtonActive));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
-        ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+        PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
+        PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
+        PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
+        PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
         bool res = IconButton(symbol, color, size_arg);
 
-        ImGui::PopStyleColor(4);
-        ImGui::PopStyleVar(1);
+        PopStyleColor(4);
+        PopStyleVar(1);
 
         return res;
     }
@@ -848,46 +836,46 @@ namespace ImGui {
         bool toggled = false;
 
         if (*v) {
-            ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+            PushStyleColor(ImGuiCol_Border, GetStyleColorVec4(ImGuiCol_ButtonActive));
             pushed = true;
         }
 
-        if (ImGui::DimmedIconButton(icon, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+        if (DimmedIconButton(icon, GetStyleColorVec4(ImGuiCol_Text))) {
             *v = !*v;
             toggled = true;
         }
 
         if (pushed)
-            ImGui::PopStyleColor();
+            PopStyleColor();
 
         return toggled;
     }
 
     void TextOverlay(const char *text, ImVec2 pos) {
-        const auto textSize = ImGui::CalcTextSize(text);
+        const auto textSize = CalcTextSize(text);
         const auto textPos  = pos - textSize / 2;
-        const auto margin   = ImGui::GetStyle().FramePadding * 2;
+        const auto margin   = GetStyle().FramePadding * 2;
         const auto textRect = ImRect(textPos - margin, textPos + textSize + margin);
 
-        auto drawList = ImGui::GetForegroundDrawList();
+        auto drawList = GetForegroundDrawList();
 
-        drawList->AddRectFilled(textRect.Min, textRect.Max, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
-        drawList->AddRect(textRect.Min, textRect.Max, ImGui::GetColorU32(ImGuiCol_Border));
-        drawList->AddText(textPos, ImGui::GetColorU32(ImGuiCol_Text), text);
+        drawList->AddRectFilled(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
+        drawList->AddRect(textRect.Min, textRect.Max, GetColorU32(ImGuiCol_Border));
+        drawList->AddText(textPos, GetColorU32(ImGuiCol_Text), text);
     }
 
     bool BeginBox() {
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5, 5));
-        auto result = ImGui::BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame);
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
+        PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(5, 5));
+        auto result = BeginTable("##box", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_SizingStretchSame);
+        TableNextRow();
+        TableNextColumn();
 
         return result;
     }
 
     void EndBox() {
-        ImGui::EndTable();
-        ImGui::PopStyleVar();
+        EndTable();
+        PopStyleVar();
     }
 
     void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
@@ -905,6 +893,26 @@ namespace ImGui {
 
     void EndSubWindow() {
         ImGui::EndChild();
+    }
+
+}
+
+namespace ImGui {
+
+    bool InputText(const char *label, std::u8string &buffer, ImGuiInputTextFlags flags) {
+        return ImGui::InputText(label, reinterpret_cast<char *>(buffer.data()), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGuiExt::UpdateStringSizeCallback, &buffer);
+    }
+
+    bool InputText(const char *label, std::string &buffer, ImGuiInputTextFlags flags) {
+        return ImGui::InputText(label, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGuiExt::UpdateStringSizeCallback, &buffer);
+    }
+
+    bool InputTextMultiline(const char *label, std::string &buffer, const ImVec2 &size, ImGuiInputTextFlags flags) {
+        return ImGui::InputTextMultiline(label, buffer.data(), buffer.size() + 1, size, ImGuiInputTextFlags_CallbackResize | flags, ImGuiExt::UpdateStringSizeCallback, &buffer);
+    }
+
+    bool InputTextWithHint(const char *label, const char *hint, std::string &buffer, ImGuiInputTextFlags flags) {
+        return ImGui::InputTextWithHint(label, hint, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGuiExt::UpdateStringSizeCallback, &buffer);
     }
 
 }

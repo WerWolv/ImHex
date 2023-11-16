@@ -82,7 +82,7 @@ namespace hex {
         this->setupNativeWindow();
         this->registerEventHandlers();
 
-        this->m_logoTexture = ImGui::Texture(romfs::get("logo.png").span());
+        this->m_logoTexture = ImGuiExt::Texture(romfs::get("logo.png").span());
 
         ContentRegistry::Settings::impl::store();
         EventManager::post<EventSettingsChanged>();
@@ -263,22 +263,22 @@ namespace hex {
         if (!titleBarButtons.empty()) {
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * float(4 + titleBarButtons.size()));
             for (const auto &[icon, tooltip, callback]: titleBarButtons) {
-                if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
+                if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                     callback();
                 }
-                ImGui::InfoTooltip(LangEntry(tooltip));
+                ImGuiExt::InfoTooltip(LangEntry(tooltip));
             }
         }
 
         // Draw minimize, restore and maximize buttons
         ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
-        if (ImGui::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
+        if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
             glfwIconifyWindow(this->m_window);
         if (glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED)) {
-            if (ImGui::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
+            if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
                 glfwRestoreWindow(this->m_window);
         } else {
-            if (ImGui::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
+            if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
                 glfwMaximizeWindow(this->m_window);
         }
 
@@ -287,7 +287,7 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
 
         // Draw close button
-        if (ImGui::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
+        if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
             ImHexApi::System::closeImHex();
         }
 
@@ -335,10 +335,10 @@ namespace hex {
         if (!titleBarButtons.empty()) {
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (titleBarButtons.size() + 0.5F));
             for (const auto &[icon, tooltip, callback]: titleBarButtons) {
-                if (ImGui::TitleBarButton(icon.c_str(), buttonSize)) {
+                if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                     callback();
                 }
-                ImGui::InfoTooltip(LangEntry(tooltip));
+                ImGuiExt::InfoTooltip(LangEntry(tooltip));
             }
         }
 
@@ -606,7 +606,7 @@ namespace hex {
         // Plugin load error popups. These are not translated because they should always be readable, no matter if any localization could be loaded or not
         {
             auto drawPluginFolderTable = [] {
-                ImGui::UnderlinedText("Plugin folders");
+                ImGuiExt::UnderlinedText("Plugin folders");
                 if (ImGui::BeginTable("plugins", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, 100_scaled))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
                     ImGui::TableSetupColumn("Path", ImGuiTableColumnFlags_WidthStretch, 0.2);

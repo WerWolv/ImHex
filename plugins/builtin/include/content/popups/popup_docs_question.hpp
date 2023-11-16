@@ -35,23 +35,23 @@ namespace hex::plugin::builtin {
                 if (!this->m_requestTask.isRunning()) {
                     if (this->m_answer.empty()) {
                         if (this->m_noAnswer)
-                            ImGui::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.no_answer"_lang);
+                            ImGuiExt::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.no_answer"_lang);
                         else
-                            ImGui::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.prompt"_lang);
+                            ImGuiExt::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.prompt"_lang);
                     } else {
                         int id = 1;
                         for (auto &[type, text] : this->m_answer) {
                             ImGui::PushID(id);
                             switch (type) {
                                 case TextBlockType::Text:
-                                    ImGui::TextFormattedWrapped("{}", text);
+                                    ImGuiExt::TextFormattedWrapped("{}", text);
                                     break;
                                 case TextBlockType::Code:
                                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyle().Colors[ImGuiCol_WindowBg]);
                                     auto textWidth = 400_scaled - ImGui::GetStyle().FramePadding.x * 4 - ImGui::GetStyle().ScrollbarSize;
                                     auto textHeight = ImGui::CalcTextSize(text.c_str(), nullptr, false, textWidth).y + ImGui::GetStyle().FramePadding.y * 6;
                                     if (ImGui::BeginChild("##code", ImVec2(textWidth, textHeight), true)) {
-                                        ImGui::TextFormattedWrapped("{}", text);
+                                        ImGuiExt::TextFormattedWrapped("{}", text);
                                         ImGui::EndChild();
                                     }
                                     ImGui::PopStyleColor();
@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
                         }
                     }
                 } else {
-                    ImGui::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.thinking"_lang);
+                    ImGuiExt::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.thinking"_lang);
                 }
             }
             ImGui::EndChild();

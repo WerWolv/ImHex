@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
                   m_message(std::move(message)), m_function(std::move(function)) { }
 
             void drawContent() override {
-                ImGui::TextFormattedWrapped("{}", this->m_message.c_str());
+                ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
                 ImGui::NewLine();
                 ImGui::Separator();
                 if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))

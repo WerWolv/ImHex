@@ -105,7 +105,7 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
                 ImGui::BeginGroup();
 
-                if (ImGui::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
+                if (ImGuiExt::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
                     fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
                         if (std::find(this->m_paths.begin(), this->m_paths.end(), path) == this->m_paths.end()) {
                             this->m_paths.emplace_back(path);
@@ -115,9 +115,9 @@ namespace hex::plugin::builtin {
                         }
                     });
                 }
-                ImGui::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
+                ImGuiExt::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
 
-                if (ImGui::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
+                if (ImGuiExt::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
                     if (!this->m_paths.empty()) {
                         this->m_paths.erase(std::next(this->m_paths.begin(), this->m_itemIndex));
                         ImHexApi::System::setAdditionalFolderPaths(this->m_paths);
@@ -125,7 +125,7 @@ namespace hex::plugin::builtin {
                         result = true;
                     }
                 }
-                ImGui::InfoTooltip("hex.builtin.setting.folders.remove_folder"_lang);
+                ImGuiExt::InfoTooltip("hex.builtin.setting.folders.remove_folder"_lang);
 
                 ImGui::EndGroup();
 

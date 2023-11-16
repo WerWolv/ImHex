@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize("[-]").x) / 2);
-            ImGui::TextSpinner("");
+            ImGuiExt::TextSpinner("");
             ImGui::NewLine();
             ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 150_scaled) / 2);
             if (ImGui::ButtonEx("hex.builtin.common.cancel"_lang, ImVec2(150, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))

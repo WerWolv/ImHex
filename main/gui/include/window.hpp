@@ -58,7 +58,7 @@ namespace hex {
 
         double m_lastFrameTime = 0;
 
-        ImGui::Texture m_logoTexture;
+        ImGuiExt::Texture m_logoTexture;
 
         std::mutex m_popupMutex;
         std::list<std::string> m_popupsToOpen;
@@ -70,7 +70,7 @@ namespace hex {
         bool m_frameRateTemporarilyUnlocked = false;
         double m_frameRateUnlockTime = 0;
 
-        ImGui::ImHexCustomData m_imguiCustomData;
+        ImGuiExt::ImHexCustomData m_imguiCustomData;
     };
 
 }

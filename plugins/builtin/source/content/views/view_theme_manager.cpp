@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
 
     void ViewThemeManager::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.theme_manager.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking)) {
-            ImGui::Header("hex.builtin.view.theme_manager.colors"_lang, true);
+            ImGuiExt::Header("hex.builtin.view.theme_manager.colors"_lang, true);
 
             // Draw theme handlers
             ImGui::PushID(1);
@@ -79,7 +79,7 @@ namespace hex::plugin::builtin {
             ImGui::PopID();
 
 
-            ImGui::Header("hex.builtin.view.theme_manager.styles"_lang);
+            ImGuiExt::Header("hex.builtin.view.theme_manager.styles"_lang);
 
             // Draw style handlers
             ImGui::PushID(2);
@@ -111,8 +111,8 @@ namespace hex::plugin::builtin {
             ImGui::PopID();
 
             // Draw export settings
-            ImGui::Header("hex.builtin.view.theme_manager.export"_lang);
-            ImGui::InputTextIcon("hex.builtin.view.theme_manager.export.name"_lang, ICON_VS_SYMBOL_KEY, this->m_themeName);
+            ImGuiExt::Header("hex.builtin.view.theme_manager.export"_lang);
+            ImGuiExt::InputTextIcon("hex.builtin.view.theme_manager.export.name"_lang, ICON_VS_SYMBOL_KEY, this->m_themeName);
 
             // Draw the export buttons
             if (ImGui::Button("hex.builtin.view.theme_manager.save_theme"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {

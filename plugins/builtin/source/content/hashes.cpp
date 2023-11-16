@@ -112,9 +112,9 @@ namespace hex::plugin::builtin {
             : Hash(name), m_crcFunction(crcFunction), m_polynomial(polynomial), m_initialValue(initialValue), m_xorOut(xorOut), m_reflectIn(reflectIn), m_reflectOut(reflectOut) {}
 
         void draw() override {
-            ImGui::InputHexadecimal("hex.builtin.hash.crc.poly"_lang, &this->m_polynomial);
-            ImGui::InputHexadecimal("hex.builtin.hash.crc.iv"_lang, &this->m_initialValue);
-            ImGui::InputHexadecimal("hex.builtin.hash.crc.xor_out"_lang, &this->m_xorOut);
+            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.poly"_lang, &this->m_polynomial);
+            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.iv"_lang, &this->m_initialValue);
+            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.xor_out"_lang, &this->m_xorOut);
 
             ImGui::NewLine();
 

@@ -203,11 +203,11 @@ namespace hex::plugin::builtin {
 
                 ThemeManager::addThemeHandler("imhex", ImHexColorMap,
                    [](u32 colorId) -> ImColor {
-                       return static_cast<ImGui::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId];
+                       return static_cast<ImGuiExt::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId];
 
                    },
                    [](u32 colorId, ImColor color) {
-                       static_cast<ImGui::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId] = color;
+                       static_cast<ImGuiExt::ImHexCustomData *>(GImGui->IO.UserData)->Colors[colorId] = color;
                    }
                 );
             }
@@ -344,7 +344,7 @@ namespace hex::plugin::builtin {
             }
 
             {
-                auto &style = ImGui::GetCustomStyle();
+                auto &style = ImGuiExt::GetCustomStyle();
                 const static ThemeManager::StyleMap ImHexStyleMap = {
                         { "window-blur",    { &style.WindowBlur,    0.0F,   1.0F,   true } },
                 };

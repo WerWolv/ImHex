@@ -101,7 +101,7 @@ namespace hex::plugin::builtin {
     void ViewYara::drawContent() {
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.yara.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
 
-            ImGui::Header("hex.builtin.view.yara.header.rules"_lang, true);
+            ImGuiExt::Header("hex.builtin.view.yara.header.rules"_lang, true);
 
             if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                 for (u32 i = 0; i < this->m_rules->size(); i++) {
@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndListBox();
             }
 
-            if (ImGui::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                 const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Yara);
                 std::vector<std::fs::path> paths;
                 for (const auto &path : basePaths) {
@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
             }
 
             ImGui::SameLine();
-            if (ImGui::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                 if (this->m_selectedRule < this->m_rules->size()) {
                     this->m_rules->erase(this->m_rules->begin() + this->m_selectedRule);
                     this->m_selectedRule = std::min(this->m_selectedRule, u32(this->m_rules->size() - 1));
@@ -146,10 +146,10 @@ namespace hex::plugin::builtin {
 
             if (this->m_matcherTask.isRunning()) {
                 ImGui::SameLine();
-                ImGui::TextSpinner("hex.builtin.view.yara.matching"_lang);
+                ImGuiExt::TextSpinner("hex.builtin.view.yara.matching"_lang);
             }
 
-            ImGui::Header("hex.builtin.view.yara.header.matches"_lang);
+            ImGuiExt::Header("hex.builtin.view.yara.header.matches"_lang);
 
             auto matchesTableSize = ImGui::GetContentRegionAvail();
             matchesTableSize.y *= 3.75 / 5.0;
@@ -211,12 +211,12 @@ namespace hex::plugin::builtin {
 
                             if (!wholeDataMatch) {
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("0x{0:X} : 0x{1:X}", address, address + size - 1);
+                                ImGuiExt::TextFormatted("0x{0:X} : 0x{1:X}", address, address + size - 1);
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("0x{0:X}", size);
+                                ImGuiExt::TextFormatted("0x{0:X}", size);
                             } else {
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
+                                ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
                                 ImGui::TableNextColumn();
                                 ImGui::TextUnformatted("");
                             }

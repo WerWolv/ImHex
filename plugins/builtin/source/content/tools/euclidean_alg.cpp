@@ -40,11 +40,11 @@ namespace hex::plugin::builtin {
                 return { x, y };
             };
 
-            ImGui::TextFormattedWrapped("{}", "hex.builtin.tools.euclidean_algorithm.description"_lang);
+            ImGuiExt::TextFormattedWrapped("{}", "hex.builtin.tools.euclidean_algorithm.description"_lang);
 
             ImGui::NewLine();
 
-            if (ImGui::BeginBox()) {
+            if (ImGuiExt::BeginBox()) {
                 bool hasChanged = false;
                 hasChanged = ImGui::InputScalar("A", ImGuiDataType_U64, &a) || hasChanged;
                 hasChanged = ImGui::InputScalar("B", ImGuiDataType_U64, &b) || hasChanged;
@@ -76,17 +76,17 @@ namespace hex::plugin::builtin {
                 ImGui::InputScalar("gcd(A, B)", ImGuiDataType_S64, &gcdResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
 
                 ImGui::Indent();
-                ImGui::TextFormatted(ICON_VS_ARROW_RIGHT " a \u00D7 p  +  b \u00D7 q  =  ({0}) \u00D7 ({1})  +  ({2}) \u00D7 ({3})", a, p, b, q);
+                ImGuiExt::TextFormatted(ICON_VS_ARROW_RIGHT " a \u00D7 p  +  b \u00D7 q  =  ({0}) \u00D7 ({1})  +  ({2}) \u00D7 ({3})", a, p, b, q);
                 ImGui::Unindent();
 
                 ImGui::InputScalar("lcm(A, B)", ImGuiDataType_S64, &lcmResult, nullptr, nullptr, "%llu", ImGuiInputTextFlags_ReadOnly);
                 ImGui::PopStyleVar();
 
-                ImGui::EndBox();
+                ImGuiExt::EndBox();
             }
 
             if (overflow)
-                ImGui::TextFormattedColored(ImGui::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "{}", "hex.builtin.tools.euclidean_algorithm.overflow"_lang);
+                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "{}", "hex.builtin.tools.euclidean_algorithm.overflow"_lang);
             else
                 ImGui::NewLine();
 

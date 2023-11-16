@@ -34,18 +34,18 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextRow();
 
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0:03d}", i + 32 * tablePart);
+                    ImGuiExt::TextFormatted("{0:03d}", i + 32 * tablePart);
 
                     if (asciiTableShowOctal) {
                         ImGui::TableNextColumn();
-                        ImGui::TextFormatted("0o{0:03o}", i + 32 * tablePart);
+                        ImGuiExt::TextFormatted("0o{0:03o}", i + 32 * tablePart);
                     }
 
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("0x{0:02X}", i + 32 * tablePart);
+                    ImGuiExt::TextFormatted("0x{0:02X}", i + 32 * tablePart);
 
                     ImGui::TableNextColumn();
-                    ImGui::TextFormatted("{0}", hex::makePrintable(i + 32 * tablePart));
+                    ImGuiExt::TextFormatted("{0}", hex::makePrintable(i + 32 * tablePart));
                 }
 
                 ImGui::EndTable();

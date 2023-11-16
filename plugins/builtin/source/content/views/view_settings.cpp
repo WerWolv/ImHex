@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
                         // Draw the category description
                         if (!category.unlocalizedDescription.empty()) {
-                            ImGui::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
+                            ImGuiExt::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
                             ImGui::NewLine();
                         }
 
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
                             if (subCategory.entries.empty())
                                 continue;
 
-                            ImGui::BeginSubWindow(LangEntry(subCategory.unlocalizedName));
+                            ImGuiExt::BeginSubWindow(LangEntry(subCategory.unlocalizedName));
                             {
                                 for (auto &setting : subCategory.entries) {
                                     ImGui::BeginDisabled(!setting.widget->isEnabled());
@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
                                     ImGui::EndDisabled();
 
                                     if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
-                                        ImGui::InfoTooltip(LangEntry(tooltip.value()));
+                                        ImGuiExt::InfoTooltip(LangEntry(tooltip.value()));
 
                                     auto &widget = setting.widget;
 
@@ -95,7 +95,7 @@ namespace hex::plugin::builtin {
                                 }
 
                             }
-                            ImGui::EndSubWindow();
+                            ImGuiExt::EndSubWindow();
 
                         }
 

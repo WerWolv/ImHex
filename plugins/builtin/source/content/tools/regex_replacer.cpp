@@ -21,8 +21,8 @@ namespace hex::plugin::builtin {
             static auto regexOutput    = [] { std::string s; s.reserve(0xFFF); return s; }();
 
             ImGui::PushItemWidth(-150_scaled);
-            bool changed1 = ImGui::InputTextIcon("hex.builtin.tools.regex_replacer.pattern"_lang, ICON_VS_REGEX, regexPattern);
-            bool changed2 = ImGui::InputTextIcon("hex.builtin.tools.regex_replacer.replace"_lang, ICON_VS_REGEX, replacePattern);
+            bool changed1 = ImGuiExt::InputTextIcon("hex.builtin.tools.regex_replacer.pattern"_lang, ICON_VS_REGEX, regexPattern);
+            bool changed2 = ImGuiExt::InputTextIcon("hex.builtin.tools.regex_replacer.replace"_lang, ICON_VS_REGEX, replacePattern);
             bool changed3 = ImGui::InputTextMultiline("hex.builtin.tools.regex_replacer.input"_lang, regexInput, ImVec2(0, 0));
 
             if (changed1 || changed2 || changed3) {

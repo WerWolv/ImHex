@@ -396,7 +396,7 @@ namespace hex {
                         GetProcAddress(user32Dll.get(), "SetWindowCompositionAttribute");
 
                 if (SetWindowCompositionAttribute != nullptr) {
-                    ACCENTPOLICY policy = { ImGui::GetCustomStyle().WindowBlur > 0.5F ? 4U : 0U, 0, ImGui::GetCustomColorU32(ImGuiCustomCol_BlurBackground), 0 };
+                    ACCENTPOLICY policy = { ImGuiExt::GetCustomStyle().WindowBlur > 0.5F ? 4U : 0U, 0, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_BlurBackground), 0 };
                     WINCOMPATTRDATA data = { 19, &policy, sizeof(ACCENTPOLICY) };
                     SetWindowCompositionAttribute(hwnd, &data);
                 }

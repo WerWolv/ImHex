@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
 
             ImGui::PushItemWidth(-1);
 
-            if (ImGui::InputTextIcon("##search", ICON_VS_FILTER, this->m_filter)) {
+            if (ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, this->m_filter)) {
                 this->m_filterIndices.clear();
 
                 // Filter the constants according to the entered value

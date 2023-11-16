@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
                   m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
 
         void drawContent() override {
-            ImGui::TextFormattedWrapped("{}", this->m_message.c_str());
+            ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
             ImGui::NewLine();
             ImGui::Separator();
 

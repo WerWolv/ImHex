@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
               m_message(std::move(message)), m_function(std::move(function)) { }
 
         void drawContent() override {
-            ImGui::TextFormattedWrapped("{}", this->m_message.c_str());
+            ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
             ImGui::NewLine();
 
             ImGui::PushItemWidth(-1);
@@ -28,7 +28,7 @@ namespace hex::plugin::builtin {
                 this->m_justOpened = false;
             }
 
-            ImGui::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, this->m_input);
+            ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, this->m_input);
             ImGui::PopItemWidth();
 
             ImGui::NewLine();

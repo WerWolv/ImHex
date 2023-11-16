@@ -96,24 +96,24 @@ namespace hex::plugin::builtin {
 
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-                ImGui::Header("hex.builtin.view.disassembler.position"_lang, true);
+                ImGuiExt::Header("hex.builtin.view.disassembler.position"_lang, true);
 
                 // Draw base address input
-                ImGui::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
+                ImGuiExt::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
 
                 // Draw region selection picker
                 ui::regionSelectionPicker(&this->m_codeRegion, provider, &this->m_range);
 
                 // Draw settings
                 {
-                    ImGui::Header("hex.builtin.common.settings"_lang);
+                    ImGuiExt::Header("hex.builtin.common.settings"_lang);
 
                     // Draw architecture selector
                     if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames.data(), Disassembler::getArchitectureSupportedCount()))
                         this->m_mode = cs_mode(0);
 
                     // Draw sub-settings for each architecture
-                    if (ImGui::BeginBox()) {
+                    if (ImGuiExt::BeginBox()) {
 
                         // Draw endian radio buttons. This setting is available for all architectures
                         static int littleEndian = true;
@@ -373,7 +373,7 @@ namespace hex::plugin::builtin {
                                 break;
                         }
 
-                        ImGui::EndBox();
+                        ImGuiExt::EndBox();
                     }
                 }
 
@@ -388,7 +388,7 @@ namespace hex::plugin::builtin {
                 // Draw a spinner if the disassembler is running
                 if (this->m_disassemblerTask.isRunning()) {
                     ImGui::SameLine();
-                    ImGui::TextSpinner("hex.builtin.view.disassembler.disassembling"_lang);
+                    ImGuiExt::TextSpinner("hex.builtin.view.disassembler.disassembling"_lang);
                 }
 
                 ImGui::NewLine();
@@ -425,11 +425,11 @@ namespace hex::plugin::builtin {
 
                                 // Draw instruction address
                                 ImGui::SameLine();
-                                ImGui::TextFormatted("0x{0:X}", instruction.address);
+                                ImGuiExt::TextFormatted("0x{0:X}", instruction.address);
 
                                 // Draw instruction offset
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormatted("0x{0:X}", instruction.offset);
+                                ImGuiExt::TextFormatted("0x{0:X}", instruction.offset);
 
                                 // Draw instruction bytes
                                 ImGui::TableNextColumn();
@@ -437,7 +437,7 @@ namespace hex::plugin::builtin {
 
                                 // Draw instruction mnemonic and operands
                                 ImGui::TableNextColumn();
-                                ImGui::TextFormattedColored(ImColor(0xFFD69C56), "{}", instruction.mnemonic);
+                                ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "{}", instruction.mnemonic);
                                 ImGui::SameLine();
                                 ImGui::TextUnformatted(instruction.operators.c_str());
                             }
