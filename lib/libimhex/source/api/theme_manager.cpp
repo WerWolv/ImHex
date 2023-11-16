@@ -29,11 +29,16 @@ namespace hex {
     }
 
     void ThemeManager::addTheme(const std::string &content) {
-        auto theme = nlohmann::json::parse(content);
-        if (theme.contains("name") && theme.contains("colors")) {
-            s_themes[theme["name"].get<std::string>()] = theme;
-        } else {
-            hex::log::error("Invalid theme file");
+        try {
+            auto theme = nlohmann::json::parse(content);
+
+            if (theme.contains("name") && theme.contains("colors")) {
+                s_themes[theme["name"].get<std::string>()] = theme;
+            } else {
+                hex::log::error("Invalid theme file");
+            }
+        } catch (const nlohmann::json::parse_error &e) {
+            hex::log::error("Invalid theme file: {}", e.what());
         }
     }
 

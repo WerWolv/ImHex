@@ -19,6 +19,10 @@ namespace hex::plugin::builtin {
     private:
         std::string m_themeName;
         bool m_viewOpen = false;
+
+        std::optional<ImColor> m_startingColor;
+        std::optional<u32> m_hoveredColorId;
+        std::optional<std::string> m_hoveredHandlerName;
     };
 
 }

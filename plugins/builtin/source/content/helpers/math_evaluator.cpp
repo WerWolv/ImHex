@@ -19,7 +19,12 @@ namespace hex {
 
     template<typename T>
     bool MathEvaluator<T>::isLeftAssociative(const Operator &op) {
-        return (static_cast<u32>(op) & 0xF00) == 0;
+        return (static_cast<u32>(op) & 0x100) == 0;
+    }
+
+    template<typename T>
+    bool MathEvaluator<T>::isUnary(const Operator &op) {
+        return (static_cast<u32>(op) & 0x200) != 0;
     }
 
     template<typename T>
@@ -143,10 +148,18 @@ namespace hex {
             } else {
                 auto [op, width] = toOperator(pos);
 
-                if (op != Operator::Invalid) {
-                    if (inputQueue.empty() || inputQueue.back().type == TokenType::Bracket || inputQueue.back().type == TokenType::Operator)
-                        inputQueue.push(Token { .type = TokenType::Number, .number = 0, .name = "", .arguments = { } });
+                if (!inputQueue.empty()) {
+                    auto token = inputQueue.back();
 
+                    if (token.type == TokenType::Operator || (token.type == TokenType::Bracket && token.bracketType == BracketType::Left)) {
+                        if (op == Operator::Addition)
+                            op = Operator::Plus;
+                        else if (op == Operator::Subtraction)
+                            op = Operator::Minus;
+                    }
+                }
+
+                if (op != Operator::Invalid) {
                     inputQueue.push(Token { .type = TokenType::Operator, .op = op, .name = "", .arguments = { } });
                     pos += width;
                 } else {
@@ -241,14 +254,25 @@ namespace hex {
                 evaluationStack.push(front.number);
             else if (front.type == TokenType::Operator) {
                 T rightOperand, leftOperand;
-                if (evaluationStack.size() < 2) {
-                    this->setError("Not enough operands for operator!");
-                    return std::nullopt;
+                if (isUnary(front.op)) {
+                    if (evaluationStack.size() < 1) {
+                        this->setError("Not enough operands for operator!");
+                        return std::nullopt;
+                    } else {
+                        rightOperand = evaluationStack.top();
+                        evaluationStack.pop();
+                        leftOperand = 0;
+                    }
                 } else {
-                    rightOperand = evaluationStack.top();
-                    evaluationStack.pop();
-                    leftOperand = evaluationStack.top();
-                    evaluationStack.pop();
+                    if (evaluationStack.size() < 2) {
+                        this->setError("Not enough operands for operator!");
+                        return std::nullopt;
+                    } else {
+                        rightOperand = evaluationStack.top();
+                        evaluationStack.pop();
+                        leftOperand = evaluationStack.top();
+                        evaluationStack.pop();
+                    }
                 }
 
                 T result = [] {
@@ -336,6 +360,12 @@ namespace hex {
                         break;
                     case Operator::Combine:
                         result = (static_cast<u64>(leftOperand) << (64 - __builtin_clzll(static_cast<u64>(rightOperand)))) | static_cast<u64>(rightOperand);
+                        break;
+                    case Operator::Plus:
+                        result = +rightOperand;
+                        break;
+                    case Operator::Minus:
+                        result = -rightOperand;
                         break;
                 }
 

@@ -314,7 +314,7 @@ namespace hex::init {
                 IM_DELETE(fonts);
 
                 // Disable unicode support in settings
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.font.load_all_unicode_chars", false);
+                ContentRegistry::Settings::write("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false);
 
                 // Try to load the font atlas again
                 return loadFontsImpl(false);
@@ -335,7 +335,7 @@ namespace hex::init {
         // Check if unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
         // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
         bool shouldLoadUnicode =
-                ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
+                ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
                 ImHexApi::System::getGPUVendor() != "VMware, Inc.";
 
         return loadFontsImpl(shouldLoadUnicode);

@@ -748,8 +748,8 @@ namespace hex {
             impl::getToolbarItems().push_back(function);
         }
 
-        void addSidebarItem(const std::string &icon, const impl::DrawCallback &function) {
-            impl::getSidebarItems().push_back({ icon, function });
+        void addSidebarItem(const std::string &icon, const impl::DrawCallback &function, const impl::EnabledCallback &enabledCallback) {
+            impl::getSidebarItems().push_back({ icon, function, enabledCallback });
         }
 
         void addTitleBarButton(const std::string &icon, const std::string &unlocalizedTooltip, const impl::ClickCallback &function) {

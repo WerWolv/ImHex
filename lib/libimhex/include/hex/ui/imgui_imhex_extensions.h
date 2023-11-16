@@ -113,6 +113,7 @@ namespace ImGuiExt {
     bool Hyperlink(const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool BulletHyperlink(const char *label, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
     bool DescriptionButton(const char *label, const char *description, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
+    bool DescriptionButtonProgress(const char *label, const char *description, float fraction, const ImVec2 &size_arg = ImVec2(0, 0), ImGuiButtonFlags flags = 0);
 
     void HelpHover(const char *text);
 
@@ -231,7 +232,7 @@ namespace ImGuiExt {
     inline void TextFormattedCentered(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
         auto availableSpace = ImGui::GetContentRegionAvail();
-        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
+        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false);
 
         ImGui::SetCursorPos(((availableSpace - textSize) / 2.0F));
 
@@ -243,7 +244,7 @@ namespace ImGuiExt {
     inline void TextFormattedCenteredHorizontal(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
         auto availableSpace = ImGui::GetContentRegionAvail();
-        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
+        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false);
 
         ImGui::SetCursorPosX(((availableSpace - textSize) / 2.0F).x);
 
@@ -268,6 +269,9 @@ namespace ImGuiExt {
 
     bool BeginBox();
     void EndBox();
+
+    void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
+    void EndSubWindow();
 
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {

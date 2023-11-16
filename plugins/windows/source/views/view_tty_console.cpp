@@ -27,11 +27,10 @@ namespace hex::plugin::windows {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, connected ? 0.5F : 1.0F);
 
             ImGui::Combo(
-                "hex.windows.view.tty_console.port"_lang, &this->m_selectedPort, [](void *data, int idx, const char **out_text) -> bool {
+                "hex.windows.view.tty_console.port"_lang, &this->m_selectedPort, [](void *data, int idx) {
                     auto &ports = *static_cast<std::vector<std::pair<std::string, std::string>> *>(data);
 
-                    *out_text = ports[idx].first.c_str();
-                    return true;
+                    return ports[idx].first.c_str();
                 },
                 &this->m_comPorts,
                 this->m_comPorts.size());
@@ -41,38 +40,37 @@ namespace hex::plugin::windows {
                 this->m_comPorts = getAvailablePorts();
 
             ImGui::Combo(
-                "hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void *data, int idx, const char **out_text) -> bool {
+                "hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void *data, int idx) {
                     hex::unused(data);
 
-                    *out_text = ViewTTYConsole::BaudRates[idx];
-                    return true;
+                    return ViewTTYConsole::BaudRates[idx];
                 },
                 nullptr,
                 ViewTTYConsole::BaudRates.size());
 
             ImGui::Combo(
-                "hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void *data, int idx, const char **out_text) -> bool {
+                "hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void *data, int idx) {
                     hex::unused(data);
-                    *out_text = ViewTTYConsole::NumBits[idx];
-                    return true;
+
+                    return ViewTTYConsole::NumBits[idx];
                 },
                 nullptr,
                 ViewTTYConsole::NumBits.size());
 
             ImGui::Combo(
-                "hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void *data, int idx, const char **out_text) -> bool {
+                "hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void *data, int idx) {
                     hex::unused(data);
-                    *out_text = ViewTTYConsole::StopBits[idx];
-                    return true;
+
+                    return ViewTTYConsole::StopBits[idx];
                 },
                 nullptr,
                 ViewTTYConsole::StopBits.size());
 
             ImGui::Combo(
-                "hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void *data, int idx, const char **out_text) -> bool {
+                "hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void *data, int idx) {
                     hex::unused(data);
-                    *out_text = ViewTTYConsole::ParityBits[idx];
-                    return true;
+
+                    return ViewTTYConsole::ParityBits[idx];
                 },
                 nullptr,
                 ViewTTYConsole::ParityBits.size());

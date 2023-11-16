@@ -79,8 +79,10 @@ namespace hex {
             Modulus             = 0x0C2,
             Exponentiation      = 0x1D0,
             Combine             = 0x0E0,
-            BitwiseNot          = 0x0F0,
-            Not                 = 0x0F1
+            BitwiseNot          = 0x2F0,
+            Not                 = 0x2F1,
+            Plus                = 0x2F2,
+            Minus               = 0x2F3
         };
 
         enum class BracketType : std::uint8_t
@@ -104,6 +106,7 @@ namespace hex {
 
         static i16 comparePrecedence(const Operator &a, const Operator &b);
         static bool isLeftAssociative(const Operator &op);
+        static bool isUnary(const Operator &op);
         static std::pair<Operator, size_t> toOperator(const std::string &input);
 
     private:

@@ -21,6 +21,15 @@ namespace hex::plugin::builtin {
             this->m_achievementUnlockQueue.push_back(&achievement);
         });
 
+        EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
+            if (name == "Achievements") {
+                TaskManager::doLater([this] {
+                    this->m_viewOpen = true;
+                    this->getWindowOpenState() = true;
+                });
+            }
+        });
+
         // Load settings
         this->m_showPopup = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", true);
     }
@@ -164,7 +173,7 @@ namespace hex::plugin::builtin {
         // Calculate number of invisible achievements
         const auto invisibleCount = std::count_if(achievements.begin(), achievements.end(), [](const auto &entry) {
             const auto &[name, achievement] = entry;
-            return achievement->isInvisible();
+            return achievement->isInvisible() && !achievement->isUnlocked();
         });
 
         // Calculate number of visible achievements

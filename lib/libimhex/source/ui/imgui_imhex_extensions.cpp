@@ -244,6 +244,7 @@ namespace ImGuiExt {
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
         PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0, 0.5));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
         // Render
         const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
@@ -257,7 +258,62 @@ namespace ImGuiExt {
         RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &bb);
         PopStyleColor();
 
-        PopStyleVar();
+        PopStyleVar(2);
+
+        // Automatically close popups
+        // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
+        //    CloseCurrentPopup();
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        return pressed;
+    }
+
+    bool DescriptionButtonProgress(const char *label, const char *description, float fraction, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
+        ImGuiWindow *window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext &g         = *GImGui;
+        const ImGuiStyle &style = g.Style;
+        const ImGuiID id        = window->GetID(label);
+        const ImVec2 text_size  = CalcTextSize((std::string(label) + "\n  " + std::string(description)).c_str(), nullptr, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
+
+        ImVec2 pos = window->DC.CursorPos;
+        if ((flags & ImGuiButtonFlags_AlignTextBaseLine) && style.FramePadding.y < window->DC.CurrLineTextBaseOffset)    // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
+            pos.y += window->DC.CurrLineTextBaseOffset - style.FramePadding.y;
+        ImVec2 size = CalcItemSize(size_arg, text_size.x + style.FramePadding.x * 4.0f, text_size.y + style.FramePadding.y * 6.0f);
+
+        const ImRect bb(pos, pos + size);
+        ItemSize(size, style.FramePadding.y);
+        if (!ItemAdd(bb, id))
+            return false;
+
+        if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
+            flags |= ImGuiButtonFlags_Repeat;
+        bool hovered, held;
+        bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
+
+        PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0, 0.5));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+
+        // Render
+        const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
+                                                                                                          : ImGuiCustomCol_DescButton);
+        RenderNavHighlight(bb, id);
+        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
+        PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
+        RenderTextWrapped(bb.Min + style.FramePadding * 2, label, nullptr, CalcWrapWidthForPos(window->DC.CursorPos, window->DC.TextWrapPos));
+        PopStyleColor();
+        PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text));
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &bb);
+        PopStyleColor();
+
+        RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5 * hex::ImHexApi::System::getGlobalScale()), bb.Max, GetColorU32(ImGuiCol_ScrollbarBg), false, style.FrameRounding);
+        RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5 * hex::ImHexApi::System::getGlobalScale()), ImVec2(bb.Min.x + fraction * bb.GetSize().x, bb.Max.y), GetColorU32(ImGuiCol_Button), false, style.FrameRounding);
+        RenderFrame(bb.Min, bb.Max, 0x00, true, style.FrameRounding);
+
+        PopStyleVar(2);
 
         // Automatically close popups
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
@@ -841,4 +897,22 @@ namespace ImGui {
     bool InputTextWithHint(const char *label, const char *hint, std::string &buffer, ImGuiInputTextFlags flags) {
         return ImGui::InputTextWithHint(label, hint, buffer.data(), buffer.size() + 1, ImGuiInputTextFlags_CallbackResize | flags, ImGuiExt::UpdateStringSizeCallback, &buffer);
     }
+
+  void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
+        const bool hasMenuBar = !std::string_view(label).empty();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+            if (hasMenuBar && ImGui::BeginMenuBar()) {
+                ImGui::TextUnformatted(label);
+                ImGui::EndMenuBar();
+            }
+        }
+        ImGui::PopStyleVar();
+    }
+
+    void EndSubWindow() {
+        ImGui::EndChild();
+    }
+
 }

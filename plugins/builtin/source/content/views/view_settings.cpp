@@ -53,8 +53,6 @@ namespace hex::plugin::builtin {
                             ImGui::NewLine();
                         }
 
-                        bool firstSubCategory = true;
-
                         // Draw all settings of that category
                         for (auto &subCategory : category.subCategories) {
 
@@ -62,15 +60,13 @@ namespace hex::plugin::builtin {
                             if (subCategory.entries.empty())
                                 continue;
 
-                            if (!subCategory.unlocalizedName.empty())
-                                ImGuiExt::Header(LangEntry(subCategory.unlocalizedName), firstSubCategory);
-
-                            firstSubCategory = false;
-
-                            if (ImGuiExt::BeginBox()) {
+                            ImGui::BeginSubWindow(LangEntry(subCategory.unlocalizedName));
+                            {
                                 for (auto &setting : subCategory.entries) {
                                     ImGui::BeginDisabled(!setting.widget->isEnabled());
+                                    ImGui::PushItemWidth(-200_scaled);
                                     bool settingChanged = setting.widget->draw(LangEntry(setting.unlocalizedName));
+                                    ImGui::PopItemWidth();
                                     ImGui::EndDisabled();
 
                                     if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
@@ -98,8 +94,8 @@ namespace hex::plugin::builtin {
                                     }
                                 }
 
-                                ImGuiExt::EndBox();
                             }
+                            ImGui::EndSubWindow();
 
                         }
 

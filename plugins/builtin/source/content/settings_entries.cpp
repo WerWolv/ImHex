@@ -4,6 +4,7 @@
 #include <hex/api/theme_manager.hpp>
 
 #include <hex/helpers/http_requests.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -86,7 +87,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &) override {
                 bool result = false;
 
-                if (!ImGui::BeginListBox("", ImVec2(-38, -10))) {
+                if (!ImGui::BeginListBox("", ImVec2(-40_scaled, 280_scaled))) {
                     return false;
                 } else {
                     for (size_t n = 0; n < this->m_paths.size(); n++) {

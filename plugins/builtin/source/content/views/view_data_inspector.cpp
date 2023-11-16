@@ -226,7 +226,7 @@ namespace hex::plugin::builtin {
                             ImGui::SameLine();
 
                             // Handle copying the value to the clipboard when clicking the row
-                            if (ImGui::Selectable("##InspectorLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap)) {
+                            if (ImGui::Selectable("##InspectorLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
                                 ImGui::SetClipboardText(copyValue.c_str());
                             }
 

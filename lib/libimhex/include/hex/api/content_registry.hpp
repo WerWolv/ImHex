@@ -633,6 +633,7 @@ namespace hex {
                 struct SidebarItem {
                     std::string icon;
                     DrawCallback callback;
+                    EnabledCallback enabledCallback;
                 };
 
                 struct TitleBarButton {
@@ -712,8 +713,9 @@ namespace hex {
              * @brief Adds a new sidebar item
              * @param icon The icon to use for the item
              * @param function The function to call to draw the item
+             * @param enabledCallback The function
              */
-            void addSidebarItem(const std::string &icon, const impl::DrawCallback &function);
+            void addSidebarItem(const std::string &icon, const impl::DrawCallback &function, const impl::EnabledCallback &enabledCallback = []{ return true; });
 
             /**
              * @brief Adds a new title bar button

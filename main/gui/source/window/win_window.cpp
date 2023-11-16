@@ -215,10 +215,15 @@ namespace hex {
                         return HTBOTTOMRIGHT;
                     case RegionClient:
                     default:
-                        if ((cursor.y < (window.top + g_titleBarHeight * 2)) && !ImGui::IsAnyItemHovered() && (hoveredWindowName == "##MainMenuBar" || hoveredWindowName == "ImHexDockSpace"))
-                            return HTCAPTION;
-                        else
-                            break;
+                        if (cursor.y < (window.top + g_titleBarHeight * 2)) {
+                            if (hoveredWindowName == "##MainMenuBar" || hoveredWindowName == "ImHexDockSpace") {
+                                if (!ImGui::IsAnyItemHovered()) {
+                                    return HTCAPTION;
+                                }
+                            }
+                        }
+
+                        break;
                 }
                 break;
             }

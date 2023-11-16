@@ -34,18 +34,30 @@ namespace hex::plugin::builtin {
                 ImGui::CloseCurrentPopup();
 
 
+            const auto buttonColor = [](float alpha) {
+                return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_ModalWindowDimBg) * ImVec4(1, 1, 1, alpha)));
+            };
+
             // Draw the main input text box
             ImGui::PushItemWidth(-1);
+            ImGui::PushStyleColor(ImGuiCol_FrameBg, buttonColor(0.5F));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, buttonColor(0.7F));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, buttonColor(0.9F));
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
+
             if (ImGui::InputText("##command_input", this->m_commandBuffer)) {
                 this->m_lastResults = this->getCommandResults(this->m_commandBuffer);
             }
+            ImGui::PopStyleVar(2);
+            ImGui::PopStyleColor(3);
             ImGui::PopItemWidth();
             ImGui::SetItemDefaultFocus();
 
             // Handle giving back focus to the input text box
             if (this->m_focusInputTextBox) {
                 ImGui::SetKeyboardFocusHere(-1);
-                ImGui::ActivateItem(ImGui::GetID("##command_input"));
+                ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
 
                 auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
                 if (textState != nullptr) {
@@ -73,6 +85,8 @@ namespace hex::plugin::builtin {
                 this->m_commandBuffer.clear();
                 this->m_justOpened = false;
             }
+
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + ImGui::GetStyle().FramePadding.y);
 
             ImGui::Separator();
 

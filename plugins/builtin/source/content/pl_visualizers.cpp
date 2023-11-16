@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
             static std::vector<float> values;
             auto dataPattern = arguments[0].toPattern();
 
-            if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+            if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_CanvasOnly)) {
                 ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
 
                 if (shouldReset) {
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
             auto xPattern = arguments[0].toPattern();
             auto yPattern = arguments[1].toPattern();
 
-            if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly)) {
+            if (ImPlot::BeginPlot("##plot", ImVec2(400, 250), ImPlotFlags_CanvasOnly)) {
                 ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
 
                 if (shouldReset) {
@@ -423,7 +423,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(resetTask.isRunning());
 
             ImPlot::PushStyleVar(ImPlotStyleVar_PlotPadding, ImVec2(0, 0));
-            if (ImPlot::BeginPlot("##amplitude_plot", scaled(ImVec2(300, 80)), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
+            if (ImPlot::BeginPlot("##amplitude_plot", scaled(ImVec2(300, 80)), ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
                 ImPlot::SetupAxes("##time", "##amplitude", ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus, ImPlotAxisFlags_NoDecorations | ImPlotAxisFlags_NoMenus);
                 ImPlot::SetupAxesLimits(0, waveData.size(), std::numeric_limits<i16>::min(), std::numeric_limits<i16>::max(), ImGuiCond_Always);
 
@@ -495,7 +495,7 @@ namespace hex::plugin::builtin {
             }
 
             // Show results
-            analyzer.draw(ImVec2(400, 250), ImPlotFlags_NoChild | ImPlotFlags_CanvasOnly);
+            analyzer.draw(ImVec2(400, 250), ImPlotFlags_CanvasOnly);
         }
 
         void drawHexVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
