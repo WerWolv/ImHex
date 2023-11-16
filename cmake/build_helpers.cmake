@@ -439,23 +439,32 @@ endfunction()
 
 macro(setupCompilerFlags target)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+
+        # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
-            set(IMHEX_COMMON_FLAGS "-Wall -Wextra -Wpedantic -Werror")
+            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wall -Wextra -Wpedantic -Werror")
         endif()
 
-        set(IMHEX_C_FLAGS "${IMHEX_COMMON_FLAGS} -Wno-array-bounds -Wno-deprecated-declarations")
         set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
-        if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-            set(IMHEX_C_FLAGS "${IMHEX_C_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow -Wno-dangling-reference")
-        endif()
+
+        # Disable some warnings
+        set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations")
+
     endif()
 
+    # Disable some warnings for gcc
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -Wno-restrict -Wno-stringop-overread -Wno-stringop-overflow -Wno-dangling-reference")
+    endif()
+
+    # Define emscripten-specific disabled warnings
     if (EMSCRIPTEN)
-        set(IMHEX_C_FLAGS "${IMHEX_C_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
+        set(IMHEX_C_CXX_FLAGS "${IMHEX_C_CXX_FLAGS} -pthread -Wno-dollar-in-identifier-extension -Wno-pthreads-mem-growth")
     endif ()
 
-    set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_CXX_FLAGS}   ${IMHEX_C_FLAGS}")
+    # Set actual CMake flags
+    set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}  ${IMHEX_CXX_FLAGS}")
     set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${IMHEX_COMMON_FLAGS}")
 endmacro()
 
