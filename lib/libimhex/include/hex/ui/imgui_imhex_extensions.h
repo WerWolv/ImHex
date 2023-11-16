@@ -269,7 +269,7 @@ namespace ImGui {
     bool BeginBox();
     void EndBox();
 
-    void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0));
+    void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
     void EndSubWindow();
 
     template<typename T>

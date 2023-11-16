@@ -170,16 +170,11 @@ namespace hex::plugin::builtin::recent {
 
 
     void draw() {
-        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 9);
-        ImGui::TableNextColumn();
-        ImGui::UnderlinedText(s_recentEntries.empty() ? "" : "hex.builtin.welcome.start.recent"_lang);
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 5_scaled);
-        ImGui::Dummy({0, 0});
-        ImGui::SameLine(0, 0);
+        ImGui::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
         {
             if (!s_recentEntriesUpdating) {
-                auto it = s_recentEntries.begin();
-                while (it != s_recentEntries.end()) {
+
+                for (auto it = s_recentEntries.begin(); it != s_recentEntries.end();) {
                     const auto &recentEntry = *it;
                     bool shouldRemove = false;
 
@@ -192,13 +187,13 @@ namespace hex::plugin::builtin::recent {
                     } else {
                         icon = ICON_VS_FILE_BINARY;
                     }
-                    if (ImGui::BulletHyperlink(hex::format("{} {}", icon, recentEntry.displayName).c_str())) {
+                    if (ImGui::BulletHyperlink(hex::format("{} {}", icon, hex::limitStringLength(recentEntry.displayName, 32)).c_str())) {
                         loadRecentEntry(recentEntry);
                         break;
                     }
 
                     // Detect right click on recent provider
-                    std::string popupID = std::string("RecentEntryMenu.")+std::to_string(recentEntry.getHash());
+                    std::string popupID = hex::format("RecentEntryMenu.{}", recentEntry.getHash());
                     if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                         ImGui::OpenPopup(popupID.c_str());
                     }
@@ -220,6 +215,7 @@ namespace hex::plugin::builtin::recent {
                 }
             }
         }
+        ImGui::EndSubWindow();
     }
 
     void drawFileMenuItem() {

@@ -240,7 +240,8 @@ namespace ImGui {
         bool hovered, held;
         bool pressed = ButtonBehavior(bb, id, &hovered, &held, flags);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0, 0.5));
+        PushStyleVar(ImGuiStyleVar_ButtonTextAlign, ImVec2(0.0, 0.5));
+        PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
         // Render
         const ImU32 col = GetCustomColorU32((held && hovered) ? ImGuiCustomCol_DescButtonActive : hovered ? ImGuiCustomCol_DescButtonHovered
@@ -254,7 +255,7 @@ namespace ImGui {
         RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &bb);
         PopStyleColor();
 
-        ImGui::PopStyleVar();
+        PopStyleVar(2);
 
         // Automatically close popups
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
@@ -834,21 +835,21 @@ namespace ImGui {
         ImGui::PopStyleVar();
     }
 
-    void BeginSubWindow(const char *label, ImVec2 size) {
+    void BeginSubWindow(const char *label, ImVec2 size, ImGuiChildFlags flags) {
         const bool hasMenuBar = !std::string_view(label).empty();
 
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             if (hasMenuBar && ImGui::BeginMenuBar()) {
                 ImGui::TextUnformatted(label);
                 ImGui::EndMenuBar();
             }
         }
+        ImGui::PopStyleVar();
     }
 
     void EndSubWindow() {
         ImGui::EndChild();
-        ImGui::PopStyleVar();
     }
 
 }
