@@ -90,7 +90,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                            ImGui::TextFormatted("{}", index);
+                            ImGuiExt::TextFormatted("{}", index);
 
                             ImGui::TableNextColumn();
 
