@@ -14,9 +14,14 @@ namespace hex::prv::undo {
 
         void undo(Provider *provider) override {
             provider->insert(this->m_offset, this->m_size);
+
+            provider->write(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
         }
 
         void redo(Provider *provider) override {
+            this->m_removedData.resize(this->m_size);
+            provider->read(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
+
             provider->remove(this->m_offset, this->m_size);
         }
 
@@ -35,6 +40,7 @@ namespace hex::prv::undo {
     private:
         u64 m_offset;
         u64 m_size;
+        std::vector<u8> m_removedData;
     };
 
 }
