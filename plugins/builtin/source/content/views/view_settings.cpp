@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include <content/popups/popup_question.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -47,57 +48,59 @@ namespace hex::plugin::builtin {
 
                     // For each category, create a new tab
                     if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
-                        // Draw the category description
-                        if (!category.unlocalizedDescription.empty()) {
-                            ImGuiExt::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
-                            ImGui::NewLine();
-                        }
+                        if (ImGui::BeginChild("scrolling")) {
 
-                        // Draw all settings of that category
-                        for (auto &subCategory : category.subCategories) {
+                            // Draw the category description
+                            if (!category.unlocalizedDescription.empty()) {
+                                ImGuiExt::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
+                                ImGui::NewLine();
+                            }
 
-                            // Skip empty subcategories
-                            if (subCategory.entries.empty())
-                                continue;
+                            // Draw all settings of that category
+                            for (auto &subCategory : category.subCategories) {
 
-                            ImGuiExt::BeginSubWindow(LangEntry(subCategory.unlocalizedName));
-                            {
-                                for (auto &setting : subCategory.entries) {
-                                    ImGui::BeginDisabled(!setting.widget->isEnabled());
-                                    ImGui::PushItemWidth(-200_scaled);
-                                    bool settingChanged = setting.widget->draw(LangEntry(setting.unlocalizedName));
-                                    ImGui::PopItemWidth();
-                                    ImGui::EndDisabled();
+                                // Skip empty subcategories
+                                if (subCategory.entries.empty())
+                                    continue;
 
-                                    if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
-                                        ImGuiExt::InfoTooltip(LangEntry(tooltip.value()));
+                                ImGuiExt::BeginSubWindow(LangEntry(subCategory.unlocalizedName));
+                                {
+                                    for (auto &setting : subCategory.entries) {
+                                        ImGui::BeginDisabled(!setting.widget->isEnabled());
+                                        ImGui::PushItemWidth(-200_scaled);
+                                        bool settingChanged = setting.widget->draw(LangEntry(setting.unlocalizedName));
+                                        ImGui::PopItemWidth();
+                                        ImGui::EndDisabled();
 
-                                    auto &widget = setting.widget;
+                                        if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
+                                            ImGuiExt::InfoTooltip(LangEntry(tooltip.value()));
 
-                                    // Handle a setting being changed
-                                    if (settingChanged) {
-                                        auto newValue = widget->store();
+                                        auto &widget = setting.widget;
 
-                                        // Write new value to settings
-                                        ContentRegistry::Settings::write(category.unlocalizedName, setting.unlocalizedName, newValue);
+                                        // Handle a setting being changed
+                                        if (settingChanged) {
+                                            auto newValue = widget->store();
 
-                                        // Print a debug message
-                                        log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName, setting.unlocalizedName, nlohmann::to_string(newValue));
+                                            // Write new value to settings
+                                            ContentRegistry::Settings::write(category.unlocalizedName, setting.unlocalizedName, newValue);
 
-                                        // Signal that the setting was changed
-                                        EventManager::post<EventSettingsChanged>();
-                                        widget->onChanged();
+                                            // Print a debug message
+                                            log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName, setting.unlocalizedName, nlohmann::to_string(newValue));
 
-                                        // Request a restart if the setting requires it
-                                        if (widget->doesRequireRestart())
-                                            this->m_restartRequested = true;
+                                            // Signal that the setting was changed
+                                            EventManager::post<EventSettingsChanged>();
+                                            widget->onChanged();
+
+                                            // Request a restart if the setting requires it
+                                            if (widget->doesRequireRestart())
+                                                this->m_restartRequested = true;
+                                        }
                                     }
                                 }
-
+                                ImGuiExt::EndSubWindow();
                             }
-                            ImGuiExt::EndSubWindow();
-
                         }
+                        ImGui::EndChild();
 
                         ImGui::EndTabItem();
                     }

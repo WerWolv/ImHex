@@ -882,7 +882,7 @@ namespace ImGuiExt {
         const bool hasMenuBar = !std::string_view(label).empty();
 
         ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-        if (ImGui::BeginChild(label, size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
+        if (ImGui::BeginChild(hex::format("{}##SubWindow", label).c_str(), size, ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeY | flags, hasMenuBar ? ImGuiWindowFlags_MenuBar : ImGuiWindowFlags_None)) {
             if (hasMenuBar && ImGui::BeginMenuBar()) {
                 ImGui::TextUnformatted(label);
                 ImGui::EndMenuBar();
