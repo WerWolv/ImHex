@@ -12,6 +12,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include <utility>
 #include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
@@ -187,6 +188,107 @@ namespace hex::plugin::builtin {
             float m_value = 0;
         };
 
+        class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
+        public:
+            KeybindingWidget(View *view, Shortcut shortcut) : m_view(view), m_shortcut(std::move(shortcut)) {}
+
+            bool draw(const std::string &name) override {
+                std::string label;
+
+                if (!this->m_editing)
+                    label = this->m_shortcut.toString();
+                else
+                    label = "...";
+
+                if (label.empty())
+                    label = "???";
+
+                ImGui::PushID(this);
+                if (ImGui::Button(label.c_str(), ImVec2(150_scaled, 0))) {
+                    this->m_editing = !this->m_editing;
+
+                    if (this->m_editing)
+                        ShortcutManager::pauseShortcuts();
+                    else
+                        ShortcutManager::resumeShortcuts();
+                }
+                ImGui::PopID();
+
+                if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                    this->m_editing = false;
+                    ShortcutManager::resumeShortcuts();
+                }
+
+                ImGui::SameLine();
+
+                ImGuiExt::TextFormatted("{}", name);
+
+                if (this->m_editing) {
+                    if (this->detectShortcut()) {
+                        this->m_editing = false;
+                        ShortcutManager::resumeShortcuts();
+
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            void load(const nlohmann::json &data) override {
+                std::set<Key> keys;
+
+                for (const auto &key : data.get<std::vector<u32>>())
+                    keys.insert(Key(Keys(key)));
+
+                if (keys.empty())
+                    return;
+
+                auto newShortcut = Shortcut(keys);
+                ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
+                this->m_shortcut = std::move(newShortcut);
+            }
+
+            nlohmann::json store() override {
+                std::vector<u32> keys;
+
+                for (const auto &key : this->m_shortcut.getKeys()) {
+                    if (key != CurrentView)
+                        keys.push_back(key.getKeyCode());
+                }
+
+                return keys;
+            }
+
+        private:
+            bool detectShortcut() {
+                if (auto shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
+                    log::info("Changed shortcut to {}", shortcut->toString());
+                    auto keys = this->m_shortcut.getKeys();
+                    std::erase_if(keys, [](Key key) {
+                        return key != AllowWhileTyping && key != CurrentView;
+                    });
+
+                    for (const auto &key : shortcut->getKeys()) {
+                        keys.insert(key);
+                    }
+
+                    auto newShortcut = Shortcut(std::move(keys));
+                    ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
+                    this->m_shortcut = std::move(newShortcut);
+
+                    return true;
+                }
+
+                return false;
+            }
+
+        private:
+            View *m_view = nullptr;
+            Shortcut m_shortcut;
+            bool m_editing = false;
+        };
+
     }
 
     void registerSettings() {
@@ -313,6 +415,19 @@ namespace hex::plugin::builtin {
                         });
             }
         });
+
+        /* Shorcuts */
+        EventManager::subscribe<EventImHexStartupFinished>([]{
+            for (const auto &shortcutEntry : ShortcutManager::getGlobalShortcuts()) {
+                ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", "hex.builtin.setting.shortcuts.global", shortcutEntry.unlocalizedName, nullptr, shortcutEntry.shortcut);
+            }
+
+            for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
+                for (const auto &shortcutEntry : ShortcutManager::getViewShortcuts(view.get())) {
+                    ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", viewName, shortcutEntry.unlocalizedName, view.get(), shortcutEntry.shortcut);
+                }
+            }
+       });
 
     }
 

@@ -1345,7 +1345,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, [this] {
+        ShortcutManager::addShortcut(this, Keys::F8 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.add_breakpoint", [this] {
             auto line = this->m_textEditor.GetCursorPosition().mLine + 1;
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
@@ -1362,19 +1362,19 @@ namespace hex::plugin::builtin {
         });
 
         /* Trigger evaluation */
-        ShortcutManager::addGlobalShortcut(Keys::F5 + AllowWhileTyping, [this] {
+        ShortcutManager::addGlobalShortcut(Keys::F5 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.run_pattern", [this] {
             this->m_triggerAutoEvaluate = true;
         });
 
         /* Continue debugger */
-        ShortcutManager::addGlobalShortcut(SHIFT + Keys::F9 + AllowWhileTyping, [this] {
+        ShortcutManager::addGlobalShortcut(SHIFT + Keys::F9 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.continue_debugger", [this] {
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             if (runtime.isRunning())
                 this->m_breakpointHit = false;
         });
 
         /* Step debugger */
-        ShortcutManager::addGlobalShortcut(SHIFT + Keys::F7 + AllowWhileTyping, [this] {
+        ShortcutManager::addGlobalShortcut(SHIFT + Keys::F7 + AllowWhileTyping, "hex.builtin.view.pattern_editor.shortcut.step_debugger", [this] {
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
             if (runtime.isRunning()) {
                 runtime.getInternals().evaluator->pauseNextLine();

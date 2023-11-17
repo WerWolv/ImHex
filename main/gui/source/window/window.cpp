@@ -804,8 +804,6 @@ namespace hex {
     void Window::frame() {
         auto &io = ImGui::GetIO();
 
-        const bool popupOpen = ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId);
-
         // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
@@ -823,7 +821,7 @@ namespace hex {
                 view->drawContent();
             }
 
-            if (view->getWindowOpenState() && !popupOpen) {
+            if (view->getWindowOpenState()) {
                 auto window    = ImGui::FindWindowByName(view->getName().c_str());
                 bool hasWindow = window != nullptr;
                 bool focused   = false;
@@ -852,10 +850,8 @@ namespace hex {
         }
 
         // Handle global shortcuts
-        if (!popupOpen) {
-            for (const auto &key : this->m_pressedKeys) {
-                ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
-            }
+        for (const auto &key : this->m_pressedKeys) {
+            ShortcutManager::processGlobals(io.KeyCtrl, io.KeyAlt, io.KeyShift, io.KeySuper, key);
         }
 
         this->m_pressedKeys.clear();
@@ -1066,7 +1062,13 @@ namespace hex {
                     key = std::toupper(keyName[0]);
 
                 if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                    win->m_pressedKeys.push_back(key);
+                    if (key != GLFW_KEY_LEFT_CONTROL && key != GLFW_KEY_RIGHT_CONTROL &&
+                        key != GLFW_KEY_LEFT_ALT && key != GLFW_KEY_RIGHT_ALT &&
+                        key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
+                        key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
+                    ) {
+                        win->m_pressedKeys.push_back(key);
+                    }
                 }
 
                 win->processEvent();

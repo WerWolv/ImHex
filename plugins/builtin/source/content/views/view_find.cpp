@@ -93,7 +93,7 @@ namespace hex::plugin::builtin {
             ImGui::EndTooltip();
         });
 
-        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A, [this] {
+        ShortcutManager::addShortcut(this, CTRLCMD + Keys::A, "hex.builtin.view.find.shortcut.select_all", [this] {
             if (this->m_filterTask.isRunning())
                 return;
             if (this->m_searchTask.isRunning())

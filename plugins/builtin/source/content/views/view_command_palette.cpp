@@ -7,7 +7,7 @@ namespace hex::plugin::builtin {
 
     ViewCommandPalette::ViewCommandPalette() : View("hex.builtin.view.command_palette.name") {
         // Add global shortcut to open the command palette
-        ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, [this] {
+        ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, "hex.builtin.view.command_palette.name", [this] {
             EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
             this->m_commandPaletteOpen = true;
             this->m_justOpened         = true;

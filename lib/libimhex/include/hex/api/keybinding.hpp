@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 
@@ -132,13 +133,14 @@ namespace hex {
 
     class Key {
     public:
+        constexpr Key() = default;
         constexpr Key(Keys key) : m_key(static_cast<u32>(key)) { }
 
         auto operator<=>(const Key &) const = default;
 
         [[nodiscard]] constexpr u32 getKeyCode() const { return this->m_key; }
     private:
-        u32 m_key;
+        u32 m_key = 0;
     };
 
 
@@ -159,6 +161,13 @@ namespace hex {
     public:
         Shortcut() = default;
         Shortcut(Keys key) : m_keys({ key }) { }
+        explicit Shortcut(std::set<Key> keys) : m_keys(std::move(keys)) { }
+        Shortcut(const Shortcut &other) = default;
+        Shortcut(Shortcut &&) noexcept = default;
+
+        Shortcut& operator=(const Shortcut &other) = default;
+
+        Shortcut& operator=(Shortcut &&) noexcept = default;
 
         constexpr static inline auto None = Keys(0);
 
@@ -350,6 +359,8 @@ namespace hex {
             return result;
         }
 
+        const std::set<Key>& getKeys() const { return this->m_keys; }
+
     private:
         friend Shortcut operator+(const Key &lhs, const Key &rhs);
 
@@ -369,21 +380,29 @@ namespace hex {
      */
     class ShortcutManager {
     public:
+        using Callback = std::function<void()>;
+        struct ShortcutEntry {
+            Shortcut shortcut;
+            std::string unlocalizedName;
+            Callback callback;
+        };
 
         /**
          * @brief Add a global shortcut. Global shortcuts can be triggered regardless of what view is currently focused
          * @param shortcut The shortcut to add.
+         * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
-        static void addGlobalShortcut(const Shortcut &shortcut, const std::function<void()> &callback);
+        static void addGlobalShortcut(const Shortcut &shortcut, const std::string &unlocalizedName, const Callback &callback);
 
         /**
          * @brief Add a view-specific shortcut. View-specific shortcuts can only be triggered when the specified view is focused.
          * @param view The view to add the shortcut to.
          * @param shortcut The shortcut to add.
+         * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
-        static void addShortcut(View *view, const Shortcut &shortcut, const std::function<void()> &callback);
+        static void addShortcut(View *view, const Shortcut &shortcut, const std::string &unlocalizedName, const Callback &callback);
 
 
         /**
@@ -412,6 +431,16 @@ namespace hex {
          * @brief Clear all shortcuts
          */
         static void clearShortcuts();
+
+        static void resumeShortcuts();
+        static void pauseShortcuts();
+
+        static std::optional<Shortcut> getPreviousShortcut();
+
+        static std::vector<ShortcutEntry> getGlobalShortcuts();
+        static std::vector<ShortcutEntry> getViewShortcuts(View *view);
+
+        static void updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view = nullptr);
     };
 
 }

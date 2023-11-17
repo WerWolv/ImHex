@@ -50,7 +50,7 @@ namespace hex {
         static void confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn);
         static void discardNavigationRequests();
 
-        static inline std::string toWindowName(const std::string &unlocalizedName) {
+        static std::string toWindowName(const std::string &unlocalizedName) {
             return LangEntry(unlocalizedName) + "###" + unlocalizedName;
         }
 
@@ -63,7 +63,7 @@ namespace hex {
     private:
         std::string m_unlocalizedViewName;
         bool m_windowOpen = false;
-        std::map<Shortcut, std::function<void()>> m_shortcuts;
+        std::map<Shortcut, ShortcutManager::ShortcutEntry> m_shortcuts;
         bool m_windowJustOpened = false;
 
         friend class ShortcutManager;

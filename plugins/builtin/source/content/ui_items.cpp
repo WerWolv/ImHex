@@ -141,14 +141,14 @@ namespace hex::plugin::builtin {
     }
 
     void addToolbarItems() {
-        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, []{
+        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, "hex.builtin.shortcut.prev_provider", []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
             if (currIndex > 0)
                 ImHexApi::Provider::setCurrentProvider(currIndex - 1);
         });
 
-        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Right, []{
+        ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Right, "hex.builtin.shortcut.next_provider", []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
             const auto &providers = ImHexApi::Provider::getProviders();

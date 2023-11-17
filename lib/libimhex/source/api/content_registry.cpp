@@ -714,10 +714,12 @@ namespace hex {
                 priority, { unlocalizedMainMenuNames, shortcut, function, enabledCallback }
             });
 
-            if (shortcut.isLocal() && view != nullptr)
-                ShortcutManager::addShortcut(view, shortcut, function);
-            else
-                ShortcutManager::addGlobalShortcut(shortcut, function);
+            if (shortcut != Shortcut::None) {
+                if (shortcut.isLocal() && view != nullptr)
+                    ShortcutManager::addShortcut(view, shortcut, unlocalizedMainMenuNames.back(), function);
+                else
+                    ShortcutManager::addGlobalShortcut(shortcut, unlocalizedMainMenuNames.back(), function);
+            }
         }
 
         void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
