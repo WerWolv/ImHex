@@ -33,7 +33,7 @@
 
 namespace hex::plugin::builtin {
 
-    static ImGuiExt::Texture s_bannerTexture, s_backdropTexture;
+    static ImGuiExt::Texture s_bannerTexture, s_backdropTexture, s_infoBannerTexture;
 
     static std::string s_tipOfTheDay;
 
@@ -330,6 +330,18 @@ namespace hex::plugin::builtin {
                 ImGuiExt::EndSubWindow();
             }
 
+            if (s_infoBannerTexture.isValid()) {
+                auto width = ImGui::GetContentRegionAvail().x - windowPadding;
+
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+                ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.info"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
+                {
+                    ImGui::Image(s_infoBannerTexture, ImVec2(width, width / s_infoBannerTexture.getAspectRatio()));
+                }
+                ImGuiExt::EndSubWindow();
+                ImGui::PopStyleVar();
+            }
+
 
             ImGui::EndTable();
         }
@@ -495,7 +507,7 @@ namespace hex::plugin::builtin {
         });
 
 
-        recent::drawFileMenuItem();
+        recent::addMenuItems();
 
         // Check for crash backup
         constexpr static auto CrashFileName = "crash.json";
@@ -575,6 +587,29 @@ namespace hex::plugin::builtin {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.crash.name");
             });
         }
+
+        // Load info banner texture either locally or from the server
+        TaskManager::doLater([] {
+            for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
+                const auto infoBannerPath = defaultPath / "info_banner.png";
+                if (wolv::io::fs::exists(infoBannerPath)) {
+                    s_infoBannerTexture = ImGuiExt::Texture(wolv::util::toUTF8String(infoBannerPath).c_str());
+                    break;
+                } else {
+                    TaskManager::createBackgroundTask("Load banner", [](auto&) {
+                        HttpRequest request("GET", ImHexApiURL + std::string("/info_banner"));
+                        auto response = request.downloadFile().get();
+
+                        if (response.isSuccess()) {
+                            const auto &data = response.getData();
+                            TaskManager::doLater([data] {
+                                s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size());
+                            });
+                        }
+                    });
+                }
+            }
+        });
     }
 
 }

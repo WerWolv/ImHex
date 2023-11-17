@@ -223,7 +223,7 @@ namespace hex::plugin::builtin::recent {
         ImGuiExt::EndSubWindow();
     }
 
-    void drawFileMenuItem() {
+    void addMenuItems() {
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
             if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration

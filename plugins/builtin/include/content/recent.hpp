@@ -72,8 +72,8 @@ namespace hex::plugin::builtin::recent {
     void draw();
 
     /**
-     * @brief Draw the "open recent" item in the "File" menu
+     * @brief Adds the "open recent" item in the "File" menu
      */
-    void drawFileMenuItem();
+    void addMenuItems();
 
 }
