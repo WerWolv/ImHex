@@ -34,7 +34,7 @@ namespace hex::plugin::builtin {
             std::vector<u8> data;
 
             auto c = [&] {
-                while (std::isspace(string[offset]) && offset < string.length())
+                while (offset < string.length() && std::isspace(string[offset]))
                     offset++;
 
                 if (offset >= string.length())
