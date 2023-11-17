@@ -51,7 +51,7 @@ namespace hex {
                 i += 2;
             }
         }
-        return input;
+        return result;
     }
 
 }

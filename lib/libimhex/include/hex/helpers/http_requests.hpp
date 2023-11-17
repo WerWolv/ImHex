@@ -118,9 +118,9 @@ namespace hex {
         template<typename T = std::string>
         std::future<Result<T>> execute();
 
-        std::string urlEncode(const std::string &input);
+        static std::string urlEncode(const std::string &input);
 
-        std::string urlDecode(const std::string &input);
+        static std::string urlDecode(const std::string &input);
 
     protected:
         void setDefaultConfig();

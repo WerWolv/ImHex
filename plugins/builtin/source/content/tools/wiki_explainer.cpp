@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
 
             if (startSearch && !searchString.empty()) {
-                request.setUrl(getWikipediaApiUrl() + "&exintro"s + "&titles="s + request.urlEncode(searchString));
+                request.setUrl(getWikipediaApiUrl() + "&exintro"s + "&titles="s + HttpRequest::urlEncode(searchString));
                 searchProcess = request.execute();
             }
 
@@ -66,7 +66,7 @@ namespace hex::plugin::builtin {
                     if (!extendedSearch && resultExtract.ends_with(':')) {
                         extendedSearch = true;
 
-                        request.setUrl(getWikipediaApiUrl() + "&titles="s + request.urlEncode(searchString));
+                        request.setUrl(getWikipediaApiUrl() + "&titles="s + HttpRequest::urlEncode(searchString));
                         searchProcess  = request.execute();
 
                         resultTitle.clear();
