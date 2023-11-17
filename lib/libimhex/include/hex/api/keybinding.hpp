@@ -189,7 +189,15 @@ namespace hex {
         }
 
         bool operator==(const Shortcut &other) const {
-            return this->m_keys == other.m_keys;
+            auto thisKeys = this->m_keys;
+            auto otherKeys = other.m_keys;
+
+            thisKeys.erase(CurrentView);
+            thisKeys.erase(AllowWhileTyping);
+            otherKeys.erase(CurrentView);
+            otherKeys.erase(AllowWhileTyping);
+
+            return thisKeys == otherKeys;
         }
 
         bool isLocal() const {

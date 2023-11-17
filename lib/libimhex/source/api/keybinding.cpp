@@ -42,42 +42,34 @@ namespace hex {
         return pressedShortcut;
     }
 
-    void ShortcutManager::process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
-        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
-
-        if (keyCode != 0)
-            s_prevShortcut = Shortcut(pressedShortcut.getKeys());
-
-        if (s_paused) return;
-
-        if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
-                return;
-
-        if (currentView->m_shortcuts.contains(pressedShortcut + AllowWhileTyping)) {
-            currentView->m_shortcuts[pressedShortcut + AllowWhileTyping].callback();
-        } else if (currentView->m_shortcuts.contains(pressedShortcut)) {
-            if (!ImGui::GetIO().WantTextInput)
-                currentView->m_shortcuts[pressedShortcut].callback();
-        }
-    }
-
-    void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
-        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, keyCode);
-
-        if (keyCode != 0)
-            s_prevShortcut = pressedShortcut;
-
+    static void processShortcut(const Shortcut &shortcut, const std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
         if (s_paused) return;
 
         if (ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId))
             return;
 
-        if (s_globalShortcuts.contains(pressedShortcut + AllowWhileTyping)) {
-            s_globalShortcuts[pressedShortcut + AllowWhileTyping].callback();
-        } else if (s_globalShortcuts.contains(pressedShortcut)) {
+        if (shortcuts.contains(shortcut + AllowWhileTyping)) {
+            shortcuts.at(shortcut + AllowWhileTyping).callback();
+        } else if (shortcuts.contains(shortcut)) {
             if (!ImGui::GetIO().WantTextInput)
-                s_globalShortcuts[pressedShortcut].callback();
+                shortcuts.at(shortcut).callback();
         }
+    }
+
+    void ShortcutManager::process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
+        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
+        if (keyCode != 0)
+            s_prevShortcut = Shortcut(pressedShortcut.getKeys());
+
+        processShortcut(pressedShortcut, currentView->m_shortcuts);
+    }
+
+    void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
+        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, keyCode);
+        if (keyCode != 0)
+            s_prevShortcut = Shortcut(pressedShortcut.getKeys());
+
+        processShortcut(pressedShortcut, s_globalShortcuts);
     }
 
     void ShortcutManager::clearShortcuts() {

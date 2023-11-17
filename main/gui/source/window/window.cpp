@@ -1044,7 +1044,7 @@ namespace hex {
 
         #if !defined(OS_WEB)
             // Register key press callback
-            glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
+            glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int, int action, int mods) {
                 hex::unused(mods);
 
                 auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
@@ -1056,10 +1056,6 @@ namespace hex {
                 }
 
                 if (key == GLFW_KEY_UNKNOWN) return;
-
-                auto keyName = glfwGetKeyName(key, scancode);
-                if (keyName != nullptr)
-                    key = std::toupper(keyName[0]);
 
                 if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                     if (key != GLFW_KEY_LEFT_CONTROL && key != GLFW_KEY_RIGHT_CONTROL &&
