@@ -163,7 +163,11 @@ namespace hex {
 
             for (const auto &[id, event] : getEvents()) {
                 if (id == E::Id) {
-                    (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
+                    try {
+                        (*static_cast<E *const>(event.get()))(std::forward<decltype(args)>(args)...);
+                    } catch (const std::exception &e) {
+                        log::error("Event '{}' threw {}: {}", wolv::type::getTypeName<decltype(e)>(), wolv::type::getTypeName<E>(), e.what());
+                    }
                 }
             }
 
