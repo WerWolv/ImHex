@@ -6,7 +6,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/layout_manager.hpp>
-#include <hex/api/keybinding.hpp>
+#include <hex/api/shortcut_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>

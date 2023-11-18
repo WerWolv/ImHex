@@ -1,7 +1,7 @@
 #include "content/command_line_interface.hpp"
 
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 

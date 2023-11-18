@@ -5,7 +5,7 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/fs.hpp>
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <future>
 #include <string>

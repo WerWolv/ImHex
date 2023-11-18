@@ -1,4 +1,4 @@
-#include <hex/api/keybinding.hpp>
+#include <hex/api/shortcut_manager.hpp>
 #include <imgui.h>
 #include <hex/api/content_registry.hpp>
 

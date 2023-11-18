@@ -2,10 +2,10 @@
 
 #include <imgui.h>
 
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/provider.hpp>
 

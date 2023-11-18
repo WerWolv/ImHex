@@ -1,7 +1,7 @@
 #include "content/views/view_hex_editor.hpp"
 
 #include <hex/api/content_registry.hpp>
-#include <hex/api/keybinding.hpp>
+#include <hex/api/shortcut_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 

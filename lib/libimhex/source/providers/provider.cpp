@@ -1,7 +1,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex.hpp>
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <cmath>
 #include <cstring>

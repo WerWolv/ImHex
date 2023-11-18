@@ -3,7 +3,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <hex/providers/provider.hpp>
 

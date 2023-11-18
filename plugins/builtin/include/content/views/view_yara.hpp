@@ -4,7 +4,7 @@
 
 #include <hex/ui/view.hpp>
 
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 
 namespace hex::plugin::builtin {
 

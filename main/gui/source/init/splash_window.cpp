@@ -2,7 +2,7 @@
 #include "init/splash_window.hpp"
 
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/utils_macos.hpp>

@@ -10,7 +10,7 @@
 
 #include <hex/helpers/fs.hpp>
 
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <wolv/io/file.hpp>
 

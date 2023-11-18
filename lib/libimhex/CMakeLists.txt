@@ -5,17 +5,17 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 set(LIBIMHEX_SOURCES
-        source/api/event.cpp
         source/api/imhex_api.cpp
         source/api/content_registry.cpp
-        source/api/task.cpp
-        source/api/keybinding.cpp
+        source/api/event_manager.cpp
+        source/api/task_manager.cpp
+        source/api/shortcut_manager.cpp
         source/api/plugin_manager.cpp
-        source/api/localization.cpp
         source/api/project_file_manager.cpp
         source/api/theme_manager.cpp
         source/api/layout_manager.cpp
         source/api/achievement_manager.cpp
+        source/api/localization.cpp
 
         source/data_processor/attribute.cpp
         source/data_processor/link.cpp

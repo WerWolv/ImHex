@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/api/content_registry.hpp>
 
 #include <pl/core/lexer.hpp>

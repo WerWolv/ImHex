@@ -2,7 +2,7 @@
 
 #include <imgui_internal.h>
 
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/guards.hpp>

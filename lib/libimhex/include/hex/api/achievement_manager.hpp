@@ -7,7 +7,7 @@
 #include <vector>
 #include <span>
 
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 

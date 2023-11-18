@@ -3,7 +3,7 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 
 namespace hex::plugin::builtin {
 

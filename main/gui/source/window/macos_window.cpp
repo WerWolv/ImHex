@@ -4,7 +4,7 @@
 
     #include <hex/api/imhex_api.hpp>
     #include <hex/api/content_registry.hpp>
-    #include <hex/api/event.hpp>
+    #include <hex/api/event_manager.hpp>
 
     #include <hex/helpers/utils_macos.hpp>
     #include <hex/helpers/logger.hpp>

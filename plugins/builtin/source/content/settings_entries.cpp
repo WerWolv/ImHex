@@ -2,8 +2,8 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/api/theme_manager.hpp>
-#include <hex/api/keybinding.hpp>
-#include <hex/api/event.hpp>
+#include <hex/api/shortcut_manager.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>

@@ -4,7 +4,7 @@
 #include <implot.h>
 
 #include <hex/ui/view.hpp>
-#include <hex/api/keybinding.hpp>
+#include <hex/api/shortcut_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>

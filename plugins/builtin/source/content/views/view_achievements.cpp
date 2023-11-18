@@ -1,7 +1,7 @@
 #include "content/views/view_achievements.hpp"
 
 #include <hex/api/content_registry.hpp>
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <cmath>
 

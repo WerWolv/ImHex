@@ -1,4 +1,4 @@
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 
 namespace hex {
 

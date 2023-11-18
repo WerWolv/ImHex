@@ -5,7 +5,7 @@
 #include <emscripten.h>
 #include <emscripten/html5.h>
 
-#include <hex/api/event.hpp>
+#include <hex/api/event_manager.hpp>
 
 // Function used by c++ to get the size of the html canvas
 EM_JS(int, canvas_get_width, (), {

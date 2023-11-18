@@ -2,7 +2,7 @@
 
 #include <hex.hpp>
 
-#include <hex/api/task.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/ui/view.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 #include <ui/widgets.hpp>
