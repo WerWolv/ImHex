@@ -32,6 +32,8 @@
 #ifndef __gl3w_h_
 #define __gl3w_h_
 
+#include <GL/gl.h>
+
 #if __has_include(<KHR/khrplatform.h>)
     #include <KHR/khrplatform.h>
 #else

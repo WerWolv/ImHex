@@ -4,8 +4,6 @@
 #include <hex/helpers/concepts.hpp>
 
 #include <pl/pattern_language.hpp>
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/event.hpp>
 
 #include <functional>
 #include <map>
@@ -27,6 +25,7 @@ namespace hex {
 
     class View;
     class LanguageDefinition;
+    class Shortcut;
 
     namespace dp {
         class Node;
@@ -625,7 +624,8 @@ namespace hex {
 
                 struct MenuItem {
                     std::vector<std::string> unlocalizedNames;
-                    Shortcut shortcut;
+                    std::unique_ptr<Shortcut> shortcut;
+                    View *view;
                     MenuCallback callback;
                     EnabledCallback enabledCallback;
                 };
@@ -734,6 +734,9 @@ namespace hex {
 
                 void addProviderName(const std::string &unlocalizedName);
 
+                using ProviderCreationFunction = prv::Provider*(*)();
+                void add(const std::string &typeName, ProviderCreationFunction creationFunction);
+
                 std::vector<std::string> &getEntries();
 
             }
@@ -747,15 +750,8 @@ namespace hex {
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName](const std::string &name, bool skipLoadInterface, bool selectProvider, prv::Provider **provider) {
-                    if (name != expectedName) return;
-
-                    prv::Provider *newProvider = new T();
-
-                    ImHexApi::Provider::add(newProvider, skipLoadInterface, selectProvider);
-
-                    if (provider != nullptr)
-                        *provider = newProvider;
+                impl::add(typeName, [] -> prv::Provider* {
+                    return new T();
                 });
 
                 if (addToList)

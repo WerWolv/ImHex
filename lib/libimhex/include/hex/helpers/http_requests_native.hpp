@@ -6,6 +6,9 @@
 #include <curl/curl.h>
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/fmt.hpp>
+
+#include <wolv/utils/string.hpp>
 
 namespace hex {
 
@@ -34,22 +37,22 @@ namespace hex {
 
             curl_mime_data_cb(part, file.getSize(),
                                 [](char *buffer, size_t size, size_t nitems, void *arg) -> size_t {
-                                    auto file = static_cast<FILE*>(arg);
+                                    auto handle = static_cast<FILE*>(arg);
 
-                                    return fread(buffer, size, nitems, file);
+                                    return fread(buffer, size, nitems, handle);
                                 },
                                 [](void *arg, curl_off_t offset, int origin) -> int {
-                                    auto file = static_cast<FILE*>(arg);
+                                    auto handle = static_cast<FILE*>(arg);
 
-                                    if (fseek(file, offset, origin) != 0)
+                                    if (fseek(handle, offset, origin) != 0)
                                         return CURL_SEEKFUNC_CANTSEEK;
                                     else
                                         return CURL_SEEKFUNC_OK;
                                 },
                                 [](void *arg) {
-                                    auto file = static_cast<FILE*>(arg);
+                                    auto handle = static_cast<FILE*>(arg);
 
-                                    fclose(file);
+                                    fclose(handle);
                                 },
                                 file.getHandle());
             curl_mime_filename(part, fileName.c_str());

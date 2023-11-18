@@ -7,11 +7,8 @@
 #include <string>
 #include <vector>
 
-#include <hex/helpers/fmt.hpp>
-
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
-#include <wolv/utils/string.hpp>
 
 #if defined(OS_WEB)
     #include <emscripten/fetch.h>

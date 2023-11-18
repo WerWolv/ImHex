@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/event.hpp>
 
 #include <nlohmann/json.hpp>
 

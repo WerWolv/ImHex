@@ -1,12 +1,12 @@
 #pragma once
 
+#include <hex.hpp>
+#include <hex/api/plugin_manager.hpp>
+
 #include <string>
 
 #include <imgui.h>
 #include <imgui_internal.h>
-
-#include <hex.hpp>
-#include <hex/api/plugin_manager.hpp>
 
 #include <wolv/utils/string.hpp>
 #include <wolv/utils/preproc.hpp>

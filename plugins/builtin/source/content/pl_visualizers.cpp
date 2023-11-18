@@ -2,10 +2,10 @@
 #include <hex/api/localization.hpp>
 #include <hex/api/task.hpp>
 
+#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/disassembler.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/opengl.hpp>
-#include <hex/helpers/http_requests.hpp>
 
 #include <imgui.h>
 #include <implot.h>

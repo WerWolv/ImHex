@@ -10,6 +10,7 @@
 #include <fonts/codicons_font.h>
 
 #include <hex/api/imhex_api.hpp>
+#include <hex/api/keybinding.hpp>
 #include <hex/api/event.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/providers/provider_data.hpp>
@@ -19,8 +20,6 @@
 
 #include <functional>
 #include <string>
-#include <vector>
-
 
 namespace hex {
 

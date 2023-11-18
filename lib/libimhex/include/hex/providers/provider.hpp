@@ -9,7 +9,6 @@
 #include <variant>
 #include <vector>
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/providers/overlay.hpp>
 #include <hex/helpers/fs.hpp>
 

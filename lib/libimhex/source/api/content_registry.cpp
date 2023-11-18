@@ -1,4 +1,5 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/keybinding.hpp>
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
@@ -711,7 +712,7 @@ namespace hex {
             log::debug("Added new menu item to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
 
             impl::getMenuItems().insert({
-                priority, { unlocalizedMainMenuNames, shortcut, function, enabledCallback }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback }
             });
 
             if (shortcut != Shortcut::None) {
@@ -727,14 +728,14 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::getMenuItems().insert({
-                priority, { unlocalizedMainMenuNames, {}, function, enabledCallback }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, std::make_unique<Shortcut>(), nullptr, function, enabledCallback }
             });
         }
 
         void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::getMenuItems().insert({
-                priority, { unlocalizedMainMenuNames, {}, []{}, []{ return true; } }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; } }
             });
         }
 
@@ -803,19 +804,31 @@ namespace hex {
 
     namespace ContentRegistry::Provider {
 
-        void impl::addProviderName(const std::string &unlocalizedName) {
-            log::debug("Registered new provider: {}", unlocalizedName);
-
-            getEntries().push_back(unlocalizedName);
-        }
-
-
         namespace impl {
+
+            void add(const std::string &typeName, ProviderCreationFunction creationFunction) {
+                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, prv::Provider **provider) {
+                    if (name != expectedName) return;
+
+                    prv::Provider *newProvider = creationFunction();
+
+                    ImHexApi::Provider::add(newProvider, skipLoadInterface, selectProvider);
+
+                    if (provider != nullptr)
+                        *provider = newProvider;
+                });
+            }
 
             std::vector<std::string> &getEntries() {
                 static std::vector<std::string> providerNames;
 
                 return providerNames;
+            }
+
+            void addProviderName(const std::string &unlocalizedName) {
+                log::debug("Registered new provider: {}", unlocalizedName);
+
+                getEntries().push_back(unlocalizedName);
             }
 
         }

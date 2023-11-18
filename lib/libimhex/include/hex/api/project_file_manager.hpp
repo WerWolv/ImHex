@@ -1,10 +1,5 @@
 #pragma once
 
-#include <hex/api/imhex_api.hpp>
-#include <hex/api/event.hpp>
-
-#include <hex/helpers/fs.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/tar.hpp>
 
 /**
@@ -15,6 +10,10 @@
  *
  */
 namespace hex {
+
+    namespace prv {
+        class Provider;
+    }
 
     class ProjectFile {
     public:

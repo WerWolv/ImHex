@@ -10,6 +10,7 @@
 #include <hex/helpers/utils.hpp>
 
 #include <string_view>
+#include <set>
 
 namespace hex::plugin::windows {
 

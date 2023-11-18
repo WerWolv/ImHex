@@ -11,6 +11,8 @@
 
 #include <hex/providers/provider.hpp>
 
+#include <set>
+
 struct ImGuiTableSortSpecs;
 
 namespace hex::plugin::builtin::ui {

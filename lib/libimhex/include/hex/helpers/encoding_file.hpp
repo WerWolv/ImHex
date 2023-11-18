@@ -7,7 +7,7 @@
 #include <vector>
 #include <span>
 
-#include <wolv/io/file.hpp>
+#include <wolv/io/fs.hpp>
 
 namespace hex {
 

@@ -8,9 +8,9 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <hex/helpers/utils.hpp>
 
 #include <hex/api/task.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex {
 

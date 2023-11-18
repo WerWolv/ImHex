@@ -6,6 +6,8 @@
 
 #include <hex/ui/popup.hpp>
 
+#include <hex/helpers/utils.hpp>
+
 using namespace hex;
 
 #define VERSION V1

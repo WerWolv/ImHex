@@ -7,8 +7,6 @@
 #include <vector>
 #include <map>
 
-#include <hex/api/keybinding.hpp>
-
 #include <wolv/io/fs.hpp>
 
 using ImGuiID = unsigned int;

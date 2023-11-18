@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
                         if (auto combined = wolv::util::combineStrings(names, " -> "); hex::containsIgnoreCase(combined, input) && !combined.contains(ContentRegistry::Interface::impl::SeparatorValue) && !combined.contains(ContentRegistry::Interface::impl::SubMenuValue)) {
                             result.emplace_back(ContentRegistry::CommandPaletteCommands::impl::QueryResult {
                                 std::move(combined),
-                                [entry](const auto&) { entry.callback(); }
+                                [&entry](const auto&) { entry.callback(); }
                             });
                         }
                     }

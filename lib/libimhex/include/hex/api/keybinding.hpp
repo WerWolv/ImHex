@@ -443,12 +443,12 @@ namespace hex {
         static void resumeShortcuts();
         static void pauseShortcuts();
 
-        static std::optional<Shortcut> getPreviousShortcut();
+        [[nodiscard]] static std::optional<Shortcut> getPreviousShortcut();
 
-        static std::vector<ShortcutEntry> getGlobalShortcuts();
-        static std::vector<ShortcutEntry> getViewShortcuts(View *view);
+        [[nodiscard]] static std::vector<ShortcutEntry> getGlobalShortcuts();
+        [[nodiscard]] static std::vector<ShortcutEntry> getViewShortcuts(View *view);
 
-        static void updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view = nullptr);
+        [[nodiscard]] static bool updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view = nullptr);
     };
 
 }

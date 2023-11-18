@@ -2,6 +2,8 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization.hpp>
 #include <hex/api/theme_manager.hpp>
+#include <hex/api/keybinding.hpp>
+#include <hex/api/event.hpp>
 
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
@@ -190,7 +192,7 @@ namespace hex::plugin::builtin {
 
         class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
-            KeybindingWidget(View *view, Shortcut shortcut) : m_view(view), m_shortcut(std::move(shortcut)) {}
+            KeybindingWidget(View *view, const Shortcut &shortcut) : m_view(view), m_shortcut(shortcut), m_defaultShortcut(shortcut) {}
 
             bool draw(const std::string &name) override {
                 std::string label;
@@ -203,8 +205,12 @@ namespace hex::plugin::builtin {
                 if (label.empty())
                     label = "???";
 
+
+                if (this->m_hasDuplicate)
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerError));
+
                 ImGui::PushID(this);
-                if (ImGui::Button(label.c_str(), ImVec2(150_scaled, 0))) {
+                if (ImGui::Button(label.c_str(), ImVec2(250_scaled, 0))) {
                     this->m_editing = !this->m_editing;
 
                     if (this->m_editing)
@@ -212,7 +218,18 @@ namespace hex::plugin::builtin {
                     else
                         ShortcutManager::resumeShortcuts();
                 }
-                ImGui::PopID();
+
+                ImGui::SameLine();
+
+                if (this->m_hasDuplicate)
+                    ImGui::PopStyleColor();
+
+                ImGui::BeginDisabled(this->m_shortcut == this->m_defaultShortcut);
+                if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, this->m_defaultShortcut, this->m_view);
+                    this->m_shortcut = this->m_defaultShortcut;
+                }
+                ImGui::EndDisabled();
 
                 if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                     this->m_editing = false;
@@ -222,6 +239,8 @@ namespace hex::plugin::builtin {
                 ImGui::SameLine();
 
                 ImGuiExt::TextFormatted("{}", name);
+
+                ImGui::PopID();
 
                 if (this->m_editing) {
                     if (this->detectShortcut()) {
@@ -245,7 +264,7 @@ namespace hex::plugin::builtin {
                     return;
 
                 auto newShortcut = Shortcut(keys);
-                ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
+                this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
                 this->m_shortcut = std::move(newShortcut);
             }
 
@@ -274,7 +293,7 @@ namespace hex::plugin::builtin {
                     }
 
                     auto newShortcut = Shortcut(std::move(keys));
-                    ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
+                    this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
                     this->m_shortcut = std::move(newShortcut);
 
                     return true;
@@ -285,8 +304,9 @@ namespace hex::plugin::builtin {
 
         private:
             View *m_view = nullptr;
-            Shortcut m_shortcut;
+            Shortcut m_shortcut, m_defaultShortcut;
             bool m_editing = false;
+            bool m_hasDuplicate = false;
         };
 
     }

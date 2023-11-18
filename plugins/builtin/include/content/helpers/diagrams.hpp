@@ -5,13 +5,14 @@
 #include <imgui.h>
 #include <implot.h>
 
-#include <hex/providers/provider.hpp>
+#include <hex/api/imhex_api.hpp>
 #include <hex/api/localization.hpp>
+
+#include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
 #include <imgui_internal.h>
 
-#include <hex/helpers/logger.hpp>
 #include <random>
 
 namespace hex {
@@ -114,7 +115,8 @@ namespace hex {
 
                 if (!this->m_processing)
                     for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size() - 1); i++) {
-                        const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, this->m_buffer[i + 1] * yStep };
+                        auto x = this->m_buffer[i] * xStep;
+                        auto y = this->m_buffer[i + 1] * yStep;
 
                         auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size()) + ImVec4(this->m_glowBuffer[i], this->m_glowBuffer[i], this->m_glowBuffer[i], 0.0F);
                         color.w    = this->m_opacity;
@@ -209,7 +211,8 @@ namespace hex {
 
                 if (!this->m_processing)
                     for (size_t i = 0; i < (this->m_buffer.empty() ? 0 : this->m_buffer.size()); i++) {
-                        const auto &[x, y] = std::pair { this->m_buffer[i] * xStep, yStep * ((float(i) / this->m_buffer.size()) * 0xFF) };
+                        auto x = this->m_buffer[i] * xStep;
+                        auto y = yStep * ((float(i) / this->m_buffer.size()) * 0xFF);
 
                         auto color = ImLerp(ImColor(0xFF, 0x6D, 0x01).Value, ImColor(0x01, 0x93, 0xFF).Value, float(i) / this->m_buffer.size()) + ImVec4(this->m_glowBuffer[i], this->m_glowBuffer[i], this->m_glowBuffer[i], 0.0F);
                         color.w    = this->m_opacity;
@@ -549,29 +552,29 @@ namespace hex {
         // Variables used to store the parameters to process 
         
         // Chunk's size for entropy analysis
-        u64 m_chunkSize;
-        u64 m_startAddress;
-        u64 m_endAddress;
+        u64 m_chunkSize = 0;
+        u64 m_startAddress = 0x00;
+        u64 m_endAddress = 0x00;
         // Start / size of the file
-        u64 m_baseAddress;
-        u64 m_fileSize; 
+        u64 m_baseAddress = 0x00;
+        u64 m_fileSize = 0;
         // The size of the blocks (for diagram drawing) 
-        u64 m_blockSize;
+        u64 m_blockSize = 0;
 
         // Position of the handle inside the plot
         double m_handlePosition = 0.0; 
 
         // Hold the number of blocks that have been processed
         // during the chunk-based entropy analysis
-        u64 m_blockCount;
+        u64 m_blockCount = 0;
         
         // Hold the number of bytes that have been processed 
         // during the analysis (useful for the iterative analysis)
-        u64 m_byteCount;
+        u64 m_byteCount = 0;
         
         // Array used to hold the occurrences of each byte
         // (useful for the iterative analysis)
-        std::array<ImU64, 256> m_blockValueCounts;
+        std::array<ImU64, 256> m_blockValueCounts = {};
 
         // Variable to hold the result of the chunk-based
         // entropy analysis
@@ -580,7 +583,7 @@ namespace hex {
 
         // Sampling size, number of elements displayed in the plot,
         // avoid showing to many data because it decreased the frame rate
-        size_t m_sampleSize;
+        size_t m_sampleSize = 0;
 
         std::atomic<bool> m_processing = false;
     };
@@ -950,7 +953,7 @@ namespace hex {
 
         // Array used to hold the occurrences of each byte
         // (useful for the iterative analysis)
-        std::array<ImU64, 256> m_blockValueCounts;
+        std::array<ImU64, 256> m_blockValueCounts = {};
 
         // The m_xBlockTypeDistributions attributes are used to specify the position of
         // the values in the plot when the Y axis doesn't start at 0 

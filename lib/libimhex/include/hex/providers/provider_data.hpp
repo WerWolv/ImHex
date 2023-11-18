@@ -2,12 +2,15 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event.hpp>
-#include <hex/providers/provider.hpp>
 
 #include <map>
 #include <utility>
 
 namespace hex {
+
+    namespace prv {
+        class Provider;
+    }
 
     template<typename T>
     class PerProvider {
@@ -16,7 +19,7 @@ namespace hex {
         PerProvider(const PerProvider&) = delete;
         PerProvider(PerProvider&&) = delete;
         PerProvider& operator=(const PerProvider&) = delete;
-        PerProvider& operator=(PerProvider&&) = delete;
+        PerProvider& operator=(PerProvider &&) = delete;
 
         PerProvider(T data) : m_data({ { ImHexApi::Provider::get(), std::move(data) } }) { this->onCreate(); }
 

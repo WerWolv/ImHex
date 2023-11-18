@@ -6,6 +6,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/layout_manager.hpp>
+#include <hex/api/keybinding.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
@@ -559,8 +560,8 @@ namespace hex {
                     }
 
                     for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                        const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
-                        createNestedMenu(unlocalizedNames, shortcut, callback, enabledCallback);
+                        const auto &[unlocalizedNames, shortcut, view, callback, enabledCallback] = menuItem;
+                        createNestedMenu(unlocalizedNames, *shortcut, callback, enabledCallback);
                     }
                 };
 
@@ -790,10 +791,10 @@ namespace hex {
 
         // Draw main menu popups
         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-            const auto &[unlocalizedNames, shortcut, callback, enabledCallback] = menuItem;
+            const auto &[unlocalizedNames, shortcut, view, callback, enabledCallback] = menuItem;
 
             if (ImGui::BeginPopup(unlocalizedNames.front().c_str())) {
-                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, shortcut, callback, enabledCallback);
+                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, *shortcut, callback, enabledCallback);
                 ImGui::EndPopup();
             }
         }
