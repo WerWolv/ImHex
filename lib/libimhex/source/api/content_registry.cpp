@@ -163,6 +163,8 @@ namespace hex {
 
             if (setting.is_number() && defaultValue.is_boolean())
                 setting = setting.get<int>() != 0;
+            if (setting.is_null())
+                setting = defaultValue;
 
             return setting;
         }
