@@ -1045,7 +1045,7 @@ namespace hex {
 
         #if !defined(OS_WEB)
             // Register key press callback
-            glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int, int action, int mods) {
+            glfwSetKeyCallback(this->m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
                 hex::unused(mods);
 
                 auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
@@ -1054,6 +1054,18 @@ namespace hex {
                     win->m_buttonDown = false;
                 } else {
                     win->m_buttonDown = true;
+                }
+
+                // Handle A-Z keys using their ASCII value instead of the keycode
+                if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
+                    std::string_view name = glfwGetKeyName(key, scanCode);
+
+                    // If the key name is only one character long, use the ASCII value instead
+                    // Otherwise the keyboard was set to a non-English layout and the key name
+                    // is not the same as the ASCII value
+                    if (name.length() == 1) {
+                        key = std::toupper(name[0]);
+                    }
                 }
 
                 if (key == GLFW_KEY_UNKNOWN) return;
