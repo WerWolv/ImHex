@@ -170,6 +170,9 @@ namespace hex::plugin::builtin::recent {
 
 
     void draw() {
+        if (s_recentEntries.empty())
+            return;
+
         ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
         {
             if (!s_recentEntriesUpdating) {
