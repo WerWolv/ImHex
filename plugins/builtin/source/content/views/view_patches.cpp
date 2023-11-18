@@ -41,11 +41,6 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
 
             auto provider = ImHexApi::Provider::get();
-
-            u8 byte = 0x00;
-            provider->read(offset, &byte, sizeof(u8), false);
-
-                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
             const auto &undoStack = provider->getUndoStack();
             for (const auto &operation : undoStack.getOperations()) {
                 if (operation->getRegion().overlaps(Region { offset, 1}))
