@@ -5,6 +5,7 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <pl/pattern_language.hpp>
@@ -39,11 +40,18 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventProviderClosed>(this, [this](const auto*) {
             this->m_selectedProvider = nullptr;
         });
+
+        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+            auto filterValues = ContentRegistry::Settings::read("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", nlohmann::json::array()).get<std::vector<std::string>>();
+
+            this->m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
+        });
     }
 
     ViewDataInspector::~ViewDataInspector() {
         EventManager::unsubscribe<EventRegionSelected>(this);
         EventManager::unsubscribe<EventProviderClosed>(this);
+        EventManager::unsubscribe<EventSettingsChanged>(this);
     }
 
 
@@ -74,7 +82,8 @@ namespace hex::plugin::builtin {
                     entry.unlocalizedName,
                     entry.generatorFunction(buffer, endian, numberDisplayStyle),
                     entry.editingFunction,
-                    false
+                    false,
+                   entry.unlocalizedName
                 });
             }
 
@@ -111,10 +120,10 @@ namespace hex::plugin::builtin {
 
             // Loop over all files in the inspectors folder and execute them
             for (const auto &folderPath : fs::getDefaultPaths(fs::ImHexPath::Inspectors)) {
-               for (const auto &filePath : std::fs::recursive_directory_iterator(folderPath)) {
-
+               for (const auto &entry : std::fs::recursive_directory_iterator(folderPath)) {
+                    const auto &filePath = entry.path();
                    // Skip non-files and files that don't end with .hexpat
-                   if (!filePath.exists() || !filePath.is_regular_file() || filePath.path().extension() != ".hexpat")
+                   if (!entry.exists() || !entry.is_regular_file() || filePath.extension() != ".hexpat")
                        continue;
 
                    // Read the inspector file
@@ -161,7 +170,8 @@ namespace hex::plugin::builtin {
                                             pattern->getDisplayName(),
                                             displayFunction,
                                             editingFunction,
-                                            false
+                                            false,
+                                            wolv::util::toUTF8String(filePath)
                                         });
 
                                        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.data_inspector.name");
@@ -172,7 +182,7 @@ namespace hex::plugin::builtin {
                            } else {
                                const auto& error = this->m_runtime.getError();
 
-                               log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(filePath.path()));
+                               log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(filePath));
                                if (error.has_value())
                                    log::error("{}", error.value().what());
                            }
@@ -200,15 +210,35 @@ namespace hex::plugin::builtin {
 
         if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_inspector.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
             if (this->m_selectedProvider != nullptr && this->m_selectedProvider->isReadable() && this->m_validBytes > 0) {
-                if (ImGui::BeginTable("##datainspector", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (this->m_cachedData.size() + 1)))) {
+                u32 validLineCount = this->m_cachedData.size();
+                if (!this->m_tableEditingModeEnabled) {
+                    validLineCount = std::count_if(this->m_cachedData.begin(), this->m_cachedData.end(), [this](const auto &entry) {
+                        return !this->m_hiddenValues.contains(entry.filterValue);
+                    });
+                }
+
+                if (ImGui::BeginTable("##datainspector", this->m_tableEditingModeEnabled ? 3 : 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (validLineCount + 1)))) {
                     ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang);
-                    ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.value"_lang);
+                    ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang, ImGuiTableColumnFlags_WidthFixed);
+                    ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.value"_lang, ImGuiTableColumnFlags_WidthStretch);
+
+                    if (this->m_tableEditingModeEnabled)
+                        ImGui::TableSetupColumn("##favorite", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
 
                     ImGui::TableHeadersRow();
 
                     int inspectorRowId = 1;
-                    for (auto &[unlocalizedName, displayFunction, editingFunction, editing] : this->m_cachedData) {
+                    for (auto &[unlocalizedName, displayFunction, editingFunction, editing, filterValue] : this->m_cachedData) {
+                        bool grayedOut = false;
+                        if (this->m_hiddenValues.contains(filterValue)) {
+                            if (!this->m_tableEditingModeEnabled)
+                                continue;
+                            else
+                                grayedOut = true;
+                        }
+
+                        ImGui::BeginDisabled(grayedOut);
+
                         ImGui::PushID(inspectorRowId);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -267,11 +297,41 @@ namespace hex::plugin::builtin {
                             }
                         }
 
+                        ImGui::EndDisabled();
+
+                        if (this->m_tableEditingModeEnabled) {
+                            ImGui::TableNextColumn();
+
+                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyleColorVec4(ImGuiCol_Text));
+
+                            bool hidden = this->m_hiddenValues.contains(filterValue);
+                            if (ImGuiExt::DimmedButton(hidden ? ICON_VS_EYE : ICON_VS_EYE_CLOSED)) {
+                                if (hidden)
+                                    this->m_hiddenValues.erase(filterValue);
+                                else
+                                    this->m_hiddenValues.insert(filterValue);
+
+                                {
+                                    std::vector filterValues(this->m_hiddenValues.begin(), this->m_hiddenValues.end());
+
+                                    ContentRegistry::Settings::write("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", filterValues);
+                                }
+                            }
+
+                            ImGui::PopStyleColor();
+                            ImGui::PopStyleVar();
+                        }
+
                         ImGui::PopID();
                         inspectorRowId++;
                     }
 
                     ImGui::EndTable();
+                }
+
+                if (ImGuiExt::DimmedButton("hex.builtin.common.edit"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                    this->m_tableEditingModeEnabled = !this->m_tableEditingModeEnabled;
                 }
 
                 ImGui::NewLine();

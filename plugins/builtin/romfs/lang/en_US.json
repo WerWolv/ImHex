@@ -80,6 +80,7 @@
         "hex.builtin.common.decimal": "Decimal",
         "hex.builtin.common.deny": "Deny",
         "hex.builtin.common.dont_show_again": "Don't show again",
+        "hex.builtin.common.edit": "Edit",
         "hex.builtin.common.encoding.ascii": "ASCII",
         "hex.builtin.common.encoding.utf16be": "UTF-16BE",
         "hex.builtin.common.encoding.utf16le": "UTF-16LE",

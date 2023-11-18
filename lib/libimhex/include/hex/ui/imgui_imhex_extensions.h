@@ -261,8 +261,8 @@ namespace ImGuiExt {
 
     bool BitCheckbox(const char* label, bool* v);
 
-    bool DimmedButton(const char* label);
-    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size_arg = ImVec2(0, 0));
+    bool DimmedButton(const char* label, ImVec2 size = ImVec2(0, 0));
+    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size = ImVec2(0, 0));
     bool DimmedIconToggle(const char *icon, bool *v);
 
     void TextOverlay(const char *text, ImVec2 pos);

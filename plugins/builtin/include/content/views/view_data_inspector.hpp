@@ -24,6 +24,8 @@ namespace hex::plugin::builtin {
             ContentRegistry::DataInspector::impl::DisplayFunction displayFunction;
             std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
             bool editing;
+
+            std::string filterValue;
         };
 
     private:
@@ -44,6 +46,9 @@ namespace hex::plugin::builtin {
         TaskHolder m_updateTask;
 
         std::string m_editingValue = "";
+
+        bool m_tableEditingModeEnabled = false;
+        std::set<std::string> m_hiddenValues;
 
         pl::PatternLanguage m_runtime;
     };

@@ -802,14 +802,14 @@ namespace ImGuiExt {
         return pressed;
     }
 
-    bool DimmedButton(const char* label){
+    bool DimmedButton(const char* label, ImVec2 size){
         PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
         PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-        bool res = Button(label);
+        bool res = Button(label, size);
 
         PopStyleColor(4);
         PopStyleVar(1);
@@ -817,14 +817,14 @@ namespace ImGuiExt {
         return res;
     }
 
-    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size_arg){
+    bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size){
         PushStyleColor(ImGuiCol_ButtonHovered, GetCustomColorU32(ImGuiCustomCol_DescButtonHovered));
         PushStyleColor(ImGuiCol_Button, GetCustomColorU32(ImGuiCustomCol_DescButton));
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
         PushStyleColor(ImGuiCol_ButtonActive, GetCustomColorU32(ImGuiCustomCol_DescButtonActive));
         PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
 
-        bool res = IconButton(symbol, color, size_arg);
+        bool res = IconButton(symbol, color, size);
 
         PopStyleColor(4);
         PopStyleVar(1);
