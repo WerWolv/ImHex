@@ -107,23 +107,40 @@ namespace hex {
         return result;
     }
 
-    void ShortcutManager::updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view) {
-        if (oldShortcut == newShortcut)
-            return;
+    static bool updateShortcutImpl(const Shortcut &oldShortcut, const Shortcut &newShortcut, std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
+        if (shortcuts.contains(oldShortcut + CurrentView)) {
+            if (shortcuts.contains(newShortcut + CurrentView))
+                return false;
 
+            shortcuts[newShortcut + CurrentView] = shortcuts[oldShortcut + CurrentView];
+            shortcuts[newShortcut + CurrentView].shortcut = newShortcut + CurrentView;
+            shortcuts.erase(oldShortcut + CurrentView);
+        }
+
+        return true;
+    }
+
+    bool ShortcutManager::updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view) {
+        if (oldShortcut == newShortcut)
+            return true;
+
+        bool result;
         if (view != nullptr) {
-            if (view->m_shortcuts.contains(oldShortcut + CurrentView)) {
-                view->m_shortcuts[newShortcut + CurrentView] = view->m_shortcuts[oldShortcut + CurrentView];
-                view->m_shortcuts[newShortcut + CurrentView].shortcut = newShortcut + CurrentView;
-                view->m_shortcuts.erase(oldShortcut + CurrentView);
-            }
+            result = updateShortcutImpl(oldShortcut, newShortcut, view->m_shortcuts);
         } else {
-            if (s_globalShortcuts.contains(oldShortcut)) {
-                s_globalShortcuts[newShortcut] = s_globalShortcuts[oldShortcut];
-                s_globalShortcuts[newShortcut].shortcut = newShortcut;
-                s_globalShortcuts.erase(oldShortcut);
+            result = updateShortcutImpl(oldShortcut, newShortcut, s_globalShortcuts);
+        }
+
+        if (result) {
+            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                if (menuItem.view == view && *menuItem.shortcut == oldShortcut) {
+                    *menuItem.shortcut = newShortcut;
+                    break;
+                }
             }
         }
+
+        return result;
     }
 
 }
