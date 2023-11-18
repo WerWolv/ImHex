@@ -67,6 +67,9 @@ namespace hex::prv::undo {
     }
 
     void Stack::groupOperations(u32 count) {
+        if (count <= 1)
+            return;
+
         auto operation = std::make_unique<OperationGroup>();
 
         i64 startIndex = std::max<i64>(0, this->m_undoStack.size() - count);

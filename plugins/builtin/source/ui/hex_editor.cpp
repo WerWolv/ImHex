@@ -218,7 +218,21 @@ namespace hex::plugin::builtin::ui {
             }
 
             if (shouldExitEditingMode || this->m_shouldModifyValue) {
-                this->m_provider->write(*this->m_editingAddress, this->m_editingBytes.data(), this->m_editingBytes.size());
+                {
+                    std::vector<u8> oldData(this->m_editingBytes.size());
+                    this->m_provider->read(*this->m_editingAddress, oldData.data(), oldData.size());
+
+                    size_t writtenBytes = 0;
+                    for (size_t i = 0; i < this->m_editingBytes.size(); i += 1) {
+                        if (this->m_editingBytes[i] != oldData[i]) {
+                            this->m_provider->write(*this->m_editingAddress, &this->m_editingBytes[i], 1);
+                            writtenBytes += 1;
+                        }
+                    }
+
+                    this->m_provider->getUndoStack().groupOperations(writtenBytes);
+                }
+
 
                 if (!this->m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                     auto nextEditingAddress = *this->m_editingAddress + this->m_currDataVisualizer->getBytesPerCell();
