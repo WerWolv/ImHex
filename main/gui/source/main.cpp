@@ -227,13 +227,14 @@ int main(int argc, char **argv) {
 
 #if defined(OS_WINDOWS)
     // create UTF-8 argv
+    int wargc = 0;
     std::string argbuf;
     std::vector<char *> utf8_args;
-    WCHAR **wargv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+    WCHAR **wargv = ::CommandLineToArgvW(::GetCommandLineW(), &wargc);
     if (wargv) {
         // convert WCHAR arguments to UTF-8
         std::vector<size_t> offsets;
-        for (int i = 0; i < argc; i++) {
+        for (int i = 0; i < wargc; i++) {
             std::string arg = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().to_bytes(wargv[i]);
             offsets.push_back(argbuf.size());
             argbuf.append(arg);
