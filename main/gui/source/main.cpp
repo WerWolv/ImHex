@@ -224,6 +224,34 @@ namespace {
  * @return Exit code
  */
 int main(int argc, char **argv) {
+
+#if defined(OS_WINDOWS)
+    // create UTF-8 argv
+    std::string argbuf;
+    std::vector<char *> utf8_args;
+    WCHAR **wargv = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+    if (wargv) {
+        // convert WCHAR arguments to UTF-8
+        std::vector<size_t> offsets;
+        for (int i = 0; i < argc; i++) {
+            std::string arg = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t>().to_bytes(wargv[i]);
+            offsets.push_back(argbuf.size());
+            argbuf.append(arg);
+            argbuf.push_back('\0');
+        }
+
+        // create argv using offsets into argbuf
+        for (size_t offset : offsets) {
+            utf8_args.push_back(&argbuf[offset]);
+        }
+
+        utf8_args.push_back(nullptr);
+        argc = static_cast<int>(utf8_args.size() - 1);
+        argv = &utf8_args[0];
+        ::LocalFree(wargv);
+    }
+#endif
+
     Window::initNative();
     hex::crash::setupCrashHandlers();
 
