@@ -296,7 +296,6 @@ namespace hex::plugin::builtin {
                 frameBuffer.bind();
 
                 glEnable(GL_DEPTH_TEST);
-                glEnable(GL_DEPTH_CLAMP);
 
                 shader.bind();
                 shader.setUniform("scale", scaling);
@@ -308,9 +307,6 @@ namespace hex::plugin::builtin {
                 glViewport(0, 0, renderTexture.getWidth(), renderTexture.getHeight());
                 glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glMatrixMode(GL_PROJECTION);
-                glLoadIdentity();
-                glFrustum(-1.0F, 1.0F, -1.0F, 1.0F, 0.0000001F, 10000000.0F);
 
                 if (indices.empty())
                     vertexBuffer.draw();

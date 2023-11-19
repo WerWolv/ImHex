@@ -31,6 +31,6 @@ mat4 viewMatrix(vec3 rotation) {
 
 void main() {
     mat4 view = viewMatrix(rotation);
-    normal = (vec4(in_Normal, 1.0) * view).xyz;
-    gl_Position = vec4((in_Position + translation) * scale, 1.0) * view;
+    normal = (vec4(in_Normal, 1.0) * view).xyz * -1;
+    gl_Position = vec4((in_Position + translation) * -scale, 1.0) * view;
 }
