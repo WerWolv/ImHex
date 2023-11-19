@@ -21,7 +21,7 @@ We'll explain this command in the next section
 
 Docker-based builds work with a Dockerfile. You run the Dockerfile, it builds the package.
 
-We are using a base environment (often given to us by dockerhub) (e.g. ubuntu:22.04) which are really just a root filesystem, and are then run shell commands, just like a shell script
+We are using a base environment (often given to us by dockerhub) (e.g. ubuntu:22.04) which are really just a root filesystem, and we then run shell commands in that env, just like a shell script
 
 Docker-based builds have two kind of caches used:
 - layer cache, which mean that if a layer (command) hasn't been changed, and previous layers haven't changed, it will not be run again
