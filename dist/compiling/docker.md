@@ -2,7 +2,7 @@ For a TLDR of commands see [How to build](#How-to-build)
 
 # Introduction
 
-The original CI we used (vanilla Github Actions) was great for specifying what steps to execute to build packages. It could even do some cusom steps with reusable actions. But it had problem: no local reproducibility. This meant that:
+The original CI we used (vanilla Github Actions) was great for specifying what steps to execute to build packages. It could even do some custom steps with reusable actions. But it had problem: no local reproducibility. This meant that:
 - We couldn't test code properly locally, we were dependent on GitHub to do it
 - If something was wrong and we had to debug the build script, it was *long and painful* because we had to wait for Github runners to finish their stuff, and couldn't quickly iterate
 
