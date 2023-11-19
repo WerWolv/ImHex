@@ -35,8 +35,31 @@ namespace {
      * @param argv Argument values
      */
     void handleCommandLineInterface(int argc, char **argv) {
-        // Skip the first argument (the executable path) and convert the rest to a vector of strings
-        std::vector<std::string> args(argv + 1, argv + argc);
+        std::vector<std::string> args;
+
+        #if defined (OS_WINDOWS)
+            hex::unused(argv);
+
+            // On Windows, argv contains UTF-16 encoded strings, so we need to convert them to UTF-8
+            auto convertedCommandLine = ::CommandLineToArgvW(::GetCommandLineW(), &argc);
+            if (convertedCommandLine == nullptr) {
+                log::error("Failed to convert command line arguments to UTF-8");
+                std::exit(EXIT_FAILURE);
+            }
+
+            for (int i = 1; i < argc; i += 1) {
+                std::wstring wcharArg = convertedCommandLine[i];
+                std::string  utf8Arg  = std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>>().to_bytes(wcharArg);
+
+                args.push_back(utf8Arg);
+            }
+
+            ::LocalFree(convertedCommandLine);
+        #else
+            // Skip the first argument (the executable path) and convert the rest to a vector of strings
+            args = { argv + 1, argv + argc };
+        #endif
+
 
         // Load all plugins but don't initialize them
         for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
