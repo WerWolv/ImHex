@@ -79,5 +79,5 @@ if (CoreClrEmbed_INCLUDE_DIR AND CoreClrEmbed_LIBRARY)
     set(CoreClrEmbed_SHARED_LIBRARIES "${CoreClrEmbed_SHARED_LIBRARY}")
     set(CoreClrEmbed_INCLUDE_DIRS "${CoreClrEmbed_INCLUDE_DIR}")
 
-    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CoreClrEmbed_INCLUDE_DIR}/nethost.h")
+    configure_file("${CoreClrEmbed_INCLUDE_DIR}/nethost.h" "${CMAKE_CURRENT_BINARY_DIR}/nethost.h" COPYONLY)
 endif()
