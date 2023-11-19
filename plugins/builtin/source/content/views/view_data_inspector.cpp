@@ -237,11 +237,11 @@ namespace hex::plugin::builtin {
                                 grayedOut = true;
                         }
 
-                        ImGui::BeginDisabled(grayedOut);
-
                         ImGui::PushID(inspectorRowId);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
+
+                        ImGui::BeginDisabled(grayedOut);
 
                         // Render inspector row name
                         ImGui::TextUnformatted(LangEntry(unlocalizedName));
