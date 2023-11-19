@@ -10,10 +10,18 @@ To solve this, we are now trying to move the CI build script to docker container
 
 # How to build
 
-Commands are available in the [CI](../../.github/workflows/build.yml) and you should prefer copying them from there. But here is an example of a command, for building the MacOS arm64 build as of 2023/11/19:
+Commands are available in the [CI](../../.github/workflows/build.yml) and you should prefer copying them from there.
+But here is a general command that should work for every build we have:
 ```
-docker buildx build . -f dist/macOS/arm64.Dockerfile --progress plain --build-arg 'JOBS=11' --build-arg 'BUILD_TYPE=Debug' --build-context imhex=$(pwd) --output local
+docker buildx build . -f <DOCKERFILE_PATH> --progress plain --build-arg 'JOBS=11' --build-arg 'BUILD_TYPE=Debug' --build-context imhex=$(pwd) --output local
 ```
+
+where `<DOCKERFILE_PATH>` should be replaced by the wanted Dockerfile base d on the build you want to do:
+| Wanted build | Dockerfile path             |
+|--------------|-----------------------------|
+| MacOS M1     | dist/macOS/arm64.Dockerfile |
+| AppImage     | dist/appimage/Dockerfile    |
+| Web version  | dist/web/Dockerfile         |
 
 We'll explain this command in the next section
 
