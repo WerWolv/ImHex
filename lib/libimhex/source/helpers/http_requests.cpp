@@ -1,6 +1,7 @@
 #include <hex/helpers/http_requests.hpp>
 
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/fmt.hpp>
 
 namespace hex {
 
