@@ -22,12 +22,11 @@ target_include_directories(imgui_imgui PUBLIC
 add_library(imgui_includes INTERFACE)
 target_include_directories(imgui_includes INTERFACE include)
 
-target_compile_definitions(imgui_imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 target_compile_options(imgui_imgui PRIVATE -Wno-unknown-warning-option)
 set_property(TARGET imgui_imgui PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 find_package(Freetype REQUIRED)
 
-target_include_directories(imgui_imgui PUBLIC ${FREETYPE_INCLUDE_DIRS} )
+target_include_directories(imgui_imgui PUBLIC ${FREETYPE_INCLUDE_DIRS})
 target_link_directories(imgui_imgui PUBLIC ${FREETYPE_LIBRARY_DIRS})
 target_link_libraries(imgui_imgui PUBLIC ${FREETYPE_LIBRARIES})
