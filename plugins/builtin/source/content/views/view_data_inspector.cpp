@@ -171,7 +171,7 @@ namespace hex::plugin::builtin {
                                             displayFunction,
                                             editingFunction,
                                             false,
-                                            wolv::util::toUTF8String(filePath)
+                                            wolv::util::toUTF8String(filePath) + ":" + pattern->getVariableName()
                                         });
 
                                        AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.data_inspector.name");
