@@ -224,10 +224,14 @@ namespace hex::plugin::builtin {
                 if (this->m_hasDuplicate)
                     ImGui::PopStyleColor();
 
+                bool settingChanged = false;
+
                 ImGui::BeginDisabled(this->m_shortcut == this->m_defaultShortcut);
                 if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, this->m_defaultShortcut, this->m_view);
                     this->m_shortcut = this->m_defaultShortcut;
+
+                    settingChanged = true;
                 }
                 ImGui::EndDisabled();
 
@@ -247,11 +251,11 @@ namespace hex::plugin::builtin {
                         this->m_editing = false;
                         ShortcutManager::resumeShortcuts();
 
-                        return true;
+                        settingChanged = true;
                     }
                 }
 
-                return false;
+                return settingChanged;
             }
 
             void load(const nlohmann::json &data) override {
