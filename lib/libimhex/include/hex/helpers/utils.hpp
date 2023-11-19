@@ -22,6 +22,10 @@ struct ImVec2;
 
 namespace hex {
 
+    namespace prv {
+        class Provider;
+    }
+
     template<typename T>
     [[nodiscard]] std::vector<T> sampleData(const std::vector<T> &data, size_t count) {
         size_t stride = std::max(1.0, double(data.size()) / count);
@@ -285,5 +289,8 @@ namespace hex {
     }
 
     [[nodiscard]] std::optional<std::fs::path> getInitialFilePath();
+
+    [[nodiscard]] std::string generateHexView(u64 offset, u64 size, prv::Provider *provider);
+    [[nodiscard]] std::string generateHexView(u64 offset, const std::vector<u8> &data);
 
 }

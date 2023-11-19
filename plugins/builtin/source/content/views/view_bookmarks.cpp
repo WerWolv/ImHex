@@ -146,6 +146,30 @@ namespace hex::plugin::builtin {
             }
         });
 
+        ContentRegistry::Reports::addReportProvider([this](prv::Provider *provider) -> std::string {
+            std::string result;
+
+            const auto &bookmars = this->m_bookmarks.get(provider);
+            if (bookmars.empty())
+                return "";
+
+            result += "## Bookmarks\n\n";
+
+            for (const auto &bookmark : bookmars) {
+                result += hex::format("### <span style=\"background-color: #{:06X}80\">{} [0x{:04X} - 0x{:04X}]</span>\n\n", hex::changeEndianess(bookmark.color, std::endian::big) >> 8, bookmark.name, bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
+
+                for (const auto &line : hex::splitString(bookmark.comment, "\n"))
+                    result += hex::format("> {}\n", line);
+                result += "\n";
+
+                result += "```\n";
+                result += hex::generateHexView(bookmark.region.getStartAddress(), bookmark.region.getSize(), provider);
+                result += "\n```\n\n";
+            }
+
+            return result;
+        });
+
         this->registerMenuItems();
     }
 

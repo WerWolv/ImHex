@@ -307,6 +307,7 @@ namespace hex::plugin::builtin {
             if (this->m_textEditor.IsTextChanged()) {
                 this->m_hasUnevaluatedChanges = true;
                 ImHexApi::Provider::markDirty();
+                this->m_sourceCode = this->m_textEditor.GetText();
             }
 
             if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
@@ -919,6 +920,7 @@ namespace hex::plugin::builtin {
 
             this->evaluatePattern(code, provider);
             this->m_textEditor.SetText(code);
+            this->m_sourceCode = code;
 
             TaskManager::createBackgroundTask("Parse pattern", [this, code, provider](auto&) { this->parsePattern(code, provider); });
         }
@@ -1079,6 +1081,7 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
             this->m_textEditor.SetText(code);
+            this->m_sourceCode = code;
             this->m_hasUnevaluatedChanges = true;
         });
 
@@ -1113,6 +1116,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
             if (this->m_syncPatternSourceCode && ImHexApi::Provider::getProviders().empty()) {
                 this->m_textEditor.SetText("");
+                this->m_sourceCode = "";
             }
         });
     }
@@ -1377,6 +1381,23 @@ namespace hex::plugin::builtin {
                 runtime.getInternals().evaluator->pauseNextLine();
                 this->m_breakpointHit = false;
             }
+        });
+
+        // Generate pattern code report
+        ContentRegistry::Reports::addReportProvider([this](prv::Provider *provider) -> std::string {
+            auto patternCode = this->m_sourceCode.get(provider);
+
+            if (wolv::util::trim(patternCode).empty())
+                return "";
+
+            std::string result;
+
+            result += "## Pattern Code\n\n";
+            result += "```cpp\n";
+            result += patternCode;
+            result += "\n```\n\n";
+
+            return result;
         });
     }
 

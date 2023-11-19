@@ -1098,4 +1098,22 @@ namespace hex {
 
     }
 
+    namespace ContentRegistry::Reports {
+
+        namespace impl {
+
+            std::vector<ReportGenerator> &getGenerators() {
+                static std::vector<ReportGenerator> generators;
+
+                return generators;
+            }
+
+        }
+
+        void addReportProvider(impl::Callback callback) {
+            impl::getGenerators().push_back(impl::ReportGenerator { std::move(callback ) });
+        }
+
+    }
+
 }
