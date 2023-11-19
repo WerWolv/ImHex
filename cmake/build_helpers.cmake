@@ -482,7 +482,6 @@ macro(addBundledLibraries)
 
     set(BUILD_SHARED_LIBS OFF)
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/imgui)
-    set_target_properties(imgui PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/microtar EXCLUDE_FROM_ALL)
     set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
