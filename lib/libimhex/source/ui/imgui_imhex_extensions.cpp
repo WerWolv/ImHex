@@ -832,6 +832,26 @@ namespace ImGuiExt {
         return res;
     }
 
+    bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size) {
+        bool pushed = false;
+        bool toggled = false;
+
+        if (*v) {
+            PushStyleColor(ImGuiCol_Border, GetStyleColorVec4(ImGuiCol_ButtonActive));
+            pushed = true;
+        }
+
+        if (DimmedIconButton(icon, GetStyleColorVec4(ImGuiCol_Text), size)) {
+            *v = !*v;
+            toggled = true;
+        }
+
+        if (pushed)
+            PopStyleColor();
+
+        return toggled;
+    }
+
     bool DimmedIconToggle(const char *icon, bool *v) {
         bool pushed = false;
         bool toggled = false;

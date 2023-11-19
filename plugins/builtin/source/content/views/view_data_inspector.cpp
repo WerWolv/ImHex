@@ -330,9 +330,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndTable();
                 }
 
-                if (ImGuiExt::DimmedButton("hex.builtin.common.edit"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                    this->m_tableEditingModeEnabled = !this->m_tableEditingModeEnabled;
-                }
+                ImGuiExt::DimmedButtonToggle("hex.builtin.common.edit"_lang, &this->m_tableEditingModeEnabled, ImVec2(ImGui::GetContentRegionAvail().x, 0));
 
                 ImGui::NewLine();
                 ImGui::Separator();
