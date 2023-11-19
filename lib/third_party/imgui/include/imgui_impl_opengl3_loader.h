@@ -32,7 +32,11 @@
 #ifndef __gl3w_h_
 #define __gl3w_h_
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
 #include <GL/gl.h>
+#endif
 
 #if __has_include(<KHR/khrplatform.h>)
     #include <KHR/khrplatform.h>
@@ -1159,7 +1163,9 @@ typedef khronos_uint16_t GLhalf;
 #define GL_TEXTURE_DEPTH_TYPE             0x8C16
 #define GL_UNSIGNED_NORMALIZED            0x8C17
 #define GL_FRAMEBUFFER_BINDING            0x8CA6
+#ifndef __APPLE__
 #define GL_DRAW_FRAMEBUFFER_BINDING       0x8CA6
+#endif
 #define GL_RENDERBUFFER_BINDING           0x8CA7
 #define GL_READ_FRAMEBUFFER               0x8CA8
 #define GL_DRAW_FRAMEBUFFER               0x8CA9
