@@ -133,11 +133,19 @@ typedef double GLdouble;
 typedef unsigned int GLuint;
 typedef unsigned char GLboolean;
 typedef khronos_uint8_t GLubyte;
+
+#if !defined(__EMSCRIPTEN__)
+    #define GL_FALSE                          0
+    #define GL_TRUE                           1
+    #define GL_ZERO                           0
+    #define GL_ONE                            1
+    #define GL_NONE                           0
+    #define GL_NO_ERROR                       0
+#endif
+
 #define GL_DEPTH_BUFFER_BIT               0x00000100
 #define GL_STENCIL_BUFFER_BIT             0x00000400
 #define GL_COLOR_BUFFER_BIT               0x00004000
-#define GL_FALSE                          0
-#define GL_TRUE                           1
 #define GL_POINTS                         0x0000
 #define GL_LINES                          0x0001
 #define GL_LINE_LOOP                      0x0002
@@ -154,8 +162,6 @@ typedef khronos_uint8_t GLubyte;
 #define GL_NOTEQUAL                       0x0205
 #define GL_GEQUAL                         0x0206
 #define GL_ALWAYS                         0x0207
-#define GL_ZERO                           0
-#define GL_ONE                            1
 #define GL_SRC_COLOR                      0x0300
 #define GL_ONE_MINUS_SRC_COLOR            0x0301
 #define GL_SRC_ALPHA                      0x0302
@@ -165,7 +171,6 @@ typedef khronos_uint8_t GLubyte;
 #define GL_DST_COLOR                      0x0306
 #define GL_ONE_MINUS_DST_COLOR            0x0307
 #define GL_SRC_ALPHA_SATURATE             0x0308
-#define GL_NONE                           0
 #define GL_FRONT_LEFT                     0x0400
 #define GL_FRONT_RIGHT                    0x0401
 #define GL_BACK_LEFT                      0x0402
@@ -175,7 +180,6 @@ typedef khronos_uint8_t GLubyte;
 #define GL_LEFT                           0x0406
 #define GL_RIGHT                          0x0407
 #define GL_FRONT_AND_BACK                 0x0408
-#define GL_NO_ERROR                       0
 #define GL_INVALID_ENUM                   0x0500
 #define GL_INVALID_VALUE                  0x0501
 #define GL_INVALID_OPERATION              0x0502
