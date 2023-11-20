@@ -1,8 +1,11 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#if defined(OS_WEB)
+    #define IMGL3W_IMPL
+#endif
+
 #include <imgui.h>
 #include <imgui_internal.h>
-#define IMGL3W_IMPL
 #include <imgui_impl_opengl3_loader.h>
 #undef IMGUI_DEFINE_MATH_OPERATORS
 
