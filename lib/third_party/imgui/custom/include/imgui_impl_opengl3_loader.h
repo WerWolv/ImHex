@@ -32,9 +32,9 @@
 #ifndef __gl3w_h_
 #define __gl3w_h_
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 #include <OpenGL/gl.h>
-#else
+#elif !defined(__EMSCRIPTEN__)
 #include <GL/gl.h>
 #endif
 
