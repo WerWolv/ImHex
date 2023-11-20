@@ -18,8 +18,9 @@ set_property(TARGET imgui_custom PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 find_package(PkgConfig REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(Freetype REQUIRED)
 pkg_search_module(GLFW REQUIRED glfw3)
 
-target_include_directories(imgui_custom PUBLIC ${GLFW_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
-target_link_directories(imgui_custom PUBLIC ${GLFW_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
+target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
+target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS} ${GLFW_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
 target_link_libraries(imgui_custom PUBLIC ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})
