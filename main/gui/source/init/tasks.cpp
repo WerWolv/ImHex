@@ -410,6 +410,9 @@ namespace hex::init {
 
         ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints().clear();
 
+        ContentRegistry::Experiments::impl::getExperiments().clear();
+        ContentRegistry::Reports::impl::getGenerators().clear();
+
         LayoutManager::reset();
 
         ThemeManager::reset();
