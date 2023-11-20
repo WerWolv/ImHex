@@ -1,18 +1,8 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#if defined(OS_WEB)
-    #define IMGL3W_IMPL
-#endif
-
 #include <imgui.h>
 #include <imgui_internal.h>
-
-#if defined(OS_WEB)
-    #define GLFW_INCLUDE_ES3
-    #include <GLES3/gl3.h>
-#else
-    #include <imgui_impl_opengl3_loader.h>
-#endif
+#include <opengl_support.h>
 
 #undef IMGUI_DEFINE_MATH_OPERATORS
 

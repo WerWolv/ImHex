@@ -14,10 +14,14 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <fonts/fontawesome_font.h>
 #include <GLFW/glfw3.h>
+#include <opengl_support.h>
+
+#include <fonts/fontawesome_font.h>
+
 
 #include <wolv/utils/guards.hpp>
 
@@ -28,13 +32,6 @@
 #include <numeric>
 #include <random>
 
-#if defined(OS_WEB)
-    #define GLFW_INCLUDE_ES3
-    #include <GLES3/gl3.h>
-    #include <emscripten/html5.h>
-#else
-    #include <imgui_impl_opengl3_loader.h>
-#endif
 
 using namespace std::literals::chrono_literals;
 
