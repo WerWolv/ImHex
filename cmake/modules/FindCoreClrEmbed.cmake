@@ -75,9 +75,7 @@ find_file(CoreClrEmbed_SHARED_LIBRARY nethost.dll nethost.so libnethost.so netho
 
 if (CoreClrEmbed_INCLUDE_DIR AND CoreClrEmbed_LIBRARY)
     set(CoreClrEmbed_FOUND TRUE)
-    set(CoreClrEmbed_LIBRARIES "${CoreClrEmbed_LIBRARY}")
-    set(CoreClrEmbed_SHARED_LIBRARIES "${CoreClrEmbed_SHARED_LIBRARY}")
-    set(CoreClrEmbed_INCLUDE_DIRS "${CoreClrEmbed_INCLUDE_DIR}")
-
-    configure_file("${CoreClrEmbed_INCLUDE_DIR}/nethost.h" "${CMAKE_CURRENT_BINARY_DIR}/nethost.h" COPYONLY)
+    set(CoreClrEmbed_LIBRARIES "${CoreClrEmbed_LIBRARY}" CACHE STRING "CoreClrEmbed libraries" FORCE)
+    set(CoreClrEmbed_SHARED_LIBRARIES "${CoreClrEmbed_SHARED_LIBRARY}" CACHE STRING "CoreClrEmbed shared libraries" FORCE)
+    set(CoreClrEmbed_INCLUDE_DIRS "${CoreClrEmbed_INCLUDE_DIR}" CACHE STRING "CoreClrEmbed include directories" FORCE)
 endif()
