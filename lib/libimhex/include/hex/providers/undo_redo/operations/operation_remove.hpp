@@ -13,16 +13,16 @@ namespace hex::prv::undo {
             m_offset(offset), m_size(size) { }
 
         void undo(Provider *provider) override {
-            provider->insert(this->m_offset, this->m_size);
+            provider->insertRaw(this->m_offset, this->m_size);
 
-            provider->write(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
+            provider->writeRaw(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
         }
 
         void redo(Provider *provider) override {
             this->m_removedData.resize(this->m_size);
-            provider->read(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
+            provider->readRaw(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
 
-            provider->remove(this->m_offset, this->m_size);
+            provider->removeRaw(this->m_offset, this->m_size);
         }
 
         [[nodiscard]] std::string format() const override {

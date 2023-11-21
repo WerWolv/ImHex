@@ -13,15 +13,15 @@ namespace hex::prv::undo {
             m_offset(offset), m_size(size) { }
 
         void undo(Provider *provider) override {
-            provider->remove(this->m_offset, this->m_size);
+            provider->removeRaw(this->m_offset, this->m_size);
         }
 
         void redo(Provider *provider) override {
-            provider->insert(this->m_offset, this->m_size);
+            provider->insertRaw(this->m_offset, this->m_size);
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("Removed {} at 0x{:04x}", hex::toByteString(this->m_size), this->m_offset);
+            return hex::format("Inserted {} at 0x{:04x}", hex::toByteString(this->m_size), this->m_offset);
         }
 
         std::unique_ptr<Operation> clone() const override {

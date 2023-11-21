@@ -24,9 +24,9 @@ namespace hex::plugin::builtin {
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] size_t getActualSize() const override { return this->m_data.size(); }
 
-        void resize(size_t newSize) override;
-        void insert(u64 offset, size_t size) override;
-        void remove(u64 offset, size_t size) override;
+        void resizeRaw(size_t newSize) override;
+        void insertRaw(u64 offset, size_t size) override;
+        void removeRaw(u64 offset, size_t size) override;
 
         void save() override;
 

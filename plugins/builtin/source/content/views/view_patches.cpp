@@ -42,7 +42,7 @@ namespace hex::plugin::builtin {
 
             auto provider = ImHexApi::Provider::get();
             const auto &undoStack = provider->getUndoStack();
-            for (const auto &operation : undoStack.getOperations()) {
+            for (const auto &operation : undoStack.getAppliedOperations()) {
                 if (operation->getRegion().overlaps(Region { offset, 1}))
                     return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
             }
@@ -60,57 +60,61 @@ namespace hex::plugin::builtin {
 
         if (ImHexApi::Provider::isValid() && provider->isReadable()) {
 
-                if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
-                    ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableSetupColumn("hex.builtin.view.patches.id"_lang);
-                    ImGui::TableSetupColumn("hex.builtin.view.patches.offset"_lang);
-                    ImGui::TableSetupColumn("hex.builtin.view.patches.patch"_lang);
+            if (ImGui::BeginTable("##patchesTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("##PatchID", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoResize);
+                ImGui::TableSetupColumn("hex.builtin.view.patches.offset"_lang, ImGuiTableColumnFlags_WidthFixed);
+                ImGui::TableSetupColumn("hex.builtin.view.patches.patch"_lang, ImGuiTableColumnFlags_WidthStretch);
 
                 ImGui::TableHeadersRow();
 
-                    auto &operations = provider->getUndoStack().getOperations();
-                    u32 index     = 0;
+                const auto &undoRedoStack = provider->getUndoStack();
+                std::vector<prv::undo::Operation*> operations;
+                for (const auto &operation : undoRedoStack.getUndoneOperations())
+                    operations.push_back(operation.get());
+                for (const auto &operation : undoRedoStack.getAppliedOperations() | std::views::reverse)
+                    operations.push_back(operation.get());
+
+                u32 index = 0;
 
                 ImGuiListClipper clipper;
 
-                    clipper.Begin(operations.size());
-                    while (clipper.Step()) {
-                        auto iter = operations.begin();
-                        for (auto i = 0; i < clipper.DisplayStart; i++)
-                            ++iter;
+                clipper.Begin(operations.size());
+                while (clipper.Step()) {
+                    auto iter = operations.begin();
+                    for (auto i = 0; i < clipper.DisplayStart; i++)
+                        ++iter;
 
-                        for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            const auto &operation = *iter;
+                    auto undoneOperationsCount = undoRedoStack.getUndoneOperations().size();
+                    for (auto i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        const auto &operation = *iter;
+
+                        const auto [address, size] = operation->getRegion();
 
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                            ImGuiExt::TextFormatted("{}", index);
+                        ImGui::BeginDisabled(size_t(i) < undoneOperationsCount);
 
-                            ImGui::TableNextColumn();
-
-                            const auto [address, size] = operation->getRegion();
-
-                            if (ImGui::Selectable(("##patchLine" + std::to_string(index)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                ImHexApi::HexEditor::setSelection(address, size);
-                            }
-                            if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
-                                ImGui::OpenPopup("PatchContextMenu");
-                                this->m_selectedPatch = address;
-                            }
-                            ImGui::SameLine();
-                            ImGuiExt::TextFormatted("0x{0:08X}", address);
-
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", operation->format());
-                            index += 1;
-
-                            ++iter;
+                        if (ImGui::Selectable(hex::format("{} {}", index == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : " ", index).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            ImHexApi::HexEditor::setSelection(address, size);
                         }
-                    }
-                }
+                        if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
+                            ImGui::OpenPopup("PatchContextMenu");
+                            this->m_selectedPatch = address;
+                        }
 
-                    ImGui::EndTable();
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("0x{0:08X}", address);
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", operation->format());
+                        index += 1;
+
+                        ++iter;
+
+                        ImGui::EndDisabled();
+                    }
                 }
 
                 ImGui::EndTable();
@@ -120,7 +124,7 @@ namespace hex::plugin::builtin {
 
     void ViewPatches::drawAlwaysVisibleContent() {
         if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
-            const auto &operations = provider->getUndoStack().getOperations();
+            const auto &operations = provider->getUndoStack().getAppliedOperations();
             if (this->m_numOperations.get(provider) != operations.size()) {
                 this->m_numOperations.get(provider) = operations.size();
                 EventManager::post<EventHighlightingChanged>();

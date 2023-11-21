@@ -64,15 +64,13 @@ namespace hex::plugin::builtin {
         });
     }
 
-    void MemoryFileProvider::resize(size_t newSize) {
+    void MemoryFileProvider::resizeRaw(size_t newSize) {
         this->m_data.resize(newSize);
-
-        Provider::resize(newSize);
     }
 
-    void MemoryFileProvider::insert(u64 offset, size_t size) {
+    void MemoryFileProvider::insertRaw(u64 offset, size_t size) {
         auto oldSize = this->getActualSize();
-        this->resize(oldSize + size);
+        this->resizeRaw(oldSize + size);
 
         std::vector<u8> buffer(0x1000);
         const std::vector<u8> zeroBuffer(0x1000);
@@ -87,14 +85,10 @@ namespace hex::plugin::builtin {
             this->writeRaw(position, zeroBuffer.data(), readSize);
             this->writeRaw(position + size, buffer.data(), readSize);
         }
-
-        Provider::insert(offset, size);
     }
 
-    void MemoryFileProvider::remove(u64 offset, size_t size) {
+    void MemoryFileProvider::removeRaw(u64 offset, size_t size) {
         auto oldSize = this->getActualSize();
-        this->resize(oldSize + size);
-
         std::vector<u8> buffer(0x1000);
 
         const auto newSize = oldSize - size;
@@ -108,10 +102,7 @@ namespace hex::plugin::builtin {
             position += readSize;
         }
 
-        this->resize(newSize);
-
-        Provider::insert(offset, size);
-        Provider::remove(offset, size);
+        this->resizeRaw(oldSize - size);
     }
 
     [[nodiscard]] std::string MemoryFileProvider::getName() const {

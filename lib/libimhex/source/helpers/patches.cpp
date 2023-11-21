@@ -43,11 +43,11 @@ namespace hex {
                     return this->m_patches.rbegin()->first;
             }
 
-            void resize(size_t newSize) override {
+            void resizeRaw(size_t newSize) override {
                 hex::unused(newSize);
             }
 
-            void insert(u64 offset, size_t size) override {
+            void insertRaw(u64 offset, size_t size) override {
                 std::vector<std::pair<u64, u8>> patchesToMove;
 
                 for (auto &[address, value] : this->m_patches) {
@@ -61,7 +61,7 @@ namespace hex {
                     this->m_patches.insert({ address + size, value });
             }
 
-            void remove(u64 offset, size_t size) override {
+            void removeRaw(u64 offset, size_t size) override {
                 std::vector<std::pair<u64, u8>> patchesToMove;
 
                 for (auto &[address, value] : this->m_patches) {

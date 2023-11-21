@@ -53,10 +53,10 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool open() override { return true; }
         void close() override { }
 
-        void resize(size_t newSize) override {
+        void resizeRaw(size_t newSize) override {
             this->m_size = newSize;
         }
-        void insert(u64 offset, size_t size) override {
+        void insertRaw(u64 offset, size_t size) override {
             if (this->m_provider == nullptr)
                 return;
 
@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
             this->m_provider->insert(offset + this->m_startAddress, size);
         }
 
-        void remove(u64 offset, size_t size) override {
+        void removeRaw(u64 offset, size_t size) override {
             if (this->m_provider == nullptr)
                 return;
 

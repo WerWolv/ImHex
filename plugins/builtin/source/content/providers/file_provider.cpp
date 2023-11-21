@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
             Provider::saveAs(path);
     }
 
-    void FileProvider::resize(size_t newSize) {
+    void FileProvider::resizeRaw(size_t newSize) {
         this->close();
 
         {
@@ -94,9 +94,9 @@ namespace hex::plugin::builtin {
         (void)this->open();
     }
 
-    void FileProvider::insert(u64 offset, size_t size) {
+    void FileProvider::insertRaw(u64 offset, size_t size) {
         auto oldSize = this->getActualSize();
-        this->resize(oldSize + size);
+        this->resizeRaw(oldSize + size);
 
         std::vector<u8> buffer(0x1000);
         const std::vector<u8> zeroBuffer(0x1000);
@@ -111,11 +111,9 @@ namespace hex::plugin::builtin {
             this->writeRaw(position, zeroBuffer.data(), readSize);
             this->writeRaw(position + size, buffer.data(), readSize);
         }
-
-        Provider::insert(offset, size);
     }
 
-    void FileProvider::remove(u64 offset, size_t size) {
+    void FileProvider::removeRaw(u64 offset, size_t size) {
         if (offset > this->getActualSize() || size == 0)
             return;
 
@@ -137,9 +135,7 @@ namespace hex::plugin::builtin {
             position += readSize;
         }
 
-        this->resize(newSize);
-
-        Provider::remove(offset, size);
+        this->resizeRaw(newSize);
     }
 
     size_t FileProvider::getActualSize() const {

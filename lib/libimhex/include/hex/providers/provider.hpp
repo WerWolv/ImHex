@@ -156,9 +156,13 @@ namespace hex::prv {
          */
         [[nodiscard]] virtual std::string getName() const = 0;
 
-        virtual void resize(size_t newSize);
-        virtual void insert(u64 offset, size_t size);
-        virtual void remove(u64 offset, size_t size);
+        void resize(size_t newSize);
+        void insert(u64 offset, size_t size);
+        void remove(u64 offset, size_t size);
+
+        virtual void resizeRaw(size_t newSize) { hex::unused(newSize); }
+        virtual void insertRaw(u64 offset, size_t size) { hex::unused(offset, size); }
+        virtual void removeRaw(u64 offset, size_t size) { hex::unused(offset, size); }
 
         virtual void save();
         virtual void saveAs(const std::fs::path &path);

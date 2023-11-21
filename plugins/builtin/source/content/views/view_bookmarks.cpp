@@ -258,9 +258,9 @@ namespace hex::plugin::builtin {
             int id = 1;
             auto bookmarkToRemove = this->m_bookmarks->end();
 
-                // Draw all bookmarks
-                for (auto iter = this->m_bookmarks->begin(); iter != this->m_bookmarks->end(); iter++) {
-                    auto &[region, name, comment, color, locked, bookmarkId] = *iter;
+            // Draw all bookmarks
+            for (auto iter = this->m_bookmarks->begin(); iter != this->m_bookmarks->end(); iter++) {
+                auto &[region, name, comment, color, locked, bookmarkId] = *iter;
 
                 // Apply filter
                 if (!this->m_currFilter.empty()) {
