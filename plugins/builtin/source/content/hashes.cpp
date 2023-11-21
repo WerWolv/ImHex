@@ -1,5 +1,5 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/helpers/crypto.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>

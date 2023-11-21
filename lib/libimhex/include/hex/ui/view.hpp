@@ -16,7 +16,7 @@
 #include <hex/providers/provider_data.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <map>
 #include <string>
@@ -56,7 +56,7 @@ namespace hex {
          * drawn in the drawAlwaysVisibleContent() function.
          * @return True if the view should be processed, false otherwise
          */
-        [[nodiscard]] virtual bool shouldProcess() const { return true; }
+        [[nodiscard]] virtual bool shouldProcess() const;
 
         /**
          * @brief Whether or not the view should have an entry in the view menu
@@ -170,8 +170,9 @@ namespace hex {
 
                 if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
+
+                    ImGui::EndPopup();
                 }
-                ImGui::EndPopup();
             }
         }
     };

@@ -221,7 +221,7 @@ namespace hex::plugin::builtin {
 
         void drawExportLanguageMenu() {
             for (const auto &formatter : ContentRegistry::DataFormatter::impl::getEntries()) {
-                if (ImGui::MenuItem(LangEntry(formatter.unlocalizedName), nullptr, false, ImHexApi::Provider::get()->getActualSize() > 0)) {
+                if (ImGui::MenuItem(Lang(formatter.unlocalizedName), nullptr, false, ImHexApi::Provider::get()->getActualSize() > 0)) {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&formatter](const auto &path) {
                         TaskManager::createTask("Exporting data", TaskManager::NoProgress, [&formatter, path](auto&){
                             auto provider = ImHexApi::Provider::get();
@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
         /* Open Other */
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_other"}, 1150, [] {
             for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                if (ImGui::MenuItem(LangEntry(unlocalizedProviderName)))
+                if (ImGui::MenuItem(Lang(unlocalizedProviderName)))
                     ImHexApi::Provider::createProvider(unlocalizedProviderName);
             }
         }, noRunningTasks);
@@ -477,7 +477,7 @@ namespace hex::plugin::builtin {
                 if (view->hasViewMenuItemEntry()) {
                     auto &state = view->getWindowOpenState();
 
-                    if (ImGui::MenuItem(LangEntry(view->getUnlocalizedName()), "", &state))
+                    if (ImGui::MenuItem(Lang(view->getUnlocalizedName()), "", &state))
                         view->setWindowJustOpened(state);
                 }
             }

@@ -1,5 +1,5 @@
 #include <hex/helpers/fs.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <algorithm>
 #include <random>

@@ -1,4 +1,4 @@
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>

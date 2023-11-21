@@ -154,7 +154,7 @@ namespace hex::plugin::builtin {
 
                 if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch)
-                        results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
+                        results.push_back({ command + " (" + Lang(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
                         auto matchedCommand = input.substr(command.length());
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
 
                 if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
                     if (match != MatchType::PerfectMatch)
-                        results.push_back({ command + " (" + LangEntry(unlocalizedDescription) + ")", "", AutoComplete });
+                        results.push_back({ command + " (" + Lang(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
                         auto matchedCommand = input.substr(command.length() + 1);
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });

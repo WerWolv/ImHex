@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
                     ImGui::BeginDisabled(!achievement.isUnlocked());
 
                     // Draw achievement name
-                    ImGui::TextUnformatted(LangEntry(achievement.getUnlocalizedName()));
+                    ImGui::TextUnformatted(Lang(achievement.getUnlocalizedName()));
 
                     // Draw progress bar if achievement has progress
                     if (auto requiredProgress = achievement.getRequiredProgress(); requiredProgress > 1) {
@@ -125,7 +125,7 @@ namespace hex::plugin::builtin {
                         ImGui::Separator();
                         separator = true;
 
-                        ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "[ {} ]", LangEntry("hex.builtin.view.achievements.click"));
+                        ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "[ {} ]", Lang("hex.builtin.view.achievements.click"));
                     }
 
                     // Draw achievement description if available
@@ -135,7 +135,7 @@ namespace hex::plugin::builtin {
                         else
                             ImGui::NewLine();
 
-                        ImGuiExt::TextFormattedWrapped("{}", LangEntry(desc));
+                        ImGuiExt::TextFormattedWrapped("{}", Lang(desc));
                     }
                     ImGui::EndDisabled();
                 }
@@ -338,7 +338,7 @@ namespace hex::plugin::builtin {
                 }
 
                 // Draw the achievement category
-                if (ImGui::BeginTabItem(LangEntry(categoryName), nullptr, flags)) {
+                if (ImGui::BeginTabItem(Lang(categoryName), nullptr, flags)) {
                     auto drawList = ImGui::GetWindowDrawList();
 
                     const auto cursorPos = ImGui::GetCursorPos();
@@ -427,7 +427,7 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
 
                     // Draw name of achievement
-                    ImGuiExt::TextFormattedWrapped("{}", LangEntry(this->m_currAchievement->getUnlocalizedName()));
+                    ImGuiExt::TextFormattedWrapped("{}", Lang(this->m_currAchievement->getUnlocalizedName()));
 
                     // Handle clicking on the popup
                     if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {

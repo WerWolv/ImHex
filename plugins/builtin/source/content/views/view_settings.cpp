@@ -46,12 +46,12 @@ namespace hex::plugin::builtin {
                         continue;
 
                     // For each category, create a new tab
-                    if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
+                    if (ImGui::BeginTabItem(Lang(category.unlocalizedName))) {
                         if (ImGui::BeginChild("scrolling")) {
 
                             // Draw the category description
                             if (!category.unlocalizedDescription.empty()) {
-                                ImGuiExt::TextFormattedWrapped("{}", LangEntry(category.unlocalizedDescription));
+                                ImGuiExt::TextFormattedWrapped("{}", Lang(category.unlocalizedDescription));
                                 ImGui::NewLine();
                             }
 
@@ -62,17 +62,17 @@ namespace hex::plugin::builtin {
                                 if (subCategory.entries.empty())
                                     continue;
 
-                                ImGuiExt::BeginSubWindow(LangEntry(subCategory.unlocalizedName));
+                                ImGuiExt::BeginSubWindow(Lang(subCategory.unlocalizedName));
                                 {
                                     for (auto &setting : subCategory.entries) {
                                         ImGui::BeginDisabled(!setting.widget->isEnabled());
                                         ImGui::PushItemWidth(-200_scaled);
-                                        bool settingChanged = setting.widget->draw(LangEntry(setting.unlocalizedName));
+                                        bool settingChanged = setting.widget->draw(Lang(setting.unlocalizedName));
                                         ImGui::PopItemWidth();
                                         ImGui::EndDisabled();
 
                                         if (auto tooltip = setting.widget->getTooltip(); tooltip.has_value() && ImGui::IsItemHovered())
-                                            ImGuiExt::InfoTooltip(LangEntry(tooltip.value()));
+                                            ImGuiExt::InfoTooltip(Lang(tooltip.value()));
 
                                         auto &widget = setting.widget;
 

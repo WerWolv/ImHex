@@ -1,4 +1,4 @@
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <wolv/net/socket_client.hpp>

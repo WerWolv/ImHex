@@ -2,7 +2,7 @@
 
 #include <hex/helpers/fmt.hpp>
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/providers/provider.hpp>
 
 namespace hex::dp {
@@ -22,7 +22,7 @@ namespace hex::dp {
         auto attribute = this->getConnectedInputAttribute(index);
 
         if (attribute == nullptr)
-            throwNodeError(hex::format("Nothing connected to input '{0}'", LangEntry(this->m_attributes[index].getUnlocalizedName())));
+            throwNodeError(hex::format("Nothing connected to input '{0}'", Lang(this->m_attributes[index].getUnlocalizedName())));
 
         if (attribute->getType() != Attribute::Type::Buffer)
             throwNodeError("Tried to read buffer from non-buffer attribute");

@@ -5,7 +5,7 @@
 #include <cstring>
 
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/api/event_manager.hpp>
 
 #include <wolv/io/file.hpp>
@@ -116,14 +116,14 @@ namespace hex::plugin::builtin {
 
     [[nodiscard]] std::string MemoryFileProvider::getName() const {
         if (this->m_name.empty())
-            return LangEntry("hex.builtin.provider.mem_file.unsaved");
+            return Lang("hex.builtin.provider.mem_file.unsaved");
         else
             return this->m_name;
     }
 
     std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
         return {
-            MenuEntry { LangEntry("hex.builtin.provider.mem_file.rename"), [this] { this->renameFile(); } }
+            MenuEntry { Lang("hex.builtin.provider.mem_file.rename"), [this] { this->renameFile(); } }
         };
     }
 

@@ -1,6 +1,6 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/event_manager.hpp>
@@ -358,7 +358,7 @@ namespace hex::plugin::builtin {
         std::vector<std::string> languageNames;
         std::vector<nlohmann::json> languageCodes;
 
-        for (auto &[languageCode, languageName] : LangEntry::getSupportedLanguages()) {
+        for (auto &[languageCode, languageName] : LocalizationManager::getSupportedLanguages()) {
             languageNames.emplace_back(languageName);
             languageCodes.emplace_back(languageCode);
         }
@@ -431,7 +431,7 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventImHexStartupFinished>([]{
             for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
-                        .setTooltip(LangEntry(experiment.unlocalizedDescription))
+                        .setTooltip(Lang(experiment.unlocalizedDescription))
                         .setChangedCallback([name](Widgets::Widget &widget) {
                             auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 

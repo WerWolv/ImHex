@@ -243,7 +243,7 @@ namespace hex::plugin::builtin {
                     ImGui::BeginDisabled(grayedOut);
 
                     // Render inspector row name
-                    ImGui::TextUnformatted(LangEntry(unlocalizedName));
+                    ImGui::TextUnformatted(Lang(unlocalizedName));
                     ImGui::TableNextColumn();
 
                     if (!editing) {

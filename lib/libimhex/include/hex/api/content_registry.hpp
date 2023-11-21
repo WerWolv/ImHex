@@ -24,7 +24,6 @@ struct ImColor;
 namespace hex {
 
     class View;
-    class LanguageDefinition;
     class Shortcut;
 
     namespace dp {
@@ -32,6 +31,10 @@ namespace hex {
     }
     namespace prv {
         class Provider;
+    }
+
+    namespace LocalizationManager {
+        class LanguageDefinition;
     }
 
     /*
@@ -590,7 +593,7 @@ namespace hex {
 
         }
 
-        /* Language Registry. Allows together with the LangEntry class and the _lang user defined literal to add new languages */
+        /* Language Registry. Allows together with the Lang class and the _lang user defined literal to add new languages */
         namespace Language {
 
             /**
@@ -602,7 +605,7 @@ namespace hex {
             namespace impl {
 
                 std::map<std::string, std::string> &getLanguages();
-                std::map<std::string, std::vector<LanguageDefinition>> &getLanguageDefinitions();
+                std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>> &getLanguageDefinitions();
 
             }
 

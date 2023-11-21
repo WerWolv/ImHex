@@ -1,6 +1,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
         // Task exception popup
         for (const auto &task : TaskManager::getRunningTasks()) {
             if (task->hadException()) {
-                PopupError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, LangEntry(task->getUnlocalizedName()), task->getExceptionMessage()));
+                PopupError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
                 task->clearException();
                 break;
             }
@@ -98,7 +98,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindow()->MenuBarHeight()));
                 ImGui::SetCursorPos(widgetEnd);
 
-                ImGuiExt::InfoTooltip(LangEntry(frontTask->getUnlocalizedName()).get().c_str());
+                ImGuiExt::InfoTooltip(Lang(frontTask->getUnlocalizedName()).get().c_str());
 
                 if (ImGui::BeginPopupContextItem("FrontTask", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
                             continue;
 
                         ImGui::PushID(&task);
-                        ImGuiExt::TextFormatted("{}", LangEntry(task->getUnlocalizedName()));
+                        ImGuiExt::TextFormatted("{}", Lang(task->getUnlocalizedName()));
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();

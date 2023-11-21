@@ -267,13 +267,13 @@ namespace hex {
                     preview = this->m_items[this->m_value].c_str();
 
                 bool changed = false;
-                if (ImGui::BeginCombo(name.c_str(), LangEntry(preview))) {
+                if (ImGui::BeginCombo(name.c_str(), Lang(preview))) {
 
                     int index = 0;
                     for (const auto &item : this->m_items) {
                         const bool selected = index == this->m_value;
 
-                        if (ImGui::Selectable(LangEntry(item), selected)) {
+                        if (ImGui::Selectable(Lang(item), selected)) {
                             this->m_value = index;
                             changed = true;
                         }
@@ -665,7 +665,7 @@ namespace hex {
                 const auto &fallback = data["fallback"];
 
                 if (fallback.is_boolean() && fallback.get<bool>())
-                    LangEntry::setFallbackLanguage(code.get<std::string>());
+                    LocalizationManager::impl::setFallbackLanguage(code.get<std::string>());
             }
 
             impl::getLanguages().insert({ code.get<std::string>(), hex::format("{} ({})", language.get<std::string>(), country.get<std::string>()) });
@@ -691,8 +691,8 @@ namespace hex {
                 return languages;
             }
 
-            std::map<std::string, std::vector<LanguageDefinition>> &getLanguageDefinitions() {
-                static std::map<std::string, std::vector<LanguageDefinition>> definitions;
+            std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>> &getLanguageDefinitions() {
+                static std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>> definitions;
 
                 return definitions;
             }

@@ -21,7 +21,7 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <content/helpers/math_evaluator.hpp>

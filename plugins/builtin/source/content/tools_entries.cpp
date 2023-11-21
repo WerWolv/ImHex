@@ -1,6 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <content/tools_entries.hpp>
 

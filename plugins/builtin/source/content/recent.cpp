@@ -198,7 +198,7 @@ namespace hex::plugin::builtin::recent {
                         break;
                     }
                     if (!isProject)
-                        ImGui::SetItemTooltip("%s", LangEntry(recentEntry.type).get().c_str());
+                        ImGui::SetItemTooltip("%s", Lang(recentEntry.type).get().c_str());
 
                     // Detect right click on recent provider
                     std::string popupID = hex::format("RecentEntryMenu.{}", recentEntry.getHash());

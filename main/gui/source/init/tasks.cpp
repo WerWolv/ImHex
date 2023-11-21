@@ -384,7 +384,7 @@ namespace hex::init {
 
         ContentRegistry::Language::impl::getLanguages().clear();
         ContentRegistry::Language::impl::getLanguageDefinitions().clear();
-        LangEntry::resetLanguageStrings();
+        LocalizationManager::impl::resetLanguageStrings();
 
         ContentRegistry::Interface::impl::getWelcomeScreenEntries().clear();
         ContentRegistry::Interface::impl::getFooterItems().clear();

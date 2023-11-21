@@ -1,7 +1,7 @@
 #include "content/providers/motorola_srec_provider.hpp"
 
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 

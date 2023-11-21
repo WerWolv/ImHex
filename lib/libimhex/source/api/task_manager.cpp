@@ -1,6 +1,6 @@
 #include <hex/api/task_manager.hpp>
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <algorithm>
@@ -249,7 +249,7 @@ namespace hex {
             }
 
             try {
-                setThreadName(LangEntry(task->m_unlocalizedName));
+                setThreadName(Lang(task->m_unlocalizedName));
                 task->m_function(*task);
                 setThreadName("Idle Task");
                 log::debug("Finished task {}", task->m_unlocalizedName);

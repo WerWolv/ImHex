@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::drawTab(hex::plugin::builtin::StoreCategory &category) {
-        if (ImGui::BeginTabItem(LangEntry(category.unlocalizedName))) {
+        if (ImGui::BeginTabItem(Lang(category.unlocalizedName))) {
             if (ImGui::BeginTable("##pattern_language", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.store.row.name"_lang, ImGuiTableColumnFlags_WidthFixed);

@@ -9,7 +9,7 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <nlohmann/json.hpp>
 

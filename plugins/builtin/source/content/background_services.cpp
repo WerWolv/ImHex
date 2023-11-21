@@ -1,5 +1,5 @@
 #include <hex/api/content_registry.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/api/event_manager.hpp>
 
 #include <wolv/net/socket_server.hpp>

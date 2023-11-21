@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = LangEntry(this->getUnlocalizedName());
+        std::string m_name = Lang(this->getUnlocalizedName());
         int m_type = 0;
 
         std::variant<i128, long double, std::vector<u8>> m_value;
@@ -152,7 +152,7 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        std::string m_name = LangEntry(this->getUnlocalizedName());
+        std::string m_name = Lang(this->getUnlocalizedName());
         int m_type = 0;
 
         std::variant<i128, long double, std::vector<u8>> m_value;
@@ -300,7 +300,7 @@ namespace hex::plugin::builtin {
         void load(const nlohmann::json &j) override {
             this->m_dataProcessor->loadNodes(this->m_workspace, j.at("nodes"));
 
-            this->m_name = LangEntry(this->getUnlocalizedTitle()).get();
+            this->m_name = Lang(this->getUnlocalizedTitle()).get();
             this->m_requiresAttributeUpdate = true;
         }
 
@@ -579,7 +579,7 @@ namespace hex::plugin::builtin {
                     nlohmann::json nodeJson = nlohmann::json::parse(file.readString());
 
                     // Add the loaded node to the list of custom nodes
-                    this->m_customNodes.push_back(CustomNode { LangEntry(nodeJson.at("name")), nodeJson });
+                    this->m_customNodes.push_back(CustomNode { Lang(nodeJson.at("name")), nodeJson });
                 } catch (nlohmann::json::exception &e) {
                     log::warn("Failed to load custom node '{}': {}", entry.path().string(), e.what());
                 }
@@ -646,13 +646,13 @@ namespace hex::plugin::builtin {
                     ImGui::Separator();
                 } else if (unlocalizedCategory.empty()) {
                     // Draw the node if it has no category
-                    if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
+                    if (ImGui::MenuItem(Lang(unlocalizedName))) {
                         node = function();
                     }
                 } else {
                     // Draw the node inside its sub menu if it has a category
-                    if (ImGui::BeginMenu(LangEntry(unlocalizedCategory))) {
-                        if (ImGui::MenuItem(LangEntry(unlocalizedName))) {
+                    if (ImGui::BeginMenu(Lang(unlocalizedCategory))) {
+                        if (ImGui::MenuItem(Lang(unlocalizedName))) {
                             node = function();
                         }
                         ImGui::EndMenu();
@@ -758,7 +758,7 @@ namespace hex::plugin::builtin {
             // Draw the node's title bar
             ImNodes::BeginNodeTitleBar();
             {
-                ImGui::TextUnformatted(LangEntry(node.getUnlocalizedTitle()));
+                ImGui::TextUnformatted(Lang(node.getUnlocalizedTitle()));
             }
             ImNodes::EndNodeTitleBar();
 
@@ -799,7 +799,7 @@ namespace hex::plugin::builtin {
                             defaultValue.resize(sizeof(i128));
 
                             auto value = i64(*reinterpret_cast<i128*>(defaultValue.data()));
-                            if (ImGui::InputScalar(LangEntry(attribute.getUnlocalizedName()), ImGuiDataType_S64, &value)) {
+                            if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_S64, &value)) {
                                 std::fill(defaultValue.begin(), defaultValue.end(), 0x00);
 
                                 i128 writeValue = value;
@@ -809,7 +809,7 @@ namespace hex::plugin::builtin {
                             defaultValue.resize(sizeof(long double));
 
                             auto value = double(*reinterpret_cast<long double*>(defaultValue.data()));
-                            if (ImGui::InputScalar(LangEntry(attribute.getUnlocalizedName()), ImGuiDataType_Double, &value)) {
+                            if (ImGui::InputScalar(Lang(attribute.getUnlocalizedName()), ImGuiDataType_Double, &value)) {
                                 std::fill(defaultValue.begin(), defaultValue.end(), 0x00);
 
                                 long double writeValue = value;
@@ -819,13 +819,13 @@ namespace hex::plugin::builtin {
                         ImGui::PopItemWidth();
 
                     } else {
-                        ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
+                        ImGui::TextUnformatted(Lang(attribute.getUnlocalizedName()));
                     }
 
                     ImNodes::EndInputAttribute();
                 } else if (attribute.getIOType() == dp::Attribute::IOType::Out) {
                     ImNodes::BeginOutputAttribute(attribute.getId(), ImNodesPinShape(pinShape + 1));
-                    ImGui::TextUnformatted(LangEntry(attribute.getUnlocalizedName()));
+                    ImGui::TextUnformatted(Lang(attribute.getUnlocalizedName()));
                     ImNodes::EndOutputAttribute();
                 }
             }

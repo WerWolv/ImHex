@@ -1168,7 +1168,7 @@ namespace hex::plugin::builtin {
 
             bool enabled = ImHexApi::HexEditor::isSelectionValid();
             for (const auto &[unlocalizedName, callback] : ContentRegistry::DataFormatter::impl::getEntries()) {
-                if (ImGui::MenuItem(LangEntry(unlocalizedName), nullptr, false, enabled)) {
+                if (ImGui::MenuItem(Lang(unlocalizedName), nullptr, false, enabled)) {
                     ImGui::SetClipboardText(
                             callback(
                                     provider,

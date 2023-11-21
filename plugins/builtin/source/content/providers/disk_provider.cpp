@@ -3,7 +3,7 @@
 
 #include "content/providers/disk_provider.hpp"
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>

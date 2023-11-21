@@ -487,7 +487,7 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginTabBar("about_tab_bar")) {
             // Draw all tabs
             for (const auto &[unlocalizedName, function] : Tabs) {
-                if (ImGui::BeginTabItem(LangEntry(unlocalizedName))) {
+                if (ImGui::BeginTabItem(Lang(unlocalizedName))) {
                     ImGui::NewLine();
 
                     if (ImGui::BeginChild(1)) {

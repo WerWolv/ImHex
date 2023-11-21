@@ -1,6 +1,6 @@
 #include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/ui/view.hpp>
 

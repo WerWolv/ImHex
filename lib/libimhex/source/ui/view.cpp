@@ -13,6 +13,10 @@ namespace hex {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }
 
+    bool View::shouldProcess() const {
+        return this->shouldDraw() && this->getWindowOpenState();
+    }
+
     bool View::hasViewMenuItemEntry() const {
         return true;
     }
@@ -61,7 +65,7 @@ namespace hex {
     }
 
     std::string View::toWindowName(const std::string &unlocalizedName) {
-        return LangEntry(unlocalizedName) + "###" + unlocalizedName;
+        return Lang(unlocalizedName) + "###" + unlocalizedName;
     }
 
 }

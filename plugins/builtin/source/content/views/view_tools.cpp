@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
             if (detached) continue;
 
             // Draw the tool
-            if (ImGui::CollapsingHeader(LangEntry(name))) {
+            if (ImGui::CollapsingHeader(Lang(name))) {
                 function();
                 ImGui::NewLine();
             } else {

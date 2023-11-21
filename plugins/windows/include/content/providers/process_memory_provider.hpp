@@ -1,7 +1,7 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <windows.h>
 

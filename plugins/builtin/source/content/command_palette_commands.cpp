@@ -1,6 +1,6 @@
 #include <hex/api/content_registry.hpp>
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
                             continue;
 
                         std::vector<std::string> names;
-                        std::transform(entry.unlocalizedNames.begin(), entry.unlocalizedNames.end(), std::back_inserter(names), [](auto &name) { return LangEntry(name); });
+                        std::transform(entry.unlocalizedNames.begin(), entry.unlocalizedNames.end(), std::back_inserter(names), [](auto &name) { return Lang(name); });
 
                         if (auto combined = wolv::util::combineStrings(names, " -> "); hex::containsIgnoreCase(combined, input) && !combined.contains(ContentRegistry::Interface::impl::SeparatorValue) && !combined.contains(ContentRegistry::Interface::impl::SubMenuValue)) {
                             result.emplace_back(ContentRegistry::CommandPaletteCommands::impl::QueryResult {

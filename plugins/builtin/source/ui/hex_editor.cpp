@@ -1,7 +1,7 @@
 #include <ui/hex_editor.hpp>
 
 #include <hex/api/content_registry.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/helpers/utils.hpp>
@@ -816,10 +816,10 @@ namespace hex::plugin::builtin::ui {
 
                         ImGui::SameLine(0, 2_scaled);
                         ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x / 3) * 2);
-                        if (ImGui::BeginCombo("##visualizer", LangEntry(this->m_currDataVisualizer->getUnlocalizedName()))) {
+                        if (ImGui::BeginCombo("##visualizer", Lang(this->m_currDataVisualizer->getUnlocalizedName()))) {
 
                             for (const auto &visualizer : visualizers) {
-                                if (ImGui::Selectable(LangEntry(visualizer->getUnlocalizedName()))) {
+                                if (ImGui::Selectable(Lang(visualizer->getUnlocalizedName()))) {
                                     this->m_currDataVisualizer = visualizer;
                                     this->m_encodingLineStartAddresses.clear();
 

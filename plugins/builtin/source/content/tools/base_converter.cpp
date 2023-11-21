@@ -1,6 +1,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/ui/view.hpp>
 

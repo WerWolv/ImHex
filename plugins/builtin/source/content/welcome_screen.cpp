@@ -2,7 +2,7 @@
 #include <hex/helpers/http_requests.hpp>
 #include <hex/api/event_manager.hpp>
 #include <hex/api/content_registry.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 #include <hex/api/layout_manager.hpp>
@@ -196,7 +196,7 @@ namespace hex::plugin::builtin {
 
                     ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX);
                     for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
-                        if (ImGuiExt::Hyperlink(LangEntry(unlocalizedProviderName))) {
+                        if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
                             ImHexApi::Provider::createProvider(unlocalizedProviderName);
                             otherProvidersVisible = false;
                         }
@@ -454,8 +454,8 @@ namespace hex::plugin::builtin {
             {
                 auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US").get<std::string>();
 
-                if (language != LangEntry::getSelectedLanguage())
-                    LangEntry::loadLanguage(language);
+                if (language != LocalizationManager::getSelectedLanguage())
+                    LocalizationManager::loadLanguage(language);
             }
 
             {

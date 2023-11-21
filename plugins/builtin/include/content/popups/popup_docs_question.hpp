@@ -4,7 +4,7 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/helpers/http_requests.hpp>
 
 #include <functional>

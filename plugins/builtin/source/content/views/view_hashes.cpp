@@ -135,10 +135,10 @@ namespace hex::plugin::builtin {
             this->m_selectedHash = hashes.front().get();
         }
 
-        if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? LangEntry(this->m_selectedHash->getUnlocalizedName()) : "")) {
+        if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? Lang(this->m_selectedHash->getUnlocalizedName()) : "")) {
 
             for (const auto &hash : hashes) {
-                if (ImGui::Selectable(LangEntry(hash->getUnlocalizedName()), this->m_selectedHash == hash.get())) {
+                if (ImGui::Selectable(Lang(hash->getUnlocalizedName()), this->m_selectedHash == hash.get())) {
                     this->m_selectedHash = hash.get();
                     this->m_newHashName.clear();
                 }
@@ -148,7 +148,7 @@ namespace hex::plugin::builtin {
         }
 
         if (this->m_newHashName.empty() && this->m_selectedHash != nullptr)
-            this->m_newHashName = hex::format("{} {}", LangEntry(this->m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
+            this->m_newHashName = hex::format("{} {}", Lang(this->m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
 
         if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvail().x, 200_scaled), true)) {
             if (this->m_selectedHash != nullptr) {
@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
                 ImGui::PopStyleColor(3);
 
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("{}", LangEntry(function.getType()->getUnlocalizedName()));
+                ImGuiExt::TextFormatted("{}", Lang(function.getType()->getUnlocalizedName()));
 
                 ImGui::TableNextColumn();
                 std::string result;

@@ -238,10 +238,10 @@ namespace hex {
         if (name == ContentRegistry::Interface::impl::SubMenuValue) {
             callback();
         } else if (menuItems.size() == 1) {
-            if (ImGui::MenuItem(LangEntry(name), shortcut.toString().c_str(), false, enabledCallback()))
+            if (ImGui::MenuItem(Lang(name), shortcut.toString().c_str(), false, enabledCallback()))
                 callback();
         } else {
-            if (ImGui::BeginMenu(LangEntry(name), *(menuItems.begin() + 1) == ContentRegistry::Interface::impl::SubMenuValue ? enabledCallback() : true)) {
+            if (ImGui::BeginMenu(Lang(name), *(menuItems.begin() + 1) == ContentRegistry::Interface::impl::SubMenuValue ? enabledCallback() : true)) {
                 createNestedMenu({ menuItems.begin() + 1, menuItems.end() }, shortcut, callback, enabledCallback);
                 ImGui::EndMenu();
             }
@@ -267,7 +267,7 @@ namespace hex {
                 if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                     callback();
                 }
-                ImGuiExt::InfoTooltip(LangEntry(tooltip));
+                ImGuiExt::InfoTooltip(Lang(tooltip));
             }
         }
 
@@ -339,7 +339,7 @@ namespace hex {
                 if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                     callback();
                 }
-                ImGuiExt::InfoTooltip(LangEntry(tooltip));
+                ImGuiExt::InfoTooltip(Lang(tooltip));
             }
         }
 
@@ -553,7 +553,7 @@ namespace hex {
                 const static auto drawMenu = [] {
                     for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMainMenuItems()) {
                         ImGui::GetStyle().TouchExtraPadding = scaled(ImVec2(0, 2));
-                        if (ImGui::BeginMenu(LangEntry(menuItem.unlocalizedName))) {
+                        if (ImGui::BeginMenu(Lang(menuItem.unlocalizedName))) {
                             ImGui::EndMenu();
                         }
                         ImGui::GetStyle().TouchExtraPadding = ImVec2(0, 0);
@@ -704,7 +704,7 @@ namespace hex {
             static double popupDelay = -2.0;
 
             static std::unique_ptr<impl::PopupBase> currPopup;
-            static LangEntry name("");
+            static Lang name("");
 
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
@@ -715,7 +715,7 @@ namespace hex {
                         if (popupDelay < 0) {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
-                            name = LangEntry(currPopup->getUnlocalizedName());
+                            name = Lang(currPopup->getUnlocalizedName());
 
                             ImGui::OpenPopup(name);
                             popups.pop_back();

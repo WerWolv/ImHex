@@ -1,7 +1,7 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/http_requests.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/ui/view.hpp>
 
