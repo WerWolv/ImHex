@@ -10,12 +10,12 @@
 
 namespace hex::plugin::builtin {
 
-    ViewSettings::ViewSettings() : View("hex.builtin.view.settings.name") {
+    ViewSettings::ViewSettings() : View::Floating("hex.builtin.view.settings.name") {
         // Handle window open requests
         EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
             if (name == "Settings") {
                 TaskManager::doLater([this] {
-                    ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str());
+                    ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str());
                     this->getWindowOpenState() = true;
                 });
             }
@@ -24,7 +24,7 @@ namespace hex::plugin::builtin {
         // Add the settings menu item to the Extras menu
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name"_lang }, 4000, Shortcut::None, [&, this] {
-            TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.settings.name").c_str()); });
+            TaskManager::doLater([this] { ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str()); });
             this->getWindowOpenState() = true;
         });
     }
@@ -33,9 +33,8 @@ namespace hex::plugin::builtin {
         EventManager::unsubscribe<RequestOpenWindow>(this);
     }
 
-    void ViewSettings::drawContent() {
-
-        if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.settings.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoResize)) {
+    void ViewSettings::drawAlwaysVisibleContent() {
+        if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoResize)) {
             if (ImGui::BeginTabBar("settings")) {
                 auto &categories = ContentRegistry::Settings::impl::getSettings();
 

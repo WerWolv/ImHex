@@ -347,7 +347,7 @@ namespace hex::plugin::builtin {
         ViewDataProcessor::Workspace m_workspace;
     };
 
-    ViewDataProcessor::ViewDataProcessor() : View("hex.builtin.view.data_processor.name") {
+    ViewDataProcessor::ViewDataProcessor() : View::Window("hex.builtin.view.data_processor.name") {
         ContentRegistry::DataProcessorNode::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom", this);
         ContentRegistry::DataProcessorNode::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
         ContentRegistry::DataProcessorNode::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
@@ -842,180 +842,177 @@ namespace hex::plugin::builtin {
         auto &workspace = *this->m_workspaceStack->back();
 
         bool popWorkspace = false;
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.data_processor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            // Set the ImNodes context to the current workspace context
-            ImNodes::SetCurrentContext(workspace.context.get());
+        // Set the ImNodes context to the current workspace context
+        ImNodes::SetCurrentContext(workspace.context.get());
 
-            this->drawContextMenus(workspace);
+        this->drawContextMenus(workspace);
 
-            // Draw error tooltip when hovering over a node that has an error
-            {
-                int nodeId;
-                if (ImNodes::IsNodeHovered(&nodeId) && workspace.currNodeError.has_value() && workspace.currNodeError->node->getId() == nodeId) {
-                    ImGui::BeginTooltip();
-                    ImGui::TextUnformatted("hex.builtin.common.error"_lang);
-                    ImGui::Separator();
-                    ImGui::TextUnformatted(workspace.currNodeError->message.c_str());
-                    ImGui::EndTooltip();
-                }
+        // Draw error tooltip when hovering over a node that has an error
+        {
+            int nodeId;
+            if (ImNodes::IsNodeHovered(&nodeId) && workspace.currNodeError.has_value() && workspace.currNodeError->node->getId() == nodeId) {
+                ImGui::BeginTooltip();
+                ImGui::TextUnformatted("hex.builtin.common.error"_lang);
+                ImGui::Separator();
+                ImGui::TextUnformatted(workspace.currNodeError->message.c_str());
+                ImGui::EndTooltip();
+            }
+        }
+
+        // Draw the main node editor workspace window
+        if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3F))) {
+            ImNodes::BeginNodeEditor();
+
+            // Loop over all nodes that have been placed in the workspace
+            for (auto &node : workspace.nodes) {
+                ImNodes::SnapNodeToGrid(node->getId());
+
+                // If the node has an error, draw it with a red outline
+                const bool hasError = workspace.currNodeError.has_value() && workspace.currNodeError->node == node.get();
+                if (hasError)
+                    ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
+
+                // Draw the node
+                this->drawNode(*node);
+
+                if (hasError)
+                    ImNodes::PopColorStyle();
             }
 
-            // Draw the main node editor workspace window
-            if (ImGui::BeginChild("##node_editor", ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 1.3F))) {
-                ImNodes::BeginNodeEditor();
+            this->m_updateNodePositions = false;
 
-                // Loop over all nodes that have been placed in the workspace
-                for (auto &node : workspace.nodes) {
-                    ImNodes::SnapNodeToGrid(node->getId());
-
-                    // If the node has an error, draw it with a red outline
-                    const bool hasError = workspace.currNodeError.has_value() && workspace.currNodeError->node == node.get();
-                    if (hasError)
-                        ImNodes::PushColorStyle(ImNodesCol_NodeOutline, 0xFF0000FF);
-
-                    // Draw the node
-                    this->drawNode(*node);
-
-                    if (hasError)
-                        ImNodes::PopColorStyle();
-                }
-
-                this->m_updateNodePositions = false;
-
-                // Handle removing links that are connected to attributes that don't exist anymore
-                {
-                    std::vector<int> linksToRemove;
-                    for (const auto &link : workspace.links) {
-                        if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Pins, link.getFromId()) == -1 ||
-                            ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Pins, link.getToId()) == -1) {
-
-                            linksToRemove.push_back(link.getId());
-                        }
-                    }
-                    for (auto linkId : linksToRemove)
-                        this->eraseLink(workspace, linkId);
-                }
-
-                // Draw links
+            // Handle removing links that are connected to attributes that don't exist anymore
+            {
+                std::vector<int> linksToRemove;
                 for (const auto &link : workspace.links) {
-                    ImNodes::Link(link.getId(), link.getFromId(), link.getToId());
-                }
+                    if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Pins, link.getFromId()) == -1 ||
+                        ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Pins, link.getToId()) == -1) {
 
-                // Draw the mini map in the bottom right
-                ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
-
-                // Draw the help text if no nodes have been placed yet
-                if (workspace.nodes.empty())
-                    ImGuiExt::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
-
-                // Draw a close button if there is more than one workspace on the stack
-                if (this->m_workspaceStack->size() > 1) {
-                    ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.5F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0F, 4.0F));
-                    if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-                        popWorkspace = true;
+                        linksToRemove.push_back(link.getId());
                     }
-                    ImGui::PopStyleVar();
                 }
-
-                ImNodes::EndNodeEditor();
-            }
-            ImGui::EndChild();
-
-            // Draw the control bar at the bottom
-            {
-                if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_continuousEvaluation)
-                    this->processNodes(workspace);
-
-                ImGui::SameLine();
-
-                ImGui::Checkbox("Continuous evaluation", &this->m_continuousEvaluation);
-            }
-
-
-            // Erase links that have been distroyed
-            {
-                int linkId;
-                if (ImNodes::IsLinkDestroyed(&linkId)) {
+                for (auto linkId : linksToRemove)
                     this->eraseLink(workspace, linkId);
-                }
             }
 
-            // Handle creation of new links
-            {
-                int from, to;
-                if (ImNodes::IsLinkCreated(&from, &to)) {
+            // Draw links
+            for (const auto &link : workspace.links) {
+                ImNodes::Link(link.getId(), link.getFromId(), link.getToId());
+            }
 
-                    do {
-                        dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
+            // Draw the mini map in the bottom right
+            ImNodes::MiniMap(0.2F, ImNodesMiniMapLocation_BottomRight);
 
-                        // Find the attributes that are connected by the link
-                        for (auto &node : workspace.nodes) {
-                            for (auto &attribute : node->getAttributes()) {
-                                if (attribute.getId() == from)
-                                    fromAttr = &attribute;
-                                else if (attribute.getId() == to)
-                                    toAttr = &attribute;
-                            }
+            // Draw the help text if no nodes have been placed yet
+            if (workspace.nodes.empty())
+                ImGuiExt::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
+
+            // Draw a close button if there is more than one workspace on the stack
+            if (this->m_workspaceStack->size() > 1) {
+                ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.5F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0F, 4.0F));
+                if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                    popWorkspace = true;
+                }
+                ImGui::PopStyleVar();
+            }
+
+            ImNodes::EndNodeEditor();
+        }
+        ImGui::EndChild();
+
+        // Draw the control bar at the bottom
+        {
+            if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_continuousEvaluation)
+                this->processNodes(workspace);
+
+            ImGui::SameLine();
+
+            ImGui::Checkbox("Continuous evaluation", &this->m_continuousEvaluation);
+        }
+
+
+        // Erase links that have been distroyed
+        {
+            int linkId;
+            if (ImNodes::IsLinkDestroyed(&linkId)) {
+                this->eraseLink(workspace, linkId);
+            }
+        }
+
+        // Handle creation of new links
+        {
+            int from, to;
+            if (ImNodes::IsLinkCreated(&from, &to)) {
+
+                do {
+                    dp::Attribute *fromAttr = nullptr, *toAttr = nullptr;
+
+                    // Find the attributes that are connected by the link
+                    for (auto &node : workspace.nodes) {
+                        for (auto &attribute : node->getAttributes()) {
+                            if (attribute.getId() == from)
+                                fromAttr = &attribute;
+                            else if (attribute.getId() == to)
+                                toAttr = &attribute;
                         }
-
-                        // If one of the attributes could not be found, the link is invalid and can't be created
-                        if (fromAttr == nullptr || toAttr == nullptr)
-                            break;
-
-                        // If the attributes have different types, don't create the link
-                        if (fromAttr->getType() != toAttr->getType())
-                            break;
-
-                        // If the link tries to connect two input or two output attributes, don't create the link
-                        if (fromAttr->getIOType() == toAttr->getIOType())
-                            break;
-
-                        // If the link tries to connect to a input attribute that already has a link connected to it, don't create the link
-                        if (!toAttr->getConnectedAttributes().empty())
-                            break;
-
-                        // Add a new link to the current workspace
-                        auto newLink = workspace.links.emplace_back(from, to);
-
-                        // Add the link to the attributes that are connected by it
-                        fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
-                        toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
-
-                        AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.create_connection.name");
-                    } while (false);
-                }
-            }
-
-            // Handle deletion of links using the Delete key
-            {
-                const int selectedLinkCount = ImNodes::NumSelectedLinks();
-                if (selectedLinkCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
-                    std::vector<int> selectedLinks;
-                    selectedLinks.resize(static_cast<size_t>(selectedLinkCount));
-                    ImNodes::GetSelectedLinks(selectedLinks.data());
-                    ImNodes::ClearLinkSelection();
-
-                    for (const int id : selectedLinks) {
-                        eraseLink(workspace, id);
                     }
-                }
+
+                    // If one of the attributes could not be found, the link is invalid and can't be created
+                    if (fromAttr == nullptr || toAttr == nullptr)
+                        break;
+
+                    // If the attributes have different types, don't create the link
+                    if (fromAttr->getType() != toAttr->getType())
+                        break;
+
+                    // If the link tries to connect two input or two output attributes, don't create the link
+                    if (fromAttr->getIOType() == toAttr->getIOType())
+                        break;
+
+                    // If the link tries to connect to a input attribute that already has a link connected to it, don't create the link
+                    if (!toAttr->getConnectedAttributes().empty())
+                        break;
+
+                    // Add a new link to the current workspace
+                    auto newLink = workspace.links.emplace_back(from, to);
+
+                    // Add the link to the attributes that are connected by it
+                    fromAttr->addConnectedAttribute(newLink.getId(), toAttr);
+                    toAttr->addConnectedAttribute(newLink.getId(), fromAttr);
+
+                    AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.create_connection.name");
+                } while (false);
             }
+        }
 
-            // Handle deletion of noes using the Delete key
-            {
-                const int selectedNodeCount = ImNodes::NumSelectedNodes();
-                if (selectedNodeCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
-                    std::vector<int> selectedNodes;
-                    selectedNodes.resize(static_cast<size_t>(selectedNodeCount));
-                    ImNodes::GetSelectedNodes(selectedNodes.data());
-                    ImNodes::ClearNodeSelection();
+        // Handle deletion of links using the Delete key
+        {
+            const int selectedLinkCount = ImNodes::NumSelectedLinks();
+            if (selectedLinkCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
+                std::vector<int> selectedLinks;
+                selectedLinks.resize(static_cast<size_t>(selectedLinkCount));
+                ImNodes::GetSelectedLinks(selectedLinks.data());
+                ImNodes::ClearLinkSelection();
 
-                    this->eraseNodes(workspace, selectedNodes);
+                for (const int id : selectedLinks) {
+                    eraseLink(workspace, id);
                 }
             }
         }
-        ImGui::End();
+
+        // Handle deletion of noes using the Delete key
+        {
+            const int selectedNodeCount = ImNodes::NumSelectedNodes();
+            if (selectedNodeCount > 0 && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete))) {
+                std::vector<int> selectedNodes;
+                selectedNodes.resize(static_cast<size_t>(selectedNodeCount));
+                ImNodes::GetSelectedNodes(selectedNodes.data());
+                ImNodes::ClearNodeSelection();
+
+                this->eraseNodes(workspace, selectedNodes);
+            }
+        }
 
         // Remove the top-most workspace from the stack if requested
         if (popWorkspace) {

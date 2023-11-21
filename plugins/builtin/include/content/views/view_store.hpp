@@ -44,14 +44,14 @@ namespace hex::plugin::builtin {
         std::function<void()> downloadCallback;
     };
 
-    class ViewStore : public View {
+    class ViewStore : public View::Floating {
     public:
         ViewStore();
         ~ViewStore() override = default;
 
         void drawContent() override;
 
-        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool shouldDraw() const override { return false; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override { return scaled({ 600, 400 }); }

@@ -5,9 +5,8 @@
 
 namespace hex::plugin::builtin {
 
-    ViewLogs::ViewLogs() : View("hex.builtin.view.logs.name") {
+    ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name") {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.logs.name" }, 2500, Shortcut::None, [&, this] {
-            this->m_viewOpen = true;
             this->getWindowOpenState() = true;
         });
     }
@@ -41,48 +40,42 @@ namespace hex::plugin::builtin {
     }
 
     void ViewLogs::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.logs.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse)) {
+        ImGui::Combo("hex.builtin.view.logs.log_level"_lang, &this->m_logLevel, "DEBUG\0INFO\0WARNING\0ERROR\0FATAL\0");
 
-            ImGui::Combo("hex.builtin.view.logs.log_level"_lang, &this->m_logLevel, "DEBUG\0INFO\0WARNING\0ERROR\0FATAL\0");
+        if (ImGui::BeginTable("##logs", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
+            ImGui::TableSetupColumn("hex.builtin.view.logs.component"_lang, ImGuiTableColumnFlags_WidthFixed, 100_scaled);
+            ImGui::TableSetupColumn("hex.builtin.view.logs.message"_lang);
+            ImGui::TableSetupScrollFreeze(0, 1);
 
-            if (ImGui::BeginTable("##logs", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
-                ImGui::TableSetupColumn("hex.builtin.view.logs.component"_lang, ImGuiTableColumnFlags_WidthFixed, 100_scaled);
-                ImGui::TableSetupColumn("hex.builtin.view.logs.message"_lang);
-                ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableHeadersRow();
 
-                ImGui::TableHeadersRow();
+            const auto &logs = log::impl::getLogEntries();
+            ImGuiListClipper clipper;
+            clipper.Begin(logs.size());
 
-                const auto &logs = log::impl::getLogEntries();
-                ImGuiListClipper clipper;
-                clipper.Begin(logs.size());
+            while (clipper.Step()) {
+                auto end = 0;
+                for (size_t i = clipper.DisplayStart; i < std::min<size_t>(clipper.DisplayEnd + end, logs.size()); i++) {
+                    const auto &log = logs[logs.size() - 1 - i];
 
-                while (clipper.Step()) {
-                    auto end = 0;
-                    for (size_t i = clipper.DisplayStart; i < std::min<size_t>(clipper.DisplayEnd + end, logs.size()); i++) {
-                        const auto &log = logs[logs.size() - 1 - i];
-
-                        if (!shouldDisplay(log.level, this->m_logLevel)) {
-                            end++;
-                            clipper.ItemsCount--;
-                            continue;
-                        }
-
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(log.project.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::PushStyleColor(ImGuiCol_Text, getColor(log.level).Value);
-                        ImGui::TextUnformatted(log.message.c_str());
-                        ImGui::PopStyleColor();
+                    if (!shouldDisplay(log.level, this->m_logLevel)) {
+                        end++;
+                        clipper.ItemsCount--;
+                        continue;
                     }
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(log.project.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::PushStyleColor(ImGuiCol_Text, getColor(log.level).Value);
+                    ImGui::TextUnformatted(log.message.c_str());
+                    ImGui::PopStyleColor();
                 }
-
-                ImGui::EndTable();
             }
-        }
-        ImGui::End();
 
-        this->getWindowOpenState() = this->m_viewOpen;
+            ImGui::EndTable();
+        }
     }
 
 }

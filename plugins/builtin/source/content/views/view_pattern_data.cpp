@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewPatternData::ViewPatternData() : View("hex.builtin.view.pattern_data.name") {
+    ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name") {
         this->m_patternDrawer = std::make_unique<ui::PatternDrawer>();
 
         // Handle tree style setting changes
@@ -42,22 +42,19 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternData::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_data.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            // Draw the pattern tree if the provider is valid
-            if (ImHexApi::Provider::isValid()) {
-                // Make sure the runtime has finished evaluating and produced valid patterns
-                auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-                if (!runtime.arePatternsValid()) {
-                    this->m_patternDrawer->draw({ });
-                } else {
-                    // If the runtime has finished evaluating, draw the patterns
-                    if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                        this->m_patternDrawer->draw(runtime.getPatterns(), &runtime);
-                    }
+        // Draw the pattern tree if the provider is valid
+        if (ImHexApi::Provider::isValid()) {
+            // Make sure the runtime has finished evaluating and produced valid patterns
+            auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+            if (!runtime.arePatternsValid()) {
+                this->m_patternDrawer->draw({ });
+            } else {
+                // If the runtime has finished evaluating, draw the patterns
+                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                    this->m_patternDrawer->draw(runtime.getPatterns(), &runtime);
                 }
             }
         }
-        ImGui::End();
     }
 
 }

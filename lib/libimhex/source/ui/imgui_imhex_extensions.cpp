@@ -917,6 +917,17 @@ namespace ImGuiExt {
         ImGui::EndChild();
     }
 
+    void ConfirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonCallback, const std::function<void()> &rightButtonCallback) {
+        auto width = ImGui::GetWindowWidth();
+        ImGui::SetCursorPosX(width / 9);
+        if (ImGui::Button(textLeft, ImVec2(width / 3, 0)))
+            leftButtonCallback();
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(width / 9 * 5);
+        if (ImGui::Button(textRight, ImVec2(width / 3, 0)))
+            rightButtonCallback();
+    }
+
 }
 
 namespace ImGui {

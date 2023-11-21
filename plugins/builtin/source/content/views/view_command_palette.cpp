@@ -5,7 +5,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewCommandPalette::ViewCommandPalette() : View("hex.builtin.view.command_palette.name") {
+    ViewCommandPalette::ViewCommandPalette() : View::Special("hex.builtin.view.command_palette.name") {
         // Add global shortcut to open the command palette
         ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, "hex.builtin.view.command_palette.name", [this] {
             EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
         });
     }
 
-    void ViewCommandPalette::drawContent() {
+    void ViewCommandPalette::drawAlwaysVisibleContent() {
         // If the command palette is hidden, don't draw it
         if (!this->m_commandPaletteOpen) return;
 

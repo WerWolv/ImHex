@@ -122,7 +122,7 @@ namespace hex::plugin::builtin {
         return langDef;
     }
 
-    ViewPatternEditor::ViewPatternEditor() : View("hex.builtin.view.pattern_editor.name") {
+    ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name") {
         this->m_parserRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*this->m_parserRuntime, nullptr);
 
@@ -148,202 +148,199 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.pattern_editor.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_None | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            auto provider = ImHexApi::Provider::get();
+        auto provider = ImHexApi::Provider::get();
 
-            if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
-                static float height = 0;
-                static bool dragging = false;
+        if (ImHexApi::Provider::isValid() && provider->isAvailable()) {
+            static float height = 0;
+            static bool dragging = false;
 
-                auto availableSize = ImGui::GetContentRegionAvail();
-                auto textEditorSize = availableSize;
-                textEditorSize.y *= 3.5 / 5.0;
-                textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
-                textEditorSize.y += height;
+            auto availableSize = ImGui::GetContentRegionAvail();
+            auto textEditorSize = availableSize;
+            textEditorSize.y *= 3.5 / 5.0;
+            textEditorSize.y -= ImGui::GetTextLineHeightWithSpacing();
+            textEditorSize.y += height;
 
-                if (availableSize.y > 1)
-                    textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3);
+            if (availableSize.y > 1)
+                textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3);
 
-                this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
+            this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
-                ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
-                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
-                    if (ImGui::IsItemHovered())
-                        dragging = true;
-                } else {
-                    dragging = false;
+            ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
+            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
+                if (ImGui::IsItemHovered())
+                    dragging = true;
+            } else {
+                dragging = false;
+            }
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+            }
+
+            if (dragging) {
+                height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).y;
+                ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+            }
+
+            auto settingsSize = ImGui::GetContentRegionAvail();
+            settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
+
+            if (ImGui::BeginTabBar("##settings")) {
+                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
+                    this->drawConsole(settingsSize);
+                    ImGui::EndTabItem();
                 }
-                if (ImGui::IsItemHovered()) {
-                    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeNS);
+                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.env_vars"_lang)) {
+                    this->drawEnvVars(settingsSize, *this->m_envVarEntries);
+                    ImGui::EndTabItem();
                 }
-
-                if (dragging) {
-                    height += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).y;
-                    ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.settings"_lang)) {
+                    this->drawVariableSettings(settingsSize, *this->m_patternVariables);
+                    ImGui::EndTabItem();
                 }
-
-                auto settingsSize = ImGui::GetContentRegionAvail();
-                settingsSize.y -= ImGui::GetTextLineHeightWithSpacing() * 2.5F;
-
-                if (ImGui::BeginTabBar("##settings")) {
-                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.console"_lang)) {
-                        this->drawConsole(settingsSize);
-                        ImGui::EndTabItem();
-                    }
-                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.env_vars"_lang)) {
-                        this->drawEnvVars(settingsSize, *this->m_envVarEntries);
-                        ImGui::EndTabItem();
-                    }
-                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.settings"_lang)) {
-                        this->drawVariableSettings(settingsSize, *this->m_patternVariables);
-                        ImGui::EndTabItem();
-                    }
-                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.sections"_lang)) {
-                        this->drawSectionSelector(settingsSize, *this->m_sections);
-                        ImGui::EndTabItem();
-                    }
-                    if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
-                        this->drawDebugger(settingsSize);
-                        ImGui::EndTabItem();
-                    }
-
-                    ImGui::EndTabBar();
+                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.sections"_lang)) {
+                    this->drawSectionSelector(settingsSize, *this->m_sections);
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
+                    this->drawDebugger(settingsSize);
+                    ImGui::EndTabItem();
                 }
 
-                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+                ImGui::EndTabBar();
+            }
 
-                {
-                    auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
-                    if (runtime.isRunning()) {
-                        if (this->m_breakpointHit) {
-                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_CONTINUE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow)))
-                                this->m_breakpointHit = false;
-                            ImGui::SameLine();
-                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_INTO, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow))) {
-                                runtime.getInternals().evaluator->pauseNextLine();
-                                this->m_breakpointHit = false;
-                            }
-                        } else {
-                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
-                                runtime.abort();
+            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1);
+
+            {
+                auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+                if (runtime.isRunning()) {
+                    if (this->m_breakpointHit) {
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_CONTINUE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow)))
+                            this->m_breakpointHit = false;
+                        ImGui::SameLine();
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_INTO, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarYellow))) {
+                            runtime.getInternals().evaluator->pauseNextLine();
+                            this->m_breakpointHit = false;
                         }
                     } else {
-                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
-                            this->m_triggerEvaluation = false;
-                            this->evaluatePattern(this->m_textEditor.GetText(), provider);
-                        }
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_STOP, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed)))
+                            runtime.abort();
                     }
+                } else {
+                    if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_triggerEvaluation) {
+                        this->m_triggerEvaluation = false;
+                        this->evaluatePattern(this->m_textEditor.GetText(), provider);
+                    }
+                }
 
 
-                    ImGui::PopStyleVar();
+                ImGui::PopStyleVar();
+
+                ImGui::SameLine();
+                if (this->m_runningEvaluators > 0) {
+                    if (this->m_breakpointHit) {
+                        ImGuiExt::TextFormatted("hex.builtin.view.pattern_editor.breakpoint_hit"_lang, runtime.getInternals().evaluator->getPauseLine().value_or(0));
+                    } else {
+                        ImGuiExt::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
+                    }
 
                     ImGui::SameLine();
-                    if (this->m_runningEvaluators > 0) {
-                        if (this->m_breakpointHit) {
-                            ImGuiExt::TextFormatted("hex.builtin.view.pattern_editor.breakpoint_hit"_lang, runtime.getInternals().evaluator->getPauseLine().value_or(0));
-                        } else {
-                            ImGuiExt::TextSpinner("hex.builtin.view.pattern_editor.evaluating"_lang);
-                        }
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    ImGui::SameLine();
 
-                        ImGui::SameLine();
-                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-                        ImGui::SameLine();
+                    const auto padding = ImGui::GetStyle().FramePadding.y;
 
-                        const auto padding = ImGui::GetStyle().FramePadding.y;
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+                    if (ImGui::BeginChild("##read_cursor", ImGui::GetContentRegionAvail() + ImVec2(0, padding), true)) {
+                        const auto startPos = ImGui::GetCursorScreenPos();
+                        const auto size    = ImGui::GetContentRegionAvail();
 
-                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
-                        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
-                        if (ImGui::BeginChild("##read_cursor", ImGui::GetContentRegionAvail() + ImVec2(0, padding), true)) {
-                            const auto startPos = ImGui::GetCursorScreenPos();
-                            const auto size    = ImGui::GetContentRegionAvail();
+                        const auto dataBaseAddress = runtime.getInternals().evaluator->getDataBaseAddress();
+                        const auto dataSize = runtime.getInternals().evaluator->getDataSize();
 
-                            const auto dataBaseAddress = runtime.getInternals().evaluator->getDataBaseAddress();
-                            const auto dataSize = runtime.getInternals().evaluator->getDataSize();
+                        const auto insertPos = [&, this](u64 address, u32 color) {
+                            const auto progress = (address - dataBaseAddress) / float(dataSize);
 
-                            const auto insertPos = [&, this](u64 address, u32 color) {
-                                const auto progress = (address - dataBaseAddress) / float(dataSize);
+                            this->m_accessHistory[this->m_accessHistoryIndex] = { progress, color };
+                            this->m_accessHistoryIndex = (this->m_accessHistoryIndex + 1) % this->m_accessHistory.size();
+                        };
 
-                                this->m_accessHistory[this->m_accessHistoryIndex] = { progress, color };
-                                this->m_accessHistoryIndex = (this->m_accessHistoryIndex + 1) % this->m_accessHistory.size();
-                            };
+                        insertPos(runtime.getLastReadAddress(),         ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue));
+                        insertPos(runtime.getLastWriteAddress(),        ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
+                        insertPos(runtime.getLastPatternPlaceAddress(), ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
 
-                            insertPos(runtime.getLastReadAddress(),         ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarBlue));
-                            insertPos(runtime.getLastWriteAddress(),        ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarRed));
-                            insertPos(runtime.getLastPatternPlaceAddress(), ImGuiExt::GetCustomColorU32(ImGuiCustomCol_ToolbarGreen));
+                        auto drawList = ImGui::GetWindowDrawList();
+                        for (const auto &[progress, color] : this->m_accessHistory) {
+                            if (progress <= 0) continue;
 
-                            auto drawList = ImGui::GetWindowDrawList();
-                            for (const auto &[progress, color] : this->m_accessHistory) {
-                                if (progress <= 0) continue;
+                            const auto linePos = startPos + ImVec2(size.x * progress, 0);
 
-                                const auto linePos = startPos + ImVec2(size.x * progress, 0);
-
-                                drawList->AddLine(linePos, linePos + ImVec2(0, size.y), color, 2_scaled);
-                            }
-                        }
-                        ImGui::EndChild();
-                        ImGui::PopStyleVar(2);
-
-                    } else {
-                        if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
-                            if (this->m_runAutomatically)
-                                this->m_hasUnevaluatedChanges = true;
-                        }
-
-                        ImGui::SameLine();
-                        ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-                        ImGui::SameLine();
-
-                        if (auto max = runtime.getMaximumPatternCount(); max >= std::numeric_limits<u32>::max()) {
-                            ImGuiExt::TextFormatted("{} / {}",
-                                                 runtime.getCreatedPatternCount(),
-                                                 ICON_FA_INFINITY);
-                        } else {
-                            ImGuiExt::TextFormatted("{} / {}",
-                                                 runtime.getCreatedPatternCount(),
-                                                 runtime.getMaximumPatternCount());
+                            drawList->AddLine(linePos, linePos + ImVec2(0, size.y), color, 2_scaled);
                         }
                     }
-                }
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar(2);
 
-                if (this->m_textEditor.IsTextChanged()) {
-                    this->m_hasUnevaluatedChanges = true;
-                    ImHexApi::Provider::markDirty();
-                }
-
-                if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
-                    this->m_hasUnevaluatedChanges = false;
-
-                    auto code = this->m_textEditor.GetText();
-                    EventManager::post<EventPatternEditorChanged>(code);
-
-                    TaskManager::createBackgroundTask("Pattern Parsing", [this, code, provider](auto &){
-                        this->parsePattern(code, provider);
-
+                } else {
+                    if (ImGui::Checkbox("hex.builtin.view.pattern_editor.auto"_lang, &this->m_runAutomatically)) {
                         if (this->m_runAutomatically)
-                            this->m_triggerAutoEvaluate = true;
-                    });
-                }
-
-                if (this->m_triggerAutoEvaluate.exchange(false)) {
-                    this->evaluatePattern(this->m_textEditor.GetText(), provider);
-                }
-            }
-
-            if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
-                PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
-                    [this] {
-                        this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
-                    }, [this] {
-                        this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Deny;
+                            this->m_hasUnevaluatedChanges = true;
                     }
-                );
 
-                this->m_dangerousFunctionCalled = false;
+                    ImGui::SameLine();
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    ImGui::SameLine();
+
+                    if (auto max = runtime.getMaximumPatternCount(); max >= std::numeric_limits<u32>::max()) {
+                        ImGuiExt::TextFormatted("{} / {}",
+                                             runtime.getCreatedPatternCount(),
+                                             ICON_FA_INFINITY);
+                    } else {
+                        ImGuiExt::TextFormatted("{} / {}",
+                                             runtime.getCreatedPatternCount(),
+                                             runtime.getMaximumPatternCount());
+                    }
+                }
             }
 
-            View::discardNavigationRequests();
+            if (this->m_textEditor.IsTextChanged()) {
+                this->m_hasUnevaluatedChanges = true;
+                ImHexApi::Provider::markDirty();
+            }
+
+            if (this->m_hasUnevaluatedChanges && this->m_runningEvaluators == 0 && this->m_runningParsers == 0) {
+                this->m_hasUnevaluatedChanges = false;
+
+                auto code = this->m_textEditor.GetText();
+                EventManager::post<EventPatternEditorChanged>(code);
+
+                TaskManager::createBackgroundTask("Pattern Parsing", [this, code, provider](auto &){
+                    this->parsePattern(code, provider);
+
+                    if (this->m_runAutomatically)
+                        this->m_triggerAutoEvaluate = true;
+                });
+            }
+
+            if (this->m_triggerAutoEvaluate.exchange(false)) {
+                this->evaluatePattern(this->m_textEditor.GetText(), provider);
+            }
         }
-        ImGui::End();
+
+        if (this->m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
+            PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
+                [this] {
+                    this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
+                }, [this] {
+                    this->m_dangerousFunctionsAllowed = DangerousFunctionPerms::Deny;
+                }
+            );
+
+            this->m_dangerousFunctionCalled = false;
+        }
+
+        View::discardNavigationRequests();
     }
 
     void ViewPatternEditor::drawConsole(ImVec2 size) {
@@ -689,7 +686,7 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
     }
 
-    void ViewPatternEditor::drawAlwaysVisible() {
+    void ViewPatternEditor::drawAlwaysVisibleContent() {
         auto provider = ImHexApi::Provider::get();
 
         auto open = this->m_sectionWindowDrawer.contains(provider);

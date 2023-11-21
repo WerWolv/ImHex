@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    ViewDiff::ViewDiff() : View("hex.builtin.view.diff.name") {
+    ViewDiff::ViewDiff() : View::Window("hex.builtin.view.diff.name") {
 
         // Clear the selected diff providers when a provider is closed
         EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
@@ -183,147 +183,142 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDiff::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.diff.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+        auto &[a, b] = this->m_columns;
 
-            auto &[a, b] = this->m_columns;
+        a.hexEditor.enableSyncScrolling(false);
+        b.hexEditor.enableSyncScrolling(false);
 
-            a.hexEditor.enableSyncScrolling(false);
-            b.hexEditor.enableSyncScrolling(false);
+        if (a.scrollLock > 0) a.scrollLock--;
+        if (b.scrollLock > 0) b.scrollLock--;
 
-            if (a.scrollLock > 0) a.scrollLock--;
-            if (b.scrollLock > 0) b.scrollLock--;
+        // Change the hex editor providers if the user selected a new provider
+        {
+            const auto &providers = ImHexApi::Provider::getProviders();
+            if (a.provider >= 0 && size_t(a.provider) < providers.size())
+                a.hexEditor.setProvider(providers[a.provider]);
+            else
+                a.hexEditor.setProvider(nullptr);
 
-            // Change the hex editor providers if the user selected a new provider
-            {
-                const auto &providers = ImHexApi::Provider::getProviders();
-                if (a.provider >= 0 && size_t(a.provider) < providers.size())
-                    a.hexEditor.setProvider(providers[a.provider]);
-                else
-                    a.hexEditor.setProvider(nullptr);
-
-                if (b.provider >= 0 && size_t(b.provider) < providers.size())
-                    b.hexEditor.setProvider(providers[b.provider]);
-                else
-                    b.hexEditor.setProvider(nullptr);
-            }
-
-            // Analyze the providers if they are valid and the user selected a new provider
-            if (!this->m_analyzed && a.provider != -1 && b.provider != -1 && !this->m_diffTask.isRunning()) {
-                const auto &providers = ImHexApi::Provider::getProviders();
-                auto providerA = providers[a.provider];
-                auto providerB = providers[b.provider];
-
-                this->analyze(providerA, providerB);
-            }
-
-            const auto height = ImGui::GetContentRegionAvail().y;
-
-            // Draw the two hex editor columns side by side
-            if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 250_scaled))) {
-                ImGui::TableSetupColumn("hex.builtin.view.diff.provider_a"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
-                ImGui::TableHeadersRow();
-
-                ImGui::BeginDisabled(this->m_diffTask.isRunning());
-                {
-                    // Draw first provider selector
-                    ImGui::TableNextColumn();
-                    if (drawProviderSelector(a)) this->m_analyzed = false;
-
-                    // Draw second provider selector
-                    ImGui::TableNextColumn();
-                    if (drawProviderSelector(b)) this->m_analyzed = false;
-                }
-                ImGui::EndDisabled();
-
-                ImGui::TableNextRow();
-
-                // Draw first hex editor column
-                ImGui::TableNextColumn();
-                bool scrollB = drawDiffColumn(a, height - 250_scaled);
-
-                // Draw second hex editor column
-                ImGui::TableNextColumn();
-                bool scrollA = drawDiffColumn(b, height - 250_scaled);
-
-                // Sync the scroll positions of the hex editors
-                {
-                    if (scrollA && a.scrollLock == 0) {
-                        a.hexEditor.setScrollPosition(b.hexEditor.getScrollPosition());
-                        a.hexEditor.forceUpdateScrollPosition();
-                    }
-                    if (scrollB && b.scrollLock == 0) {
-                        b.hexEditor.setScrollPosition(a.hexEditor.getScrollPosition());
-                        b.hexEditor.forceUpdateScrollPosition();
-                    }
-                }
-
-                ImGui::EndTable();
-            }
-
-            // Draw the differences table
-            if (ImGui::BeginTable("##differences", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable, ImVec2(0, 200_scaled))) {
-                ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.builtin.common.begin"_lang);
-                ImGui::TableSetupColumn("hex.builtin.common.end"_lang);
-                ImGui::TableSetupColumn("hex.builtin.common.type"_lang);
-                ImGui::TableHeadersRow();
-
-                // Draw the differences if the providers have been analyzed
-                if (this->m_analyzed) {
-                    ImGuiListClipper clipper;
-                    clipper.Begin(int(this->m_diffs.size()));
-
-                    while (clipper.Step())
-                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            ImGui::TableNextRow();
-
-                            // Prevent the list from trying to access non-existing diffs
-                            if (size_t(i) >= this->m_diffs.size())
-                                break;
-
-                            ImGui::PushID(i);
-
-                            const auto &diff = this->m_diffs[i];
-
-                            // Draw a clickable row for each difference that will select the difference in both hex editors
-
-                            // Draw start address
-                            ImGui::TableNextColumn();
-                            if (ImGui::Selectable(hex::format("0x{:02X}", diff.region.getStartAddress()).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                a.hexEditor.setSelection(diff.region);
-                                a.hexEditor.jumpToSelection();
-                                b.hexEditor.setSelection(diff.region);
-                                b.hexEditor.jumpToSelection();
-                            }
-
-                            // Draw end address
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(hex::format("0x{:02X}", diff.region.getEndAddress()).c_str());
-
-                            // Draw difference type
-                            ImGui::TableNextColumn();
-                            switch (diff.type) {
-                                case DifferenceType::Modified:
-                                    ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.builtin.view.diff.modified"_lang);
-                                    break;
-                                case DifferenceType::Added:
-                                    ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), "hex.builtin.view.diff.added"_lang);
-                                    break;
-                                case DifferenceType::Removed:
-                                    ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), "hex.builtin.view.diff.removed"_lang);
-                                    break;
-                            }
-
-                            ImGui::PopID();
-                        }
-                }
-
-                ImGui::EndTable();
-            }
-
+            if (b.provider >= 0 && size_t(b.provider) < providers.size())
+                b.hexEditor.setProvider(providers[b.provider]);
+            else
+                b.hexEditor.setProvider(nullptr);
         }
-        ImGui::End();
+
+        // Analyze the providers if they are valid and the user selected a new provider
+        if (!this->m_analyzed && a.provider != -1 && b.provider != -1 && !this->m_diffTask.isRunning()) {
+            const auto &providers = ImHexApi::Provider::getProviders();
+            auto providerA = providers[a.provider];
+            auto providerB = providers[b.provider];
+
+            this->analyze(providerA, providerB);
+        }
+
+        const auto height = ImGui::GetContentRegionAvail().y;
+
+        // Draw the two hex editor columns side by side
+        if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 250_scaled))) {
+            ImGui::TableSetupColumn("hex.builtin.view.diff.provider_a"_lang);
+            ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
+            ImGui::TableHeadersRow();
+
+            ImGui::BeginDisabled(this->m_diffTask.isRunning());
+            {
+                // Draw first provider selector
+                ImGui::TableNextColumn();
+                if (drawProviderSelector(a)) this->m_analyzed = false;
+
+                // Draw second provider selector
+                ImGui::TableNextColumn();
+                if (drawProviderSelector(b)) this->m_analyzed = false;
+            }
+            ImGui::EndDisabled();
+
+            ImGui::TableNextRow();
+
+            // Draw first hex editor column
+            ImGui::TableNextColumn();
+            bool scrollB = drawDiffColumn(a, height - 250_scaled);
+
+            // Draw second hex editor column
+            ImGui::TableNextColumn();
+            bool scrollA = drawDiffColumn(b, height - 250_scaled);
+
+            // Sync the scroll positions of the hex editors
+            {
+                if (scrollA && a.scrollLock == 0) {
+                    a.hexEditor.setScrollPosition(b.hexEditor.getScrollPosition());
+                    a.hexEditor.forceUpdateScrollPosition();
+                }
+                if (scrollB && b.scrollLock == 0) {
+                    b.hexEditor.setScrollPosition(a.hexEditor.getScrollPosition());
+                    b.hexEditor.forceUpdateScrollPosition();
+                }
+            }
+
+            ImGui::EndTable();
+        }
+
+        // Draw the differences table
+        if (ImGui::BeginTable("##differences", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable, ImVec2(0, 200_scaled))) {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("hex.builtin.common.begin"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.end"_lang);
+            ImGui::TableSetupColumn("hex.builtin.common.type"_lang);
+            ImGui::TableHeadersRow();
+
+            // Draw the differences if the providers have been analyzed
+            if (this->m_analyzed) {
+                ImGuiListClipper clipper;
+                clipper.Begin(int(this->m_diffs.size()));
+
+                while (clipper.Step())
+                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        ImGui::TableNextRow();
+
+                        // Prevent the list from trying to access non-existing diffs
+                        if (size_t(i) >= this->m_diffs.size())
+                            break;
+
+                        ImGui::PushID(i);
+
+                        const auto &diff = this->m_diffs[i];
+
+                        // Draw a clickable row for each difference that will select the difference in both hex editors
+
+                        // Draw start address
+                        ImGui::TableNextColumn();
+                        if (ImGui::Selectable(hex::format("0x{:02X}", diff.region.getStartAddress()).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            a.hexEditor.setSelection(diff.region);
+                            a.hexEditor.jumpToSelection();
+                            b.hexEditor.setSelection(diff.region);
+                            b.hexEditor.jumpToSelection();
+                        }
+
+                        // Draw end address
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(hex::format("0x{:02X}", diff.region.getEndAddress()).c_str());
+
+                        // Draw difference type
+                        ImGui::TableNextColumn();
+                        switch (diff.type) {
+                            case DifferenceType::Modified:
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.builtin.view.diff.modified"_lang);
+                                break;
+                            case DifferenceType::Added:
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), "hex.builtin.view.diff.added"_lang);
+                                break;
+                            case DifferenceType::Removed:
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), "hex.builtin.view.diff.removed"_lang);
+                                break;
+                        }
+
+                        ImGui::PopID();
+                    }
+            }
+
+            ImGui::EndTable();
+        }
     }
 
 }

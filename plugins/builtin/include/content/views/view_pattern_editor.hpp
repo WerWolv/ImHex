@@ -24,13 +24,16 @@ namespace pl::ptrn { class Pattern; }
 
 namespace hex::plugin::builtin {
 
-    class ViewPatternEditor : public View {
+    class ViewPatternEditor : public View::Window {
     public:
         ViewPatternEditor();
         ~ViewPatternEditor() override;
 
-        void drawAlwaysVisible() override;
+        void drawAlwaysVisibleContent() override;
         void drawContent() override;
+        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
+            return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        }
 
     private:
         enum class DangerousFunctionPerms : u8 {
@@ -79,7 +82,7 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
                 ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
-                confirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
+                ImGuiExt::ConfirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
                         [this, provider] {
                             this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles.get(provider)[this->m_selectedPatternFile], provider);
                             this->close();

@@ -10,7 +10,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewInformation : public View {
+    class ViewInformation : public View::Window {
     public:
         explicit ViewInformation();
         ~ViewInformation() override;

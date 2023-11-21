@@ -6,7 +6,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewHashes : public View {
+    class ViewHashes : public View::Window {
     public:
         explicit ViewHashes();
         ~ViewHashes() override;

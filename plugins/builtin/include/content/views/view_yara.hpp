@@ -8,7 +8,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewYara : public View {
+    class ViewYara : public View::Window {
     public:
         ViewYara();
         ~ViewYara() override;

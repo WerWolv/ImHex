@@ -8,13 +8,13 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewAbout : public View {
+    class ViewAbout : public View::Modal {
     public:
         ViewAbout();
 
         void drawContent() override;
 
-        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool shouldDraw() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override {
@@ -22,8 +22,6 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        bool m_aboutWindowOpen = false;
-
         void drawAboutPopup();
 
         void drawAboutMainPage();

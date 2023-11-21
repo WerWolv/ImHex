@@ -4,14 +4,15 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewSettings : public View {
+    class ViewSettings : public View::Floating {
     public:
         explicit ViewSettings();
         ~ViewSettings() override;
 
-        void drawContent() override;
+        void drawContent() override {}
+        void drawAlwaysVisibleContent() override;
 
-        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool shouldDraw() const override { return false; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override { return scaled({ 700, 400 }); }

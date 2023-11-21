@@ -12,12 +12,13 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewDiff : public View {
+    class ViewDiff : public View::Window {
     public:
         ViewDiff();
         ~ViewDiff() override;
 
         void drawContent() override;
+        ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse; }
 
     public:
         struct Column {

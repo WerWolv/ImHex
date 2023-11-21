@@ -11,7 +11,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewDataProcessor : public View {
+    class ViewDataProcessor : public View::Window {
     public:
         struct Workspace {
             Workspace() = default;

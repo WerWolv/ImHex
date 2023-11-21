@@ -37,6 +37,10 @@ namespace hex {
         return vector * ImHexApi::System::getGlobalScale();
     }
 
+    ImVec2 scaled(float x, float y) {
+        return ImVec2(x, y) * ImHexApi::System::getGlobalScale();
+    }
+
     std::string to_string(u128 value) {
         char data[45] = { 0 };
 

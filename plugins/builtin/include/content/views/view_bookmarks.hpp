@@ -6,7 +6,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewBookmarks : public View {
+    class ViewBookmarks : public View::Window {
     public:
         ViewBookmarks();
         ~ViewBookmarks() override;

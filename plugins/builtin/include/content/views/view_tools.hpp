@@ -7,13 +7,13 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewTools : public View {
+    class ViewTools : public View::Window {
     public:
         ViewTools();
         ~ViewTools() override = default;
 
         void drawContent() override;
-        void drawAlwaysVisible() override;
+        void drawAlwaysVisibleContent() override;
 
     private:
         std::vector<ContentRegistry::Tools::impl::Entry>::iterator m_dragStartIterator;

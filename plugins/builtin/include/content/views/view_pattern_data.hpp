@@ -6,7 +6,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewPatternData : public View {
+    class ViewPatternData : public View::Window {
     public:
         ViewPatternData();
         ~ViewPatternData() override;

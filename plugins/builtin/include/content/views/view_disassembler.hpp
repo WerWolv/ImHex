@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
         std::string operators;
     };
 
-    class ViewDisassembler : public View {
+    class ViewDisassembler : public View::Window {
     public:
         explicit ViewDisassembler();
         ~ViewDisassembler() override;

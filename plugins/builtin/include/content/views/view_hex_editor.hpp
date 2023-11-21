@@ -9,12 +9,15 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewHexEditor : public View {
+    class ViewHexEditor : public View::Window {
     public:
         ViewHexEditor();
         ~ViewHexEditor() override;
 
         void drawContent() override;
+        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
+            return ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        }
 
         class Popup {
         public:

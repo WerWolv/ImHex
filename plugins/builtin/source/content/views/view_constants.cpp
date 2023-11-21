@@ -12,7 +12,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewConstants::ViewConstants() : View("hex.builtin.view.constants.name") {
+    ViewConstants::ViewConstants() : View::Window("hex.builtin.view.constants.name") {
         this->reloadConstants();
     }
 
@@ -63,92 +63,88 @@ namespace hex::plugin::builtin {
     }
 
     void ViewConstants::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.constants.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        ImGui::PushItemWidth(-1);
 
-            ImGui::PushItemWidth(-1);
+        if (ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, this->m_filter)) {
+            this->m_filterIndices.clear();
 
-            if (ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, this->m_filter)) {
-                this->m_filterIndices.clear();
-
-                // Filter the constants according to the entered value
-                for (u64 i = 0; i < this->m_constants.size(); i++) {
-                    auto &constant = this->m_constants[i];
-                    if (hex::containsIgnoreCase(constant.name, this->m_filter) ||
-                        hex::containsIgnoreCase(constant.category, this->m_filter) ||
-                        hex::containsIgnoreCase(constant.description, this->m_filter) ||
-                        hex::containsIgnoreCase(constant.value, this->m_filter))
-                        this->m_filterIndices.push_back(i);
-                }
-            }
-
-            ImGui::PopItemWidth();
-
-            if (ImGui::BeginTable("##strings", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
-                ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.builtin.view.constants.row.category"_lang, 0, -1, ImGui::GetID("category"));
-                ImGui::TableSetupColumn("hex.builtin.view.constants.row.name"_lang, 0, -1, ImGui::GetID("name"));
-                ImGui::TableSetupColumn("hex.builtin.view.constants.row.desc"_lang, 0, -1, ImGui::GetID("desc"));
-                ImGui::TableSetupColumn("hex.builtin.view.constants.row.value"_lang, 0, -1, ImGui::GetID("value"));
-
-                auto sortSpecs = ImGui::TableGetSortSpecs();
-
-                // Handle table sorting
-                if (sortSpecs->SpecsDirty) {
-                    std::sort(this->m_constants.begin(), this->m_constants.end(), [&sortSpecs](const Constant &left, const Constant &right) -> bool {
-                        if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("category")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left.category > right.category;
-                            else
-                                return left.category < right.category;
-                        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left.name > right.name;
-                            else
-                                return left.name < right.name;
-                        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("desc")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left.description > right.description;
-                            else
-                                return left.description < right.description;
-                        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
-                            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                                return left.value > right.value;
-                            else
-                                return left.value < right.value;
-                        }
-
-                        return false;
-                    });
-
-                    sortSpecs->SpecsDirty = false;
-                }
-
-                ImGui::TableHeadersRow();
-
-                ImGuiListClipper clipper;
-                clipper.Begin(this->m_filterIndices.size());
-
-                // Draw the constants table
-                while (clipper.Step()) {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &constant = this->m_constants[this->m_filterIndices[i]];
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(constant.category.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(constant.name.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(constant.description.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(constant.value.c_str());
-                    }
-                }
-                clipper.End();
-
-                ImGui::EndTable();
+            // Filter the constants according to the entered value
+            for (u64 i = 0; i < this->m_constants.size(); i++) {
+                auto &constant = this->m_constants[i];
+                if (hex::containsIgnoreCase(constant.name, this->m_filter) ||
+                    hex::containsIgnoreCase(constant.category, this->m_filter) ||
+                    hex::containsIgnoreCase(constant.description, this->m_filter) ||
+                    hex::containsIgnoreCase(constant.value, this->m_filter))
+                    this->m_filterIndices.push_back(i);
             }
         }
-        ImGui::End();
+
+        ImGui::PopItemWidth();
+
+        if (ImGui::BeginTable("##strings", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY)) {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("hex.builtin.view.constants.row.category"_lang, 0, -1, ImGui::GetID("category"));
+            ImGui::TableSetupColumn("hex.builtin.view.constants.row.name"_lang, 0, -1, ImGui::GetID("name"));
+            ImGui::TableSetupColumn("hex.builtin.view.constants.row.desc"_lang, 0, -1, ImGui::GetID("desc"));
+            ImGui::TableSetupColumn("hex.builtin.view.constants.row.value"_lang, 0, -1, ImGui::GetID("value"));
+
+            auto sortSpecs = ImGui::TableGetSortSpecs();
+
+            // Handle table sorting
+            if (sortSpecs->SpecsDirty) {
+                std::sort(this->m_constants.begin(), this->m_constants.end(), [&sortSpecs](const Constant &left, const Constant &right) -> bool {
+                    if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("category")) {
+                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                            return left.category > right.category;
+                        else
+                            return left.category < right.category;
+                    } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
+                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                            return left.name > right.name;
+                        else
+                            return left.name < right.name;
+                    } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("desc")) {
+                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                            return left.description > right.description;
+                        else
+                            return left.description < right.description;
+                    } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
+                        if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
+                            return left.value > right.value;
+                        else
+                            return left.value < right.value;
+                    }
+
+                    return false;
+                });
+
+                sortSpecs->SpecsDirty = false;
+            }
+
+            ImGui::TableHeadersRow();
+
+            ImGuiListClipper clipper;
+            clipper.Begin(this->m_filterIndices.size());
+
+            // Draw the constants table
+            while (clipper.Step()) {
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                    auto &constant = this->m_constants[this->m_filterIndices[i]];
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(constant.category.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(constant.name.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(constant.description.c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(constant.value.c_str());
+                }
+            }
+            clipper.End();
+
+            ImGui::EndTable();
+        }
     }
 
 }

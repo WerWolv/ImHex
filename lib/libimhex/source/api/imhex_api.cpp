@@ -421,6 +421,12 @@ namespace hex {
                 s_fontSize = size;
             }
 
+            static ImFontAtlas *s_fontAtlas;
+            void setFontAtlas(ImFontAtlas* fontAtlas) {
+                s_fontAtlas = fontAtlas;
+            }
+
+
             static std::string s_gpuVendor;
             void setGPUVendor(const std::string &vendor) {
                 s_gpuVendor = vendor;
@@ -507,6 +513,11 @@ namespace hex {
         float getFontSize() {
             return impl::s_fontSize;
         }
+
+        ImFontAtlas* getFontAtlas() {
+            return impl::s_fontAtlas;
+        }
+
 
 
         static bool s_systemThemeDetection;

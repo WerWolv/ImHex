@@ -9,10 +9,9 @@
 
 namespace hex::plugin::builtin {
 
-    ViewAchievements::ViewAchievements() : View("hex.builtin.view.achievements.name") {
+    ViewAchievements::ViewAchievements() : View::Floating("hex.builtin.view.achievements.name") {
         // Add achievements menu item to Extas menu
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.achievements.name" }, 2600, Shortcut::None, [&, this] {
-            this->m_viewOpen = true;
             this->getWindowOpenState() = true;
         });
 
@@ -24,7 +23,6 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
             if (name == "Achievements") {
                 TaskManager::doLater([this] {
-                    this->m_viewOpen = true;
                     this->getWindowOpenState() = true;
                 });
             }
@@ -302,113 +300,108 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAchievements::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.achievements.name").c_str(), &this->m_viewOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking)) {
-            if (ImGui::BeginTabBar("##achievement_categories")) {
-                auto &startNodes = AchievementManager::getAchievementStartNodes();
+        if (ImGui::BeginTabBar("##achievement_categories")) {
+            auto &startNodes = AchievementManager::getAchievementStartNodes();
 
-                // Get all achievement category names
-                std::vector<std::string> categories;
-                for (const auto &[categoryName, achievements] : startNodes) {
-                    categories.push_back(categoryName);
-                }
-
-                std::reverse(categories.begin(), categories.end());
-
-                // Draw each individual achievement category
-                for (const auto &categoryName : categories) {
-                    const auto &achievements = startNodes[categoryName];
-
-                    // Check if any achievements in the category are unlocked or unlockable
-                    bool visible = false;
-                    for (const auto &achievement : achievements) {
-                        if (achievement->isUnlocked() || achievement->isUnlockable()) {
-                            visible = true;
-                            break;
-                        }
-                    }
-
-                    // If all achievements in this category are invisible, don't draw it
-                    if (!visible)
-                        continue;
-
-                    ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
-
-                    // Handle jumping to the category of an achievement
-                    if (this->m_achievementToGoto != nullptr) {
-                        if (this->m_achievementToGoto->getUnlocalizedCategory() == categoryName) {
-                            flags |= ImGuiTabItemFlags_SetSelected;
-                        }
-                    }
-
-                    // Draw the achievement category
-                    if (ImGui::BeginTabItem(LangEntry(categoryName), nullptr, flags)) {
-                        auto drawList = ImGui::GetWindowDrawList();
-
-                        const auto cursorPos = ImGui::GetCursorPos();
-                        const auto windowPos = ImGui::GetWindowPos() + ImVec2(0, cursorPos.y);
-                        const auto windowSize = ImGui::GetWindowSize() - ImVec2(0, cursorPos.y);
-                        const float borderSize = 20.0_scaled;
-
-                        const auto windowPadding = ImGui::GetStyle().WindowPadding;
-                        const auto innerWindowPos = windowPos + ImVec2(borderSize, borderSize);
-                        const auto innerWindowSize = windowSize - ImVec2(borderSize * 2, borderSize * 2) - ImVec2(0, ImGui::GetTextLineHeightWithSpacing());
-
-                        // Prevent the achievement tree from being drawn outside of the window
-                        drawList->PushClipRect(innerWindowPos, innerWindowPos + innerWindowSize, true);
-
-                        drawList->ChannelsSplit(4);
-
-                        drawList->ChannelsSetCurrent(0);
-
-                        // Draw achievement background
-                        drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, this->m_offset);
-
-                        // Draw the achievement tree
-                        auto maxPos = drawAchievementTree(drawList, nullptr, achievements, innerWindowPos + scaled({ 100, 100 }) + this->m_offset);
-
-                        drawList->ChannelsSetCurrent(3);
-
-                        // Draw the achievement overlay
-                        drawOverlay(drawList, innerWindowPos, innerWindowPos + innerWindowSize, categoryName);
-
-                        drawList->ChannelsMerge();
-
-                        // Handle dragging the achievement tree around
-                        if (ImGui::IsMouseHoveringRect(innerWindowPos, innerWindowPos + innerWindowSize)) {
-                            auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
-                            this->m_offset += dragDelta;
-                            ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
-                        }
-
-                        // Clamp the achievement tree to the window
-                        this->m_offset = -ImClamp(-this->m_offset, { 0, 0 }, ImMax(maxPos - innerWindowPos - innerWindowSize, { 0, 0 }));
-
-                        drawList->PopClipRect();
-
-                        // Draw settings below the window
-                        ImGui::SetCursorScreenPos(innerWindowPos + ImVec2(0, innerWindowSize.y + windowPadding.y));
-                        ImGui::BeginGroup();
-                        {
-                            if (ImGui::Checkbox("Show popup", &this->m_showPopup))
-                                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", this->m_showPopup);
-                        }
-                        ImGui::EndGroup();
-
-                        ImGui::EndTabItem();
-                    }
-                }
-
-                ImGui::EndTabBar();
+            // Get all achievement category names
+            std::vector<std::string> categories;
+            for (const auto &[categoryName, achievements] : startNodes) {
+                categories.push_back(categoryName);
             }
-        }
-        ImGui::End();
 
-        this->getWindowOpenState() = this->m_viewOpen;
+            std::reverse(categories.begin(), categories.end());
+
+            // Draw each individual achievement category
+            for (const auto &categoryName : categories) {
+                const auto &achievements = startNodes[categoryName];
+
+                // Check if any achievements in the category are unlocked or unlockable
+                bool visible = false;
+                for (const auto &achievement : achievements) {
+                    if (achievement->isUnlocked() || achievement->isUnlockable()) {
+                        visible = true;
+                        break;
+                    }
+                }
+
+                // If all achievements in this category are invisible, don't draw it
+                if (!visible)
+                    continue;
+
+                ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
+
+                // Handle jumping to the category of an achievement
+                if (this->m_achievementToGoto != nullptr) {
+                    if (this->m_achievementToGoto->getUnlocalizedCategory() == categoryName) {
+                        flags |= ImGuiTabItemFlags_SetSelected;
+                    }
+                }
+
+                // Draw the achievement category
+                if (ImGui::BeginTabItem(LangEntry(categoryName), nullptr, flags)) {
+                    auto drawList = ImGui::GetWindowDrawList();
+
+                    const auto cursorPos = ImGui::GetCursorPos();
+                    const auto windowPos = ImGui::GetWindowPos() + ImVec2(0, cursorPos.y);
+                    const auto windowSize = ImGui::GetWindowSize() - ImVec2(0, cursorPos.y);
+                    const float borderSize = 20.0_scaled;
+
+                    const auto windowPadding = ImGui::GetStyle().WindowPadding;
+                    const auto innerWindowPos = windowPos + ImVec2(borderSize, borderSize);
+                    const auto innerWindowSize = windowSize - ImVec2(borderSize * 2, borderSize * 2) - ImVec2(0, ImGui::GetTextLineHeightWithSpacing());
+
+                    // Prevent the achievement tree from being drawn outside of the window
+                    drawList->PushClipRect(innerWindowPos, innerWindowPos + innerWindowSize, true);
+
+                    drawList->ChannelsSplit(4);
+
+                    drawList->ChannelsSetCurrent(0);
+
+                    // Draw achievement background
+                    drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, this->m_offset);
+
+                    // Draw the achievement tree
+                    auto maxPos = drawAchievementTree(drawList, nullptr, achievements, innerWindowPos + scaled({ 100, 100 }) + this->m_offset);
+
+                    drawList->ChannelsSetCurrent(3);
+
+                    // Draw the achievement overlay
+                    drawOverlay(drawList, innerWindowPos, innerWindowPos + innerWindowSize, categoryName);
+
+                    drawList->ChannelsMerge();
+
+                    // Handle dragging the achievement tree around
+                    if (ImGui::IsMouseHoveringRect(innerWindowPos, innerWindowPos + innerWindowSize)) {
+                        auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
+                        this->m_offset += dragDelta;
+                        ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
+                    }
+
+                    // Clamp the achievement tree to the window
+                    this->m_offset = -ImClamp(-this->m_offset, { 0, 0 }, ImMax(maxPos - innerWindowPos - innerWindowSize, { 0, 0 }));
+
+                    drawList->PopClipRect();
+
+                    // Draw settings below the window
+                    ImGui::SetCursorScreenPos(innerWindowPos + ImVec2(0, innerWindowSize.y + windowPadding.y));
+                    ImGui::BeginGroup();
+                    {
+                        if (ImGui::Checkbox("Show popup", &this->m_showPopup))
+                            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", this->m_showPopup);
+                    }
+                    ImGui::EndGroup();
+
+                    ImGui::EndTabItem();
+                }
+            }
+
+            ImGui::EndTabBar();
+        }
 
         this->m_achievementToGoto = nullptr;
     }
 
-    void ViewAchievements::drawAlwaysVisible() {
+    void ViewAchievements::drawAlwaysVisibleContent() {
 
         // Handle showing the achievement unlock popup
         if (this->m_achievementUnlockQueueTimer >= 0 && this->m_showPopup) {
@@ -439,8 +432,7 @@ namespace hex::plugin::builtin {
                     // Handle clicking on the popup
                     if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                         // Open the achievement window and jump to the achievement
-                        this->m_viewOpen = true;
-                        this->getWindowOpenState() = this->m_viewOpen;
+                        this->getWindowOpenState() = true;
                         this->m_achievementToGoto = this->m_currAchievement;
                     }
                 }

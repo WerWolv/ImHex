@@ -4,17 +4,16 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewProviderSettings : public hex::View {
+    class ViewProviderSettings : public View::Modal {
     public:
         ViewProviderSettings();
         ~ViewProviderSettings() override;
 
         void drawContent() override;
-        void drawAlwaysVisible() override;
 
         [[nodiscard]] bool hasViewMenuItemEntry() const override;
 
-        [[nodiscard]] bool isAvailable() const override;
+        [[nodiscard]] bool shouldDraw() const override { return true; }
     };
 
 }

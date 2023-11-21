@@ -11,7 +11,7 @@
 
 namespace hex::plugin::windows {
 
-    class ViewTTYConsole : public View {
+    class ViewTTYConsole : public View::Window {
     public:
         ViewTTYConsole();
         ~ViewTTYConsole() override = default;

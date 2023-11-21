@@ -6,13 +6,13 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewPatches : public View {
+    class ViewPatches : public View::Window {
     public:
         explicit ViewPatches();
         ~ViewPatches() override = default;
 
         void drawContent() override;
-        void drawAlwaysVisible() override;
+        void drawAlwaysVisibleContent() override;
 
     private:
         u64 m_selectedPatch = 0x00;

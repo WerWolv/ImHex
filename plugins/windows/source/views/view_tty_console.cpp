@@ -9,7 +9,7 @@
 
 namespace hex::plugin::windows {
 
-    ViewTTYConsole::ViewTTYConsole() : View("hex.windows.view.tty_console.name") {
+    ViewTTYConsole::ViewTTYConsole() : View::Window("hex.windows.view.tty_console.name") {
         this->m_comPorts = getAvailablePorts();
         this->m_transmitDataBuffer.resize(0xFFF, 0x00);
         this->m_receiveDataBuffer.reserve(0xFFF);
@@ -17,156 +17,152 @@ namespace hex::plugin::windows {
     }
 
     void ViewTTYConsole::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.windows.view.tty_console.name").c_str(), &this->getWindowOpenState())) {
+        ImGuiExt::Header("hex.windows.view.tty_console.config"_lang, true);
 
-            ImGuiExt::Header("hex.windows.view.tty_console.config"_lang, true);
+        bool connected = this->m_portHandle != INVALID_HANDLE_VALUE;
 
-            bool connected = this->m_portHandle != INVALID_HANDLE_VALUE;
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, connected);
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, connected ? 0.5F : 1.0F);
 
-            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, connected);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, connected ? 0.5F : 1.0F);
+        ImGui::Combo(
+            "hex.windows.view.tty_console.port"_lang, &this->m_selectedPort, [](void *data, int idx) {
+                auto &ports = *static_cast<std::vector<std::pair<std::string, std::string>> *>(data);
 
-            ImGui::Combo(
-                "hex.windows.view.tty_console.port"_lang, &this->m_selectedPort, [](void *data, int idx) {
-                    auto &ports = *static_cast<std::vector<std::pair<std::string, std::string>> *>(data);
+                return ports[idx].first.c_str();
+            },
+            &this->m_comPorts,
+            this->m_comPorts.size());
 
-                    return ports[idx].first.c_str();
-                },
-                &this->m_comPorts,
-                this->m_comPorts.size());
+        ImGui::SameLine();
+        if (ImGui::Button("hex.windows.view.tty_console.reload"_lang))
+            this->m_comPorts = getAvailablePorts();
 
-            ImGui::SameLine();
-            if (ImGui::Button("hex.windows.view.tty_console.reload"_lang))
-                this->m_comPorts = getAvailablePorts();
+        ImGui::Combo(
+            "hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void *data, int idx) {
+                hex::unused(data);
 
-            ImGui::Combo(
-                "hex.windows.view.tty_console.baud"_lang, &this->m_selectedBaudRate, [](void *data, int idx) {
-                    hex::unused(data);
+                return ViewTTYConsole::BaudRates[idx];
+            },
+            nullptr,
+            ViewTTYConsole::BaudRates.size());
 
-                    return ViewTTYConsole::BaudRates[idx];
-                },
-                nullptr,
-                ViewTTYConsole::BaudRates.size());
+        ImGui::Combo(
+            "hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void *data, int idx) {
+                hex::unused(data);
 
-            ImGui::Combo(
-                "hex.windows.view.tty_console.num_bits"_lang, &this->m_selectedNumBits, [](void *data, int idx) {
-                    hex::unused(data);
+                return ViewTTYConsole::NumBits[idx];
+            },
+            nullptr,
+            ViewTTYConsole::NumBits.size());
 
-                    return ViewTTYConsole::NumBits[idx];
-                },
-                nullptr,
-                ViewTTYConsole::NumBits.size());
+        ImGui::Combo(
+            "hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void *data, int idx) {
+                hex::unused(data);
 
-            ImGui::Combo(
-                "hex.windows.view.tty_console.stop_bits"_lang, &this->m_selectedStopBits, [](void *data, int idx) {
-                    hex::unused(data);
+                return ViewTTYConsole::StopBits[idx];
+            },
+            nullptr,
+            ViewTTYConsole::StopBits.size());
 
-                    return ViewTTYConsole::StopBits[idx];
-                },
-                nullptr,
-                ViewTTYConsole::StopBits.size());
+        ImGui::Combo(
+            "hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void *data, int idx) {
+                hex::unused(data);
 
-            ImGui::Combo(
-                "hex.windows.view.tty_console.parity_bits"_lang, &this->m_selectedParityBits, [](void *data, int idx) {
-                    hex::unused(data);
+                return ViewTTYConsole::ParityBits[idx];
+            },
+            nullptr,
+            ViewTTYConsole::ParityBits.size());
 
-                    return ViewTTYConsole::ParityBits[idx];
-                },
-                nullptr,
-                ViewTTYConsole::ParityBits.size());
+        ImGui::Checkbox("hex.windows.view.tty_console.cts"_lang, &this->m_hasCTSFlowControl);
 
-            ImGui::Checkbox("hex.windows.view.tty_console.cts"_lang, &this->m_hasCTSFlowControl);
+        ImGui::PopStyleVar();
+        ImGui::PopItemFlag();
 
-            ImGui::PopStyleVar();
-            ImGui::PopItemFlag();
+        ImGui::NewLine();
 
-            ImGui::NewLine();
+        if (this->m_portHandle == INVALID_HANDLE_VALUE) {
+            if (ImGui::Button("hex.windows.view.tty_console.connect"_lang))
+                if (!this->connect())
+                    EventManager::post<RequestOpenErrorPopup>("hex.windows.view.tty_console.connect_error"_lang);
+        } else {
+            if (ImGui::Button("hex.windows.view.tty_console.disconnect"_lang))
+                this->disconnect();
+        }
 
-            if (this->m_portHandle == INVALID_HANDLE_VALUE) {
-                if (ImGui::Button("hex.windows.view.tty_console.connect"_lang))
-                    if (!this->connect())
-                        EventManager::post<RequestOpenErrorPopup>("hex.windows.view.tty_console.connect_error"_lang);
-            } else {
-                if (ImGui::Button("hex.windows.view.tty_console.disconnect"_lang))
-                    this->disconnect();
-            }
+        ImGui::NewLine();
 
-            ImGui::NewLine();
+        if (ImGui::Button("hex.windows.view.tty_console.clear"_lang)) {
+            std::scoped_lock lock(this->m_receiveBufferMutex);
 
-            if (ImGui::Button("hex.windows.view.tty_console.clear"_lang)) {
+            this->m_receiveDataBuffer.clear();
+            this->m_wrapPositions.clear();
+        }
+
+        ImGui::SameLine();
+
+        ImGui::Checkbox("hex.windows.view.tty_console.auto_scroll"_lang, &this->m_shouldAutoScroll);
+
+        ImGuiExt::Header("hex.windows.view.tty_console.console"_lang);
+
+        auto consoleSize = ImGui::GetContentRegionAvail();
+        consoleSize.y -= ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 4;
+        if (ImGui::BeginChild("##scrolling", consoleSize, true, ImGuiWindowFlags_HorizontalScrollbar)) {
+            ImGuiListClipper clipper;
+            clipper.Begin(this->m_wrapPositions.size(), ImGui::GetTextLineHeight());
+
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
+            while (clipper.Step()) {
                 std::scoped_lock lock(this->m_receiveBufferMutex);
 
-                this->m_receiveDataBuffer.clear();
-                this->m_wrapPositions.clear();
-            }
-
-            ImGui::SameLine();
-
-            ImGui::Checkbox("hex.windows.view.tty_console.auto_scroll"_lang, &this->m_shouldAutoScroll);
-
-            ImGuiExt::Header("hex.windows.view.tty_console.console"_lang);
-
-            auto consoleSize = ImGui::GetContentRegionAvail();
-            consoleSize.y -= ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 4;
-            if (ImGui::BeginChild("##scrolling", consoleSize, true, ImGuiWindowFlags_HorizontalScrollbar)) {
-                ImGuiListClipper clipper;
-                clipper.Begin(this->m_wrapPositions.size(), ImGui::GetTextLineHeight());
-
-                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
-                while (clipper.Step()) {
-                    std::scoped_lock lock(this->m_receiveBufferMutex);
-
-                    for (int i = clipper.DisplayStart + 1; i < clipper.DisplayEnd; i++) {
-                        ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions[i - 1], this->m_receiveDataBuffer.data() + this->m_wrapPositions[i]);
-                    }
-
-                    if (!this->m_receiveDataBuffer.empty() && !this->m_wrapPositions.empty())
-                        if (static_cast<size_t>(clipper.DisplayEnd) >= this->m_wrapPositions.size() - 1)
-                            ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions.back());
-
-                    if (this->m_shouldAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
-                        ImGui::SetScrollHereY(0.0F);
-                    }
-                }
-                ImGui::PopStyleVar();
-            }
-            ImGui::EndChild();
-
-            ImGui::PushItemWidth(-1);
-            if (ImGui::InputText("##transmit", this->m_transmitDataBuffer.data(), this->m_transmitDataBuffer.size() - 2, ImGuiInputTextFlags_EnterReturnsTrue)) {
-                auto size = strlen(this->m_transmitDataBuffer.data());
-
-                this->m_transmitDataBuffer[size + 0] = '\n';
-                this->m_transmitDataBuffer[size + 1] = 0x00;
-
-                this->transmitData(this->m_transmitDataBuffer);
-                ImGui::SetKeyboardFocusHere(0);
-            }
-            ImGui::PopItemWidth();
-
-            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && this->m_portHandle != INVALID_HANDLE_VALUE && !this->m_transmitting)
-                ImGui::OpenPopup("ConsoleMenu");
-
-            if (ImGui::BeginPopup("ConsoleMenu")) {
-
-                static std::vector<char> buffer(2, 0x00);
-                if (ImGui::MenuItem("hex.windows.view.tty_console.send_etx"_lang, "CTRL + C")) {
-                    buffer[0] = 0x03;
-                    this->transmitData(buffer);
-                }
-                if (ImGui::MenuItem("hex.windows.view.tty_console.send_eot"_lang, "CTRL + D")) {
-                    buffer[0] = 0x04;
-                    this->transmitData(buffer);
-                }
-                if (ImGui::MenuItem("hex.windows.view.tty_console.send_sub"_lang, "CTRL + Z")) {
-                    buffer[0] = 0x1A;
-                    this->transmitData(buffer);
+                for (int i = clipper.DisplayStart + 1; i < clipper.DisplayEnd; i++) {
+                    ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions[i - 1], this->m_receiveDataBuffer.data() + this->m_wrapPositions[i]);
                 }
 
-                ImGui::EndPopup();
+                if (!this->m_receiveDataBuffer.empty() && !this->m_wrapPositions.empty())
+                    if (static_cast<size_t>(clipper.DisplayEnd) >= this->m_wrapPositions.size() - 1)
+                        ImGui::TextUnformatted(this->m_receiveDataBuffer.data() + this->m_wrapPositions.back());
+
+                if (this->m_shouldAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()) {
+                    ImGui::SetScrollHereY(0.0F);
+                }
             }
+            ImGui::PopStyleVar();
         }
-        ImGui::End();
+        ImGui::EndChild();
+
+        ImGui::PushItemWidth(-1);
+        if (ImGui::InputText("##transmit", this->m_transmitDataBuffer.data(), this->m_transmitDataBuffer.size() - 2, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            auto size = strlen(this->m_transmitDataBuffer.data());
+
+            this->m_transmitDataBuffer[size + 0] = '\n';
+            this->m_transmitDataBuffer[size + 1] = 0x00;
+
+            this->transmitData(this->m_transmitDataBuffer);
+            ImGui::SetKeyboardFocusHere(0);
+        }
+        ImGui::PopItemWidth();
+
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered() && this->m_portHandle != INVALID_HANDLE_VALUE && !this->m_transmitting)
+            ImGui::OpenPopup("ConsoleMenu");
+
+        if (ImGui::BeginPopup("ConsoleMenu")) {
+
+            static std::vector<char> buffer(2, 0x00);
+            if (ImGui::MenuItem("hex.windows.view.tty_console.send_etx"_lang, "CTRL + C")) {
+                buffer[0] = 0x03;
+                this->transmitData(buffer);
+            }
+            if (ImGui::MenuItem("hex.windows.view.tty_console.send_eot"_lang, "CTRL + D")) {
+                buffer[0] = 0x04;
+                this->transmitData(buffer);
+            }
+            if (ImGui::MenuItem("hex.windows.view.tty_console.send_sub"_lang, "CTRL + Z")) {
+                buffer[0] = 0x1A;
+                this->transmitData(buffer);
+            }
+
+            ImGui::EndPopup();
+        }
     }
 
     std::vector<std::pair<std::string, std::string>> ViewTTYConsole::getAvailablePorts() const {

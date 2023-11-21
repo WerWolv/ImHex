@@ -274,6 +274,8 @@ namespace ImGuiExt {
     void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
     void EndSubWindow();
 
+    void ConfirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonCallback, const std::function<void()> &rightButtonCallback);
+
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {
         if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;

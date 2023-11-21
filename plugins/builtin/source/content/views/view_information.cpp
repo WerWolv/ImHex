@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
 
     using namespace hex::literals;
 
-    ViewInformation::ViewInformation() : View("hex.builtin.view.information.name") {
+    ViewInformation::ViewInformation() : View::Window("hex.builtin.view.information.name") {
         EventManager::subscribe<EventDataChanged>(this, [this] {
             this->m_dataValid = false;
             this->m_plainTextCharacterPercentage = -1.0;
@@ -136,232 +136,229 @@ namespace hex::plugin::builtin {
     }        
 
     void ViewInformation::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.information.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav)) {
+        if (ImGui::BeginChild("##scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoNav)) {
 
-                auto provider = ImHexApi::Provider::get();
-                if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-                    ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
-                    {
-                        ImGuiExt::Header("hex.builtin.common.settings"_lang, true);
+            auto provider = ImHexApi::Provider::get();
+            if (ImHexApi::Provider::isValid() && provider->isReadable()) {
+                ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
+                {
+                    ImGuiExt::Header("hex.builtin.common.settings"_lang, true);
 
-                        ui::regionSelectionPicker(&this->m_analysisRegion, provider, &this->m_selectionType, false);
-                        ImGui::NewLine();
+                    ui::regionSelectionPicker(&this->m_analysisRegion, provider, &this->m_selectionType, false);
+                    ImGui::NewLine();
 
-                        ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
+                    ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
 
-                        if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-                            this->analyze();
+                    if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                        this->analyze();
+                }
+                ImGui::EndDisabled();
+
+                if (this->m_analyzerTask.isRunning()) {
+                    ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
+                } else {
+                    ImGui::NewLine();
+                }
+
+                if (!this->m_analyzerTask.isRunning() && this->m_dataValid) {
+
+                    // Provider information
+                    ImGuiExt::Header("hex.builtin.view.information.provider_information"_lang, true);
+
+                    if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
+                        ImGui::TableSetupColumn("type");
+                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+
+                        for (auto &[name, value] : provider->getDataDescription()) {
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormatted("{}", name);
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormattedWrapped("{}", value);
+                        }
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.region"_lang);
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("0x{:X} - 0x{:X}", this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getEndAddress());
+
+                        ImGui::EndTable();
                     }
-                    ImGui::EndDisabled();
 
-                    if (this->m_analyzerTask.isRunning()) {
-                        ImGuiExt::TextSpinner("hex.builtin.view.information.analyzing"_lang);
-                    } else {
-                        ImGui::NewLine();
-                    }
+                    // Magic information
+                    if (!(this->m_dataDescription.empty() && this->m_dataMimeType.empty())) {
+                        ImGuiExt::Header("hex.builtin.view.information.magic"_lang);
 
-                    if (!this->m_analyzerTask.isRunning() && this->m_dataValid) {
-
-                        // Provider information
-                        ImGuiExt::Header("hex.builtin.view.information.provider_information"_lang, true);
-
-                        if (ImGui::BeginTable("information", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoKeepColumnsVisible)) {
+                        if (ImGui::BeginTable("magic", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
                             ImGui::TableSetupColumn("type");
                             ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
                             ImGui::TableNextRow();
 
-                            for (auto &[name, value] : provider->getDataDescription()) {
+                            if (!this->m_dataDescription.empty()) {
                                 ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}", name);
+                                ImGui::TextUnformatted("hex.builtin.view.information.description"_lang);
                                 ImGui::TableNextColumn();
-                                ImGuiExt::TextFormattedWrapped("{}", value);
+
+                                if (this->m_dataDescription == "data") {
+                                    ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataDescription);
+                                } else {
+                                    ImGuiExt::TextFormattedWrapped("{}", this->m_dataDescription);
+                                }
                             }
 
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.region"_lang);
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("0x{:X} - 0x{:X}", this->m_analyzedRegion.getStartAddress(), this->m_analyzedRegion.getEndAddress());
+                            if (!this->m_dataMimeType.empty()) {
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted("hex.builtin.view.information.mime"_lang);
+                                ImGui::TableNextColumn();
+
+                                if (this->m_dataMimeType == "application/octet-stream") {
+                                    ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataMimeType);
+                                    ImGui::SameLine();
+                                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                                    ImGuiExt::HelpHover("hex.builtin.view.information.octet_stream_warning"_lang);
+                                    ImGui::PopStyleVar();
+                                } else {
+                                    ImGuiExt::TextFormatted("{}", this->m_dataMimeType);
+                                }
+                            }
 
                             ImGui::EndTable();
                         }
 
-                        // Magic information
-                        if (!(this->m_dataDescription.empty() && this->m_dataMimeType.empty())) {
-                            ImGuiExt::Header("hex.builtin.view.information.magic"_lang);
+                        ImGui::NewLine();
+                    }
 
-                            if (ImGui::BeginTable("magic", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-                                ImGui::TableSetupColumn("type");
-                                ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+                    // Information analysis
+                    if (this->m_analyzedRegion.getSize() > 0) {
 
-                                ImGui::TableNextRow();
+                        ImGuiExt::Header("hex.builtin.view.information.info_analysis"_lang);
 
-                                if (!this->m_dataDescription.empty()) {
-                                    ImGui::TableNextColumn();
-                                    ImGui::TextUnformatted("hex.builtin.view.information.description"_lang);
-                                    ImGui::TableNextColumn();
+                        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
+                        ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
 
-                                    if (this->m_dataDescription == "data") {
-                                        ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataDescription);
-                                    } else {
-                                        ImGuiExt::TextFormattedWrapped("{}", this->m_dataDescription);
-                                    }
-                                }
+                        // Display byte distribution analysis
+                        ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
+                        this->m_byteDistribution.draw(
+                            ImVec2(-1, 0),
+                            ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect
+                        );
 
-                                if (!this->m_dataMimeType.empty()) {
-                                    ImGui::TableNextColumn();
-                                    ImGui::TextUnformatted("hex.builtin.view.information.mime"_lang);
-                                    ImGui::TableNextColumn();
-
-                                    if (this->m_dataMimeType == "application/octet-stream") {
-                                        ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, this->m_dataMimeType);
-                                        ImGui::SameLine();
-                                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                                        ImGuiExt::HelpHover("hex.builtin.view.information.octet_stream_warning"_lang);
-                                        ImGui::PopStyleVar();
-                                    } else {
-                                        ImGuiExt::TextFormatted("{}", this->m_dataMimeType);
-                                    }
-                                }
-
-                                ImGui::EndTable();
-                            }
-
-                            ImGui::NewLine();
-                        }
-
-                        // Information analysis
-                        if (this->m_analyzedRegion.getSize() > 0) {
-
-                            ImGuiExt::Header("hex.builtin.view.information.info_analysis"_lang);
-
-                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
-                            ImPlot::PushStyleColor(ImPlotCol_FrameBg, ImGui::GetColorU32(ImGuiCol_WindowBg));
-
-                            // Display byte distribution analysis
-                            ImGui::TextUnformatted("hex.builtin.view.information.distribution"_lang);
-                            this->m_byteDistribution.draw(
-                                ImVec2(-1, 0), 
-                                ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect
-                            );
-
-                            // Display byte types distribution analysis
-                            ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
-                            this->m_byteTypesDistribution.draw(
-                                    ImVec2(-1, 0), 
-                                    ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
-                                    true
-                            );
-
-                            // Display chunk-based entropy analysis
-                            ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
-                            this->m_chunkBasedEntropy.draw(
-                                ImVec2(-1, 0), 
-                                ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
+                        // Display byte types distribution analysis
+                        ImGui::TextUnformatted("hex.builtin.view.information.byte_types"_lang);
+                        this->m_byteTypesDistribution.draw(
+                                ImVec2(-1, 0),
+                                ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
                                 true
-                            );
+                        );
 
-                            ImPlot::PopStyleColor();
-                            ImGui::PopStyleColor();
+                        // Display chunk-based entropy analysis
+                        ImGui::TextUnformatted("hex.builtin.view.information.entropy"_lang);
+                        this->m_chunkBasedEntropy.draw(
+                            ImVec2(-1, 0),
+                            ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect,
+                            true
+                        );
 
-                            ImGui::NewLine();
-                        }
-
-                        // Entropy information
-                        if (ImGui::BeginTable("entropy_info", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-                            ImGui::TableSetupColumn("type");
-                            ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
-
-                            ImGui::TableNextRow();
-
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.block_size"_lang);
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("hex.builtin.view.information.block_size.desc"_lang, this->m_chunkBasedEntropy.getSize(), this->m_chunkBasedEntropy.getChunkSize());
-
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
-                            ImGui::TableNextColumn();
-                            if (this->m_averageEntropy < 0) ImGui::TextUnformatted("???");
-                            else ImGuiExt::TextFormatted("{:.5f}", std::abs(this->m_averageEntropy));
-
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{:.5f} @", this->m_highestBlockEntropy);
-                            ImGui::SameLine();
-                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                            if (ImGui::Button(hex::format("0x{:06X}", this->m_highestBlockEntropyAddress).c_str())) {
-                                ImHexApi::HexEditor::setSelection(this->m_highestBlockEntropyAddress, this->m_inputChunkSize);
-                            }
-                            ImGui::PopStyleColor();
-                            ImGui::PopStyleVar();
-
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.lowest_entropy"_lang);
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{:.5f} @", this->m_lowestBlockEntropy);
-                            ImGui::SameLine();
-                            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                            if (ImGui::Button(hex::format("0x{:06X}", this->m_lowestBlockEntropyAddress).c_str())) {
-                                ImHexApi::HexEditor::setSelection(this->m_lowestBlockEntropyAddress, this->m_inputChunkSize);
-                            }
-                            ImGui::PopStyleColor();
-                            ImGui::PopStyleVar();
-
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
-                            ImGui::TableNextColumn();
-                            if (this->m_plainTextCharacterPercentage < 0) ImGui::TextUnformatted("???");
-                            else ImGuiExt::TextFormatted("{:.2f}%", this->m_plainTextCharacterPercentage);
-
-                            ImGui::EndTable();
-                        }
+                        ImPlot::PopStyleColor();
+                        ImGui::PopStyleColor();
 
                         ImGui::NewLine();
-
-                        // General information
-                        if (ImGui::BeginTable("info", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
-                            ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
-                            ImGui::TableNextRow();
-
-                            if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
-                            }
-
-                            if (this->m_plainTextCharacterPercentage > 95) {
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.plain_text"_lang);
-                            }
-
-                            ImGui::EndTable();
-                        }
-
-                        ImGui::BeginGroup();
-                        {
-                            ImGui::TextUnformatted("hex.builtin.view.information.digram"_lang);
-                            this->m_digram.draw(scaled(ImVec2(300, 300)));
-                        }
-                        ImGui::EndGroup();
-
-                        ImGui::SameLine();
-
-                        ImGui::BeginGroup();
-                        {
-                            ImGui::TextUnformatted("hex.builtin.view.information.layered_distribution"_lang);
-                            this->m_layeredDistribution.draw(scaled(ImVec2(300, 300)));
-                        }
-                        ImGui::EndGroup();
                     }
+
+                    // Entropy information
+                    if (ImGui::BeginTable("entropy_info", 2, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+                        ImGui::TableSetupColumn("type");
+                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow();
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.block_size"_lang);
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("hex.builtin.view.information.block_size.desc"_lang, this->m_chunkBasedEntropy.getSize(), this->m_chunkBasedEntropy.getChunkSize());
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
+                        ImGui::TableNextColumn();
+                        if (this->m_averageEntropy < 0) ImGui::TextUnformatted("???");
+                        else ImGuiExt::TextFormatted("{:.5f}", std::abs(this->m_averageEntropy));
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{:.5f} @", this->m_highestBlockEntropy);
+                        ImGui::SameLine();
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                        if (ImGui::Button(hex::format("0x{:06X}", this->m_highestBlockEntropyAddress).c_str())) {
+                            ImHexApi::HexEditor::setSelection(this->m_highestBlockEntropyAddress, this->m_inputChunkSize);
+                        }
+                        ImGui::PopStyleColor();
+                        ImGui::PopStyleVar();
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.lowest_entropy"_lang);
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{:.5f} @", this->m_lowestBlockEntropy);
+                        ImGui::SameLine();
+                        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                        if (ImGui::Button(hex::format("0x{:06X}", this->m_lowestBlockEntropyAddress).c_str())) {
+                            ImHexApi::HexEditor::setSelection(this->m_lowestBlockEntropyAddress, this->m_inputChunkSize);
+                        }
+                        ImGui::PopStyleColor();
+                        ImGui::PopStyleVar();
+
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
+                        ImGui::TableNextColumn();
+                        if (this->m_plainTextCharacterPercentage < 0) ImGui::TextUnformatted("???");
+                        else ImGuiExt::TextFormatted("{:.2f}%", this->m_plainTextCharacterPercentage);
+
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::NewLine();
+
+                    // General information
+                    if (ImGui::BeginTable("info", 1, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg)) {
+                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
+                        ImGui::TableNextRow();
+
+                        if (this->m_averageEntropy > 0.83 && this->m_highestBlockEntropy > 0.9) {
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.encrypted"_lang);
+                        }
+
+                        if (this->m_plainTextCharacterPercentage > 95) {
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.information.plain_text"_lang);
+                        }
+
+                        ImGui::EndTable();
+                    }
+
+                    ImGui::BeginGroup();
+                    {
+                        ImGui::TextUnformatted("hex.builtin.view.information.digram"_lang);
+                        this->m_digram.draw(scaled(ImVec2(300, 300)));
+                    }
+                    ImGui::EndGroup();
+
+                    ImGui::SameLine();
+
+                    ImGui::BeginGroup();
+                    {
+                        ImGui::TextUnformatted("hex.builtin.view.information.layered_distribution"_lang);
+                        this->m_layeredDistribution.draw(scaled(ImVec2(300, 300)));
+                    }
+                    ImGui::EndGroup();
                 }
             }
-            ImGui::EndChild();
         }
-        ImGui::End();
+        ImGui::EndChild();
     }
 
 }

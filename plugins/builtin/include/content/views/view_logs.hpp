@@ -4,19 +4,18 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewLogs : public View {
+    class ViewLogs : public View::Floating {
     public:
         ViewLogs();
         ~ViewLogs() override = default;
 
         void drawContent() override;
 
-        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool shouldDraw() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
     private:
         int m_logLevel = 1;
-        bool m_viewOpen = false;
     };
 
 }

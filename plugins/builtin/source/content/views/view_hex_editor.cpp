@@ -347,7 +347,7 @@ namespace hex::plugin::builtin {
                 editor->closePopup();
             }
 
-            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
                     setBaseAddress(this->m_baseAddress);
                     editor->closePopup();
@@ -381,7 +381,7 @@ namespace hex::plugin::builtin {
                 editor->closePopup();
             }
 
-            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
                     setPageSize(this->m_pageSize);
                     editor->closePopup();
@@ -419,7 +419,7 @@ namespace hex::plugin::builtin {
                 editor->closePopup();
             }
 
-            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
                     this->resize(this->m_size);
                     editor->closePopup();
@@ -449,7 +449,7 @@ namespace hex::plugin::builtin {
             ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
             ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
 
-            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
                     insert(this->m_address, this->m_size);
                     editor->closePopup();
@@ -480,7 +480,7 @@ namespace hex::plugin::builtin {
             ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &this->m_address);
             ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size);
 
-            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
                 [&, this]{
                     remove(this->m_address, this->m_size);
                     editor->closePopup();
@@ -515,7 +515,7 @@ namespace hex::plugin::builtin {
 
             ImGuiExt::InputTextIcon("hex.builtin.common.bytes"_lang, ICON_VS_SYMBOL_NAMESPACE, this->m_input);
 
-            View::confirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
             [&, this] {
                 fill(this->m_address, this->m_size, this->m_input);
                 editor->closePopup();
@@ -552,7 +552,7 @@ namespace hex::plugin::builtin {
 
     /* Hex Editor */
 
-    ViewHexEditor::ViewHexEditor() : View("hex.builtin.view.hex_editor.name") {
+    ViewHexEditor::ViewHexEditor() : View::Window("hex.builtin.view.hex_editor.name") {
         this->m_hexEditor.setForegroundHighlightCallback([this](u64 address, const u8 *data, size_t size) -> std::optional<color_t> {
             if (auto highlight = this->m_foregroundHighlights->find(address); highlight != this->m_foregroundHighlights->end())
                 return highlight->second;
@@ -675,14 +675,11 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::drawContent() {
-        if (ImGui::Begin(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            this->m_hexEditor.setProvider(ImHexApi::Provider::get());
+        this->m_hexEditor.setProvider(ImHexApi::Provider::get());
 
-            this->m_hexEditor.draw();
+        this->m_hexEditor.draw();
 
-            this->drawPopup();
-        }
-        ImGui::End();
+        this->drawPopup();
     }
 
     static void save() {

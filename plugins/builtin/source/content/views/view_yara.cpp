@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
 
     using namespace wolv::literals;
 
-    ViewYara::ViewYara() : View("hex.builtin.view.yara.name") {
+    ViewYara::ViewYara() : View::Window("hex.builtin.view.yara.name") {
         yr_initialize();
 
         ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
@@ -99,153 +99,149 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.yara.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
+        ImGuiExt::Header("hex.builtin.view.yara.header.rules"_lang, true);
 
-            ImGuiExt::Header("hex.builtin.view.yara.header.rules"_lang, true);
-
-            if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-                for (u32 i = 0; i < this->m_rules->size(); i++) {
-                    const bool selected = (this->m_selectedRule == i);
-                    if (ImGui::Selectable(wolv::util::toUTF8String((*this->m_rules)[i].first).c_str(), selected)) {
-                        this->m_selectedRule = i;
-                    }
+        if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
+            for (u32 i = 0; i < this->m_rules->size(); i++) {
+                const bool selected = (this->m_selectedRule == i);
+                if (ImGui::Selectable(wolv::util::toUTF8String((*this->m_rules)[i].first).c_str(), selected)) {
+                    this->m_selectedRule = i;
                 }
-                ImGui::EndListBox();
+            }
+            ImGui::EndListBox();
+        }
+
+        if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Yara);
+            std::vector<std::fs::path> paths;
+            for (const auto &path : basePaths) {
+                std::error_code error;
+                for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
+                    if (!entry.is_regular_file()) continue;
+                    if (entry.path().extension() != ".yara" && entry.path().extension() != ".yar") continue;
+
+                    paths.push_back(entry);
+                }
             }
 
-            if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Yara);
-                std::vector<std::fs::path> paths;
-                for (const auto &path : basePaths) {
-                    std::error_code error;
-                    for (const auto &entry : std::fs::recursive_directory_iterator(path, error)) {
-                        if (!entry.is_regular_file()) continue;
-                        if (entry.path().extension() != ".yara" && entry.path().extension() != ".yar") continue;
+            PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
+                [&](const auto &path) {
+                    this->m_rules->push_back({ path.filename(), path });
+                });
+        }
 
-                        paths.push_back(entry);
-                    }
-                }
-
-                PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
-                    [&](const auto &path) {
-                        this->m_rules->push_back({ path.filename(), path });
-                    });
+        ImGui::SameLine();
+        if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            if (this->m_selectedRule < this->m_rules->size()) {
+                this->m_rules->erase(this->m_rules->begin() + this->m_selectedRule);
+                this->m_selectedRule = std::min(this->m_selectedRule, u32(this->m_rules->size() - 1));
             }
+        }
 
+        ImGui::NewLine();
+        if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
+        ImGui::SameLine();
+
+        if (this->m_matcherTask.isRunning()) {
             ImGui::SameLine();
-            if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                if (this->m_selectedRule < this->m_rules->size()) {
-                    this->m_rules->erase(this->m_rules->begin() + this->m_selectedRule);
-                    this->m_selectedRule = std::min(this->m_selectedRule, u32(this->m_rules->size() - 1));
-                }
+            ImGuiExt::TextSpinner("hex.builtin.view.yara.matching"_lang);
+        }
+
+        ImGuiExt::Header("hex.builtin.view.yara.header.matches"_lang);
+
+        auto matchesTableSize = ImGui::GetContentRegionAvail();
+        matchesTableSize.y *= 3.75 / 5.0;
+        matchesTableSize.y -= ImGui::GetTextLineHeightWithSpacing();
+
+        if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("identifier"));
+            ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
+            ImGui::TableSetupColumn("hex.builtin.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
+            ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
+
+            ImGui::TableHeadersRow();
+
+            auto sortSpecs = ImGui::TableGetSortSpecs();
+            if (!this->m_matches->empty() && (sortSpecs->SpecsDirty || this->m_sortedMatches->empty())) {
+                this->m_sortedMatches->clear();
+                std::transform(this->m_matches->begin(), this->m_matches->end(), std::back_inserter(*this->m_sortedMatches), [](auto &match) {
+                    return &match;
+                });
+
+                std::sort(this->m_sortedMatches->begin(), this->m_sortedMatches->end(), [&sortSpecs](const YaraMatch *left, const YaraMatch *right) -> bool {
+                    if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
+                        return left->identifier < right->identifier;
+                    else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
+                        return left->variable < right->variable;
+                    else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("address"))
+                        return left->address < right->address;
+                    else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size"))
+                        return left->size < right->size;
+                    else
+                        return false;
+                });
+
+                if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Descending)
+                    std::reverse(this->m_sortedMatches->begin(), this->m_sortedMatches->end());
+
+                sortSpecs->SpecsDirty = false;
             }
 
-            ImGui::NewLine();
-            if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
-            ImGui::SameLine();
+            if (!this->m_matcherTask.isRunning()) {
+                ImGuiListClipper clipper;
+                clipper.Begin(this->m_sortedMatches->size());
 
-            if (this->m_matcherTask.isRunning()) {
-                ImGui::SameLine();
-                ImGuiExt::TextSpinner("hex.builtin.view.yara.matching"_lang);
-            }
+                while (clipper.Step()) {
+                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *(*this->m_sortedMatches)[i];
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGui::PushID(i);
+                        if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
+                            ImHexApi::HexEditor::setSelection(address, size);
+                        }
+                        ImGui::PopID();
+                        ImGui::SameLine();
+                        ImGui::TextUnformatted(identifier.c_str());
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(variableName.c_str());
 
-            ImGuiExt::Header("hex.builtin.view.yara.header.matches"_lang);
-
-            auto matchesTableSize = ImGui::GetContentRegionAvail();
-            matchesTableSize.y *= 3.75 / 5.0;
-            matchesTableSize.y -= ImGui::GetTextLineHeightWithSpacing();
-
-            if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
-                ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("identifier"));
-                ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
-                ImGui::TableSetupColumn("hex.builtin.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
-                ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
-
-                ImGui::TableHeadersRow();
-
-                auto sortSpecs = ImGui::TableGetSortSpecs();
-                if (!this->m_matches->empty() && (sortSpecs->SpecsDirty || this->m_sortedMatches->empty())) {
-                    this->m_sortedMatches->clear();
-                    std::transform(this->m_matches->begin(), this->m_matches->end(), std::back_inserter(*this->m_sortedMatches), [](auto &match) {
-                        return &match;
-                    });
-
-                    std::sort(this->m_sortedMatches->begin(), this->m_sortedMatches->end(), [&sortSpecs](const YaraMatch *left, const YaraMatch *right) -> bool {
-                        if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
-                            return left->identifier < right->identifier;
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
-                            return left->variable < right->variable;
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("address"))
-                            return left->address < right->address;
-                        else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size"))
-                            return left->size < right->size;
-                        else
-                            return false;
-                    });
-
-                    if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Descending)
-                        std::reverse(this->m_sortedMatches->begin(), this->m_sortedMatches->end());
-
-                    sortSpecs->SpecsDirty = false;
-                }
-
-                if (!this->m_matcherTask.isRunning()) {
-                    ImGuiListClipper clipper;
-                    clipper.Begin(this->m_sortedMatches->size());
-
-                    while (clipper.Step()) {
-                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *(*this->m_sortedMatches)[i];
-                            ImGui::TableNextRow();
+                        if (!wholeDataMatch) {
                             ImGui::TableNextColumn();
-                            ImGui::PushID(i);
-                            if (ImGui::Selectable("match", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
-                                ImHexApi::HexEditor::setSelection(address, size);
-                            }
-                            ImGui::PopID();
-                            ImGui::SameLine();
-                            ImGui::TextUnformatted(identifier.c_str());
+                            ImGuiExt::TextFormatted("0x{0:X} : 0x{1:X}", address, address + size - 1);
                             ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(variableName.c_str());
-
-                            if (!wholeDataMatch) {
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("0x{0:X} : 0x{1:X}", address, address + size - 1);
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("0x{0:X}", size);
-                            } else {
-                                ImGui::TableNextColumn();
-                                ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
-                                ImGui::TableNextColumn();
-                                ImGui::TextUnformatted("");
-                            }
+                            ImGuiExt::TextFormatted("0x{0:X}", size);
+                        } else {
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted("");
                         }
                     }
-
-                    clipper.End();
                 }
 
-                ImGui::EndTable();
+                clipper.End();
             }
 
-            auto consoleSize = ImGui::GetContentRegionAvail();
-
-            if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
-                ImGuiListClipper clipper;
-
-                clipper.Begin(this->m_consoleMessages.size());
-                while (clipper.Step())
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        const auto &message = this->m_consoleMessages[i];
-
-                        if (ImGui::Selectable(message.c_str()))
-                            ImGui::SetClipboardText(message.c_str());
-                    }
-            }
-            ImGui::EndChild();
+            ImGui::EndTable();
         }
-        ImGui::End();
+
+        auto consoleSize = ImGui::GetContentRegionAvail();
+
+        if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
+            ImGuiListClipper clipper;
+
+            clipper.Begin(this->m_consoleMessages.size());
+            while (clipper.Step())
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                    const auto &message = this->m_consoleMessages[i];
+
+                    if (ImGui::Selectable(message.c_str()))
+                        ImGui::SetClipboardText(message.c_str());
+                }
+        }
+        ImGui::EndChild();
     }
 
     void ViewYara::clearResult() {

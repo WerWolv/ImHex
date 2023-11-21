@@ -5,15 +5,15 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewAchievements : public View {
+    class ViewAchievements : public View::Floating {
     public:
         ViewAchievements();
         ~ViewAchievements() override;
 
         void drawContent() override;
-        void drawAlwaysVisible() override;
+        void drawAlwaysVisibleContent() override;
 
-        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool shouldDraw() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override {
@@ -28,8 +28,6 @@ namespace hex::plugin::builtin {
         ImVec2 drawAchievementTree(ImDrawList *drawList, const AchievementManager::AchievementNode * prevNode, const std::vector<AchievementManager::AchievementNode*> &nodes, ImVec2 position);
 
     private:
-        bool m_viewOpen = false;
-
         std::list<const Achievement*> m_achievementUnlockQueue;
         const Achievement *m_currAchievement = nullptr;
         const Achievement *m_achievementToGoto = nullptr;

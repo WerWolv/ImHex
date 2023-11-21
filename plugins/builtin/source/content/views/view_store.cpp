@@ -27,11 +27,11 @@ namespace hex::plugin::builtin {
     using namespace std::literals::string_literals;
     using namespace std::literals::chrono_literals;
 
-    ViewStore::ViewStore() : View("hex.builtin.view.store.name") {
+    ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name") {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, 1000, Shortcut::None, [&, this] {
             if (this->m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
-            TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.store.name").c_str()); });
+            TaskManager::doLater([this] { ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str()); });
             this->getWindowOpenState() = true;
         });
 
@@ -278,16 +278,10 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::drawContent() {
-        if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.store.name").c_str(), &this->getWindowOpenState())) {
-            if (this->m_requestStatus == RequestStatus::Failed)
-                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
-            
-            this->drawStore();            
+        if (this->m_requestStatus == RequestStatus::Failed)
+            ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
 
-            ImGui::EndPopup();
-        } else {
-            this->getWindowOpenState() = false;
-        }
+        this->drawStore();
     }
 
     bool ViewStore::download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {

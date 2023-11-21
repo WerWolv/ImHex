@@ -20,20 +20,12 @@ namespace hex::plugin::builtin {
         std::string value;
     };
 
-    class ViewConstants : public View {
+    class ViewConstants : public View::Window {
     public:
         explicit ViewConstants();
         ~ViewConstants() override = default;
 
         void drawContent() override;
-
-        ImVec2 getMinSize() const override {
-            return scaled(ImVec2(300, 400));
-        }
-
-        ImVec2 getMaxSize() const override {
-            return { FLT_MAX, 800_scaled };
-        }
 
     private:
         void reloadConstants();

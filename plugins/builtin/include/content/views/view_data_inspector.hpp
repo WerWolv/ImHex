@@ -11,7 +11,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewDataInspector : public View {
+    class ViewDataInspector : public View::Window {
     public:
         explicit ViewDataInspector();
         ~ViewDataInspector() override;

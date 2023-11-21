@@ -11,6 +11,7 @@
 
 using ImGuiID = unsigned int;
 struct ImVec2;
+struct ImFontAtlas;
 
 namespace hex {
 
@@ -340,12 +341,14 @@ namespace hex {
 
                 void setCustomFontPath(const std::fs::path &path);
                 void setFontSize(float size);
+                void setFontAtlas(ImFontAtlas *fontAtlas);
 
                 void setGPUVendor(const std::string &vendor);
 
                 void setPortableVersion(bool enabled);
 
                 void addInitArgument(const std::string &key, const std::string &value = { });
+
             }
 
             struct ProgramArguments {
@@ -456,6 +459,12 @@ namespace hex {
              * @return The current font size
              */
             float getFontSize();
+
+            /**
+             * @brief Gets the current font atlas
+             * @return Current font atlas
+             */
+            ImFontAtlas* getFontAtlas();
 
 
             /**

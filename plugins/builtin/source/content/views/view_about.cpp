@@ -16,12 +16,11 @@
 
 namespace hex::plugin::builtin {
 
-    ViewAbout::ViewAbout() : View("hex.builtin.view.help.about.name") {
+    ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name") {
 
         // Add "About" menu item to the help menu
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, 1000, Shortcut::None, [this] {
-            TaskManager::doLater([] { ImGui::OpenPopup(View::toWindowName("hex.builtin.view.help.about.name").c_str()); });
-            this->m_aboutWindowOpen    = true;
+            TaskManager::doLater([this] { ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str()); });
             this->getWindowOpenState() = true;
         });
 
@@ -481,38 +480,30 @@ namespace hex::plugin::builtin {
             Tab { "hex.builtin.view.help.about.license",        &ViewAbout::drawLicensePage         },
         };
 
-        if (ImGui::BeginPopupModal(View::toWindowName("hex.builtin.view.help.about.name").c_str(), &this->m_aboutWindowOpen)) {
+        // Allow the window to be closed by pressing ESC
+        if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+            ImGui::CloseCurrentPopup();
 
-            // Allow the window to be closed by pressing ESC
-            if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
-                ImGui::CloseCurrentPopup();
+        if (ImGui::BeginTabBar("about_tab_bar")) {
+            // Draw all tabs
+            for (const auto &[unlocalizedName, function] : Tabs) {
+                if (ImGui::BeginTabItem(LangEntry(unlocalizedName))) {
+                    ImGui::NewLine();
 
-            if (ImGui::BeginTabBar("about_tab_bar")) {
-                // Draw all tabs
-                for (const auto &[unlocalizedName, function] : Tabs) {
-                    if (ImGui::BeginTabItem(LangEntry(unlocalizedName))) {
-                        ImGui::NewLine();
-
-                        if (ImGui::BeginChild(1)) {
-                            (this->*function)();
-                        }
-                        ImGui::EndChild();
-
-                        ImGui::EndTabItem();
+                    if (ImGui::BeginChild(1)) {
+                        (this->*function)();
                     }
-                }
+                    ImGui::EndChild();
 
-                ImGui::EndTabBar();
+                    ImGui::EndTabItem();
+                }
             }
 
-            ImGui::EndPopup();
+            ImGui::EndTabBar();
         }
     }
 
     void ViewAbout::drawContent() {
-        if (!this->m_aboutWindowOpen)
-            this->getWindowOpenState() = false;
-
         this->drawAboutPopup();
     }
 

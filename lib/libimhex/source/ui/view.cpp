@@ -7,16 +7,9 @@
 
 namespace hex {
 
-    namespace {
-
-        ImFontAtlas *s_fontAtlas;
-        ImFontConfig s_fontConfig;
-
-    }
-
     View::View(std::string unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
 
-    bool View::isAvailable() const {
+    bool View::shouldDraw() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
     }
 
@@ -25,12 +18,17 @@ namespace hex {
     }
 
     ImVec2 View::getMinSize() const {
-        return scaled(ImVec2(300, 400));
+        return scaled({ 300, 400 });
     }
 
     ImVec2 View::getMaxSize() const {
         return { FLT_MAX, FLT_MAX };
     }
+
+    ImGuiWindowFlags View::getWindowFlags() const {
+        return ImGuiWindowFlags_None;
+    }
+
 
 
     bool &View::getWindowOpenState() {
@@ -50,11 +48,7 @@ namespace hex {
     }
 
     bool View::didWindowJustOpen() {
-        bool result = this->m_windowJustOpened;
-
-        this->m_windowJustOpened = false;
-
-        return result;
+        return std::exchange(this->m_windowJustOpened, false);
     }
 
     void View::setWindowJustOpened(bool state) {
@@ -66,21 +60,8 @@ namespace hex {
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
     }
 
-    void View::confirmButtons(const std::string &textLeft, const std::string &textRight, const std::function<void()> &leftButtonFn, const std::function<void()> &rightButtonFn) {
-        auto width = ImGui::GetWindowWidth();
-        ImGui::SetCursorPosX(width / 9);
-        if (ImGui::Button(textLeft.c_str(), ImVec2(width / 3, 0)))
-            leftButtonFn();
-        ImGui::SameLine();
-        ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button(textRight.c_str(), ImVec2(width / 3, 0)))
-            rightButtonFn();
+    std::string View::toWindowName(const std::string &unlocalizedName) {
+        return LangEntry(unlocalizedName) + "###" + unlocalizedName;
     }
-
-    ImFontAtlas *View::getFontAtlas() { return s_fontAtlas; }
-    void View::setFontAtlas(ImFontAtlas *atlas) { s_fontAtlas = atlas; }
-
-    ImFontConfig View::getFontConfig() { return s_fontConfig; }
-    void View::setFontConfig(ImFontConfig config) { s_fontConfig = std::move(config); }
 
 }

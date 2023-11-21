@@ -810,17 +810,14 @@ namespace hex {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
 
             // Draw always visible views
-            view->drawAlwaysVisible();
+            view->drawAlwaysVisibleContent();
 
             // Skip views that shouldn't be processed currently
             if (!view->shouldProcess())
                 continue;
 
             // Draw view
-            if (view->isAvailable()) {
-                ImGui::SetNextWindowSizeConstraints(view->getMinSize(), view->getMaxSize());
-                view->drawContent();
-            }
+            view->draw();
 
             if (view->getWindowOpenState()) {
                 auto window    = ImGui::FindWindowByName(view->getName().c_str());
@@ -1137,7 +1134,7 @@ namespace hex {
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
 
-        auto fonts = View::getFontAtlas();
+        auto fonts = ImHexApi::System::getFontAtlas();
 
         // Initialize ImGui and all other ImGui extensions
         GImGui   = ImGui::CreateContext(fonts);

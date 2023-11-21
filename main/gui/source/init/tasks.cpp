@@ -325,8 +325,7 @@ namespace hex::init {
         }
 
         // Configure ImGui to use the font atlas
-        View::setFontAtlas(fonts);
-        View::setFontConfig(cfg);
+        ImHexApi::System::impl::setFontAtlas(fonts);
 
         return true;
     }

@@ -8,14 +8,15 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewCommandPalette : public View {
+    class ViewCommandPalette : public View::Special {
     public:
         ViewCommandPalette();
         ~ViewCommandPalette() override = default;
 
-        void drawContent() override;
+        void drawContent() override {}
+        void drawAlwaysVisibleContent() override;
 
-        [[nodiscard]] bool isAvailable() const override { return true; }
+        [[nodiscard]] bool shouldDraw() const override { return false; }
         [[nodiscard]] bool shouldProcess() const override { return true; }
 
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }

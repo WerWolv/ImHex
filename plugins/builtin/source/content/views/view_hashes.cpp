@@ -42,21 +42,13 @@ namespace hex::plugin::builtin {
             return ImGuiWindowFlags_AlwaysAutoResize;
         }
 
-        [[nodiscard]] ImVec2 getMinSize() const override {
-            return scaled({ 400, 100 });
-        }
-
-        [[nodiscard]] ImVec2 getMaxSize() const override {
-            return scaled({ 600, 300 });
-        }
-
     private:
         std::string m_input;
         std::string m_result;
         ContentRegistry::Hashes::Hash::Function m_hash;
     };
 
-    ViewHashes::ViewHashes() : View("hex.builtin.view.hashes.name") {
+    ViewHashes::ViewHashes() : View::Window("hex.builtin.view.hashes.name") {
         EventManager::subscribe<EventRegionSelected>(this, [this](const auto &providerRegion) {
             for (auto &function : this->m_hashFunctions.get(providerRegion.getProvider()))
                 function.reset();
@@ -143,112 +135,109 @@ namespace hex::plugin::builtin {
             this->m_selectedHash = hashes.front().get();
         }
 
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.hashes.name").c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse)) {
-            if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? LangEntry(this->m_selectedHash->getUnlocalizedName()) : "")) {
+        if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? LangEntry(this->m_selectedHash->getUnlocalizedName()) : "")) {
 
-                for (const auto &hash : hashes) {
-                    if (ImGui::Selectable(LangEntry(hash->getUnlocalizedName()), this->m_selectedHash == hash.get())) {
-                        this->m_selectedHash = hash.get();
-                        this->m_newHashName.clear();
-                    }
-                }
-
-                ImGui::EndCombo();
-            }
-
-            if (this->m_newHashName.empty() && this->m_selectedHash != nullptr)
-                this->m_newHashName = hex::format("{} {}", LangEntry(this->m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
-
-            if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvail().x, 200_scaled), true)) {
-                if (this->m_selectedHash != nullptr) {
-                    auto startPos = ImGui::GetCursorPosY();
-                    this->m_selectedHash->draw();
-
-                    // Check if no elements have been added
-                    if (startPos == ImGui::GetCursorPosY()) {
-                        ImGuiExt::TextFormattedCentered("hex.builtin.view.hashes.no_settings"_lang);
-                    }
+            for (const auto &hash : hashes) {
+                if (ImGui::Selectable(LangEntry(hash->getUnlocalizedName()), this->m_selectedHash == hash.get())) {
+                    this->m_selectedHash = hash.get();
+                    this->m_newHashName.clear();
                 }
             }
-            ImGui::EndChild();
 
+            ImGui::EndCombo();
+        }
 
-            ImGuiExt::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, this->m_newHashName);
-            ImGui::SameLine();
+        if (this->m_newHashName.empty() && this->m_selectedHash != nullptr)
+            this->m_newHashName = hex::format("{} {}", LangEntry(this->m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
 
-            ImGui::BeginDisabled(this->m_newHashName.empty() || this->m_selectedHash == nullptr);
-            if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                if (this->m_selectedHash != nullptr) {
-                    this->m_hashFunctions->push_back(this->m_selectedHash->create(this->m_newHashName));
-                    AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.create_hash.name");
+        if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvail().x, 200_scaled), true)) {
+            if (this->m_selectedHash != nullptr) {
+                auto startPos = ImGui::GetCursorPosY();
+                this->m_selectedHash->draw();
+
+                // Check if no elements have been added
+                if (startPos == ImGui::GetCursorPosY()) {
+                    ImGuiExt::TextFormattedCentered("hex.builtin.view.hashes.no_settings"_lang);
                 }
-            }
-            ImGui::EndDisabled();
-
-            ImGui::SameLine();
-            ImGuiExt::HelpHover("hex.builtin.view.hashes.hover_info"_lang);
-
-            if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
-                ImGui::TableSetupColumn("hex.builtin.view.hashes.table.name"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.hashes.table.type"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
-                ImGui::TableSetupColumn("##buttons", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
-
-                ImGui::TableHeadersRow();
-
-                auto provider  = ImHexApi::Provider::get();
-                auto selection = ImHexApi::HexEditor::getSelection();
-
-                std::optional<u32> indexToRemove;
-                for (u32 i = 0; i < this->m_hashFunctions->size(); i++) {
-                    auto &function = (*this->m_hashFunctions)[i];
-
-                    ImGui::PushID(i);
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    ImGui::PushStyleColor(ImGuiCol_Header, 0x00);
-                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, 0x00);
-                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, 0x00);
-                    ImGui::Selectable(function.getName().c_str(), false);
-                    ImGui::PopStyleColor(3);
-
-                    ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{}", LangEntry(function.getType()->getUnlocalizedName()));
-
-                    ImGui::TableNextColumn();
-                    std::string result;
-                    if (provider != nullptr && selection.has_value())
-                        result = crypt::encode16(function.get(*selection, provider));
-                    else
-                        result = "???";
-
-                    ImGui::PushItemWidth(-1);
-                    ImGui::InputText("##result", result, ImGuiInputTextFlags_ReadOnly);
-                    ImGui::PopItemWidth();
-
-                    ImGui::TableNextColumn();
-
-                    if (ImGuiExt::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        PopupTextHash::open(function);
-                    }
-                    ImGui::SameLine();
-                    if (ImGuiExt::IconButton(ICON_VS_X, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
-                        indexToRemove = i;
-                    }
-
-                    ImGui::PopID();
-                }
-
-                if (indexToRemove.has_value()) {
-                    this->m_hashFunctions->erase(this->m_hashFunctions->begin() + indexToRemove.value());
-                }
-
-                ImGui::EndTable();
             }
         }
-        ImGui::End();
+        ImGui::EndChild();
+
+
+        ImGuiExt::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, this->m_newHashName);
+        ImGui::SameLine();
+
+        ImGui::BeginDisabled(this->m_newHashName.empty() || this->m_selectedHash == nullptr);
+        if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+            if (this->m_selectedHash != nullptr) {
+                this->m_hashFunctions->push_back(this->m_selectedHash->create(this->m_newHashName));
+                AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.create_hash.name");
+            }
+        }
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+        ImGuiExt::HelpHover("hex.builtin.view.hashes.hover_info"_lang);
+
+        if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
+            ImGui::TableSetupColumn("hex.builtin.view.hashes.table.name"_lang);
+            ImGui::TableSetupColumn("hex.builtin.view.hashes.table.type"_lang);
+            ImGui::TableSetupColumn("hex.builtin.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("##buttons", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
+
+            ImGui::TableHeadersRow();
+
+            auto provider  = ImHexApi::Provider::get();
+            auto selection = ImHexApi::HexEditor::getSelection();
+
+            std::optional<u32> indexToRemove;
+            for (u32 i = 0; i < this->m_hashFunctions->size(); i++) {
+                auto &function = (*this->m_hashFunctions)[i];
+
+                ImGui::PushID(i);
+
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::PushStyleColor(ImGuiCol_Header, 0x00);
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, 0x00);
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, 0x00);
+                ImGui::Selectable(function.getName().c_str(), false);
+                ImGui::PopStyleColor(3);
+
+                ImGui::TableNextColumn();
+                ImGuiExt::TextFormatted("{}", LangEntry(function.getType()->getUnlocalizedName()));
+
+                ImGui::TableNextColumn();
+                std::string result;
+                if (provider != nullptr && selection.has_value())
+                    result = crypt::encode16(function.get(*selection, provider));
+                else
+                    result = "???";
+
+                ImGui::PushItemWidth(-1);
+                ImGui::InputText("##result", result, ImGuiInputTextFlags_ReadOnly);
+                ImGui::PopItemWidth();
+
+                ImGui::TableNextColumn();
+
+                if (ImGuiExt::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    PopupTextHash::open(function);
+                }
+                ImGui::SameLine();
+                if (ImGuiExt::IconButton(ICON_VS_X, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
+                    indexToRemove = i;
+                }
+
+                ImGui::PopID();
+            }
+
+            if (indexToRemove.has_value()) {
+                this->m_hashFunctions->erase(this->m_hashFunctions->begin() + indexToRemove.value());
+            }
+
+            ImGui::EndTable();
+        }
     }
 
     bool ViewHashes::importHashes(prv::Provider *provider, const nlohmann::json &json) {

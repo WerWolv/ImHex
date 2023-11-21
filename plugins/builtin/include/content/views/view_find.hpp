@@ -13,7 +13,7 @@
 
 namespace hex::plugin::builtin {
 
-    class ViewFind : public View {
+    class ViewFind : public View::Window {
     public:
         ViewFind();
         ~ViewFind() override = default;

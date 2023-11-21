@@ -17,7 +17,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewBookmarks::ViewBookmarks() : View("hex.builtin.view.bookmarks.name") {
+    ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name") {
 
         // Handle bookmark add requests sent by the API
         EventManager::subscribe<RequestAddBookmark>(this, [this](Region region, std::string name, std::string comment, color_t color) {
@@ -201,193 +201,190 @@ namespace hex::plugin::builtin {
     }
 
     void ViewBookmarks::drawContent() {
-        if (ImGui::Begin(View::toWindowName("hex.builtin.view.bookmarks.name").c_str(), &this->getWindowOpenState())) {
-            auto provider = ImHexApi::Provider::get();
+        auto provider = ImHexApi::Provider::get();
 
-            // Draw filter input
-            ImGui::PushItemWidth(-1);
-            ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, this->m_currFilter);
-            ImGui::PopItemWidth();
+        // Draw filter input
+        ImGui::PushItemWidth(-1);
+        ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, this->m_currFilter);
+        ImGui::PopItemWidth();
 
-            ImGui::NewLine();
+        ImGui::NewLine();
 
-            if (ImGui::BeginChild("##bookmarks")) {
-                if (this->m_bookmarks->empty()) {
-                    ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
-                }
-
-                int id = 1;
-                auto bookmarkToRemove = this->m_bookmarks->end();
-
-                // Draw all bookmarks
-                for (auto iter = this->m_bookmarks->begin(); iter != this->m_bookmarks->end(); iter++) {
-                    auto &[region, name, comment, color, locked] = *iter;
-
-                    // Apply filter
-                    if (!this->m_currFilter.empty()) {
-                        if (!name.contains(this->m_currFilter) && !comment.contains(this->m_currFilter))
-                            continue;
-                    }
-
-                    auto headerColor = ImColor(color);
-                    auto hoverColor  = ImColor(color);
-                    hoverColor.Value.w *= 1.3F;
-
-                    // Draw bookmark header in the same color as the bookmark was set to
-                    ImGui::PushID(id);
-                    ImGui::PushStyleColor(ImGuiCol_Header, color);
-                    ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
-                    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
-
-                    ON_SCOPE_EXIT {
-                        ImGui::PopID();
-                        ImGui::PopStyleColor(3);
-                        id++;
-                    };
-
-                    bool open = true;
-                    if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), locked ? nullptr : &open)) {
-                        // Handle dragging bookmarks up and down when they're collapsed
-
-                        // Set the currently held bookmark as the one being dragged
-                        if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == this->m_bookmarks->end())
-                            this->m_dragStartIterator = iter;
-
-                        // When the mouse moved away from the current bookmark, swap the dragged bookmark with the current one
-                        if (ImGui::IsItemHovered() && this->m_dragStartIterator != this->m_bookmarks->end()) {
-                            std::iter_swap(iter, this->m_dragStartIterator);
-                            this->m_dragStartIterator = iter;
-                        }
-
-                        // When the mouse is released, reset the dragged bookmark
-                        if (!ImGui::IsMouseDown(0))
-                            this->m_dragStartIterator = this->m_bookmarks->end();
-                    } else {
-                        const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() + 2 * ImGui::GetStyle().FramePadding.y;
-                        if (ImGui::BeginTable("##bookmark_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
-                            ImGui::TableSetupColumn("##name");
-                            ImGui::TableSetupColumn("##spacing", ImGuiTableColumnFlags_WidthFixed, 20);
-                            ImGui::TableSetupColumn("##value", ImGuiTableColumnFlags_WidthStretch);
-
-                            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
-                            ImGui::TableNextColumn();
-
-                            // Draw bookmark name
-                            ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.name"_lang);
-                            ImGui::TableNextColumn();
-                            ImGui::TableNextColumn();
-
-                            // Draw lock/unlock button
-                            if (locked) {
-                                if (ImGuiExt::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
-                                ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
-                            } else {
-                                if (ImGuiExt::IconButton(ICON_VS_UNLOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = true;
-                                ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.lock"_lang);
-                            }
-
-                            ImGui::SameLine();
-
-                            // Draw color button
-                            if (ImGui::ColorButton("hex.builtin.view.bookmarks.header.color"_lang, headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha)) {
-                                if (!locked)
-                                    ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
-                            }
-                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.header.color"_lang);
-
-                            // Draw color picker
-                            if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
-                                drawColorPopup(headerColor);
-                                color = headerColor;
-                                ImGui::EndPopup();
-                            }
-
-                            ImGui::SameLine();
-
-                            // Draw bookmark name if the bookmark is locked or an input text box if it's unlocked
-                            if (locked)
-                                ImGui::TextUnformatted(name.data());
-                            else {
-                                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                                ImGui::InputText("##nameInput", name);
-                                ImGui::PopItemWidth();
-                            }
-
-                            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
-                            ImGui::TableNextColumn();
-
-                            ImGui::TextUnformatted("hex.builtin.common.address"_lang);
-                            ImGui::TableNextColumn();
-                            ImGui::TableNextColumn();
-
-                            // Draw jump to address button
-                            if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
-                                ImHexApi::HexEditor::setSelection(region);
-                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
-
-                            ImGui::SameLine();
-
-                            // Draw open in new view button
-                            if (ImGuiExt::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                                TaskManager::doLater([region, provider]{
-                                    auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
-                                    if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
-                                        viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
-                                        if (viewProvider->open()) {
-                                            EventManager::post<EventProviderOpened>(viewProvider);
-                                            AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
-                                        }
-                                    }
-                                });
-                            }
-                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
-
-                            ImGui::SameLine();
-
-                            // Draw the address of the bookmark
-                            ImGuiExt::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.getStartAddress(), region.getEndAddress());
-
-                            ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
-                            ImGui::TableNextColumn();
-
-                            // Draw size of the bookmark
-                            ImGui::TextUnformatted("hex.builtin.common.size"_lang);
-                            ImGui::TableNextColumn();
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted(hex::toByteString(region.size));
-
-                            ImGui::EndTable();
-                        }
-
-                        // Draw comment if the bookmark is locked or an input text box if it's unlocked
-                        if (locked) {
-                            if (!comment.empty()) {
-                                ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
-                                ImGuiExt::TextFormattedWrapped("{}", comment.data());
-                            }
-                        }
-                        else {
-                            ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
-                            ImGui::InputTextMultiline("##commentInput", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled));
-                        }
-
-                        ImGui::NewLine();
-                    }
-
-                    // Mark a bookmark for removal when the user clicks the remove button
-                    if (!open)
-                        bookmarkToRemove = iter;
-                }
-
-                // Remove the bookmark that was marked for removal
-                if (bookmarkToRemove != this->m_bookmarks->end()) {
-                    this->m_bookmarks->erase(bookmarkToRemove);
-                    EventManager::post<EventHighlightingChanged>();
-                }
+        if (ImGui::BeginChild("##bookmarks")) {
+            if (this->m_bookmarks->empty()) {
+                ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
             }
-            ImGui::EndChild();
+
+            int id = 1;
+            auto bookmarkToRemove = this->m_bookmarks->end();
+
+            // Draw all bookmarks
+            for (auto iter = this->m_bookmarks->begin(); iter != this->m_bookmarks->end(); iter++) {
+                auto &[region, name, comment, color, locked] = *iter;
+
+                // Apply filter
+                if (!this->m_currFilter.empty()) {
+                    if (!name.contains(this->m_currFilter) && !comment.contains(this->m_currFilter))
+                        continue;
+                }
+
+                auto headerColor = ImColor(color);
+                auto hoverColor  = ImColor(color);
+                hoverColor.Value.w *= 1.3F;
+
+                // Draw bookmark header in the same color as the bookmark was set to
+                ImGui::PushID(id);
+                ImGui::PushStyleColor(ImGuiCol_Header, color);
+                ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
+                ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
+
+                ON_SCOPE_EXIT {
+                    ImGui::PopID();
+                    ImGui::PopStyleColor(3);
+                    id++;
+                };
+
+                bool open = true;
+                if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), locked ? nullptr : &open)) {
+                    // Handle dragging bookmarks up and down when they're collapsed
+
+                    // Set the currently held bookmark as the one being dragged
+                    if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == this->m_bookmarks->end())
+                        this->m_dragStartIterator = iter;
+
+                    // When the mouse moved away from the current bookmark, swap the dragged bookmark with the current one
+                    if (ImGui::IsItemHovered() && this->m_dragStartIterator != this->m_bookmarks->end()) {
+                        std::iter_swap(iter, this->m_dragStartIterator);
+                        this->m_dragStartIterator = iter;
+                    }
+
+                    // When the mouse is released, reset the dragged bookmark
+                    if (!ImGui::IsMouseDown(0))
+                        this->m_dragStartIterator = this->m_bookmarks->end();
+                } else {
+                    const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() + 2 * ImGui::GetStyle().FramePadding.y;
+                    if (ImGui::BeginTable("##bookmark_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+                        ImGui::TableSetupColumn("##name");
+                        ImGui::TableSetupColumn("##spacing", ImGuiTableColumnFlags_WidthFixed, 20);
+                        ImGui::TableSetupColumn("##value", ImGuiTableColumnFlags_WidthStretch);
+
+                        ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                        ImGui::TableNextColumn();
+
+                        // Draw bookmark name
+                        ImGui::TextUnformatted("hex.builtin.view.bookmarks.header.name"_lang);
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+
+                        // Draw lock/unlock button
+                        if (locked) {
+                            if (ImGuiExt::IconButton(ICON_VS_LOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = false;
+                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.unlock"_lang);
+                        } else {
+                            if (ImGuiExt::IconButton(ICON_VS_UNLOCK, ImGui::GetStyleColorVec4(ImGuiCol_Text))) locked = true;
+                            ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.lock"_lang);
+                        }
+
+                        ImGui::SameLine();
+
+                        // Draw color button
+                        if (ImGui::ColorButton("hex.builtin.view.bookmarks.header.color"_lang, headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha)) {
+                            if (!locked)
+                                ImGui::OpenPopup("hex.builtin.view.bookmarks.header.color"_lang);
+                        }
+                        ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.header.color"_lang);
+
+                        // Draw color picker
+                        if (ImGui::BeginPopup("hex.builtin.view.bookmarks.header.color"_lang)) {
+                            drawColorPopup(headerColor);
+                            color = headerColor;
+                            ImGui::EndPopup();
+                        }
+
+                        ImGui::SameLine();
+
+                        // Draw bookmark name if the bookmark is locked or an input text box if it's unlocked
+                        if (locked)
+                            ImGui::TextUnformatted(name.data());
+                        else {
+                            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                            ImGui::InputText("##nameInput", name);
+                            ImGui::PopItemWidth();
+                        }
+
+                        ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                        ImGui::TableNextColumn();
+
+                        ImGui::TextUnformatted("hex.builtin.common.address"_lang);
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+
+                        // Draw jump to address button
+                        if (ImGuiExt::IconButton(ICON_VS_DEBUG_STEP_BACK, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                            ImHexApi::HexEditor::setSelection(region);
+                        ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.jump_to"_lang);
+
+                        ImGui::SameLine();
+
+                        // Draw open in new view button
+                        if (ImGuiExt::IconButton(ICON_VS_GO_TO_FILE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                            TaskManager::doLater([region, provider]{
+                                auto newProvider = ImHexApi::Provider::createProvider("hex.builtin.provider.view", true);
+                                if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
+                                    viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
+                                    if (viewProvider->open()) {
+                                        EventManager::post<EventProviderOpened>(viewProvider);
+                                        AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
+                                    }
+                                }
+                            });
+                        }
+                        ImGuiExt::InfoTooltip("hex.builtin.view.bookmarks.tooltip.open_in_view"_lang);
+
+                        ImGui::SameLine();
+
+                        // Draw the address of the bookmark
+                        ImGuiExt::TextFormatted("hex.builtin.view.bookmarks.address"_lang, region.getStartAddress(), region.getEndAddress());
+
+                        ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+                        ImGui::TableNextColumn();
+
+                        // Draw size of the bookmark
+                        ImGui::TextUnformatted("hex.builtin.common.size"_lang);
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted(hex::toByteString(region.size));
+
+                        ImGui::EndTable();
+                    }
+
+                    // Draw comment if the bookmark is locked or an input text box if it's unlocked
+                    if (locked) {
+                        if (!comment.empty()) {
+                            ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
+                            ImGuiExt::TextFormattedWrapped("{}", comment.data());
+                        }
+                    }
+                    else {
+                        ImGuiExt::Header("hex.builtin.view.bookmarks.header.comment"_lang);
+                        ImGui::InputTextMultiline("##commentInput", comment, ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled));
+                    }
+
+                    ImGui::NewLine();
+                }
+
+                // Mark a bookmark for removal when the user clicks the remove button
+                if (!open)
+                    bookmarkToRemove = iter;
+            }
+
+            // Remove the bookmark that was marked for removal
+            if (bookmarkToRemove != this->m_bookmarks->end()) {
+                this->m_bookmarks->erase(bookmarkToRemove);
+                EventManager::post<EventHighlightingChanged>();
+            }
         }
-        ImGui::End();
+        ImGui::EndChild();
     }
 
     bool ViewBookmarks::importBookmarks(prv::Provider *provider, const nlohmann::json &json) {
