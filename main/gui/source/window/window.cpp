@@ -1254,7 +1254,7 @@ namespace hex {
             glfwGetWindowSize(this->m_window, &width, &height);
             maximized = glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED);
 
-            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.", x);
+            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
             ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
             ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
             ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
