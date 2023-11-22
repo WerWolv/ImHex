@@ -44,6 +44,9 @@ namespace hex::plugin::builtin {
                 return std::nullopt;
 
             auto provider = ImHexApi::Provider::get();
+
+            offset -= provider->getBaseAddress();
+
             const auto &undoStack = provider->getUndoStack();
             for (const auto &operation : undoStack.getAppliedOperations()) {
                 if (operation->getRegion().overlaps(Region { offset, 1}))
@@ -58,16 +61,22 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderDataModified>(this, [](prv::Provider *provider, u64 offset, u64 size, const u8 *data) {
+            offset -= provider->getBaseAddress();
+
             std::vector<u8> oldData(size, 0x00);
             provider->read(offset, oldData.data(), size);
             provider->getUndoStack().add<undo::OperationWrite>(offset, size, oldData.data(), data);
         });
 
         EventManager::subscribe<EventProviderDataInserted>(this, [](prv::Provider *provider, u64 offset, u64 size) {
+            offset -= provider->getBaseAddress();
+
             provider->getUndoStack().add<undo::OperationInsert>(offset, size);
         });
 
         EventManager::subscribe<EventProviderDataRemoved>(this, [](prv::Provider *provider, u64 offset, u64 size) {
+            offset -= provider->getBaseAddress();
+
             provider->getUndoStack().add<undo::OperationRemove>(offset, size);
         });
     }
