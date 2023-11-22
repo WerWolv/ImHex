@@ -172,7 +172,7 @@ namespace hex::prv {
 
         [[nodiscard]] Overlay *newOverlay();
         void deleteOverlay(Overlay *overlay);
-        [[nodiscard]] const std::list<std::unique_ptr<Overlay>> &getOverlays();
+        [[nodiscard]] const std::list<std::unique_ptr<Overlay>> &getOverlays() const;
 
         [[nodiscard]] size_t getPageSize() const;
         void setPageSize(size_t pageSize);

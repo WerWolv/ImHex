@@ -9,6 +9,8 @@
 #include <hex/helpers/crypto.hpp>
 #include <hex/helpers/utils_linux.hpp>
 
+#include <hex/providers/buffered_reader.hpp>
+
 #include <imgui.h>
 #include <imgui_internal.h>
 
@@ -550,6 +552,72 @@ namespace hex {
 
     std::optional<std::fs::path> getInitialFilePath() {
         return fileToOpen;
+    }
+
+    namespace {
+
+        std::string generateHexViewImpl(u64 offset, auto begin, auto end) {
+            constexpr static auto HeaderLine = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n";
+            std::string result;
+
+            const auto size = std::distance(begin, end);
+            result.reserve(std::string(HeaderLine).size() * size / 0x10);
+
+            result += HeaderLine;
+
+            u64 address = offset & ~u64(0x0F);
+            std::string asciiRow;
+            for (auto it = begin; it != end; ++it) {
+                u8 byte = *it;
+
+                if ((address % 0x10) == 0) {
+                    result += hex::format(" {}", asciiRow);
+                    result += hex::format("\n{0:08X}  ", address);
+
+                    asciiRow.clear();
+
+                    if (address == (offset & ~u64(0x0F))) {
+                        for (u64 i = 0; i < (offset - address); i++) {
+                            result += "   ";
+                            asciiRow += " ";
+                        }
+
+                        if (offset - address >= 8)
+                            result += " ";
+
+                        address = offset;
+                    }
+                }
+
+                result += hex::format("{0:02X} ", byte);
+                asciiRow += std::isprint(byte) ? char(byte) : '.';
+                if ((address % 0x10) == 0x07)
+                    result += " ";
+
+                address++;
+            }
+
+            if ((address % 0x10) != 0x00)
+                for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
+                    result += "   ";
+
+            result += hex::format(" {}", asciiRow);
+
+            return result;
+        }
+
+    }
+
+    std::string generateHexView(u64 offset, u64 size, prv::Provider *provider) {
+        auto reader = prv::ProviderReader(provider);
+        reader.seek(offset);
+        reader.setEndAddress((offset + size) - 1);
+
+        return generateHexViewImpl(offset, reader.begin(), reader.end());
+    }
+
+    std::string generateHexView(u64 offset, const std::vector<u8> &data) {
+        return generateHexViewImpl(offset, data.begin(), data.end());
     }
 
 }

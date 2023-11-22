@@ -173,7 +173,7 @@ namespace hex::prv {
         });
     }
 
-    const std::list<std::unique_ptr<Overlay>> &Provider::getOverlays() {
+    const std::list<std::unique_ptr<Overlay>> &Provider::getOverlays() const {
         return this->m_overlays;
     }
 

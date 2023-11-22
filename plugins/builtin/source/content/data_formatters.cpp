@@ -3,8 +3,10 @@
 
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
+
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/utils.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -104,49 +106,7 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.hex_view", [](prv::Provider *provider, u64 offset, size_t size) {
-            constexpr static auto HeaderLine = "Hex View  00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F\n";
-            std::string result;
-            result.reserve(std::string(HeaderLine).size() * size / 0x10);
-
-            result += HeaderLine;
-
-            auto reader = prv::ProviderReader(provider);
-            reader.seek(offset);
-            reader.setEndAddress((offset + size) - 1);
-
-            u64 address = offset & ~u64(0x0F);
-            std::string asciiRow;
-            for (u8 byte : reader) {
-                if ((address % 0x10) == 0) {
-                    result += hex::format(" {}", asciiRow);
-                    result += hex::format("\n{0:08X}  ", address);
-
-                    asciiRow.clear();
-
-                    if (address == (offset & ~u64(0x0F))) {
-                        for (u64 i = 0; i < (offset - address); i++) {
-                            result += "   ";
-                            asciiRow += " ";
-                        }
-                        address = offset;
-                    }
-                }
-
-                result += hex::format("{0:02X} ", byte);
-                asciiRow += std::isprint(byte) ? char(byte) : '.';
-                if ((address % 0x10) == 0x07)
-                    result += " ";
-
-                address++;
-            }
-
-            if ((address % 0x10) != 0x00)
-                for (u32 i = 0; i < (0x10 - (address % 0x10)); i++)
-                    result += "   ";
-
-            result += hex::format(" {}", asciiRow);
-
-            return result;
+            return hex::generateHexView(offset, size, provider);
         });
 
         ContentRegistry::DataFormatter::add("hex.builtin.view.hex_editor.copy.html", [](prv::Provider *provider, u64 offset, size_t size) {

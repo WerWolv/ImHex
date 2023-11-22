@@ -1000,6 +1000,24 @@ namespace hex {
 
             [[nodiscard]] bool isExperimentEnabled(const std::string &experimentName);
         }
+
+        namespace Reports {
+
+            namespace impl {
+
+                using Callback = std::function<std::string(prv::Provider*)>;
+
+                struct ReportGenerator {
+                    Callback callback;
+                };
+
+                std::vector<ReportGenerator>& getGenerators();
+
+            }
+
+            void addReportProvider(impl::Callback callback);
+
+        }
     }
 
 }

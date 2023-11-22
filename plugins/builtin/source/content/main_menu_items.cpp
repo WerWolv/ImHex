@@ -249,6 +249,35 @@ namespace hex::plugin::builtin {
             }
         }
 
+        void exportReport() {
+            TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [](auto &) {
+                std::string data;
+
+                for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                    data += hex::format("# {}", provider->getName());
+                    data += "\n\n";
+
+                    for (const auto &generator : ContentRegistry::Reports::impl::getGenerators()) {
+                        data += generator.callback(provider);
+                        data += "\n\n";
+                    }
+                    data += "\n\n";
+                }
+
+                TaskManager::doLater([data] {
+                    fs::openFileBrowser(fs::DialogMode::Save, { { "Markdown File", "md" }}, [&data](const auto &path) {
+                        auto file = wolv::io::File(path, wolv::io::File::Mode::Create);
+                        if (!file.isValid()) {
+                            PopupError::open("hex.builtin.menu.file.export.report.popup.export_error"_lang);
+                            return;
+                        }
+
+                        file.writeString(data);
+                    });
+                });
+            });
+        }
+
         void exportIPSPatch() {
             auto provider = ImHexApi::Provider::get();
 
@@ -420,9 +449,16 @@ namespace hex::plugin::builtin {
                                                     exportBase64,
                                                     isProviderDumpable);
 
+            /* Language */
             ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.as_language" }, 6010,
                                                     drawExportLanguageMenu,
                                                     isProviderDumpable);
+
+            /* Report */
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.report" }, 6020,
+                                                    Shortcut::None,
+                                                    exportReport,
+                                                    ImHexApi::Provider::isValid);
 
             ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, 6050);
 
