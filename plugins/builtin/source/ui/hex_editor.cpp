@@ -230,7 +230,7 @@ namespace hex::plugin::builtin::ui {
                         }
                     }
 
-                    this->m_provider->getUndoStack().groupOperations(writtenBytes);
+                    this->m_provider->getUndoStack().groupOperations(writtenBytes, "hex.builtin.undo_operation.modification");
                 }
 
 

@@ -10,10 +10,6 @@
 #include <hex/helpers/magic.hpp>
 #include <wolv/io/file.hpp>
 
-#include <hex/providers/undo_redo/operations/operation_write.hpp>
-#include <hex/providers/undo_redo/operations/operation_remove.hpp>
-#include <hex/providers/undo_redo/operations/operation_insert.hpp>
-
 namespace hex::prv {
 
     namespace {
@@ -41,10 +37,7 @@ namespace hex::prv {
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
-        std::vector<u8> oldData(size, 0x00);
-        this->read(offset, oldData.data(), size);
-
-        this->m_undoRedoStack.add<undo::OperationWrite>(offset, size, oldData.data(), static_cast<const u8*>(buffer));
+        EventManager::post<EventProviderDataModified>(this, offset, size, static_cast<const u8*>(buffer));
         this->markDirty();
     }
 
@@ -81,21 +74,21 @@ namespace hex::prv {
         i64 difference = newSize - this->getActualSize();
 
         if (difference > 0)
-            this->m_undoRedoStack.add<undo::OperationInsert>(this->getActualSize(), difference);
+            EventManager::post<EventProviderDataInserted>(this, this->getActualSize(), difference);
         else if (difference < 0)
-            this->m_undoRedoStack.add<undo::OperationRemove>(this->getActualSize(), -difference);
+            EventManager::post<EventProviderDataRemoved>(this, this->getActualSize(), -difference);
 
         this->markDirty();
     }
 
     void Provider::insert(u64 offset, size_t size) {
-        this->m_undoRedoStack.add<undo::OperationInsert>(offset, size);
+        EventManager::post<EventProviderDataInserted>(this, offset, size);
 
         this->markDirty();
     }
 
     void Provider::remove(u64 offset, size_t size) {
-        this->m_undoRedoStack.add<undo::OperationRemove>(offset, size);
+        EventManager::post<EventProviderDataRemoved>(this, offset, size);
 
         this->markDirty();
     }

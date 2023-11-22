@@ -243,6 +243,10 @@ namespace hex {
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
     EVENT_DEF(EventSearchBoxClicked);
 
+    EVENT_DEF(EventProviderDataModified, prv::Provider *, u64, u64, const u8*);
+    EVENT_DEF(EventProviderDataInserted, prv::Provider *, u64, u64);
+    EVENT_DEF(EventProviderDataRemoved, prv::Provider *, u64, u64);
+
     /**
      * @brief Called when a project has been loaded
      */

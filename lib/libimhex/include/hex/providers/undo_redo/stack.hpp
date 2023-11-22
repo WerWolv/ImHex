@@ -24,7 +24,7 @@ namespace hex::prv::undo {
         void undo(u32 count = 1);
         void redo(u32 count = 1);
 
-        void groupOperations(u32 count);
+        void groupOperations(u32 count, const std::string &unlocalizedName);
         void apply(const Stack &otherStack);
 
         [[nodiscard]] bool canUndo() const;

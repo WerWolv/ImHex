@@ -5,6 +5,10 @@
 #include <hex/api/project_file_manager.hpp>
 #include <nlohmann/json.hpp>
 
+#include <content/providers/undo_operations/operation_write.hpp>
+#include <content/providers/undo_operations/operation_insert.hpp>
+#include <content/providers/undo_operations/operation_remove.hpp>
+
 #include <string>
 
 using namespace std::literals::string_literals;
@@ -24,12 +28,11 @@ namespace hex::plugin::builtin {
                     provider->write(address, &value, sizeof(value));
                 }
 
-                provider->getUndoStack().groupOperations(patches.size());
+                provider->getUndoStack().groupOperations(patches.size(), "hex.builtin.undo_operation.patches");
 
                 return true;
             },
             .store = [](prv::Provider *, const std::fs::path &, Tar &) {
-
                 return true;
             }
         });
@@ -52,6 +55,20 @@ namespace hex::plugin::builtin {
 
         EventManager::subscribe<EventProviderSaved>([](auto *) {
             EventManager::post<EventHighlightingChanged>();
+        });
+
+        EventManager::subscribe<EventProviderDataModified>(this, [](prv::Provider *provider, u64 offset, u64 size, const u8 *data) {
+            std::vector<u8> oldData(size, 0x00);
+            provider->read(offset, oldData.data(), size);
+            provider->getUndoStack().add<undo::OperationWrite>(offset, size, oldData.data(), data);
+        });
+
+        EventManager::subscribe<EventProviderDataInserted>(this, [](prv::Provider *provider, u64 offset, u64 size) {
+            provider->getUndoStack().add<undo::OperationInsert>(offset, size);
+        });
+
+        EventManager::subscribe<EventProviderDataRemoved>(this, [](prv::Provider *provider, u64 offset, u64 size) {
+            provider->getUndoStack().add<undo::OperationRemove>(offset, size);
         });
     }
 
@@ -98,6 +115,23 @@ namespace hex::plugin::builtin {
 
                         if (ImGui::Selectable(hex::format("{} {}", index == undoneOperationsCount ? ICON_VS_ARROW_SMALL_RIGHT : " ", index).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
                             ImHexApi::HexEditor::setSelection(address, size);
+                        }
+                        if (ImGui::IsItemHovered()) {
+                            const auto content = operation->formatContent();
+                            if (!content.empty()) {
+                                if (ImGui::BeginTooltip()) {
+                                    if (ImGui::BeginTable("##content_table", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
+                                        for (const auto &entry : content) {
+                                            ImGui::TableNextRow();
+                                            ImGui::TableNextColumn();
+
+                                            ImGuiExt::TextFormatted("{}", entry);
+                                        }
+                                        ImGui::EndTable();
+                                    }
+                                    ImGui::EndTooltip();
+                                }
+                            }
                         }
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup("PatchContextMenu");

@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
                         task.update(count);
                     }
 
-                    provider->getUndoStack().groupOperations(count);
+                    provider->getUndoStack().groupOperations(count, "hex.builtin.undo_operation.patches");
                 });
             });
         }
@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
                         task.update(count);
                     }
 
-                    provider->getUndoStack().groupOperations(count);
+                    provider->getUndoStack().groupOperations(count, "hex.builtin.undo_operation.patches");
                 });
             });
         }
@@ -186,7 +186,7 @@ namespace hex::plugin::builtin {
                         task.update(count);
                     }
 
-                    provider->getUndoStack().groupOperations(count);
+                    provider->getUndoStack().groupOperations(count, "hex.builtin.undo_operation.patches");
                 });
             });
         }

@@ -5,23 +5,23 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
-namespace hex::prv::undo {
+namespace hex::plugin::builtin::undo {
 
-    class OperationInsert : public Operation {
+    class OperationInsert : public prv::undo::Operation {
     public:
         OperationInsert(u64 offset, u64 size) :
             m_offset(offset), m_size(size) { }
 
-        void undo(Provider *provider) override {
+        void undo(prv::Provider *provider) override {
             provider->removeRaw(this->m_offset, this->m_size);
         }
 
-        void redo(Provider *provider) override {
+        void redo(prv::Provider *provider) override {
             provider->insertRaw(this->m_offset, this->m_size);
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("Inserted {} at 0x{:04x}", hex::toByteString(this->m_size), this->m_offset);
+            return hex::format("hex.builtin.undo_operation.insert"_lang, hex::toByteString(this->m_size), this->m_offset);
         }
 
         std::unique_ptr<Operation> clone() const override {

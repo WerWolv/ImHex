@@ -66,11 +66,11 @@ namespace hex::prv::undo {
         }
     }
 
-    void Stack::groupOperations(u32 count) {
+    void Stack::groupOperations(u32 count, const std::string &unlocalizedName) {
         if (count <= 1)
             return;
 
-        auto operation = std::make_unique<OperationGroup>();
+        auto operation = std::make_unique<OperationGroup>(unlocalizedName);
 
         i64 startIndex = std::max<i64>(0, this->m_undoStack.size() - count);
 

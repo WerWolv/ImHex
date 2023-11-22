@@ -541,7 +541,7 @@ namespace hex::plugin::builtin {
                 provider->write(provider->getBaseAddress() + address + i, bytes.data(), remainingSize);
                 patchCount += 1;
             }
-            provider->getUndoStack().groupOperations(patchCount);
+            provider->getUndoStack().groupOperations(patchCount, "hex.builtin.undo_operation.fill");
 
             AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.fill.name");
         }
