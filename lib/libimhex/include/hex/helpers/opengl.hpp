@@ -1204,7 +1204,7 @@ namespace hex::gl {
 
     class FrameBuffer {
     public:
-        FrameBuffer();
+        FrameBuffer(u32 width, u32 height);
         ~FrameBuffer();
         FrameBuffer(const FrameBuffer&) = delete;
         FrameBuffer(FrameBuffer&& other) noexcept;

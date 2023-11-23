@@ -1647,9 +1647,10 @@ namespace hex::plugin::builtin {
                 gl::Matrix<float, 4, 4> view(0);
                 gl::Matrix<float, 4, 4> projection(0);
 
-                gl::FrameBuffer frameBuffer;
                 unsigned width = std::floor(renderingWindowSize.x);
                 unsigned height = std::floor(renderingWindowSize.y);
+
+                gl::FrameBuffer frameBuffer(width,height);
                 gl::Texture renderTexture(width,height );
                 frameBuffer.attachTexture(renderTexture);
                 frameBuffer.bind();

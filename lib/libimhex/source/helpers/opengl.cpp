@@ -303,13 +303,13 @@ namespace hex::gl {
         return copy;
     }
 
-    FrameBuffer::FrameBuffer() {
+    FrameBuffer::FrameBuffer(u32 width, u32 height) {
         glGenFramebuffers(1, &this->m_frameBuffer);
         glBindFramebuffer(GL_FRAMEBUFFER, this->m_frameBuffer);
 
         glGenRenderbuffers(1, &this->m_renderBuffer);
         glBindRenderbuffer(GL_RENDERBUFFER, this->m_renderBuffer);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 1280, 720);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this->m_renderBuffer);
 
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
