@@ -80,25 +80,26 @@ namespace hex::plugin::builtin {
             auto taskCount = TaskManager::getRunningTaskCount();
             if (taskCount > 0) {
                 const auto &tasks = TaskManager::getRunningTasks();
-                auto frontTask = tasks.front();
+                const auto &frontTask = tasks.front();
 
-                auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / frontTask->getMaxValue();
+                const auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / frontTask->getMaxValue();
 
                 ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, progress * 100);
 
-                auto widgetStart = ImGui::GetCursorPos();
+                const auto widgetStart = ImGui::GetCursorPos();
+                {
+                    ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
+                    ImGui::SameLine();
+                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
+                    ImGui::SameLine();
+                }
+                const auto widgetEnd = ImGui::GetCursorPos();
 
-                ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
-                ImGui::SameLine();
-                ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
-                ImGui::SameLine();
-
-                auto widgetEnd = ImGui::GetCursorPos();
                 ImGui::SetCursorPos(widgetStart);
                 ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindow()->MenuBarHeight()));
                 ImGui::SetCursorPos(widgetEnd);
 
-                ImGuiExt::InfoTooltip(Lang(frontTask->getUnlocalizedName()).get().c_str());
+                ImGuiExt::InfoTooltip(hex::format("[{:.1f}%] {}", progress * 100.0F, Lang(frontTask->getUnlocalizedName())).c_str());
 
                 if (ImGui::BeginPopupContextItem("FrontTask", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
