@@ -13,7 +13,7 @@ macro(add_imhex_plugin)
         configure_file(${CMAKE_SOURCE_DIR}/dist/web/plugin-bundle.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp @ONLY)
         target_sources(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp)
     else()
-        set(IMHEX_PLUGIN_LIBRARY_TYPE SHARED)
+        set(IMHEX_PLUGIN_LIBRARY_TYPE MODULE)
     endif()
 
     # Define new project for plugin
