@@ -741,10 +741,7 @@ namespace hex {
                 const auto flags = currPopup->getFlags() | (!hasConstraints ? (ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize) : ImGuiWindowFlags_None);
 
                 if (!positionSet) {
-                    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-                        ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + (ImHexApi::System::getMainWindowSize() / 2.0F), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
-                    else
-                        ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowSize() / 2.0F, ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+                    ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + (ImHexApi::System::getMainWindowSize() / 2.0F), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
 
                     if (sizeSet)
                         positionSet = true;

@@ -484,7 +484,10 @@ namespace hex {
 
 
         ImVec2 getMainWindowPosition() {
-            return impl::s_mainWindowPos;
+            if ((ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != ImGuiConfigFlags_None)
+                return impl::s_mainWindowPos;
+            else
+                return { 0, 0 };
         }
 
         ImVec2 getMainWindowSize() {
