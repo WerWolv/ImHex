@@ -154,7 +154,7 @@ namespace hex {
         void update(u8 byte) {
             // Check if there is some space left
             if (this->m_byteCount < this->m_fileSize) {
-                if (this->m_byteCount % (this->m_fileSize / this->m_sampleSize))
+                if ((this->m_byteCount % (this->m_fileSize / this->m_sampleSize)) == 0)
                     this->m_buffer.push_back(byte);
                 ++this->m_byteCount;
                 if (this->m_byteCount == this->m_fileSize) {
@@ -250,7 +250,7 @@ namespace hex {
         void update(u8 byte) {
             // Check if there is some space left
             if (this->m_byteCount < this->m_fileSize) {
-                if (this->m_byteCount % (this->m_fileSize / this->m_sampleSize))
+                if ((this->m_byteCount % (this->m_fileSize / this->m_sampleSize)) == 0)
                     this->m_buffer.push_back(byte);
                 ++this->m_byteCount;
                 if (this->m_byteCount == this->m_fileSize) {
