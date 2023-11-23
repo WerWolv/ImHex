@@ -28,7 +28,11 @@ namespace hex::plugin::builtin {
         auto windowSize = ImHexApi::System::getMainWindowSize();
 
         ImGui::SetNextWindowPos(ImVec2(windowPos.x + windowSize.x * 0.5F, windowPos.y), ImGuiCond_Always, ImVec2(0.5F, 0.0F));
+        ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
         if (ImGui::BeginPopup("hex.builtin.view.command_palette.name"_lang)) {
+            ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
+            ImGui::BringWindowToFocusFront(ImGui::GetCurrentWindowRead());
+
             // Close the popup if the user presses ESC
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                 ImGui::CloseCurrentPopup();
@@ -106,8 +110,8 @@ namespace hex::plugin::builtin {
                         break;
                     }
                 }
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
 
             ImGui::EndPopup();
         } else {

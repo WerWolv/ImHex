@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
 
         void drawContent() override;
 
-        [[nodiscard]] bool shouldDraw() const override { return false; }
+        [[nodiscard]] bool shouldDraw() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
         [[nodiscard]] ImVec2 getMinSize() const override { return scaled({ 600, 400 }); }

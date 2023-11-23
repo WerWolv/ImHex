@@ -17,10 +17,8 @@
 namespace hex::plugin::builtin {
 
     ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name") {
-
         // Add "About" menu item to the help menu
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, 1000, Shortcut::None, [this] {
-            TaskManager::doLater([this] { ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str()); });
             this->getWindowOpenState() = true;
         });
 

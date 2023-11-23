@@ -123,7 +123,6 @@ namespace hex {
         void draw() final {
             if (this->shouldDraw()) {
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-
                 if (ImGui::Begin(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
                 }
@@ -167,6 +166,9 @@ namespace hex {
         void draw() final {
             if (this->shouldDraw()) {
                 ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+
+                if (this->getWindowOpenState())
+                    ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str());
 
                 if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
                     this->drawContent();
