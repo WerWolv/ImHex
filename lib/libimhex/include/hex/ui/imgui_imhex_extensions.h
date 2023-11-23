@@ -124,7 +124,7 @@ namespace ImGuiExt {
     void Header(const char *label, bool firstEntry = false);
     void HeaderColored(const char *label, ImColor color, bool firstEntry);
 
-    bool InfoTooltip(const char *text = "");
+    bool InfoTooltip(const char *text = "",bool = false);
 
     bool TitleBarButton(const char *label, ImVec2 size_arg);
     bool ToolBarButton(const char *symbol, ImVec4 color);
@@ -275,6 +275,8 @@ namespace ImGuiExt {
     void EndSubWindow();
 
     void ConfirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonCallback, const std::function<void()> &rightButtonCallback);
+
+    bool VSliderAngle(const char* label, ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags);
 
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {

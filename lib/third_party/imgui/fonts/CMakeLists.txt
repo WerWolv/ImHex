@@ -10,6 +10,7 @@ add_library(imgui_fonts OBJECT
     source/unifont_font.c
     source/codicons_font.c
     source/fontawesome_font.c
+    source/blendericons_font.c
 )
 
 target_include_directories(imgui_fonts PUBLIC

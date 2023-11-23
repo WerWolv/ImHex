@@ -1,36 +1,29 @@
 #version 330 core
 layout (location = 0) in vec3 in_Position;
-layout (location = 1) in vec3 in_Normal;
+layout (location = 1) in vec4 in_Color;
+layout (location = 2) in vec3 in_Normal;
+layout (location = 3) in vec2 in_TexCoord1;
 
-/*uniform float time;*/
-uniform float scale;
-uniform vec3 rotation;
-uniform vec3 translation;
+uniform mat4 ScaledModel;
+uniform mat4 Model;
+uniform mat4 View;
+uniform mat4 Projection;
+uniform vec3 LightPosition;
+uniform vec4 Strength;
 
 out vec3 normal;
-
-mat4 rotationMatrix(vec3 axis, float angle) {
-    axis = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
-
-    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-    oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-    oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-    0.0,                                0.0,                                0.0,                                1.0);
-}
-
-mat4 viewMatrix(vec3 rotation) {
-    mat4 rotationX = rotationMatrix(vec3(1, 0, 0), rotation.x);
-    mat4 rotationY = rotationMatrix(vec3(0, 1, 0), rotation.y);
-    mat4 rotationZ = rotationMatrix(vec3(0, 0, 1), rotation.z);
-
-    return rotationX * rotationY * rotationZ;
-}
+out vec4 fragColor;
+out vec2 texCoord;
+out vec3 lightPos;
+out vec3 fragPos;
+out vec4 strength;
 
 void main() {
-    mat4 view = viewMatrix(rotation);
-    normal = (vec4(in_Normal, 1.0) * view).xyz * -1;
-    gl_Position = vec4((in_Position + translation) * -scale, 1.0) * view;
+     normal = mat3(transpose(inverse(ScaledModel))) * in_Normal;
+     gl_Position = Projection * View * ScaledModel * vec4(in_Position, 1.0);
+     fragPos = vec3(View * ScaledModel * vec4(in_Position, 1.0));
+     fragColor = in_Color;
+     texCoord = in_TexCoord1;
+     strength = Strength;
+     lightPos = vec3(View * Model * vec4(LightPosition, 1.0)); // Transform world-space light position to view-space light position
 }
