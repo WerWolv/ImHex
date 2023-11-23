@@ -24,6 +24,8 @@ namespace hex::prv::undo {
         [[nodiscard]] virtual std::vector<std::string> formatContent() const {
             return { };
         }
+
+        [[nodiscard]] virtual bool shouldHighlight() const { return true; }
     };
 
 }

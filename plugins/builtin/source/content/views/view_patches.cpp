@@ -49,6 +49,9 @@ namespace hex::plugin::builtin {
 
             const auto &undoStack = provider->getUndoStack();
             for (const auto &operation : undoStack.getAppliedOperations()) {
+                if (!operation->shouldHighlight())
+                    continue;
+
                 if (operation->getRegion().overlaps(Region { offset, 1}))
                     return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Patches);
             }

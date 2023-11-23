@@ -37,6 +37,8 @@ namespace hex::plugin::builtin::undo {
             return { this->m_offset, this->m_size };
         }
 
+        bool shouldHighlight() const override { return false; }
+
     private:
         u64 m_offset;
         u64 m_size;

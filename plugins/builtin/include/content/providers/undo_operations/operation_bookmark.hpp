@@ -34,8 +34,10 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] Region getRegion() const override {
-            return Region::Invalid();
+            return this->m_entry.region;
         }
+
+        bool shouldHighlight() const override { return false; }
 
     private:
         ImHexApi::Bookmarks::Entry m_entry;
