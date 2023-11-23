@@ -386,13 +386,22 @@ namespace hex::plugin::builtin {
         /* Fonts */
 
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false);
-        auto fontPathSetting = ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path").requiresRestart();
+
+        auto customFontEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_enable", false).requiresRestart();
+
+        ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
+                .requiresRestart()
+                .setEnabledCallback([customFontEnabledSetting]{
+                    auto &checkBox = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+
+                    return checkBox.isChecked();
+                });
         ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
                 .requiresRestart()
-                .setEnabledCallback([fontPathSetting]{
-                    auto &filePicker = static_cast<Widgets::FilePicker &>(fontPathSetting.getWidget());
+                .setEnabledCallback([customFontEnabledSetting]{
+                    auto &checkBox = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
 
-                    return !filePicker.getPath().empty();
+                    return checkBox.isChecked();
                 });
 
 
