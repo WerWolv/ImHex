@@ -185,7 +185,7 @@ namespace hex::init {
         const float defaultFontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
 
         // Load custom font related settings
-        if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false)) {
+        if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
             std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "").get<std::string>();
             if (!fontFile.empty()) {
                 if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
@@ -279,14 +279,17 @@ namespace hex::init {
             fonts->Clear();
             fonts->AddFontDefault(&cfg);
         } else {
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.bold", false))
+            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
                 cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.italic", false))
+            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
                 cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
-            if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.antialias", false))
+            if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
                 cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
 
             auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
+
+            cfg.FontBuilderFlags = 0;
+
             if (font == nullptr) {
                 log::warn("Failed to load custom font! Falling back to default font.");
 
