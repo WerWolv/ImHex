@@ -241,7 +241,9 @@ namespace hex {
             if (ImGui::MenuItem(Lang(name), shortcut.toString().c_str(), false, enabledCallback()))
                 callback();
         } else {
-            if (ImGui::BeginMenu(Lang(name), *(menuItems.begin() + 1) == ContentRegistry::Interface::impl::SubMenuValue ? enabledCallback() : true)) {
+            bool isSubmenu = *(menuItems.begin() + 1) == ContentRegistry::Interface::impl::SubMenuValue;
+
+            if (ImGui::BeginMenu(Lang(name), isSubmenu ? enabledCallback() : true)) {
                 createNestedMenu({ menuItems.begin() + 1, menuItems.end() }, shortcut, callback, enabledCallback);
                 ImGui::EndMenu();
             }
