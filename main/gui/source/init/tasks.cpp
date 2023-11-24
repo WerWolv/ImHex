@@ -1,6 +1,8 @@
 #include "init/tasks.hpp"
 
 #include <imgui.h>
+#include <imgui_freetype.h>
+
 #include <romfs/romfs.hpp>
 
 #include <hex/helpers/http_requests.hpp>
@@ -21,8 +23,6 @@
 #include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
 #include <fonts/unifont_font.h>
-
-#include <filesystem>
 
 #include <nlohmann/json.hpp>
 
@@ -184,8 +184,8 @@ namespace hex::init {
     static bool loadFontsImpl(bool loadUnicode) {
         const float defaultFontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
 
-        // Load font related settings
-        {
+        // Load custom font related settings
+        if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
             std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "").get<std::string>();
             if (!fontFile.empty()) {
                 if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
@@ -239,18 +239,18 @@ namespace hex::init {
             ImFontGlyphRangesBuilder glyphRangesBuilder;
 
             {
-                constexpr static ImWchar controlCodeRange[]   = { 0x0001, 0x001F, 0 };
-                constexpr static ImWchar extendedAsciiRange[] = { 0x007F, 0x00FF, 0 };
+                constexpr static std::array<ImWchar, 3> controlCodeRange   = { 0x0001, 0x001F, 0 };
+                constexpr static std::array<ImWchar, 3> extendedAsciiRange = { 0x007F, 0x00FF, 0 };
 
-                glyphRangesBuilder.AddRanges(controlCodeRange);
+                glyphRangesBuilder.AddRanges(controlCodeRange.data());
                 glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
-                glyphRangesBuilder.AddRanges(extendedAsciiRange);
+                glyphRangesBuilder.AddRanges(extendedAsciiRange.data());
             }
 
             if (loadUnicode) {
-                constexpr static ImWchar fullRange[]   = { 0x0100, 0xFFEF, 0 };
+                constexpr static std::array<ImWchar, 3> fullRange = { 0x0100, 0xFFEF, 0 };
 
-                glyphRangesBuilder.AddRanges(fullRange);
+                glyphRangesBuilder.AddRanges(fullRange.data());
             } else {
                 glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesJapanese());
                 glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesChineseFull());
@@ -264,12 +264,12 @@ namespace hex::init {
         }
 
         // Glyph range for font awesome icons
-        static ImWchar fontAwesomeRange[] = {
+        constexpr static std::array<ImWchar, 3> fontAwesomeRange = {
                 ICON_MIN_FA, ICON_MAX_FA, 0
         };
 
         // Glyph range for codicons icons
-        static ImWchar codiconsRange[] = {
+        constexpr static std::array<ImWchar, 3> codiconsRange = {
                 ICON_MIN_VS, ICON_MAX_VS, 0
         };
 
@@ -279,7 +279,17 @@ namespace hex::init {
             fonts->Clear();
             fonts->AddFontDefault(&cfg);
         } else {
+            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
+                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
+            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
+                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
+            if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
+                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+
             auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
+
+            cfg.FontBuilderFlags = 0;
+
             if (font == nullptr) {
                 log::warn("Failed to load custom font! Falling back to default font.");
 
@@ -295,8 +305,8 @@ namespace hex::init {
 
         // Add font awesome and codicons icons to font atlas
         cfg.GlyphOffset = ImVec2(0, 3_scaled);
-        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange);
-        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange);
+        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange.data());
+        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange.data());
 
         cfg.GlyphOffset = ImVec2(0, 0);
         // Add unifont if unicode support is enabled

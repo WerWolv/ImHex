@@ -1181,6 +1181,9 @@ namespace hex::plugin::builtin {
                     );
                 }
             }
+        },
+        [] {
+            return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid();
         });
 
         /* Paste */

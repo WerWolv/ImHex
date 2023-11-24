@@ -285,7 +285,7 @@ namespace hex::plugin::builtin {
 
         private:
             bool detectShortcut() {
-                if (auto shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
+                if (const auto &shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
                     log::info("Changed shortcut to {}", shortcut->toString());
                     auto keys = this->m_shortcut.getKeys();
                     std::erase_if(keys, [](Key key) {
@@ -298,9 +298,11 @@ namespace hex::plugin::builtin {
 
                     auto newShortcut = Shortcut(std::move(keys));
                     this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
-                    this->m_shortcut = std::move(newShortcut);
 
-                    return true;
+                    if (!this->m_hasDuplicate) {
+                        this->m_shortcut = std::move(newShortcut);
+                        return true;
+                    }
                 }
 
                 return false;
@@ -386,14 +388,32 @@ namespace hex::plugin::builtin {
         /* Fonts */
 
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false);
-        auto fontPathSetting = ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path").requiresRestart();
+
+        auto customFontEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_enable", false).requiresRestart();
+
+        const auto fontSettingsEnabled = [customFontEnabledSetting]{
+            auto &checkBox = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+
+            return checkBox.isChecked();
+        };
+
+        ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
+                .requiresRestart()
+                .setEnabledCallback(fontSettingsEnabled);
         ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
                 .requiresRestart()
-                .setEnabledCallback([fontPathSetting]{
-                    auto &filePicker = static_cast<Widgets::FilePicker &>(fontPathSetting.getWidget());
+                .setEnabledCallback(fontSettingsEnabled);
 
-                    return !filePicker.getPath().empty();
-                });
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
+                .requiresRestart()
+                .setEnabledCallback(fontSettingsEnabled);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
+                .requiresRestart()
+                .setEnabledCallback(fontSettingsEnabled);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", false)
+                .requiresRestart()
+                .setEnabledCallback(fontSettingsEnabled);
+
 
 
         /* Folders */

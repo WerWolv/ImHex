@@ -1203,49 +1203,51 @@ namespace hex::plugin::builtin {
         }};
 
         /* Place pattern... */
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern", "hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin" }, 3000,
-                                                       [&, this] {
-                                                           if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
-                                                               for (const auto &[type, size] : Types)
-                                                                   if (ImGui::MenuItem(type))
-                                                                       appendVariable(type);
-                                                               ImGui::EndMenu();
-                                                           }
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern" }, 3000,
+            [&, this] {
+                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
+                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
+                        for (const auto &[type, size] : Types)
+                            if (ImGui::MenuItem(type))
+                                appendVariable(type);
+                        ImGui::EndMenu();
+                    }
 
-                                                           if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
-                                                               for (const auto &[type, size] : Types)
-                                                                   if (ImGui::MenuItem(type))
-                                                                       appendArray(type, size);
-                                                               ImGui::EndMenu();
-                                                           }
-                                                       }, [this] {
-                                                           return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && this->m_runningParsers == 0;
-                                                       });
+                    if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
+                        for (const auto &[type, size] : Types)
+                            if (ImGui::MenuItem(type))
+                                appendArray(type, size);
+                        ImGui::EndMenu();
+                    }
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern", "hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom" }, 3050,
-                                                       [&, this] {
-                                                           const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
-                                                           auto selection = ImHexApi::HexEditor::getSelection();
+                    ImGui::EndMenu();
+                }
 
-                                                           for (const auto &[typeName, type] : types) {
-                                                               if (type->isTemplateType())
-                                                                   continue;
+                const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
+                bool hasPlaceableTypes = std::any_of(types.begin(), types.end(), [](const auto &type) { return !type.second->isTemplateType(); });
 
-                                                               createNestedMenu(hex::splitString(typeName, "::"), [&, this] {
-                                                                   std::string variableName;
-                                                                   for (char &c : hex::replaceStrings(typeName, "::", "_"))
-                                                                       variableName += static_cast<char>(std::tolower(c));
-                                                                   variableName += hex::format("_at_0x{:02X}", selection->getStartAddress());
+                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang, hasPlaceableTypes)) {
+                    auto selection = ImHexApi::HexEditor::getSelection();
 
-                                                                   appendEditorText(hex::format("{0} {1} @ 0x{2:02X};", typeName, variableName, selection->getStartAddress()));
-                                                               });
-                                                           }
-                                                       }, [this] {
-                                                           const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
-                                                           bool hasPlaceableTypes = std::any_of(types.begin(), types.end(), [](const auto &type) { return !type.second->isTemplateType(); });
+                    for (const auto &[typeName, type] : types) {
+                        if (type->isTemplateType())
+                            continue;
 
-                                                           return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && this->m_runningParsers == 0 && hasPlaceableTypes;
-                                                       });
+                        createNestedMenu(hex::splitString(typeName, "::"), [&, this] {
+                            std::string variableName;
+                            for (char &c : hex::replaceStrings(typeName, "::", "_"))
+                                variableName += static_cast<char>(std::tolower(c));
+                            variableName += hex::format("_at_0x{:02X}", selection->getStartAddress());
+
+                            appendEditorText(hex::format("{0} {1} @ 0x{2:02X};", typeName, variableName, selection->getStartAddress()));
+                        });
+                    }
+
+                    ImGui::EndMenu();
+                }
+            }, [this] {
+                return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && this->m_runningParsers == 0;
+            });
     }
 
     void ViewPatternEditor::registerHandlers() {

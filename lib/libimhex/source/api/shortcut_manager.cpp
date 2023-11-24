@@ -108,13 +108,13 @@ namespace hex {
     }
 
     static bool updateShortcutImpl(const Shortcut &oldShortcut, const Shortcut &newShortcut, std::map<Shortcut, ShortcutManager::ShortcutEntry> &shortcuts) {
-        if (shortcuts.contains(oldShortcut + CurrentView)) {
-            if (shortcuts.contains(newShortcut + CurrentView))
+        if (shortcuts.contains(oldShortcut)) {
+            if (shortcuts.contains(newShortcut))
                 return false;
 
-            shortcuts[newShortcut + CurrentView] = shortcuts[oldShortcut + CurrentView];
-            shortcuts[newShortcut + CurrentView].shortcut = newShortcut + CurrentView;
-            shortcuts.erase(oldShortcut + CurrentView);
+            shortcuts[newShortcut] = shortcuts[oldShortcut];
+            shortcuts[newShortcut].shortcut = newShortcut;
+            shortcuts.erase(oldShortcut);
         }
 
         return true;
@@ -126,7 +126,7 @@ namespace hex {
 
         bool result;
         if (view != nullptr) {
-            result = updateShortcutImpl(oldShortcut, newShortcut, view->m_shortcuts);
+            result = updateShortcutImpl(oldShortcut + CurrentView, newShortcut + CurrentView , view->m_shortcuts);
         } else {
             result = updateShortcutImpl(oldShortcut, newShortcut, s_globalShortcuts);
         }

@@ -18,7 +18,7 @@
             "header": "#6666E572",
             "header-active": "#8787DDCC",
             "header-hovered": "#7272E5CC",
-            "menu-bar-background": "#66668CCC",
+            "menu-bar-background": "#535371FF",
             "modal-window-dim-background": "#33333359",
             "nav-highlight": "#7272E5CC",
             "nav-windowing-background": "#CCCCCC33",
@@ -53,10 +53,11 @@
             "text": "#E5E5E5FF",
             "text-disabled": "#999999FF",
             "text-selected-background": "#0000FF59",
-            "title-background": "#66668CCC",
-            "title-background-active": "#66668CCC",
-            "title-background-collapse": "#66668CCC",
-            "window-background": "#000000FF"
+            "title-background": "#535371FF",
+            "title-background-active": "#535371FF",
+            "title-background-collapse": "#535371FF",
+            "window-background": "#000000FF",
+            "window-shadow": "#000000FF"
         },
         "imhex": {
             "blur-background": "#00000000",
@@ -67,7 +68,7 @@
             "IEEE-tool-sign": "#5D5D7FFF",
             "IEEE-tool-exp": "#5D7F5DFF",
             "IEEE-tool-mantissa": "#7F5D5DFF",
-            "toolbar-blue": "#06539BFF",
+            "toolbar-blue": "#55A5F6FF",
             "toolbar-brown": "#DBB377FF",
             "toolbar-gray": "#E6E6E6FF",
             "toolbar-green": "#388B42FF",
@@ -224,7 +225,10 @@
             "window-title-align": [
                 0.0,
                 0.5
-            ]
+            ],
+            "window-shadow-size": 64.0,
+            "window-shadow-offset": 0.0,
+            "window-shadow-angle": 0.0
         },
         "imnodes": {
             "grid-spacing": 24.0,
