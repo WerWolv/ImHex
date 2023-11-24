@@ -9,6 +9,7 @@
 #include <content/providers/undo_operations/operation_insert.hpp>
 #include <content/providers/undo_operations/operation_remove.hpp>
 
+#include <ranges>
 #include <string>
 
 using namespace std::literals::string_literals;
