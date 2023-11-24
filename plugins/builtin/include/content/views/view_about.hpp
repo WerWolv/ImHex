@@ -17,8 +17,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool shouldDraw() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
 
-        [[nodiscard]] ImVec2 getMinSize() const override {
-            return scaled({ 700, 400 });
+        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override {
+            return ImGuiWindowFlags_AlwaysAutoResize;
         }
 
     private:

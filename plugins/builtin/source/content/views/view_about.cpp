@@ -35,26 +35,9 @@ namespace hex::plugin::builtin {
         });
     }
 
-    static void link(const std::string &name, const std::string &author, const std::string &url) {
-        // Draw the hyperlink and open the URL if clicked
-        if (ImGuiExt::BulletHyperlink(name.c_str()))
-            hex::openWebpage(url);
 
-        // Show the URL as a tooltip
-        if (ImGui::IsItemHovered()) {
-            ImGui::BeginTooltip();
-            ImGuiExt::TextFormatted("{}", url);
-            ImGui::EndTooltip();
-        }
-
-        // Show the author if there is one
-        if (!author.empty()) {
-            ImGui::SameLine(0, 0);
-            ImGuiExt::TextFormatted("by {}", author);
-        }
-    }
-
-    void ViewAbout::drawAboutMainPage() {
+    void ViewAbout::drawAboutMainPage()
+    {
         // Draw main about table
         if (ImGui::BeginTable("about_table", 2, ImGuiTableFlags_SizingFixedFit)) {
             ImGui::TableNextRow();
@@ -64,164 +47,279 @@ namespace hex::plugin::builtin {
             if (!this->m_logoTexture.isValid())
                 this->m_logoTexture = ImGuiExt::Texture(romfs::get("assets/common/logo.png").span());
 
-            ImGui::Image(this->m_logoTexture, scaled({ 64, 64 }));
+            ImGui::Image(this->m_logoTexture, scaled({ 100, 100 }));
             if (ImGui::IsItemHovered() && ImGui::IsItemClicked()) {
                 this->m_clickCount += 1;
             }
             ImGui::TableNextColumn();
 
-            // Draw basic information about ImHex and its version
-            ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv  " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
+            ImGuiExt::BeginSubWindow("Build Information", ImVec2(0, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
+            {
+                if (ImGui::BeginTable("Information", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInner)) {
+                    ImGui::TableNextRow();
 
-            ImGui::SameLine();
+                    ImGui::TableNextColumn();
+                    {
+                        // Draw basic information about ImHex and its version
+                        ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv  " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
 
-            // Draw a clickable link to the current commit
-            if (ImGuiExt::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
-                hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
+                        ImGui::SameLine();
 
-            // Draw the build date and time
-            ImGuiExt::TextFormatted("{}, {}", __DATE__, __TIME__);
+                        // Draw a clickable link to the current commit
+                        if (ImGuiExt::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))
+                            hex::openWebpage("https://github.com/WerWolv/ImHex/commit/" + ImHexApi::System::getCommitHash(true));
+                    }
 
-            // Draw the author of the current translation
-            ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
+                    ImGui::TableNextColumn();
+                    {
+                        // Draw the build date and time
+                        ImGuiExt::TextFormatted("Compiled on {} at {}", __DATE__, __TIME__);
+                    }
 
-            // Draw information about the open-source nature of ImHex
-            ImGui::TextUnformatted("hex.builtin.view.help.about.source"_lang);
+                    ImGui::TableNextColumn();
+                    {
+                        // Draw the author of the current translation
+                        ImGui::TextUnformatted("hex.builtin.view.help.about.translator"_lang);
+                    }
 
-            ImGui::SameLine();
+                    ImGui::TableNextColumn();
+                    {
+                        // Draw information about the open-source nature of ImHex
+                        ImGui::TextUnformatted("hex.builtin.view.help.about.source"_lang);
 
-            // Draw a clickable link to the GitHub repository
-            if (ImGuiExt::Hyperlink("WerWolv/ImHex"))
-                hex::openWebpage("https://github.com/WerWolv/ImHex");
+                        ImGui::SameLine();
+
+                        // Draw a clickable link to the GitHub repository
+                        if (ImGuiExt::Hyperlink("WerWolv/ImHex"))
+                            hex::openWebpage("https://github.com/WerWolv/ImHex");
+                    }
+                    ImGui::EndTable();
+                }
+            }
+            ImGuiExt::EndSubWindow();
 
             ImGui::EndTable();
         }
 
-        ImGui::NewLine();
-
         // Draw donation links
-        ImGui::TextUnformatted("hex.builtin.view.help.about.donations"_lang);
-        ImGui::Separator();
-
-        constexpr std::array Links = { "https://werwolv.net/donate", "https://www.patreon.com/werwolv", "https://github.com/sponsors/WerWolv" };
+        ImGuiExt::Header("hex.builtin.view.help.about.donations"_lang);
 
         ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
 
         ImGui::NewLine();
 
-        for (auto &link : Links) {
-            if (ImGuiExt::Hyperlink(link))
-                hex::openWebpage(link);
-        }
-    }
+        struct DonationPage {
+            ImGuiExt::Texture texture;
+            const char *link;
+        };
 
-    void ViewAbout::drawContributorPage() {
-        ImGuiExt::TextFormattedWrapped("These amazing people have contributed to ImHex in the past. If you'd like to become part of them, please submit a PR to the GitHub Repository!");
-        ImGui::NewLine();
-
-        // Draw main ImHex contributors
-        link("iTrooz for a huge amount of help maintaining ImHex and the CI", "", "https://github.com/iTrooz");
-        link("jumanji144 for a ton of help with the Pattern Language, API and usage stats", "", "https://github.com/Nowilltolife");
+        static std::array DonationPages = {
+            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/paypal.png").span<std::byte>()),  "https://werwolv.net/donate"           },
+            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/github.png").span<std::byte>()),  "https://github.com/sponsors/WerWolv"  },
+            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/patreon.png").span<std::byte>()), "https://patreon.com/werwolv"          },
+        };
 
         ImGui::NewLine();
+        if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
 
-        // Draw additional contributors
-        link("Mary for porting ImHex to MacOS", "", "https://github.com/marysaka");
-        link("Roblabla for adding the MSI Windows installer", "", "https://github.com/roblabla");
-        link("jam1garner for adding support for Rust plugins", "", "https://github.com/jam1garner");
+            for (const auto &page : DonationPages) {
+                ImGui::TableNextColumn();
 
-        ImGui::NewLine();
+                const auto size = page.texture.getSize() / 1.5F;
+                const auto startPos = ImGui::GetCursorScreenPos();
+                ImGui::Image(page.texture, page.texture.getSize() / 1.5F);
 
-        link("All other amazing contributors", "", "https://github.com/WerWolv/ImHex/graphs/contributors/");
-    }
-
-    void ViewAbout::drawLibraryCreditsPage() {
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.2F, 0.2F, 0.2F, 0.3F));
-
-        // Draw ImGui dependencies
-        link("ImGui", "ocornut", "https://github.com/ocornut/imgui/");
-        link("imgui_club", "ocornut", "https://github.com/ocornut/imgui_club/");
-        link("imnodes", "Nelarius", "https://github.com/Nelarius/imnodes/");
-        link("ImGuiColorTextEdit", "BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit/");
-        link("ImPlot", "epezent", "https://github.com/epezent/implot/");
-
-        ImGui::NewLine();
-
-        // Draw dependencies maintained by individual people
-        link("capstone", "aquynh", "https://github.com/aquynh/capstone/");
-        link("JSON for Modern C++", "nlohmann", "https://github.com/nlohmann/json/");
-        link("YARA", "VirusTotal", "https://github.com/VirusTotal/yara/");
-        link("Native File Dialog Extended", "btzy and mlabbe", "https://github.com/btzy/nativefiledialog-extended/");
-        link("libromfs", "WerWolv", "https://github.com/WerWolv/libromfs/");
-        link("microtar", "rxi", "https://github.com/rxi/microtar/");
-        link("xdgpp", "danyspin97", "https://sr.ht/~danyspin97/xdgpp/");
-        link("FreeType", "David Turner", "https://gitlab.freedesktop.org/freetype/freetype/");
-        link("mbedTLS", "ARM", "https://github.com/ARMmbed/mbedtls/");
-        link("libcurl", "Daniel Stenberg", "https://curl.se/");
-        link("libfmt", "vitaut", "https://fmt.dev/");
-
-        ImGui::NewLine();
-
-        // Draw dependencies maintained by groups
-        link("GNU libmagic", "", "https://www.darwinsys.com/file/");
-        link("GLFW3", "", "https://github.com/glfw/glfw/");
-        link("LLVM", "", "https://github.com/llvm/llvm-project/");
-
-        ImGui::PopStyleColor();
-
-        ImGui::NewLine();
-    }
-
-    void ViewAbout::drawPathsPage() {
-        if (ImGui::BeginTable("##imhex_paths", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
-            ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("Type");
-            ImGui::TableSetupColumn("Paths");
-
-            // Specify the types of paths to display
-            constexpr static std::array<std::pair<const char *, fs::ImHexPath>, size_t(fs::ImHexPath::END) - 1U> PathTypes = {
-                {
-                    { "Patterns", fs::ImHexPath::Patterns },
-                    { "Patterns Includes", fs::ImHexPath::PatternsInclude },
-                    { "Magic", fs::ImHexPath::Magic },
-                    { "Plugins", fs::ImHexPath::Plugins },
-                    { "Libraries", fs::ImHexPath::Libraries },
-                    { "Yara Patterns", fs::ImHexPath::Yara },
-                    { "Config", fs::ImHexPath::Config },
-                    { "Resources", fs::ImHexPath::Resources },
-                    { "Constants lists", fs::ImHexPath::Constants },
-                    { "Custom encodings", fs::ImHexPath::Encodings },
-                    { "Logs", fs::ImHexPath::Logs },
-                    { "Recent files", fs::ImHexPath::Recent },
-                    { "Scripts", fs::ImHexPath::Scripts },
-                    { "Themes", fs::ImHexPath::Themes },
-                    { "Data inspector scripts", fs::ImHexPath::Inspectors },
-                    { "Custom data processor nodes", fs::ImHexPath::Nodes },
+                if (ImGui::IsItemHovered()) {
+                    ImGui::GetForegroundDrawList()->AddShadowCircle(startPos + size / 2, size.x / 2, ImGui::GetColorU32(ImGuiCol_Button), 100.0F, ImVec2(), ImDrawFlags_ShadowCutOutShapeBackground);
                 }
-            };
 
-            // Draw the table
-            ImGui::TableHeadersRow();
-            for (const auto &[name, type] : PathTypes) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-                ImGui::TextUnformatted(name);
-
-                ImGui::TableNextColumn();
-                for (auto &path : fs::getDefaultPaths(type, true)){
-                    // Draw hyperlink to paths that exist or red text if they don't
-                    if (wolv::io::fs::isDirectory(path)){
-                        if (ImGuiExt::Hyperlink(wolv::util::toUTF8String(path).c_str())) {
-                            fs::openFolderExternal(path);
-                        }
-                    } else {
-                        ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path));
-                    }
+                if (ImGui::IsItemClicked()) {
+                    hex::openWebpage(page.link);
                 }
             }
 
             ImGui::EndTable();
         }
+    }
+
+    void ViewAbout::drawContributorPage() {
+        struct Contributor {
+            const char *name;
+            const char *description;
+            const char *link;
+        };
+
+        constexpr static std::array Contributors = {
+            Contributor { "iTrooz", "A huge amount of help maintaining ImHex and the CI", "https://github.com/iTrooz" },
+            Contributor { "jumanji144", "A ton of help with the Pattern Language, API and usage stats", "https://github.com/Nowilltolife" },
+            Contributor { "Mary", "Porting ImHex to macOS originally", "https://github.com/marysaka" },
+            Contributor { "Roblabla", "Adding the MSI Windows installer", "https://github.com/roblabla" },
+            Contributor { "jam1garner", "Adding support for Rust plugins", "https://github.com/jam1garner" },
+            Contributor { "All other amazing contributors", "Being part of the community, opening issues, PRs and donating", "https://github.com/WerWolv/ImHex/graphs/contributors" }
+        };
+
+        ImGuiExt::TextFormattedWrapped("These amazing people have contributed some incredible things to ImHex in the past.\nConsider opening a PR on the Git Repository to become a part of them!");
+        ImGui::NewLine();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+        ImGuiExt::BeginSubWindow("Contributors", ImVec2(ImGui::GetContentRegionAvail().x, 0), ImGuiChildFlags_AutoResizeX);
+        {
+            if (ImGui::BeginTable("Contributors", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
+                for (const auto &contributor : Contributors) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    if (contributor.name == nullptr) {
+                        ImGui::Separator();
+                        continue;
+                    }
+
+                    if (ImGuiExt::Hyperlink(contributor.name))
+                        hex::openWebpage(contributor.link);
+
+                    ImGui::Indent();
+                    ImGui::TextUnformatted(contributor.description);
+                    ImGui::Unindent();
+                }
+
+                ImGui::EndTable();
+            }
+        }
+        ImGuiExt::EndSubWindow();
+        ImGui::PopStyleVar();
+    }
+
+    void ViewAbout::drawLibraryCreditsPage() {
+
+        struct Library {
+            const char *name;
+            const char *author;
+            const char *link;
+        };
+
+        constexpr static std::array ImGuiLibraries = {
+            Library { "ImGui", "ocornut", "https://github.com/ocornut/imgui" },
+            Library { "ImPlot", "epezent", "https://github.com/epezent/implot" },
+            Library { "imnodes", "Nelarius", "https://github.com/Nelarius/imnodes" },
+            Library { "ImGuiColorTextEdit", "BalazsJako", "https://github.com/BalazsJako/ImGuiColorTextEdit" },
+
+        };
+
+        constexpr static std::array ExternalLibraries = {
+            Library { "PatternLanguage", "WerWolv", "https://github.com/WerWolv/PatternLanguage" },
+            Library { "libwolv", "WerWolv", "https://github.com/WerWolv/libwolv" },
+            Library { "libromfs", "WerWolv", "https://github.com/WerWolv/libromfs" },
+        };
+
+        constexpr static std::array ThirdPartyLibraries = {
+            Library { "capstone", "aquynh", "https://github.com/aquynh/capstone" },
+            Library { "json", "nlohmann", "https://github.com/nlohmann/json" },
+            Library { "yara", "VirusTotal", "https://github.com/VirusTotal/yara" },
+            Library { "nativefiledialog-extended", "btzy", "https://github.com/btzy/nativefiledialog-extended" },
+            Library { "microtar", "rxi", "https://github.com/rxi/microtar" },
+            Library { "xdgpp", "danyspin97", "https://sr.ht/~danyspin97/xdgpp" },
+            Library { "freetype", "freetype", "https://gitlab.freedesktop.org/freetype/freetype" },
+            Library { "mbedTLS", "ARMmbed", "https://github.com/ARMmbed/mbedtls" },
+            Library { "curl", "curl", "https://github.com/curl/curl" },
+            Library { "fmt", "fmtlib", "https://github.com/fmtlib/fmt" },
+            Library { "file", "file", "https://github.com/file/file" },
+            Library { "glfw", "glfw", "https://github.com/glfw/glfw" },
+            Library { "llvm", "llvm-project", "https://github.com/llvm/llvm-project" },
+        };
+
+        constexpr static auto drawTable = [](const char *category, const auto &libraries) {
+            const auto width = ImGui::GetContentRegionAvail().x;
+            ImGuiExt::BeginSubWindow(category);
+            {
+                for (const auto &library : libraries) {
+                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetColorU32(ImGuiCol_TableHeaderBg));
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 50);
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 12, 3 }));
+
+                    if (ImGui::BeginChild(library.link, ImVec2(), ImGuiChildFlags_Border | ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
+                        if (ImGuiExt::Hyperlink(hex::format("{}/{}", library.author, library.name).c_str())) {
+                            hex::openWebpage(library.link);
+                        }
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::SameLine();
+                    if (ImGui::GetCursorPosX() > (width - 200_scaled))
+                        ImGui::NewLine();
+
+                    ImGui::PopStyleColor();
+                    ImGui::PopStyleVar(2);
+                }
+            }
+            ImGuiExt::EndSubWindow();
+        };
+
+        ImGuiExt::TextFormattedWrapped("ImHex builds on top of the amazing work of a ton of talented library developers without which this project wouldn't stand.");
+        ImGui::NewLine();
+
+        drawTable("ImGui", ImGuiLibraries);
+        drawTable("External", ExternalLibraries);
+        drawTable("Third Party", ThirdPartyLibraries);
+    }
+
+    void ViewAbout::drawPathsPage() {
+        constexpr static std::array<std::pair<const char *, fs::ImHexPath>, size_t(fs::ImHexPath::END) - 1U> PathTypes = {
+            {
+                { "Patterns", fs::ImHexPath::Patterns },
+                { "Patterns Includes", fs::ImHexPath::PatternsInclude },
+                { "Magic", fs::ImHexPath::Magic },
+                { "Plugins", fs::ImHexPath::Plugins },
+                { "Libraries", fs::ImHexPath::Libraries },
+                { "Yara Patterns", fs::ImHexPath::Yara },
+                { "Config", fs::ImHexPath::Config },
+                { "Resources", fs::ImHexPath::Resources },
+                { "Constants lists", fs::ImHexPath::Constants },
+                { "Custom encodings", fs::ImHexPath::Encodings },
+                { "Logs", fs::ImHexPath::Logs },
+                { "Recent files", fs::ImHexPath::Recent },
+                { "Scripts", fs::ImHexPath::Scripts },
+                { "Themes", fs::ImHexPath::Themes },
+                { "Data inspector scripts", fs::ImHexPath::Inspectors },
+                { "Custom data processor nodes", fs::ImHexPath::Nodes },
+            }
+        };
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+        ImGuiExt::BeginSubWindow("Paths", ImGui::GetContentRegionAvail());
+        {
+            if (ImGui::BeginTable("##imhex_paths", 2, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("Type");
+                ImGui::TableSetupColumn("Paths");
+
+                // Draw the table
+                ImGui::TableHeadersRow();
+                for (const auto &[name, type] : PathTypes) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(name);
+
+                    ImGui::TableNextColumn();
+                    for (auto &path : fs::getDefaultPaths(type, true)){
+                        // Draw hyperlink to paths that exist or red text if they don't
+                        if (wolv::io::fs::isDirectory(path)){
+                            if (ImGuiExt::Hyperlink(wolv::util::toUTF8String(path).c_str())) {
+                                fs::openFolderExternal(path);
+                            }
+                        } else {
+                            ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), wolv::util::toUTF8String(path));
+                        }
+                    }
+                }
+
+                ImGui::EndTable();
+            }
+        }
+        ImGuiExt::EndSubWindow();
+        ImGui::PopStyleVar();
+
     }
 
     void ViewAbout::drawReleaseNotesPage() {
@@ -403,56 +501,63 @@ namespace hex::plugin::builtin {
 
         // Draw commits table
         if (!commits.empty()) {
-            if (ImGui::BeginTable("##commits", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
-                // Draw commits
-                for (const auto &commit : commits) {
-                    ImGui::PushID(commit.hash.c_str());
-                    ImGui::TableNextRow();
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+            ImGuiExt::BeginSubWindow("Commits", ImGui::GetContentRegionAvail());
+            {
 
-                    // Draw hover tooltip
-                    ImGui::TableNextColumn();
-                    if (ImGui::Selectable("##commit", false, ImGuiSelectableFlags_SpanAllColumns)) {
-                        hex::openWebpage(commit.url);
-                    }
+                if (ImGui::BeginTable("##commits", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
+                    // Draw commits
+                    for (const auto &commit : commits) {
+                        ImGui::PushID(commit.hash.c_str());
+                        ImGui::TableNextRow();
 
-                    if (ImGui::IsItemHovered()) {
-                        if (ImGui::BeginTooltip()) {
-                            // Draw author and commit date
-                            ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.author);
-                            ImGui::SameLine();
-                            ImGuiExt::TextFormatted("@ {}", commit.date.c_str());
-
-                            // Draw description if there is one
-                            if (!commit.description.empty()) {
-                                ImGui::Separator();
-                                ImGuiExt::TextFormatted("{}", commit.description);
-                            }
-
-                            ImGui::EndTooltip();
+                        // Draw hover tooltip
+                        ImGui::TableNextColumn();
+                        if (ImGui::Selectable("##commit", false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            hex::openWebpage(commit.url);
                         }
 
+                        if (ImGui::IsItemHovered()) {
+                            if (ImGui::BeginTooltip()) {
+                                // Draw author and commit date
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.author);
+                                ImGui::SameLine();
+                                ImGuiExt::TextFormatted("@ {}", commit.date.c_str());
+
+                                // Draw description if there is one
+                                if (!commit.description.empty()) {
+                                    ImGui::Separator();
+                                    ImGuiExt::TextFormatted("{}", commit.description);
+                                }
+
+                                ImGui::EndTooltip();
+                            }
+
+                        }
+
+                        // Draw commit hash
+                        ImGui::SameLine(0, 0);
+                        ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.hash.substr(0, 7));
+
+                        // Draw the commit message
+                        ImGui::TableNextColumn();
+
+                        const ImColor color = [&]{
+                            if (commit.hash == ImHexApi::System::getCommitHash(true))
+                                return ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive);
+                            else
+                                return ImGui::GetStyleColorVec4(ImGuiCol_Text);
+                        }();
+                        ImGuiExt::TextFormattedColored(color, commit.message);
+
+                        ImGui::PopID();
                     }
 
-                    // Draw commit hash
-                    ImGui::SameLine(0, 0);
-                    ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight), "{}", commit.hash.substr(0, 7));
-
-                    // Draw the commit message
-                    ImGui::TableNextColumn();
-
-                    const ImColor color = [&]{
-                        if (commit.hash == ImHexApi::System::getCommitHash(true))
-                            return ImGui::GetStyleColorVec4(ImGuiCol_HeaderActive);
-                        else
-                            return ImGui::GetStyleColorVec4(ImGuiCol_Text);
-                    }();
-                    ImGuiExt::TextFormattedColored(color, commit.message);
-
-                    ImGui::PopID();
+                    ImGui::EndTable();
                 }
-
-                ImGui::EndTable();
             }
+            ImGuiExt::EndSubWindow();
+            ImGui::PopStyleVar();
         }
     }
 
