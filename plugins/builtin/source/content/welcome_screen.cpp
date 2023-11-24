@@ -356,6 +356,7 @@ namespace hex::plugin::builtin {
     }
 
     static void drawWelcomeScreen() {
+        ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
         if (ImGui::Begin("ImHexDockSpace")) {
             if (!ImHexApi::Provider::isValid()) {
                 static std::array<char, 256> title;
@@ -377,6 +378,7 @@ namespace hex::plugin::builtin {
             }
         }
         ImGui::End();
+        ImGui::PopStyleColor();
     }
     /**
      * @brief Draw some default background if there are no views available in the current layout

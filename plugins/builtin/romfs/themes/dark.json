@@ -56,7 +56,8 @@
             "title-background": "#232323FF",
             "title-background-active": "#232323FF",
             "title-background-collapse": "#232323FF",
-            "window-background": "#0F0F0FFF"
+            "window-background": "#0F0F0FFF",
+            "window-shadow": "#000000FF"
         },
         "imhex": {
             "blur-background": "#00000000",
@@ -224,7 +225,10 @@
             "window-title-align": [
                 0.0,
                 0.5
-            ]
+            ],
+            "window-shadow-size": 64.0,
+            "window-shadow-offset": 0.0,
+            "window-shadow-angle": 0.0
         },
         "imnodes": {
             "grid-spacing": 24.0,
