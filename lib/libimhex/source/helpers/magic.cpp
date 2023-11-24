@@ -61,6 +61,9 @@ namespace hex::magic {
         if (!magicFiles.has_value())
             return false;
 
+        if (magicFiles->empty())
+            return true;
+
         std::array<char, 1024> cwd = { 0x00 };
         if (getcwd(cwd.data(), cwd.size()) == nullptr)
             return false;
