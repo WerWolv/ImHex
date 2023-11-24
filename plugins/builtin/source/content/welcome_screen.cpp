@@ -235,15 +235,15 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
           
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-            ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.plugins"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
+            ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.plugins"_lang, ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0), ImGuiChildFlags_AutoResizeX);
             {
                 const auto &plugins = PluginManager::getPlugins();
 
                 if (!plugins.empty()) {
                     if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5))) {
                         ImGui::TableSetupScrollFreeze(0, 1);
-                        ImGui::TableSetupColumn("hex.builtin.welcome.plugins.plugin"_lang, ImGuiTableColumnFlags_WidthStretch, 0.2);
-                        ImGui::TableSetupColumn("hex.builtin.welcome.plugins.author"_lang, ImGuiTableColumnFlags_WidthStretch, 0.2);
+                        ImGui::TableSetupColumn("hex.builtin.welcome.plugins.plugin"_lang);
+                        ImGui::TableSetupColumn("hex.builtin.welcome.plugins.author"_lang);
                         ImGui::TableSetupColumn("hex.builtin.welcome.plugins.desc"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5);
                         ImGui::TableSetupColumn("##loaded", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
 
