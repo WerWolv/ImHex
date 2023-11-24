@@ -285,7 +285,7 @@ namespace hex::plugin::builtin {
 
         private:
             bool detectShortcut() {
-                if (auto shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
+                if (const auto &shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
                     log::info("Changed shortcut to {}", shortcut->toString());
                     auto keys = this->m_shortcut.getKeys();
                     std::erase_if(keys, [](Key key) {
@@ -298,9 +298,11 @@ namespace hex::plugin::builtin {
 
                     auto newShortcut = Shortcut(std::move(keys));
                     this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
-                    this->m_shortcut = std::move(newShortcut);
 
-                    return true;
+                    if (!this->m_hasDuplicate) {
+                        this->m_shortcut = std::move(newShortcut);
+                        return true;
+                    }
                 }
 
                 return false;
