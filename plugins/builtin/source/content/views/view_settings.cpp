@@ -113,7 +113,12 @@ namespace hex::plugin::builtin {
 
         // If a restart is required, ask the user if they want to restart
         if (!this->getWindowOpenState() && this->m_restartRequested) {
-            PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang, ImHexApi::System::restartImHex, []{});
+            PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
+                ImHexApi::System::restartImHex,
+                [this]{
+                    this->m_restartRequested = false;
+                }
+            );
         }
     }
 

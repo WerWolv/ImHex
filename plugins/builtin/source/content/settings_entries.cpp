@@ -389,20 +389,29 @@ namespace hex::plugin::builtin {
 
         auto customFontEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_enable", false).requiresRestart();
 
+        const auto fontSettingsEnabled = [customFontEnabledSetting]{
+            auto &checkBox = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+
+            return checkBox.isChecked();
+        };
+
         ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
                 .requiresRestart()
-                .setEnabledCallback([customFontEnabledSetting]{
-                    auto &checkBox = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
-
-                    return checkBox.isChecked();
-                });
+                .setEnabledCallback(fontSettingsEnabled);
         ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
                 .requiresRestart()
-                .setEnabledCallback([customFontEnabledSetting]{
-                    auto &checkBox = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+                .setEnabledCallback(fontSettingsEnabled);
 
-                    return checkBox.isChecked();
-                });
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
+                .requiresRestart()
+                .setEnabledCallback(fontSettingsEnabled);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
+                .requiresRestart()
+                .setEnabledCallback(fontSettingsEnabled);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", false)
+                .requiresRestart()
+                .setEnabledCallback(fontSettingsEnabled);
+
 
 
         /* Folders */
