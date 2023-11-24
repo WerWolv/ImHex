@@ -38,6 +38,7 @@ namespace hex::plugin::builtin {
 
         static bool imhexClosing = false;
         EventManager::subscribe<EventWindowClosing>([](GLFWwindow *window) {
+            imhexClosing = false;
             if (ImHexApi::Provider::isDirty() && !imhexClosing) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
                 PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
@@ -58,13 +59,16 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderClosing>([](const hex::prv::Provider *provider, bool *shouldClose) {
+        EventManager::subscribe<EventProviderClosing>([](const prv::Provider *provider, bool *shouldClose) {
             if (provider->isDirty()) {
                 *shouldClose = false;
                 PopupUnsavedChanges::open("hex.builtin.popup.close_provider.desc"_lang,
                                     []{
                                         for (const auto &provider : ImHexApi::Provider::impl::getClosingProviders())
                                             ImHexApi::Provider::remove(provider, true);
+
+                                        if (imhexClosing)
+                                            ImHexApi::System::closeImHex(true);
                                     },
                                     [] {
                                         ImHexApi::Provider::impl::resetClosingProvider();
