@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
                     framerate = 1.0F / ImGui::GetIO().DeltaTime;
                 }
 
-                ImGuiExt::TextFormatted("FPS {0:2}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
+                ImGuiExt::TextFormatted("FPS {0:3}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
             });
         #endif
 

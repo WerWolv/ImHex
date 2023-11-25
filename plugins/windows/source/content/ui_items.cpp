@@ -61,7 +61,7 @@ namespace hex::plugin::windows {
                 cpuUsage *= 100;
             }
 
-            ImGuiExt::TextFormatted(ICON_FA_TACHOMETER_ALT " {0:2}.{1:02}", u32(cpuUsage), u32(cpuUsage * 100) % 100);
+            ImGuiExt::TextFormatted(ICON_FA_TACHOMETER_ALT " {0:2}.{1:02}%", u32(cpuUsage), u32(cpuUsage * 100) % 100);
         });
 
         ContentRegistry::Interface::addFooterItem([] {
