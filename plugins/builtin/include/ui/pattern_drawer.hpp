@@ -35,6 +35,7 @@ namespace hex::plugin::builtin::ui {
 
         void setTreeStyle(TreeStyle style) { this->m_treeStyle = style; }
         void setSelectionCallback(std::function<void(Region)> callback) { this->m_selectionCallback = std::move(callback); }
+        void enableRowColoring(bool enabled) { this->m_rowColoring = enabled; }
         void reset();
 
     private:
@@ -99,6 +100,7 @@ namespace hex::plugin::builtin::ui {
         u64 m_editingPatternOffset = 0;
 
         TreeStyle m_treeStyle = TreeStyle::Default;
+        bool m_rowColoring = false;
         pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
 
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;

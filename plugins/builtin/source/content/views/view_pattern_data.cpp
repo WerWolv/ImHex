@@ -15,6 +15,9 @@ namespace hex::plugin::builtin {
         EventManager::subscribe<EventSettingsChanged>(this, [this] {
             auto patternStyle = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0);
             this->m_patternDrawer->setTreeStyle(patternStyle);
+
+            auto rowColoring = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", false);
+            this->m_patternDrawer->enableRowColoring(rowColoring);
         });
 
         // Reset the pattern drawer when the provider changes

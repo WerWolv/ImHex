@@ -229,6 +229,9 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::drawFavoriteColumn(const pl::ptrn::Pattern& pattern) {
+        if (this->m_rowColoring)
+            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, pattern.getColor() & 0x4FFFFFFF);
+
         if (!this->m_showFavoriteStars) {
             ImGui::TableNextColumn();
             return;

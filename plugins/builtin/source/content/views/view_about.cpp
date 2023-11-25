@@ -161,7 +161,7 @@ namespace hex::plugin::builtin {
             Contributor { "All other amazing contributors", "Being part of the community, opening issues, PRs and donating", "https://github.com/WerWolv/ImHex/graphs/contributors", false }
         };
 
-        ImGuiExt::TextFormattedWrapped("These amazing people have contributed some incredible things to ImHex in the past.\nConsider opening a PR on the Git Repository to become a part of them!");
+        ImGuiExt::TextFormattedWrapped("These amazing people have contributed some incredible things to ImHex in the past.\nConsider opening a PR on the Git Repository to take your place among them!");
         ImGui::NewLine();
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
@@ -172,8 +172,7 @@ namespace hex::plugin::builtin {
                 for (const auto &contributor : Contributors) {
                     ImGui::TableNextRow();
                     if (contributor.mainContributor) {
-                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_PlotHistogram) & 0x0FFFFFFF);
-                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(ImGuiCol_PlotHistogram) & 0x0FFFFFFF);
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_PlotHistogram) & 0x1FFFFFFF);
                     }
                     ImGui::TableNextColumn();
 

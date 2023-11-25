@@ -341,7 +341,7 @@ namespace hex::plugin::builtin {
         themeNames.emplace(themeNames.begin(), ThemeManager::NativeTheme);
         themeJsons.emplace(themeJsons.begin(), ThemeManager::NativeTheme);
 
-        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.color",
+        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.color",
                                                           themeNames,
                                                           themeJsons,
                                                           "Dark").setChangedCallback([](auto &widget) {
@@ -355,7 +355,9 @@ namespace hex::plugin::builtin {
                                                               }
                                                           });
 
-        ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.scaling").requiresRestart();
+        ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling").requiresRestart();
+
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.pattern_data_row_bg", false);
 
         std::vector<std::string> languageNames;
         std::vector<nlohmann::json> languageCodes;
@@ -365,10 +367,10 @@ namespace hex::plugin::builtin {
             languageCodes.emplace_back(languageCode);
         }
 
-        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
 
-        ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.wiki_explain_language", "en");
-        ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.fps");
+        ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
+        ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.fps");
 
         #if defined (OS_LINUX)
             constexpr static auto MultiWindowSupportEnabledDefault = 0;
@@ -376,8 +378,8 @@ namespace hex::plugin::builtin {
             constexpr static auto MultiWindowSupportEnabledDefault = 1;
         #endif
 
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault).requiresRestart();
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "", "hex.builtin.setting.interface.restore_window_pos", false);
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault).requiresRestart();
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
 
         ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
