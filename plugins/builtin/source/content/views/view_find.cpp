@@ -150,12 +150,14 @@ namespace hex::plugin::builtin {
     }
 
     template<typename T>
-    static std::string formatBytes(const std::vector<u8> &bytes) {
+    static std::string formatBytes(const std::vector<u8> &bytes, std::endian endian) {
         if (bytes.size() > sizeof(T))
             return { };
 
         T value = 0x00;
         std::memcpy(&value, bytes.data(), bytes.size());
+
+        value = hex::changeEndianess(value, bytes.size(), endian);
 
         if (std::signed_integral<T>)
             value = hex::signExtend(bytes.size() * 8, value);
@@ -507,16 +509,16 @@ namespace hex::plugin::builtin {
                             result += hex::encodeByteString({ bytes[i] });
                         break;
                     case Unsigned:
-                        result += formatBytes<u64>(bytes);
+                        result += formatBytes<u64>(bytes, occurrence.endian);
                         break;
                     case Signed:
-                        result += formatBytes<i64>(bytes);
+                        result += formatBytes<i64>(bytes, occurrence.endian);
                         break;
                     case Float:
-                        result += formatBytes<float>(bytes);
+                        result += formatBytes<float>(bytes, occurrence.endian);
                         break;
                     case Double:
-                        result += formatBytes<double>(bytes);
+                        result += formatBytes<double>(bytes, occurrence.endian);
                         break;
                 }
             }
