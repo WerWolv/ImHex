@@ -21,6 +21,7 @@ jobs:
 
       - name: 📜 Verify version and set version variable
         run: |
+          set -x
           project_version=`cat ImHex/VERSION`
           tag_version="${{github.event.release.tag_name}}"
           tag_version="${tag_version:1}"
@@ -64,6 +65,7 @@ jobs:
 
       - name: 📜 Verify version and set version variable
         run: |
+          set -x
           project_version=`cat ImHex/VERSION`
           tag_version="${{github.event.release.tag_name}}"
           tag_version="${tag_version:1}"
@@ -87,7 +89,8 @@ jobs:
           skip_unpack: true
 
       - name: 🗜️ Unzip files when needed
-        run: |	
+        run: |
+          set -x
           for zipfile in ./*.zip
           do
               if [ `zipinfo -1 "$zipfile" | wc -l` -eq 1 ];
@@ -112,6 +115,7 @@ jobs:
 
       - name: ✒️ Prepare PKGBUILD
         run: |
+          set -x
           cp ImHex/dist/Arch/PKGBUILD .
           
           hash=`md5sum imhex-${{ env.IMHEX_VERSION }}-ArchLinux-x86_64.pkg.tar.zst | cut -d ' ' -f 1`
@@ -150,6 +154,7 @@ jobs:
           WINGET_GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         if: "${{ env.WINGET_GITHUB_TOKEN != '' }}"
         run: |
+          set -x
           $tagname = $env:GITHUB_REF.Replace("refs/tags/", "")
           $version = $tagname.Replace("v", "")
           $url = "https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-Windows-x86_64.msi"

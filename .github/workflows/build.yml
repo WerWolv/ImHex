@@ -72,6 +72,7 @@ jobs:
     # Windows cmake build
     - name: 🛠️ Build
       run: |
+        set -x
         mkdir -p build
         cd build
 
@@ -112,6 +113,7 @@ jobs:
     - name: ⬇️ Download Mesa3D for NoGPU version
       shell: bash
       run: |
+        set -x
         echo "NoGPU version Powered by Mesa 3D : https://fdossena.com/?p=mesa%2Findex.frag" > build/install/MESA.md
         curl https://werwolv.net/downloads/mesa/MesaForWindows-x64-latest.7z -L -o mesa.7z
         7z e mesa.7z
@@ -192,6 +194,7 @@ jobs:
     - name: ⬇️ Patch and install custom glfw
       if: ${{matrix.custom_glfw}}
       run: |
+        set -x
         cd glfw
         git apply ../dist/macOS/0001-glfw-SW.patch
 
@@ -211,6 +214,7 @@ jobs:
     # MacOS cmake build
     - name: 🛠️ Build
       run: |
+        set -x
         mkdir -p build
         cd build
         CC=$(brew --prefix gcc@12)/bin/gcc-12                                                       \
@@ -340,6 +344,7 @@ jobs:
       # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
+          set -x
           git config --global --add safe.directory '*'
           mkdir -p build
           cd build
@@ -466,6 +471,7 @@ jobs:
       # ArchLinux cmake build
       - name: 🛠️ Build
         run: |
+          set -x
           mkdir -p build
           cd build
           CC=gcc CXX=g++ cmake -G "Ninja"               \
@@ -498,6 +504,7 @@ jobs:
     # makepkg doesn't want to run as root, so I had to chmod 777 all over
       - name: 📦 Package ArchLinux .pkg.tar.zst
         run: |
+          set -x
           cd build
 
           # the name is a small trick to make makepkg recognize it as the source
@@ -570,6 +577,7 @@ jobs:
 
       - name: ⬇️ Update all packages and install dependencies
         run: |
+          set -x
           dnf upgrade --disablerepo="*" --enablerepo="fedora,updates" -y
           dnf install --disablerepo="*" --enablerepo="fedora,updates" -y \
           fedpkg         \
