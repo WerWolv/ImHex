@@ -106,7 +106,8 @@ namespace hex::plugin::builtin {
         std::string s_texturePath;
 
 
-        void indicesForLines(std::vector<u32> &vertexIndices) {
+        template<typename T>
+        void indicesForLines(std::vector<T> &vertexIndices) {
             std::vector<u32> indices;
 
             u32 vertexCount = vertexIndices.size() / 3;
@@ -123,7 +124,9 @@ namespace hex::plugin::builtin {
                 indices[i * 6 + 5] = vertexIndices[3 * i];
             }
 
-            vertexIndices = indices;
+            vertexIndices.resize(indices.size());
+            for (u32 i = 0; i < indices.size(); ++i)
+                vertexIndices[i] = indices[i];
         }
 
 
@@ -451,7 +454,7 @@ namespace hex::plugin::builtin {
             if (std::fabs(nearLimit) < 1e-6)
                 nearLimit = 0.0;
 
-            auto label = "hex.builtin.pl_visualizer.3d.nearClipPlane"_lang.operator std::string() + ":";
+            auto label = "hex.builtin.pl_visualizer.3d.nearClipPlane"_lang.get() + ":";
             label += fmt::format("{:.3}", nearLimit);
 
             if (ImHexApi::System::isDebugBuild())
@@ -460,7 +463,7 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(availableWidth);
             ImGui::TextUnformatted(label.c_str());
             if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.nearlimit"_lang.operator std::string();
+                std::string tip = "hex.builtin.pl_visualizer.3d.nearlimit"_lang.get();
                 styledToolTip(tip);
             }
             ImGui::PopItemWidth();
@@ -479,11 +482,11 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(availableWidth);
             ImGui::TextUnformatted(label.c_str());
             if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.translation"_lang.operator std::string();
+                std::string tip = "hex.builtin.pl_visualizer.3d.translation"_lang.get();
                 styledToolTip(tip,true);
-                tip = "hex.builtin.pl_visualizer.3d.translationMouse"_lang.operator std::string();
+                tip = "hex.builtin.pl_visualizer.3d.translationMouse"_lang.get();
                 tip += "\n";
-                tip += "hex.builtin.pl_visualizer.3d.translationKeyboard"_lang.operator std::string();
+                tip += "hex.builtin.pl_visualizer.3d.translationKeyboard"_lang.get();
                 styledToolTip(tip);
             }
             ImGui::PopItemWidth();
@@ -497,7 +500,7 @@ namespace hex::plugin::builtin {
             float fontSize = ImHexApi::System::getFontSize();
             float sliderWidth = std::floor(fontSize / 2.0f) * 3.0f;
             ImVec2 size(sliderWidth, renderingWindowSize.y);
-            std::string units = "hex.builtin.pl_visualizer.3d.degrees"_lang.operator std::string();
+            std::string units = "hex.builtin.pl_visualizer.3d.degrees"_lang.get();
 
             ImGuiExt::VSliderAngle("##X", size, &rotation.data()[1], 0, 360, "X", ImGuiSliderFlags_AlwaysClamp);
             std::string temp = fmt::format("{:.3} ", rotation[1] * 180 * std::numbers::inv_pi);
@@ -537,7 +540,7 @@ namespace hex::plugin::builtin {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            std::string label = "hex.builtin.pl_visualizer.3d.scale"_lang.operator std::string();
+            std::string label = "hex.builtin.pl_visualizer.3d.scale"_lang.get();
             label += ": %.3f";
 
             ImGui::PushItemWidth(availableWidth_1);
@@ -552,7 +555,7 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextColumn();
 
-            label = "hex.builtin.common.reset"_lang.operator std::string();
+            label = "hex.builtin.common.reset"_lang.get();
             auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
             auto spacing = (availableWidth_2 - labelWidth) / 2.0f;
 
@@ -560,7 +563,7 @@ namespace hex::plugin::builtin {
 
             ImGui::TextUnformatted(label.c_str());
             if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.reset_description"_lang.operator std::string();
+                std::string tip = "hex.builtin.pl_visualizer.3d.reset_description"_lang.get();
                 styledToolTip(tip);
             }
             ImGui::Unindent(spacing);
@@ -601,7 +604,7 @@ namespace hex::plugin::builtin {
                 resetEverything = false;
 
             if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.reset_usage"_lang.operator std::string();
+                std::string tip = "hex.builtin.pl_visualizer.3d.reset_usage"_lang.get();
                 styledToolTip(tip);
             }
             ImGui::Unindent(spacing);
@@ -613,7 +616,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                std::string label = "hex.builtin.pl_visualizer.3d.lightPosition"_lang.operator std::string();
+                std::string label = "hex.builtin.pl_visualizer.3d.lightPosition"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 auto indent = (availableWidth - labelWidth) / 2.0f;
@@ -621,7 +624,7 @@ namespace hex::plugin::builtin {
 
                 ImGuiExt::TextFormatted(label);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_description"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_description"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
@@ -636,7 +639,7 @@ namespace hex::plugin::builtin {
                     s_previousTime = 0;
                 }
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_usage"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_usage"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::PopItemWidth();
@@ -651,7 +654,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
 
                 static auto projectionIcon = ICON_BI_VIEW_PERSPECTIVE;
-                auto label = "hex.builtin.pl_visualizer.3d.projection"_lang.operator std::string();
+                auto label = "hex.builtin.pl_visualizer.3d.projection"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 float spacing = (availableWidth - labelWidth) / 2.0f;
@@ -661,9 +664,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (isPerspective)
-                        tip = "hex.builtin.pl_visualizer.3d.perspectiveSelected"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.perspectiveSelected"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.orthographicSelected"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.orthographicSelected"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -690,9 +693,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (isPerspective)
-                        tip = "hex.builtin.pl_visualizer.3d.selectOrthographic"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.selectOrthographic"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.selectPerspective"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.selectPerspective"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -706,7 +709,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                auto label = "hex.builtin.pl_visualizer.3d.primitive"_lang.operator std::string();
+                auto label = "hex.builtin.pl_visualizer.3d.primitive"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 float spacing = (availableWidth - labelWidth) / 2.0f;
@@ -716,9 +719,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (drawMode == GL_TRIANGLES)
-                        tip = "hex.builtin.pl_visualizer.3d.trianglesSelected"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.trianglesSelected"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.linesSelected"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.linesSelected"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -745,9 +748,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (drawMode == GL_TRIANGLES)
-                        tip = "hex.builtin.pl_visualizer.3d.line"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.line"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.triangle"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.triangle"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -761,7 +764,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                auto label = "hex.builtin.pl_visualizer.3d.lightProperties"_lang.operator std::string();
+                auto label = "hex.builtin.pl_visualizer.3d.lightProperties"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 auto indent = (availableWidth - labelWidth) / 2.0f;
@@ -779,7 +782,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::InvisibleButton("##ambient", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.ambientIntensity"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.ambientIntensity"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(framePadding);
@@ -791,7 +794,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::InvisibleButton("##diffuse", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.diffuseIntensity"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.diffuseIntensity"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
@@ -803,7 +806,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::InvisibleButton("##specular", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.specularIntensity"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.specularIntensity"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
@@ -815,7 +818,7 @@ namespace hex::plugin::builtin {
 
                 ImGui::InvisibleButton("##shininess", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.shininessIntensity"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.shininessIntensity"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
@@ -833,7 +836,7 @@ namespace hex::plugin::builtin {
                 ImGui::Indent(0);
                 ImGui::InvisibleButton("##ambient2", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.ambient"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.ambient"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(0);
@@ -842,7 +845,7 @@ namespace hex::plugin::builtin {
                 ImGui::Indent(bSize.x);
                 ImGui::InvisibleButton("##diffuse2", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.diffuse"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.diffuse"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(bSize.x);
@@ -851,7 +854,7 @@ namespace hex::plugin::builtin {
                 ImGui::Indent(2 * bSize.x);
                 ImGui::InvisibleButton("##specular2", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.specular"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.specular"_lang.get();
                     styledToolTip(tip);
                 }
 
@@ -861,7 +864,7 @@ namespace hex::plugin::builtin {
                 ImGui::Indent(3 * bSize.x);
                 ImGui::InvisibleButton("##shininess2", bSize);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.shininess"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.shininess"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(3 * bSize.x);
@@ -875,7 +878,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                auto label = "hex.builtin.pl_visualizer.3d.textureFile"_lang.operator std::string();
+                auto label = "hex.builtin.pl_visualizer.3d.textureFile"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 auto indent = (availableWidth - labelWidth) / 2.0f;
@@ -883,7 +886,7 @@ namespace hex::plugin::builtin {
 
                 ImGuiExt::TextFormatted("{}", label);
                 if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.textureFile"_lang.operator std::string();
+                    std::string tip = "hex.builtin.pl_visualizer.3d.textureFile"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
@@ -904,7 +907,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                auto label = "hex.builtin.pl_visualizer.3d.animationSpeed"_lang.operator std::string();
+                auto label = "hex.builtin.pl_visualizer.3d.animationSpeed"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 auto indent = (availableWidth - labelWidth) / 2.0f;
@@ -931,7 +934,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                auto label = "hex.builtin.pl_visualizer.3d.light"_lang.operator std::string();
+                auto label = "hex.builtin.pl_visualizer.3d.light"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 auto spacing = (availableWidth - labelWidth) / 2.0f;
@@ -941,9 +944,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (drawSource)
-                        tip = "hex.builtin.pl_visualizer.3d.renderingLightSource"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.renderingLightSource"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.notRenderingLightSource"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.notRenderingLightSource"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -964,9 +967,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (drawSource)
-                        tip = "hex.builtin.pl_visualizer.3d.dontDrawSource"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.dontDrawSource"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.drawSource"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.drawSource"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -980,7 +983,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                auto label = "hex.builtin.pl_visualizer.3d.animation"_lang.operator std::string();
+                auto label = "hex.builtin.pl_visualizer.3d.animation"_lang.get();
                 auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
 
                 auto spacing = (availableWidth - labelWidth) / 2.0f;
@@ -990,9 +993,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (animationOn)
-                        tip = "hex.builtin.pl_visualizer.3d.animationIsRunning"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.animationIsRunning"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.animationIsNotRunning"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.animationIsNotRunning"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -1021,9 +1024,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (animationOn)
-                        tip = "hex.builtin.pl_visualizer.3d.dontAnimate"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.dontAnimate"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.animate"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.animate"_lang.get();
                     styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
@@ -1056,7 +1059,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTable("##3DVisualizer", columnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX)) {
                 constexpr static auto ColumnFlags =  ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoResize;
-                ImGui::TableSetupColumn("##FirstColumn", ColumnFlags, textureWidth);
+                ImGui::TableSetupColumn("##FirstColumn", ColumnFlags, textureWidth + 4_scaled);
 
                 if (showUI) {
                     float column2Width = secondColumnWidth;
@@ -1073,43 +1076,11 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (showUI)
-                        tip = "hex.builtin.pl_visualizer.3d.hideUI"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.hideUI"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.showUI"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.showUI"_lang.get();
                     styledToolTip(tip);
                 }
-
-                ImGui::SameLine();
-                ImGui::TextUnformatted("hex.builtin.pl_visualizer.3d.size"_lang);
-
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.size_usage"_lang.operator std::string();
-                    styledToolTip(tip);
-                }
-
-                ImGui::SameLine();
-
-                auto labelWidth = ImGui::CalcTextSize("1000").x;
-                ImGui::PushItemWidth(labelWidth);
-
-                ImGui::DragFloat("##WinSizex", &renderingWindowSize.x, 1.0f, minSize, maxSize.x);
-
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.size_units"_lang.operator std::string();
-                    styledToolTip(tip);
-                }
-                ImGui::PopItemWidth();
-
-                ImGui::SameLine();
-
-                ImGui::PushItemWidth(labelWidth);
-                ImGui::DragFloat("##WinSizey", &renderingWindowSize.y, 1.0f, minSize, maxSize.y);
-
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.size_units"_lang.operator std::string();
-                    styledToolTip(tip);
-                }
-                ImGui::PopItemWidth();
 
                 ImGui::SameLine();
 
@@ -1125,9 +1096,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (s_drawAxes)
-                        tip = "hex.builtin.pl_visualizer.3d.dontDrawAxes"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.dontDrawAxes"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.drawAxes"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.drawAxes"_lang.get();
                     styledToolTip(tip);
                 }
 
@@ -1149,9 +1120,9 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
                     if (s_drawGrid)
-                        tip = "hex.builtin.pl_visualizer.3d.hideGrid"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.hideGrid"_lang.get();
                     else
-                        tip = "hex.builtin.pl_visualizer.3d.renderGrid"_lang.operator std::string();
+                        tip = "hex.builtin.pl_visualizer.3d.renderGrid"_lang.get();
                     styledToolTip(tip);
                 }
 
@@ -1166,7 +1137,7 @@ namespace hex::plugin::builtin {
                     ImGui::Unindent(indent);
 
                     if (ImGui::IsItemHovered()) {
-                        std::string tip = "hex.builtin.pl_visualizer.3d.rotation_usage"_lang.operator std::string();
+                        std::string tip = "hex.builtin.pl_visualizer.3d.rotation_usage"_lang.get();
                         styledToolTip(tip);
                     }
                 }
@@ -1177,8 +1148,10 @@ namespace hex::plugin::builtin {
                 ImVec2 screenPos = ImGui::GetCursorScreenPos();
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-                if (ImGui::BeginChild("##image", textureSize, true,
+                if (ImGui::BeginChild("##image", textureSize, ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY | ImGuiChildFlags_Border,
                                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                    renderingWindowSize = ImGui::GetContentRegionAvail();
+
                     ImGui::Image(texture, textureSize, ImVec2(0, 1), ImVec2(1, 0));
 
                     if (s_drawAxes) {
@@ -1211,13 +1184,13 @@ namespace hex::plugin::builtin {
 
                     if (ImHexApi::System::isDebugBuild()) {
                         float mouse_x = ImGui::GetMousePos().x;
-                        if (std::fabs(mouse_x) >= 3.0e+38F)
+                        if (std::fabs(mouse_x) >= std::numeric_limits<float>::max())
                             mouse_x = 0.0F;
                         else
                             mouse_x -= screenPos.x;
 
                         float mouse_y = ImGui::GetMousePos().y;
-                        if (std::fabs(mouse_y) >= 3.0e+38F)
+                        if (std::fabs(mouse_y) >= std::numeric_limits<float>::max())
                             mouse_y = 0.0F;
                         else
                             mouse_y -= screenPos.y;
@@ -1226,6 +1199,7 @@ namespace hex::plugin::builtin {
                         ImDrawList *drawList = ImGui::GetWindowDrawList();
                         drawList->AddText(screenPos, IM_COL32(255, 255, 255, 255), mousePos.c_str());
                     }
+
                 }
 
                 ImGui::EndChild();
@@ -1322,9 +1296,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        static bool shouldResetLocally = shouldReset;
         if (shouldReset)
-            shouldResetLocally = true;
+            s_shouldReset = true;
 
         const auto fontSize = ImGui::GetFontSize();
         const auto framePad = ImGui::GetStyle().FramePadding;
@@ -1350,14 +1323,14 @@ namespace hex::plugin::builtin {
 
         processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
 
-        if (shouldResetLocally) {
-            shouldResetLocally = false;
-            if (indicesPattern->getTypeName() == "u8" || indicesPattern->getTypeName() == "byte" || indicesPattern->getTypeName() == "char" || indicesPattern->getTypeName() == "s8") {
+        if (s_shouldReset) {
+            s_shouldReset = false;
+            if (indicesPattern->getSection() == 1) {
                 s_indexType = IndexType::U8;
-            } else if (indicesPattern->getTypeName() == "u32" || indicesPattern->getTypeName() == "s32" || indicesPattern->getTypeName() == "unsigned") {
-                s_indexType = IndexType::U32;
-            } else if (indicesPattern->getTypeName() == "u16" || indicesPattern->getTypeName() == "s16" || indicesPattern->getTypeName() == "short") {
+            } else if (indicesPattern->getSection() == 2) {
                 s_indexType = IndexType::U16;
+            } else if (indicesPattern->getSection() == 4) {
+                s_indexType = IndexType::U32;
             } else {
                 s_indexType = IndexType::Invalid;
             }
