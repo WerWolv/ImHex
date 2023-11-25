@@ -166,8 +166,8 @@ jobs:
 
     - name: ⬇️ Install dependencies
       run: |
-        brew install python --overwrite
-        brew link --overwrite python
+        set -x
+        brew reinstall python || brew link --overwrite python
         brew bundle --no-lock --file dist/Brewfile
         rm -rf /usr/local/Cellar/capstone
 
