@@ -92,6 +92,10 @@ namespace ImGuiExt {
             return this->m_textureId;
         }
 
+        [[nodiscard]] constexpr operator unsigned int() const noexcept {
+            return this->m_textureId;
+        }
+
         [[nodiscard]] auto getSize() const noexcept {
             return ImVec2(this->m_width, this->m_height);
         }

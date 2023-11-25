@@ -75,8 +75,8 @@ namespace hex::plugin::builtin {
         float s_scaling = 1.0F;
         float s_max;
         float s_rpms = 10;
-        float s_previousTime;
-        float s_initialTime;
+        double s_previousTime;
+        double s_initialTime;
 
         bool s_showUI = false;
         bool s_isPerspective = true;
@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
 
         IndexType s_indexType;
 
-        unsigned int s_ogltexture;
+        ImGuiExt::Texture s_modelTexture;
         std::string s_texturePathStrOld;
         float s_minScaling = 0.01F;
         float s_maxScaling = 10.0F;
@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
         std::string s_texturePath;
 
 
-        void indicesForLines(auto &vertexIndices) {
+        void indicesForLines(std::vector<u32> &vertexIndices) {
             std::vector<u32> indices;
 
             u32 vertexCount = vertexIndices.size() / 3;
@@ -122,15 +122,12 @@ namespace hex::plugin::builtin {
                 indices[i * 6 + 4] = vertexIndices[3 * i + 2];
                 indices[i * 6 + 5] = vertexIndices[3 * i];
             }
-            vertexIndices.resize(indices.size());
 
-            for (u32 i = 0; i < indices.size(); ++i)
-                vertexIndices[i] = indices[i];
-        };
+            vertexIndices = indices;
+        }
 
 
         void boundingBox(auto vertices, auto &max) {
-
             gl::Vector<float, 4> minWorld(std::numeric_limits<float>::infinity()), maxWorld(-std::numeric_limits<float>::infinity());
             for (u32 i = 0; i < vertices.size(); i += 3) {
                 if (vertices[i] < minWorld[0]) minWorld[0] = vertices[i];
@@ -156,7 +153,7 @@ namespace hex::plugin::builtin {
             float maxx = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
             float maxy = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
             max = std::max(maxx, maxy);
-        };
+        }
 
         void setDefaultColors(auto &colors, auto size, int color) {
             colors.resize(size / 3 * 4);
@@ -172,7 +169,7 @@ namespace hex::plugin::builtin {
                 colors[i + 2] = blue;
                 colors[i + 3] = alpha;
             }
-        };
+        }
 
         void setNormals(auto vertices, auto &normals) {
             for (u32 i = 0; i < normals.size(); i += 9) {
@@ -199,10 +196,9 @@ namespace hex::plugin::builtin {
                 normals[i + 1] = normal[1];
                 normals[i + 2] = normal[2];
             }
-        };
+        }
 
         void setNormalsWithIndices(auto vertices, auto &normals, auto indices) {
-
             for (u32 i = 0; i < indices.size(); i += 3) {
                 auto idx = indices[i];
                 auto idx1 = indices[i + 1];
@@ -236,38 +232,7 @@ namespace hex::plugin::builtin {
                     normals[i + 2] = normal[2] / mag;
                 }
             }
-        };
-
-        void loadTexture(const std::string &texturePath, auto &ogltexture, auto &drawTexture) {
-
-            int width, height, nrChannels;
-
-            if (texturePath != s_texturePathStrOld) {
-                s_shouldReset = true;
-                glGenTextures(1, &ogltexture);
-                glBindTexture(GL_TEXTURE_2D, ogltexture);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                auto data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
-
-                if (data != nullptr) {
-                    if (nrChannels == 4)
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-                    else
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-
-                    glGenerateMipmap(GL_TEXTURE_2D);
-
-                    stbi_image_free(data);
-                    drawTexture = true;
-                } else
-                    drawTexture = false;
-                s_texturePathStrOld = texturePath;
-            }
-        };
+        }
 
         void loadVectors(auto &vectors, auto indexType) {
             boundingBox(vectors.vertices, s_max);
@@ -307,7 +272,7 @@ namespace hex::plugin::builtin {
                     setNormalsWithIndices(vectors.vertices, vectors.normals, indices);
                 }
             }
-        };
+        }
 
         void loadLineVectors(auto &lineVectors, auto indexType) {
             boundingBox(lineVectors.vertices, s_max);
@@ -322,7 +287,7 @@ namespace hex::plugin::builtin {
                 indicesForLines(lineVectors.indices8);
             else
                 indicesForLines(lineVectors.indices32);
-        };
+        }
 
         void processKeyEvent(ImGuiKey key, auto &variable, auto incr, auto accel) {
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(key))) {
@@ -376,7 +341,7 @@ namespace hex::plugin::builtin {
             processKeyEvent(ImGuiKey_KeypadAdd, rotation[2], -0.075F, accel);
             processKeyEvent(ImGuiKey_KeypadSubtract, rotation[2], 0.075F, accel);
             rotation[2] = std::fmod(rotation[2], 2 * std::numbers::pi);
-        };
+        }
 
 
         void bindBuffers(auto &buffers, auto &vertexArray, auto vectors, auto indexType) {
@@ -428,7 +393,7 @@ namespace hex::plugin::builtin {
 
             vertexArray.unbind();
 
-        };
+        }
 
         void bindLineBuffers(auto &lineBuffers, auto &vertexArray, auto lineVectors, auto indexType) {
             lineBuffers.vertices = {};
@@ -465,7 +430,7 @@ namespace hex::plugin::builtin {
 
             vertexArray.unbind();
 
-        };
+        }
 
         void styledToolTip(const std::string &tip, bool isSeparator = false) {
             ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 3.0F);
@@ -480,7 +445,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::InfoTooltip(tip.c_str(),false);
 
             ImGui::PopStyleVar();
-        };
+        }
 
         void drawNearPlaneUI(float availableWidth, auto &nearLimit, auto &farLimit) {
             if (std::fabs(nearLimit) < 1e-6)
@@ -499,7 +464,7 @@ namespace hex::plugin::builtin {
                 styledToolTip(tip);
             }
             ImGui::PopItemWidth();
-        };
+        }
 
         void drawTranslateUI(auto availableWidth, auto &translation) {
 
@@ -522,7 +487,7 @@ namespace hex::plugin::builtin {
                 styledToolTip(tip);
             }
             ImGui::PopItemWidth();
-        };
+        }
 
         void drawRotationsScaleUI(auto availableWidth_1, auto availableWidth_2, auto &rotation, auto &rotate,
                                                     auto &scaling, auto &strength, auto &lightPosition,
@@ -640,7 +605,7 @@ namespace hex::plugin::builtin {
                 styledToolTip(tip);
             }
             ImGui::Unindent(spacing);
-        };
+        }
 
         void drawLightPositionUI(float availableWidth, auto &lightPosition, auto &shouldUpdateSource, auto &resetEverything) {
             if (ImGui::BeginTable("##LightPosition", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -677,7 +642,7 @@ namespace hex::plugin::builtin {
                 ImGui::PopItemWidth();
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawProjectionUI(auto availableWidth, auto &isPerspective, auto &shouldResetLocally, auto &resetEverything) {
             if (ImGui::BeginTable("##Proj", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -700,7 +665,7 @@ namespace hex::plugin::builtin {
                     else
                         tip = "hex.builtin.pl_visualizer.3d.orthographicSelected"_lang.operator std::string();
                     styledToolTip(tip);
-                };
+                }
                 ImGui::Unindent(spacing);
 
                 ImGui::TableNextRow();
@@ -733,7 +698,7 @@ namespace hex::plugin::builtin {
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawPrimitiveUI(auto availableWidth, auto &drawMode, auto &shouldResetLocally, auto &resetEverything) {
             if (ImGui::BeginTable("##Prim", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -788,7 +753,7 @@ namespace hex::plugin::builtin {
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawLightPropertiesUI(float availableWidth, auto &strength) {
             if (ImGui::BeginTable("##LightProperties", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -902,7 +867,7 @@ namespace hex::plugin::builtin {
                 ImGui::Unindent(3 * bSize.x);
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawTextureUI(float availableWidth, auto texturePath) {
             if (ImGui::BeginTable("##Texture", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -931,7 +896,7 @@ namespace hex::plugin::builtin {
                 ImGui::PopItemWidth();
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawAnimationSpeedUI(float availableWidth, auto &rpms) {
             if (ImGui::BeginTable("##AnimationSpeed", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -958,7 +923,7 @@ namespace hex::plugin::builtin {
                 ImGui::PopItemWidth();
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawLightUI(float availableWidth, auto &drawSource, auto &resetEverything) {
             if (ImGui::BeginTable("##ligth", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -1007,7 +972,7 @@ namespace hex::plugin::builtin {
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawAnimateUI(float availableWidth, auto &animationOn, auto &previousTime, auto &initialTime, auto &resetEverything) {
             if (ImGui::BeginTable("##Animate", 1, ImGuiTableFlags_SizingFixedFit)) {
@@ -1064,7 +1029,7 @@ namespace hex::plugin::builtin {
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
-        };
+        }
 
         void drawWindow(auto &texture, auto &renderingWindowSize, auto mvp, auto minSize, auto& showUI, auto UISize) {
             auto textureSize = texture.getSize();
@@ -1317,7 +1282,7 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGui::EndTable();
-        };
+        }
 
     }
 
@@ -1519,9 +1484,10 @@ namespace hex::plugin::builtin {
                 shader.setUniform<4>("Strength", s_strength);
 
                 vertexArray.bind();
-                loadTexture(s_texturePath, s_ogltexture, s_drawTexture);
+                if (s_texturePath != s_texturePathStrOld)
+                    s_modelTexture = ImGuiExt::Texture(s_texturePath.c_str());
                 if (s_drawTexture)
-                    glBindTexture(GL_TEXTURE_2D, s_ogltexture);
+                    glBindTexture(GL_TEXTURE_2D, s_modelTexture);
 
                 if (s_indexType == IndexType::U8) {
 
