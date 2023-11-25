@@ -149,15 +149,16 @@ namespace hex::plugin::builtin {
             const char *name;
             const char *description;
             const char *link;
+            bool mainContributor;
         };
 
         constexpr static std::array Contributors = {
-            Contributor { "iTrooz", "A huge amount of help maintaining ImHex and the CI", "https://github.com/iTrooz" },
-            Contributor { "jumanji144", "A ton of help with the Pattern Language, API and usage stats", "https://github.com/Nowilltolife" },
-            Contributor { "Mary", "Porting ImHex to macOS originally", "https://github.com/marysaka" },
-            Contributor { "Roblabla", "Adding the MSI Windows installer", "https://github.com/roblabla" },
-            Contributor { "jam1garner", "Adding support for Rust plugins", "https://github.com/jam1garner" },
-            Contributor { "All other amazing contributors", "Being part of the community, opening issues, PRs and donating", "https://github.com/WerWolv/ImHex/graphs/contributors" }
+            Contributor { "iTrooz", "A huge amount of help maintaining ImHex and the CI", "https://github.com/iTrooz", true },
+            Contributor { "jumanji144", "A ton of help with the Pattern Language, API and usage stats", "https://github.com/Nowilltolife", true },
+            Contributor { "Mary", "Porting ImHex to macOS originally", "https://github.com/marysaka", false },
+            Contributor { "Roblabla", "Adding the MSI Windows installer", "https://github.com/roblabla", false },
+            Contributor { "jam1garner", "Adding support for Rust plugins", "https://github.com/jam1garner", false },
+            Contributor { "All other amazing contributors", "Being part of the community, opening issues, PRs and donating", "https://github.com/WerWolv/ImHex/graphs/contributors", false }
         };
 
         ImGuiExt::TextFormattedWrapped("These amazing people have contributed some incredible things to ImHex in the past.\nConsider opening a PR on the Git Repository to become a part of them!");
@@ -165,27 +166,36 @@ namespace hex::plugin::builtin {
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
         ImGuiExt::BeginSubWindow("Contributors", ImVec2(ImGui::GetContentRegionAvail().x, 0), ImGuiChildFlags_AutoResizeX);
+        ImGui::PopStyleVar();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 5, 5 }));
         {
+            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2());
+            const auto width = ImGui::GetContentRegionAvail().x;
             if (ImGui::BeginTable("Contributors", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
                 for (const auto &contributor : Contributors) {
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    if (contributor.name == nullptr) {
-                        ImGui::Separator();
-                        continue;
+                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetColorU32(contributor.mainContributor ? ImGuiCol_PlotHistogram : ImGuiCol_ChildBg) & 0x1FFFFFFF);
+
+                    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 2_scaled);
+                    if (ImGui::BeginChild(contributor.name, ImVec2(width - 2, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
+                        if (ImGuiExt::Hyperlink(contributor.name))
+                            hex::openWebpage(contributor.link);
+
+                        ImGui::Indent();
+                        ImGui::TextUnformatted(contributor.description);
+                        ImGui::Unindent();
                     }
+                    ImGui::EndChild();
+                    ImGui::PopStyleVar();
 
-                    if (ImGuiExt::Hyperlink(contributor.name))
-                        hex::openWebpage(contributor.link);
-
-                    ImGui::Indent();
-                    ImGui::TextUnformatted(contributor.description);
-                    ImGui::Unindent();
+                    ImGui::PopStyleColor();
                 }
 
                 ImGui::EndTable();
             }
+            ImGui::PopStyleVar();
         }
         ImGuiExt::EndSubWindow();
         ImGui::PopStyleVar();
@@ -246,7 +256,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndChild();
 
                     ImGui::SameLine();
-                    if (ImGui::GetCursorPosX() > (width - 200_scaled))
+                    if (ImGui::GetCursorPosX() > (width - 100_scaled))
                         ImGui::NewLine();
 
                     ImGui::PopStyleColor();
@@ -254,6 +264,8 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGuiExt::EndSubWindow();
+
+            ImGui::NewLine();
         };
 
         ImGuiExt::TextFormattedWrapped("ImHex builds on top of the amazing work of a ton of talented library developers without which this project wouldn't stand.");
