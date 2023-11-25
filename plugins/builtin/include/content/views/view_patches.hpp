@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
 
     private:
         u64 m_selectedPatch = 0x00;
-        PerProvider<u32> m_numPatches;
+        PerProvider<u32> m_numOperations;
     };
 
 }

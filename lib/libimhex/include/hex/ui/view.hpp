@@ -141,6 +141,7 @@ namespace hex {
 
         void draw() final {
             if (this->shouldDraw()) {
+                ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
                 this->drawContent();
             }
         }

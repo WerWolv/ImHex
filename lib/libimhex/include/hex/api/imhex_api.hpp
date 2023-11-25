@@ -211,6 +211,7 @@ namespace hex {
                 std::string comment;
                 u32 color;
                 bool locked;
+                u64 id;
             };
 
             /**
@@ -220,8 +221,25 @@ namespace hex {
              * @param name The name of the bookmark
              * @param comment The comment of the bookmark
              * @param color The color of the bookmark or 0x00 for the default color
+             * @return Bookmark ID
              */
-            void add(u64 address, size_t size, const std::string &name, const std::string &comment, color_t color = 0x00000000);
+            u64 add(u64 address, size_t size, const std::string &name, const std::string &comment, color_t color = 0x00000000);
+
+            /**
+            * @brief Adds a new bookmark
+            * @param region The region of the bookmark
+            * @param name The name of the bookmark
+            * @param comment The comment of the bookmark
+            * @param color The color of the bookmark or 0x00 for the default color
+            * @return Bookmark ID
+            */
+            u64 add(Region region, const std::string &name, const std::string &comment, color_t color = 0x00000000);
+
+            /**
+            * @brief Removes a bookmark
+            * @param id The ID of the bookmark to remove
+            */
+            void remove(u64 id);
 
         }
 

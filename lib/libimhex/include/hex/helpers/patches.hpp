@@ -9,7 +9,9 @@
 
 namespace hex {
 
-    using Patches = std::map<u64, u8>;
+    namespace prv {
+        class Provider;
+    }
 
     enum class IPSError {
         AddressOutOfRange,
@@ -19,9 +21,22 @@ namespace hex {
         MissingEOF
     };
 
-    wolv::util::Expected<std::vector<u8>, IPSError> generateIPSPatch(const Patches &patches);
-    wolv::util::Expected<std::vector<u8>, IPSError> generateIPS32Patch(const Patches &patches);
+    class Patches {
+    public:
+        Patches() = default;
+        Patches(std::map<u64, u8> &&patches) : m_patches(std::move(patches)) {}
 
-    wolv::util::Expected<Patches, IPSError> loadIPSPatch(const std::vector<u8> &ipsPatch);
-    wolv::util::Expected<Patches, IPSError> loadIPS32Patch(const std::vector<u8> &ipsPatch);
+        static wolv::util::Expected<Patches, IPSError> fromProvider(hex::prv::Provider *provider);
+        static wolv::util::Expected<Patches, IPSError> fromIPSPatch(const std::vector<u8> &ipsPatch);
+        static wolv::util::Expected<Patches, IPSError> fromIPS32Patch(const std::vector<u8> &ipsPatch);
+
+        wolv::util::Expected<std::vector<u8>, IPSError> toIPSPatch() const;
+        wolv::util::Expected<std::vector<u8>, IPSError> toIPS32Patch() const;
+
+        const auto& get() const { return this->m_patches; }
+        auto& get() { return this->m_patches; }
+
+    private:
+        std::map<u64, u8> m_patches;
+    };
 }

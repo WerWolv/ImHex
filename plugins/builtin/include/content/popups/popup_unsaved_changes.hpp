@@ -57,7 +57,7 @@ namespace hex::plugin::builtin {
         }
 
         [[nodiscard]] ImVec2 getMaxSize() const override {
-            return scaled({ 600, 300 });
+            return scaled({ 600, 600 });
         }
 
     private:

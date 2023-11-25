@@ -23,6 +23,7 @@ namespace hex::plugin::builtin {
 
         std::list<ImHexApi::Bookmarks::Entry>::iterator m_dragStartIterator;
         PerProvider<std::list<ImHexApi::Bookmarks::Entry>> m_bookmarks;
+        PerProvider<u64> m_currBookmarkId;
     };
 
 }

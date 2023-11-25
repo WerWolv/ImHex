@@ -39,28 +39,7 @@ namespace hex::plugin::builtin {
     }
 
     bool FileProvider::isSavable() const {
-        return !this->getPatches().empty();
-    }
-
-
-    void FileProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-        this->readRaw(offset - this->getBaseAddress(), buffer, size);
-
-        if (overlays) [[likely]] {
-            for (const auto&[patchOffset, patchData] : getPatches()) {
-                if (patchOffset >= offset && patchOffset < (offset + size))
-                    static_cast<u8 *>(buffer)[patchOffset - offset] = patchData;
-            }
-
-            this->applyOverlays(offset, buffer, size);
-        }
-    }
-
-    void FileProvider::write(u64 offset, const void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
-            return;
-
-        addPatch(offset, buffer, size, true);
+        return this->m_undoRedoStack.canUndo();
     }
 
     void FileProvider::readRaw(u64 offset, void *buffer, size_t size) {
@@ -79,8 +58,6 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::save() {
-        this->applyPatches();
-
         #if defined(OS_WINDOWS)
             FILETIME ft;
             SYSTEMTIME st;
@@ -105,7 +82,7 @@ namespace hex::plugin::builtin {
             Provider::saveAs(path);
     }
 
-    void FileProvider::resize(size_t newSize) {
+    void FileProvider::resizeRaw(size_t newSize) {
         this->close();
 
         {
@@ -117,9 +94,9 @@ namespace hex::plugin::builtin {
         (void)this->open();
     }
 
-    void FileProvider::insert(u64 offset, size_t size) {
+    void FileProvider::insertRaw(u64 offset, size_t size) {
         auto oldSize = this->getActualSize();
-        this->resize(oldSize + size);
+        this->resizeRaw(oldSize + size);
 
         std::vector<u8> buffer(0x1000);
         const std::vector<u8> zeroBuffer(0x1000);
@@ -134,11 +111,9 @@ namespace hex::plugin::builtin {
             this->writeRaw(position, zeroBuffer.data(), readSize);
             this->writeRaw(position + size, buffer.data(), readSize);
         }
-
-        Provider::insert(offset, size);
     }
 
-    void FileProvider::remove(u64 offset, size_t size) {
+    void FileProvider::removeRaw(u64 offset, size_t size) {
         if (offset > this->getActualSize() || size == 0)
             return;
 
@@ -160,10 +135,7 @@ namespace hex::plugin::builtin {
             position += readSize;
         }
 
-        this->resize(newSize);
-
-        Provider::insert(offset, size);
-        Provider::remove(offset, size);
+        this->resizeRaw(newSize);
     }
 
     size_t FileProvider::getActualSize() const {

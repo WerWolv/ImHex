@@ -51,8 +51,7 @@ TEST_SEQUENCE("TestProvider_write") {
     u8 data[1024] = { 0xde, 0xad, 0xbe, 0xef, 0x42, 0x2a, 0x00, 0xff };
 
     std::fill(std::begin(buff), std::end(buff), 22);
-    provider2->write(1, data, 4);
-    provider2->applyPatches();
+    provider2->writeRaw(1, data, 4);
     TEST_ASSERT(buff[0] == 22);    // should be unchanged
     TEST_ASSERT(buff[1] == 0xde);
     TEST_ASSERT(buff[2] == 0xad);
@@ -61,22 +60,19 @@ TEST_SEQUENCE("TestProvider_write") {
     TEST_ASSERT(buff[5] == 22);    // should be unchanged
 
     std::fill(std::begin(buff), std::end(buff), 22);
-    provider2->write(0, data + 6, 2);
-    provider2->applyPatches();
+    provider2->writeRaw(0, data + 6, 2);
     TEST_ASSERT(buff[0] == 0x00);
     TEST_ASSERT(buff[1] == 0xff);
     TEST_ASSERT(buff[2] == 22);    // should be unchanged
 
     std::fill(std::begin(buff), std::end(buff), 22);
-    provider2->write(6, data, 2);
-    provider2->applyPatches();
+    provider2->writeRaw(6, data, 2);
     TEST_ASSERT(buff[5] == 22);    // should be unchanged
     TEST_ASSERT(buff[6] == 0xde);
     TEST_ASSERT(buff[7] == 0xad);
 
     std::fill(std::begin(buff), std::end(buff), 22);
-    provider2->write(7, data, 2);
-    provider2->applyPatches();
+    provider2->writeRaw(7, data, 2);
     TEST_ASSERT(std::count(std::begin(buff), std::end(buff), 22) == std::size(buff));    // buff should be unchanged
 
     TEST_SUCCESS();

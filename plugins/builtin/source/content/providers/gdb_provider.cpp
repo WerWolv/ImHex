@@ -184,10 +184,6 @@ namespace hex::plugin::builtin {
         }
 
         if (overlays) {
-            for (u64 i = 0; i < size; i++)
-                if (getPatches().contains(offset + i))
-                    static_cast<u8 *>(buffer)[i] = getPatches()[offset + this->getPageSize() * this->m_currPage + i];
-
             this->applyOverlays(offset, buffer, size);
         }
     }
@@ -218,7 +214,6 @@ namespace hex::plugin::builtin {
     }
 
     void GDBProvider::save() {
-        this->applyPatches();
         Provider::save();
     }
 

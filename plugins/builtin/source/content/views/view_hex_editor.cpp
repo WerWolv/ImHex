@@ -535,10 +535,13 @@ namespace hex::plugin::builtin {
                 return;
 
             auto provider = ImHexApi::Provider::get();
+            u32 patchCount = 0;
             for (u64 i = 0; i < size; i += bytes.size()) {
                 auto remainingSize = std::min<size_t>(size - i, bytes.size());
                 provider->write(provider->getBaseAddress() + address + i, bytes.data(), remainingSize);
+                patchCount += 1;
             }
+            provider->getUndoStack().groupOperations(patchCount, "hex.builtin.undo_operation.fill");
 
             AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.fill.name");
         }

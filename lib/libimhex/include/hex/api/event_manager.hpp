@@ -243,6 +243,10 @@ namespace hex {
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
     EVENT_DEF(EventSearchBoxClicked);
 
+    EVENT_DEF(EventProviderDataModified, prv::Provider *, u64, u64, const u8*);
+    EVENT_DEF(EventProviderDataInserted, prv::Provider *, u64, u64);
+    EVENT_DEF(EventProviderDataRemoved, prv::Provider *, u64, u64);
+
     /**
      * @brief Called when a project has been loaded
      */
@@ -254,7 +258,8 @@ namespace hex {
 
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);
-    EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t);
+    EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t, u64*);
+    EVENT_DEF(RequestRemoveBookmark, u64);
     EVENT_DEF(RequestSetPatternLanguageCode, std::string);
     EVENT_DEF(RequestLoadPatternLanguageFile, std::fs::path);
     EVENT_DEF(RequestSavePatternLanguageFile, std::fs::path);
