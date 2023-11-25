@@ -379,7 +379,7 @@ namespace ImGuiExt {
         Separator();
     }
 
-    bool InfoTooltip(const char *text) {
+    bool InfoTooltip(const char *text, bool isSeparator) {
         static double lastMoveTime;
         static ImGuiID lastHoveredID;
 
@@ -390,7 +390,10 @@ namespace ImGuiExt {
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
                 BeginTooltip();
-                TextUnformatted(text);
+                if (isSeparator)
+                    SeparatorText(text);
+                else
+                    TextUnformatted(text);
                 EndTooltip();
             }
 
@@ -926,6 +929,16 @@ namespace ImGuiExt {
         ImGui::SetCursorPosX(width / 9 * 5);
         if (ImGui::Button(textRight, ImVec2(width / 3, 0)))
             rightButtonCallback();
+    }
+
+    bool VSliderAngle(const char* label, ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags)
+    {
+        if (format == NULL)
+            format = "%.0f deg";
+        float v_deg = (*v_rad) * 360.0f / (2 * IM_PI);
+        bool value_changed = ImGui::VSliderFloat(label, size, &v_deg, v_degrees_min, v_degrees_max, format, flags);
+        *v_rad = v_deg * (2 * IM_PI) / 360.0f;
+        return value_changed;
     }
 
 }

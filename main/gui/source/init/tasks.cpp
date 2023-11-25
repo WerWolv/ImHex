@@ -1,4 +1,5 @@
 #include "init/tasks.hpp"
+#include "misc/freetype/imgui_freetype.h"
 
 #include <imgui.h>
 #include <imgui_freetype.h>
@@ -23,6 +24,7 @@
 #include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
 #include <fonts/unifont_font.h>
+#include <fonts/blendericons_font.h>
 
 #include <nlohmann/json.hpp>
 
@@ -273,6 +275,11 @@ namespace hex::init {
                 ICON_MIN_VS, ICON_MAX_VS, 0
         };
 
+        // Glyph range for blender icons
+        static ImWchar blenderIconsRange[] = {
+                ICON_MIN_BI, ICON_MAX_BI, 0
+        };
+
         // Load main font
         // If a custom font has been specified, load it, otherwise load the default ImGui font
         if (fontFile.empty()) {
@@ -304,9 +311,21 @@ namespace hex::init {
         cfg.MergeMode = true;
 
         // Add font awesome and codicons icons to font atlas
-        cfg.GlyphOffset = ImVec2(0, 3_scaled);
-        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange.data());
-        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange.data());
+        cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome;
+        cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_MonoHinting;
+        cfg.GlyphOffset = ImVec2(0, -2_scaled);
+        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange);
+
+        cfg.GlyphOffset = ImVec2(0, 0);
+        //cfg.SizePixels = fontSize;
+        //fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges2.Data);
+        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange);
+
+        cfg.GlyphOffset = ImVec2(0, -3_scaled);
+        fonts->AddFontFromMemoryTTF((void *) blendericons_data, blendericons_size, 0, &cfg, blenderIconsRange);
+        //fonts->AddFontFromMemoryCompressedTTF(blender_icons_compressed_data, blender_icons_compressed_size, 0, &cfg, blenderIconsRange);
+        cfg.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Monochrome;
+        cfg.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_MonoHinting;
 
         cfg.GlyphOffset = ImVec2(0, 0);
         // Add unifont if unicode support is enabled
