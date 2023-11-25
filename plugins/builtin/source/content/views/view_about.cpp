@@ -104,7 +104,9 @@ namespace hex::plugin::builtin {
         // Draw donation links
         ImGuiExt::Header("hex.builtin.view.help.about.donations"_lang);
 
+        ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x * 0.8F);
         ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
+        ImGui::PopTextWrapPos();
 
         ImGui::NewLine();
 
@@ -120,7 +122,7 @@ namespace hex::plugin::builtin {
         };
 
         ImGui::NewLine();
-        if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
+        if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame)) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 

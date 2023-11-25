@@ -59,7 +59,9 @@ namespace hex::plugin::builtin {
     void addFooterItems() {
         if (hex::isProcessElevated()) {
             ContentRegistry::Interface::addFooterItem([] {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight));
                 ImGui::TextUnformatted(ICON_VS_SHIELD);
+                ImGui::PopStyleColor();
             });
         }
 
