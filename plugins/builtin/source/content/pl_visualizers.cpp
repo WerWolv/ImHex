@@ -31,7 +31,6 @@
 
 #include <content/providers/memory_file_provider.hpp>
 #include <iostream>
-#include <ntdef.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"

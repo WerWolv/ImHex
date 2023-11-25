@@ -303,15 +303,15 @@ namespace hex::init {
         // Add font awesome and codicons icons to font atlas
         cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome;
         cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_MonoHinting;
-        cfg.GlyphOffset = ImVec2(0, 1_scaled);
+        cfg.GlyphOffset = ImVec2(0, -2_scaled);
         fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange);
 
-        cfg.GlyphOffset = ImVec2(0, 3_scaled);
+        cfg.GlyphOffset = ImVec2(0, 0);
         //cfg.SizePixels = fontSize;
         //fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges2.Data);
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange);
 
-        cfg.GlyphOffset = ImVec2(0, 0);
+        cfg.GlyphOffset = ImVec2(0, -3_scaled);
         fonts->AddFontFromMemoryTTF((void *) blendericons_data, blendericons_size, 0, &cfg, blenderIconsRange);
         //fonts->AddFontFromMemoryCompressedTTF(blender_icons_compressed_data, blender_icons_compressed_size, 0, &cfg, blenderIconsRange);
         cfg.FontBuilderFlags &= ~ImGuiFreeTypeBuilderFlags_Monochrome;
