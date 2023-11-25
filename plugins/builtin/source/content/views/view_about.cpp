@@ -167,38 +167,29 @@ namespace hex::plugin::builtin {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
         ImGuiExt::BeginSubWindow("Contributors", ImVec2(ImGui::GetContentRegionAvail().x, 0), ImGuiChildFlags_AutoResizeX);
         ImGui::PopStyleVar();
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 5, 5 }));
         {
-            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2());
-            const auto width = ImGui::GetContentRegionAvail().x;
             if (ImGui::BeginTable("Contributors", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
                 for (const auto &contributor : Contributors) {
                     ImGui::TableNextRow();
+                    if (contributor.mainContributor) {
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, ImGui::GetColorU32(ImGuiCol_PlotHistogram) & 0x0FFFFFFF);
+                        ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg1, ImGui::GetColorU32(ImGuiCol_PlotHistogram) & 0x0FFFFFFF);
+                    }
                     ImGui::TableNextColumn();
 
-                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetColorU32(contributor.mainContributor ? ImGuiCol_PlotHistogram : ImGuiCol_ChildBg) & 0x1FFFFFFF);
+                    if (ImGuiExt::Hyperlink(contributor.name))
+                        hex::openWebpage(contributor.link);
 
-                    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 2_scaled);
-                    if (ImGui::BeginChild(contributor.name, ImVec2(width - 2, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY)) {
-                        if (ImGuiExt::Hyperlink(contributor.name))
-                            hex::openWebpage(contributor.link);
+                    ImGui::Indent();
+                    ImGui::TextUnformatted(contributor.description);
+                    ImGui::Unindent();
 
-                        ImGui::Indent();
-                        ImGui::TextUnformatted(contributor.description);
-                        ImGui::Unindent();
-                    }
-                    ImGui::EndChild();
-                    ImGui::PopStyleVar();
-
-                    ImGui::PopStyleColor();
                 }
 
                 ImGui::EndTable();
             }
-            ImGui::PopStyleVar();
         }
         ImGuiExt::EndSubWindow();
-        ImGui::PopStyleVar();
     }
 
     void ViewAbout::drawLibraryCreditsPage() {
@@ -252,6 +243,7 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::Hyperlink(hex::format("{}/{}", library.author, library.name).c_str())) {
                             hex::openWebpage(library.link);
                         }
+                        ImGui::SetItemTooltip("%s", library.link);
                     }
                     ImGui::EndChild();
 
