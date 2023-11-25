@@ -437,6 +437,62 @@ namespace hex::plugin::builtin {
         return results;
     }
 
+    std::vector<ViewFind::Occurrence> ViewFind::searchApproximate(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Approximate &settings) {
+        std::vector<Occurrence> results;
+
+        auto reader = prv::ProviderReader(provider);
+        reader.seek(searchRegion.getStartAddress());
+        reader.setEndAddress(searchRegion.getEndAddress());
+
+        using FloatingType = ViewFind::SearchSettings::Approximate::Type;
+
+        const size_t size = settings.type == FloatingType::F32 ? sizeof(float) : sizeof(double);
+        const auto advance = settings.aligned ? size : 1;
+
+        std::variant<float, double> floating_var;
+        if (settings.type == FloatingType::F32) {
+            floating_var = 0.F;
+        } else {
+            floating_var = 0.0;
+        }
+
+        for (u64 address = searchRegion.getStartAddress(); address <= searchRegion.getEndAddress() - size + 1; address += advance) {
+            task.update(address);
+
+            auto result = std::visit([&]<typename T>(T) {
+                using DecayedType = std::remove_cvref_t<std::decay_t<T>>;
+
+                DecayedType value = 0;
+                reader.read(address, reinterpret_cast<u8*>(&value), size);
+                value = hex::changeEndianess(value, size, settings.endian);
+
+                if (settings.ignore_zeroes && value == T(0)) {
+                    return false;
+                }
+
+                return std::floor(value) == value;
+            }, floating_var);
+
+            if (result) {
+                Occurrence::DecodeType decodeType = [&]{
+                    switch (settings.type) {
+                        using enum Occurrence::DecodeType;
+
+                        case FloatingType::F32:
+                            return Float;
+                        case FloatingType::F64:
+                            return Double;
+                        default:
+                            return Binary;
+                    }
+                }();
+
+                results.push_back(Occurrence { Region { address, size }, decodeType, settings.endian, false });
+            }
+        }
+        return results;
+    }
+
     void ViewFind::runSearch() {
         Region searchRegion = this->m_searchSettings.region;
 
@@ -472,6 +528,9 @@ namespace hex::plugin::builtin {
                 case Value:
                     this->m_foundOccurrences.get(provider) = searchValue(task, provider, searchRegion, settings.value);
                     break;
+                case Approximate:
+                    this->m_foundOccurrences.get(provider) = searchApproximate(task, provider, searchRegion, settings.approximate);
+                    break;
             }
 
             this->m_sortedOccurrences.get(provider) = this->m_foundOccurrences.get(provider);
@@ -494,6 +553,7 @@ namespace hex::plugin::builtin {
             using enum SearchSettings::Mode;
 
             case Value:
+            case Approximate:
             case Strings:
             {
                 switch (occurrence.decodeType) {
@@ -797,6 +857,53 @@ namespace hex::plugin::builtin {
 
                     if (settings.inputMin.empty())
                         this->m_settingsValid = false;
+
+                    ImGui::EndTabItem();
+                }
+                if (ImGui::BeginTabItem("hex.builtin.view.find.approximate"_lang)) {
+                    auto &settings = this->m_searchSettings.approximate;
+
+                    mode = SearchSettings::Mode::Approximate;
+
+                    this->m_settingsValid = true;
+
+                    const std::array<std::string, 2> InputTypes = {
+                            "hex.builtin.common.type.f32"_lang,
+                            "hex.builtin.common.type.f64"_lang
+                    };
+
+                    if (ImGui::BeginCombo("hex.builtin.common.type"_lang, InputTypes[std::to_underlying(settings.type)].c_str())) {
+                        for (size_t i = 0; i < InputTypes.size(); i++) {
+                            auto type = static_cast<SearchSettings::Approximate::Type>(i);
+
+                            if (ImGui::Selectable(InputTypes[i].c_str(), type == settings.type)) {
+                                settings.type = type;
+                            }
+                        }
+                        ImGui::EndCombo();
+                    }
+
+                    {
+                        int selection = [&] {
+                            switch (settings.endian) {
+                                default:
+                                case std::endian::little:    return 0;
+                                case std::endian::big:       return 1;
+                            }
+                        }();
+
+                        std::array options = { "hex.builtin.common.little"_lang, "hex.builtin.common.big"_lang };
+                        if (ImGui::SliderInt("hex.builtin.common.endian"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
+                            switch (selection) {
+                                default:
+                                case 0: settings.endian = std::endian::little;   break;
+                                case 1: settings.endian = std::endian::big;      break;
+                            }
+                        }
+                    }
+
+                    ImGui::Checkbox("hex.builtin.view.find.approximate.aligned"_lang, &settings.aligned);
+                    ImGui::Checkbox("hex.builtin.view.find.approximate.ignore_zeroes"_lang, &settings.ignore_zeroes);
 
                     ImGui::EndTabItem();
                 }

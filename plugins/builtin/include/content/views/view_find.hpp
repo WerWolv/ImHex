@@ -42,7 +42,8 @@ namespace hex::plugin::builtin {
                 Sequence,
                 Regex,
                 BinaryPattern,
-                Value
+                Value,
+                Approximate
             } mode = Mode::Strings;
 
             enum class StringType : int { ASCII = 0, UTF16LE = 1, UTF16BE = 2, ASCII_UTF16LE = 3, ASCII_UTF16BE = 4 };
@@ -93,6 +94,16 @@ namespace hex::plugin::builtin {
                 } type = Type::U8;
             } value;
 
+            struct Approximate {
+                std::endian endian = std::endian::native;
+                bool aligned = true;
+                bool ignore_zeroes = true;
+
+                enum class Type {
+                    F32 = 0, F64 = 1
+                } type = Type::F32;
+            } approximate;
+
         } m_searchSettings, m_decodeSettings;
 
         using OccurrenceTree = wolv::container::IntervalTree<Occurrence>;
@@ -111,6 +122,7 @@ namespace hex::plugin::builtin {
         static std::vector<Occurrence> searchRegex(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Regex &settings);
         static std::vector<Occurrence> searchBinaryPattern(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::BinaryPattern &settings);
         static std::vector<Occurrence> searchValue(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Value &settings);
+        static std::vector<Occurrence> searchApproximate(Task &task, prv::Provider *provider, Region searchRegion, const SearchSettings::Approximate &settings);
 
         void drawContextMenu(Occurrence &target, const std::string &value);
 
