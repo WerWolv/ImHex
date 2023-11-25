@@ -742,6 +742,7 @@ namespace hex {
 
                 if (!positionSet) {
                     ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + (ImHexApi::System::getMainWindowSize() / 2.0F), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+
                     if (sizeSet)
                         positionSet = true;
                 }

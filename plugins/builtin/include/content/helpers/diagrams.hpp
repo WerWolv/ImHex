@@ -146,7 +146,7 @@ namespace hex {
         void reset(u64 size) {
             this->m_processing = true;
             this->m_buffer.clear();
-            this->m_buffer.resize(size);
+            this->m_buffer.reserve(this->m_sampleSize);
             this->m_byteCount = 0;
             this->m_fileSize  = size;
         }
@@ -154,11 +154,11 @@ namespace hex {
         void update(u8 byte) {
             // Check if there is some space left
             if (this->m_byteCount < this->m_fileSize) {
-                this->m_buffer[this->m_byteCount] = byte;
+                if (this->m_byteCount % (this->m_fileSize / this->m_sampleSize))
+                    this->m_buffer.push_back(byte);
                 ++this->m_byteCount;
                 if (this->m_byteCount == this->m_fileSize) {
-                    this->m_buffer = impl::getSampleSelection(this->m_buffer, this->m_sampleSize);
-                    processImpl();                    
+                    processImpl();
                     this->m_processing = false;
                 }
             } 
@@ -242,7 +242,7 @@ namespace hex {
         void reset(u64 size) {
             this->m_processing = true;
             this->m_buffer.clear();
-            this->m_buffer.resize(size);
+            this->m_buffer.reserve(this->m_sampleSize);
             this->m_byteCount = 0;
             this->m_fileSize  = size;
         }
@@ -250,11 +250,11 @@ namespace hex {
         void update(u8 byte) {
             // Check if there is some space left
             if (this->m_byteCount < this->m_fileSize) {
-                this->m_buffer[this->m_byteCount] = byte;
+                if (this->m_byteCount % (this->m_fileSize / this->m_sampleSize))
+                    this->m_buffer.push_back(byte);
                 ++this->m_byteCount;
                 if (this->m_byteCount == this->m_fileSize) {
-                    this->m_buffer = impl::getSampleSelection(this->m_buffer, this->m_sampleSize);
-                    processImpl();                    
+                    processImpl();
                     this->m_processing = false;
                 }
             } 

@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, 1000, Shortcut::None, [&, this] {
             if (this->m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
-            TaskManager::doLater([this] { ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str()); });
+
             this->getWindowOpenState() = true;
         });
 
