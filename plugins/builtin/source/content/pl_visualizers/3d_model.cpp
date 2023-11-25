@@ -22,78 +22,7 @@
 
 namespace hex::plugin::builtin {
 
-    void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-        std::shared_ptr<pl::ptrn::Pattern> verticesPattern = arguments[0].toPattern();
-        std::shared_ptr<pl::ptrn::Pattern> indicesPattern = arguments[1].toPattern();
-        std::shared_ptr<pl::ptrn::Pattern> normalsPattern = nullptr;
-        std::shared_ptr<pl::ptrn::Pattern> colorsPattern = nullptr;
-        std::shared_ptr<pl::ptrn::Pattern> uvPattern1 = nullptr;
-
-        std::string textureFile = "";
-        if (arguments.size() > 2) {
-            normalsPattern = arguments[2].toPattern();
-            if (arguments.size() > 3) {
-                colorsPattern = arguments[3].toPattern();
-                if (arguments.size() > 4) {
-                    uvPattern1 = arguments[4].toPattern();
-                    if (arguments.size() > 5)
-                        textureFile = arguments[5].toString();
-                }
-            }
-        }
-
-        static bool shouldResetLocally = shouldReset;
-        if (shouldReset)
-            shouldResetLocally = true;
-
-        const auto fontSize = ImGui::GetFontSize();
-        const auto framePad = ImGui::GetStyle().FramePadding;
-        float minSize = fontSize * 8_scaled + framePad.x * 20_scaled;
-        minSize = minSize > 200_scaled ? minSize : 200_scaled;
-        const ImVec2 UISize = {(fontSize / 2.0F) * 9_scaled + framePad.x * 6_scaled,
-                               ImGui::GetFrameHeightWithSpacing() * 12_scaled + framePad.y * 4_scaled - 6_scaled};
-        static ImVec2 renderingWindowSize = {minSize, minSize};
-
-        static int drawMode = GL_TRIANGLES;
-        static float nearLimit = 0.9f;
-        static float farLimit = 100.0f;
-        static float scaling = 1.0F;
-        static float max;
-        static float rpms = 10;
-        static float previousTime;
-        static float initialTime;
-
-        static bool showUI = false;
-        static bool isPerspective = true;
-        static bool drawAxes = true;
-        static bool drawGrid = true;
-        static bool animationOn = false;
-        static bool drawSource = true;
-        static bool drawTexture = false;
-        static bool resetEverything = false;
-        static bool shouldUpdateSource = true;
-
-        static gl::Vector<float, 3> translation = {{0.0f, 0.0F, -3.0F}};
-        static gl::Vector<float, 3> rotation = {{0.0F, 0.0F, 0.0F}};
-        static gl::Vector<float, 3> lightPosition = {{-0.7F, 0.0F, 0.0F}};
-        static gl::Vector<float, 4> strength = {{0.5F, 0.5F, 0.5F, 32}};
-        static gl::Matrix<float, 4, 4> rotate = gl::Matrix<float, 4, 4>::identity();
-
-        static ImGuiExt::Texture texture;
-        static char texturePath[256] = "";
-        if (textureFile != "")
-            std::strcpy(texturePath, textureFile.c_str());
-        else
-            drawTexture = false;
-        static unsigned int ogltexture;
-        static std::string texturePathStrOld;
-
-
-
-        if (renderingWindowSize.x < minSize)
-            renderingWindowSize.x = minSize;
-        if (renderingWindowSize.y < minSize)
-            renderingWindowSize.y = minSize;
+    namespace {
 
         enum class IndexType {
             U8,
@@ -138,7 +67,46 @@ namespace hex::plugin::builtin {
             gl::Buffer<u32> indices32;
         };
 
-        const static auto IndicesForLines = [](auto &vertexIndices) {
+        ImVec2 s_renderingWindowSize;
+
+        int s_drawMode = GL_TRIANGLES;
+        float s_nearLimit = 0.9f;
+        float s_farLimit = 100.0f;
+        float s_scaling = 1.0F;
+        float s_max;
+        float s_rpms = 10;
+        float s_previousTime;
+        float s_initialTime;
+
+        bool s_showUI = false;
+        bool s_isPerspective = true;
+        bool s_drawAxes = true;
+        bool s_drawGrid = true;
+        bool s_animationOn = false;
+        bool s_drawSource = true;
+        bool s_drawTexture = false;
+        bool s_resetEverything = false;
+        bool s_shouldReset = false;
+        bool s_shouldUpdateSource = true;
+
+        IndexType s_indexType;
+
+        unsigned int s_ogltexture;
+        std::string s_texturePathStrOld;
+        float s_minScaling = 0.01F;
+        float s_maxScaling = 10.0F;
+
+        gl::Vector<float, 3> s_translation = {{0.0f, 0.0F, -3.0F}};
+        gl::Vector<float, 3> s_rotation = {{0.0F, 0.0F, 0.0F}};
+        gl::Vector<float, 3> s_lightPosition = {{-0.7F, 0.0F, 0.0F}};
+        gl::Vector<float, 4> s_strength = {{0.5F, 0.5F, 0.5F, 32}};
+        gl::Matrix<float, 4, 4> s_rotate = gl::Matrix<float, 4, 4>::identity();
+
+        ImGuiExt::Texture s_texture;
+        std::string s_texturePath;
+
+
+        void indicesForLines(auto &vertexIndices) {
             std::vector<u32> indices;
 
             u32 vertexCount = vertexIndices.size() / 3;
@@ -161,10 +129,9 @@ namespace hex::plugin::builtin {
         };
 
 
-        const static auto BoundingBox = [](auto vertices, auto &max) {
-            const float kInfinity = std::numeric_limits<float>::max();
+        void boundingBox(auto vertices, auto &max) {
 
-            gl::Vector<float, 4> minWorld(kInfinity), maxWorld(-kInfinity);
+            gl::Vector<float, 4> minWorld(std::numeric_limits<float>::infinity()), maxWorld(-std::numeric_limits<float>::infinity());
             for (u32 i = 0; i < vertices.size(); i += 3) {
                 if (vertices[i] < minWorld[0]) minWorld[0] = vertices[i];
                 if (vertices[i + 1] < minWorld[1]) minWorld[1] = vertices[i + 1];
@@ -178,13 +145,11 @@ namespace hex::plugin::builtin {
             minWorld[3] = 1;
             maxWorld[3] = 1;
 
-            gl::Vector<float, 4> minCamera, maxCamera;
+            gl::Vector<float, 4> minCamera = minWorld, maxCamera = maxWorld;
 
-            maxCamera = maxWorld;
             if (maxCamera[3] != 0)
                 maxCamera = maxCamera * (1.0f / maxCamera[3]);
 
-            minCamera = minWorld;
             if (minCamera[3] != 0)
                 minCamera = minCamera * (1.0f / minCamera[3]);
 
@@ -193,13 +158,13 @@ namespace hex::plugin::builtin {
             max = std::max(maxx, maxy);
         };
 
-        const static auto SetDefaultColors = [](auto &colors, auto size, int color) {
+        void setDefaultColors(auto &colors, auto size, int color) {
             colors.resize(size / 3 * 4);
 
-            float red = (color & 0xFF) / 255.0F;
-            float green = ((color >> 8) & 0xFF) / 255.0F;
-            float blue = ((color >> 16) & 0xFF) / 255.0F;
-            float alpha = ((color >> 24) & 0xFF) / 255.0F;
+            float red   = float(color & 0xFF) / 255.0F;
+            float green = float((color >> 8) & 0xFF) / 255.0F;
+            float blue  = float((color >> 16) & 0xFF) / 255.0F;
+            float alpha = float((color >> 24) & 0xFF) / 255.0F;
 
             for (u32 i = 0; i < colors.size(); i += 4) {
                 colors[i] = red;
@@ -209,7 +174,7 @@ namespace hex::plugin::builtin {
             }
         };
 
-        const static auto SetNormals = [](auto vertices, auto &normals) {
+        void setNormals(auto vertices, auto &normals) {
             for (u32 i = 0; i < normals.size(); i += 9) {
 
                 auto v1 = gl::Vector<float, 3>({vertices[i], vertices[i + 1], vertices[i + 2]});
@@ -236,7 +201,7 @@ namespace hex::plugin::builtin {
             }
         };
 
-        const static auto SetNormalsWithIndices = [](auto vertices, auto &normals, auto indices) {
+        void setNormalsWithIndices(auto vertices, auto &normals, auto indices) {
 
             for (u32 i = 0; i < indices.size(); i += 3) {
                 auto idx = indices[i];
@@ -273,14 +238,12 @@ namespace hex::plugin::builtin {
             }
         };
 
-        const static auto LoadTexture = [](char *texturePath, auto &ogltexture, auto &drawTexture) {
+        void loadTexture(const std::string &texturePath, auto &ogltexture, auto &drawTexture) {
 
             int width, height, nrChannels;
-            unsigned char *data = nullptr;
 
-            std::string texturePathStr = texturePath;
-            if (texturePathStr != texturePathStrOld) {
-                shouldResetLocally = true;
+            if (texturePath != s_texturePathStrOld) {
+                s_shouldReset = true;
                 glGenTextures(1, &ogltexture);
                 glBindTexture(GL_TEXTURE_2D, ogltexture);
 
@@ -288,12 +251,10 @@ namespace hex::plugin::builtin {
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                data = stbi_load(texturePath, &width, &height, &nrChannels, 0);
+                auto data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
 
-                if (data) {
-                    if (nrChannels == 3)
-                        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-                    else if (nrChannels == 4)
+                if (data != nullptr) {
+                    if (nrChannels == 4)
                         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
                     else
                         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -304,17 +265,17 @@ namespace hex::plugin::builtin {
                     drawTexture = true;
                 } else
                     drawTexture = false;
-                texturePathStrOld = texturePathStr;
+                s_texturePathStrOld = texturePath;
             }
         };
 
-        const static auto LoadVectors = [](auto &vectors, auto indexType) {
-            BoundingBox(vectors.vertices, max);
+        void loadVectors(auto &vectors, auto indexType) {
+            boundingBox(vectors.vertices, s_max);
 
-            if (drawTexture)
-                SetDefaultColors(vectors.colors, vectors.vertices.size(), 0x00000000);
+            if (s_drawTexture)
+                setDefaultColors(vectors.colors, vectors.vertices.size(), 0x00000000);
             else if (vectors.colors.empty())
-                SetDefaultColors(vectors.colors, vectors.vertices.size(), 0xFF337FFF);
+                setDefaultColors(vectors.colors, vectors.vertices.size(), 0xFF337FFF);
 
             if (vectors.normals.empty()) {
                 vectors.normals.resize(vectors.vertices.size());
@@ -323,7 +284,7 @@ namespace hex::plugin::builtin {
                     (indexType == IndexType::U16 && vectors.indices16.empty()) ||
                     (indexType == IndexType::U32 && vectors.indices32.empty())) {
 
-                    SetNormals(vectors.vertices, vectors.normals);
+                    setNormals(vectors.vertices, vectors.normals);
 
                 } else {
                     std::vector<u32> indices;
@@ -343,28 +304,27 @@ namespace hex::plugin::builtin {
                         for (u32 i = 0; i < vectors.indices32.size(); ++i)
                             indices[i] = vectors.indices32[i];
                     }
-                    SetNormalsWithIndices(vectors.vertices, vectors.normals, indices);
+                    setNormalsWithIndices(vectors.vertices, vectors.normals, indices);
                 }
             }
         };
 
-        const static auto LoadLineVectors = [](auto &lineVectors, auto indexType) {
-
-            BoundingBox(lineVectors.vertices, max);
+        void loadLineVectors(auto &lineVectors, auto indexType) {
+            boundingBox(lineVectors.vertices, s_max);
 
             if (lineVectors.colors.empty())
-                SetDefaultColors(lineVectors.colors, lineVectors.vertices.size(), 0xFF337FFF);
+                setDefaultColors(lineVectors.colors, lineVectors.vertices.size(), 0xFF337FFF);
 
             std::vector<u32> indices;
             if (indexType == IndexType::U16)
-                IndicesForLines(lineVectors.indices16);
+                indicesForLines(lineVectors.indices16);
             else if (indexType == IndexType::U8)
-                IndicesForLines(lineVectors.indices8);
+                indicesForLines(lineVectors.indices8);
             else
-                IndicesForLines(lineVectors.indices32);
+                indicesForLines(lineVectors.indices32);
         };
 
-        const static auto ProcessKeyEvent = [](ImGuiKey key, auto &variable, auto incr, auto accel ){
+        void processKeyEvent(ImGuiKey key, auto &variable, auto incr, auto accel) {
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(key))) {
                 auto temp = variable + incr * accel;
                 if (variable * temp < 0.0F)
@@ -372,11 +332,9 @@ namespace hex::plugin::builtin {
                 else
                     variable = temp;
             }
-        };
+        }
 
-        const static auto ProcessInputEvents = [](auto &rotation, auto &translation, auto &scaling,
-                                                  auto &nearLimit, auto &farLimit) {
-
+        void processInputEvents(auto &rotation, auto &translation, auto &scaling, auto &nearLimit, auto &farLimit) {
             auto accel = 1.0F;
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftShift)) ||
                 ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_RightShift)))
@@ -403,25 +361,25 @@ namespace hex::plugin::builtin {
             if (scaling < 0.01F)
                 scaling = 0.01F;
 
-            ProcessKeyEvent(ImGuiKey_Keypad4, translation[0], -0.1F, accel);
-            ProcessKeyEvent(ImGuiKey_Keypad6, translation[0], 0.1F, accel);
-            ProcessKeyEvent(ImGuiKey_Keypad8, translation[1], 0.1F, accel);
-            ProcessKeyEvent(ImGuiKey_Keypad2, translation[1], -0.1F, accel);
-            ProcessKeyEvent(ImGuiKey_Keypad1, translation[2], 0.1F, accel);
-            ProcessKeyEvent(ImGuiKey_Keypad7, translation[2], -0.1F, accel);
-            ProcessKeyEvent(ImGuiKey_Keypad9, nearLimit, -0.01F, accel);
-            ProcessKeyEvent(ImGuiKey_Keypad3, nearLimit, 0.01F, accel);
+            processKeyEvent(ImGuiKey_Keypad4, translation[0], -0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad6, translation[0], 0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad8, translation[1], 0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad2, translation[1], -0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad1, translation[2], 0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad7, translation[2], -0.1F, accel);
+            processKeyEvent(ImGuiKey_Keypad9, nearLimit, -0.01F, accel);
+            processKeyEvent(ImGuiKey_Keypad3, nearLimit, 0.01F, accel);
             if (ImHexApi::System::isDebugBuild()) {
-                ProcessKeyEvent(ImGuiKey_KeypadDivide, farLimit, -1.0F, accel);
-                ProcessKeyEvent(ImGuiKey_KeypadMultiply, farLimit, 1.0F, accel);
+                processKeyEvent(ImGuiKey_KeypadDivide, farLimit, -1.0F, accel);
+                processKeyEvent(ImGuiKey_KeypadMultiply, farLimit, 1.0F, accel);
             }
-            ProcessKeyEvent(ImGuiKey_KeypadAdd, rotation[2], -0.075F, accel);
-            ProcessKeyEvent(ImGuiKey_KeypadSubtract, rotation[2], 0.075F, accel);
+            processKeyEvent(ImGuiKey_KeypadAdd, rotation[2], -0.075F, accel);
+            processKeyEvent(ImGuiKey_KeypadSubtract, rotation[2], 0.075F, accel);
             rotation[2] = std::fmod(rotation[2], 2 * std::numbers::pi);
         };
 
 
-        const static auto BindBuffers = [](auto &buffers, auto &vertexArray, auto vectors, auto indexType) {
+        void bindBuffers(auto &buffers, auto &vertexArray, auto vectors, auto indexType) {
             buffers.vertices = {};
             buffers.normals = {};
             buffers.colors = {};
@@ -472,7 +430,7 @@ namespace hex::plugin::builtin {
 
         };
 
-        const static auto BindLineBuffers = [](auto &lineBuffers, auto &vertexArray, auto lineVectors, auto indexType) {
+        void bindLineBuffers(auto &lineBuffers, auto &vertexArray, auto lineVectors, auto indexType) {
             lineBuffers.vertices = {};
             lineBuffers.colors = {};
             lineBuffers.indices8 = {};
@@ -509,7 +467,7 @@ namespace hex::plugin::builtin {
 
         };
 
-        const static auto StyledToolTip = [](std::string tip, bool isSeparator = false) {
+        void styledToolTip(const std::string &tip, bool isSeparator = false) {
             ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 3.0F);
 
             if (isSeparator) {
@@ -524,7 +482,7 @@ namespace hex::plugin::builtin {
             ImGui::PopStyleVar();
         };
 
-        const static auto DrawNearPlaneUI = [](float availableWidth, auto &nearLimit, auto &farLimit) {
+        void drawNearPlaneUI(float availableWidth, auto &nearLimit, auto &farLimit) {
             if (std::fabs(nearLimit) < 1e-6)
                 nearLimit = 0.0;
 
@@ -538,12 +496,12 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted(label.c_str());
             if (ImGui::IsItemHovered()) {
                 std::string tip = "hex.builtin.pl_visualizer.3d.nearlimit"_lang.operator std::string();
-                StyledToolTip(tip);
+                styledToolTip(tip);
             }
             ImGui::PopItemWidth();
         };
 
-        const static auto DrawTranslateUI = [](auto availableWidth, auto &translation) {
+        void drawTranslateUI(auto availableWidth, auto &translation) {
 
             if (std::fabs(translation[0]) < 1e-6)
                 translation[0] = 0.0;
@@ -557,19 +515,16 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted(label.c_str());
             if (ImGui::IsItemHovered()) {
                 std::string tip = "hex.builtin.pl_visualizer.3d.translation"_lang.operator std::string();
-                StyledToolTip(tip,true);
+                styledToolTip(tip,true);
                 tip = "hex.builtin.pl_visualizer.3d.translationMouse"_lang.operator std::string();
                 tip += "\n";
                 tip += "hex.builtin.pl_visualizer.3d.translationKeyboard"_lang.operator std::string();
-                StyledToolTip(tip);
+                styledToolTip(tip);
             }
             ImGui::PopItemWidth();
         };
 
-        static float minScaling = 0.01F;
-        static float maxScaling = 10.0F;
-
-        const static auto DrawRotationsScaleUI = [](auto availableWidth_1, auto availableWidth_2, auto &rotation, auto &rotate,
+        void drawRotationsScaleUI(auto availableWidth_1, auto availableWidth_2, auto &rotation, auto &rotate,
                                                     auto &scaling, auto &strength, auto &lightPosition,
                                                     auto &renderingWindowSize, auto minSize, auto &resetEverything,
                                                     auto &translation, auto &nearLimit, auto &farLimit) {
@@ -584,7 +539,7 @@ namespace hex::plugin::builtin {
             temp += units;
 
             if (ImGui::IsItemHovered())
-                StyledToolTip(temp);
+                styledToolTip(temp);
 
             ImGui::SameLine();
 
@@ -593,7 +548,7 @@ namespace hex::plugin::builtin {
             temp += units;
 
             if (ImGui::IsItemHovered())
-                StyledToolTip(temp);
+                styledToolTip(temp);
 
             ImGui::SameLine();
 
@@ -602,13 +557,11 @@ namespace hex::plugin::builtin {
             temp += units;
 
             if (ImGui::IsItemHovered())
-                StyledToolTip(temp);
+                styledToolTip(temp);
 
             for (u8 i = 0; i < 3; i++) {
                 i32 winding = 0;
-                if (rotation.data()[i] > std::numbers::pi * 2)
-                    winding = std::floor(rotation.data()[i] / std::numbers::pi / 2.0);
-                else if (rotation.data()[i] < 0)
+                if (rotation.data()[i] < 0 || rotation.data()[i] > std::numbers::pi * 2)
                     winding = std::floor(rotation.data()[i] / std::numbers::pi / 2.0);
 
                 rotation.data()[i] -= std::numbers::pi * winding * 2.0;
@@ -624,12 +577,12 @@ namespace hex::plugin::builtin {
 
             ImGui::PushItemWidth(availableWidth_1);
 
-            if (scaling < minScaling)
-                minScaling = scaling;
-            if (scaling > maxScaling)
-                maxScaling = scaling;
+            if (scaling < s_minScaling)
+                s_minScaling = scaling;
+            if (scaling > s_maxScaling)
+                s_maxScaling = scaling;
 
-            ImGui::SliderFloat("##Scale", &scaling, minScaling, maxScaling, label.c_str());
+            ImGui::SliderFloat("##Scale", &scaling, s_minScaling, s_maxScaling, label.c_str());
             ImGui::PopItemWidth();
 
             ImGui::TableNextColumn();
@@ -643,14 +596,14 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted(label.c_str());
             if (ImGui::IsItemHovered()) {
                 std::string tip = "hex.builtin.pl_visualizer.3d.reset_description"_lang.operator std::string();
-                StyledToolTip(tip);
+                styledToolTip(tip);
             }
             ImGui::Unindent(spacing);
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
 
-            DrawTranslateUI(availableWidth_1, translation);
+            drawTranslateUI(availableWidth_1, translation);
 
             ImGui::TableNextColumn();
 
@@ -684,13 +637,12 @@ namespace hex::plugin::builtin {
 
             if (ImGui::IsItemHovered()) {
                 std::string tip = "hex.builtin.pl_visualizer.3d.reset_usage"_lang.operator std::string();
-                StyledToolTip(tip);
+                styledToolTip(tip);
             }
             ImGui::Unindent(spacing);
         };
 
-        const static auto DrawLightPositionUI = [](float availableWidth, auto &lightPosition, auto &shouldUpdateSource,
-                                                   auto &resetEverything) {
+        void drawLightPositionUI(float availableWidth, auto &lightPosition, auto &shouldUpdateSource, auto &resetEverything) {
             if (ImGui::BeginTable("##LightPosition", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -705,7 +657,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextFormatted(label);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_description"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
 
@@ -716,19 +668,18 @@ namespace hex::plugin::builtin {
                 if (ImGui::InputFloat3("##lightDir", lightPosition.data(), "%.3f",
                                        ImGuiInputTextFlags_EnterReturnsTrue) || resetEverything) {
                     shouldUpdateSource = true;
-                    previousTime = 0;
+                    s_previousTime = 0;
                 }
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_usage"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::PopItemWidth();
             }
             ImGui::EndTable();
         };
 
-        const static auto DrawProjectionUI = [](auto availableWidth, auto &isPerspective, auto &shouldResetLocally,
-                                                auto &resetEverything) {
+        void drawProjectionUI(auto availableWidth, auto &isPerspective, auto &shouldResetLocally, auto &resetEverything) {
             if (ImGui::BeginTable("##Proj", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -748,7 +699,7 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.perspectiveSelected"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.orthographicSelected"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 };
                 ImGui::Unindent(spacing);
 
@@ -777,15 +728,14 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.selectOrthographic"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.selectPerspective"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
         };
 
-        const static auto DrawPrimitiveUI = [](auto availableWidth, auto &drawMode, auto &shouldResetLocally,
-                                               auto &resetEverything) {
+        void drawPrimitiveUI(auto availableWidth, auto &drawMode, auto &shouldResetLocally, auto &resetEverything) {
             if (ImGui::BeginTable("##Prim", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -804,7 +754,7 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.trianglesSelected"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.linesSelected"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
 
@@ -833,14 +783,14 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.line"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.triangle"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
         };
 
-        const static auto DrawLightPropertiesUI = [](float  availableWidth, auto &strength) {
+        void drawLightPropertiesUI(float availableWidth, auto &strength) {
             if (ImGui::BeginTable("##LightProperties", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -852,7 +802,7 @@ namespace hex::plugin::builtin {
                 auto indent = (availableWidth - labelWidth) / 2.0f;
                 ImGui::Indent(indent);
 
-                ImGuiExt::TextFormatted(label.c_str());
+                ImGuiExt::TextFormatted("{}", label);
                 ImGui::Unindent(indent);
                 ImGui::SameLine();
 
@@ -865,7 +815,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##ambient", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.ambientIntensity"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(framePadding);
 
@@ -877,7 +827,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##diffuse", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.diffuseIntensity"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
 
@@ -889,7 +839,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##specular", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.specularIntensity"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
 
@@ -901,7 +851,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##shininess", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.shininessIntensity"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
 
@@ -919,7 +869,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##ambient2", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.ambient"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(0);
                 ImGui::SameLine();
@@ -928,7 +878,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##diffuse2", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.diffuse"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(bSize.x);
                 ImGui::SameLine();
@@ -937,7 +887,7 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##specular2", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.specular"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
 
                 ImGui::Unindent(2 * bSize.x);
@@ -947,14 +897,14 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("##shininess2", bSize);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.shininess"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(3 * bSize.x);
             }
             ImGui::EndTable();
         };
 
-        const static auto DrawTextureUI = [](float availableWidth, auto texturePath) {
+        void drawTextureUI(float availableWidth, auto texturePath) {
             if (ImGui::BeginTable("##Texture", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -966,10 +916,10 @@ namespace hex::plugin::builtin {
                 auto indent = (availableWidth - labelWidth) / 2.0f;
                 ImGui::Indent(indent);
 
-                ImGuiExt::TextFormatted(label.c_str());
+                ImGuiExt::TextFormatted("{}", label);
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.textureFile"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(indent);
 
@@ -977,13 +927,13 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
 
                 ImGui::PushItemWidth(availableWidth);
-                ImGui::InputText("##Texture", texturePath, 256, ImGuiInputTextFlags_EnterReturnsTrue);
+                ImGui::InputText("##Texture", texturePath, ImGuiInputTextFlags_EnterReturnsTrue);
                 ImGui::PopItemWidth();
             }
             ImGui::EndTable();
         };
 
-        const static auto DrawAnimationSpeedUI = [](float availableWidth, auto &rpms) {
+        void drawAnimationSpeedUI(float availableWidth, auto &rpms) {
             if (ImGui::BeginTable("##AnimationSpeed", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -1010,7 +960,7 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         };
 
-        const static auto DrawLightUI = [](float availableWidth, auto &drawSource, auto &resetEverything) {
+        void drawLightUI(float availableWidth, auto &drawSource, auto &resetEverything) {
             if (ImGui::BeginTable("##ligth", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -1029,7 +979,7 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.renderingLightSource"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.notRenderingLightSource"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
 
@@ -1052,15 +1002,14 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.dontDrawSource"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.drawSource"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
         };
 
-        const static auto DrawAnimateUI = [](float availableWidth, auto &animationOn, auto &previousTime,
-                                             auto &initialTime, auto &resetEverything) {
+        void drawAnimateUI(float availableWidth, auto &animationOn, auto &previousTime, auto &initialTime, auto &resetEverything) {
             if (ImGui::BeginTable("##Animate", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -1079,7 +1028,7 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.animationIsRunning"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.animationIsNotRunning"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
 
@@ -1110,14 +1059,14 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.dontAnimate"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.animate"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
         };
 
-        const static auto DrawWindow = [](auto &texture, auto &renderingWindowSize, auto mvp, auto minSize, auto& showUI, auto UISize) {
+        void drawWindow(auto &texture, auto &renderingWindowSize, auto mvp, auto minSize, auto& showUI, auto UISize) {
             auto textureSize = texture.getSize();
             auto textureWidth = textureSize.x;
             auto textureHeight = textureSize.y;
@@ -1142,11 +1091,10 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTable("##3DVisualizer", columnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX)) {
                 constexpr static auto ColumnFlags =  ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoResize;
-                float column2Width;
                 ImGui::TableSetupColumn("##FirstColumn", ColumnFlags, textureWidth);
 
                 if (showUI) {
-                    column2Width = secondColumnWidth;
+                    float column2Width = secondColumnWidth;
                     ImGui::TableSetupColumn("##SecondColumn", ColumnFlags, column2Width);
                 }
 
@@ -1163,7 +1111,7 @@ namespace hex::plugin::builtin {
                         tip = "hex.builtin.pl_visualizer.3d.hideUI"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.showUI"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
 
                 ImGui::SameLine();
@@ -1171,7 +1119,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.size_usage"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
 
                 ImGui::SameLine();
@@ -1183,7 +1131,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.size_units"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::PopItemWidth();
 
@@ -1194,7 +1142,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::IsItemHovered()) {
                     std::string tip = "hex.builtin.pl_visualizer.3d.size_units"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
                 ImGui::PopItemWidth();
 
@@ -1202,44 +1150,44 @@ namespace hex::plugin::builtin {
 
                 static auto axesIcon = ICON_BI_EMPTY_ARROWS;
 
-                if (ImGuiExt::DimmedIconToggle(axesIcon, &drawAxes))
-                    shouldResetLocally = true;
-                if (resetEverything) {
-                    drawAxes = true;
-                    shouldResetLocally = true;
+                if (ImGuiExt::DimmedIconToggle(axesIcon, &s_drawAxes))
+                    s_shouldReset = true;
+                if (s_resetEverything) {
+                    s_drawAxes = true;
+                    s_shouldReset = true;
                 }
 
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
-                    if (drawAxes)
+                    if (s_drawAxes)
                         tip = "hex.builtin.pl_visualizer.3d.dontDrawAxes"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.drawAxes"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
 
                 ImGui::SameLine();
 
                 static auto gridIcon = ICON_BI_GRID;
-                if (isPerspective)
+                if (s_isPerspective)
                     gridIcon = ICON_BI_GRID;
                 else
                     gridIcon = ICON_VS_SYMBOL_NUMBER;
-                if (ImGuiExt::DimmedIconToggle(gridIcon, &drawGrid))
-                    shouldResetLocally = true;
+                if (ImGuiExt::DimmedIconToggle(gridIcon, &s_drawGrid))
+                    s_shouldReset = true;
 
-                if (resetEverything) {
-                    drawGrid = true;
-                    shouldResetLocally = true;
+                if (s_resetEverything) {
+                    s_drawGrid = true;
+                    s_shouldReset = true;
                 }
 
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
-                    if (drawGrid)
+                    if (s_drawGrid)
                         tip = "hex.builtin.pl_visualizer.3d.hideGrid"_lang.operator std::string();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.renderGrid"_lang.operator std::string();
-                    StyledToolTip(tip);
+                    styledToolTip(tip);
                 }
 
                 if (showUI) {
@@ -1254,7 +1202,7 @@ namespace hex::plugin::builtin {
 
                     if (ImGui::IsItemHovered()) {
                         std::string tip = "hex.builtin.pl_visualizer.3d.rotation_usage"_lang.operator std::string();
-                        StyledToolTip(tip);
+                        styledToolTip(tip);
                     }
                 }
 
@@ -1268,7 +1216,7 @@ namespace hex::plugin::builtin {
                                       ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                     ImGui::Image(texture, textureSize, ImVec2(0, 1), ImVec2(1, 0));
 
-                    if (drawAxes) {
+                    if (s_drawAxes) {
                         gl::Matrix<float, 4, 4> axes = gl::Matrix<float, 4, 4>::identity();
                         axes(0, 3) = 1.0f;
                         axes(1, 3) = 1.0f;
@@ -1322,58 +1270,58 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    DrawRotationsScaleUI(firstColumnWidth, secondColumnWidth, rotation, rotate, scaling,
-                                         strength, lightPosition, renderingWindowSize, minSize, resetEverything,
-                                         translation, nearLimit, farLimit);
+                    drawRotationsScaleUI(firstColumnWidth, secondColumnWidth, s_rotation, s_rotate, s_scaling,
+                                         s_strength, s_lightPosition, renderingWindowSize, minSize, s_resetEverything,
+                                         s_translation, s_nearLimit, s_farLimit);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    DrawLightPositionUI(firstColumnWidth, lightPosition, shouldUpdateSource, resetEverything);
+                    drawLightPositionUI(firstColumnWidth, s_lightPosition, s_shouldUpdateSource, s_resetEverything);
 
                     ImGui::TableNextColumn();
 
-                    DrawProjectionUI(secondColumnWidth, isPerspective, shouldResetLocally, resetEverything);
+                    drawProjectionUI(secondColumnWidth, s_isPerspective, s_shouldReset, s_resetEverything);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    DrawLightPropertiesUI(firstColumnWidth, strength);
+                    drawLightPropertiesUI(firstColumnWidth, s_strength);
 
                     ImGui::TableNextColumn();
 
-                    DrawLightUI(secondColumnWidth, drawSource, resetEverything);
+                    drawLightUI(secondColumnWidth, s_drawSource, s_resetEverything);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    DrawTextureUI(firstColumnWidth, texturePath);
+                    drawTextureUI(firstColumnWidth, s_texturePath);
 
                     ImGui::TableNextColumn();
 
-                    DrawPrimitiveUI(secondColumnWidth, drawMode, shouldResetLocally, resetEverything);
+                    drawPrimitiveUI(secondColumnWidth, s_drawMode, s_shouldReset, s_resetEverything);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    DrawAnimationSpeedUI(firstColumnWidth, rpms);
+                    drawAnimationSpeedUI(firstColumnWidth, s_rpms);
 
                     ImGui::TableNextColumn();
 
-                    DrawAnimateUI(secondColumnWidth, animationOn, previousTime, initialTime, resetEverything);
+                    drawAnimateUI(secondColumnWidth, s_animationOn, s_previousTime, s_initialTime, s_resetEverything);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    DrawNearPlaneUI(firstColumnWidth, nearLimit, farLimit);
+                    drawNearPlaneUI(firstColumnWidth, s_nearLimit, s_farLimit);
                 }
             }
             ImGui::EndTable();
         };
 
-        static IndexType indexType;
-        gl::Matrix<float, 4, 4> mvp(0);
+    }
 
+    void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static gl::LightSourceVectors sourceVectors(10);
         static gl::VertexArray sourceVertexArray = gl::VertexArray();
         static gl::LightSourceBuffers sourceBuffers(sourceVertexArray, sourceVectors);
@@ -1390,40 +1338,74 @@ namespace hex::plugin::builtin {
         static Buffers buffers;
         static LineBuffers lineBuffers;
 
-        ProcessInputEvents(rotation, translation, scaling, nearLimit, farLimit);
+        std::shared_ptr<pl::ptrn::Pattern> verticesPattern = arguments[0].toPattern();
+        std::shared_ptr<pl::ptrn::Pattern> indicesPattern = arguments[1].toPattern();
+        std::shared_ptr<pl::ptrn::Pattern> normalsPattern = nullptr;
+        std::shared_ptr<pl::ptrn::Pattern> colorsPattern = nullptr;
+        std::shared_ptr<pl::ptrn::Pattern> uvPattern1 = nullptr;
+
+        std::string textureFile;
+        if (arguments.size() > 2) {
+            normalsPattern = arguments[2].toPattern();
+            if (arguments.size() > 3) {
+                colorsPattern = arguments[3].toPattern();
+                if (arguments.size() > 4) {
+                    uvPattern1 = arguments[4].toPattern();
+                    if (arguments.size() > 5)
+                        textureFile = arguments[5].toString();
+                }
+            }
+        }
+
+        static bool shouldResetLocally = shouldReset;
+        if (shouldReset)
+            shouldResetLocally = true;
+
+        const auto fontSize = ImGui::GetFontSize();
+        const auto framePad = ImGui::GetStyle().FramePadding;
+        float minSize = fontSize * 8_scaled + framePad.x * 20_scaled;
+        minSize = minSize > 200_scaled ? minSize : 200_scaled;
+        const ImVec2 UISize = {(fontSize / 2.0F) * 9_scaled + framePad.x * 6_scaled,
+                               ImGui::GetFrameHeightWithSpacing() * 12_scaled + framePad.y * 4_scaled - 6_scaled};
+
+        if (s_renderingWindowSize.x <= 0 || s_renderingWindowSize.y <= 0)
+            s_renderingWindowSize = { minSize, minSize };
+
+        if (!textureFile.empty())
+            s_texturePath = textureFile;
+        else
+            s_drawTexture = false;
+
+        if (s_renderingWindowSize.x < minSize)
+            s_renderingWindowSize.x = minSize;
+        if (s_renderingWindowSize.y < minSize)
+            s_renderingWindowSize.y = minSize;
+
+        gl::Matrix<float, 4, 4> mvp(0);
+
+        processInputEvents(s_rotation, s_translation, s_scaling, s_nearLimit, s_farLimit);
 
         if (shouldResetLocally) {
             shouldResetLocally = false;
-            if (indicesPattern->getTypeName() == "u8" || indicesPattern->getTypeName() == "byte" ||
-                indicesPattern->getTypeName() == "char" || indicesPattern->getTypeName() == "s8")
+            if (indicesPattern->getTypeName() == "u8" || indicesPattern->getTypeName() == "byte" || indicesPattern->getTypeName() == "char" || indicesPattern->getTypeName() == "s8") {
+                s_indexType = IndexType::U8;
+            } else if (indicesPattern->getTypeName() == "u32" || indicesPattern->getTypeName() == "s32" || indicesPattern->getTypeName() == "unsigned") {
+                s_indexType = IndexType::U32;
+            } else if (indicesPattern->getTypeName() == "u16" || indicesPattern->getTypeName() == "s16" || indicesPattern->getTypeName() == "short") {
+                s_indexType = IndexType::U16;
+            } else {
+                s_indexType = IndexType::Invalid;
+            }
 
-                indexType = IndexType::U8;
+            if (s_drawMode == GL_TRIANGLES) {
+                Vectors vectors;
 
-            else if (indicesPattern->getTypeName() == "u32" || indicesPattern->getTypeName() == "s32" ||
-                     indicesPattern->getTypeName() == "unsigned")
-
-                indexType = IndexType::U32;
-
-            else if (indicesPattern->getTypeName() == "u16" || indicesPattern->getTypeName() == "s16" ||
-                     indicesPattern->getTypeName() == "short")
-
-                indexType = IndexType::U16;
-
-            else
-                indexType = IndexType::Invalid;
-
-            Vectors vectors;
-            LineVectors lineVectors;
-
-            if (drawMode == GL_TRIANGLES) {
                 vectors.vertices = patternToArray<float>(verticesPattern.get());
-                if (indexType == IndexType::U16)
+                if (s_indexType == IndexType::U16)
                     vectors.indices16 = patternToArray<u16>(indicesPattern.get());
-
-                else if (indexType == IndexType::U32)
+                else if (s_indexType == IndexType::U32)
                     vectors.indices32 = patternToArray<u32>(indicesPattern.get());
-
-                else if (indexType == IndexType::U8)
+                else if (s_indexType == IndexType::U8)
                     vectors.indices8 = patternToArray<u8>(indicesPattern.get());
 
                 if (colorsPattern != nullptr)
@@ -1433,32 +1415,34 @@ namespace hex::plugin::builtin {
                 if (uvPattern1 != nullptr)
                     vectors.uv1 = patternToArray<float>(uvPattern1.get());
 
-                LoadVectors(vectors, indexType);
+                loadVectors(vectors, s_indexType);
 
-                BindBuffers(buffers, vertexArray, vectors, indexType);
+                bindBuffers(buffers, vertexArray, vectors, s_indexType);
             } else {
+                LineVectors lineVectors;
+
                 lineVectors.vertices = patternToArray<float>(verticesPattern.get());
-                if (indexType == IndexType::U16)
+                if (s_indexType == IndexType::U16)
                     lineVectors.indices16 = patternToArray<u16>(indicesPattern.get());
 
-                else if (indexType == IndexType::U32)
+                else if (s_indexType == IndexType::U32)
                     lineVectors.indices32 = patternToArray<u32>(indicesPattern.get());
 
-                else if (indexType == IndexType::U8)
+                else if (s_indexType == IndexType::U8)
                     lineVectors.indices8 = patternToArray<u8>(indicesPattern.get());
 
                 if (colorsPattern != nullptr)
                     lineVectors.colors = patternToArray<float>(colorsPattern.get());
 
-                LoadLineVectors(lineVectors, indexType);
+                loadLineVectors(lineVectors, s_indexType);
 
-                BindLineBuffers(lineBuffers, vertexArray, lineVectors, indexType);
+                bindLineBuffers(lineBuffers, vertexArray, lineVectors, s_indexType);
             }
         }
 
-        if (shouldUpdateSource) {
-            shouldUpdateSource = false;
-            sourceVectors.moveTo(lightPosition);
+        if (s_shouldUpdateSource) {
+            s_shouldUpdateSource = false;
+            sourceVectors.moveTo(s_lightPosition);
             sourceBuffers.moveVertices(sourceVertexArray, sourceVectors);
         }
         {
@@ -1467,62 +1451,62 @@ namespace hex::plugin::builtin {
             gl::Matrix<float, 4, 4> view(0);
             gl::Matrix<float, 4, 4> projection(0);
 
-            unsigned width = std::floor(renderingWindowSize.x);
-            unsigned height = std::floor(renderingWindowSize.y);
+            unsigned width = std::floor(s_renderingWindowSize.x);
+            unsigned height = std::floor(s_renderingWindowSize.y);
 
             gl::FrameBuffer frameBuffer(width,height);
             gl::Texture renderTexture(width,height );
             frameBuffer.attachTexture(renderTexture);
             frameBuffer.bind();
 
-            rotate = gl::getRotationMatrix<float>(rotation, true, gl::RotationSequence::ZYX);
+            s_rotate = gl::getRotationMatrix<float>(s_rotation, true, gl::RotationSequence::ZYX);
 
             gl::Matrix<float, 4, 4> scale = gl::Matrix<float, 4, 4>::identity();
             gl::Matrix<float, 4, 4> scaleForVertices = gl::Matrix<float, 4, 4>::identity();
             gl::Matrix<float, 4, 4> translate = gl::Matrix<float, 4, 4>::identity();
 
             float totalScale;
-            float viewWidth =  renderingWindowSize.x / 500.0f;
-            float viewHeight = renderingWindowSize.y / 500.0f;
-            glViewport(0,0 , renderTexture.getWidth(), renderTexture.getHeight());
-            glDepthRangef(nearLimit, farLimit);
+            float viewWidth =  s_renderingWindowSize.x / 500.0f;
+            float viewHeight = s_renderingWindowSize.y / 500.0f;
+            glViewport(0,0 , GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
+            glDepthRangef(s_nearLimit, s_farLimit);
             glClearColor(0.00F, 0.00F, 0.00F, 0.00f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_CULL_FACE);
 
-            if (isPerspective == 0) {
-                projection = gl::GetOrthographicMatrix(viewWidth, viewHeight, nearLimit, farLimit, false);
-                totalScale = scaling / (std::fabs(translation[2]));
+            if (s_isPerspective == 0) {
+                projection = gl::GetOrthographicMatrix(viewWidth, viewHeight, s_nearLimit, s_farLimit, false);
+                totalScale = s_scaling / (std::fabs(s_translation[2]));
                 scale(0, 0) = totalScale;
                 scale(1, 1) = totalScale;
                 scale(2, 2) = totalScale;
 
-                translate(3, 0) = translation[0] / std::fabs(translation[2]);
-                translate(3, 1) = translation[1] / std::fabs(translation[2]);
-                translate(3, 2) = translation[2];
+                translate(3, 0) = s_translation[0] / std::fabs(s_translation[2]);
+                translate(3, 1) = s_translation[1] / std::fabs(s_translation[2]);
+                translate(3, 2) = s_translation[2];
             } else {
-                projection = gl::GetPerspectiveMatrix(viewWidth, viewHeight, nearLimit, farLimit, false);
-                totalScale = scaling;
+                projection = gl::GetPerspectiveMatrix(viewWidth, viewHeight, s_nearLimit, s_farLimit, false);
+                totalScale = s_scaling;
                 scale(0, 0) = totalScale;
                 scale(1, 1) = totalScale;
                 scale(2, 2) = totalScale;
 
-                translate(3, 0) = translation[0];
-                translate(3, 1) = translation[1];
-                translate(3, 2) = translation[2];
+                translate(3, 0) = s_translation[0];
+                translate(3, 1) = s_translation[1];
+                translate(3, 2) = s_translation[2];
             }
-            totalScale /= (3.0f * max);
+            totalScale /= (3.0f * s_max);
             scaleForVertices(0, 0) = totalScale;
             scaleForVertices(1, 1) = totalScale;
             scaleForVertices(2, 2) = totalScale;
 
-            model = rotate * scale;
-            scaledModel =  rotate * scaleForVertices;
+            model = s_rotate * scale;
+            scaledModel = s_rotate * scaleForVertices;
             view = translate;
             mvp = model * view * projection;
 
-            if (drawMode == GL_TRIANGLES) {
+            if (s_drawMode == GL_TRIANGLES) {
                 static gl::Shader shader = gl::Shader(romfs::get("shaders/default/vertex.glsl").string(),
                                                       romfs::get("shaders/default/fragment.glsl").string());
                 shader.bind();
@@ -1531,38 +1515,38 @@ namespace hex::plugin::builtin {
                 shader.setUniform<4>("Model", model);
                 shader.setUniform<4>("View", view);
                 shader.setUniform<4>("Projection", projection);
-                shader.setUniform<3>("LightPosition", lightPosition);
-                shader.setUniform<4>("Strength", strength);
+                shader.setUniform<3>("LightPosition", s_lightPosition);
+                shader.setUniform<4>("Strength", s_strength);
 
                 vertexArray.bind();
-                LoadTexture(texturePath, ogltexture, drawTexture);
-                if (drawTexture)
-                    glBindTexture(GL_TEXTURE_2D, ogltexture);
+                loadTexture(s_texturePath, s_ogltexture, s_drawTexture);
+                if (s_drawTexture)
+                    glBindTexture(GL_TEXTURE_2D, s_ogltexture);
 
-                if (indexType == IndexType::U8) {
+                if (s_indexType == IndexType::U8) {
 
                     buffers.indices8.bind();
                     if (buffers.indices8.getSize() == 0)
-                        buffers.vertices.draw(drawMode);
+                        buffers.vertices.draw(s_drawMode);
                     else
-                        buffers.indices8.draw(drawMode);
+                        buffers.indices8.draw(s_drawMode);
                     buffers.indices8.unbind();
 
-                } else if (indexType == IndexType::U16) {
+                } else if (s_indexType == IndexType::U16) {
 
                     buffers.indices16.bind();
                     if (buffers.indices16.getSize() == 0)
-                        buffers.vertices.draw(drawMode);
+                        buffers.vertices.draw(s_drawMode);
                     else
-                        buffers.indices16.draw(drawMode);
+                        buffers.indices16.draw(s_drawMode);
                     buffers.indices16.unbind();
                 } else {
 
                     buffers.indices32.bind();
                     if (buffers.indices32.getSize() == 0)
-                        buffers.vertices.draw(drawMode);
+                        buffers.vertices.draw(s_drawMode);
                     else
-                        buffers.indices32.draw(drawMode);
+                        buffers.indices32.draw(s_drawMode);
                     buffers.indices32.unbind();
 
                 }
@@ -1575,35 +1559,32 @@ namespace hex::plugin::builtin {
                 lineShader.setUniform<4>("View", view);
                 lineShader.setUniform<4>("Projection", projection);
                 vertexArray.bind();
-                if (indexType == IndexType::U8) {
-
+                if (s_indexType == IndexType::U8) {
                     lineBuffers.indices8.bind();
                     if (lineBuffers.indices8.getSize() == 0)
-                        lineBuffers.vertices.draw(drawMode);
+                        lineBuffers.vertices.draw(s_drawMode);
                     else
-                        lineBuffers.indices8.draw(drawMode);
+                        lineBuffers.indices8.draw(s_drawMode);
                     lineBuffers.indices8.unbind();
 
-                } else if (indexType == IndexType::U16) {
-
+                } else if (s_indexType == IndexType::U16) {
                     lineBuffers.indices16.bind();
                     if (lineBuffers.indices16.getSize() == 0)
-                        lineBuffers.vertices.draw(drawMode);
+                        lineBuffers.vertices.draw(s_drawMode);
                     else
-                        lineBuffers.indices16.draw(drawMode);
+                        lineBuffers.indices16.draw(s_drawMode);
                     lineBuffers.indices16.unbind();
                 } else {
-
                     lineBuffers.indices32.bind();
                     if (lineBuffers.indices32.getSize() == 0)
-                        lineBuffers.vertices.draw(drawMode);
+                        lineBuffers.vertices.draw(s_drawMode);
                     else
-                        lineBuffers.indices32.draw(drawMode);
+                        lineBuffers.indices32.draw(s_drawMode);
                     lineBuffers.indices32.unbind();
                 }
             }
 
-            if (drawGrid || drawAxes) {
+            if (s_drawGrid || s_drawAxes) {
                 static gl::Shader gridAxesShader = gl::Shader(
                         romfs::get("shaders/default/lineVertex.glsl").string(),
                         romfs::get("shaders/default/lineFragment.glsl").string());
@@ -1613,7 +1594,7 @@ namespace hex::plugin::builtin {
                 gridAxesShader.setUniform<4>("View", view);
                 gridAxesShader.setUniform<4>("Projection", projection);
 
-                if (drawGrid) {
+                if (s_drawGrid) {
                     gridVertexArray.bind();
                     gridBuffers.getIndices().bind();
                     gridBuffers.getIndices().draw(GL_LINES);
@@ -1621,7 +1602,7 @@ namespace hex::plugin::builtin {
                     gridVertexArray.unbind();
                 }
 
-                if (drawAxes) {
+                if (s_drawAxes) {
                     axesVertexArray.bind();
                     axesBuffers.getIndices().bind();
                     axesBuffers.getIndices().draw(GL_LINES);
@@ -1630,12 +1611,12 @@ namespace hex::plugin::builtin {
                 }
                 gridAxesShader.unbind();
             }
-            if (drawSource) {
+            if (s_drawSource) {
                 static gl::Shader sourceShader = gl::Shader(
                         romfs::get("shaders/default/lineVertex.glsl").string(),
                         romfs::get("shaders/default/lineFragment.glsl").string());
                 sourceShader.bind();
-                gl::Vector<float, 4> tempStrength({1.0F, 0.0F, 0.0F, 32.0F});
+
                 sourceShader.setUniform<4>("Model", model);
                 sourceShader.setUniform<4>("View", view);
                 sourceShader.setUniform<4>("Projection", projection);
@@ -1648,34 +1629,33 @@ namespace hex::plugin::builtin {
                 sourceShader.unbind();
             }
 
-            if (animationOn) {
+            if (s_animationOn) {
                 static float radius;
                 static float initialAngle;
-                float currentTime = glfwGetTime() - initialTime;
+                double currentTime = glfwGetTime() - s_initialTime;
 
-                if (previousTime == 0) {
+                if (s_previousTime == 0) {
                     radius = std::sqrt(
-                            lightPosition[0] * lightPosition[0] + lightPosition[2] * lightPosition[2]);
-                    initialAngle = std::atan2(lightPosition[2], lightPosition[0]);
+                            s_lightPosition[0] * s_lightPosition[0] + s_lightPosition[2] * s_lightPosition[2]);
+                    initialAngle = std::atan2(s_lightPosition[2], s_lightPosition[0]);
                 }
 
-                float unitConvert = rpms * std::numbers::pi / 30.0f;
-                float angle = std::fmod(initialAngle + unitConvert * currentTime, 2 * std::numbers::pi);
+                float unitConvert = s_rpms * std::numbers::pi_v<float> / 30.0F;
+                float angle = std::fmod(initialAngle + unitConvert * currentTime, 2 * std::numbers::pi_v<float>);
 
-                lightPosition[0] = radius * std::cos(angle);
-                lightPosition[2] = radius * std::sin(angle);
+                s_lightPosition[0] = radius * std::cos(angle);
+                s_lightPosition[2] = radius * std::sin(angle);
 
-                shouldUpdateSource = true;
-                previousTime = currentTime;
+                s_shouldUpdateSource = true;
+                s_previousTime = currentTime;
             }
 
             vertexArray.unbind();
             frameBuffer.unbind();
 
-            texture = ImGuiExt::Texture(renderTexture.release(), renderTexture.getWidth(),
-                                     renderTexture.getHeight());
+            s_texture = ImGuiExt::Texture(renderTexture.release(), GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
 
-            DrawWindow(texture, renderingWindowSize, mvp, minSize, showUI, UISize);
+            drawWindow(s_texture, s_renderingWindowSize, mvp, minSize, s_showUI, UISize);
         }
     }
 
