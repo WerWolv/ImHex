@@ -1325,14 +1325,19 @@ namespace hex::plugin::builtin {
 
         if (s_shouldReset) {
             s_shouldReset = false;
-            if (indicesPattern->getSection() == 1) {
-                s_indexType = IndexType::U8;
-            } else if (indicesPattern->getSection() == 2) {
-                s_indexType = IndexType::U16;
-            } else if (indicesPattern->getSection() == 4) {
-                s_indexType = IndexType::U32;
-            } else {
-                s_indexType = IndexType::Invalid;
+
+            auto *iterable = dynamic_cast<pl::ptrn::IIterable*>(indicesPattern.get());
+            if (iterable != nullptr && iterable->getEntryCount() > 0) {
+                const auto &content = iterable->getEntry(0);
+                if (content->getSize() == 1) {
+                    s_indexType = IndexType::U8;
+                } else if (content->getSize() == 2) {
+                    s_indexType = IndexType::U16;
+                } else if (content->getSize() == 4) {
+                    s_indexType = IndexType::U32;
+                } else {
+                    s_indexType = IndexType::Invalid;
+                }
             }
 
             if (s_drawMode == GL_TRIANGLES) {
