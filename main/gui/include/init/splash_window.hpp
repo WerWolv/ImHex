@@ -2,15 +2,26 @@
 
 #include <functional>
 #include <future>
+#include <list>
+#include <string>
 #include <vector>
 
 #include <mutex>
+
+#include <imgui.h>
+#include <hex/ui/imgui_imhex_extensions.h>
 
 struct GLFWwindow;
 
 namespace hex::init {
 
     using TaskFunction = std::function<bool()>;
+
+    struct Task {
+        std::string name;
+        std::function<bool()> callback;
+        bool async;
+    };
 
     enum FrameResult{ success, failure, wait };
 
@@ -30,8 +41,12 @@ namespace hex::init {
         FrameResult fullFrame();
         void startStartupTasks();
 
-        void addStartupTask(const std::string &taskName, const TaskFunction &task, bool async) {
-            this->m_tasks.emplace_back(taskName, task, async);
+        void createTask(const Task &task);
+
+        void addStartupTask(const std::string &taskName, const TaskFunction &function, bool async) {
+            std::scoped_lock lock(this->m_tasksMutex);
+
+            this->m_tasks.emplace_back(taskName, function, async);
         }
 
     private:
@@ -49,7 +64,10 @@ namespace hex::init {
 
         std::future<bool> processTasksAsync();
 
-        std::vector<std::tuple<std::string, TaskFunction, bool>> m_tasks;
+        std::atomic<u32> m_totalTaskCount, m_completedTaskCount;
+        std::atomic<bool> m_taskStatus;
+        std::vector<Task> m_tasks;
+        std::mutex m_tasksMutex;
 
         std::string m_gpuVendor;
     

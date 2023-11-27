@@ -713,6 +713,10 @@ namespace hex {
             return true;
         }
 
+        void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function) {
+            EventManager::post<RequestAddInitTask>(name, async, function);
+        }
+
     }
 
     namespace ImHexApi::Messaging {

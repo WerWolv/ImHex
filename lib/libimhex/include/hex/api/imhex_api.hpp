@@ -571,7 +571,14 @@ namespace hex {
                 Nightly
             };
 
+            /**
+             * @brief Triggers the update process
+             * @param updateType The update channel
+             * @return If the update process was successfully started
+             */
             bool updateImHex(UpdateType updateType);
+
+            void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function);
         }
 
         /**

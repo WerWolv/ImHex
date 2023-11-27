@@ -44,6 +44,7 @@ namespace hex::plugin::builtin {
     void addTitleBarButtons();
     void addToolbarItems();
     void addGlobalUIItems();
+    void addInitTasks();
 
     void handleBorderlessWindowMode();
 
@@ -73,6 +74,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
     for (auto &path : romfs::list("lang"))
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+
+    addInitTasks();
 
     registerEventHandlers();
     registerDataVisualizers();
