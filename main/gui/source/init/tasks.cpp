@@ -317,7 +317,7 @@ namespace hex::init {
             { "Setting up environment",  setupEnvironment,    false },
             { "Creating directories",    createDirectories,   false },
             { "Loading settings",        loadSettings,        false },
-            { "Loading plugins",         loadPlugins,         true  },
+            { "Loading plugins",         loadPlugins,         false  },
         };
     }
 

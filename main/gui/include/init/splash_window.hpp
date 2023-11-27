@@ -65,8 +65,8 @@ namespace hex::init {
         std::future<bool> processTasksAsync();
 
         std::atomic<u32> m_totalTaskCount, m_completedTaskCount;
-        std::atomic<bool> m_taskStatus;
-        std::vector<Task> m_tasks;
+        std::atomic<bool> m_taskStatus = true;
+        std::list<Task> m_tasks;
         std::mutex m_tasksMutex;
 
         std::string m_gpuVendor;

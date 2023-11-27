@@ -86,33 +86,6 @@ namespace hex::init {
         glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
     }
 
-    std::future<bool> WindowSplash::processTasksAsync() {
-        return std::async(std::launch::async, [this] {
-            // Loop over all registered init tasks
-            for (const auto &task : this->m_tasks) {
-
-                // Construct a new task callback
-                this->createTask(task);
-            }
-
-            // Check every 100ms if all tasks have run
-            while (true) {
-                {
-                    std::scoped_lock lock(this->m_tasksMutex);
-                    if (this->m_completedTaskCount >= this->m_totalTaskCount)
-                        break;
-                }
-
-                std::this_thread::sleep_for(100ms);
-            }
-
-            // Small extra delay so the last progress step is visible
-            std::this_thread::sleep_for(100ms);
-
-            return this->m_taskStatus.load();
-        });
-    }
-
     void WindowSplash::createTask(const Task& task) {
         auto runTask = [&, task] {
             try {
@@ -135,11 +108,12 @@ namespace hex::init {
                 bool taskStatus = task.callback();
                 auto endTime = std::chrono::high_resolution_clock::now();
 
-                log::info("Task '{}' finished {} in {} ms",
-                          task.name,
-                          taskStatus ? "successfully" : "unsuccessfully",
-                          std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count()
-                );
+                auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+                if (taskStatus)
+                    log::info("Task '{}' finished successfully in {} ms", task.name, milliseconds);
+                else
+                    log::warn("Task '{}' finished unsuccessfully in {} ms", task.name, milliseconds);
 
                 // Track the overall status of the tasks
                 this->m_taskStatus = this->m_taskStatus && taskStatus;
@@ -167,6 +141,40 @@ namespace hex::init {
         } else {
             runTask();
         }
+    }
+
+    std::future<bool> WindowSplash::processTasksAsync() {
+        return std::async(std::launch::async, [this] {
+            auto startTime = std::chrono::high_resolution_clock::now();
+
+            // Loop over all registered init tasks
+            for (const auto &task : this->m_tasks) {
+
+                // Construct a new task callback
+                this->createTask(task);
+            }
+
+            // Check every 100ms if all tasks have run
+            while (true) {
+                {
+                    std::scoped_lock lock(this->m_tasksMutex);
+                    if (this->m_completedTaskCount >= this->m_totalTaskCount)
+                        break;
+                }
+
+                std::this_thread::sleep_for(100ms);
+            }
+
+            auto endTime = std::chrono::high_resolution_clock::now();
+
+            auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+            log::info("ImHex fully started in {}ms", milliseconds);
+
+            // Small extra delay so the last progress step is visible
+            std::this_thread::sleep_for(100ms);
+
+            return this->m_taskStatus.load();
+        });
     }
 
 
