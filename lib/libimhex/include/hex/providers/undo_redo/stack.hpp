@@ -44,6 +44,12 @@ namespace hex::prv::undo {
         const std::vector<std::unique_ptr<Operation>> &getUndoneOperations() const {
             return this->m_redoStack;
         }
+
+        void reset() {
+            this->m_undoStack.clear();
+            this->m_redoStack.clear();
+        }
+
     private:
         [[nodiscard]] Operation* getLastOperation() const {
             return this->m_undoStack.back().get();
