@@ -132,7 +132,7 @@ namespace hex::gl {
         return uniform->second;
     }
 
-    void Shader::compile(GLuint shader, std::string_view source) {
+    void Shader::compile(GLuint shader, std::string_view source) const {
         auto sourcePtr = source.data();
 
         glShaderSource(shader, 1, &sourcePtr, nullptr);
@@ -149,7 +149,7 @@ namespace hex::gl {
 
 
     template<typename T>
-    Buffer<T>::Buffer(BufferType type, std::span<T> data) : m_size(data.size()), m_type(GLuint(type)) {
+    Buffer<T>::Buffer(BufferType type, std::span<const T> data) : m_size(data.size()), m_type(GLuint(type)) {
         glGenBuffers(1, &this->m_buffer);
         glBindBuffer(this->m_type, this->m_buffer);
         glBufferData(this->m_type, data.size_bytes(), data.data(), GL_STATIC_DRAW);
@@ -206,7 +206,7 @@ namespace hex::gl {
     }
 
     template<typename T>
-    void Buffer<T>::update(std::span<T> data) {
+    void Buffer<T>::update(std::span<const T> data) {
         glBindBuffer(this->m_type, this->m_buffer);
         glBufferSubData(this->m_type, 0, data.size_bytes(), data.data());
         glBindBuffer(this->m_type, 0);
@@ -354,207 +354,206 @@ namespace hex::gl {
     }
 
     AxesVectors::AxesVectors() {
-        vertices.resize(36);
-        colors.resize(48);
-        indices.resize(18);
+        m_vertices.resize(36);
+        m_colors.resize(48);
+        m_indices.resize(18);
 
         // Vertices are x,y,z. Colors are RGBA. Indices are for the ends of each segment
         // Entries with value zero are unneeded but kept to help keep track of location
         // x-axis
         //vertices[0]=0.0F;  vertices[1]= 0.0F   vertices[2] = 0.0F;  // shaft base
-        vertices[3] = 1.0F;//vertices[4]= 0.0F   vertices[5] = 0.0F;  // shaft tip
-        vertices[6] = 0.9F;                      vertices[8] = 0.05F; // arrow base
-        vertices[9] = 0.9F;                      vertices[11]=-0.05F; // arrow base
+        m_vertices[3] = 1.0F;//vertices[4]= 0.0F   vertices[5] = 0.0F;  // shaft tip
+        m_vertices[6] = 0.9F;                      m_vertices[8] = 0.05F; // arrow base
+        m_vertices[9] = 0.9F;                      m_vertices[11]=-0.05F; // arrow base
         // y-axis
         //vertices[12]=0.0F;  vertices[13] = 0.0F;  vertices[14]=0.0F;// shaft base
-                              vertices[16] = 1.0F;//vertices[17]=0.0F;// shaft tip
-        vertices[18] = 0.05F; vertices[19] = 0.9F;//vertices[20]=0.0F;// arrow base
-        vertices[21] =-0.05F; vertices[22] = 0.9F;//vertices[23]=0.0F;// arrow base
+                              m_vertices[16] = 1.0F;//vertices[17]=0.0F;// shaft tip
+        m_vertices[18] = 0.05F; m_vertices[19] = 0.9F;//vertices[20]=0.0F;// arrow base
+        m_vertices[21] =-0.05F; m_vertices[22] = 0.9F;//vertices[23]=0.0F;// arrow base
         // z-axis
         //vertices[24]=0.0F;   vertices[25]=0.0F  vertices[26] = 0.0F; // shaft base
-                                                  vertices[29] = 1.0F; // shaft tip
-        vertices[30] = 0.05F;                     vertices[32] = 0.9F; // arrow base
-        vertices[33] =-0.05F;                     vertices[35] = 0.9F; // arrow base
+                                                  m_vertices[29] = 1.0F; // shaft tip
+        m_vertices[30] = 0.05F;                     m_vertices[32] = 0.9F; // arrow base
+        m_vertices[33] =-0.05F;                     m_vertices[35] = 0.9F; // arrow base
         // x-axis colors
-        colors[0]  = 0.7F;colors[3]  = 1.0F;
-        colors[4]  = 0.7F;colors[7]  = 1.0F;
-        colors[8]  = 0.7F;colors[11] = 1.0F;
-        colors[12] = 0.7F;colors[15] = 1.0F;
+        m_colors[0]  = 0.7F; m_colors[3]  = 1.0F;
+        m_colors[4]  = 0.7F; m_colors[7]  = 1.0F;
+        m_colors[8]  = 0.7F; m_colors[11] = 1.0F;
+        m_colors[12] = 0.7F; m_colors[15] = 1.0F;
         // y-axis colors
-        colors[17] = 0.7F;colors[19] = 1.0F;
-        colors[21] = 0.7F;colors[23] = 1.0F;
-        colors[25] = 0.7F;colors[27] = 1.0F;
-        colors[29] = 0.7F;colors[31] = 1.0F;
+        m_colors[17] = 0.7F; m_colors[19] = 1.0F;
+        m_colors[21] = 0.7F; m_colors[23] = 1.0F;
+        m_colors[25] = 0.7F; m_colors[27] = 1.0F;
+        m_colors[29] = 0.7F; m_colors[31] = 1.0F;
         // z-axis colors
-        colors[34] = 0.7F;colors[35] = 1.0F;
-        colors[38] = 0.7F;colors[39] = 1.0F;
-        colors[42] = 0.7F;colors[43] = 1.0F;
-        colors[46] = 0.7F;colors[47] = 1.0F;
+        m_colors[34] = 0.7F; m_colors[35] = 1.0F;
+        m_colors[38] = 0.7F; m_colors[39] = 1.0F;
+        m_colors[42] = 0.7F; m_colors[43] = 1.0F;
+        m_colors[46] = 0.7F; m_colors[47] = 1.0F;
         // indices  for x
-                        indices[1]  = 1;
-        indices[2] = 2; indices[3]  = 1;
-        indices[4] = 3; indices[5]  = 1;
+        m_indices[0]  = 0;  m_indices[1]  = 1;
+        m_indices[2]  = 2;  m_indices[3]  = 1;
+        m_indices[4]  = 3;  m_indices[5]  = 1;
         // indices for y
-        indices[6] =  4; indices[7]  = 5;
-        indices[8] =  6; indices[9]  = 5;
-        indices[10] = 7; indices[11] = 5;
+        m_indices[6]  = 4;  m_indices[7]  = 5;
+        m_indices[8]  = 6;  m_indices[9]  = 5;
+        m_indices[10] = 7;  m_indices[11] = 5;
         // indices for z
-        indices[12] =  8; indices[13] = 9;
-        indices[14] = 10; indices[15] = 9;
-        indices[16] = 11; indices[17] = 9;
+        m_indices[12] =  8; m_indices[13] = 9;
+        m_indices[14] = 10; m_indices[15] = 9;
+        m_indices[16] = 11; m_indices[17] = 9;
     }
 
-    AxesBuffers::AxesBuffers( VertexArray& axesVertexArray, AxesVectors axesVectors) {
-        vertices = {};
-        colors = {};
-        indices = {};
+    AxesBuffers::AxesBuffers(const VertexArray& axesVertexArray, const AxesVectors &axesVectors) {
+        m_vertices = {};
+        m_colors = {};
+        m_indices = {};
 
         axesVertexArray.bind();
 
-        vertices = gl::Buffer<float>(gl::BufferType::Vertex, axesVectors.getVertices());
-        colors = gl::Buffer<float>(gl::BufferType::Vertex, axesVectors.getColors());
-        indices = gl::Buffer<u8>(gl::BufferType::Index, axesVectors.getIndices());
+        m_vertices = gl::Buffer<float>(gl::BufferType::Vertex, axesVectors.getVertices());
+        m_colors = gl::Buffer<float>(gl::BufferType::Vertex, axesVectors.getColors());
+        m_indices = gl::Buffer<u8>(gl::BufferType::Index, axesVectors.getIndices());
 
-        axesVertexArray.addBuffer(0, vertices);
-        axesVertexArray.addBuffer(1, colors, 4);
+        axesVertexArray.addBuffer(0, m_vertices);
+        axesVertexArray.addBuffer(1, m_colors, 4);
 
-        vertices.unbind();
-        colors.unbind();
-        indices.unbind();
+        m_vertices.unbind();
+        m_colors.unbind();
+        m_indices.unbind();
         axesVertexArray.unbind();
     }
 
 
     GridVectors::GridVectors(int sliceCount) {
-        slices = sliceCount;
-        vertices.resize((slices + 1) * (slices + 1) * 3);
-        colors.resize((slices + 1) * (slices + 1) * 4);
-        indices.resize(slices  * slices  * 6 + slices * 2);
+        m_slices = sliceCount;
+        m_vertices.resize((m_slices + 1) * (m_slices + 1) * 3);
+        m_colors.resize((m_slices + 1) * (m_slices + 1) * 4);
+        m_indices.resize(m_slices  * m_slices  * 6 + m_slices * 2);
         int k = 0;
         int l = 0;
-        for (int j = 0; j <= slices; ++j) {
-            float z = 2.0f * (float) j / (float) slices - 1.0f;
-            for (int i = 0; i <= slices; ++i) {
-                vertices[k   ] = 2.0f * (float) i / (float) slices - 1.0f;
-                vertices[k + 1] = 0.0f;
-                vertices[k + 2] = z;
+        for (u32 j = 0; j <= m_slices; ++j) {
+            float z = 2.0f * float(j) / float(m_slices) - 1.0f;
+            for (u32 i = 0; i <= m_slices; ++i) {
+                m_vertices[k   ] = 2.0f * float(i) / float(m_slices) - 1.0f;
+                m_vertices[k + 1] = 0.0f;
+                m_vertices[k + 2] = z;
                 k += 3;
-                colors[l    ] = 0.5f;
-                colors[l + 1] = 0.5f;
-                colors[l + 2] = 0.5f;
-                colors[l + 3] = 0.3f;
+                m_colors[l    ] = 0.5f;
+                m_colors[l + 1] = 0.5f;
+                m_colors[l + 2] = 0.5f;
+                m_colors[l + 3] = 0.3f;
                 l += 4;
             }
         }
         k = 0;
-        for (int j = 0; j < slices; ++j) {
-            int row1 = j * (slices + 1);
-            int row2 = (j + 1) * (slices + 1);
+        for (u32 j = 0; j < m_slices; ++j) {
+            int row1 = j * (m_slices + 1);
+            int row2 = (j + 1) * (m_slices + 1);
 
-            for (int i = 0; i < slices; ++i) {
-                indices[k    ] = row1 + i;
-                indices[k + 1] = row1 + i + 1;
-                indices[k + 2] = row1 + i + 1;
-                indices[k + 3] = row2 + i + 1;
-                indices[k + 4] = row2 + i + 1;
-                indices[k + 5] = row2 + i;
+            for (u32 i = 0; i < m_slices; ++i) {
+                m_indices[k    ] = row1 + i;
+                m_indices[k + 1] = row1 + i + 1;
+                m_indices[k + 2] = row1 + i + 1;
+                m_indices[k + 3] = row2 + i + 1;
+                m_indices[k + 4] = row2 + i + 1;
+                m_indices[k + 5] = row2 + i;
                 k += 6;
 
                 if (i == 0) {
-                    indices[k    ] = row2 + i;
-                    indices[k + 1] = row1 + i;
+                    m_indices[k    ] = row2 + i;
+                    m_indices[k + 1] = row1 + i;
                     k += 2;
                 }
             }
         }
     }
 
-    GridBuffers::GridBuffers(VertexArray& gridVertexArray, GridVectors gridVectors) {
-        vertices = {};
-        colors = {};
-        indices = {};
+    GridBuffers::GridBuffers(const VertexArray& gridVertexArray, const GridVectors &gridVectors) {
+        m_vertices = {};
+        m_colors = {};
+        m_indices = {};
 
         gridVertexArray.bind();
 
-        vertices = gl::Buffer<float>(gl::BufferType::Vertex, gridVectors.getVertices());
-        indices  = gl::Buffer<u8>(gl::BufferType::Index, gridVectors.getIndices());
-        colors   = gl::Buffer<float>(gl::BufferType::Vertex, gridVectors.getColors());
+        m_vertices = gl::Buffer<float>(gl::BufferType::Vertex, gridVectors.getVertices());
+        m_indices  = gl::Buffer<u8>(gl::BufferType::Index, gridVectors.getIndices());
+        m_colors   = gl::Buffer<float>(gl::BufferType::Vertex, gridVectors.getColors());
 
-        gridVertexArray.addBuffer(0, vertices);
-        gridVertexArray.addBuffer(1, colors,4);
+        gridVertexArray.addBuffer(0, m_vertices);
+        gridVertexArray.addBuffer(1, m_colors,4);
 
-        vertices.unbind();
-        colors.unbind();
-        indices.unbind();
+        m_vertices.unbind();
+        m_colors.unbind();
+        m_indices.unbind();
         gridVertexArray.unbind();
-        }
     }
 
     hex::gl::LightSourceVectors::LightSourceVectors(int res) {
-        resolution = res;
-        radius = 0.05f;
-        vertices.resize((res + 1) * (res + 1) * 3);
-        normals.resize((res + 1) * (res + 1) * 3);
-        colors.resize((res + 1) * (res + 1) * 4);
-        indices.resize((res + 1) * (res + 1) * 6);
+        m_resolution = res;
+        m_radius = 0.05f;
+        m_vertices.resize((res + 1) * (res + 1) * 3);
+        m_normals.resize((res + 1) * (res + 1) * 3);
+        m_colors.resize((res + 1) * (res + 1) * 4);
+        m_indices.resize((res + 1) * (res + 1) * 6);
 
 
-        auto constexpr two_pi = std::numbers::pi * 2.0f;
-        auto constexpr half_pi = std::numbers::pi / 2.0f;
-        auto dv = two_pi / resolution;
-        auto du = std::numbers::pi / resolution;
+        constexpr auto TwoPi = std::numbers::pi_v<float> * 2.0F;
+        constexpr auto HalfPi = std::numbers::pi_v<float> / 2.0F;
+        const auto dv = TwoPi / m_resolution;
+        const auto du = std::numbers::pi_v<float> / m_resolution;
 
-        float x,y,z,xy;
-        int k,l,m,n;
-        k=l=m=n=0;
-        //vertical: pi/2 to  -pi/2
-        for (int i = 0; i < (resolution +1); i += 1) {
-            float u = half_pi - i * du;
-            z  = sin(u);
-            xy = cos(u);
-            //horizontal: 0  to  2pi
-            for (int j = 0; j < (resolution+1); j += 1) {
+        int k = 0, l = 0, m = 0, n = 0;
+
+        // Vertical: pi/2 to  -pi/2
+        for (int i = 0; i < (m_resolution +1); i += 1) {
+            float u = HalfPi - i * du;
+            float z  = std::sin(u);
+            float xy = std::cos(u);
+
+            // Horizontal: 0  to  2pi
+            for (int j = 0; j < (m_resolution+1); j += 1) {
                 float v = j * dv;
-                x = xy * cos(v);
-                y = xy * sin(v);
+                float x = xy * std::cos(v);
+                float y = xy * std::sin(v);
 
-                normals[m    ] = x;
-                normals[m + 1] = y;
-                normals[m + 2] = z;
+                m_normals[m    ] = x;
+                m_normals[m + 1] = y;
+                m_normals[m + 2] = z;
 
-                vertices[m    ] = radius * x;
-                vertices[m + 1] = radius * y;
-                vertices[m + 2] = radius * z;
+                m_vertices[m    ] = m_radius * x;
+                m_vertices[m + 1] = m_radius * y;
+                m_vertices[m + 2] = m_radius * z;
 
                 m += 3;
 
-                colors[n    ] = 1.0f;;
-                colors[n + 1] = 1.0f;
-                colors[n + 2] = 1.0f;
-                colors[n + 3] = 1.0f;
+                m_colors[n    ] = 1.0f;;
+                m_colors[n + 1] = 1.0f;
+                m_colors[n + 2] = 1.0f;
+                m_colors[n + 3] = 1.0f;
                 n += 4;
 
                 if (i == 0) {
-                    indices[l    ] = k;
-                    indices[l + 1] = k + resolution;
-                    indices[l + 2] = k + resolution + 1;
+                    m_indices[l    ] = k;
+                    m_indices[l + 1] = k + m_resolution;
+                    m_indices[l + 2] = k + m_resolution + 1;
                     l += 3;
                     k += 1;
-                } else if (i < resolution) {
-                    indices[l    ] = k;
-                    indices[l + 1] = k + resolution + 1;
-                    indices[l + 2] = k + 1;
+                } else if (i < m_resolution) {
+                    m_indices[l    ] = k;
+                    m_indices[l + 1] = k + m_resolution + 1;
+                    m_indices[l + 2] = k + 1;
 
-                    indices[l + 3] = k + 1;
-                    indices[l + 4] = k + resolution + 1;
-                    indices[l + 5] = k + resolution + 2;
+                    m_indices[l + 3] = k + 1;
+                    m_indices[l + 4] = k + m_resolution + 1;
+                    m_indices[l + 5] = k + m_resolution + 2;
 
                     k += 1;
                     l += 6;
                 } else {
-                    indices[l    ] = k;
-                    indices[l + 1] = k + resolution + 1;
-                    indices[l + 2] = k + 1;
+                    m_indices[l    ] = k;
+                    m_indices[l + 1] = k + m_resolution + 1;
+                    m_indices[l + 2] = k + 1;
                     l += 3;
                     k += 1;
                 }
@@ -562,43 +561,45 @@ namespace hex::gl {
         }
     }
 
-    void hex::gl::LightSourceVectors::moveTo(Vector<float, 3> positionVector) {
-
+    void LightSourceVectors::moveTo(const Vector<float, 3> &positionVector) {
         int k = 0;
-        for (int i = 0; i < (resolution + 1)*(resolution + 1); i += 1) {
-            vertices[k    ] = radius * normals[k    ] + positionVector[0];
-            vertices[k + 1] = radius * normals[k + 1] + positionVector[1];
-            vertices[k + 2] = radius * normals[k + 2] + positionVector[2];
+        for (int i = 0; i < (m_resolution + 1)*(m_resolution + 1); i += 1) {
+            m_vertices[k    ] = m_radius * m_normals[k    ] + positionVector[0];
+            m_vertices[k + 1] = m_radius * m_normals[k + 1] + positionVector[1];
+            m_vertices[k + 2] = m_radius * m_normals[k + 2] + positionVector[2];
             k += 3;
         }
     }
 
-    hex::gl::LightSourceBuffers::LightSourceBuffers(VertexArray &sourceVertexArray, LightSourceVectors sourceVectors) {
-
+    LightSourceBuffers::LightSourceBuffers(const VertexArray &sourceVertexArray, const LightSourceVectors &sourceVectors) {
         sourceVertexArray.bind();
 
-        vertices = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.vertices);
-        indices  = gl::Buffer<u8>(gl::BufferType::Index, sourceVectors.indices);
+        m_vertices = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.getVertices());
+        m_indices  = gl::Buffer<u8>(gl::BufferType::Index, sourceVectors.getIndices());
         //normals  = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.normals);
-        colors   = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.colors);
+        m_colors   = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.getColors());
 
-        sourceVertexArray.addBuffer(0, vertices);
-        sourceVertexArray.addBuffer(1, colors,4);
+        sourceVertexArray.addBuffer(0, m_vertices);
+        sourceVertexArray.addBuffer(1, m_colors,4);
         //sourceVertexArray.addBuffer(1, normals);
 
-        vertices.unbind();
+        m_vertices.unbind();
         //normals.unbind();
-        colors.unbind();
-        indices.unbind();
+        m_colors.unbind();
+        m_indices.unbind();
         sourceVertexArray.unbind();
     }
 
-    void hex::gl::LightSourceBuffers::moveVertices(VertexArray& sourceVertexArray, LightSourceVectors& sourceVectors) {
-
+    void LightSourceBuffers::moveVertices(const VertexArray& sourceVertexArray, const LightSourceVectors& sourceVectors) {
         sourceVertexArray.bind();
-        vertices.update(sourceVectors.vertices);
-        sourceVertexArray.addBuffer(0, vertices);
+
+        m_vertices.update(sourceVectors.getVertices());
+        sourceVertexArray.addBuffer(0, m_vertices);
+
         sourceVertexArray.unbind();
     }
+
+}
+
 
 

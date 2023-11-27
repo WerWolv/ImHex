@@ -66,38 +66,59 @@ namespace hex::gl {
         }
 
         auto operator+=(const Vector& other) {
+            for (size_t i = 0; i < Size; i++)
+                this->m_data[i] += other.m_data[i];
+
+            return *this;
+        }
+
+        auto operator+=(const T scalar) {
+            for (size_t i = 0; i < Size; i++)
+                this->m_data[i] += scalar;
+
+            return *this;
+        }
+
+        auto operator-=(Vector other) {
+            for (size_t i = 0; i < Size; i++)
+                this->m_data[i] -= other.m_data[i];
+
+            return *this;
+        }
+
+
+        auto operator-=(const T scalar) {
+            for (size_t i = 0; i < Size; i++)
+                this->m_data[i] -= scalar;
+
+            return *this;
+        }
+
+        Vector operator*=(const T scalar) {
+            for (size_t i = 0; i < Size; i++)
+                this->m_data[i] *= scalar;
+
+            return *this;
+        }
+
+        auto operator*(const T scalar) {
+            auto copy = *this;
+            for (size_t i = 0; i < Size; i++)
+                copy[i] *= scalar;
+            return copy;
+        }
+
+        auto operator+(const Vector& other) {
             auto copy = *this;
             for (size_t i = 0; i < Size; i++)
                 copy[i] += other[i];
             return copy;
         }
 
-        auto operator+=(const T scalar) {
-            auto copy = *this;
-            for (size_t i = 0; i < Size; i++)
-        copy[i] += scalar;
-        return copy;
-    }
-
-        auto operator-=(Vector other) {
+        auto operator-(const Vector& other) {
             auto copy = *this;
             for (size_t i = 0; i < Size; i++)
                 copy[i] -= other[i];
-            return copy;
-        }
-
-
-        auto operator-=(const T scalar) {
-            auto copy = *this;
-            for (size_t i = 0; i < Size; i++)
-                copy[i] -= scalar;
-            return copy;
-        }
-
-        Vector operator*=(const T scalar) {
-            auto copy = *this;
-            for (size_t i = 0; i < Size; i++)
-                copy[i]  = scalar * copy[i];
             return copy;
         }
 
@@ -138,71 +159,13 @@ namespace hex::gl {
         std::array<T, Size> m_data;
     };
 
-    template<typename T, size_t Size>
-    auto operator*(const Vector<T, Size>& lhs, const T scalar) {
-        auto copy = lhs;
-        for (size_t i = 0; i < Size; i++)
-            copy[i] *= scalar;
-        return copy;
-    }
-
-    template<typename T, size_t Size>
-    auto operator*(const T scalar, const Vector<T, Size>& rhs) {
-        auto copy = rhs;
-        for (size_t i = 0; i < Size; i++)
-            copy[i] *= scalar;
-        return copy;
-    }
-
-    template<typename T, size_t Size>
-    auto operator+(const Vector<T, Size>& lhs, const T scalar) {
-        auto copy = lhs;
-        for (size_t i = 0; i < Size; i++)
-            copy[i] += scalar;
-        return copy;
-    }
-
-    template<typename T, size_t Size>
-    auto dot(const Vector<T, Size>& lhs, const Vector<T, Size>& rhs) {
-        auto copy = lhs;
-        return copy.dot(rhs);
-    }
-
-    template<typename T, size_t Size>
-    auto operator==(const Vector<T, Size>& lhs, const Vector<T, Size>& rhs) {
-        auto copy = lhs;
-        return copy == rhs;
-    }
-
-    template<typename T, size_t Size>
-    auto operator+(const Vector<T, Size>& lhs, const Vector<T, Size>& rhs) {
-        auto copy = lhs;
-        for (size_t i = 0; i < Size; i++)
-            copy[i] += rhs[i];
-        return copy;
-    }
-
-     template<typename T, size_t Size>
-    auto operator-(const Vector<T, Size>& lhs, const Vector<T, Size>& rhs) {
-        auto copy = lhs;
-        for (size_t i = 0; i < Size; i++)
-            copy[i] -= rhs[i];
-        return copy;
-    }
-
-    template<typename T>
-    auto cross(const Vector<T, 3>& lhs, const Vector<T, 3>& rhs) {
-        auto copy = lhs;
-        return copy.cross(rhs);
-    }
-
-    template<typename T, size_t ROWS, size_t COLS>
+    template<typename T, size_t Rows, size_t Columns>
     class Matrix {
     public:
         Matrix(const T &init) {
-            for (size_t i = 0; i < ROWS; i++)
-                for (size_t j = 0; j < COLS; j++)
-                    mat[i*COLS+j] = init;
+            for (size_t i = 0; i < Rows; i++)
+                for (size_t j = 0; j < Columns; j++)
+                    mat[i * Columns + j] = init;
         }
 
         Matrix(const Matrix &A) {
@@ -212,11 +175,11 @@ namespace hex::gl {
         virtual ~Matrix() {}
 
         size_t getRows() const {
-            return ROWS;
+            return Rows;
         }
 
         size_t getColumns() const {
-            return COLS;
+            return Columns;
         }
 
         T *data() { return this->mat.data(); }
@@ -225,375 +188,139 @@ namespace hex::gl {
 
 
         T &getElement(int row,int col) {
-            return this->mat[row*COLS+col];
+            return this->mat[row*Columns+col];
         }
 
-        Vector<T,ROWS> getColumn(int col) {
-            Vector<T,ROWS> result;
-            for (size_t i = 0; i < ROWS; i++)
-                result[i] = this->mat[i*COLS+col];
+        Vector<T,Rows> getColumn(int col) {
+            Vector<T,Rows> result;
+            for (size_t i = 0; i < Rows; i++)
+                result[i] = this->mat[i*Columns+col];
             return result;
         }
 
-        Vector<T,COLS> getRow(int row) {
-            Vector<T,COLS> result;
-            for (size_t i = 0; i < COLS; i++)
-                result[i] = this->mat[row*COLS+i];
+        Vector<T,Columns> getRow(int row) {
+            Vector<T,Columns> result;
+            for (size_t i = 0; i < Columns; i++)
+                result[i] = this->mat[row*Columns+i];
             return result;
         }
 
-        void updateRow(int row, Vector<T,COLS> values) {
-            for (size_t i = 0; i < COLS; i++)
-                this->mat[row*COLS+i] = values[i];
+        void updateRow(int row, Vector<T,Columns> values) {
+            for (size_t i = 0; i < Columns; i++)
+                this->mat[row*Columns+i] = values[i];
         }
 
-        void updateColumn(int col, Vector<T,ROWS> values) {
-            for (size_t i = 0; i < ROWS; i++)
-                this->mat[i*COLS+col] = values[i];
+        void updateColumn(int col, Vector<T,Rows> values) {
+            for (size_t i = 0; i < Rows; i++)
+                this->mat[i*Columns+col] = values[i];
         }
 
         void updateElement( int row,int col, T value) {
-            this->mat[row*COLS + col] = value;
+            this->mat[row*Columns + col] = value;
         }
 
         T &operator()( const int &row,const int &col) {
-            return this->mat[row*COLS + col];
+            return this->mat[row*Columns + col];
         }
 
         const T &operator()(const unsigned& row,const unsigned& col ) const {
-            return this->mat[row*COLS + col];
+            return this->mat[row*Columns + col];
         }
 
         Matrix& operator=(const Matrix& A) {
             if (&A == this)
                 return *this;
 
-            for (size_t i = 0; i < ROWS; i++)
-                for (size_t j = 0; j < COLS; j++)
-                    mat[i*COLS+j] = A(i, j);
+            for (size_t i = 0; i < Rows; i++)
+                for (size_t j = 0; j < Columns; j++)
+                    mat[i*Columns+j] = A(i, j);
             return *this;
         }
 
         Matrix operator+(const Matrix& A) {
             Matrix result(0.0);
 
-            for (size_t i = 0; i < ROWS; i++)
-                for (size_t j = 0; j < COLS; j++)
-                    result(i, j) = this->mat[i*COLS+j] + A(i, j);
+            for (size_t i = 0; i < Rows; i++)
+                for (size_t j = 0; j < Columns; j++)
+                    result(i, j) = this->mat[i*Columns+j] + A(i, j);
             return result;
         }
 
         Matrix operator-(const Matrix& A) {
             Matrix result(0.0);
 
-            for (size_t i = 0; i < ROWS; i++)
-                for (size_t j = 0; j < COLS; j++)
-                    result(i, j) = this->mat[i*COLS+j] - A(i, j);
+            for (size_t i = 0; i < Rows; i++)
+                for (size_t j = 0; j < Columns; j++)
+                    result(i, j) = this->mat[i*Columns+j] - A(i, j);
             return result;
         }
 
-        void getCoFactors(std::array<T, ROWS*COLS> array, std::array<T, ROWS*COLS> &temp, int size, int c, int r) {
-            int current_row = 0;
-            int current_col = 0;
-
-            for (int i = 0; i < size; i++) {
-                for (int j = 0; j < size; j++) {
-                    if (i != r && j != c) {
-                        temp[ current_row*COLS+current_col] = array[i*COLS+j];
-                        current_col++;
-                        if (current_col == size - 1) {
-                            current_col = 0;
-                            current_row++;
-                        }
-                    }
-                }
-            }
-        }
-
-        T iterateDet(std::array<T, ROWS* COLS> array, int size)
-        {
-            T determinant = 0;
-            if(size == 2)
-                return array[0]*array[3] - array[1]*array[2];
-            else if(size == 3)
-                return array[0]*array[4]*array[8] + array[1]*array[5]*array[6] + array[2]*array[3]*array[7]
-                       - array[2]*array[4]*array[6] - array[1]*array[3]*array[8] - array[0]*array[5]*array[7];
-            else if(size == 4)
-                return array[0]*array[5]*array[10]*array[15] + array[1]*array[6]*array[11]*array[12] + array[2]*array[7]*array[8]*array[13] + array[3]*array[4]*array[9]*array[14]
-                       - array[3]*array[6]*array[9]*array[12] - array[2]*array[5]*array[8]*array[15] - array[1]*array[4]*array[11]*array[14] - array[0]*array[7]*array[10]*array[13]
-                       - array[0]*array[6]*array[11]*array[13] - array[1]*array[7]*array[8]*array[14] - array[2]*array[4]*array[10]*array[15] - array[3]*array[5]*array[9]*array[12];
-            else if(size == 5)
-                return array[0]*array[6]*array[12]*array[18]*array[24] + array[1]*array[7]*array[13]*array[19]*array[20] + array[2]*array[8]*array[14]*array[15]*array[21] + array[3]*array[9]*array[10]*array[16]*array[22] + array[4]*array[5]*array[11]*array[17]*array[23]
-                       - array[4]*array[7]*array[10]*array[19]*array[21] - array[3]*array[6]*array[11]*array[18]*array[22] - array[2]*array[5]*array[14]*array[17]*array[24] - array[1]*array[9]*array[12]*array[16]*array[23] - array[0]*array[8]*array[13]*array[15]*array[22]
-                       - array[0]*array[7]*array[14]*array[16]*array[20] - array[1]*array[5]*array[12]*array[19]*array[24] - array[2]*array[6]*array[13]*array[17]*array[20] - array[3]*array[8]*array[11]*array[15]*array[23] - array[4]*array[9]*array[10]*array[18]*array[21]
-                       - array[4]*array[6]*array[13]*array[16]*array[23] - array[3]*array[5]*array[14]*array[18]*array[20] - array[2]*array[9]*array[10]*array[17]*array[21] - array[1]*array[8]*array[11]*array[19]*array[22] - array[0]*array[5]*array[11]*array[18]*array[24]
-                       - array[0]*array[6]*array[9]*array[17]*array[22] - array[1]*array[7]*array[10]*array[15]*array[24] - array[2]*array[8]*array[12]*array[16]*array[21] - array[3]*array[4]*array[13]*array[17]*array[22] - array[4]*array[5]*array[12]*array[15]*array[23]
-                       - array[4]*array[7]*array[9]*array[13]*array[20] - array[3]*array[8]*array[10]*array[14]*array[23] - array[2]*array[4]*array[11]*array[19]*array[23] - array[1]*array[5]*array[9]*array[18]*array[22] - array[0]*array[6]*array[10]*array[17]*array[21]
-                       - array[0]*array[7]*array[11]*array[15]*array[22] - array[1]*array[4]*array[12]*array[16]*array[20] - array[2]*array[5]*array[13]*array[14]*array[21] - array[3]*array[6]*array[8]*array[15]*array[20] - array[4]*array[7]*array[9]*array[11]*array[18]
-                          - array[4]*array[5]*array[10]*array[12]*array[19] - array[3]*array[7]*array[8]*array[12]*array[17] - array[2]*array[6]*array[9]*array[13]*array[18] - array[1]*array[5]*array[8]*array[14]*array[19] - array[0]*array[6]*array[9]*array[11]*array[17]
-                            - array[0]*array[5]*array[7]*array[13]*array[18] - array[1]*array[6]*array[8]*array[12]*array[19] - array[2]*array[4]*array[9]*array[11]*array[19] - array[3]*array[5]*array[7]*array[12]*array[18] - array[4]*array[6]*array[8]*array[10]*array[17]
-                                 - array[4]*array[5]*array[9]*array[11]*array[16] - array[3]*array[6]*array[7]*array[9]*array[16] - array[2]*array[5]*array[8]*array[10]*array[17] - array[1]*array[4]*array[7]*array[11]*array[17] - array[0]*array[5]*array[8]*array[9]*array[17]
-                                     - array[0]*array[4]*array[6]*array[11]*array[18] - array[1]*array[5]*array[6]*array[8]*array[19] - array[2]*array[6]*array[7]*array[9]*array[15] - array[3]*array[7]*array[8]*array[10]*array[16] - array[4]*array[8]*array[9]*array[11]*array[12]
-                                         - array[4]*array[6]*array[10]*array[8]*array[13] - array[3]*array[7]*array[9]*array[8]*array[14] - array[2]*array[5]*array[11]*array[9]*array[14] - array[1]*array[6]*array[10]*array[9]*array[15] - array[0]*array[7]*array[11]*array[8]*array[16]
-                                         - array[0]*array[6]*array[9]*array[10]*array[17] - array[1]*array[7]*array[10]*array[8]*array[18] - array[2]*array[8]*array[11]*array[9]*array[12] - array[3]*array[9]*array[10]*array[8]*array[13] - array[4]*array[10]*array[11]*array[9]*array[14]
-                                             - array[4]*array[9]*array[10]*array[11]*array[8];
-
-
-
-            std::array<T, ROWS* COLS> temp;
-            T sign = 1;
-
-            for(int h=0; h<size; h++)
-            {
-                this->getCoFactors(array, temp, size, 0, h);
-                determinant += sign * array[h] * this->iterateDet(temp, size-1);
-                sign = -sign;
-            }
-            return determinant;
-        }
-
-        T getDeterminant(int size)
-        {
-            if(ROWS != COLS)
-            {
-                static_assert(ROWS==COLS, "ERROR: Matrix is not square");
-                return 0;
-            }
-            std::array<T, ROWS* COLS> array;
-
-            for (size_t i = 0; i < ROWS; i++)
-                for (size_t j = 0; j < COLS; j++)
-                    array[i*COLS+j] = this->mat[i*COLS+j];
-
-            T det = this->iterateDet(array, size);
-            return det;
-        }
-
-        Matrix  scalarTimesMatrix(T scalar)
-        {
-            Matrix  result(0);
-            for (size_t i = 0; i < ROWS; i++)
-            {
-                for (size_t j = 0; j < COLS; j++)
-                {
-                    T newVal = scalar * this->mat[i*COLS+j];
-                    result.updateElement(i, j, newVal);
-                }
-            }
-            return result;
-        }
-
-
-        Matrix  scalarPlusMatrix(T scalar)
-        {
-            Matrix  result(0);
-            for (size_t i = 0; i < ROWS; i++)
-            {
-                for (size_t j = 0; j < COLS; j++)
-                {
-                    T newVal = scalar + this->mat[i*COLS+j];
-                    result.updateElement(i, j, newVal);
-                }
-            }
-            return result;
-        }
-
-
-        Matrix  scalarMinusMatrix(T scalar)
-        {
-            Matrix  result(0);
-            for (size_t i = 0; i < ROWS; i++)
-            {
-                for (size_t j = 0; j < COLS; j++)
-                {
-                    T newVal = this->mat[i*COLS+j] - scalar;
-                    result.updateElement(i, j, newVal);
-                }
-            }
-            return result;
-        }
-
-        Vector<T,ROWS> diagonalVector()
-        {
-            Vector<T,ROWS> d(0);
-            if(ROWS != COLS)
-            {
-                static_assert(ROWS==COLS,"ERROR: Matrix is not square!");
-                return d;
-            }
-            for (size_t i = 0; i < ROWS; i++)
-            {
-                for (size_t j = 0; j < COLS; j++)
-                {
-                    if(i == j)
-                    {
-                        T val = this->getElement(i, j);
-                        d.push_back(val);
-                    }
-                }
-            }
-            return d;
-        }
-
-        static Matrix  identity()
-        {
-            Matrix  I( 0);
-            for (size_t i = 0; i < ROWS; i++)
-                for (size_t j = 0; j < COLS; j++)
+        static Matrix identity() {
+            Matrix  I(0);
+            for (size_t i = 0; i < Rows; i++)
+                for (size_t j = 0; j < Columns; j++)
                     if(i == j)
                         I.updateElement(i, j, 1);
             return I;
         }
 
-        Matrix  transpose()
-        {
+        Matrix transpose() {
             Matrix  t(0);
-            for (size_t i = 0; i < COLS; i++)
-                for (size_t j = 0; j < ROWS; j++)
-                    t.updateElement(i, j, this->mat[j*ROWS+i]);
+            for (size_t i = 0; i < Columns; i++)
+                for (size_t j = 0; j < Rows; j++)
+                    t.updateElement(i, j, this->mat[j*Rows+i]);
 
             return t;
         }
 
-        Matrix  adjoint()
-        {
-            Matrix  adjnt(0);
-            int size = COLS;
-            T sign = 1;
-
-            if(ROWS != COLS)
-            {
-                static_assert( ROWS==COLS,"ERROR: Matrix is not square!");
-                return adjnt;
-            }
-
-            std::array<T, ROWS* COLS> array;
-            for(size_t g=0; g<ROWS; g++)
-                for(size_t j=0; j<COLS; j++)
-                    array[g*COLS+j] = this->mat[g*COLS+j];
-            std::array<T, ROWS* COLS> temp;
-
-            for(size_t h=0; h<ROWS; h++)
-            {
-                for(size_t k=0; k<COLS; k++)
-                {
-                    this->getCoFactors(array, temp, size, h, k);
-
-                    sign = ((h+k)%2==0)? 1: -1;
-
-                    T partial_det = sign * this->iterateDet(temp, size-1);
-                    adjnt.updateElement(k, h, partial_det);
-                }
-            }
-            return adjnt;
-        }
-
-        Matrix  inverse()
-        {
-            Matrix inv(0);
-            int size = ROWS;
-
-            if(ROWS != COLS)
-            {
-                static_assert(ROWS == COLS ,"ERROR: Matrix is not square!");
-                return inv;
-            }
-
-            T det = this->getDeterminant(size);
-
-            if(det == 0)
-            {
-                printf("ERROR: Singular matrix, not possible to compute its determinant");
-                return inv;
-            }
-
-            Matrix adj(0);
-            adj = this->adjoint();
-
-            for (size_t i = 0; i < ROWS; i++)
-            {
-                for (size_t j = 0; j < COLS; j++)
-                {
-                    T adj_val = adj.getElement(i, j);
-                    T newVal = adj_val/det;
-                    inv.updateElement(i, j, newVal);
-                }
-            }
-            return inv;
-        }
-
     private:
-        std::array<T,ROWS*COLS> mat;
+        std::array<T,Rows * Columns> mat;
     };
 
-    template<typename T, size_t ROWS, size_t N, size_t COLS>
-    Matrix<T,ROWS, COLS >  operator*(const Matrix<T, ROWS,N > &A, const Matrix<T, N,COLS > &B ) {
-        Matrix<T,ROWS, COLS >  result(0.0);
-        for (size_t i = 0; i < ROWS; i++)
-            for (size_t j = 0; j < COLS; j++)
-                for (size_t k = 0; k < N; k++)
+    template<typename T, size_t Rows, size_t Columns, size_t OtherDimension>
+    Matrix<T,Rows, Columns> operator*(const Matrix<T, Rows, OtherDimension> &A, const Matrix<T, OtherDimension, Columns> &B) {
+        Matrix<T, Rows, Columns> result(0.0);
+
+        for (size_t i = 0; i < Rows; i++)
+            for (size_t j = 0; j < Columns; j++)
+                for (size_t k = 0; k < OtherDimension; k++)
                     result(i, j) += A(i,k) * B(k, j);
+
         return result;
     }
 
-    template<typename T, size_t ROWS, size_t COLS>
-    Matrix<T,ROWS, COLS >  operator*(const Vector<T, ROWS> &a,const  Vector<T, COLS> &b) {
-        Matrix<T,ROWS, COLS >  result(0);
-        for (size_t i = 0; i < ROWS; i++)
-            for (size_t j = 0; j < COLS; j++)
+    template<typename T, size_t Rows, size_t Columns>
+    Matrix<T, Rows, Columns> operator*(const Vector<T, Rows> &a, const Vector<T, Columns> &b) {
+        Matrix<T, Rows, Columns> result(0);
+
+        for (size_t i = 0; i < Rows; i++)
+            for (size_t j = 0; j < Columns; j++)
                 result.updateElement(i, j, a[i] * b[j]);
+
         return result;
     }
 
-    template<typename T, size_t ROWS, size_t COLS>
-    Vector<T, ROWS> operator*(const Matrix<T,ROWS,COLS> &A, const Vector<T, COLS> &b) {
-        Vector<T, ROWS> result(0);
-        for (size_t i = 0; i < ROWS; i++)
-            for (size_t j = 0; j < COLS; j++)
-                result[i] += A(i,j) * b[j];
+    template<typename T, size_t Rows, size_t Columns>
+    Vector<T, Rows> operator*(const Matrix<T, Rows, Columns> &A, const Vector<T, Columns> &b) {
+        Vector<T, Rows> result(0);
+
+        for (size_t i = 0; i < Rows; i++)
+            for (size_t j = 0; j < Columns; j++)
+                result[i] += A(i, j) * b[j];
+
         return result;
     }
 
-    template<typename T, size_t ROWS, size_t COLS>
-    Vector<T, COLS> operator*( const Vector<T, ROWS> &b, const Matrix<T,ROWS,COLS> &A) {
-        Vector<T, COLS> result(0);
-        for (size_t i = 0; i < ROWS; i++)
-            for (size_t j = 0; j < COLS; j++)
-                result[j] += b[i]*A(i,j);
+    template<typename T, size_t Rows, size_t Columns>
+    Vector<T, Columns> operator*(const Vector<T, Rows> &b, const Matrix<T,Rows,Columns> &A) {
+        Vector<T, Columns> result(0);
+
+        for (size_t i = 0; i < Rows; i++)
+            for (size_t j = 0; j < Columns; j++)
+                result[j] += b[i] * A(i, j);
+
         return result;
     }
-
-    Matrix<float,4, 4 > lookAt( const Vector<float, 3> &cameraPosition, const Vector<float, 3> &target,
-                                  const Vector<float, 3> &up) {
-        Vector<float, 3> zAxis3 = (cameraPosition-target);
-        zAxis3.normalize();
-        Vector<float, 3> xAxis3 = cross(up, zAxis3).normalize();
-        Vector<float, 3> yAxis3 = cross(zAxis3, xAxis3).normalize();
-        Vector<float, 4> zAxis(0);
-        Vector<float, 4> xAxis(0);
-        Vector<float, 4> yAxis(0);
-        Vector<float, 4> cameraPosition4(0);
-        for (size_t i = 0; i < 3; i++)
-        {
-            zAxis[i] = zAxis3[i];
-            xAxis[i] = xAxis3[i];
-            yAxis[i] = yAxis3[i];
-            cameraPosition4[i] = cameraPosition[i];
-        }
-
-        Matrix<float,4, 4 > result(0);
-
-        result.updateColumn(0, xAxis);
-        result.updateColumn(1, yAxis);
-        result.updateColumn(2, zAxis);
-        result.updateColumn(3, cameraPosition4);
-
-
-        return result.inverse();
-    }
-
-
-
 
 // Convert horizontal (Xh) vertical (Yv)  and spin (Zs) angles to a rotation matrix.
 // Xh: Horizontal rotation, also known as heading or yaw.
@@ -668,8 +395,7 @@ namespace hex::gl {
     };
 
     template<typename T>
-    Matrix<T, 4,4 > getRotationMatrix(Vector<T,3> ypr, bool radians, RotationSequence rotationSequence)
-    {
+    Matrix<T, 4, 4> getRotationMatrix(Vector<T,3> ypr, bool radians, RotationSequence rotationSequence) {
         Matrix<T,4,4> rotation(0);
 
         T Sx, Cx, Sy, Cy, Sz, Cz;
@@ -794,7 +520,7 @@ namespace hex::gl {
     }
 
     template<typename T>
-    Matrix<T, 4,4 > getRotationMatrixFromVectorAngle(Vector<T,4> rotationVector, bool radians) {
+    Matrix<T, 4, 4> getRotationMatrixFromVectorAngle(Vector<T, 4> rotationVector, bool radians) {
         Vector<T,3> rotationVector3 = {{rotationVector[0], rotationVector[1], rotationVector[2]}};
         T theta = rotationVector3.magnitude();
         if (!radians)
@@ -839,8 +565,7 @@ namespace hex::gl {
     };
 
     template<typename T>
-    T findValue(Vector<T,3> ypr, MatrixElements matrixElement, RotationSequence rotationSequence)
-    {
+    T findValue(Vector<T,3> ypr, MatrixElements matrixElement, RotationSequence rotationSequence) {
         T Sx, Cx, Sy, Cy, Sz, Cz;
         Vector<T,3> angles = ypr;
 
@@ -987,8 +712,7 @@ namespace hex::gl {
     }
 
     template<typename T>
-    Matrix<T, 4,4 > getTransformMatrix(Vector<T,3> xyz, Vector<T,3> ypr, bool radians)
-    {
+    Matrix<T, 4,4 > getTransformMatrix(Vector<T,3> xyz, Vector<T,3> ypr, bool radians) {
         Matrix<T,4,4> transform( 0);
 
         Matrix<T,3,3> rotation = getRotationMatrix(ypr, radians);
@@ -1006,8 +730,7 @@ namespace hex::gl {
     }
 
     template<typename T>
-    Vector<T,3> getTranslationVector(Matrix<T, 4,4 > transform_matrix)
-    {
+    Vector<T,3> getTranslationVector(Matrix<T, 4,4 > transform_matrix) {
         Vector<T,3> xyz;
 
         xyz.push_back(transform_matrix.getElement(0,3));
@@ -1018,8 +741,7 @@ namespace hex::gl {
     }
 
     template<typename T>
-    Vector<T,3> getYprVector(Matrix<T, 4,4 > transform_matrix)
-    {
+    Vector<T,3> getYprVector(Matrix<T, 4,4 > transform_matrix) {
         Vector<T,3> result;
 
         Matrix<T,3,3> rotation(0);
@@ -1032,14 +754,12 @@ namespace hex::gl {
         bool singular = sy < 1e-6;
 
         T x, y, z;
-        if (!singular)
-        {
+        if (!singular) {
             x =  atan2(rotation.getElement(1,0), rotation.getElement(0,0));
             y = atan2(-rotation.getElement(2,0), sy);
             z = atan2(rotation.getElement(2,1), rotation.getElement(2,2));
         }
-        else
-        {
+        else {
             x = 0;
             y = atan2(-rotation.getElement(2,0), sy);
             z =  atan2(-rotation.getElement(1,2), rotation.getElement(1,1));
@@ -1057,21 +777,15 @@ namespace hex::gl {
 
 
     template<typename T>
-    static Matrix<T,4,4> GetObliqueMatrix(	T width, T height,T nearVal,T farVal, bool actionType = false)
-    {
+    static Matrix<T,4,4> GetObliqueMatrix(	T width, T height,T nearVal,T farVal, bool actionType = false) {
         int sign =1;
         if (actionType)
             sign=-1;
         Matrix<T,4,4> result(0);
         result.updateElement(0,0,sign * nearVal/width);
-        //result.updateElement(0,2,sign * (right+left)/(right - left));
-
         result.updateElement(1,1, sign *  nearVal/height);
-       // result.updateElement(1,2,sign * (top+bottom)/(top - bottom));
-
         result.updateElement(2,2,sign * (farVal + nearVal)/( farVal - nearVal ));
         result.updateElement(3,2,sign * 2*farVal * nearVal/( farVal - nearVal ));
-
         result.updateElement(2,3,-sign);
 
         return result;
@@ -1098,21 +812,21 @@ namespace hex::gl {
 
         template<size_t N>
         void setUniform(std::string_view name, const Vector<float, N> &value) {
-            if(N==2)
+            if (N == 2)
                 glUniform2f(getUniformLocation(name), value[0], value[1]);
-            else if(N==3)
+            else if (N == 3)
                 glUniform3f(getUniformLocation(name), value[0], value[1], value[2]);
-            else if(N==4)
+            else if (N == 4)
                 glUniform4f(getUniformLocation(name), value[0], value[1], value[2],value[3]);
         }
 
         template<size_t N>
         void setUniform(std::string_view name, Matrix<float, N,N> &value){
-            glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, (GLfloat *)(value.data()));
+            glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, value.data());
         }
 
     private:
-        void compile(GLuint shader, std::string_view source);
+        void compile(GLuint shader, std::string_view source) const;
         GLint getUniformLocation(std::string_view name);
 
     private:
@@ -1129,7 +843,7 @@ namespace hex::gl {
     class Buffer {
     public:
         Buffer() = default;
-        Buffer(BufferType type, std::span<T> data);
+        Buffer(BufferType type, std::span<const T> data);
         ~Buffer();
         Buffer(const Buffer&) = delete;
         Buffer(Buffer&& other) noexcept;
@@ -1142,7 +856,7 @@ namespace hex::gl {
 
         void draw(unsigned primitive) const;
         size_t getSize() const;
-        void update(std::span<T> data);
+        void update(std::span<const T> data);
     private:
         GLuint m_buffer = 0;
         size_t m_size = 0;
@@ -1224,105 +938,151 @@ namespace hex::gl {
     class AxesVectors {
     public:
         AxesVectors();
-        std::vector<float>& getVertices() {
-            return vertices;
+
+        const std::vector<float>& getVertices() const {
+            return m_vertices;
         }
-        std::vector<float>& getColors() {
-            return colors;
+
+        const std::vector<float>& getColors() const {
+            return m_colors;
         }
-        std::vector<u8>& getIndices() {
-            return indices;
+
+        const std::vector<u8>& getIndices() const {
+            return m_indices;
         }
+
     private:
-        std::vector<float> vertices;
-        std::vector<float> colors;
-        std::vector<u8> indices;
+        std::vector<float> m_vertices;
+        std::vector<float> m_colors;
+        std::vector<u8> m_indices;
 
     };
 
     class AxesBuffers {
     public:
-        AxesBuffers(VertexArray& axesVertexArray, AxesVectors axesVectors);
-        gl::Buffer<float>& getVertices() {
-            return vertices;
+        AxesBuffers(const VertexArray& axesVertexArray, const AxesVectors &axesVectors);
+
+        const gl::Buffer<float>& getVertices() const {
+            return m_vertices;
         }
-        gl::Buffer<float>& getColors() {
-            return colors;
+
+        const gl::Buffer<float>& getColors() const {
+            return m_colors;
         }
-        gl::Buffer<u8>& getIndices() {
-            return indices;
+
+        const gl::Buffer<u8>& getIndices() const {
+            return m_indices;
         }
+
     private:
-        gl::Buffer<float> vertices;
-        gl::Buffer<float> colors;
-        gl::Buffer<u8> indices;
+        gl::Buffer<float> m_vertices;
+        gl::Buffer<float> m_colors;
+        gl::Buffer<u8> m_indices;
     };
 
     class GridVectors {
     public:
         GridVectors(int sliceCount);
 
-        int getSlices() {
-            return slices;
+        u32 getSlices() const {
+            return m_slices;
         }
 
-        std::vector<float>& getVertices() {
-            return vertices;
+        const std::vector<float>& getVertices() const {
+            return m_vertices;
         }
 
-        std::vector<float>& getColors() {
-            return colors;
+        const std::vector<float>& getColors() const {
+            return m_colors;
         }
 
-        std::vector<u8>& getIndices() {
-            return indices;
+        const std::vector<u8>& getIndices() const {
+            return m_indices;
         }
 
     private:
-        int slices;
-        std::vector<float> vertices;
-        std::vector<float> colors;
-        std::vector<u8> indices;
+        u32 m_slices;
+        std::vector<float> m_vertices;
+        std::vector<float> m_colors;
+        std::vector<u8> m_indices;
     };
 
     class GridBuffers {
     public:
-        GridBuffers(VertexArray &gridVertexArray, GridVectors gridVectors);
-        gl::Buffer<float>& getVertices() {
-            return vertices;
+        GridBuffers(const VertexArray &gridVertexArray, const GridVectors &gridVectors);
+
+        const gl::Buffer<float>& getVertices() const {
+            return m_vertices;
         }
-        gl::Buffer<float>& getColors() {
-            return colors;
+
+        const gl::Buffer<float>& getColors() const {
+            return m_colors;
         }
-        gl::Buffer<u8>& getIndices() {
-            return indices;
+
+        const gl::Buffer<u8>& getIndices() const {
+            return m_indices;
         }
+
     private:
-        gl::Buffer<float> vertices;
-        gl::Buffer<float> colors;
-        gl::Buffer<u8> indices;
+        gl::Buffer<float> m_vertices;
+        gl::Buffer<float> m_colors;
+        gl::Buffer<u8> m_indices;
     };
 
     class LightSourceVectors {
     public:
         LightSourceVectors(int res);
-        void moveTo(Vector<float, 3> position);
-        int resolution;
-        float radius;
-        std::vector<float> vertices;
-        std::vector<float> normals;
-        std::vector<float> colors;
-        std::vector<u8> indices;
+
+        void moveTo(const Vector<float, 3> &position);
+
+        const std::vector<float>& getVertices() const {
+            return m_vertices;
+        }
+
+        const std::vector<float>& getNormals() const {
+            return m_normals;
+        }
+
+        const std::vector<float>& getColors() const {
+            return m_colors;
+        }
+
+        const std::vector<u8>& getIndices() const {
+            return m_indices;
+        }
+
+    private:
+        int m_resolution;
+        float m_radius;
+
+        std::vector<float> m_vertices;
+        std::vector<float> m_normals;
+        std::vector<float> m_colors;
+        std::vector<u8> m_indices;
     };
 
     class LightSourceBuffers {
     public:
-        LightSourceBuffers(VertexArray &sourceVertexArray, LightSourceVectors sourceVectors);
-        void moveVertices(VertexArray &sourceVertexArray, LightSourceVectors& sourceVectors);
-        gl::Buffer<float> vertices;
-        //gl::Buffer<float> normals;
-        gl::Buffer<float> colors;
-        gl::Buffer<u8> indices;
+        LightSourceBuffers(const VertexArray &sourceVertexArray, const LightSourceVectors &sourceVectors);
+
+        void moveVertices(const VertexArray &sourceVertexArray, const LightSourceVectors& sourceVectors);
+
+        const gl::Buffer<float>& getVertices() const {
+            return m_vertices;
+        }
+
+        const gl::Buffer<float>& getColors() const {
+            return m_colors;
+        }
+
+        const gl::Buffer<u8>& getIndices() const {
+            return m_indices;
+        }
+
+    private:
+        gl::Buffer<float> m_vertices;
+        gl::Buffer<float> m_colors;
+        gl::Buffer<u8> m_indices;
     };
 
 }

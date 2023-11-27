@@ -2,8 +2,8 @@
 
 // Generated: 2023-11-12 08:44:48.641532
 
-extern const unsigned int blendericons_size;
-extern const unsigned int blendericons_data[];
+extern const unsigned int blendericons_compressed_size;
+extern const unsigned int blendericons_compressed_data[];
 
 
 #define ICON_MIN_BI                              0xea00

@@ -228,7 +228,7 @@ namespace hex::init {
 
         // Setup basic font configuration
         auto fonts       = IM_NEW(ImFontAtlas)();
-        ImFontConfig cfg = {};
+        static ImFontConfig cfg = {};
         cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
         cfg.SizePixels = fontSize;
 
@@ -315,7 +315,7 @@ namespace hex::init {
         cfg.GlyphOffset = ImVec2(0, 3_scaled);
         fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange.data());
         cfg.GlyphOffset = ImVec2(1_scaled, 0_scaled);
-        fonts->AddFontFromMemoryTTF((void*)blendericons_data, blendericons_size, 0, &cfg, blenderIconsRange.data());
+        fonts->AddFontFromMemoryCompressedTTF(blendericons_compressed_data, blendericons_compressed_size, 0, &cfg, blenderIconsRange.data());
 
         cfg.GlyphOffset = ImVec2(0, 0);
         // Add unifont if unicode support is enabled

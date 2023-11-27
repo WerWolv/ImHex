@@ -12,6 +12,7 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/concepts.hpp>
+#include <hex/helpers/fs.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -75,6 +76,7 @@ namespace ImGuiExt {
         Texture(const ImU8 *buffer, int size, int width = 0, int height = 0);
         Texture(std::span<const std::byte> bytes, int width = 0, int height = 0);
         explicit Texture(const char *path);
+        explicit Texture(const std::fs::path &path);
         Texture(unsigned int texture, int width, int height);
         Texture(const Texture&) = delete;
         Texture(Texture&& other) noexcept;
@@ -269,6 +271,7 @@ namespace ImGuiExt {
     bool DimmedIconButton(const char *symbol, ImVec4 color, ImVec2 size = ImVec2(0, 0));
     bool DimmedButtonToggle(const char *icon, bool *v, ImVec2 size);
     bool DimmedIconToggle(const char *icon, bool *v);
+    bool DimmedIconToggle(const char *iconOn, const char *iconOff, bool *v);
 
     void TextOverlay(const char *text, ImVec2 pos);
 
@@ -281,6 +284,8 @@ namespace ImGuiExt {
     void ConfirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonCallback, const std::function<void()> &rightButtonCallback);
 
     bool VSliderAngle(const char* label, ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags);
+
+    bool InputFilePicker(const char *label, std::fs::path &path, const std::vector<hex::fs::ItemFilter> &validExtensions);
 
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {

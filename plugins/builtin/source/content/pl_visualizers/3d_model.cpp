@@ -78,23 +78,18 @@ namespace hex::plugin::builtin {
         double s_previousTime;
         double s_initialTime;
 
-        bool s_showUI = false;
         bool s_isPerspective = true;
         bool s_drawAxes = true;
         bool s_drawGrid = true;
         bool s_animationOn = false;
         bool s_drawSource = true;
         bool s_drawTexture = false;
-        bool s_resetEverything = false;
         bool s_shouldReset = false;
         bool s_shouldUpdateSource = true;
 
         IndexType s_indexType;
 
         ImGuiExt::Texture s_modelTexture;
-        std::string s_texturePathStrOld;
-        float s_minScaling = 0.01F;
-        float s_maxScaling = 10.0F;
 
         gl::Vector<float, 3> s_translation = {{0.0f, 0.0F, -3.0F}};
         gl::Vector<float, 3> s_rotation = {{0.0F, 0.0F, 0.0F}};
@@ -103,7 +98,7 @@ namespace hex::plugin::builtin {
         gl::Matrix<float, 4, 4> s_rotate = gl::Matrix<float, 4, 4>::identity();
 
         ImGuiExt::Texture s_texture;
-        std::string s_texturePath;
+        std::fs::path s_texturePath, s_texturePathOld;
 
 
         template<typename T>
@@ -435,7 +430,7 @@ namespace hex::plugin::builtin {
 
         }
 
-        void styledToolTip(const std::string &tip, bool isSeparator = false) {
+        /*void styledToolTip(const std::string &tip, bool isSeparator = false) {
             ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 3.0F);
 
             if (isSeparator) {
@@ -448,9 +443,9 @@ namespace hex::plugin::builtin {
                 ImGuiExt::InfoTooltip(tip.c_str(),false);
 
             ImGui::PopStyleVar();
-        }
+        }*/
 
-        void drawNearPlaneUI(float availableWidth, auto &nearLimit, auto &farLimit) {
+        /*void drawNearPlaneUI(float availableWidth, auto &nearLimit, auto &farLimit) {
             if (std::fabs(nearLimit) < 1e-6)
                 nearLimit = 0.0;
 
@@ -490,9 +485,9 @@ namespace hex::plugin::builtin {
                 styledToolTip(tip);
             }
             ImGui::PopItemWidth();
-        }
+        }*/
 
-        void drawRotationsScaleUI(auto availableWidth_1, auto availableWidth_2, auto &rotation, auto &rotate,
+        /*void drawRotationsScaleUI(auto availableWidth_1, auto availableWidth_2, auto &rotation, auto &rotate,
                                                     auto &scaling, auto &strength, auto &lightPosition,
                                                     auto &renderingWindowSize, auto minSize, auto &resetEverything,
                                                     auto &translation, auto &nearLimit, auto &farLimit) {
@@ -703,7 +698,7 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-        void drawPrimitiveUI(auto availableWidth, auto &drawMode, auto &shouldResetLocally, auto &resetEverything) {
+        void drawPrimitiveUI(auto availableWidth) {
             if (ImGui::BeginTable("##Prim", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -718,7 +713,7 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted(label.c_str());
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
-                    if (drawMode == GL_TRIANGLES)
+                    if (s_drawMode == GL_TRIANGLES)
                         tip = "hex.builtin.pl_visualizer.3d.trianglesSelected"_lang.get();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.linesSelected"_lang.get();
@@ -735,19 +730,19 @@ namespace hex::plugin::builtin {
 
                 ImGui::Indent(spacing);
                 bool dummy = true;
-                if (ImGuiExt::DimmedIconToggle(primitiveIcon, &dummy) || resetEverything) {
-                    if (drawMode == GL_LINES || resetEverything) {
+                if (ImGuiExt::DimmedIconToggle(primitiveIcon, &dummy) || s_resetEverything) {
+                    if (s_drawMode == GL_LINES || s_resetEverything) {
                         primitiveIcon = ICON_BI_MOD_SOLIDIFY;
-                        drawMode = GL_TRIANGLES;
+                        s_drawMode = GL_TRIANGLES;
                     } else {
                         primitiveIcon = ICON_BI_CUBE;
-                        drawMode = GL_LINES;
+                        s_drawMode = GL_LINES;
                     }
-                    shouldResetLocally = true;
+                    s_shouldReset = true;
                 }
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
-                    if (drawMode == GL_TRIANGLES)
+                    if (s_drawMode == GL_TRIANGLES)
                         tip = "hex.builtin.pl_visualizer.3d.line"_lang.get();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.triangle"_lang.get();
@@ -928,7 +923,7 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-        void drawLightUI(float availableWidth, auto &drawSource, auto &resetEverything) {
+        void drawLightUI(float availableWidth) {
             if (ImGui::BeginTable("##ligth", 1, ImGuiTableFlags_SizingFixedFit)) {
 
                 ImGui::TableNextRow();
@@ -943,7 +938,7 @@ namespace hex::plugin::builtin {
                 ImGui::TextUnformatted(label.c_str());
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
-                    if (drawSource)
+                    if (s_drawSource)
                         tip = "hex.builtin.pl_visualizer.3d.renderingLightSource"_lang.get();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.notRenderingLightSource"_lang.get();
@@ -960,13 +955,13 @@ namespace hex::plugin::builtin {
                 spacing = (availableWidth - buttonSize.x) / 2.0f;
                 ImGui::Indent(spacing);
 
-                if (ImGuiExt::DimmedIconToggle(sourceIcon, &drawSource) || resetEverything) {
-                    if (resetEverything)
-                        drawSource = true;
+                if (ImGuiExt::DimmedIconToggle(sourceIcon, &s_drawSource) || s_resetEverything) {
+                    if (s_resetEverything)
+                        s_drawSource = true;
                 }
                 if (ImGui::IsItemHovered()) {
                     std::string tip;
-                    if (drawSource)
+                    if (s_drawSource)
                         tip = "hex.builtin.pl_visualizer.3d.dontDrawSource"_lang.get();
                     else
                         tip = "hex.builtin.pl_visualizer.3d.drawSource"_lang.get();
@@ -1032,32 +1027,140 @@ namespace hex::plugin::builtin {
                 ImGui::Unindent(spacing);
             }
             ImGui::EndTable();
-        }
+        }*/
 
-        void drawWindow(auto &texture, auto &renderingWindowSize, auto mvp, auto minSize, auto& showUI, auto UISize) {
+        void drawWindow(auto &texture, auto &renderingWindowSize, auto mvp) {
             auto textureSize = texture.getSize();
             auto textureWidth = textureSize.x;
             auto textureHeight = textureSize.y;
-            float firstColumnWidth = textureWidth;
-            float secondColumnWidth = UISize.x;
-            int columnCount;
-            auto maxSize = ImGui::GetPlatformIO().Monitors[0].MainSize;
 
-            if (showUI) {
-                maxSize.x -= (secondColumnWidth + 40);
-                maxSize.y -= (UISize.y + 40);
+            ImVec2 screenPos = ImGui::GetCursorScreenPos();
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 
-                if (renderingWindowSize.x > maxSize.x)
-                    renderingWindowSize.x = maxSize.x;
-                if (renderingWindowSize.y > maxSize.y)
-                    renderingWindowSize.y = maxSize.y;
-                columnCount = 2;
-            } else
-                columnCount = 1;
+            ImGui::SetNextWindowSizeConstraints(scaled({ 350, 350 }), ImVec2(FLT_MAX, FLT_MAX));
+            if (ImGui::BeginChild("##image", textureSize, ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                renderingWindowSize = ImGui::GetContentRegionAvail();
 
+                ImGui::Image(texture, textureSize, ImVec2(0, 1), ImVec2(1, 0));
 
+                if (s_drawAxes) {
+                    gl::Matrix<float, 4, 4> axes = gl::Matrix<float, 4, 4>::identity();
+                    axes(0, 3) = 1.0f;
+                    axes(1, 3) = 1.0f;
+                    axes(2, 3) = 1.0f;
 
-            if (ImGui::BeginTable("##3DVisualizer", columnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX)) {
+                    axes = axes * mvp;
+                    bool showX = axes(0, 3) > 0.0f;
+                    bool showY = axes(1, 3) > 0.0f;
+                    bool showZ = axes(2, 3) > 0.0f;
+
+                    axes.updateRow(0, axes.getRow(0) * (1.0f / axes(0, 3)));
+                    axes.updateRow(1, axes.getRow(1) * (1.0f / axes(1, 3)));
+                    axes.updateRow(2, axes.getRow(2) * (1.0f / axes(2, 3)));
+
+                    auto axesPosx = (axes.getColumn(0) + 1.0f) * (textureWidth / 2.0f);
+                    auto axesPosy = (axes.getColumn(1) + 1.0f) * (-textureHeight / 2.0f) + textureHeight;
+
+                    ImDrawList *drawList = ImGui::GetWindowDrawList();
+
+                    if (showX)
+                        drawList->AddText(ImVec2(axesPosx[0], axesPosy[0]) + screenPos, IM_COL32(255, 0, 0, 255), "X");
+                    if (showY)
+                        drawList->AddText(ImVec2(axesPosx[1], axesPosy[1]) + screenPos, IM_COL32(0, 255, 0, 255), "Y");
+                    if (showZ)
+                        drawList->AddText(ImVec2(axesPosx[2], axesPosy[2]) + screenPos, IM_COL32(0, 0, 255, 255), "Z");
+                }
+
+                if (ImHexApi::System::isDebugBuild()) {
+                    auto mousePos = ImClamp(ImGui::GetMousePos() - screenPos, { 0, 0 }, textureSize);
+                    ImDrawList *drawList = ImGui::GetWindowDrawList();
+                    drawList->AddText(
+                        screenPos + scaled({ 5, 5 }),
+                        ImGui::GetColorU32(ImGuiCol_Text),
+                        hex::format("X: {:.5}\nY: {:.5}", mousePos.x, mousePos.y).c_str());
+                }
+
+            }
+            ImGui::EndChild();
+            ImGui::PopStyleVar();
+
+            // Draw axis arrows toggle
+            {
+                ImGui::PushID(1);
+                if (ImGuiExt::DimmedIconToggle(ICON_BI_EMPTY_ARROWS, &s_drawAxes))
+                    s_shouldReset = true;
+                ImGui::PopID();
+            }
+
+            ImGui::SameLine();
+
+            // Draw grid toggle
+            {
+                ImGui::PushID(2);
+                if (ImGuiExt::DimmedIconToggle(ICON_BI_GRID, &s_drawGrid))
+                    s_shouldReset = true;
+                ImGui::PopID();
+            }
+
+            ImGui::SameLine();
+
+            // Draw light source toggle
+            {
+                ImGui::PushID(3);
+                if (ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &s_drawSource))
+                    s_shouldReset = true;
+
+                if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+                    ImGui::OpenPopup("LightSettings");
+                }
+
+                if (ImGui::BeginPopup("LightSettings")) {
+                    if (ImGui::DragFloat3("Position", s_lightPosition.data(), 0.05F)) {
+                        s_shouldUpdateSource = true;
+                    }
+
+                    ImGui::SliderFloat("Ambient Brightness",   &s_strength.data()[0], 0, 2);
+                    ImGui::SliderFloat("Diffuse Brightness",   &s_strength.data()[1], 0, 2);
+                    ImGui::SliderFloat("Specular Brightness ",  &s_strength.data()[2], 0, 2);
+                    ImGui::SliderFloat("Light source strength", &s_strength.data()[3], 0, 64);
+                    ImGui::EndPopup();
+                }
+                ImGui::PopID();
+            }
+
+            ImGui::SameLine();
+            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+            ImGui::SameLine();
+
+            // Draw projection toggle
+            {
+                ImGui::PushID(4);
+                if (ImGuiExt::DimmedIconToggle(ICON_BI_VIEW_PERSPECTIVE, ICON_BI_VIEW_ORTHO, &s_isPerspective)) {
+                    s_shouldReset = true;
+                }
+                ImGui::PopID();
+            }
+
+            ImGui::SameLine();
+
+            // Draw solid / line mode toggle
+            {
+                ImGui::PushID(4);
+                bool isSolid = s_drawMode == GL_TRIANGLES;
+                if (ImGuiExt::DimmedIconToggle(ICON_BI_MOD_SOLIDIFY, ICON_BI_CUBE , &isSolid)) {
+                    s_shouldReset = true;
+
+                    s_drawMode = isSolid ? GL_TRIANGLES : GL_LINES;
+                }
+                ImGui::PopID();
+            }
+
+            // Draw more settings
+            if (ImGui::CollapsingHeader("More settings")) {
+                ImGuiExt::InputFilePicker("Texture File", s_texturePath, {});
+            }
+
+            /*if (ImGui::BeginTable("##3DVisualizer", columnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX)) {
                 constexpr static auto ColumnFlags =  ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoResize;
                 ImGui::TableSetupColumn("##FirstColumn", ColumnFlags, textureWidth + 4_scaled);
 
@@ -1145,66 +1248,6 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                ImVec2 screenPos = ImGui::GetCursorScreenPos();
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
-                if (ImGui::BeginChild("##image", textureSize, ImGuiChildFlags_ResizeX | ImGuiChildFlags_ResizeY | ImGuiChildFlags_Border,
-                                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                    renderingWindowSize = ImGui::GetContentRegionAvail();
-
-                    ImGui::Image(texture, textureSize, ImVec2(0, 1), ImVec2(1, 0));
-
-                    if (s_drawAxes) {
-                        gl::Matrix<float, 4, 4> axes = gl::Matrix<float, 4, 4>::identity();
-                        axes(0, 3) = 1.0f;
-                        axes(1, 3) = 1.0f;
-                        axes(2, 3) = 1.0f;
-
-                        axes = axes * mvp;
-                        bool showX = axes(0, 3) > 0.0f;
-                        bool showY = axes(1, 3) > 0.0f;
-                        bool showZ = axes(2, 3) > 0.0f;
-
-                        axes.updateRow(0, axes.getRow(0) * (1.0f / axes(0, 3)));
-                        axes.updateRow(1, axes.getRow(1) * (1.0f / axes(1, 3)));
-                        axes.updateRow(2, axes.getRow(2) * (1.0f / axes(2, 3)));
-
-                        auto axesPosx = (axes.getColumn(0) + 1.0f) * (textureWidth / 2.0f);
-                        auto axesPosy = (axes.getColumn(1) + 1.0f) * (-textureHeight / 2.0f) + textureHeight;
-
-                        ImDrawList *drawList = ImGui::GetWindowDrawList();
-
-                        if (showX)
-                            drawList->AddText(ImVec2(axesPosx[0], axesPosy[0]) + screenPos, IM_COL32(255, 0, 0, 255), "X");
-                        if (showY)
-                            drawList->AddText(ImVec2(axesPosx[1], axesPosy[1]) + screenPos, IM_COL32(0, 255, 0, 255), "Y");
-                        if (showZ)
-                            drawList->AddText(ImVec2(axesPosx[2], axesPosy[2]) + screenPos, IM_COL32(0, 0, 255, 255), "Z");
-                    }
-
-                    if (ImHexApi::System::isDebugBuild()) {
-                        float mouse_x = ImGui::GetMousePos().x;
-                        if (std::fabs(mouse_x) >= std::numeric_limits<float>::max())
-                            mouse_x = 0.0F;
-                        else
-                            mouse_x -= screenPos.x;
-
-                        float mouse_y = ImGui::GetMousePos().y;
-                        if (std::fabs(mouse_y) >= std::numeric_limits<float>::max())
-                            mouse_y = 0.0F;
-                        else
-                            mouse_y -= screenPos.y;
-
-                        std::string mousePos = format("x: {:.5}\ny: {:.5}", mouse_x, mouse_y);
-                        ImDrawList *drawList = ImGui::GetWindowDrawList();
-                        drawList->AddText(screenPos, IM_COL32(255, 255, 255, 255), mousePos.c_str());
-                    }
-
-                }
-
-                ImGui::EndChild();
-                ImGui::PopStyleVar();
-
                 if (showUI) {
 
                     ImGui::TableNextColumn();
@@ -1229,7 +1272,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    drawLightUI(secondColumnWidth, s_drawSource, s_resetEverything);
+                    drawLightUI(secondColumnWidth);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
@@ -1238,7 +1281,7 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    drawPrimitiveUI(secondColumnWidth, s_drawMode, s_shouldReset, s_resetEverything);
+                    drawPrimitiveUI(secondColumnWidth);
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
@@ -1255,7 +1298,7 @@ namespace hex::plugin::builtin {
                     drawNearPlaneUI(firstColumnWidth, s_nearLimit, s_farLimit);
                 }
             }
-            ImGui::EndTable();
+            ImGui::EndTable();*/
         }
 
     }
@@ -1303,8 +1346,6 @@ namespace hex::plugin::builtin {
         const auto framePad = ImGui::GetStyle().FramePadding;
         float minSize = fontSize * 8_scaled + framePad.x * 20_scaled;
         minSize = minSize > 200_scaled ? minSize : 200_scaled;
-        const ImVec2 UISize = {(fontSize / 2.0F) * 9_scaled + framePad.x * 6_scaled,
-                               ImGui::GetFrameHeightWithSpacing() * 12_scaled + framePad.y * 4_scaled - 6_scaled};
 
         if (s_renderingWindowSize.x <= 0 || s_renderingWindowSize.y <= 0)
             s_renderingWindowSize = { minSize, minSize };
@@ -1397,8 +1438,8 @@ namespace hex::plugin::builtin {
             unsigned width = std::floor(s_renderingWindowSize.x);
             unsigned height = std::floor(s_renderingWindowSize.y);
 
-            gl::FrameBuffer frameBuffer(width,height);
-            gl::Texture renderTexture(width,height );
+            gl::FrameBuffer frameBuffer(width, height);
+            gl::Texture renderTexture(width, height);
             frameBuffer.attachTexture(renderTexture);
             frameBuffer.bind();
 
@@ -1462,8 +1503,8 @@ namespace hex::plugin::builtin {
                 shader.setUniform<4>("Strength", s_strength);
 
                 vertexArray.bind();
-                if (s_texturePath != s_texturePathStrOld)
-                    s_modelTexture = ImGuiExt::Texture(s_texturePath.c_str());
+                if (s_texturePath != s_texturePathOld)
+                    s_modelTexture = ImGuiExt::Texture(s_texturePath);
                 if (s_drawTexture)
                     glBindTexture(GL_TEXTURE_2D, s_modelTexture);
 
@@ -1566,9 +1607,9 @@ namespace hex::plugin::builtin {
                 sourceShader.setUniform<4>("Projection", projection);
 
                 sourceVertexArray.bind();
-                sourceBuffers.indices.bind();
-                sourceBuffers.indices.draw(GL_TRIANGLES);
-                sourceBuffers.indices.unbind();
+                sourceBuffers.getIndices().bind();
+                sourceBuffers.getIndices().draw(GL_TRIANGLES);
+                sourceBuffers.getIndices().unbind();
                 sourceVertexArray.unbind();
                 sourceShader.unbind();
             }
@@ -1599,7 +1640,7 @@ namespace hex::plugin::builtin {
 
             s_texture = ImGuiExt::Texture(renderTexture.release(), GLsizei(renderTexture.getWidth()), GLsizei(renderTexture.getHeight()));
 
-            drawWindow(s_texture, s_renderingWindowSize, mvp, minSize, s_showUI, UISize);
+            drawWindow(s_texture, s_renderingWindowSize, mvp);
         }
     }
 
