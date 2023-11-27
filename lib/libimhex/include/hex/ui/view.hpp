@@ -171,7 +171,7 @@ namespace hex {
                 if (this->getWindowOpenState())
                     ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str());
 
-                if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | this->getWindowFlags())) {
+                if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | this->getWindowFlags())) {
                     this->drawContent();
 
                     ImGui::EndPopup();

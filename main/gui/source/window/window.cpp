@@ -469,6 +469,7 @@ namespace hex {
                         ImGui::SetNextWindowSize(ImVec2(width, dockSpaceSize.y + 11_scaled - footerHeight));
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
+                        ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
                         if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
                             if (ImGui::BeginTable("##Table", 2)) {
                                 ImGui::TableSetupColumn("Main", ImGuiTableColumnFlags_WidthStretch, 1.0F);
@@ -510,6 +511,7 @@ namespace hex {
                         }
                         ImGui::End();
                         ImGui::PopStyleVar();
+                        ImGui::PopStyleColor();
                     }
 
                     ImGui::NewLine();

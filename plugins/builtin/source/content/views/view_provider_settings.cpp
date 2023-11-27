@@ -6,9 +6,9 @@
 namespace hex::plugin::builtin {
 
     ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name") {
-        EventManager::subscribe<EventProviderCreated>(this, [](const hex::prv::Provider *provider) {
+        EventManager::subscribe<EventProviderCreated>(this, [this](const hex::prv::Provider *provider) {
             if (provider->hasLoadInterface() && !provider->shouldSkipLoadInterface())
-                EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
+                this->getWindowOpenState() = true;
         });
 
         ContentRegistry::Interface::addSidebarItem(ICON_VS_SERVER_PROCESS, [] {
@@ -40,9 +40,12 @@ namespace hex::plugin::builtin {
             if (ImGui::Button("hex.builtin.common.open"_lang)) {
                 if (provider->open()) {
                     EventManager::post<EventProviderOpened>(provider);
+
+                    this->getWindowOpenState() = false;
                     ImGui::CloseCurrentPopup();
                 }
                 else {
+                    this->getWindowOpenState() = false;
                     ImGui::CloseCurrentPopup();
                     auto errorMessage = provider->getErrorMessage();
                     if (errorMessage.empty()) {
@@ -59,6 +62,7 @@ namespace hex::plugin::builtin {
 
             if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
                 ImGui::CloseCurrentPopup();
+                this->getWindowOpenState() = false;
                 TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
             }
         }
