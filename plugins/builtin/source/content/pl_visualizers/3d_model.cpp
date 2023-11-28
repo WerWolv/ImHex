@@ -11,6 +11,8 @@
 #include <opengl_support.h>
 #include <GLFW/glfw3.h>
 
+#include <numbers>
+
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization_manager.hpp>

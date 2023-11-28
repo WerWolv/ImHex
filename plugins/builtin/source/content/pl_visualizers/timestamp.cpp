@@ -2,6 +2,8 @@
 
 #include <content/pl_visualizers/visualizer_helpers.hpp>
 
+#include <numbers>
+
 #include <implot.h>
 #include <imgui.h>
 #include <hex/api/imhex_api.hpp>

@@ -6,6 +6,7 @@
 
 #include <wolv/utils/guards.hpp>
 
+#include <numbers>
 
 namespace hex::gl {
 
