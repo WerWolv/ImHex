@@ -104,7 +104,7 @@ namespace hex::plugin::windows {
 
         ImGuiExt::Header("hex.windows.view.tty_console.console"_lang);
 
-        auto consoleSize = ImGui::GetContentRegionAvail();
+        auto consoleSize = ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5));
         consoleSize.y -= ImGui::GetTextLineHeight() + ImGui::GetStyle().FramePadding.y * 4;
         if (ImGui::BeginChild("##scrolling", consoleSize, true, ImGuiWindowFlags_HorizontalScrollbar)) {
             ImGuiListClipper clipper;

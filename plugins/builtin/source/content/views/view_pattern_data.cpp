@@ -49,12 +49,14 @@ namespace hex::plugin::builtin {
         if (ImHexApi::Provider::isValid()) {
             // Make sure the runtime has finished evaluating and produced valid patterns
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
+
+            const auto height = std::max(ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2, ImGui::GetTextLineHeightWithSpacing() * 5);
             if (!runtime.arePatternsValid()) {
-                this->m_patternDrawer->draw({ });
+                this->m_patternDrawer->draw({ }, nullptr, height);
             } else {
                 // If the runtime has finished evaluating, draw the patterns
                 if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                    this->m_patternDrawer->draw(runtime.getPatterns(), &runtime);
+                    this->m_patternDrawer->draw(runtime.getPatterns(), &runtime, height);
                 }
             }
         }
