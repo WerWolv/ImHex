@@ -1,34 +1,37 @@
 #version 330 core
-in vec3 normal;
-in vec4 fragColor;
-in vec2 texCoord;
-in vec3 lightPos;
-in vec3 fragPos;
-in vec4 strength;
+
+in VertexData {
+    vec3 normal;
+    vec4 fragColor;
+    vec2 texCoord;
+    vec3 lightPosition;
+    vec3 fragPosition;
+    vec4 lightBrightness;
+    vec3 lightColor;
+} vertexData;
+
 out vec4 outColor;
 
-uniform sampler2D ourTexture;
+uniform sampler2D modelTexture;
 
 void main() {
+    vec3 ambientLightColor = vec3(1.0, 1.0, 1.0);
 
-    vec3 lightColor = vec3(1.0, 1.0, 1.0);
+    // Ambient lighting
+    vec3 ambient = vertexData.lightBrightness.x * ambientLightColor;
 
-    // ambient
-    vec3 ambient = strength.x * lightColor;
+    // Diffuse lighting
+    vec3 normalVector = normalize(vertexData.normal);
 
-    // diffuse
-    vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(lightPos-fragPos);
-    vec3 diffuse = strength.y * max(dot(norm, lightDir), 0.0)*lightColor;
+    vec3 lightDirection = normalize(vertexData.lightPosition - vertexData.fragPosition);
+    vec3 diffuse = vertexData.lightBrightness.y * max(dot(normalVector, lightDirection), 0.0) * vertexData.lightColor;
 
-    // specular
-    vec3 viewDir = normalize(-fragPos);
-    //vec3 halfwayDir = normalize(lightDir + viewDir);
-    //float spec = pow(max(dot(norm, halfwayDir), 0.0), strength.w);
-    vec3 reflectDir = normalize(-reflect(lightDir, norm));
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), strength.w);
-    vec3 specular = strength.z * spec * lightColor;
+    // Specular lighting
+    vec3 viewDirection = normalize(-vertexData.fragPosition);
+    vec3 reflectDirection = normalize(-reflect(lightDirection, normalVector));
+    float reflectionIntensity = pow(max(dot(viewDirection, reflectDirection), 0.0), vertexData.lightBrightness.w);
+    vec3 specular = vertexData.lightBrightness.z * reflectionIntensity * vertexData.lightColor;
 
-    outColor = (texture(ourTexture, texCoord) + fragColor) * vec4(ambient+diffuse+specular, 1.0);
+    outColor = (texture(modelTexture, vertexData.texCoord) + vertexData.fragColor) * vec4(ambient + diffuse + specular, 1.0);
 }
 

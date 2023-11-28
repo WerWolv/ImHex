@@ -2,28 +2,38 @@
 layout (location = 0) in vec3 in_Position;
 layout (location = 1) in vec4 in_Color;
 layout (location = 2) in vec3 in_Normal;
-layout (location = 3) in vec2 in_TexCoord1;
+layout (location = 3) in vec2 in_TexCoord;
 
-uniform mat4 ScaledModel;
-uniform mat4 Model;
-uniform mat4 View;
-uniform mat4 Projection;
-uniform vec3 LightPosition;
-uniform vec4 Strength;
+uniform mat4 modelScale;
 
-out vec3 normal;
-out vec4 fragColor;
-out vec2 texCoord;
-out vec3 lightPos;
-out vec3 fragPos;
-out vec4 strength;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+
+uniform vec3 lightPosition;
+uniform vec4 lightBrightness;
+uniform vec3 lightColor;
+
+out VertexData {
+     vec3 normal;
+     vec4 fragColor;
+     vec2 texCoord;
+     vec3 lightPosition;
+     vec3 fragPosition;
+     vec4 lightBrightness;
+     vec3 lightColor;
+} vertexData;
 
 void main() {
-     normal = mat3(transpose(inverse(ScaledModel))) * in_Normal;
-     gl_Position = Projection * View * ScaledModel * vec4(in_Position, 1.0);
-     fragPos = vec3(View * ScaledModel * vec4(in_Position, 1.0));
-     fragColor = in_Color;
-     texCoord = in_TexCoord1;
-     strength = Strength;
-     lightPos = vec3(View * Model * vec4(LightPosition, 1.0)); // Transform world-space light position to view-space light position
+     gl_Position                   = projectionMatrix * viewMatrix * modelScale * vec4(in_Position, 1.0);
+
+     vertexData.normal             = mat3(transpose(inverse(modelScale))) * in_Normal;
+     vertexData.fragPosition       = vec3(viewMatrix * modelScale * vec4(in_Position, 1.0));
+     vertexData.fragColor          = in_Color;
+     vertexData.texCoord           = in_TexCoord;
+     vertexData.lightBrightness    = lightBrightness;
+     vertexData.lightColor         = lightColor;
+
+     // Transform world-space light position to view-space light position
+     vertexData.lightPosition      = vec3(viewMatrix * modelMatrix * vec4(lightPosition, 1.0));
 }

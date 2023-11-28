@@ -22,20 +22,18 @@ namespace hex::plugin::builtin {
          *  efficient when packing the glyphs into the font atlas and therefor make the atlas much smaller.
          */
 
-        ImHexApi::Fonts::loadFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(),{ { ICON_MIN_BI, ICON_MAX_BI } }, { 1_scaled, 0 });
+        ImHexApi::Fonts::loadFont("Blender Icons",  romfs::get("fonts/blendericons.ttf").span<u8>(),{ { ICON_MIN_BI, ICON_MAX_BI } }, { 0, -3_scaled });
         ImHexApi::Fonts::loadFont("Font Awesome 5", romfs::get("fonts/fontawesome.otf").span<u8>(),
             {
                 { glyph(ICON_FA_BACKSPACE), glyph(ICON_FA_INFINITY), glyph(ICON_FA_TACHOMETER_ALT), glyph(ICON_FA_MICROCHIP), glyph(ICON_FA_CODE_BRANCH) }
             },
-            { 0, 0 },
-            ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting);
+            { 0, 0 });
 
         ImHexApi::Fonts::loadFont("VS Codicons", romfs::get("fonts/codicons.ttf").span<u8>(),
             {
                 { ICON_MIN_VS, ICON_MAX_VS }
             },
-            { 0, 0 },
-            ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting);
+            { 0, 0 });
 
         ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>());
     }

@@ -576,12 +576,12 @@ namespace hex::gl {
         sourceVertexArray.bind();
 
         m_vertices = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.getVertices());
-        m_indices  = gl::Buffer<u8>(gl::BufferType::Index, sourceVectors.getIndices());
+        m_indices  = gl::Buffer<u16>(gl::BufferType::Index, sourceVectors.getIndices());
         //normals  = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.normals);
         m_colors   = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.getColors());
 
         sourceVertexArray.addBuffer(0, m_vertices);
-        sourceVertexArray.addBuffer(1, m_colors,4);
+        sourceVertexArray.addBuffer(1, m_colors, 4);
         //sourceVertexArray.addBuffer(1, normals);
 
         m_vertices.unbind();
@@ -596,6 +596,15 @@ namespace hex::gl {
 
         m_vertices.update(sourceVectors.getVertices());
         sourceVertexArray.addBuffer(0, m_vertices);
+
+        sourceVertexArray.unbind();
+    }
+
+    void LightSourceBuffers::updateColors(const VertexArray& sourceVertexArray, const LightSourceVectors& sourceVectors) {
+        sourceVertexArray.bind();
+
+        m_colors.update(sourceVectors.getColors());
+        sourceVertexArray.addBuffer(1, m_colors, 4);
 
         sourceVertexArray.unbind();
     }

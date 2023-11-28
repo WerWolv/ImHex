@@ -3,7 +3,6 @@
 #include <content/pl_visualizers/visualizer_helpers.hpp>
 
 #include <fonts/codicons_font.h>
-#include <fonts/fontawesome_font.h>
 #include <fonts/blendericons_font.h>
 
 #include <imgui.h>
@@ -71,36 +70,34 @@ namespace hex::plugin::builtin {
         ImVec2 s_renderingWindowSize;
 
         int s_drawMode = GL_TRIANGLES;
-        float s_nearLimit = 0.9f;
+        float s_nearLimit = 0.5f;
         float s_farLimit = 100.0f;
         float s_scaling = 1.0F;
         float s_max;
-        float s_rpms = 10;
-        double s_previousTime;
-        double s_initialTime;
 
         bool s_isPerspective = true;
         bool s_drawAxes = true;
         bool s_drawGrid = true;
-        bool s_animationOn = false;
-        bool s_drawSource = true;
+        bool s_drawLightSource = true;
         bool s_drawTexture = false;
         bool s_shouldReset = false;
-        bool s_shouldUpdateSource = true;
+
+        bool s_shouldUpdateLightSource = true;
+        bool s_shouldUpdateTexture = false;
 
         IndexType s_indexType;
 
         ImGuiExt::Texture s_modelTexture;
 
-        gl::Vector<float, 3> s_translation = {{0.0f, 0.0F, -3.0F}};
-        gl::Vector<float, 3> s_rotation = {{0.0F, 0.0F, 0.0F}};
-        gl::Vector<float, 3> s_lightPosition = {{-0.7F, 0.0F, 0.0F}};
-        gl::Vector<float, 4> s_strength = {{0.5F, 0.5F, 0.5F, 32}};
-        gl::Matrix<float, 4, 4> s_rotate = gl::Matrix<float, 4, 4>::identity();
+        gl::Vector<float, 3> s_translation      = { {  0.0F, 0.0F, -3.0F } };
+        gl::Vector<float, 3> s_rotation         = { {  0.0F, 0.0F,  0.0F } };
+        gl::Vector<float, 3> s_lightPosition    = { { -0.7F, 0.0F,  0.0F } };
+        gl::Vector<float, 4> s_lightBrightness  = { {  0.5F, 0.5F,  0.5F, 32.0F } };
+        gl::Vector<float, 3> s_lightColor       = { {  1.0F, 1.0F,  1.0f } };
+        gl::Matrix<float, 4, 4> s_rotate        = gl::Matrix<float, 4, 4>::identity();
 
         ImGuiExt::Texture s_texture;
-        std::fs::path s_texturePath, s_texturePathOld;
-
+        std::fs::path s_texturePath;
 
         template<typename T>
         void indicesForLines(std::vector<T> &vertexIndices) {
@@ -126,7 +123,7 @@ namespace hex::plugin::builtin {
         }
 
 
-        void boundingBox(auto vertices, auto &max) {
+        float getBoundingBox(const std::vector<float> &vertices) {
             gl::Vector<float, 4> minWorld(std::numeric_limits<float>::infinity()), maxWorld(-std::numeric_limits<float>::infinity());
             for (u32 i = 0; i < vertices.size(); i += 3) {
                 if (vertices[i] < minWorld[0]) minWorld[0] = vertices[i];
@@ -151,14 +148,15 @@ namespace hex::plugin::builtin {
 
             float maxx = std::max(std::fabs(minCamera[0]), std::fabs(maxCamera[0]));
             float maxy = std::max(std::fabs(minCamera[1]), std::fabs(maxCamera[1]));
-            max = std::max(maxx, maxy);
+
+            return std::max(maxx, maxy);
         }
 
-        void setDefaultColors(auto &colors, auto size, int color) {
+        void setDefaultColors(std::vector<float> &colors, float size, u32 color) {
             colors.resize(size / 3 * 4);
 
-            float red   = float(color & 0xFF) / 255.0F;
-            float green = float((color >> 8) & 0xFF) / 255.0F;
+            float red   = float((color >> 0)  & 0xFF) / 255.0F;
+            float green = float((color >> 8)  & 0xFF) / 255.0F;
             float blue  = float((color >> 16) & 0xFF) / 255.0F;
             float alpha = float((color >> 24) & 0xFF) / 255.0F;
 
@@ -170,7 +168,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void setNormals(auto vertices, auto &normals) {
+        void setNormals(const std::vector<float> &vertices, std::vector<float> &normals) {
             for (u32 i = 0; i < normals.size(); i += 9) {
 
                 auto v1 = gl::Vector<float, 3>({vertices[i], vertices[i + 1], vertices[i + 2]});
@@ -197,7 +195,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void setNormalsWithIndices(auto vertices, auto &normals, auto indices) {
+        void setNormalsWithIndices(const std::vector<float> &vertices, std::vector<float> &normals, const std::vector<u32> &indices) {
             for (u32 i = 0; i < indices.size(); i += 3) {
                 auto idx = indices[i];
                 auto idx1 = indices[i + 1];
@@ -233,8 +231,8 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void loadVectors(auto &vectors, auto indexType) {
-            boundingBox(vectors.vertices, s_max);
+        void loadVectors(Vectors &vectors, IndexType indexType) {
+            s_max = getBoundingBox(vectors.vertices);
 
             if (s_drawTexture)
                 setDefaultColors(vectors.colors, vectors.vertices.size(), 0x00000000);
@@ -273,22 +271,22 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void loadLineVectors(auto &lineVectors, auto indexType) {
-            boundingBox(lineVectors.vertices, s_max);
+        void loadLineVectors(LineVectors &lineVectors, IndexType indexType) {
+            s_max = getBoundingBox(lineVectors.vertices);
 
             if (lineVectors.colors.empty())
                 setDefaultColors(lineVectors.colors, lineVectors.vertices.size(), 0xFF337FFF);
 
             std::vector<u32> indices;
-            if (indexType == IndexType::U16)
-                indicesForLines(lineVectors.indices16);
-            else if (indexType == IndexType::U8)
+            if (indexType == IndexType::U8)
                 indicesForLines(lineVectors.indices8);
+            else if (indexType == IndexType::U16)
+                indicesForLines(lineVectors.indices16);
             else
                 indicesForLines(lineVectors.indices32);
         }
 
-        void processKeyEvent(ImGuiKey key, auto &variable, auto incr, auto accel) {
+        void processKeyEvent(ImGuiKey key, float &variable, float incr, float accel) {
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(key))) {
                 auto temp = variable + incr * accel;
                 if (variable * temp < 0.0F)
@@ -298,20 +296,21 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void processInputEvents(auto &rotation, auto &translation, auto &scaling, auto &nearLimit, auto &farLimit) {
+        void processInputEvents(gl::Vector<float, 3> &rotation, gl::Vector<float, 3> &translation, float &scaling, float &nearLimit, float &farLimit) {
             auto accel = 1.0F;
             if (ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_LeftShift)) ||
                 ImGui::IsKeyDown(ImGui::GetKeyIndex(ImGuiKey_RightShift)))
                 accel = 10.0F;
 
-
             auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Middle);
             if (dragDelta.x != 0) {
                 rotation[1] += dragDelta.x * 0.0075F * accel;
             }
+
             if (dragDelta.y != 0) {
                 rotation[0] += dragDelta.y * 0.0075F * accel;
             }
+
             ImGui::ResetMouseDragDelta(ImGuiMouseButton_Middle);
 
             dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Right);
@@ -333,34 +332,36 @@ namespace hex::plugin::builtin {
             processKeyEvent(ImGuiKey_Keypad7, translation[2], -0.1F, accel);
             processKeyEvent(ImGuiKey_Keypad9, nearLimit, -0.01F, accel);
             processKeyEvent(ImGuiKey_Keypad3, nearLimit, 0.01F, accel);
+
             if (ImHexApi::System::isDebugBuild()) {
                 processKeyEvent(ImGuiKey_KeypadDivide, farLimit, -1.0F, accel);
                 processKeyEvent(ImGuiKey_KeypadMultiply, farLimit, 1.0F, accel);
             }
+
             processKeyEvent(ImGuiKey_KeypadAdd, rotation[2], -0.075F, accel);
             processKeyEvent(ImGuiKey_KeypadSubtract, rotation[2], 0.075F, accel);
             rotation[2] = std::fmod(rotation[2], 2 * std::numbers::pi);
         }
 
 
-        void bindBuffers(auto &buffers, auto &vertexArray, auto vectors, auto indexType) {
-            buffers.vertices = {};
-            buffers.normals = {};
-            buffers.colors = {};
-            buffers.indices8 = {};
-            buffers.uv1 = {};
-            buffers.indices16 = {};
-            buffers.indices32 = {};
+        void bindBuffers(Buffers &buffers, const gl::VertexArray &vertexArray, Vectors vectors, IndexType indexType) {
+            buffers.vertices    = {};
+            buffers.normals     = {};
+            buffers.colors      = {};
+            buffers.uv1         = {};
+            buffers.indices8    = {};
+            buffers.indices16   = {};
+            buffers.indices32   = {};
 
             vertexArray.bind();
             buffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, vectors.vertices);
-            buffers.colors = gl::Buffer<float>(gl::BufferType::Vertex, vectors.colors);
-            buffers.normals = gl::Buffer<float>(gl::BufferType::Vertex, vectors.normals);
+            buffers.colors   = gl::Buffer<float>(gl::BufferType::Vertex, vectors.colors);
+            buffers.normals  = gl::Buffer<float>(gl::BufferType::Vertex, vectors.normals);
 
-            if (indexType == IndexType::U16)
-                buffers.indices16 = gl::Buffer<u16>(gl::BufferType::Index, vectors.indices16);
-            else if (indexType == IndexType::U8)
+            if (indexType == IndexType::U8)
                 buffers.indices8 = gl::Buffer<u8>(gl::BufferType::Index, vectors.indices8);
+            else if (indexType == IndexType::U16)
+                buffers.indices16 = gl::Buffer<u16>(gl::BufferType::Index, vectors.indices16);
             else
                 buffers.indices32 = gl::Buffer<u32>(gl::BufferType::Index, vectors.indices32);
 
@@ -394,10 +395,10 @@ namespace hex::plugin::builtin {
 
         }
 
-        void bindLineBuffers(auto &lineBuffers, auto &vertexArray, auto lineVectors, auto indexType) {
-            lineBuffers.vertices = {};
-            lineBuffers.colors = {};
-            lineBuffers.indices8 = {};
+        void bindLineBuffers(LineBuffers &lineBuffers, const gl::VertexArray &vertexArray, const LineVectors &lineVectors, IndexType indexType) {
+            lineBuffers.vertices  = {};
+            lineBuffers.colors    = {};
+            lineBuffers.indices8  = {};
             lineBuffers.indices16 = {};
             lineBuffers.indices32 = {};
 
@@ -405,10 +406,10 @@ namespace hex::plugin::builtin {
             lineBuffers.vertices = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.vertices);
             lineBuffers.colors = gl::Buffer<float>(gl::BufferType::Vertex, lineVectors.colors);
 
-            if (indexType == IndexType::U16)
-                lineBuffers.indices16 = gl::Buffer<u16>(gl::BufferType::Index, lineVectors.indices16);
-            else if (indexType == IndexType::U8)
+            if (indexType == IndexType::U8)
                 lineBuffers.indices8 = gl::Buffer<u8>(gl::BufferType::Index, lineVectors.indices8);
+            else if (indexType == IndexType::U16)
+                lineBuffers.indices16 = gl::Buffer<u16>(gl::BufferType::Index, lineVectors.indices16);
             else
                 lineBuffers.indices32 = gl::Buffer<u32>(gl::BufferType::Index, lineVectors.indices32);
 
@@ -420,10 +421,8 @@ namespace hex::plugin::builtin {
 
             if (indexType == IndexType::U8)
                 lineBuffers.indices8.unbind();
-
             else if (indexType == IndexType::U16)
                 lineBuffers.indices16.unbind();
-
             else if (indexType == IndexType::U32)
                 lineBuffers.indices32.unbind();
 
@@ -431,606 +430,7 @@ namespace hex::plugin::builtin {
 
         }
 
-        /*void styledToolTip(const std::string &tip, bool isSeparator = false) {
-            ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 3.0F);
-
-            if (isSeparator) {
-                ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextBorderSize,3.0);
-                ImGui::PushStyleVar(ImGuiStyleVar_SeparatorTextAlign, ImVec2(0.5F, 0.5F));
-                ImGuiExt::InfoTooltip(tip.c_str(), true);
-                ImGui::PopStyleVar();
-                ImGui::PopStyleVar();
-            } else
-                ImGuiExt::InfoTooltip(tip.c_str(),false);
-
-            ImGui::PopStyleVar();
-        }*/
-
-        /*void drawNearPlaneUI(float availableWidth, auto &nearLimit, auto &farLimit) {
-            if (std::fabs(nearLimit) < 1e-6)
-                nearLimit = 0.0;
-
-            auto label = "hex.builtin.pl_visualizer.3d.nearClipPlane"_lang.get() + ":";
-            label += fmt::format("{:.3}", nearLimit);
-
-            if (ImHexApi::System::isDebugBuild())
-                label +=  fmt::format(", {:.3}", farLimit);
-
-            ImGui::PushItemWidth(availableWidth);
-            ImGui::TextUnformatted(label.c_str());
-            if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.nearlimit"_lang.get();
-                styledToolTip(tip);
-            }
-            ImGui::PopItemWidth();
-        }
-
-        void drawTranslateUI(auto availableWidth, auto &translation) {
-
-            if (std::fabs(translation[0]) < 1e-6)
-                translation[0] = 0.0;
-            if (std::fabs(translation[1]) < 1e-6)
-                translation[1] = 0.0;
-            if (std::fabs(translation[2]) < 1e-6)
-                translation[2] = 0.0;
-
-            auto label = fmt::format("{:.3},{:.3},{:.3}", translation[0], translation[1], translation[2]);
-            ImGui::PushItemWidth(availableWidth);
-            ImGui::TextUnformatted(label.c_str());
-            if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.translation"_lang.get();
-                styledToolTip(tip,true);
-                tip = "hex.builtin.pl_visualizer.3d.translationMouse"_lang.get();
-                tip += "\n";
-                tip += "hex.builtin.pl_visualizer.3d.translationKeyboard"_lang.get();
-                styledToolTip(tip);
-            }
-            ImGui::PopItemWidth();
-        }*/
-
-        /*void drawRotationsScaleUI(auto availableWidth_1, auto availableWidth_2, auto &rotation, auto &rotate,
-                                                    auto &scaling, auto &strength, auto &lightPosition,
-                                                    auto &renderingWindowSize, auto minSize, auto &resetEverything,
-                                                    auto &translation, auto &nearLimit, auto &farLimit) {
-
-            float fontSize = ImHexApi::System::getFontSize();
-            float sliderWidth = std::floor(fontSize / 2.0f) * 3.0f;
-            ImVec2 size(sliderWidth, renderingWindowSize.y);
-            std::string units = "hex.builtin.pl_visualizer.3d.degrees"_lang.get();
-
-            ImGuiExt::VSliderAngle("##X", size, &rotation.data()[1], 0, 360, "X", ImGuiSliderFlags_AlwaysClamp);
-            std::string temp = fmt::format("{:.3} ", rotation[1] * 180 * std::numbers::inv_pi);
-            temp += units;
-
-            if (ImGui::IsItemHovered())
-                styledToolTip(temp);
-
-            ImGui::SameLine();
-
-            ImGuiExt::VSliderAngle("##Y", size, &rotation.data()[0], 0, 360, "Y", ImGuiSliderFlags_AlwaysClamp);
-            temp = fmt::format("{:.3} ", rotation[0] * 180 * std::numbers::inv_pi);
-            temp += units;
-
-            if (ImGui::IsItemHovered())
-                styledToolTip(temp);
-
-            ImGui::SameLine();
-
-            ImGuiExt::VSliderAngle("##Z", size, &rotation.data()[2], 0, 360, "Z", ImGuiSliderFlags_AlwaysClamp);
-            temp = fmt::format("{:.3} ", rotation[2] * 180 * std::numbers::inv_pi);
-            temp += units;
-
-            if (ImGui::IsItemHovered())
-                styledToolTip(temp);
-
-            for (u8 i = 0; i < 3; i++) {
-                i32 winding = 0;
-                if (rotation.data()[i] < 0 || rotation.data()[i] > std::numbers::pi * 2)
-                    winding = std::floor(rotation.data()[i] / std::numbers::pi / 2.0);
-
-                rotation.data()[i] -= std::numbers::pi * winding * 2.0;
-                if (rotation.data()[i] < 0.001)
-                    rotation.data()[i] = 0.0F;
-            }
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
-            std::string label = "hex.builtin.pl_visualizer.3d.scale"_lang.get();
-            label += ": %.3f";
-
-            ImGui::PushItemWidth(availableWidth_1);
-
-            if (scaling < s_minScaling)
-                s_minScaling = scaling;
-            if (scaling > s_maxScaling)
-                s_maxScaling = scaling;
-
-            ImGui::SliderFloat("##Scale", &scaling, s_minScaling, s_maxScaling, label.c_str());
-            ImGui::PopItemWidth();
-
-            ImGui::TableNextColumn();
-
-            label = "hex.builtin.common.reset"_lang.get();
-            auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-            auto spacing = (availableWidth_2 - labelWidth) / 2.0f;
-
-            ImGui::Indent(spacing);
-
-            ImGui::TextUnformatted(label.c_str());
-            if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.reset_description"_lang.get();
-                styledToolTip(tip);
-            }
-            ImGui::Unindent(spacing);
-
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-
-            drawTranslateUI(availableWidth_1, translation);
-
-            ImGui::TableNextColumn();
-
-            static auto resetIcon = ICON_FA_SYNC_ALT;
-            auto buttonSize = ImGui::CalcTextSize(resetIcon) + ImGui::GetStyle().FramePadding * 2;
-
-            spacing = (availableWidth_2 - buttonSize.x) / 2.0f;
-            ImGui::Indent(spacing);
-
-            bool dummy = true;
-            if (ImGuiExt::DimmedIconToggle(ICON_FA_SYNC_ALT, &dummy)) {
-                if (ImGui::GetIO().KeyCtrl) {
-                    strength = {{0.5F, 0.5F, 0.5F, 32}};
-                    lightPosition = {{-0.7F, 0.0F, 0.0F}};
-                    renderingWindowSize.x = minSize;
-                    renderingWindowSize.y = minSize;
-                    resetEverything = true;
-
-                } else if (resetEverything)
-                    resetEverything = false;
-
-                translation = {{0.0F, 0.0F, -3.0F}};
-                rotation = {{0.0F, 0.0F, 0.0F}};
-                rotate = gl::Matrix<float, 4, 4>::identity();
-                scaling = 1.0F;
-                nearLimit = 0.9f;
-                farLimit = 100.0f;
-
-            } else if (resetEverything)
-                resetEverything = false;
-
-            if (ImGui::IsItemHovered()) {
-                std::string tip = "hex.builtin.pl_visualizer.3d.reset_usage"_lang.get();
-                styledToolTip(tip);
-            }
-            ImGui::Unindent(spacing);
-        }
-
-        void drawLightPositionUI(float availableWidth, auto &lightPosition, auto &shouldUpdateSource, auto &resetEverything) {
-            if (ImGui::BeginTable("##LightPosition", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                std::string label = "hex.builtin.pl_visualizer.3d.lightPosition"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                auto indent = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(indent);
-
-                ImGuiExt::TextFormatted(label);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_description"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(indent);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::PushItemWidth(availableWidth);
-                if (ImGui::InputFloat3("##lightDir", lightPosition.data(), "%.3f",
-                                       ImGuiInputTextFlags_EnterReturnsTrue) || resetEverything) {
-                    shouldUpdateSource = true;
-                    s_previousTime = 0;
-                }
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.lightPosition_usage"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::PopItemWidth();
-            }
-            ImGui::EndTable();
-        }
-
-        void drawProjectionUI(auto availableWidth, auto &isPerspective, auto &shouldResetLocally, auto &resetEverything) {
-            if (ImGui::BeginTable("##Proj", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                static auto projectionIcon = ICON_BI_VIEW_PERSPECTIVE;
-                auto label = "hex.builtin.pl_visualizer.3d.projection"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                float spacing = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(spacing);
-
-                ImGui::TextUnformatted(label.c_str());
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (isPerspective)
-                        tip = "hex.builtin.pl_visualizer.3d.perspectiveSelected"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.orthographicSelected"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                auto buttonSize = ImGui::CalcTextSize(projectionIcon) + ImGui::GetStyle().FramePadding * 2;
-                spacing = (availableWidth - buttonSize.x) / 2.0f;
-                ImGui::Indent(spacing);
-
-                bool dummy = true;
-                if (ImGuiExt::DimmedIconToggle(projectionIcon, &dummy) || resetEverything) {
-                    if (!isPerspective || resetEverything) {
-                        projectionIcon = ICON_BI_VIEW_PERSPECTIVE;
-                        isPerspective = true;
-                    } else {
-                        projectionIcon = ICON_BI_VIEW_ORTHO;
-                        isPerspective = false;
-                    }
-                    shouldResetLocally = true;
-                }
-
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (isPerspective)
-                        tip = "hex.builtin.pl_visualizer.3d.selectOrthographic"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.selectPerspective"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-            }
-            ImGui::EndTable();
-        }
-
-        void drawPrimitiveUI(auto availableWidth) {
-            if (ImGui::BeginTable("##Prim", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                auto label = "hex.builtin.pl_visualizer.3d.primitive"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                float spacing = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(spacing);
-
-                ImGui::TextUnformatted(label.c_str());
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (s_drawMode == GL_TRIANGLES)
-                        tip = "hex.builtin.pl_visualizer.3d.trianglesSelected"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.linesSelected"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                static auto primitiveIcon = ICON_BI_MOD_SOLIDIFY;
-                auto buttonSize = ImGui::CalcTextSize(primitiveIcon) + ImGui::GetStyle().FramePadding * 2;
-                spacing = (availableWidth - buttonSize.x) / 2.0f;
-
-                ImGui::Indent(spacing);
-                bool dummy = true;
-                if (ImGuiExt::DimmedIconToggle(primitiveIcon, &dummy) || s_resetEverything) {
-                    if (s_drawMode == GL_LINES || s_resetEverything) {
-                        primitiveIcon = ICON_BI_MOD_SOLIDIFY;
-                        s_drawMode = GL_TRIANGLES;
-                    } else {
-                        primitiveIcon = ICON_BI_CUBE;
-                        s_drawMode = GL_LINES;
-                    }
-                    s_shouldReset = true;
-                }
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (s_drawMode == GL_TRIANGLES)
-                        tip = "hex.builtin.pl_visualizer.3d.line"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.triangle"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-            }
-            ImGui::EndTable();
-        }
-
-        void drawLightPropertiesUI(float availableWidth, auto &strength) {
-            if (ImGui::BeginTable("##LightProperties", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                auto label = "hex.builtin.pl_visualizer.3d.lightProperties"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                auto indent = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(indent);
-
-                ImGuiExt::TextFormatted("{}", label);
-                ImGui::Unindent(indent);
-                ImGui::SameLine();
-
-                float labelHeight = ImGui::CalcTextSize("Any text").y;
-                auto framePadding = ImGui::GetStyle().FramePadding.x;
-                auto bSize = ImVec2({((availableWidth) / 4.0f) - framePadding* 2, labelHeight});
-
-                ImGui::Indent(framePadding);
-
-                ImGui::InvisibleButton("##ambient", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.ambientIntensity"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(framePadding);
-
-                ImGui::SameLine();
-
-                indent = bSize.x + framePadding;
-                ImGui::Indent(indent);
-
-                ImGui::InvisibleButton("##diffuse", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.diffuseIntensity"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(indent);
-
-                ImGui::SameLine();
-
-                indent = 2 * bSize.x + framePadding;
-                ImGui::Indent(indent);
-
-                ImGui::InvisibleButton("##specular", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.specularIntensity"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(indent);
-
-                ImGui::SameLine();
-
-                indent = 3 * bSize.x + framePadding;
-                ImGui::Indent(indent);
-
-                ImGui::InvisibleButton("##shininess", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.shininessIntensity"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(indent);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::PushItemWidth(availableWidth);
-                ImGui::InputFloat4("##strength", strength.data(), "%.3f", ImGuiInputTextFlags_EnterReturnsTrue);
-                ImGui::PopItemWidth();
-                ImGui::SameLine();
-
-                bSize = ImVec2({availableWidth / 4.0f, labelHeight});
-
-                ImGui::Indent(0);
-                ImGui::InvisibleButton("##ambient2", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.ambient"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(0);
-                ImGui::SameLine();
-
-                ImGui::Indent(bSize.x);
-                ImGui::InvisibleButton("##diffuse2", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.diffuse"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(bSize.x);
-                ImGui::SameLine();
-
-                ImGui::Indent(2 * bSize.x);
-                ImGui::InvisibleButton("##specular2", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.specular"_lang.get();
-                    styledToolTip(tip);
-                }
-
-                ImGui::Unindent(2 * bSize.x);
-                ImGui::SameLine();
-
-                ImGui::Indent(3 * bSize.x);
-                ImGui::InvisibleButton("##shininess2", bSize);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.shininess"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(3 * bSize.x);
-            }
-            ImGui::EndTable();
-        }
-
-        void drawTextureUI(float availableWidth, auto texturePath) {
-            if (ImGui::BeginTable("##Texture", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                auto label = "hex.builtin.pl_visualizer.3d.textureFile"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                auto indent = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(indent);
-
-                ImGuiExt::TextFormatted("{}", label);
-                if (ImGui::IsItemHovered()) {
-                    std::string tip = "hex.builtin.pl_visualizer.3d.textureFile"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(indent);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::PushItemWidth(availableWidth);
-                ImGui::InputText("##Texture", texturePath, ImGuiInputTextFlags_EnterReturnsTrue);
-                ImGui::PopItemWidth();
-            }
-            ImGui::EndTable();
-        }
-
-        void drawAnimationSpeedUI(float availableWidth, auto &rpms) {
-            if (ImGui::BeginTable("##AnimationSpeed", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                auto label = "hex.builtin.pl_visualizer.3d.animationSpeed"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                auto indent = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(indent);
-
-                ImGui::TextUnformatted(label.c_str());
-                ImGui::Unindent(indent);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                ImGui::PushItemWidth(availableWidth);
-                std::string format = "%.3f rpm";
-                format += std::fabs(rpms - 1.0) > 1e-6 ? "s" : "";
-                ImGui::SliderFloat("##animationSpeed", &rpms, 0.1F, 200.0f, format.c_str());
-                ImGui::PopItemWidth();
-            }
-            ImGui::EndTable();
-        }
-
-        void drawLightUI(float availableWidth) {
-            if (ImGui::BeginTable("##ligth", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                auto label = "hex.builtin.pl_visualizer.3d.light"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                auto spacing = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(spacing);
-
-                ImGui::TextUnformatted(label.c_str());
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (s_drawSource)
-                        tip = "hex.builtin.pl_visualizer.3d.renderingLightSource"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.notRenderingLightSource"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                static auto sourceIcon = ICON_VS_LIGHTBULB;
-                auto buttonSize = ImGui::CalcTextSize(sourceIcon) + ImGui::GetStyle().FramePadding * 2;
-
-                spacing = (availableWidth - buttonSize.x) / 2.0f;
-                ImGui::Indent(spacing);
-
-                if (ImGuiExt::DimmedIconToggle(sourceIcon, &s_drawSource) || s_resetEverything) {
-                    if (s_resetEverything)
-                        s_drawSource = true;
-                }
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (s_drawSource)
-                        tip = "hex.builtin.pl_visualizer.3d.dontDrawSource"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.drawSource"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-            }
-            ImGui::EndTable();
-        }
-
-        void drawAnimateUI(float availableWidth, auto &animationOn, auto &previousTime, auto &initialTime, auto &resetEverything) {
-            if (ImGui::BeginTable("##Animate", 1, ImGuiTableFlags_SizingFixedFit)) {
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                auto label = "hex.builtin.pl_visualizer.3d.animation"_lang.get();
-                auto labelWidth = ImGui::CalcTextSize(label.c_str()).x;
-
-                auto spacing = (availableWidth - labelWidth) / 2.0f;
-                ImGui::Indent(spacing);
-
-                ImGui::TextUnformatted(label.c_str());
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (animationOn)
-                        tip = "hex.builtin.pl_visualizer.3d.animationIsRunning"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.animationIsNotRunning"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                static auto animateIcon = ICON_FA_PLAY;
-                auto buttonSize = ImGui::CalcTextSize(animateIcon) + ImGui::GetStyle().FramePadding * 2;
-
-                spacing = (availableWidth - buttonSize.x) / 2.0f;
-                ImGui::Indent(spacing);
-
-                bool dummy = true;
-                if (ImGuiExt::DimmedIconToggle(animateIcon, &dummy) || resetEverything) {
-                    if (animationOn || resetEverything) {
-                        animateIcon = ICON_FA_PLAY;
-                        animationOn = false;
-                    } else {
-                        animateIcon = ICON_FA_STOP;
-                        animationOn = true;
-                        previousTime = 0;
-                        initialTime = glfwGetTime();
-                    }
-                }
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (animationOn)
-                        tip = "hex.builtin.pl_visualizer.3d.dontAnimate"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.animate"_lang.get();
-                    styledToolTip(tip);
-                }
-                ImGui::Unindent(spacing);
-            }
-            ImGui::EndTable();
-        }*/
-
-        void drawWindow(auto &texture, auto &renderingWindowSize, auto mvp) {
+        void drawWindow(const ImGuiExt::Texture &texture, ImVec2 &renderingWindowSize, const gl::Matrix<float, 4, 4> &mvp) {
             auto textureSize = texture.getSize();
             auto textureWidth = textureSize.x;
             auto textureHeight = textureSize.y;
@@ -1098,7 +498,7 @@ namespace hex::plugin::builtin {
             // Draw grid toggle
             {
                 ImGui::PushID(2);
-                if (ImGuiExt::DimmedIconToggle(ICON_BI_GRID, &s_drawGrid))
+                if (ImGuiExt::DimmedIconToggle(s_isPerspective ? ICON_BI_GRID : ICON_VS_SYMBOL_NUMBER, &s_drawGrid))
                     s_shouldReset = true;
                 ImGui::PopID();
             }
@@ -1108,7 +508,7 @@ namespace hex::plugin::builtin {
             // Draw light source toggle
             {
                 ImGui::PushID(3);
-                if (ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &s_drawSource))
+                if (ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &s_drawLightSource))
                     s_shouldReset = true;
 
                 if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
@@ -1117,13 +517,16 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::BeginPopup("LightSettings")) {
                     if (ImGui::DragFloat3("Position", s_lightPosition.data(), 0.05F)) {
-                        s_shouldUpdateSource = true;
+                        s_shouldUpdateLightSource = true;
                     }
 
-                    ImGui::SliderFloat("Ambient Brightness",   &s_strength.data()[0], 0, 2);
-                    ImGui::SliderFloat("Diffuse Brightness",   &s_strength.data()[1], 0, 2);
-                    ImGui::SliderFloat("Specular Brightness ",  &s_strength.data()[2], 0, 2);
-                    ImGui::SliderFloat("Light source strength", &s_strength.data()[3], 0, 64);
+                    ImGui::SliderFloat("Ambient Brightness",   &s_lightBrightness.data()[0], 0, 2);
+                    ImGui::SliderFloat("Diffuse Brightness",   &s_lightBrightness.data()[1], 0, 2);
+                    ImGui::SliderFloat("Specular Brightness ",  &s_lightBrightness.data()[2], 0, 2);
+                    ImGui::SliderFloat("Light source strength", &s_lightBrightness.data()[3], 0, 64);
+                    if (ImGui::ColorEdit3("Light Color", s_lightColor.data()))
+                        s_shouldUpdateLightSource = true;
+
                     ImGui::EndPopup();
                 }
                 ImGui::PopID();
@@ -1158,154 +561,15 @@ namespace hex::plugin::builtin {
 
             // Draw more settings
             if (ImGui::CollapsingHeader("More settings")) {
-                ImGuiExt::InputFilePicker("Texture File", s_texturePath, {});
+                if (ImGuiExt::InputFilePicker("Texture File", s_texturePath, {}))
+                    s_shouldUpdateTexture = true;
             }
-
-            /*if (ImGui::BeginTable("##3DVisualizer", columnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX)) {
-                constexpr static auto ColumnFlags =  ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_NoResize;
-                ImGui::TableSetupColumn("##FirstColumn", ColumnFlags, textureWidth + 4_scaled);
-
-                if (showUI) {
-                    float column2Width = secondColumnWidth;
-                    ImGui::TableSetupColumn("##SecondColumn", ColumnFlags, column2Width);
-                }
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                // Button to enable/disable  user interface
-                if (ImGui::Button("UI"))
-                    showUI = !showUI;
-
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (showUI)
-                        tip = "hex.builtin.pl_visualizer.3d.hideUI"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.showUI"_lang.get();
-                    styledToolTip(tip);
-                }
-
-                ImGui::SameLine();
-
-                static auto axesIcon = ICON_BI_EMPTY_ARROWS;
-
-                if (ImGuiExt::DimmedIconToggle(axesIcon, &s_drawAxes))
-                    s_shouldReset = true;
-                if (s_resetEverything) {
-                    s_drawAxes = true;
-                    s_shouldReset = true;
-                }
-
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (s_drawAxes)
-                        tip = "hex.builtin.pl_visualizer.3d.dontDrawAxes"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.drawAxes"_lang.get();
-                    styledToolTip(tip);
-                }
-
-                ImGui::SameLine();
-
-                static auto gridIcon = ICON_BI_GRID;
-                if (s_isPerspective)
-                    gridIcon = ICON_BI_GRID;
-                else
-                    gridIcon = ICON_VS_SYMBOL_NUMBER;
-                if (ImGuiExt::DimmedIconToggle(gridIcon, &s_drawGrid))
-                    s_shouldReset = true;
-
-                if (s_resetEverything) {
-                    s_drawGrid = true;
-                    s_shouldReset = true;
-                }
-
-                if (ImGui::IsItemHovered()) {
-                    std::string tip;
-                    if (s_drawGrid)
-                        tip = "hex.builtin.pl_visualizer.3d.hideGrid"_lang.get();
-                    else
-                        tip = "hex.builtin.pl_visualizer.3d.renderGrid"_lang.get();
-                    styledToolTip(tip);
-                }
-
-                if (showUI) {
-                    ImGui::TableNextColumn();
-                    auto textSize = ImGui::CalcTextSize("hex.builtin.pl_visualizer.3d.rotation"_lang);
-
-                    float indent = (secondColumnWidth - textSize.x) / 2.0f;
-                    ImGui::Indent(indent);
-
-                    ImGui::TextUnformatted("hex.builtin.pl_visualizer.3d.rotation"_lang);
-                    ImGui::Unindent(indent);
-
-                    if (ImGui::IsItemHovered()) {
-                        std::string tip = "hex.builtin.pl_visualizer.3d.rotation_usage"_lang.get();
-                        styledToolTip(tip);
-                    }
-                }
-
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
-
-                if (showUI) {
-
-                    ImGui::TableNextColumn();
-
-                    drawRotationsScaleUI(firstColumnWidth, secondColumnWidth, s_rotation, s_rotate, s_scaling,
-                                         s_strength, s_lightPosition, renderingWindowSize, minSize, s_resetEverything,
-                                         s_translation, s_nearLimit, s_farLimit);
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    drawLightPositionUI(firstColumnWidth, s_lightPosition, s_shouldUpdateSource, s_resetEverything);
-
-                    ImGui::TableNextColumn();
-
-                    drawProjectionUI(secondColumnWidth, s_isPerspective, s_shouldReset, s_resetEverything);
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    drawLightPropertiesUI(firstColumnWidth, s_strength);
-
-                    ImGui::TableNextColumn();
-
-                    drawLightUI(secondColumnWidth);
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    drawTextureUI(firstColumnWidth, s_texturePath);
-
-                    ImGui::TableNextColumn();
-
-                    drawPrimitiveUI(secondColumnWidth);
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    drawAnimationSpeedUI(firstColumnWidth, s_rpms);
-
-                    ImGui::TableNextColumn();
-
-                    drawAnimateUI(secondColumnWidth, s_animationOn, s_previousTime, s_initialTime, s_resetEverything);
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-
-                    drawNearPlaneUI(firstColumnWidth, s_nearLimit, s_farLimit);
-                }
-            }
-            ImGui::EndTable();*/
         }
 
     }
 
     void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
-        static gl::LightSourceVectors sourceVectors(10);
+        static gl::LightSourceVectors sourceVectors(20);
         static gl::VertexArray sourceVertexArray = gl::VertexArray();
         static gl::LightSourceBuffers sourceBuffers(sourceVertexArray, sourceVectors);
 
@@ -1425,11 +689,14 @@ namespace hex::plugin::builtin {
             }
         }
 
-        if (s_shouldUpdateSource) {
-            s_shouldUpdateSource = false;
+        if (s_shouldUpdateLightSource) {
+            s_shouldUpdateLightSource = false;
             sourceVectors.moveTo(s_lightPosition);
+            sourceVectors.setColor(s_lightColor[0], s_lightColor[1], s_lightColor[2]);
             sourceBuffers.moveVertices(sourceVertexArray, sourceVectors);
+            sourceBuffers.updateColors(sourceVertexArray, sourceVectors);
         }
+
         {
             gl::Matrix<float, 4, 4> model(0);
             gl::Matrix<float, 4, 4> scaledModel(0);
@@ -1496,16 +763,20 @@ namespace hex::plugin::builtin {
                                                       romfs::get("shaders/default/fragment.glsl").string());
                 shader.bind();
 
-                shader.setUniform<4>("ScaledModel", scaledModel);
-                shader.setUniform<4>("Model", model);
-                shader.setUniform<4>("View", view);
-                shader.setUniform<4>("Projection", projection);
-                shader.setUniform<3>("LightPosition", s_lightPosition);
-                shader.setUniform<4>("Strength", s_strength);
+                shader.setUniform("modelScale",      scaledModel);
+                shader.setUniform("modelMatrix",     model);
+                shader.setUniform("viewMatrix",      view);
+                shader.setUniform("projectionMatrix",projection);
+                shader.setUniform("lightPosition",      s_lightPosition);
+                shader.setUniform("lightBrightness",    s_lightBrightness);
+                shader.setUniform("lightColor",         s_lightColor);
 
                 vertexArray.bind();
-                if (s_texturePath != s_texturePathOld)
+                if (s_shouldUpdateTexture) {
+                    s_shouldUpdateTexture = false;
                     s_modelTexture = ImGuiExt::Texture(s_texturePath);
+                }
+
                 if (s_drawTexture)
                     glBindTexture(GL_TEXTURE_2D, s_modelTexture);
 
@@ -1535,15 +806,16 @@ namespace hex::plugin::builtin {
                         buffers.indices32.draw(s_drawMode);
                     buffers.indices32.unbind();
 
+
                 }
             } else {
                 static gl::Shader lineShader = gl::Shader(
                         romfs::get("shaders/default/lineVertex.glsl").string(),
                         romfs::get("shaders/default/lineFragment.glsl").string());
                 lineShader.bind();
-                lineShader.setUniform<4>("Model", scaledModel);
-                lineShader.setUniform<4>("View", view);
-                lineShader.setUniform<4>("Projection", projection);
+                lineShader.setUniform<4>("modelMatrix", scaledModel);
+                lineShader.setUniform<4>("viewMatrix", view);
+                lineShader.setUniform<4>("projectionMatrix", projection);
                 vertexArray.bind();
                 if (s_indexType == IndexType::U8) {
                     lineBuffers.indices8.bind();
@@ -1571,14 +843,14 @@ namespace hex::plugin::builtin {
             }
 
             if (s_drawGrid || s_drawAxes) {
-                static gl::Shader gridAxesShader = gl::Shader(
+                static auto gridAxesShader = gl::Shader(
                         romfs::get("shaders/default/lineVertex.glsl").string(),
                         romfs::get("shaders/default/lineFragment.glsl").string());
                 gridAxesShader.bind();
 
-                gridAxesShader.setUniform<4>("Model", model);
-                gridAxesShader.setUniform<4>("View", view);
-                gridAxesShader.setUniform<4>("Projection", projection);
+                gridAxesShader.setUniform<4>("modelMatrix", model);
+                gridAxesShader.setUniform<4>("viewMatrix", view);
+                gridAxesShader.setUniform<4>("projectionMatrix", projection);
 
                 if (s_drawGrid) {
                     gridVertexArray.bind();
@@ -1597,15 +869,15 @@ namespace hex::plugin::builtin {
                 }
                 gridAxesShader.unbind();
             }
-            if (s_drawSource) {
-                static gl::Shader sourceShader = gl::Shader(
+            if (s_drawLightSource) {
+                static auto sourceShader = gl::Shader(
                         romfs::get("shaders/default/lineVertex.glsl").string(),
                         romfs::get("shaders/default/lineFragment.glsl").string());
                 sourceShader.bind();
 
-                sourceShader.setUniform<4>("Model", model);
-                sourceShader.setUniform<4>("View", view);
-                sourceShader.setUniform<4>("Projection", projection);
+                sourceShader.setUniform("modelMatrix", model);
+                sourceShader.setUniform("viewMatrix", view);
+                sourceShader.setUniform("projectionMatrix", projection);
 
                 sourceVertexArray.bind();
                 sourceBuffers.getIndices().bind();
@@ -1613,27 +885,6 @@ namespace hex::plugin::builtin {
                 sourceBuffers.getIndices().unbind();
                 sourceVertexArray.unbind();
                 sourceShader.unbind();
-            }
-
-            if (s_animationOn) {
-                static float radius;
-                static float initialAngle;
-                double currentTime = glfwGetTime() - s_initialTime;
-
-                if (s_previousTime == 0) {
-                    radius = std::sqrt(
-                            s_lightPosition[0] * s_lightPosition[0] + s_lightPosition[2] * s_lightPosition[2]);
-                    initialAngle = std::atan2(s_lightPosition[2], s_lightPosition[0]);
-                }
-
-                float unitConvert = s_rpms * std::numbers::pi_v<float> / 30.0F;
-                float angle = std::fmod(initialAngle + unitConvert * currentTime, 2 * std::numbers::pi_v<float>);
-
-                s_lightPosition[0] = radius * std::cos(angle);
-                s_lightPosition[2] = radius * std::sin(angle);
-
-                s_shouldUpdateSource = true;
-                s_previousTime = currentTime;
             }
 
             vertexArray.unbind();

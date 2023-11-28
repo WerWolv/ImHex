@@ -821,7 +821,7 @@ namespace hex::gl {
         }
 
         template<size_t N>
-        void setUniform(std::string_view name, Matrix<float, N,N> &value){
+        void setUniform(std::string_view name, Matrix<float, N, N> &value){
             glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, value.data());
         }
 
@@ -1047,8 +1047,17 @@ namespace hex::gl {
             return m_colors;
         }
 
-        const std::vector<u8>& getIndices() const {
+        const std::vector<u16>& getIndices() const {
             return m_indices;
+        }
+
+        void setColor(float r, float g, float b) {
+            for (u32 i = 4; i < m_colors.size(); i += 4) {
+                m_colors[i - 4] = r;
+                m_colors[i - 3] = g;
+                m_colors[i - 2] = b;
+                m_colors[i - 1] = 1.0F;
+            }
         }
 
     private:
@@ -1058,7 +1067,7 @@ namespace hex::gl {
         std::vector<float> m_vertices;
         std::vector<float> m_normals;
         std::vector<float> m_colors;
-        std::vector<u8> m_indices;
+        std::vector<u16> m_indices;
     };
 
     class LightSourceBuffers {
@@ -1066,6 +1075,7 @@ namespace hex::gl {
         LightSourceBuffers(const VertexArray &sourceVertexArray, const LightSourceVectors &sourceVectors);
 
         void moveVertices(const VertexArray &sourceVertexArray, const LightSourceVectors& sourceVectors);
+        void updateColors(const VertexArray& sourceVertexArray, const LightSourceVectors& sourceVectors);
 
         const gl::Buffer<float>& getVertices() const {
             return m_vertices;
@@ -1075,14 +1085,14 @@ namespace hex::gl {
             return m_colors;
         }
 
-        const gl::Buffer<u8>& getIndices() const {
+        const gl::Buffer<u16>& getIndices() const {
             return m_indices;
         }
 
     private:
         gl::Buffer<float> m_vertices;
         gl::Buffer<float> m_colors;
-        gl::Buffer<u8> m_indices;
+        gl::Buffer<u16> m_indices;
     };
 
 }
