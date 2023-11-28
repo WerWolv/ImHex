@@ -13,6 +13,8 @@
 #include <imgui.h>
 #include <imgui_freetype.h>
 
+#include <cstring>
+
 namespace hex::plugin::builtin {
 
     namespace {
