@@ -119,6 +119,9 @@ namespace hex::plugin::builtin {
         bool loadFontsImpl(bool loadUnicode) {
             const float defaultFontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
 
+            // Reset used font size back to the default size
+            ImHexApi::System::impl::setFontSize(defaultFontSize);
+
             // Load custom font related settings
             if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
                 std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "").get<std::string>();
