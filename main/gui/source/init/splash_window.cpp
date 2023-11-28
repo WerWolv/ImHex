@@ -21,9 +21,6 @@
 #include <GLFW/glfw3.h>
 #include <opengl_support.h>
 
-#include <fonts/fontawesome_font.h>
-
-
 #include <wolv/utils/guards.hpp>
 
 #include <unistd.h>
@@ -53,7 +50,7 @@ namespace hex::init {
         ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
 
         EventManager::subscribe<RequestAddInitTask>([this](const std::string& name, bool async, const TaskFunction &function){
-            this->createTask(Task { name, function, async });
+            this->m_tasks.push_back(Task{ name, function, async });
         });
     }
 
@@ -148,10 +145,9 @@ namespace hex::init {
             auto startTime = std::chrono::high_resolution_clock::now();
 
             // Loop over all registered init tasks
-            for (const auto &task : this->m_tasks) {
-
+            for (auto it = this->m_tasks.begin(); it != this->m_tasks.end(); ++it) {
                 // Construct a new task callback
-                this->createTask(task);
+                this->createTask(*it);
             }
 
             // Check every 100ms if all tasks have run
@@ -261,7 +257,7 @@ namespace hex::init {
             // Draw version information
             // In debug builds, also display the current commit hash and branch
             #if defined(DEBUG)
-                const static auto VersionInfo = hex::format("{0} : {1} {2}@{3}", ImHexApi::System::getImHexVersion(), ICON_FA_CODE_BRANCH, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+                const static auto VersionInfo = hex::format("{0} : {1}@{2}", ImHexApi::System::getImHexVersion(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
             #else
                 const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion());
             #endif
@@ -425,14 +421,8 @@ namespace hex::init {
             cfg.SizePixels = 13.0_scaled;
             io.Fonts->AddFontDefault(&cfg);
 
-            cfg.MergeMode = true;
-
-            ImWchar fontAwesomeRange[] = {
-                ICON_MIN_FA, ICON_MAX_FA, 0
-            };
             std::uint8_t *px;
             int w, h;
-            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0_scaled, &cfg, fontAwesomeRange);
             io.Fonts->GetTexDataAsAlpha8(&px, &w, &h);
 
             // Create new font atlas

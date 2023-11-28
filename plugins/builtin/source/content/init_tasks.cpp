@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
             fonts->TexDesiredWidth = 4096;
 
             // Configure font glyph ranges that should be loaded from the default font and unifont
-            static ImVector<ImWchar> ranges;
+            static ImVector<ImWchar> defaultGlyphRanges;
             {
                 ImFontGlyphRangesBuilder glyphRangesBuilder;
 
@@ -199,18 +199,8 @@ namespace hex::plugin::builtin {
                     glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
                 }
 
-                glyphRangesBuilder.BuildRanges(&ranges);
+                glyphRangesBuilder.BuildRanges(&defaultGlyphRanges);
             }
-
-            // Glyph range for font awesome icons
-            constexpr static std::array<ImWchar, 3> fontAwesomeRange = {
-                    ICON_MIN_FA, ICON_MAX_FA, 0
-            };
-
-            // Glyph range for codicons icons
-            constexpr static std::array<ImWchar, 3> codiconsRange = {
-                    ICON_MIN_VS, ICON_MAX_VS, 0
-            };
 
             // Load main font
             // If a custom font has been specified, load it, otherwise load the default ImGui font
@@ -225,7 +215,7 @@ namespace hex::plugin::builtin {
                 if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
 
-                auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
+                auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, defaultGlyphRanges.Data);
 
                 cfg.FontBuilderFlags = 0;
 
@@ -241,15 +231,27 @@ namespace hex::plugin::builtin {
 
             // Merge all fonts into one big font atlas
             cfg.MergeMode = true;
+            cfg.FontDataOwnedByAtlas = false;
 
-            // Add font awesome and codicons icons to font atlas
-            cfg.GlyphOffset = ImVec2(0, 3_scaled);
-            fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange.data());
-            fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange.data());
+            std::list<ImVector<ImWchar>> ranges;
+            for (auto &font : ImHexApi::Fonts::impl::getFonts()) {
+                ImVector<ImWchar> fontRange;
+                if (font.glyphRanges.empty()) {
+                    fontRange = defaultGlyphRanges;
+                } else {
+                    for (const auto &range : font.glyphRanges) {
+                        fontRange.push_back(range.begin);
+                        fontRange.push_back(range.end);
+                    }
+                    fontRange.push_back(0x00);
+                }
 
-            cfg.GlyphOffset = ImVec2(0, 0);
-            // Add unifont if unicode support is enabled
-            fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, ranges.Data);
+                ranges.push_back(fontRange);
+
+                std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name));
+                cfg.GlyphOffset = { font.offset.x, font.offset.y };
+                fonts->AddFontFromMemoryTTF(font.fontData.data(), font.fontData.size(), 0, &cfg, ranges.back().Data);
+            }
 
             // Try to build the font atlas
             if (!fonts->Build()) {

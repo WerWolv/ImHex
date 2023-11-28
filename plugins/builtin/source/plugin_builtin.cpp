@@ -45,6 +45,7 @@ namespace hex::plugin::builtin {
     void addToolbarItems();
     void addGlobalUIItems();
     void addInitTasks();
+    void loadFonts();
 
     void handleBorderlessWindowMode();
 
@@ -76,6 +77,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
     addInitTasks();
+    loadFonts();
 
     registerEventHandlers();
     registerDataVisualizers();
