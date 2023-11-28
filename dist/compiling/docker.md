@@ -17,6 +17,7 @@ docker buildx build . -f <DOCKERFILE_PATH> --progress plain --build-arg 'JOBS=4'
 ```
 
 where `<DOCKERFILE_PATH>` should be replaced by the wanted Dockerfile base d on the build you want to do:
+
 | Wanted build | Dockerfile path             |
 |--------------|-----------------------------|
 | MacOS M1     | dist/macOS/arm64.Dockerfile |
