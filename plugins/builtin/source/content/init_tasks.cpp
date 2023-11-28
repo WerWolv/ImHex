@@ -252,7 +252,7 @@ namespace hex::plugin::builtin {
 
                 ranges.push_back(fontRange);
 
-                cfg.Name = { 0x00 };
+                std::memset(cfg.Name, 0x00, sizeof(cfg.Name));
                 std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name) - 1);
                 cfg.GlyphOffset = { font.offset.x, font.offset.y };
                 fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
