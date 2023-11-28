@@ -90,11 +90,11 @@ namespace ImGuiExt {
             return this->m_textureId != nullptr;
         }
 
-        [[nodiscard]] constexpr operator ImTextureID() const noexcept {
+        [[nodiscard]] operator ImTextureID() const noexcept {
             return this->m_textureId;
         }
 
-        [[nodiscard]] constexpr operator intptr_t() const noexcept {
+        [[nodiscard]] operator intptr_t() const noexcept {
             return reinterpret_cast<intptr_t>(this->m_textureId);
         }
 
