@@ -7,7 +7,9 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/logger.hpp>
 
+#include <wolv/utils/string.hpp>
 #include <wolv/hash/uuid.hpp>
 
 #include <imgui.h>
@@ -250,7 +252,8 @@ namespace hex::plugin::builtin {
 
                 ranges.push_back(fontRange);
 
-                std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name));
+                cfg.Name = { 0x00 };
+                std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name) - 1);
                 cfg.GlyphOffset = { font.offset.x, font.offset.y };
                 fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
