@@ -86,6 +86,7 @@ namespace hex::init {
         ImHexApi::System::getAdditionalFolderPaths().clear();
         ImHexApi::System::getCustomFontPath().clear();
         ImHexApi::Messaging::impl::getHandlers().clear();
+        ImHexApi::Fonts::impl::getFonts().clear();
 
         ContentRegistry::Settings::impl::getSettings().clear();
         ContentRegistry::Settings::impl::getSettingsData().clear();

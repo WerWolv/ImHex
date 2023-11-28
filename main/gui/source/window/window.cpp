@@ -1162,9 +1162,6 @@ namespace hex {
                 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
         }
 
-        for (auto &entry : fonts->ConfigData)
-            io.Fonts->ConfigData.push_back(entry);
-
         io.ConfigViewportsNoTaskBarIcon = false;
 
         ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);

@@ -13,10 +13,6 @@
 #include <imgui.h>
 #include <imgui_freetype.h>
 
-#include <fonts/codicons_font.h>
-#include <fonts/fontawesome_font.h>
-#include <fonts/unifont_font.h>
-
 namespace hex::plugin::builtin {
 
     namespace {
@@ -107,13 +103,13 @@ namespace hex::plugin::builtin {
         }
 
         bool configureUIScale() {
-            int interfaceScaleSetting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0.0F).get<float>() * 10;
+            int interfaceScaleSetting = int(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0.0F).get<float>() * 10.0F);
 
             float interfaceScaling;
             if (interfaceScaleSetting == 0)
                 interfaceScaling = ImHexApi::System::getNativeScale();
             else
-                interfaceScaling = interfaceScaleSetting / 10.0F;
+                interfaceScaling = int(interfaceScaleSetting / 10.0F);
 
             ImHexApi::System::impl::setGlobalScale(interfaceScaling);
 
@@ -153,7 +149,7 @@ namespace hex::plugin::builtin {
                 // If a custom font has been loaded now, also load the font size
                 float fontSize = defaultFontSize;
                 if (!fontFile.empty()) {
-                    fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13).get<int>() * ImHexApi::System::getGlobalScale();
+                    fontSize = float(ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13).get<int>()) * ImHexApi::System::getGlobalScale();
                 }
 
                 ImHexApi::System::impl::setFontSize(fontSize);
@@ -174,6 +170,7 @@ namespace hex::plugin::builtin {
 
             // Configure font glyph ranges that should be loaded from the default font and unifont
             static ImVector<ImWchar> defaultGlyphRanges;
+            defaultGlyphRanges = { };
             {
                 ImFontGlyphRangesBuilder glyphRangesBuilder;
 
@@ -250,7 +247,7 @@ namespace hex::plugin::builtin {
 
                 std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name));
                 cfg.GlyphOffset = { font.offset.x, font.offset.y };
-                fonts->AddFontFromMemoryTTF(font.fontData.data(), font.fontData.size(), 0, &cfg, ranges.back().Data);
+                fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
 
             // Try to build the font atlas
