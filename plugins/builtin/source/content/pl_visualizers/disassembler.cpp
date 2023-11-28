@@ -4,7 +4,7 @@
 
 #include <imgui.h>
 
-#include <capstone.h>
+#include <capstone/capstone.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/api/localization_manager.hpp>
