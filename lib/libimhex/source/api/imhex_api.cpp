@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <nlohmann/json.hpp>
 
@@ -763,7 +764,40 @@ namespace hex {
 
         }
 
-        void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges, Offset offset) {
+        GlyphRange glyph(const char *glyph) {
+            u32 codepoint;
+            ImTextCharFromUtf8(&codepoint, glyph, nullptr);
+
+            return {
+                .begin = u16(codepoint),
+                .end   = u16(codepoint)
+            };
+        }
+        GlyphRange glyph(u32 codepoint) {
+            return {
+                .begin = u16(codepoint),
+                .end   = u16(codepoint)
+            };
+        }
+        GlyphRange range(const char *glyphBegin, const char *glyphEnd) {
+            u32 codepointBegin, codepointEnd;
+            ImTextCharFromUtf8(&codepointBegin, glyphBegin, nullptr);
+            ImTextCharFromUtf8(&codepointEnd, glyphEnd, nullptr);
+
+            return {
+                .begin = u16(codepointBegin),
+                .end   = u16(codepointEnd)
+            };
+        }
+
+        GlyphRange range(u32 codepointBegin, u32 codepointEnd) {
+            return {
+                .begin = u16(codepointBegin),
+                .end   = u16(codepointEnd)
+            };
+        }
+
+        void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags) {
             wolv::io::File fontFile(path, wolv::io::File::Mode::Read);
             if (!fontFile.isValid()) {
                 log::error("Failed to load font from file '{}'", wolv::util::toUTF8String(path));
@@ -774,16 +808,18 @@ namespace hex {
                 wolv::util::toUTF8String(path.filename()),
                 fontFile.readVector(),
                 glyphRanges,
-                offset
+                offset,
+                flags
             });
         }
 
-        void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset) {
+        void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags) {
             impl::getFonts().emplace_back(Font {
                 name,
                 { data.begin(), data.end() },
                 glyphRanges,
-                offset
+                offset,
+                flags
             });
         }
     }

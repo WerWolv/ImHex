@@ -208,9 +208,10 @@ namespace hex::plugin::builtin {
 
             // Load main font
             // If a custom font has been specified, load it, otherwise load the default ImGui font
+            ImFont *defaultFont;
             if (fontFile.empty()) {
                 fonts->Clear();
-                fonts->AddFontDefault(&cfg);
+                defaultFont = fonts->AddFontDefault(&cfg);
             } else {
                 if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
@@ -219,24 +220,29 @@ namespace hex::plugin::builtin {
                 if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
 
-                auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, defaultGlyphRanges.Data);
+                defaultFont = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, defaultGlyphRanges.Data);
 
                 cfg.FontBuilderFlags = 0;
 
-                if (font == nullptr) {
+                if (defaultFont == nullptr) {
                     log::warn("Failed to load custom font! Falling back to default font.");
 
                     ImHexApi::System::impl::setFontSize(defaultFontSize);
                     cfg.SizePixels = defaultFontSize;
                     fonts->Clear();
-                    fonts->AddFontDefault(&cfg);
+                    defaultFont = fonts->AddFontDefault(&cfg);
                 }
             }
+
+            // Build default font to get its metrics
+            fonts->Build();
 
             // Merge all fonts into one big font atlas
             cfg.MergeMode = true;
             cfg.FontDataOwnedByAtlas = false;
 
+            // Add all other fonts to the atlas
+            auto startFlags = cfg.FontBuilderFlags;
             std::list<ImVector<ImWchar>> ranges;
             for (auto &font : ImHexApi::Fonts::impl::getFonts()) {
                 ImVector<ImWchar> fontRange;
@@ -252,9 +258,11 @@ namespace hex::plugin::builtin {
 
                 ranges.push_back(fontRange);
 
+                cfg.FontBuilderFlags = startFlags | font.flags;
+
                 std::memset(cfg.Name, 0x00, sizeof(cfg.Name));
                 std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name) - 1);
-                cfg.GlyphOffset = { font.offset.x, font.offset.y };
+                cfg.GlyphOffset = { font.offset.x, font.offset.y - defaultFont->Descent };
                 fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
 
