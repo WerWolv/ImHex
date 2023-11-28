@@ -149,6 +149,8 @@ namespace hex::init {
 
         fs::setFileBrowserErrorCallback(nullptr);
 
+        IM_DELETE(ImHexApi::System::getFontAtlas());
+
         return true;
     }
 
