@@ -156,9 +156,7 @@ namespace hex::plugin::builtin {
 
                 EventManager::post<EventProviderOpened>(provider);
             }
-            else if (provider->hasLoadInterface())
-                EventManager::post<RequestOpenPopup>(View::toWindowName("hex.builtin.view.provider_settings.load_popup"));
-            else {
+            else if (!provider->hasLoadInterface()) {
                 if (!provider->open() || !provider->isAvailable()) {
                     PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });

@@ -713,6 +713,10 @@ namespace hex {
             return true;
         }
 
+        void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function) {
+            EventManager::post<RequestAddInitTask>(name, async, function);
+        }
+
     }
 
     namespace ImHexApi::Messaging {
@@ -745,6 +749,43 @@ namespace hex {
             impl::getHandlers().insert({ eventName, handler });
         }
 
+    }
+
+    namespace ImHexApi::Fonts {
+
+        namespace impl {
+
+            std::vector<Font>& getFonts() {
+                static std::vector<Font> fonts;
+
+                return fonts;
+            }
+
+        }
+
+        void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges, Offset offset) {
+            wolv::io::File fontFile(path, wolv::io::File::Mode::Read);
+            if (!fontFile.isValid()) {
+                log::error("Failed to load font from file '{}'", wolv::util::toUTF8String(path));
+                return;
+            }
+
+            impl::getFonts().emplace_back(Font {
+                wolv::util::toUTF8String(path.filename()),
+                fontFile.readVector(),
+                glyphRanges,
+                offset
+            });
+        }
+
+        void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset) {
+            impl::getFonts().emplace_back(Font {
+                name,
+                { data.begin(), data.end() },
+                glyphRanges,
+                offset
+            });
+        }
     }
 
 }

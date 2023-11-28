@@ -3,6 +3,7 @@
 
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/utils_macos.hpp>
@@ -19,9 +20,6 @@
 #include <imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
 #include <opengl_support.h>
-
-#include <fonts/fontawesome_font.h>
-
 
 #include <wolv/utils/guards.hpp>
 
@@ -50,6 +48,10 @@ namespace hex::init {
         this->initMyself();
 
         ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
+
+        EventManager::subscribe<RequestAddInitTask>([this](const std::string& name, bool async, const TaskFunction &function){
+            this->m_tasks.push_back(Task{ name, function, async });
+        });
     }
 
     WindowSplash::~WindowSplash() {
@@ -81,80 +83,96 @@ namespace hex::init {
         glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
     }
 
-    std::future<bool> WindowSplash::processTasksAsync() {
-        return std::async(std::launch::async, [this] {
-            bool status = true;
-            std::atomic<u32> tasksCompleted = 0;
+    void WindowSplash::createTask(const Task& task) {
+        auto runTask = [&, task] {
+            try {
+                // Save an iterator to the current task name
+                decltype(this->m_currTaskNames)::iterator taskNameIter;
+                {
+                    std::lock_guard guard(this->m_progressMutex);
+                    this->m_currTaskNames.push_back(task.name + "...");
+                    taskNameIter = std::prev(this->m_currTaskNames.end());
+                }
 
-            // Loop over all registered init tasks
-            for (const auto &[name, task, async] : this->m_tasks) {
-
-                // Construct a new task callback
-                auto runTask = [&, task, name] {
-                    try {
-                        // Save an iterator to the current task name
-                        decltype(this->m_currTaskNames)::iterator taskNameIter;
-                        {
-                            std::lock_guard guard(this->m_progressMutex);
-                            this->m_currTaskNames.push_back(name + "...");
-                            taskNameIter = std::prev(this->m_currTaskNames.end());
-                        }
-
-                        // When the task finished, increment the progress bar
-                        ON_SCOPE_EXIT {
-                            tasksCompleted += 1;
-                            this->m_progress = float(tasksCompleted) / this->m_tasks.size();
-                        };
-
-                        // Execute the actual task and track the amount of time it took to run
-                        auto startTime = std::chrono::high_resolution_clock::now();
-                        bool taskStatus = task();
-                        auto endTime = std::chrono::high_resolution_clock::now();
-
-                        log::info("Task '{}' finished {} in {} ms",
-                                  name,
-                                  taskStatus ? "successfully" : "unsuccessfully",
-                                  std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count()
-                        );
-
-                        // Track the overall status of the tasks
-                        status = status && taskStatus;
-
-                        // Erase the task name from the list of running tasks
-                        {
-                            std::lock_guard guard(this->m_progressMutex);
-                            this->m_currTaskNames.erase(taskNameIter);
-                        }
-                    } catch (const std::exception &e) {
-                        log::error("Init task '{}' threw an exception: {}", name, e.what());
-                        status = false;
-                    } catch (...) {
-                        log::error("Init task '{}' threw an unidentifiable exception", name);
-                        status = false;
-                    }
+                // When the task finished, increment the progress bar
+                ON_SCOPE_EXIT {
+                    this->m_completedTaskCount += 1;
+                    this->m_progress = float(this->m_completedTaskCount) / this->m_totalTaskCount;
                 };
 
+                // Execute the actual task and track the amount of time it took to run
+                auto startTime = std::chrono::high_resolution_clock::now();
+                bool taskStatus = task.callback();
+                auto endTime = std::chrono::high_resolution_clock::now();
 
-                // If the task can be run asynchronously, run it in a separate thread
-                // otherwise run it in this thread and wait for it to finish
-                if (async) {
-                    std::thread([runTask = std::move(runTask)]{ runTask(); }).detach();
-                } else {
-                    runTask();
+                auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+
+                if (taskStatus)
+                    log::info("Task '{}' finished successfully in {} ms", task.name, milliseconds);
+                else
+                    log::warn("Task '{}' finished unsuccessfully in {} ms", task.name, milliseconds);
+
+                // Track the overall status of the tasks
+                this->m_taskStatus = this->m_taskStatus && taskStatus;
+
+                // Erase the task name from the list of running tasks
+                {
+                    std::lock_guard guard(this->m_progressMutex);
+                    this->m_currTaskNames.erase(taskNameIter);
                 }
+            } catch (const std::exception &e) {
+                log::error("Init task '{}' threw an exception: {}", task.name, e.what());
+                this->m_taskStatus = false;
+            } catch (...) {
+                log::error("Init task '{}' threw an unidentifiable exception", task.name);
+                this->m_taskStatus = false;
+            }
+        };
+
+        this->m_totalTaskCount += 1;
+
+        // If the task can be run asynchronously, run it in a separate thread
+        // otherwise run it in this thread and wait for it to finish
+        if (task.async) {
+            std::thread([runTask = std::move(runTask)]{ runTask(); }).detach();
+        } else {
+            runTask();
+        }
+    }
+
+    std::future<bool> WindowSplash::processTasksAsync() {
+        return std::async(std::launch::async, [this] {
+            auto startTime = std::chrono::high_resolution_clock::now();
+
+            // Loop over all registered init tasks
+            for (auto it = this->m_tasks.begin(); it != this->m_tasks.end(); ++it) {
+                // Construct a new task callback
+                this->createTask(*it);
             }
 
             // Check every 100ms if all tasks have run
-            while (tasksCompleted < this->m_tasks.size()) {
+            while (true) {
+                {
+                    std::scoped_lock lock(this->m_tasksMutex);
+                    if (this->m_completedTaskCount >= this->m_totalTaskCount)
+                        break;
+                }
+
                 std::this_thread::sleep_for(100ms);
             }
+
+            auto endTime = std::chrono::high_resolution_clock::now();
+
+            auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+            log::info("ImHex fully started in {}ms", milliseconds);
 
             // Small extra delay so the last progress step is visible
             std::this_thread::sleep_for(100ms);
 
-            return status;
+            return this->m_taskStatus.load();
         });
     }
+
 
     FrameResult WindowSplash::fullFrame() {
         glfwSetWindowSize(this->m_window, 640_scaled, 400_scaled);
@@ -239,7 +257,7 @@ namespace hex::init {
             // Draw version information
             // In debug builds, also display the current commit hash and branch
             #if defined(DEBUG)
-                const static auto VersionInfo = hex::format("{0} : {1} {2}@{3}", ImHexApi::System::getImHexVersion(), ICON_FA_CODE_BRANCH, ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
+                const static auto VersionInfo = hex::format("{0} : {1}@{2}", ImHexApi::System::getImHexVersion(), ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash());
             #else
                 const static auto VersionInfo = hex::format("{0}", ImHexApi::System::getImHexVersion());
             #endif
@@ -403,14 +421,8 @@ namespace hex::init {
             cfg.SizePixels = 13.0_scaled;
             io.Fonts->AddFontDefault(&cfg);
 
-            cfg.MergeMode = true;
-
-            ImWchar fontAwesomeRange[] = {
-                ICON_MIN_FA, ICON_MAX_FA, 0
-            };
             std::uint8_t *px;
             int w, h;
-            io.Fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 11.0_scaled, &cfg, fontAwesomeRange);
             io.Fonts->GetTexDataAsAlpha8(&px, &w, &h);
 
             // Create new font atlas

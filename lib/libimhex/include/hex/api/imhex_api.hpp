@@ -3,6 +3,7 @@
 #include <hex.hpp>
 
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 #include <map>
@@ -571,7 +572,14 @@ namespace hex {
                 Nightly
             };
 
+            /**
+             * @brief Triggers the update process
+             * @param updateType The update channel
+             * @return If the update process was successfully started
+             */
             bool updateImHex(UpdateType updateType);
+
+            void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function);
         }
 
         /**
@@ -592,6 +600,29 @@ namespace hex {
              * @brief Register the handler for this specific event name
              */
             void registerHandler(const std::string &eventName, const impl::MessagingHandler &handler);
+        }
+
+        namespace Fonts {
+
+            struct GlyphRange { u16 begin, end; };
+            struct Offset { float x, y; };
+
+            struct Font {
+                std::string name;
+                std::vector<u8> fontData;
+                std::vector<GlyphRange> glyphRanges;
+                Offset offset;
+            };
+
+            namespace impl {
+
+                std::vector<Font>& getFonts();
+
+            }
+
+            void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {});
+            void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {});
+
         }
 
     }

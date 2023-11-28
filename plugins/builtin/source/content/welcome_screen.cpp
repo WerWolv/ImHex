@@ -596,20 +596,24 @@ namespace hex::plugin::builtin {
                 const auto infoBannerPath = defaultPath / "info_banner.png";
                 if (wolv::io::fs::exists(infoBannerPath)) {
                     s_infoBannerTexture = ImGuiExt::Texture(wolv::util::toUTF8String(infoBannerPath).c_str());
-                    break;
-                } else {
-                    TaskManager::createBackgroundTask("Load banner", [](auto&) {
-                        HttpRequest request("GET", ImHexApiURL + std::string("/info_banner"));
-                        auto response = request.downloadFile().get();
 
-                        if (response.isSuccess()) {
-                            const auto &data = response.getData();
-                            TaskManager::doLater([data] {
-                                s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size());
-                            });
-                        }
-                    });
+                    if (s_infoBannerTexture.isValid())
+                        break;
                 }
+            }
+
+            if (!s_infoBannerTexture.isValid()) {
+                TaskManager::createBackgroundTask("Load banner", [](auto&) {
+                    HttpRequest request("GET", ImHexApiURL + std::string("/info_banner"));
+                    auto response = request.downloadFile().get();
+
+                    if (response.isSuccess()) {
+                        const auto &data = response.getData();
+                        TaskManager::doLater([data] {
+                            s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size());
+                        });
+                    }
+                });
             }
         });
     }

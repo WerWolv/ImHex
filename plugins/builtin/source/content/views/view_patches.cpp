@@ -65,6 +65,9 @@ namespace hex::plugin::builtin {
         });
 
         EventManager::subscribe<EventProviderDataModified>(this, [](prv::Provider *provider, u64 offset, u64 size, const u8 *data) {
+            if (size == 0)
+                return;
+
             offset -= provider->getBaseAddress();
 
             std::vector<u8> oldData(size, 0x00);

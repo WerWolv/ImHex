@@ -256,6 +256,8 @@ namespace hex {
     EVENT_DEF_NO_LOG(EventFrameEnd);
     EVENT_DEF_NO_LOG(EventSetTaskBarIconState, u32, u32, u32);
 
+    EVENT_DEF(RequestAddInitTask, std::string, bool, std::function<bool()>);
+    EVENT_DEF(RequestAddExitTask, std::string, std::function<bool()>);
     EVENT_DEF(RequestOpenWindow, std::string);
     EVENT_DEF(RequestSelectionChange, Region);
     EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t, u64*);

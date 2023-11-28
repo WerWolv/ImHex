@@ -43,6 +43,8 @@ add_imhex_plugin(
         source/content/achievements.cpp
         source/content/file_extraction.cpp
         source/content/report_generators.cpp
+        source/content/init_tasks.cpp
+        source/content/fonts.cpp
 
         source/content/dpn/basic_nodes.cpp
         source/content/dpn/control_nodes.cpp

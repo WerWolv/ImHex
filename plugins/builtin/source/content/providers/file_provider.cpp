@@ -201,7 +201,7 @@ namespace hex::plugin::builtin {
         return {
             { "hex.builtin.provider.file.menu.open_folder"_lang, [this] { fs::openFolderWithSelectionExternal(this->m_path); } },
             { "hex.builtin.provider.file.menu.open_file"_lang,   [this] { fs::openFileExternal(this->m_path); } },
-            { "hex.builtin.provider.file.menu.into_memory"_lang,      [this] { this->convertToMemoryFile(); } }
+            { "hex.builtin.provider.file.menu.into_memory"_lang, [this] { this->convertToMemoryFile(); } }
         };
     }
 
@@ -313,7 +313,11 @@ namespace hex::plugin::builtin {
                     }
 
                     memoryProvider->markDirty(true);
-                    ImHexApi::Provider::remove(this, false);
+                    memoryProvider->getUndoStack().reset();
+
+                    TaskManager::runWhenTasksFinished([this]{
+                        ImHexApi::Provider::remove(this, false);
+                    });
                 });
             }
         }

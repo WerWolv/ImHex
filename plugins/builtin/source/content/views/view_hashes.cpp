@@ -64,7 +64,7 @@ namespace hex::plugin::builtin {
                 if (!hashFunctions.empty() && selection.has_value() && selection->overlaps(Region { address, size })) {
                     ImGui::BeginTooltip();
 
-                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip)) {
+                    if (ImGui::BeginTable("##tooltips", 1, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoClip, ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5)))) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 

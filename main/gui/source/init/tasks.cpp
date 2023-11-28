@@ -36,89 +36,6 @@ namespace hex::init {
 
     using namespace std::literals::string_literals;
 
-    static bool checkForUpdatesSync() {
-        int checkForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
-
-        // Check if we should check for updates
-        if (checkForUpdates == 1){
-            HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
-
-            // Query the GitHub API for the latest release version
-            auto response = request.execute().get();
-            if (response.getStatusCode() != 200)
-                return false;
-
-            nlohmann::json releases;
-            try {
-                releases = nlohmann::json::parse(response.getData());
-            } catch (const std::exception &) {
-                return false;
-            }
-
-            // Check if the response is valid
-            if (!releases.contains("tag_name") || !releases["tag_name"].is_string())
-                return false;
-
-            // Convert the current version string to a format that can be compared to the latest release
-            auto versionString = ImHexApi::System::getImHexVersion();
-            size_t versionLength = std::min(versionString.find_first_of('-'), versionString.length());
-            auto currVersion   = "v" + versionString.substr(0, versionLength);
-
-            // Get the latest release version string
-            auto latestVersion = releases["tag_name"].get<std::string_view>();
-
-            // Check if the latest release is different from the current version
-            if (latestVersion != currVersion)
-                ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
-
-            // Check if there is a telemetry uuid
-            std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
-            if (uuid.empty()) {
-                // Generate a new uuid
-                uuid = wolv::hash::generateUUID();
-                // Save
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
-            }
-
-            TaskManager::createBackgroundTask("Sending statistics...", [uuid, versionString](auto&) {
-                // To avoid potentially flooding our database with lots of dead users
-                // from people just visiting the website, don't send telemetry data from
-                // the web version
-                #if defined(OS_WEB)
-                    return;
-                #endif
-
-                // Make telemetry request
-                nlohmann::json telemetry = {
-                        { "uuid", uuid },
-                        { "format_version", "1" },
-                        { "imhex_version", versionString },
-                        { "imhex_commit", fmt::format("{}@{}", ImHexApi::System::getCommitHash(true), ImHexApi::System::getCommitBranch()) },
-                        { "install_type", ImHexApi::System::isPortableVersion() ? "Portable" : "Installed" },
-                        { "os", ImHexApi::System::getOSName() },
-                        { "os_version", ImHexApi::System::getOSVersion() },
-                        { "arch", ImHexApi::System::getArchitecture() },
-                        { "gpu_vendor", ImHexApi::System::getGPUVendor() }
-                };
-
-                HttpRequest telemetryRequest("POST", ImHexApiURL + "/telemetry"s);
-                telemetryRequest.setTimeout(500);
-
-                telemetryRequest.setBody(telemetry.dump());
-                telemetryRequest.addHeader("Content-Type", "application/json");
-
-                // Execute request
-                telemetryRequest.execute();
-            });
-        }
-        return true;
-    }
-    
-    static bool checkForUpdates() {
-        TaskManager::createBackgroundTask("Checking for updates", [](auto&) { checkForUpdatesSync(); });
-        return true;
-    }
-
     bool setupEnvironment() {
         hex::log::debug("Using romfs: '{}'", romfs::name());
 
@@ -148,217 +65,6 @@ namespace hex::init {
         return result;
     }
 
-    bool migrateConfig(){
-
-        // Check if there is a new config in folder
-        auto configPaths = hex::fs::getDefaultPaths(hex::fs::ImHexPath::Config, false);
-
-        // There should always be exactly one config path on Linux
-        std::fs::path newConfigPath = configPaths[0];
-        wolv::io::File newConfigFile(newConfigPath / "settings.json", wolv::io::File::Mode::Read);
-        if (!newConfigFile.isValid()) {
-
-            // Find an old config
-            std::fs::path oldConfigPath;
-            for (const auto &dir : hex::fs::appendPath(hex::fs::getDataPaths(), "config")) {
-                wolv::io::File oldConfigFile(dir / "settings.json", wolv::io::File::Mode::Read);
-                if (oldConfigFile.isValid()) {
-                    oldConfigPath = dir;
-                    break;
-                }
-            }
-
-            if (!oldConfigPath.empty()) {
-                log::info("Found config file in {}! Migrating to {}", oldConfigPath.string(), newConfigPath.string());
-
-                std::fs::rename(oldConfigPath / "settings.json", newConfigPath / "settings.json");
-                wolv::io::File oldIniFile(oldConfigPath / "interface.ini", wolv::io::File::Mode::Read);
-                if (oldIniFile.isValid()) {
-                    std::fs::rename(oldConfigPath / "interface.ini", newConfigPath / "interface.ini");
-                }
-
-                std::fs::remove(oldConfigPath);
-            }
-        }
-        return true;
-    }
-
-    static bool loadFontsImpl(bool loadUnicode) {
-        const float defaultFontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
-
-        // Load custom font related settings
-        if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
-            std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "").get<std::string>();
-            if (!fontFile.empty()) {
-                if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
-                    log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));
-                    fontFile.clear();
-                }
-
-                log::info("Loading custom font from {}", wolv::util::toUTF8String(fontFile));
-            }
-
-            // If no custom font has been specified, search for a file called "font.ttf" in one of the resource folders
-            if (fontFile.empty()) {
-                for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
-                    auto path = dir / "font.ttf";
-                    if (wolv::io::fs::exists(path)) {
-                        log::info("Loading custom font from {}", wolv::util::toUTF8String(path));
-
-                        fontFile = path;
-                        break;
-                    }
-                }
-            }
-
-            ImHexApi::System::impl::setCustomFontPath(fontFile);
-
-            // If a custom font has been loaded now, also load the font size
-            float fontSize = defaultFontSize;
-            if (!fontFile.empty()) {
-                fontSize = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13).get<int>() * ImHexApi::System::getGlobalScale();
-            }
-
-            ImHexApi::System::impl::setFontSize(fontSize);
-        }
-
-        float fontSize = ImHexApi::System::getFontSize();
-
-        const auto &fontFile = ImHexApi::System::getCustomFontPath();
-
-        // Setup basic font configuration
-        auto fonts       = IM_NEW(ImFontAtlas)();
-        static ImFontConfig cfg = {};
-        cfg.OversampleH = cfg.OversampleV = 1, cfg.PixelSnapH = true;
-        cfg.SizePixels = fontSize;
-
-        fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
-        fonts->TexDesiredWidth = 4096;
-
-        // Configure font glyph ranges that should be loaded from the default font and unifont
-        static ImVector<ImWchar> ranges;
-        {
-            ImFontGlyphRangesBuilder glyphRangesBuilder;
-
-            {
-                constexpr static std::array<ImWchar, 3> controlCodeRange   = { 0x0001, 0x001F, 0 };
-                constexpr static std::array<ImWchar, 3> extendedAsciiRange = { 0x007F, 0x00FF, 0 };
-
-                glyphRangesBuilder.AddRanges(controlCodeRange.data());
-                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesDefault());
-                glyphRangesBuilder.AddRanges(extendedAsciiRange.data());
-            }
-
-            if (loadUnicode) {
-                constexpr static std::array<ImWchar, 3> fullRange = { 0x0100, 0xFFEF, 0 };
-
-                glyphRangesBuilder.AddRanges(fullRange.data());
-            } else {
-                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesJapanese());
-                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesChineseFull());
-                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesCyrillic());
-                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesKorean());
-                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesThai());
-                glyphRangesBuilder.AddRanges(fonts->GetGlyphRangesVietnamese());
-            }
-
-            glyphRangesBuilder.BuildRanges(&ranges);
-        }
-
-        // Glyph range for font awesome icons
-        constexpr static std::array<ImWchar, 3> fontAwesomeRange = {
-                ICON_MIN_FA, ICON_MAX_FA, 0
-        };
-
-        // Glyph range for codicons icons
-        constexpr static std::array<ImWchar, 3> codiconsRange = {
-                ICON_MIN_VS, ICON_MAX_VS, 0
-        };
-
-        // Glyph range for blender icons
-        static std::array<ImWchar, 3> blenderIconsRange = {
-                ICON_MIN_BI, ICON_MAX_BI, 0
-        };
-
-        // Load main font
-        // If a custom font has been specified, load it, otherwise load the default ImGui font
-        if (fontFile.empty()) {
-            fonts->Clear();
-            fonts->AddFontDefault(&cfg);
-        } else {
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
-                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
-                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
-            if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
-                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-
-            auto font = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, ranges.Data);
-
-            cfg.FontBuilderFlags = 0;
-
-            if (font == nullptr) {
-                log::warn("Failed to load custom font! Falling back to default font.");
-
-                ImHexApi::System::impl::setFontSize(defaultFontSize);
-                cfg.SizePixels = defaultFontSize;
-                fonts->Clear();
-                fonts->AddFontDefault(&cfg);
-            }
-        }
-
-        // Merge all fonts into one big font atlas
-        cfg.MergeMode = true;
-
-        cfg.GlyphOffset = ImVec2(1_scaled, 1_scaled);
-        fonts->AddFontFromMemoryCompressedTTF(font_awesome_compressed_data, font_awesome_compressed_size, 0, &cfg, fontAwesomeRange.data());
-        cfg.GlyphOffset = ImVec2(0, 3_scaled);
-        fonts->AddFontFromMemoryCompressedTTF(codicons_compressed_data, codicons_compressed_size, 0, &cfg, codiconsRange.data());
-        cfg.GlyphOffset = ImVec2(1_scaled, 0_scaled);
-        fonts->AddFontFromMemoryCompressedTTF(blendericons_compressed_data, blendericons_compressed_size, 0, &cfg, blenderIconsRange.data());
-
-        cfg.GlyphOffset = ImVec2(0, 0);
-        // Add unifont if unicode support is enabled
-        fonts->AddFontFromMemoryCompressedTTF(unifont_compressed_data, unifont_compressed_size, 0, &cfg, ranges.Data);
-
-        // Try to build the font atlas
-        if (!fonts->Build()) {
-            // The main reason the font atlas failed to build is that the font is too big for the GPU to handle
-            // If unicode support is enabled, therefor try to load the font atlas without unicode support
-            // If that still didn't work, there's probably something else going on with the graphics drivers
-            // Especially Intel GPU drivers are known to have various bugs
-
-            if (loadUnicode) {
-                log::error("Failed to build font atlas! Disabling Unicode support.");
-                IM_DELETE(fonts);
-
-                // Disable unicode support in settings
-                ContentRegistry::Settings::write("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false);
-
-                // Try to load the font atlas again
-                return loadFontsImpl(false);
-            } else {
-                log::error("Failed to build font atlas! Check your Graphics driver!");
-                return false;
-            }
-        }
-
-        // Configure ImGui to use the font atlas
-        ImHexApi::System::impl::setFontAtlas(fonts);
-
-        return true;
-    }
-
-    bool loadFonts() {
-        // Check if unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
-        // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
-        bool shouldLoadUnicode =
-                ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
-                ImHexApi::System::getGPUVendor() != "VMware, Inc.";
-
-        return loadFontsImpl(shouldLoadUnicode);
-    }
-
     bool deleteSharedData() {
         // This function is called when ImHex is closed. It deletes all shared data that was created by plugins
         // This is a bit of a hack but necessary because when ImHex gets closed, all plugins are unloaded in order for
@@ -382,6 +88,7 @@ namespace hex::init {
         ImHexApi::System::getAdditionalFolderPaths().clear();
         ImHexApi::System::getCustomFontPath().clear();
         ImHexApi::Messaging::impl::getHandlers().clear();
+        ImHexApi::Fonts::impl::getFonts().clear();
 
         ContentRegistry::Settings::impl::getSettings().clear();
         ContentRegistry::Settings::impl::getSettingsData().clear();
@@ -443,6 +150,8 @@ namespace hex::init {
         ProjectFile::setProjectFunctions(nullptr, nullptr);
 
         fs::setFileBrowserErrorCallback(nullptr);
+
+        IM_DELETE(ImHexApi::System::getFontAtlas());
 
         return true;
     }
@@ -590,20 +299,6 @@ namespace hex::init {
         return true;
     }
 
-    bool configureUIScale() {
-        int interfaceScaleSetting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0.0F).get<float>() * 10;
-
-        float interfaceScaling;
-        if (interfaceScaleSetting == 0)
-            interfaceScaling = ImHexApi::System::getNativeScale();
-        else
-            interfaceScaling = interfaceScaleSetting / 10.0F;
-
-        ImHexApi::System::impl::setGlobalScale(interfaceScaling);
-
-        return true;
-    }
-
     bool storeSettings() {
         try {
             ContentRegistry::Settings::impl::store();
@@ -626,14 +321,8 @@ namespace hex::init {
         return {
             { "Setting up environment",  setupEnvironment,    false },
             { "Creating directories",    createDirectories,   false },
-            #if defined(OS_LINUX)
-            { "Migrate config to .config", migrateConfig,     false },
-            #endif
             { "Loading settings",        loadSettings,        false },
-            { "Configuring UI scale",    configureUIScale,    false },
-            { "Loading plugins",         loadPlugins,         true  },
-            { "Checking for updates",    checkForUpdates,     false },
-            { "Loading fonts",           loadFonts,           true  },
+            { "Loading plugins",         loadPlugins,         false  },
         };
     }
 

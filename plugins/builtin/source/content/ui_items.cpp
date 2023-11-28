@@ -322,18 +322,20 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        std::string popupID = std::string("ProviderMenu.") + std::to_string(tabProvider->getID());
-                        if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
-                            ImGui::OpenPopup(popupID.c_str());
-                        }
-
-                        if (ImGui::BeginPopup(popupID.c_str())) {
-                            for (const auto &menuEntry : tabProvider->getMenuEntries()) {
-                                if (ImGui::MenuItem(menuEntry.name.c_str())) {
-                                    menuEntry.callback();
-                                }
+                        if (!tabProvider->getMenuEntries().empty()) {
+                            std::string popupID = std::string("ProviderMenu.") + std::to_string(tabProvider->getID());
+                            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
+                                ImGui::OpenPopup(popupID.c_str());
                             }
-                            ImGui::EndPopup();
+
+                            if (ImGui::BeginPopup(popupID.c_str())) {
+                                for (const auto &menuEntry : tabProvider->getMenuEntries()) {
+                                    if (ImGui::MenuItem(menuEntry.name.c_str())) {
+                                        menuEntry.callback();
+                                    }
+                                }
+                                ImGui::EndPopup();
+                            }
                         }
                     }
                     ImGui::EndTabBar();
