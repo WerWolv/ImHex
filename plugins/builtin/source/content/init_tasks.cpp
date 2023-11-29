@@ -257,15 +257,33 @@ namespace hex::plugin::builtin {
 
                 cfg.FontBuilderFlags = startFlags | font.flags;
 
-                cfg.MergeMode = false;
-                ImFontAtlas atlas;
-                auto queryFont = atlas.AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
-                atlas.Build();
+                float descent = [&] {
+                    ImFontAtlas atlas;
 
-                cfg.MergeMode = true;
+                    // Disable merge mode for this font but retain the rest of the configuration
+                    cfg.MergeMode = false;
+                    ON_SCOPE_EXIT { cfg.MergeMode = true; };
+
+                    // Construct a range that only contains the first glyph of the font
+                    ImVector<ImWchar> queryRange;
+                    {
+                        auto firstGlyph = font.glyphRanges.empty() ? defaultGlyphRanges.front() : font.glyphRanges.front().begin;
+                        queryRange.push_back(firstGlyph);
+                        queryRange.push_back(firstGlyph);
+                    }
+                    queryRange.push_back(0x00);
+
+                    // Build the font atlas with the query range
+                    auto newFont = atlas.AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, queryRange.Data);
+                    atlas.Build();
+
+                    return newFont->Descent;
+                }();
+
+
                 std::memset(cfg.Name, 0x00, sizeof(cfg.Name));
                 std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name) - 1);
-                cfg.GlyphOffset = { font.offset.x, font.offset.y - defaultFont->Descent + queryFont->Descent };
+                cfg.GlyphOffset = { font.offset.x, font.offset.y - defaultFont->Descent + descent };
                 fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
 
