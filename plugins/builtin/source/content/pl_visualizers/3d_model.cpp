@@ -813,9 +813,9 @@ namespace hex::plugin::builtin {
                         romfs::get("shaders/default/lineVertex.glsl").string(),
                         romfs::get("shaders/default/lineFragment.glsl").string());
                 lineShader.bind();
-                lineShader.setUniform<4>("modelMatrix", scaledModel);
-                lineShader.setUniform<4>("viewMatrix", view);
-                lineShader.setUniform<4>("projectionMatrix", projection);
+                lineShader.setUniform("modelMatrix", scaledModel);
+                lineShader.setUniform("viewMatrix", view);
+                lineShader.setUniform("projectionMatrix", projection);
                 vertexArray.bind();
                 if (s_indexType == IndexType::U8) {
                     lineBuffers.indices8.bind();
@@ -848,9 +848,9 @@ namespace hex::plugin::builtin {
                         romfs::get("shaders/default/lineFragment.glsl").string());
                 gridAxesShader.bind();
 
-                gridAxesShader.setUniform<4>("modelMatrix", model);
-                gridAxesShader.setUniform<4>("viewMatrix", view);
-                gridAxesShader.setUniform<4>("projectionMatrix", projection);
+                gridAxesShader.setUniform("modelMatrix", model);
+                gridAxesShader.setUniform("viewMatrix", view);
+                gridAxesShader.setUniform("projectionMatrix", projection);
 
                 if (s_drawGrid) {
                     gridVertexArray.bind();
