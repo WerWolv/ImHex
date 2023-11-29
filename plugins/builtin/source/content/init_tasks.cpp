@@ -234,11 +234,8 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            // Build default font to get its metrics
             fonts->Build();
 
-            // Merge all fonts into one big font atlas
-            cfg.MergeMode = true;
             cfg.FontDataOwnedByAtlas = false;
 
             // Add all other fonts to the atlas
@@ -260,9 +257,15 @@ namespace hex::plugin::builtin {
 
                 cfg.FontBuilderFlags = startFlags | font.flags;
 
+                cfg.MergeMode = false;
+                ImFontAtlas atlas;
+                auto queryFont = atlas.AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
+                atlas.Build();
+
+                cfg.MergeMode = true;
                 std::memset(cfg.Name, 0x00, sizeof(cfg.Name));
                 std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name) - 1);
-                cfg.GlyphOffset = { font.offset.x, font.offset.y - defaultFont->Descent };
+                cfg.GlyphOffset = { font.offset.x, font.offset.y - defaultFont->Descent + queryFont->Descent };
                 fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
 
