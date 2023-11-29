@@ -84,8 +84,8 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getTooltips().clear();
         ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
         ImHexApi::System::getAdditionalFolderPaths().clear();
-        ImHexApi::System::getCustomFontPath().clear();
         ImHexApi::Messaging::impl::getHandlers().clear();
+        ImHexApi::Fonts::getCustomFontPath().clear();
         ImHexApi::Fonts::impl::getFonts().clear();
 
         ContentRegistry::Settings::impl::getSettings().clear();
@@ -148,8 +148,6 @@ namespace hex::init {
         ProjectFile::setProjectFunctions(nullptr, nullptr);
 
         fs::setFileBrowserErrorCallback(nullptr);
-
-        IM_DELETE(ImHexApi::System::getFontAtlas());
 
         return true;
     }

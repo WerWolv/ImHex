@@ -13,6 +13,7 @@
 using ImGuiID = unsigned int;
 struct ImVec2;
 struct ImFontAtlas;
+struct ImFont;
 
 namespace hex {
 
@@ -358,10 +359,6 @@ namespace hex {
 
                 void setBorderlessWindowMode(bool enabled);
 
-                void setCustomFontPath(const std::fs::path &path);
-                void setFontSize(float size);
-                void setFontAtlas(ImFontAtlas *fontAtlas);
-
                 void setGPUVendor(const std::string &vendor);
 
                 void setPortableVersion(bool enabled);
@@ -464,27 +461,6 @@ namespace hex {
              * @return Init arguments
              */
             std::map<std::string, std::string> &getInitArguments();
-
-            constexpr static float DefaultFontSize = 13.0;
-
-            /**
-             * @brief Gets the current custom font path
-             * @return The current custom font path
-             */
-            std::filesystem::path &getCustomFontPath();
-
-            /**
-             * @brief Gets the current font size
-             * @return The current font size
-             */
-            float getFontSize();
-
-            /**
-             * @brief Gets the current font atlas
-             * @return Current font atlas
-             */
-            ImFontAtlas* getFontAtlas();
-
 
             /**
              * @brief Sets if ImHex should follow the system theme
@@ -619,6 +595,11 @@ namespace hex {
 
                 std::vector<Font>& getFonts();
 
+                void setCustomFontPath(const std::fs::path &path);
+                void setFontSize(float size);
+                void setFontAtlas(ImFontAtlas *fontAtlas);
+
+                void setFonts(ImFont *bold, ImFont *italic);
             }
 
             GlyphRange glyph(const char *glyph);
@@ -628,6 +609,29 @@ namespace hex {
 
             void loadFont(const std::fs::path &path, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0);
             void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges = {}, Offset offset = {}, u32 flags = 0);
+
+            constexpr static float DefaultFontSize = 13.0;
+
+            ImFont* Bold();
+            ImFont* Italic();
+
+            /**
+             * @brief Gets the current custom font path
+             * @return The current custom font path
+             */
+            std::filesystem::path &getCustomFontPath();
+
+            /**
+             * @brief Gets the current font size
+             * @return The current font size
+             */
+            float getFontSize();
+
+            /**
+             * @brief Gets the current font atlas
+             * @return Current font atlas
+             */
+            ImFontAtlas* getFontAtlas();
 
         }
 

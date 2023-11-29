@@ -1139,7 +1139,7 @@ namespace hex {
     void Window::initImGui() {
         IMGUI_CHECKVERSION();
 
-        auto fonts = ImHexApi::System::getFontAtlas();
+        auto fonts = ImHexApi::Fonts::getFontAtlas();
 
         // Initialize ImGui and all other ImGui extensions
         GImGui   = ImGui::CreateContext(fonts);

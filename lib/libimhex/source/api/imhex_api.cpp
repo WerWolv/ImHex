@@ -419,21 +419,6 @@ namespace hex {
                 s_borderlessWindowMode = enabled;
             }
 
-            static std::fs::path s_customFontPath;
-            void setCustomFontPath(const std::fs::path &path) {
-                s_customFontPath = path;
-            }
-
-            static float s_fontSize = DefaultFontSize;
-            void setFontSize(float size) {
-                s_fontSize = size;
-            }
-
-            static ImFontAtlas *s_fontAtlas;
-            void setFontAtlas(ImFontAtlas* fontAtlas) {
-                s_fontAtlas = fontAtlas;
-            }
-
 
             static std::string s_gpuVendor;
             void setGPUVendor(const std::string &vendor) {
@@ -517,23 +502,8 @@ namespace hex {
             return initArgs;
         }
 
-        std::fs::path &getCustomFontPath() {
-            return impl::s_customFontPath;
-        }
-
-        float getFontSize() {
-            return impl::s_fontSize;
-        }
-
-        ImFontAtlas* getFontAtlas() {
-            return impl::s_fontAtlas;
-        }
-
-
 
         static bool s_systemThemeDetection;
-
-
         void enableSystemThemeDetection(bool enabled) {
             s_systemThemeDetection = enabled;
 
@@ -762,6 +732,29 @@ namespace hex {
                 return fonts;
             }
 
+            static std::fs::path s_customFontPath;
+            void setCustomFontPath(const std::fs::path &path) {
+                s_customFontPath = path;
+            }
+
+            static float s_fontSize = DefaultFontSize;
+            void setFontSize(float size) {
+                s_fontSize = size;
+            }
+
+            static std::unique_ptr<ImFontAtlas> s_fontAtlas;
+            void setFontAtlas(ImFontAtlas* fontAtlas) {
+                s_fontAtlas = std::unique_ptr<ImFontAtlas>(fontAtlas);
+            }
+
+            static ImFont *s_boldFont = nullptr;
+            static ImFont *s_italicFont = nullptr;
+            void setFonts(ImFont *bold, ImFont *italic) {
+                s_boldFont   = bold;
+                s_italicFont = italic;
+            }
+
+
         }
 
         GlyphRange glyph(const char *glyph) {
@@ -822,6 +815,28 @@ namespace hex {
                 flags
             });
         }
+
+        std::fs::path &getCustomFontPath() {
+            return impl::s_customFontPath;
+        }
+
+        float getFontSize() {
+            return impl::s_fontSize;
+        }
+
+        ImFontAtlas* getFontAtlas() {
+            return impl::s_fontAtlas.get();
+        }
+
+        ImFont* Bold() {
+            return impl::s_boldFont;
+        }
+
+        ImFont* Italic() {
+            return impl::s_italicFont;
+        }
+
+
     }
 
 }
