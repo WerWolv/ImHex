@@ -69,6 +69,7 @@ else()
 endif()
 
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
+enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
 
 include(GenerateExportHeader)

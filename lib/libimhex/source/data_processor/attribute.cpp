@@ -3,11 +3,7 @@
 
 namespace hex::dp {
 
-    namespace {
-
-        int s_idCounter = 1;
-
-    }
+    int Attribute::s_idCounter = 1;
 
 
     Attribute::Attribute(IOType ioType, Type type, std::string unlocalizedName) : m_id(s_idCounter++), m_ioType(ioType), m_type(type), m_unlocalizedName(std::move(unlocalizedName)) {

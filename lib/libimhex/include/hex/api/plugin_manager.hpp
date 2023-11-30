@@ -1,15 +1,10 @@
 #pragma once
 
-#include <hex/helpers/fs.hpp>
-
+#include <functional>
 #include <span>
 #include <string>
 
-#if defined(OS_WINDOWS)
-    #include <windows.h>
-#else
-    #include <dlfcn.h>
-#endif
+#include <wolv/io/fs.hpp>
 
 struct ImGuiContext;
 
@@ -65,11 +60,7 @@ namespace hex {
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
 
     private:
-        #if defined(OS_WINDOWS)
-            HMODULE m_handle = nullptr;
-        #else
-            void *m_handle = nullptr;
-        #endif
+        uintptr_t m_handle = 0;
         std::fs::path m_path;
 
         mutable bool m_initialized = false;

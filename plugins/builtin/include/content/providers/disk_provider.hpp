@@ -7,11 +7,6 @@
 #include <string>
 #include <vector>
 
-#if defined(OS_WINDOWS)
-    #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-#endif
-
 namespace hex::plugin::builtin {
 
     class DiskProvider : public hex::prv::Provider {
@@ -67,7 +62,7 @@ namespace hex::plugin::builtin {
         std::string m_friendlyName;
 
 #if defined(OS_WINDOWS)
-        HANDLE m_diskHandle = INVALID_HANDLE_VALUE;
+        void *m_diskHandle = reinterpret_cast<void*>(-1);
 #else
         std::string m_pathBuffer;
         int m_diskHandle = -1;

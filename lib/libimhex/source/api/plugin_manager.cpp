@@ -2,29 +2,33 @@
 #include <hex/api/imhex_api.hpp>
 
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <wolv/utils/string.hpp>
 
 #include <filesystem>
-#include <system_error>
+
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#else
+    #include <dlfcn.h>
+#endif
 
 namespace hex {
 
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
 
         #if defined(OS_WINDOWS)
-            this->m_handle = LoadLibraryW(path.c_str());
+            this->m_handle = uintptr_t(LoadLibraryW(path.c_str()));
 
-            if (this->m_handle == INVALID_HANDLE_VALUE || this->m_handle == nullptr) {
+            if (this->m_handle == uintptr_t(INVALID_HANDLE_VALUE) || this->m_handle == 0) {
                 log::error("LoadLibraryW failed: {}!", std::system_category().message(::GetLastError()));
                 return;
             }
         #else
-            this->m_handle = dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY);
+            this->m_handle = uintptr_t(dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY));
 
-            if (this->m_handle == nullptr) {
+            if (this->m_handle == 0) {
                 log::error("dlopen failed: {}!", dlerror());
                 return;
             }
@@ -41,14 +45,14 @@ namespace hex {
     }
 
     Plugin::Plugin(hex::PluginFunctions functions) {
-        this->m_handle = nullptr;
+        this->m_handle = 0;
         this->m_functions = std::move(functions);
     }
 
 
     Plugin::Plugin(Plugin &&other) noexcept {
         this->m_handle = other.m_handle;
-        other.m_handle = nullptr;
+        other.m_handle = 0;
 
         this->m_path   = std::move(other.m_path);
 
@@ -58,9 +62,10 @@ namespace hex {
 
     Plugin::~Plugin() {
         #if defined(OS_WINDOWS)
-            if (this->m_handle != nullptr)
-                FreeLibrary(this->m_handle);
+            if (this->m_handle != 0)
+                FreeLibrary(HMODULE(this->m_handle));
         #else
+            dlclose(reinterpret_cast<void*>(this->m_handle));
         #endif
     }
 
@@ -100,7 +105,7 @@ namespace hex {
         if (this->m_functions.getPluginNameFunction != nullptr)
             return this->m_functions.getPluginNameFunction();
         else
-            return hex::format("Unknown Plugin @ 0x{0:016X}", reinterpret_cast<intptr_t>(this->m_handle));
+            return hex::format("Unknown Plugin @ 0x{0:016X}", this->m_handle);
     }
 
     std::string Plugin::getPluginAuthor() const {
@@ -155,9 +160,9 @@ namespace hex {
 
     void *Plugin::getPluginFunction(const std::string &symbol) const {
         #if defined(OS_WINDOWS)
-            return reinterpret_cast<void *>(GetProcAddress(this->m_handle, symbol.c_str()));
+            return reinterpret_cast<void *>(GetProcAddress(HMODULE(this->m_handle), symbol.c_str()));
         #else
-            return dlsym(this->m_handle, symbol.c_str());
+            return dlsym(reinterpret_cast<void*>(this->m_handle), symbol.c_str());
         #endif
     }
 

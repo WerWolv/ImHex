@@ -10,7 +10,6 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/ui/view.hpp>
 
-#include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::windows {

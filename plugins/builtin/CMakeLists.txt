@@ -94,7 +94,6 @@ add_imhex_plugin(
         source/content/views/view_command_palette.cpp
         source/content/views/view_settings.cpp
         source/content/views/view_data_processor.cpp
-        source/content/views/view_yara.cpp
         source/content/views/view_constants.cpp
         source/content/views/view_store.cpp
         source/content/views/view_diff.cpp
@@ -103,6 +102,7 @@ add_imhex_plugin(
         source/content/views/view_theme_manager.cpp
         source/content/views/view_logs.cpp
         source/content/views/view_achievements.cpp
+        source/content/views/view_yara.cpp
 
         source/content/helpers/math_evaluator.cpp
         source/content/helpers/notification.cpp

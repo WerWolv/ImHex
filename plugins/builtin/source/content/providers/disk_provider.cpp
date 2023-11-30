@@ -17,24 +17,24 @@
 #include <imgui.h>
 
 #if defined(OS_WINDOWS)
-#include <winioctl.h>
-#include <setupapi.h>
-#include <cfgmgr32.h>
-
+    #include <windows.h>
+    #include <winioctl.h>
+    #include <setupapi.h>
+    #include <cfgmgr32.h>
 #elif defined(OS_LINUX)
-#include <fcntl.h>
-#include <unistd.h>
-#include <linux/fs.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
+    #include <fcntl.h>
+    #include <unistd.h>
+    #include <linux/fs.h>
+    #include <sys/stat.h>
+    #include <sys/ioctl.h>
+    #include <sys/types.h>
 #elif defined(OS_MACOS)
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/disk.h>
+    #include <fcntl.h>
+    #include <unistd.h>
+    #include <sys/stat.h>
+    #include <sys/ioctl.h>
+    #include <sys/types.h>
+    #include <sys/disk.h>
 #endif
 
 #if defined(OS_LINUX)

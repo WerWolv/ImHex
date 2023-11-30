@@ -450,6 +450,9 @@ macro(setupCompilerFlags target)
         # Disable some warnings
         set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations")
 
+        if (IMHEX_ENABLE_UNITY_BUILD AND WIN32)
+            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wa,-mbig-obj")
+        endif ()
     endif()
 
     # Disable some warnings for gcc
@@ -633,6 +636,12 @@ macro(addBundledLibraries)
         endif ()
     endif ()
 endmacro()
+
+function(enableUnityBuild TARGET)
+    if (IMHEX_ENABLE_UNITY_BUILD)
+        set_target_properties(${TARGET} PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE BATCH)
+    endif ()
+endfunction()
 
 function(generatePDBs)
     if (NOT WIN32 OR CMAKE_BUILD_TYPE STREQUAL "Debug")

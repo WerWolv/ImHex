@@ -10,13 +10,13 @@
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
 
+using curl_off_t = long long;
+
 #if defined(OS_WEB)
     #include <emscripten/fetch.h>
-
-    using curl_off_t = long;
-#else
-    #include <curl/curl.h>
 #endif
+
+typedef void CURL;
 
 namespace hex {
 
