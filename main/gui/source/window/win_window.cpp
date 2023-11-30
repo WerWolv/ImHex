@@ -2,8 +2,6 @@
 
 #include "messaging.hpp"
 
-#include <hex/api/content_registry.hpp>
-
 #if defined(OS_WINDOWS)
 
     #include <hex/helpers/utils.hpp>
@@ -12,7 +10,6 @@
     #include <imgui.h>
     #include <imgui_internal.h>
 
-    #include <GLFW/glfw3.h>
     #define GLFW_EXPOSE_NATIVE_WIN32
     #include <GLFW/glfw3native.h>
     #undef GLFW_EXPOSE_NATIVE_WIN32
@@ -25,7 +22,6 @@
     #include <wrl/client.h>
     #include <fcntl.h>
 
-    #include <csignal>
     #include <cstdio>
 
 namespace hex {

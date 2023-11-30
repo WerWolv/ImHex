@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
-#include <hex/api/localization_manager.hpp>
 
 namespace hex::plugin::builtin {
 

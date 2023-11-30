@@ -1,26 +1,22 @@
 #include <hex/helpers/utils.hpp>
 
-#include <cstdio>
-
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
-#include <hex/helpers/utils_linux.hpp>
 
 #include <hex/providers/buffered_reader.hpp>
 
 #include <imgui.h>
-#include <imgui_internal.h>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
 #elif defined(OS_LINUX)
     #include <unistd.h>
+    #include <hex/helpers/utils_linux.hpp>
 #elif defined(OS_MACOS)
-    #include <hex/helpers/utils_macos.hpp>
     #include <unistd.h>
+    #include <hex/helpers/utils_macos.hpp>
 #elif defined(OS_WEB)
     #include "emscripten.h"
 #endif

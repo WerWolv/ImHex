@@ -3,13 +3,10 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/api/content_registry.hpp>
 
-#include <pl/core/lexer.hpp>
 #include <pl/patterns/pattern.hpp>
 #include <pl/pattern_visitor.hpp>
 
 #include <pl/formatters.hpp>
-
-#include <hex/providers/provider.hpp>
 
 #include <set>
 

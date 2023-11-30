@@ -1,5 +1,7 @@
 #include <ui/pattern_drawer.hpp>
 
+#include <pl/core/lexer.hpp>
+
 #include <pl/patterns/pattern_array_dynamic.hpp>
 #include <pl/patterns/pattern_array_static.hpp>
 #include <pl/patterns/pattern_bitfield.hpp>
@@ -30,6 +32,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <fonts/codicons_font.h>
 
+#include <wolv/io/file.hpp>
 
 namespace hex::plugin::builtin::ui {
 

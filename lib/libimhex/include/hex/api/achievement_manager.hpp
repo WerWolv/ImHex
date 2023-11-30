@@ -1,13 +1,12 @@
 #pragma once
 
-#include <string>
-#include <unordered_map>
-#include <utility>
+#include <list>
 #include <memory>
-#include <vector>
 #include <span>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <hex/api/event_manager.hpp>
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 

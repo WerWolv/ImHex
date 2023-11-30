@@ -2,7 +2,6 @@
 
 #include "messaging.hpp"
 
-#include <hex/api/imhex_api.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <windows.h>

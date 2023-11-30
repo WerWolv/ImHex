@@ -5,11 +5,9 @@
 #include <hex/providers/provider.hpp>
 
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <pl/pattern_language.hpp>
-#include <pl/core/evaluator.hpp>
 #include <pl/patterns/pattern.hpp>
 
 #include <wolv/io/file.hpp>

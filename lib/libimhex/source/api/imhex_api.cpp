@@ -1,5 +1,4 @@
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/content_registry.hpp>
 
 #include <hex/api/event_manager.hpp>
 #include <hex/api/task_manager.hpp>
@@ -15,12 +14,9 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
-#include <nlohmann/json.hpp>
-
 #if defined(OS_WINDOWS)
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
-    #include <shellapi.h>
 #else
     #include <sys/utsname.h>
 #endif

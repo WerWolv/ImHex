@@ -1,18 +1,8 @@
-#include <hex/api/content_registry.hpp>
-
-#include <hex/helpers/http_requests.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <hex/api/localization_manager.hpp>
 
-
-#include <algorithm>
-#include <chrono>
-#include <random>
-#include <regex>
-
-#include <llvm/Demangle/Demangle.h>
 #include <content/helpers/math_evaluator.hpp>
 #include <content/tools_entries.hpp>
 
@@ -21,10 +11,6 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
-
-#include <wolv/io/file.hpp>
-
-#include <wolv/net/socket_server.hpp>
 
 namespace hex::plugin::builtin {
     namespace impl {

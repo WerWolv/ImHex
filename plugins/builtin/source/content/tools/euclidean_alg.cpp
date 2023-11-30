@@ -1,18 +1,12 @@
-#include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
-
-#include <hex/helpers/http_requests.hpp>
-#include <hex/ui/view.hpp>
 
 #include <content/tools_entries.hpp>
 
-#include <regex>
-
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <fonts/codicons_font.h>
 
-#include <nlohmann/json.hpp>
-
+#include <numeric>
 
 namespace hex::plugin::builtin {
     namespace impl {

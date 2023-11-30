@@ -14,6 +14,8 @@
 
 namespace hex::plugin::builtin {
     namespace impl {
+        using namespace std::literals::string_literals;
+        using namespace std::literals::chrono_literals;
 
         std::string getWikipediaApiUrl() {
             std::string setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en").get<std::string>();

@@ -2,9 +2,6 @@
 
 namespace hex::plugin::builtin {
     namespace impl {
-        using namespace std::literals::string_literals;
-        using namespace std::literals::chrono_literals;
-        using namespace hex::literals;
 
         void drawDemangler();
         void drawASCIITable();
@@ -26,5 +23,6 @@ namespace hex::plugin::builtin {
         void drawFileToolShredder();
         void drawFileToolSplitter();
         void drawFileToolCombiner();
+
     }
 }
