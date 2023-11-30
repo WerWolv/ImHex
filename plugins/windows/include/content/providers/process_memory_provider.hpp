@@ -51,8 +51,8 @@ namespace hex::plugin::windows {
         bool drawLoadInterface() override;
         void drawInterface() override;
 
-        void loadSettings(const nlohmann::json &) override {}
-        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override { return { }; }
+        void loadSettings(const nlohmann::json &) override;
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override;
 
         [[nodiscard]] std::string getTypeName() const override {
             return "hex.windows.provider.process_memory";

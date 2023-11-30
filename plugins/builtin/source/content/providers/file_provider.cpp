@@ -8,9 +8,9 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
 
-
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <fmt/chrono.h>
 
 #include <wolv/utils/string.hpp>
 

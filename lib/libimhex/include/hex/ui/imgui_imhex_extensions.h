@@ -3,12 +3,10 @@
 #include <hex.hpp>
 
 #include <cstddef>
-#include <functional>
 #include <string>
 #include <span>
 
 #include <imgui.h>
-#include <imgui_internal.h>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/concepts.hpp>
@@ -152,7 +150,7 @@ namespace ImGuiExt {
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
 
     inline ImHexCustomData::Styles& GetCustomStyle() {
-        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
+        auto &customData = *static_cast<ImHexCustomData *>(ImGui::GetIO().UserData);
 
         return customData.styles;
     }
@@ -274,8 +272,16 @@ namespace ImGuiExt {
     void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
     void EndSubWindow();
 
-    void ConfirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonCallback, const std::function<void()> &rightButtonCallback);
-
+    void ConfirmButtons(const char *textLeft, const char *textRight, const auto &leftButtonCallback, const auto &rightButtonCallback) {
+        auto width = ImGui::GetWindowWidth();
+        ImGui::SetCursorPosX(width / 9);
+        if (ImGui::Button(textLeft, ImVec2(width / 3, 0)))
+            leftButtonCallback();
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(width / 9 * 5);
+        if (ImGui::Button(textRight, ImVec2(width / 3, 0)))
+            rightButtonCallback();
+    }
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {
         if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;

@@ -4,6 +4,9 @@
 
 #include <wolv/io/file.hpp>
 
+#include <chrono>
+#include <fmt/chrono.h>
+
 #if defined(OS_WINDOWS)
     #include <Windows.h>
 #endif
@@ -57,6 +60,22 @@ namespace hex::log::impl {
     std::vector<LogEntry>& getLogEntries() {
         static std::vector<LogEntry> logEntries;
         return logEntries;
+    }
+
+    void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
+        const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
+
+        fmt::print(dest, "[{0:%H:%M:%S}] ", now);
+
+        if (impl::isRedirected())
+            fmt::print(dest, "{0} ", level);
+        else
+            fmt::print(dest, ts, "{0} ", level);
+
+        fmt::print(dest, "[{0}] ", IMHEX_PROJECT_NAME);
+
+        constexpr static auto ProjectNameLength = std::char_traits<char>::length(IMHEX_PROJECT_NAME);
+        fmt::print(dest, "{}", std::string(ProjectNameLength > 10 ? 0 : 10 - ProjectNameLength, ' '));
     }
 
     void assertionHandler(bool expr, const char* exprString, const char* file, int line) {

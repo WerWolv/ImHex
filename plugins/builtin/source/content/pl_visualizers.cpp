@@ -7,6 +7,9 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/opengl.hpp>
 
+#include <hex/helpers/fmt.hpp>
+#include <fmt/chrono.h>
+
 #include <imgui.h>
 #include <implot.h>
 

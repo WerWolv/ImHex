@@ -1,9 +1,13 @@
 #pragma once
 
+#include <hex.hpp>
+
+#include <functional>
 #include <list>
 #include <memory>
 #include <span>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 

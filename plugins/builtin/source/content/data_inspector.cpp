@@ -2,8 +2,10 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/fmt.hpp>
 #include <hex/helpers/crypto.hpp>
+
+#include <hex/helpers/fmt.hpp>
+#include <fmt/chrono.h>
 
 #include <hex/providers/provider.hpp>
 

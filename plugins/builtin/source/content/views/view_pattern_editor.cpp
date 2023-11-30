@@ -16,6 +16,9 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 
+#include <hex/helpers/fmt.hpp>
+#include <fmt/chrono.h>
+
 #include <content/popups/popup_file_chooser.hpp>
 #include <content/popups/popup_question.hpp>
 
@@ -1052,7 +1055,7 @@ namespace hex::plugin::builtin {
 
                 std::scoped_lock lock(this->m_logMutex);
                 this->m_console->emplace_back(
-                   hex::format("I: Evaluation took {}", runtime.getLastRunningTime())
+                   hex::format("I: Evaluation took {}", std::chrono::duration<double>(runtime.getLastRunningTime()))
                 );
                 this->m_consoleNeedsUpdate = true;
             };

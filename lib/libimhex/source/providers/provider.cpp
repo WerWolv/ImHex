@@ -10,6 +10,8 @@
 #include <hex/helpers/magic.hpp>
 #include <wolv/io/file.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::prv {
 
     namespace {

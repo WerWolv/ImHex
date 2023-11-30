@@ -16,6 +16,8 @@
 
 #include <imgui.h>
 
+#include <nlohmann/json.hpp>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <winioctl.h>

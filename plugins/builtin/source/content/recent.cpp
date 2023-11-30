@@ -6,8 +6,10 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
-#include <hex/helpers/fmt.hpp>
 #include <hex/providers/provider.hpp>
+
+#include <hex/helpers/fmt.hpp>
+#include <fmt/chrono.h>
 
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
@@ -48,7 +50,7 @@ namespace hex::plugin::builtin::recent {
                         auto path = ProjectFile::getPath();
                         ProjectFile::clearPath();
 
-                        if (auto settings = provider->storeSettings(); !settings.is_null())
+                        if (auto settings = provider->storeSettings({}); !settings.is_null())
                             recentFile.writeString(settings.dump(4));
 
                         ProjectFile::setPath(path);

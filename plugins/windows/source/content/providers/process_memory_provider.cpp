@@ -12,6 +12,8 @@
 
 #include <wolv/utils/guards.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::plugin::windows {
 
     bool ProcessMemoryProvider::open() {
@@ -299,5 +301,15 @@ namespace hex::plugin::windows {
         } else
             return Provider::queryInformation(category, argument);
     }
+
+    void ProcessMemoryProvider::loadSettings(const nlohmann::json&) {
+
+    }
+
+    nlohmann::json ProcessMemoryProvider::storeSettings(nlohmann::json) const {
+        return {};
+    }
+
+
 
 }

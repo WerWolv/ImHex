@@ -6,7 +6,6 @@
 #include <thread>
 #include <functional>
 #include <mutex>
-#include <chrono>
 #include <memory>
 #include <list>
 #include <condition_variable>
@@ -116,11 +115,6 @@ namespace hex {
         std::weak_ptr<Task> m_task;
     };
 
-    struct Timer {
-        std::chrono::time_point<std::chrono::steady_clock> elapseTime;
-        std::function<void()> callback;
-    };
-
     /**
      * @brief The Task Manager is responsible for running and managing asynchronous tasks
      */
@@ -162,20 +156,12 @@ namespace hex {
          */
         static void runWhenTasksFinished(const std::function<void()> &function);
 
-        /**
-         * @brief Creates a callback that will be executed after the given time
-         * @param duration Time to wait
-         * @param function Function to be executed
-         */
-        static void doAfter(std::chrono::duration<i64> duration, const std::function<void()> &function);
-
         static void collectGarbage();
 
         static size_t getRunningTaskCount();
         static size_t getRunningBackgroundTaskCount();
 
         static std::list<std::shared_ptr<Task>> &getRunningTasks();
-        static std::list<Timer> &getTimers();
         static void runDeferredCalls();
 
     private:

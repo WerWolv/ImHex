@@ -12,7 +12,7 @@
 #include <hex/providers/overlay.hpp>
 #include <hex/helpers/fs.hpp>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include <hex/providers/undo_redo/stack.hpp>
 
@@ -207,7 +207,7 @@ namespace hex::prv {
         [[nodiscard]] u32 getID() const;
         void setID(u32 id);
 
-        [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings = { }) const;
+        [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings) const;
         virtual void loadSettings(const nlohmann::json &settings);
 
         void markDirty(bool dirty = true) { this->m_dirty = dirty; }
