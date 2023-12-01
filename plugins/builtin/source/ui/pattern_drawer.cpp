@@ -26,7 +26,7 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <content/helpers/math_evaluator.hpp>
+#include <wolv/math_eval/math_evaluator.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -450,7 +450,7 @@ namespace hex::plugin::builtin::ui {
             }
         } else if (std::holds_alternative<i128>(value)) {
             if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                MathEvaluator<i128> mathEvaluator;
+                wolv::math_eval::MathEvaluator<i128> mathEvaluator;
 
                 if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
                     pattern.setValue(result.value());
@@ -459,7 +459,7 @@ namespace hex::plugin::builtin::ui {
             }
         } else if (std::holds_alternative<u128>(value)) {
             if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                MathEvaluator<u128> mathEvaluator;
+                wolv::math_eval::MathEvaluator<u128> mathEvaluator;
 
                 if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
                     pattern.setValue(result.value());
@@ -614,7 +614,7 @@ namespace hex::plugin::builtin::ui {
 
         auto value = pattern.toString();
         if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            MathEvaluator<long double> mathEvaluator;
+            wolv::math_eval::MathEvaluator<long double> mathEvaluator;
 
             if (auto result = mathEvaluator.evaluate(value); result.has_value())
                 pattern.setValue(double(result.value()));
@@ -670,7 +670,7 @@ namespace hex::plugin::builtin::ui {
 
         auto value = pattern.getFormattedValue();
         if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            MathEvaluator<i128> mathEvaluator;
+            wolv::math_eval::MathEvaluator<i128> mathEvaluator;
 
             if (auto result = mathEvaluator.evaluate(value); result.has_value())
                 pattern.setValue(result.value());
@@ -817,7 +817,7 @@ namespace hex::plugin::builtin::ui {
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
         auto value = pattern.toString();
         if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            MathEvaluator<u128> mathEvaluator;
+            wolv::math_eval::MathEvaluator<u128> mathEvaluator;
 
             if (auto result = mathEvaluator.evaluate(value); result.has_value())
                 pattern.setValue(result.value());

@@ -1,6 +1,6 @@
 #include <hex/helpers/http_requests.hpp>
 
-#include <content/helpers/math_evaluator.hpp>
+#include <wolv/math_eval/math_evaluator.hpp>
 
 #include <imgui.h>
 #include <implot.h>
@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
         ImGui::PopItemWidth();
 
         if ((prevPos != limits.X.Min && (ImGui::IsMouseReleased(ImGuiMouseButton_Left) || ImGui::GetIO().MouseWheel != 0)) || (ImGui::IsItemFocused() && ImGui::IsKeyPressed(ImGuiKey_Enter))) {
-            MathEvaluator<long double> evaluator;
+            wolv::math_eval::MathEvaluator<long double> evaluator;
 
             y = {};
 

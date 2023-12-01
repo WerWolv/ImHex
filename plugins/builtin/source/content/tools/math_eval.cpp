@@ -2,7 +2,8 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/utils.hpp>
-#include <content/helpers/math_evaluator.hpp>
+
+#include <wolv/math_eval/math_evaluator.hpp>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -20,8 +21,8 @@ namespace hex::plugin::builtin {
         static std::string mathInput;
         bool evaluate = false;
 
-        static MathEvaluator<long double> mathEvaluator = [&] {
-            MathEvaluator<long double> evaluator;
+        static wolv::math_eval::MathEvaluator<long double> mathEvaluator = [&] {
+            wolv::math_eval::MathEvaluator<long double> evaluator;
 
             evaluator.registerStandardVariables();
             evaluator.registerStandardFunctions();

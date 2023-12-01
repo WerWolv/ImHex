@@ -10,8 +10,9 @@
 
 #include <hex/providers/buffered_reader.hpp>
 
+#include <wolv/math_eval/math_evaluator.hpp>
+
 #include <content/providers/view_provider.hpp>
-#include <content/helpers/math_evaluator.hpp>
 #include <content/popups/popup_file_chooser.hpp>
 
 #include <imgui_internal.h>
@@ -101,7 +102,7 @@ namespace hex::plugin::builtin {
 
         bool m_requestFocus = true;
         std::string m_input;
-        MathEvaluator<i128> m_evaluator;
+        wolv::math_eval::MathEvaluator<i128> m_evaluator;
     };
 
     class PopupSelect : public ViewHexEditor::Popup {

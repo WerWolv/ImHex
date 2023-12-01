@@ -14,8 +14,7 @@
 #include <hex/subcommands/subcommands.hpp>
 
 #include <wolv/utils/string.hpp>
-
-#include "content/helpers/math_evaluator.hpp"
+#include <wolv/math_eval/math_evaluator.hpp>
 
 #include <pl/cli/cli.hpp>
 
@@ -94,7 +93,7 @@ namespace hex::plugin::builtin {
             std::exit(EXIT_FAILURE);
         }
 
-        MathEvaluator<long double> evaluator;
+        wolv::math_eval::MathEvaluator<long double> evaluator;
 
         auto input = hex::format("{}", fmt::join(args, " "));
         auto result = evaluator.evaluate(input);

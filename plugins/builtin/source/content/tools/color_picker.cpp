@@ -3,7 +3,7 @@
 
 #include <hex/api/localization_manager.hpp>
 
-#include <content/helpers/math_evaluator.hpp>
+#include <wolv/math_eval/math_evaluator.hpp>
 
 #include <imgui.h>
 

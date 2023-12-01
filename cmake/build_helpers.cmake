@@ -503,6 +503,7 @@ macro(addBundledLibraries)
     set_property(TARGET libwolv-hash PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET libwolv-containers PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET libwolv-net PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET libwolv-math_eval PROPERTY POSITION_INDEPENDENT_CODE ON)
 
     set(XDGPP_INCLUDE_DIRS "${THIRD_PARTY_LIBS_FOLDER}/xdgpp")
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")

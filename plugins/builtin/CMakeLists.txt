@@ -104,7 +104,6 @@ add_imhex_plugin(
         source/content/views/view_achievements.cpp
         source/content/views/view_yara.cpp
 
-        source/content/helpers/math_evaluator.cpp
         source/content/helpers/notification.cpp
 
         source/ui/hex_editor.cpp
