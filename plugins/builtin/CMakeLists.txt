@@ -46,13 +46,13 @@ add_imhex_plugin(
         source/content/init_tasks.cpp
         source/content/fonts.cpp
 
-        source/content/dpn/basic_nodes.cpp
-        source/content/dpn/control_nodes.cpp
-        source/content/dpn/decode_nodes.cpp
-        source/content/dpn/logic_nodes.cpp
-        source/content/dpn/math_nodes.cpp
-        source/content/dpn/other_nodes.cpp
-        source/content/dpn/visual_nodes.cpp
+        source/content/data_processor_nodes/basic_nodes.cpp
+        source/content/data_processor_nodes/control_nodes.cpp
+        source/content/data_processor_nodes/decode_nodes.cpp
+        source/content/data_processor_nodes/logic_nodes.cpp
+        source/content/data_processor_nodes/math_nodes.cpp
+        source/content/data_processor_nodes/other_nodes.cpp
+        source/content/data_processor_nodes/visual_nodes.cpp
 
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp
