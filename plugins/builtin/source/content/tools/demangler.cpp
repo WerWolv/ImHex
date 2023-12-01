@@ -4,61 +4,60 @@
 #include <llvm/Demangle/Demangle.h>
 
 #include <imgui.h>
-#include <TextEditor.h>
-
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <TextEditor.h>
 
 
 namespace hex::plugin::builtin {
-    namespace impl {
-        void drawDemangler() {
-            static std::string mangledName, demangledName, wrappedDemangledName;
-            static TextEditor outputField = []{
-                TextEditor editor;
-                editor.SetReadOnly(true);
-                editor.SetShowLineNumbers(false);
-                editor.SetShowWhitespaces(false);
-                editor.SetShowCursor(false);
-                editor.SetImGuiChildIgnored(true);
 
-                auto languageDef = TextEditor::LanguageDefinition::CPlusPlus();
-                for (auto &[name, identifier] : languageDef.mIdentifiers)
-                    identifier.mDeclaration = "";
+    void drawDemangler() {
+        static std::string mangledName, demangledName, wrappedDemangledName;
+        static TextEditor outputField = []{
+            TextEditor editor;
+            editor.SetReadOnly(true);
+            editor.SetShowLineNumbers(false);
+            editor.SetShowWhitespaces(false);
+            editor.SetShowCursor(false);
+            editor.SetImGuiChildIgnored(true);
 
-                editor.SetLanguageDefinition(languageDef);
+            auto languageDef = TextEditor::LanguageDefinition::CPlusPlus();
+            for (auto &[name, identifier] : languageDef.mIdentifiers)
+                identifier.mDeclaration = "";
 
-                return editor;
-            }();
-            static float prevWindowWidth;
+            editor.SetLanguageDefinition(languageDef);
 
-            if (ImGui::InputTextWithHint("hex.builtin.tools.demangler.mangled"_lang, "Itanium, MSVC, Dlang & Rust", mangledName)) {
-                demangledName = llvm::demangle(mangledName);
+            return editor;
+        }();
+        static float prevWindowWidth;
 
-                if (demangledName == mangledName) {
-                    demangledName = "???";
-                }
+        if (ImGui::InputTextWithHint("hex.builtin.tools.demangler.mangled"_lang, "Itanium, MSVC, Dlang & Rust", mangledName)) {
+            demangledName = llvm::demangle(mangledName);
 
-                prevWindowWidth = 0;
+            if (demangledName == mangledName) {
+                demangledName = "???";
             }
 
-            const auto windowWidth = ImGui::GetContentRegionAvail().x;
-            if (prevWindowWidth != windowWidth) {
-                wrappedDemangledName = wolv::util::wrapMonospacedString(
-                    demangledName,
-                    ImGui::CalcTextSize("M").x,
-                    ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
-                );
-
-                outputField.SetText(wrappedDemangledName);
-                prevWindowWidth = windowWidth;
-            }
-
-            ImGuiExt::Header("hex.builtin.tools.demangler.demangled"_lang);
-
-            if (ImGui::BeginChild("Demangled", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true, ImGuiWindowFlags_NoMove)) {
-                outputField.Render("Demangled", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
-            }
-            ImGui::EndChild();
+            prevWindowWidth = 0;
         }
+
+        const auto windowWidth = ImGui::GetContentRegionAvail().x;
+        if (prevWindowWidth != windowWidth) {
+            wrappedDemangledName = wolv::util::wrapMonospacedString(
+                demangledName,
+                ImGui::CalcTextSize("M").x,
+                ImGui::GetContentRegionAvail().x - ImGui::GetStyle().ScrollbarSize - ImGui::GetStyle().FrameBorderSize
+            );
+
+            outputField.SetText(wrappedDemangledName);
+            prevWindowWidth = windowWidth;
+        }
+
+        ImGuiExt::Header("hex.builtin.tools.demangler.demangled"_lang);
+
+        if (ImGui::BeginChild("Demangled", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true, ImGuiWindowFlags_NoMove)) {
+            outputField.Render("Demangled", ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled), true);
+        }
+        ImGui::EndChild();
     }
+
 }
