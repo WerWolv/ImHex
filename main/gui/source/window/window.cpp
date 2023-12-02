@@ -1192,7 +1192,9 @@ namespace hex {
 
             handler.ReadOpenFn = [](ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) -> void* { return ctx; };
 
-            handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *, void *, const char *line) {
+            handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line) {
+                Window* window = static_cast<Window*>(handler->UserData);
+
                 for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                     std::string format = view->getUnlocalizedName() + "=%d";
                     sscanf(line, format.c_str(), &view->getWindowOpenState());
@@ -1200,6 +1202,15 @@ namespace hex {
                 for (auto &[name, function, detached] : ContentRegistry::Tools::impl::getEntries()) {
                     std::string format = name + "=%d";
                     sscanf(line, format.c_str(), &detached);
+                }
+
+                int width = 0, height = 0;
+                sscanf(line, "MainWindowSize=%d,%d", &width, &height);
+
+                if (width > 0 && height > 0) {
+                    TaskManager::doLater([width, height, window]{
+                        glfwSetWindowSize(window->m_window, width, height);
+                    });
                 }
             };
 

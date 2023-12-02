@@ -551,13 +551,15 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.layout" }, 1200);
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 2000, [] {
-            if (ImGui::MenuItem("hex.builtin.layouts.default"_lang, "", false, ImHexApi::Provider::isValid())) {
-                LayoutManager::loadString(std::string(romfs::get("layouts/default.hexlyt").string()));
+            for (const auto &path : romfs::list("layouts")) {
+                if (ImGui::MenuItem(wolv::util::capitalizeString(path.stem().string()).c_str(), "", false, ImHexApi::Provider::isValid())) {
+                    LayoutManager::loadString(std::string(romfs::get(path).string()));
+                }
             }
 
             bool shift = ImGui::GetIO().KeyShift;
             for (auto &[name, path] : LayoutManager::getLayouts()) {
-                if (ImGui::MenuItem(hex::format("{}{}", name, shift ? " [X]" : "").c_str(), "", false, ImHexApi::Provider::isValid())) {
+                if (ImGui::MenuItem(hex::format("{}{}", name, shift ? " " ICON_VS_X : "").c_str(), "", false, ImHexApi::Provider::isValid())) {
                     if (shift) {
                         wolv::io::fs::remove(path);
                         LayoutManager::reload();
