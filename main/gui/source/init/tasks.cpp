@@ -142,6 +142,10 @@ namespace hex::init {
 
         fs::setFileBrowserErrorCallback(nullptr);
 
+        // Unlock font atlas so it can be deleted in case of a crash
+        if (ImGui::GetCurrentContext() != nullptr)
+            ImGui::GetIO().Fonts->Locked = false;
+
         return true;
     }
 

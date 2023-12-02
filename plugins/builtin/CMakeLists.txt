@@ -102,6 +102,7 @@ add_imhex_plugin(
         source/content/views/view_theme_manager.cpp
         source/content/views/view_logs.cpp
         source/content/views/view_achievements.cpp
+        source/content/views/view_highlight_rules.cpp
         source/content/views/view_yara.cpp
 
         source/content/helpers/notification.cpp

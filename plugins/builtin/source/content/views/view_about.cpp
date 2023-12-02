@@ -508,8 +508,8 @@ namespace hex::plugin::builtin {
         if (!commits.empty()) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
             ImGuiExt::BeginSubWindow("Commits", ImGui::GetContentRegionAvail());
+            ImGui::PopStyleVar();
             {
-
                 if (ImGui::BeginTable("##commits", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
                     // Draw commits
                     for (const auto &commit : commits) {
@@ -562,7 +562,6 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGuiExt::EndSubWindow();
-            ImGui::PopStyleVar();
         }
     }
 
