@@ -227,17 +227,12 @@ namespace ImGuiExt {
         ImGui::PopID();
     }
 
+    void TextUnformattedCentered(const char *text);
     inline void TextFormattedCentered(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
-        auto availableSpace = ImGui::GetContentRegionAvail();
-        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
-
-        ImGui::SetCursorPos(((availableSpace - textSize) / 2.0F));
-
-        ImGui::PushTextWrapPos(availableSpace.x * 0.75F);
-        ImGuiExt::TextFormattedWrapped("{}", text);
-        ImGui::PopTextWrapPos();
+        TextUnformattedCentered(text.c_str());
     }
+
 
     inline void TextFormattedCenteredHorizontal(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);

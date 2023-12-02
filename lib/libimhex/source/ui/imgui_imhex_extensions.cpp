@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <implot.h>
+#include <implot_internal.h>
 #include <opengl_support.h>
 
 #undef IMGUI_DEFINE_MATH_OPERATORS
@@ -10,6 +12,7 @@
 #include <stb_image.h>
 
 #include <string>
+
 
 #include <hex/api/imhex_api.hpp>
 
@@ -695,6 +698,23 @@ namespace ImGuiExt {
         RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
     }
 
+    void TextUnformattedCentered(const char *text) {
+        auto availableSpace = ImGui::GetContentRegionAvail();
+
+        std::string drawString;
+        auto textEnd = text + strlen(text);
+        for (auto wrapPos = text; wrapPos != textEnd;) {
+            wrapPos = ImGui::GetFont()->CalcWordWrapPositionA(1, wrapPos, textEnd, availableSpace.x * 0.8F);
+            drawString += std::string(text, wrapPos) + "\n";
+            text = wrapPos;
+        }
+
+        drawString.pop_back();
+
+        auto textSize = ImGui::CalcTextSize(drawString.c_str());
+
+        ImPlot::AddTextCentered(ImGui::GetWindowDrawList(), ImGui::GetCursorScreenPos() + availableSpace / 2 - ImVec2(0, textSize.y / 2), ImGui::GetColorU32(ImGuiCol_Text), drawString.c_str());
+    }
     
     bool InputTextIcon(const char *label, const char *icon, std::string &buffer, ImGuiInputTextFlags flags) {
         auto window             = GetCurrentWindow();
