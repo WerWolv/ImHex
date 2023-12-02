@@ -168,6 +168,34 @@ namespace hex::plugin::builtin {
 
             this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+                ImGui::OpenPopup("##pattern_editor_context_menu");
+            }
+
+            if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
+                bool hasSelection = this->m_textEditor.HasSelection();
+                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.cut"_lang, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
+                    this->m_textEditor.Cut();
+                }
+                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.copy"_lang, Shortcut(CTRLCMD + Keys::C).toString().c_str(), false, hasSelection)) {
+                    this->m_textEditor.Copy();
+                }
+                if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.paste"_lang, Shortcut(CTRLCMD + Keys::V).toString().c_str())) {
+                    this->m_textEditor.Paste();
+                }
+
+                ImGui::Separator();
+
+                if (ImGui::MenuItem("hex.builtin.menu.edit.undo"_lang, Shortcut(CTRLCMD + Keys::Z).toString().c_str(), false, this->m_textEditor.CanUndo())) {
+                    this->m_textEditor.Undo();
+                }
+                if (ImGui::MenuItem("hex.builtin.menu.edit.redo"_lang, Shortcut(CTRLCMD + Keys::Y).toString().c_str(), false, this->m_textEditor.CanRedo())) {
+                    this->m_textEditor.Redo();
+                }
+
+                ImGui::EndPopup();
+            }
+
             ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
             if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
                 if (ImGui::IsItemHovered())
