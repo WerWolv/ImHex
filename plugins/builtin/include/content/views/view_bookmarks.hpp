@@ -2,6 +2,8 @@
 
 #include <hex/ui/view.hpp>
 
+#include <TextEditor.h>
+
 #include <list>
 
 namespace hex::plugin::builtin {
@@ -21,8 +23,13 @@ namespace hex::plugin::builtin {
     private:
         std::string m_currFilter;
 
-        std::list<ImHexApi::Bookmarks::Entry>::iterator m_dragStartIterator;
-        PerProvider<std::list<ImHexApi::Bookmarks::Entry>> m_bookmarks;
+        struct Bookmark {
+            ImHexApi::Bookmarks::Entry entry;
+            TextEditor editor;
+        };
+
+        std::list<Bookmark>::iterator m_dragStartIterator;
+        PerProvider<std::list<Bookmark>> m_bookmarks;
         PerProvider<u64> m_currBookmarkId;
     };
 
