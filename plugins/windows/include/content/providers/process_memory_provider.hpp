@@ -23,9 +23,6 @@ namespace hex::plugin::windows {
         [[nodiscard]] bool isSavable() const override { return false; }
         [[nodiscard]] bool isDumpable() const override { return false; }
 
-        void read(u64 address, void *buffer, size_t size, bool) override { this->readRaw(address, buffer, size); }
-        void write(u64 address, const void *buffer, size_t size) override { this->writeRaw(address, buffer, size); }
-
         void readRaw(u64 address, void *buffer, size_t size) override;
         void writeRaw(u64 address, const void *buffer, size_t size) override;
         [[nodiscard]] size_t getActualSize() const override { return 0xFFFF'FFFF'FFFF;  }

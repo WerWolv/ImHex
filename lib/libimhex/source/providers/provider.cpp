@@ -36,6 +36,9 @@ namespace hex::prv {
         hex::unused(overlays);
 
         this->readRaw(offset - this->getBaseAddress(), buffer, size);
+
+        if (overlays)
+            this->applyOverlays(offset, buffer, size);
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {

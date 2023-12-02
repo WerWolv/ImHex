@@ -146,8 +146,7 @@ namespace hex::plugin::builtin {
         return false;
     }
 
-
-    void GDBProvider::read(u64 offset, void *buffer, size_t size, bool overlays) {
+    void GDBProvider::readRaw(u64 offset, void *buffer, size_t size) {
         if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
 
@@ -176,39 +175,22 @@ namespace hex::plugin::builtin {
         } else {
             while (size > 0) {
                 size_t readSize = std::min(size, CacheLineSize);
-                this->readRaw(offset, buffer, readSize);
+
+                auto data = gdb::readMemory(this->m_socket, offset, size);
+                if (!data.empty())
+                    std::memcpy(buffer, &data[0], data.size());
 
                 size -= readSize;
                 offset += readSize;
             }
         }
-
-        if (overlays) {
-            this->applyOverlays(offset, buffer, size);
-        }
-    }
-
-    void GDBProvider::write(u64 offset, const void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
-            return;
-
-        offset -= this->getBaseAddress();
-
-        gdb::writeMemory(this->m_socket, offset, buffer, size);
-    }
-
-    void GDBProvider::readRaw(u64 offset, void *buffer, size_t size) {
-        if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
-            return;
-
-        auto data = gdb::readMemory(this->m_socket, offset, size);
-        if (!data.empty())
-            std::memcpy(buffer, &data[0], data.size());
     }
 
     void GDBProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset - this->getBaseAddress()) > (this->getActualSize() - size) || buffer == nullptr || size == 0)
             return;
+
+        offset -= this->getBaseAddress();
 
         gdb::writeMemory(this->m_socket, offset, buffer, size);
     }
