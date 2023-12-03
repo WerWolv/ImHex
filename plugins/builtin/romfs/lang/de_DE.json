@@ -4,7 +4,7 @@
     "country": "Germany",
     "fallback": false,
     "translations": {
-        "hex.builtin.achievement.starting_out": "",
+        "hex.builtin.achievement.starting_out": "Am Anfang",
         "hex.builtin.achievement.starting_out.docs.name": "",
         "hex.builtin.achievement.starting_out.docs.desc": "",
         "hex.builtin.achievement.starting_out.open_file.name": "",
