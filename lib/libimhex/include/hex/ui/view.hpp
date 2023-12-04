@@ -154,7 +154,7 @@ namespace hex {
     public:
         explicit Floating(std::string unlocalizedName) : Window(std::move(unlocalizedName)) {}
 
-        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const { return ImGuiWindowFlags_NoDocking; }
+        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoDocking; }
     };
 
     /**
