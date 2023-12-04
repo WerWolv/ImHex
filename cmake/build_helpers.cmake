@@ -450,6 +450,9 @@ macro(setupCompilerFlags target)
         # Disable some warnings
         set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations")
 
+        if (IMHEX_ENABLE_UNITY_BUILD AND WIN32)
+            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wa,-mbig-obj")
+        endif ()
     endif()
 
     # Disable some warnings for gcc
@@ -500,6 +503,7 @@ macro(addBundledLibraries)
     set_property(TARGET libwolv-hash PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET libwolv-containers PROPERTY POSITION_INDEPENDENT_CODE ON)
     set_property(TARGET libwolv-net PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET libwolv-math_eval PROPERTY POSITION_INDEPENDENT_CODE ON)
 
     set(XDGPP_INCLUDE_DIRS "${THIRD_PARTY_LIBS_FOLDER}/xdgpp")
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
@@ -633,6 +637,12 @@ macro(addBundledLibraries)
         endif ()
     endif ()
 endmacro()
+
+function(enableUnityBuild TARGET)
+    if (IMHEX_ENABLE_UNITY_BUILD)
+        set_target_properties(${TARGET} PROPERTIES UNITY_BUILD ON UNITY_BUILD_MODE BATCH)
+    endif ()
+endfunction()
 
 function(generatePDBs)
     if (NOT WIN32 OR CMAKE_BUILD_TYPE STREQUAL "Debug")

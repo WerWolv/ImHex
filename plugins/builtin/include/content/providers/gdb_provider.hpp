@@ -22,9 +22,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isResizable() const override;
         [[nodiscard]] bool isSavable() const override;
 
-        void read(u64 offset, void *buffer, size_t size, bool overlays) override;
-        void write(u64 offset, const void *buffer, size_t size) override;
-
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
         [[nodiscard]] size_t getActualSize() const override;

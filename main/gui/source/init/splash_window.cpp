@@ -2,11 +2,9 @@
 #include "init/splash_window.hpp"
 
 #include <hex/api/imhex_api.hpp>
-#include <hex/api/task_manager.hpp>
 #include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
-#include <hex/helpers/utils_macos.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
 
@@ -23,9 +21,6 @@
 
 #include <wolv/utils/guards.hpp>
 
-#include <unistd.h>
-
-#include <chrono>
 #include <future>
 #include <numeric>
 #include <random>
@@ -97,7 +92,7 @@ namespace hex::init {
                 // When the task finished, increment the progress bar
                 ON_SCOPE_EXIT {
                     this->m_completedTaskCount += 1;
-                    this->m_progress = float(this->m_completedTaskCount) / this->m_totalTaskCount;
+                    this->m_progress = float(this->m_completedTaskCount) / float(this->m_totalTaskCount);
                 };
 
                 // Execute the actual task and track the amount of time it took to run

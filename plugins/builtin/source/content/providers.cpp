@@ -119,7 +119,7 @@ namespace hex::plugin::builtin {
 
                     nlohmann::json json;
                     json["type"] = provider->getTypeName();
-                    json["settings"] = provider->storeSettings();
+                    json["settings"] = provider->storeSettings({});
 
                     tar.writeString(basePath / hex::format("{}.json", id), json.dump(4));
                 }

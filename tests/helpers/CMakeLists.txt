@@ -11,11 +11,6 @@ set(AVAILABLE_TESTS
         TestProvider_read
         TestProvider_write
 
-    # Net
-        StoreAPI
-        TipsAPI
-        ContentAPI
-
     # File
         FileAccess
 
@@ -24,6 +19,15 @@ set(AVAILABLE_TESTS
         SplitStringAtString
         ExtractBits
 )
+
+if (NOT IMHEX_OFFLINE_BUILD)
+    set(AVAILABLE_TESTS ${AVAILABLE_TESTS}
+        # Net
+        StoreAPI
+        TipsAPI
+        ContentAPI
+    )
+endif ()
 
 
 add_executable(${PROJECT_NAME}

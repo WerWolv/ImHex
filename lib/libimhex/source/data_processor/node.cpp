@@ -7,11 +7,7 @@
 
 namespace hex::dp {
 
-    namespace {
-
-        int s_idCounter = 1;
-
-    }
+    int Node::s_idCounter = 1;
 
     Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
         for (auto &attr : this->m_attributes)

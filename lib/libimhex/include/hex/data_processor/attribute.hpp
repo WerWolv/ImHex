@@ -65,6 +65,8 @@ namespace hex::dp {
 
         friend class Node;
         void setParentNode(Node *node) { this->m_parentNode = node; }
+
+        static int s_idCounter;
     };
 
 }

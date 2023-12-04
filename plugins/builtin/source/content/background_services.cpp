@@ -2,6 +2,7 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/event_manager.hpp>
 
+#include <wolv/utils/guards.hpp>
 #include <wolv/net/socket_server.hpp>
 
 #include <hex/helpers/logger.hpp>

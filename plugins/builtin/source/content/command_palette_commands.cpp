@@ -1,12 +1,12 @@
 #include <hex/api/content_registry.hpp>
 
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/shortcut_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <content/helpers/math_evaluator.hpp>
-
+#include <wolv/math_eval/math_evaluator.hpp>
 #include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
             "#",
             "hex.builtin.command.calc.desc",
             [](auto input) {
-                hex::MathEvaluator<long double> evaluator;
+                wolv::math_eval::MathEvaluator<long double> evaluator;
                 evaluator.registerStandardVariables();
                 evaluator.registerStandardFunctions();
 

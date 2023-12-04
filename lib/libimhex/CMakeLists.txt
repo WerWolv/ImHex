@@ -69,6 +69,7 @@ else()
 endif()
 
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
+enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
 
 include(GenerateExportHeader)
@@ -93,7 +94,7 @@ elseif (APPLE)
 endif ()
 
 target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl ${IMGUI_LIBRARIES} ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} ${JTHREAD_LIBRARIES} libwolv-utils libwolv-io libwolv-hash libwolv-net libwolv-containers)
+target_link_libraries(libimhex PUBLIC dl ${IMGUI_LIBRARIES} ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} ${JTHREAD_LIBRARIES} wolv::utils wolv::io wolv::hash wolv::net wolv::containers wolv::math_eval)
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 

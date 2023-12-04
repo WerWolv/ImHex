@@ -18,6 +18,8 @@
     #include <curl/curl.h>
 #endif
 
+typedef void CURL;
+
 namespace hex {
 
     class HttpRequest {

@@ -154,7 +154,7 @@ namespace hex {
     public:
         explicit Floating(std::string unlocalizedName) : Window(std::move(unlocalizedName)) {}
 
-        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const final { return ImGuiWindowFlags_NoDocking; }
+        [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoDocking; }
     };
 
     /**
@@ -171,6 +171,7 @@ namespace hex {
                 if (this->getWindowOpenState())
                     ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str());
 
+                ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
                 if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | this->getWindowFlags())) {
                     this->drawContent();
 

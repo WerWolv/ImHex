@@ -121,10 +121,10 @@ namespace hex::plugin::builtin {
         }
 
         bool loadFontsImpl(bool loadUnicode) {
-            const float defaultFontSize = ImHexApi::System::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
+            const float defaultFontSize = ImHexApi::Fonts::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
 
             // Reset used font size back to the default size
-            ImHexApi::System::impl::setFontSize(defaultFontSize);
+            ImHexApi::Fonts::impl::setFontSize(defaultFontSize);
 
             // Load custom font related settings
             if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                ImHexApi::System::impl::setCustomFontPath(fontFile);
+                ImHexApi::Fonts::impl::setCustomFontPath(fontFile);
 
                 // If a custom font has been loaded now, also load the font size
                 float fontSize = defaultFontSize;
@@ -159,12 +159,12 @@ namespace hex::plugin::builtin {
                     fontSize = float(ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13).get<int>()) * ImHexApi::System::getGlobalScale();
                 }
 
-                ImHexApi::System::impl::setFontSize(fontSize);
+                ImHexApi::Fonts::impl::setFontSize(fontSize);
             }
 
-            float fontSize = ImHexApi::System::getFontSize();
+            float fontSize = ImHexApi::Fonts::getFontSize();
 
-            const auto &fontFile = ImHexApi::System::getCustomFontPath();
+            const auto &fontFile = ImHexApi::Fonts::getCustomFontPath();
 
             // Setup basic font configuration
             auto fonts       = IM_NEW(ImFontAtlas)();
@@ -206,32 +206,43 @@ namespace hex::plugin::builtin {
                 glyphRangesBuilder.BuildRanges(&defaultGlyphRanges);
             }
 
+            if (fontFile.empty())
+                fonts->Clear();
+
+            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
+                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
+            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
+                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
+            if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
+                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+
+            auto loadDefaultFont = [&](const char *fontName, u32 flags = 0) {
+                ImFontConfig defaultConfig = cfg;
+                ImFont *defaultFont;
+
+                defaultConfig.FontBuilderFlags |= flags;
+
+                std::strncpy(defaultConfig.Name, fontName, sizeof(defaultConfig.Name) - 1);
+
+                if (fontFile.empty()) {
+                    defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+                    defaultFont = fonts->AddFontDefault(&defaultConfig);
+                } else {
+                    defaultFont = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &defaultConfig, defaultGlyphRanges.Data);
+                }
+
+                return defaultFont;
+            };
+
             // Load main font
             // If a custom font has been specified, load it, otherwise load the default ImGui font
-            ImFont *defaultFont;
-            if (fontFile.empty()) {
-                fonts->Clear();
+            ImFont *defaultFont = loadDefaultFont("Default Font");
+            if (defaultFont == nullptr) {
+                log::warn("Failed to load custom font! Falling back to default font.");
+
+                ImHexApi::Fonts::impl::setFontSize(defaultFontSize);
+                cfg.SizePixels = defaultFontSize;
                 defaultFont = fonts->AddFontDefault(&cfg);
-            } else {
-                if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
-                    cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
-                if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
-                    cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
-                if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
-                    cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
-
-                defaultFont = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &cfg, defaultGlyphRanges.Data);
-
-                cfg.FontBuilderFlags = 0;
-
-                if (defaultFont == nullptr) {
-                    log::warn("Failed to load custom font! Falling back to default font.");
-
-                    ImHexApi::System::impl::setFontSize(defaultFontSize);
-                    cfg.SizePixels = defaultFontSize;
-                    fonts->Clear();
-                    defaultFont = fonts->AddFontDefault(&cfg);
-                }
             }
 
             fonts->Build();
@@ -287,6 +298,12 @@ namespace hex::plugin::builtin {
                 fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
 
+            // Create bold and italic font
+            cfg.MergeMode = false;
+            ImFont *boldFont    = loadDefaultFont("Bold Font", ImGuiFreeTypeBuilderFlags_Bold);
+            ImFont *italicFont  = loadDefaultFont("Italic Font", ImGuiFreeTypeBuilderFlags_Oblique);
+            ImHexApi::Fonts::impl::setFonts(boldFont, italicFont);
+
             // Try to build the font atlas
             if (!fonts->Build()) {
                 // The main reason the font atlas failed to build is that the font is too big for the GPU to handle
@@ -310,7 +327,7 @@ namespace hex::plugin::builtin {
             }
 
             // Configure ImGui to use the font atlas
-            ImHexApi::System::impl::setFontAtlas(fonts);
+            ImHexApi::Fonts::impl::setFontAtlas(fonts);
 
             return true;
         }

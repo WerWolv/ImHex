@@ -33,6 +33,7 @@ macro(add_imhex_plugin)
 
     # Enable required compiler flags
     set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    enableUnityBuild(${IMHEX_PLUGIN_NAME})
     setupCompilerFlags(${IMHEX_PLUGIN_NAME})
 
     # Configure build properties

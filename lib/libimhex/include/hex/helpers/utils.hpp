@@ -18,6 +18,12 @@
 #include <variant>
 #include <vector>
 
+#if defined(OS_MACOS)
+    #include <hex/helpers/utils_macos.hpp>
+#elif defined(OS_LINUX)
+    #include <hex/helpers/utils_linux.hpp>
+#endif
+
 struct ImVec2;
 
 namespace hex {

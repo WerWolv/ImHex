@@ -46,13 +46,13 @@ add_imhex_plugin(
         source/content/init_tasks.cpp
         source/content/fonts.cpp
 
-        source/content/dpn/basic_nodes.cpp
-        source/content/dpn/control_nodes.cpp
-        source/content/dpn/decode_nodes.cpp
-        source/content/dpn/logic_nodes.cpp
-        source/content/dpn/math_nodes.cpp
-        source/content/dpn/other_nodes.cpp
-        source/content/dpn/visual_nodes.cpp
+        source/content/data_processor_nodes/basic_nodes.cpp
+        source/content/data_processor_nodes/control_nodes.cpp
+        source/content/data_processor_nodes/decode_nodes.cpp
+        source/content/data_processor_nodes/logic_nodes.cpp
+        source/content/data_processor_nodes/math_nodes.cpp
+        source/content/data_processor_nodes/other_nodes.cpp
+        source/content/data_processor_nodes/visual_nodes.cpp
 
         source/content/providers/file_provider.cpp
         source/content/providers/gdb_provider.cpp
@@ -105,7 +105,6 @@ add_imhex_plugin(
         source/content/views/view_command_palette.cpp
         source/content/views/view_settings.cpp
         source/content/views/view_data_processor.cpp
-        source/content/views/view_yara.cpp
         source/content/views/view_constants.cpp
         source/content/views/view_store.cpp
         source/content/views/view_diff.cpp
@@ -114,8 +113,9 @@ add_imhex_plugin(
         source/content/views/view_theme_manager.cpp
         source/content/views/view_logs.cpp
         source/content/views/view_achievements.cpp
+        source/content/views/view_highlight_rules.cpp
+        source/content/views/view_yara.cpp
 
-        source/content/helpers/math_evaluator.cpp
         source/content/helpers/notification.cpp
 
         source/ui/hex_editor.cpp

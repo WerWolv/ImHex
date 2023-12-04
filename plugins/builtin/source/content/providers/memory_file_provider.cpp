@@ -10,6 +10,8 @@
 
 #include <wolv/io/file.hpp>
 
+#include <nlohmann/json.hpp>
+
 namespace hex::plugin::builtin {
 
     bool MemoryFileProvider::open() {

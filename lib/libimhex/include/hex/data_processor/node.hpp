@@ -87,6 +87,8 @@ namespace hex::dp {
         prv::Overlay *m_overlay = nullptr;
         ImVec2 m_position;
 
+        static int s_idCounter;
+
         Attribute& getAttribute(u32 index) {
             if (index >= this->getAttributes().size())
                 throw std::runtime_error("Attribute index out of bounds!");

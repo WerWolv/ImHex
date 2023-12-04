@@ -3,12 +3,10 @@
 #include <hex.hpp>
 
 #include <cstddef>
-#include <functional>
 #include <string>
 #include <span>
 
 #include <imgui.h>
-#include <imgui_internal.h>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/concepts.hpp>
@@ -158,7 +156,7 @@ namespace ImGuiExt {
     ImVec4 GetCustomColorVec4(ImGuiCustomCol idx, float alpha_mul = 1.0F);
 
     inline ImHexCustomData::Styles& GetCustomStyle() {
-        auto &customData = *static_cast<ImHexCustomData *>(GImGui->IO.UserData);
+        auto &customData = *static_cast<ImHexCustomData *>(ImGui::GetIO().UserData);
 
         return customData.styles;
     }
@@ -235,17 +233,12 @@ namespace ImGuiExt {
         ImGui::PopID();
     }
 
+    void TextUnformattedCentered(const char *text);
     inline void TextFormattedCentered(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
-        auto availableSpace = ImGui::GetContentRegionAvail();
-        auto textSize = ImGui::CalcTextSize(text.c_str(), nullptr, false, availableSpace.x * 0.75F);
-
-        ImGui::SetCursorPos(((availableSpace - textSize) / 2.0F));
-
-        ImGui::PushTextWrapPos(availableSpace.x * 0.75F);
-        ImGuiExt::TextFormattedWrapped("{}", text);
-        ImGui::PopTextWrapPos();
+        TextUnformattedCentered(text.c_str());
     }
+
 
     inline void TextFormattedCenteredHorizontal(const std::string &fmt, auto &&...args) {
         auto text = hex::format(fmt, std::forward<decltype(args)>(args)...);
@@ -281,7 +274,16 @@ namespace ImGuiExt {
     void BeginSubWindow(const char *label, ImVec2 size = ImVec2(0, 0), ImGuiChildFlags flags = ImGuiChildFlags_None);
     void EndSubWindow();
 
-    void ConfirmButtons(const char *textLeft, const char *textRight, const std::function<void()> &leftButtonCallback, const std::function<void()> &rightButtonCallback);
+    void ConfirmButtons(const char *textLeft, const char *textRight, const auto &leftButtonCallback, const auto &rightButtonCallback) {
+        auto width = ImGui::GetWindowWidth();
+        ImGui::SetCursorPosX(width / 9);
+        if (ImGui::Button(textLeft, ImVec2(width / 3, 0)))
+            leftButtonCallback();
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(width / 9 * 5);
+        if (ImGui::Button(textRight, ImVec2(width / 3, 0)))
+            rightButtonCallback();
+    }
 
     bool VSliderAngle(const char* label, ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags);
 

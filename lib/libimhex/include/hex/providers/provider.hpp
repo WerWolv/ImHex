@@ -12,7 +12,7 @@
 #include <hex/providers/overlay.hpp>
 #include <hex/helpers/fs.hpp>
 
-#include <nlohmann/json.hpp>
+#include <nlohmann/json_fwd.hpp>
 
 #include <hex/providers/undo_redo/stack.hpp>
 
@@ -108,7 +108,7 @@ namespace hex::prv {
          * @param size number of bytes to read
          * @param overlays apply overlays and patches is true. Same as readRaw() if false
          */
-        virtual void read(u64 offset, void *buffer, size_t size, bool overlays = true);
+        void read(u64 offset, void *buffer, size_t size, bool overlays = true);
         
         /**
          * @brief Write data to the patches of this provider. Will not directly modify provider.
@@ -116,7 +116,7 @@ namespace hex::prv {
          * @param buffer buffer to take data to write from
          * @param size number of bytes to write
          */
-        virtual void write(u64 offset, const void *buffer, size_t size);
+        void write(u64 offset, const void *buffer, size_t size);
 
         /**
          * @brief Read data from this provider, without applying overlays and patches
@@ -207,7 +207,7 @@ namespace hex::prv {
         [[nodiscard]] u32 getID() const;
         void setID(u32 id);
 
-        [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings = { }) const;
+        [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings) const;
         virtual void loadSettings(const nlohmann::json &settings);
 
         void markDirty(bool dirty = true) { this->m_dirty = dirty; }

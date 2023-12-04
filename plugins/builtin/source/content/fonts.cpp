@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
             {
                 { ICON_MIN_VS, ICON_MAX_VS }
             },
-            { 0, 0 });
+            { 0, -1_scaled });
 
         ImHexApi::Fonts::loadFont("Unifont", romfs::get("fonts/unifont.otf").span<u8>());
     }

@@ -8,6 +8,7 @@
 #include <imnodes_internal.h>
 
 #include <string>
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::builtin {
 

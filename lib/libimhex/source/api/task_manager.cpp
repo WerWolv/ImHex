@@ -19,7 +19,6 @@ namespace hex {
         std::mutex s_deferredCallsMutex, s_tasksFinishedMutex;
 
         std::list<std::shared_ptr<Task>> s_tasks, s_taskQueue;
-        std::list<Timer> s_timers;
         std::list<std::function<void()>> s_deferredCalls;
         std::list<std::function<void()>> s_tasksFinishedCallbacks;
 
@@ -311,10 +310,6 @@ namespace hex {
         return s_tasks;
     }
 
-    std::list<Timer> &TaskManager::getTimers() {
-        return s_timers;
-    }
-
     size_t TaskManager::getRunningTaskCount() {
         std::unique_lock lock(s_queueMutex);
 
@@ -345,22 +340,12 @@ namespace hex {
             call();
 
         s_deferredCalls.clear();
-
-        for (const auto &timer : s_timers) {
-            if (timer.elapseTime >= std::chrono::steady_clock::now()) {
-                timer.callback();
-            }
-        }
     }
 
     void TaskManager::runWhenTasksFinished(const std::function<void()> &function) {
         std::scoped_lock lock(s_tasksFinishedMutex);
 
         s_tasksFinishedCallbacks.push_back(function);
-    }
-
-    void TaskManager::doAfter(std::chrono::duration<i64> duration, const std::function<void()> &function) {
-        s_timers.push_back({ std::chrono::steady_clock::now() + duration, function });
     }
 
 }

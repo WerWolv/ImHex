@@ -3,13 +3,10 @@
 #include <hex/providers/provider.hpp>
 #include <hex/api/localization_manager.hpp>
 
-#include <windows.h>
-
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/ui/widgets.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <string_view>
 #include <set>
 
 namespace hex::plugin::windows {
@@ -25,9 +22,6 @@ namespace hex::plugin::windows {
         [[nodiscard]] bool isResizable() const override { return false; }
         [[nodiscard]] bool isSavable() const override { return false; }
         [[nodiscard]] bool isDumpable() const override { return false; }
-
-        void read(u64 address, void *buffer, size_t size, bool) override { this->readRaw(address, buffer, size); }
-        void write(u64 address, const void *buffer, size_t size) override { this->writeRaw(address, buffer, size); }
 
         void readRaw(u64 address, void *buffer, size_t size) override;
         void writeRaw(u64 address, const void *buffer, size_t size) override;
@@ -54,8 +48,8 @@ namespace hex::plugin::windows {
         bool drawLoadInterface() override;
         void drawInterface() override;
 
-        void loadSettings(const nlohmann::json &) override {}
-        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override { return { }; }
+        void loadSettings(const nlohmann::json &) override;
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override;
 
         [[nodiscard]] std::string getTypeName() const override {
             return "hex.windows.provider.process_memory";
@@ -94,7 +88,7 @@ namespace hex::plugin::windows {
             return hex::containsIgnoreCase(memoryRegion.name, search);
         });
 
-        HANDLE m_processHandle = nullptr;
+        void* m_processHandle = reinterpret_cast<void*>(-1);
 
         bool m_enumerationFailed = false;
     };

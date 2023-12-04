@@ -1,13 +1,16 @@
 #pragma once
 
+#include <hex.hpp>
+
+#include <functional>
+#include <list>
+#include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <memory>
 #include <vector>
-#include <span>
 
-#include <hex/api/event_manager.hpp>
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 

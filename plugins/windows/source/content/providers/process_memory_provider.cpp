@@ -10,8 +10,9 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/ui/view.hpp>
 
-#include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace hex::plugin::windows {
 
@@ -300,5 +301,15 @@ namespace hex::plugin::windows {
         } else
             return Provider::queryInformation(category, argument);
     }
+
+    void ProcessMemoryProvider::loadSettings(const nlohmann::json&) {
+
+    }
+
+    nlohmann::json ProcessMemoryProvider::storeSettings(nlohmann::json) const {
+        return {};
+    }
+
+
 
 }

@@ -2,8 +2,6 @@
 
 #include <hex/ui/view.hpp>
 
-#include <windows.h>
-
 #include <mutex>
 #include <thread>
 #include <jthread.hpp>
@@ -27,7 +25,7 @@ namespace hex::plugin::windows {
 
         void transmitData(std::vector<char> &data);
 
-        HANDLE m_portHandle = INVALID_HANDLE_VALUE;
+        void* m_portHandle = reinterpret_cast<void*>(-1);
         std::jthread m_receiveThread;
 
         int m_selectedPort       = 0;

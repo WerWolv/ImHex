@@ -9,6 +9,8 @@
 
 #include "views/view_tty_console.hpp"
 
+#include <windows.h>
+
 using namespace hex;
 
 namespace hex::plugin::windows {

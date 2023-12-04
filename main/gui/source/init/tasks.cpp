@@ -2,7 +2,6 @@
 #include "misc/freetype/imgui_freetype.h"
 
 #include <imgui.h>
-#include <imgui_freetype.h>
 
 #include <romfs/romfs.hpp>
 
@@ -10,7 +9,6 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
-#include <hex/api_urls.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/theme_manager.hpp>
@@ -21,16 +19,10 @@
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
 
-#include <fonts/fontawesome_font.h>
-#include <fonts/codicons_font.h>
-#include <fonts/unifont_font.h>
-#include <fonts/blendericons_font.h>
-
 #include <nlohmann/json.hpp>
 
 #include <wolv/io/fs.hpp>
 #include <wolv/io/file.hpp>
-#include <wolv/hash/uuid.hpp>
 
 namespace hex::init {
 
@@ -86,8 +78,8 @@ namespace hex::init {
         ImHexApi::HexEditor::impl::getTooltips().clear();
         ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
         ImHexApi::System::getAdditionalFolderPaths().clear();
-        ImHexApi::System::getCustomFontPath().clear();
         ImHexApi::Messaging::impl::getHandlers().clear();
+        ImHexApi::Fonts::getCustomFontPath().clear();
         ImHexApi::Fonts::impl::getFonts().clear();
 
         ContentRegistry::Settings::impl::getSettings().clear();
@@ -151,7 +143,9 @@ namespace hex::init {
 
         fs::setFileBrowserErrorCallback(nullptr);
 
-        IM_DELETE(ImHexApi::System::getFontAtlas());
+        // Unlock font atlas so it can be deleted in case of a crash
+        if (ImGui::GetCurrentContext() != nullptr)
+            ImGui::GetIO().Fonts->Locked = false;
 
         return true;
     }
@@ -251,6 +245,7 @@ namespace hex::init {
     }
 
     bool clearOldLogs() {
+        bool result = true;
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs)) {
             try {
                 std::vector<std::filesystem::directory_entry> files;
@@ -269,10 +264,11 @@ namespace hex::init {
                     std::filesystem::remove(it->path());
             } catch (std::filesystem::filesystem_error &e) {
                 log::error("Failed to clear old log! {}", e.what());
+                result = false;
             }
         }
 
-        return true;
+        return result;
     }
 
     bool unloadPlugins() {

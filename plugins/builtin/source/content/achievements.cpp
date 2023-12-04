@@ -1,5 +1,6 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <hex/helpers/crypto.hpp>
 

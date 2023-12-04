@@ -4,7 +4,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>

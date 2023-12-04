@@ -17,6 +17,8 @@ namespace hex::dp {
     private:
         int m_id;
         int m_from, m_to;
+
+        static int s_idCounter;
     };
 
 }

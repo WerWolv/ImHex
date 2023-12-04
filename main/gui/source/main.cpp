@@ -10,7 +10,6 @@
 #include "init/tasks.hpp"
 
 #include <hex/api/task_manager.hpp>
-#include <hex/api/project_file_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
 
 #include <hex/helpers/fs.hpp>
@@ -20,7 +19,9 @@
 #include <wolv/utils/guards.hpp>
 #include <fcntl.h>
 
-#if defined(OS_WEB)
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#elif defined(OS_WEB)
     #include <emscripten.h>
     #include <emscripten/html5.h>
 #endif
