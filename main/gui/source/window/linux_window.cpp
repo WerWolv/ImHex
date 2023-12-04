@@ -73,9 +73,8 @@ namespace hex {
             std::array<char, 128> buffer = { 0 };
             std::string result;
 
-            // Ask GNOME for the current theme
-            // TODO: In the future maybe support more DEs instead of just GNOME
-            FILE *pipe = popen("gsettings get org.gnome.desktop.interface gtk-theme 2>&1", "r");
+            // Ask dbus for the current theme. 0 for Light, 1 for Dark
+            FILE *pipe = popen("dbus-send --session --print-reply --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:'org.freedesktop.appearance' string:'color-scheme' 2>&1", "r");
             if (pipe == nullptr) return;
 
             while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
@@ -84,7 +83,7 @@ namespace hex {
             auto exitCode = WEXITSTATUS(pclose(pipe));
             if (exitCode != 0) return;
 
-            EventManager::post<RequestChangeTheme>(hex::containsIgnoreCase(result, "light") ? "Light" : "Dark");
+            EventManager::post<RequestChangeTheme>(hex::containsIgnoreCase(result, "uint32 1") ? "Light" : "Dark");
         });
 
         if (themeFollowSystem)
