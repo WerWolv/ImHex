@@ -6,6 +6,7 @@
 #include <fonts/blendericons_font.h>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <hex/helpers/opengl.hpp>
 #include <opengl_support.h>
 #include <GLFW/glfw3.h>

@@ -4,11 +4,13 @@
 
 #include <numbers>
 
-#include <implot.h>
 #include <imgui.h>
 #include <hex/api/imhex_api.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
+
+#include <chrono>
+#include <fmt/chrono.h>
 
 namespace hex::plugin::builtin {
 
@@ -20,7 +22,7 @@ namespace hex::plugin::builtin {
         auto lastMonthDay = std::chrono::year_month_day_last(date.year(), date.month() / std::chrono::last);
         auto firstWeekDay = std::chrono::weekday(std::chrono::year_month_day(date.year(), date.month(), std::chrono::day(1)));
 
-        const auto scale = 1_scaled * (ImHexApi::System::getFontSize() / ImHexApi::System::DefaultFontSize);
+        const auto scale = 1_scaled * (ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize);
 
         // Draw calendar
         if (ImGui::BeginTable("##month_table", 2)) {
