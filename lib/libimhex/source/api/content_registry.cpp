@@ -1116,4 +1116,23 @@ namespace hex {
 
     }
 
+    namespace ContentRegistry::Disassembler {
+
+        namespace impl {
+
+
+            std::vector<std::unique_ptr<Architecture>>& getArchitectures() {
+                static std::vector<std::unique_ptr<Architecture>> architectures;
+
+                return architectures;
+            }
+
+            void add(std::unique_ptr<Architecture> &&architecture) {
+                getArchitectures().emplace_back(std::move(architecture));
+            }
+
+        }
+
+    }
+
 }

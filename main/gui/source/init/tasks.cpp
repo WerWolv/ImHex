@@ -129,6 +129,7 @@ namespace hex::init {
 
         ContentRegistry::Experiments::impl::getExperiments().clear();
         ContentRegistry::Reports::impl::getGenerators().clear();
+        ContentRegistry::Disassembler::impl::getArchitectures().clear();
 
         LayoutManager::reset();
 

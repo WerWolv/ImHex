@@ -1,450 +1,178 @@
 #include "content/views/view_disassembler.hpp"
 
-#include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 
-#include <cstring>
+#include <hex/providers/buffered_reader.hpp>
 
 using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
 
     ViewDisassembler::ViewDisassembler() : View::Window("hex.builtin.view.disassembler.name") {
-        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
-            this->m_disassembly.clear();
-        });
+
     }
 
-    ViewDisassembler::~ViewDisassembler() {
-        EventManager::unsubscribe<EventDataChanged>(this);
-        EventManager::unsubscribe<EventRegionSelected>(this);
-        EventManager::unsubscribe<EventProviderDeleted>(this);
+    void ViewDisassembler::addLine(prv::Provider *provider, const ContentRegistry::Disassembler::Instruction &instruction) {
+        prv::ProviderReader reader(provider);
+        reader.seek(instruction.region.getStartAddress());
+        reader.setEndAddress(instruction.region.getEndAddress());
+
+        std::string bytes;
+        for (const auto& byte : reader) {
+            bytes += fmt::format("{:02X} ", byte);
+        }
+        bytes.pop_back();
+
+        this->m_lines.get(provider).emplace_back(ImHexApi::HexEditor::ProviderRegion { instruction.region, provider }, std::move(bytes), instruction.mnemonic, instruction.operands, instruction.jumpDestination, ImVec2());
     }
 
-    void ViewDisassembler::disassemble() {
-        this->m_disassembly.clear();
+    static void drawJumpLine(ImVec2 start, ImVec2 end, float columnWidth, u32 slot, ImVec2, bool hovered) {
+        const u32 slotCount = std::floor(std::max<float>(1.0F, columnWidth / 10_scaled));
 
-        this->m_disassemblerTask = TaskManager::createTask("hex.builtin.view.disassembler.disassembling", this->m_codeRegion.getSize(), [this](auto &task) {
-            csh capstoneHandle;
-            cs_insn *instructions = nullptr;
+        if (slot >= slotCount)
+            return;
 
-            cs_mode mode = this->m_mode;
+        auto drawList = ImGui::GetWindowDrawList();
 
-            // Create a capstone disassembler instance
-            if (cs_open(Disassembler::toCapstoneArchitecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
+        if (start.y > end.y)
+            slot = slotCount - slot - 1;
 
-                // Tell capstone to skip data bytes
-                cs_option(capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
+        const auto width = (columnWidth / float(slotCount)) * float(slot + 1);
+        const auto lineColor = ImColor::HSV(hovered ? 0.25F : 0.3F + (slot / float(slotCount)) * 0.7F, hovered ? 1.0F : 0.8F, hovered ? 1.0F : 0.8F);
+        const auto thickness = 2.0_scaled;
 
-                auto provider = ImHexApi::Provider::get();
-                std::vector<u8> buffer(2048, 0x00);
-                size_t size = this->m_codeRegion.getSize();
+        // Draw line
+        drawList->AddLine(start - ImVec2(width, 0), start, lineColor, thickness);
+        drawList->AddLine(end   - ImVec2(width, 0), end,   lineColor, thickness);
+        drawList->AddLine(start - ImVec2(width, 0), end - ImVec2(width, 0), lineColor, thickness);
 
-                // Read the data in chunks and disassemble it
-                for (u64 address = 0; address < size; address += 2048) {
-                    task.update(address);
-
-                    // Read a chunk of data
-                    size_t bufferSize = std::min(u64(2048), (size - address));
-                    provider->read(this->m_codeRegion.getStartAddress() + address, buffer.data(), bufferSize);
-
-                    // Ask capstone to disassemble the data
-                    size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), bufferSize, this->m_baseAddress + address, 0, &instructions);
-                    if (instructionCount == 0)
-                        break;
-
-                    // Reserve enough space for the disassembly
-                    this->m_disassembly.reserve(this->m_disassembly.size() + instructionCount);
-
-                    // Convert the capstone instructions to our disassembly format
-                    u64 usedBytes = 0;
-                    for (u32 i = 0; i < instructionCount; i++) {
-                        const auto &instr       = instructions[i];
-                        Disassembly disassembly = { };
-                        disassembly.address     = instr.address;
-                        disassembly.offset      = this->m_codeRegion.getStartAddress() + address + usedBytes;
-                        disassembly.size        = instr.size;
-                        disassembly.mnemonic    = instr.mnemonic;
-                        disassembly.operators   = instr.op_str;
-
-                        for (u16 j = 0; j < instr.size; j++)
-                            disassembly.bytes += hex::format("{0:02X} ", instr.bytes[j]);
-                        disassembly.bytes.pop_back();
-
-                        this->m_disassembly.push_back(disassembly);
-
-                        usedBytes += instr.size;
-                    }
-
-                    // If capstone couldn't disassemble all bytes in the buffer, we might have cut off an instruction
-                    // Adjust the address,so it's being disassembled when we read the next chunk
-                    if (instructionCount < bufferSize)
-                        address -= (bufferSize - usedBytes);
-
-                    // Clean up the capstone instructions
-                    cs_free(instructions, instructionCount);
-                }
-
-                cs_close(&capstoneHandle);
-            }
-        });
+        //if (end.y >= startCursorPos.y + ImGui::GetScrollY())
+        // Draw arrow head
+        drawList->AddLine(end + scaled({ -5, -5 }), end, lineColor, thickness);
+        drawList->AddLine(end + scaled({ -5,  5 }), end, lineColor, thickness);
     }
+
 
     void ViewDisassembler::drawContent() {
-        auto provider = ImHexApi::Provider::get();
-        if (ImHexApi::Provider::isValid() && provider->isReadable()) {
-            ImGuiExt::Header("hex.builtin.view.disassembler.position"_lang, true);
+        const auto &architectures = ContentRegistry::Disassembler::impl::getArchitectures();
+        if (this->m_currArchitecture == nullptr) {
+            this->m_currArchitecture = architectures.front().get();
+        }
 
-            // Draw base address input
-            ImGuiExt::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
-
-            // Draw region selection picker
-            ui::regionSelectionPicker(&this->m_codeRegion, provider, &this->m_range);
-
-            // Draw settings
-            {
-                ImGuiExt::Header("hex.builtin.common.settings"_lang);
-
-                // Draw architecture selector
-                if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames.data(), Disassembler::getArchitectureSupportedCount()))
-                    this->m_mode = cs_mode(0);
-
-                // Draw sub-settings for each architecture
-                if (ImGuiExt::BeginBox()) {
-
-                    // Draw endian radio buttons. This setting is available for all architectures
-                    static int littleEndian = true;
-                    ImGui::RadioButton("hex.builtin.common.little_endian"_lang, &littleEndian, true);
-                    ImGui::SameLine();
-                    ImGui::RadioButton("hex.builtin.common.big_endian"_lang, &littleEndian, false);
-
-                    ImGui::NewLine();
-
-                    // Draw architecture specific settings
-                    switch (this->m_architecture) {
-                        case Architecture::ARM:
-                            {
-                                static int mode = CS_MODE_ARM;
-                                ImGui::RadioButton("hex.builtin.view.disassembler.arm.arm"_lang, &mode, CS_MODE_ARM);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.arm.thumb"_lang, &mode, CS_MODE_THUMB);
-
-                                static int extraMode = 0;
-                                ImGui::RadioButton("hex.builtin.view.disassembler.arm.default"_lang, &extraMode, 0);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.arm.cortex_m"_lang, &extraMode, CS_MODE_MCLASS);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.arm.armv8"_lang, &extraMode, CS_MODE_V8);
-
-                                this->m_mode = cs_mode(mode | extraMode);
-                            }
-                            break;
-                        case Architecture::MIPS:
-                            {
-                                static int mode = CS_MODE_MIPS32;
-                                ImGui::RadioButton("hex.builtin.view.disassembler.mips.mips32"_lang, &mode, CS_MODE_MIPS32);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.mips.mips64"_lang, &mode, CS_MODE_MIPS64);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.mips.mips32R6"_lang, &mode, CS_MODE_MIPS32R6);
-
-                                ImGui::RadioButton("hex.builtin.view.disassembler.mips.mips2"_lang, &mode, CS_MODE_MIPS2);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.mips.mips3"_lang, &mode, CS_MODE_MIPS3);
-
-                                static bool microMode;
-                                ImGui::Checkbox("hex.builtin.view.disassembler.mips.micro"_lang, &microMode);
-
-                                this->m_mode = cs_mode(mode | (microMode ? CS_MODE_MICRO : cs_mode(0)));
-                            }
-                            break;
-                        case Architecture::X86:
-                            {
-                                static int mode = CS_MODE_32;
-                                ImGui::RadioButton("hex.builtin.view.disassembler.16bit"_lang, &mode, CS_MODE_16);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.32bit"_lang, &mode, CS_MODE_32);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.64bit"_lang, &mode, CS_MODE_64);
-
-                                this->m_mode = cs_mode(mode);
-                            }
-                            break;
-                        case Architecture::PPC:
-                            {
-                                static int mode = CS_MODE_32;
-                                ImGui::RadioButton("hex.builtin.view.disassembler.32bit"_lang, &mode, CS_MODE_32);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.64bit"_lang, &mode, CS_MODE_64);
-
-                                static bool qpx = false;
-                                ImGui::Checkbox("hex.builtin.view.disassembler.ppc.qpx"_lang, &qpx);
-
-                                #if CS_API_MAJOR >= 5
-                                    static bool spe = false;
-                                    ImGui::Checkbox("hex.builtin.view.disassembler.ppc.spe"_lang, &spe);
-                                    static bool booke = false;
-                                    ImGui::Checkbox("hex.builtin.view.disassembler.ppc.booke"_lang, &booke);
-
-                                    this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)) | (spe ? CS_MODE_SPE : cs_mode(0)) | (booke ? CS_MODE_BOOKE : cs_mode(0)));
-                                #else
-                                    this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)));
-                                #endif
-                            }
-                            break;
-                        case Architecture::SPARC:
-                            {
-                                static bool v9Mode = false;
-                                ImGui::Checkbox("hex.builtin.view.disassembler.sparc.v9"_lang, &v9Mode);
-
-                                this->m_mode = cs_mode(v9Mode ? CS_MODE_V9 : cs_mode(0));
-                            }
-                            break;
-                        #if CS_API_MAJOR >= 5
-                        case Architecture::RISCV:
-                            {
-                                static int mode = CS_MODE_RISCV32;
-                                ImGui::RadioButton("hex.builtin.view.disassembler.32bit"_lang, &mode, CS_MODE_RISCV32);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.64bit"_lang, &mode, CS_MODE_RISCV64);
-
-                                static bool compressed = false;
-                                ImGui::Checkbox("hex.builtin.view.disassembler.riscv.compressed"_lang, &compressed);
-
-                                this->m_mode = cs_mode(mode | (compressed ? CS_MODE_RISCVC : cs_mode(0)));
-                            }
-                            break;
-                        #endif
-                        case Architecture::M68K:
-                            {
-                                static int selectedMode = 0;
-
-                                std::pair<const char *, cs_mode> modes[] = {
-                                    {"hex.builtin.view.disassembler.m68k.000"_lang,  CS_MODE_M68K_000},
-                                    { "hex.builtin.view.disassembler.m68k.010"_lang, CS_MODE_M68K_010},
-                                    { "hex.builtin.view.disassembler.m68k.020"_lang, CS_MODE_M68K_020},
-                                    { "hex.builtin.view.disassembler.m68k.030"_lang, CS_MODE_M68K_030},
-                                    { "hex.builtin.view.disassembler.m68k.040"_lang, CS_MODE_M68K_040},
-                                    { "hex.builtin.view.disassembler.m68k.060"_lang, CS_MODE_M68K_060},
-                                };
-
-                                if (ImGui::BeginCombo("hex.builtin.view.disassembler.settings.mode"_lang, modes[selectedMode].first)) {
-                                    for (u32 i = 0; i < IM_ARRAYSIZE(modes); i++) {
-                                        if (ImGui::Selectable(modes[i].first))
-                                            selectedMode = i;
-                                    }
-                                    ImGui::EndCombo();
-                                }
-
-                                this->m_mode = cs_mode(modes[selectedMode].second);
-                            }
-                            break;
-                        case Architecture::M680X:
-                            {
-                                static int selectedMode = 0;
-
-                                std::pair<const char *, cs_mode> modes[] = {
-                                    {"hex.builtin.view.disassembler.m680x.6301"_lang,   CS_MODE_M680X_6301 },
-                                    { "hex.builtin.view.disassembler.m680x.6309"_lang,  CS_MODE_M680X_6309 },
-                                    { "hex.builtin.view.disassembler.m680x.6800"_lang,  CS_MODE_M680X_6800 },
-                                    { "hex.builtin.view.disassembler.m680x.6801"_lang,  CS_MODE_M680X_6801 },
-                                    { "hex.builtin.view.disassembler.m680x.6805"_lang,  CS_MODE_M680X_6805 },
-                                    { "hex.builtin.view.disassembler.m680x.6808"_lang,  CS_MODE_M680X_6808 },
-                                    { "hex.builtin.view.disassembler.m680x.6809"_lang,  CS_MODE_M680X_6809 },
-                                    { "hex.builtin.view.disassembler.m680x.6811"_lang,  CS_MODE_M680X_6811 },
-                                    { "hex.builtin.view.disassembler.m680x.cpu12"_lang, CS_MODE_M680X_CPU12},
-                                    { "hex.builtin.view.disassembler.m680x.hcs08"_lang, CS_MODE_M680X_HCS08},
-                                };
-
-                                if (ImGui::BeginCombo("hex.builtin.view.disassembler.settings.mode"_lang, modes[selectedMode].first)) {
-                                    for (u32 i = 0; i < IM_ARRAYSIZE(modes); i++) {
-                                        if (ImGui::Selectable(modes[i].first))
-                                            selectedMode = i;
-                                    }
-                                    ImGui::EndCombo();
-                                }
-
-                                this->m_mode = cs_mode(modes[selectedMode].second);
-                            }
-                            break;
-                        #if CS_API_MAJOR >= 5
-                        case Architecture::MOS65XX:
-                            {
-                                static int selectedMode = 0;
-
-                                std::pair<const char *, cs_mode> modes[] = {
-                                    {"hex.builtin.view.disassembler.mos65xx.6502"_lang,           CS_MODE_MOS65XX_6502         },
-                                    { "hex.builtin.view.disassembler.mos65xx.65c02"_lang,         CS_MODE_MOS65XX_65C02        },
-                                    { "hex.builtin.view.disassembler.mos65xx.w65c02"_lang,        CS_MODE_MOS65XX_W65C02       },
-                                    { "hex.builtin.view.disassembler.mos65xx.65816"_lang,         CS_MODE_MOS65XX_65816        },
-                                    { "hex.builtin.view.disassembler.mos65xx.65816_long_m"_lang,  CS_MODE_MOS65XX_65816_LONG_M },
-                                    { "hex.builtin.view.disassembler.mos65xx.65816_long_x"_lang,  CS_MODE_MOS65XX_65816_LONG_X },
-                                    { "hex.builtin.view.disassembler.mos65xx.65816_long_mx"_lang, CS_MODE_MOS65XX_65816_LONG_MX},
-                                };
-
-                                if (ImGui::BeginCombo("hex.builtin.view.disassembler.settings.mode"_lang, modes[selectedMode].first)) {
-                                    for (u32 i = 0; i < IM_ARRAYSIZE(modes); i++) {
-                                        if (ImGui::Selectable(modes[i].first))
-                                            selectedMode = i;
-                                    }
-                                    ImGui::EndCombo();
-                                }
-
-                                this->m_mode = cs_mode(modes[selectedMode].second);
-                            }
-                            break;
-                        #endif
-                        #if CS_API_MAJOR >= 5
-                        case Architecture::BPF:
-                            {
-                                static int mode = CS_MODE_BPF_CLASSIC;
-                                ImGui::RadioButton("hex.builtin.view.disassembler.bpf.classic"_lang, &mode, CS_MODE_BPF_CLASSIC);
-                                ImGui::SameLine();
-                                ImGui::RadioButton("hex.builtin.view.disassembler.bpf.extended"_lang, &mode, CS_MODE_BPF_EXTENDED);
-
-                                this->m_mode = cs_mode(mode);
-                            }
-                            break;
-                        case Architecture::SH:
-                            {
-                                static u32 selectionMode = 0;
-                                static bool fpu = false;
-                                static bool dsp = false;
-
-                                std::pair<const char*, cs_mode> modes[] = {
-                                        { "hex.builtin.view.disassembler.sh.sh2"_lang, CS_MODE_SH2 },
-                                        { "hex.builtin.view.disassembler.sh.sh2a"_lang, CS_MODE_SH2A },
-                                        { "hex.builtin.view.disassembler.sh.sh3"_lang, CS_MODE_SH3 },
-                                        { "hex.builtin.view.disassembler.sh.sh4"_lang, CS_MODE_SH4 },
-                                        { "hex.builtin.view.disassembler.sh.sh4a"_lang, CS_MODE_SH4A },
-                                };
-
-                                if (ImGui::BeginCombo("hex.builtin.view.disassembler.settings.mode"_lang, modes[selectionMode].first)) {
-                                    for (u32 i = 0; i < IM_ARRAYSIZE(modes); i++) {
-                                        if (ImGui::Selectable(modes[i].first))
-                                            selectionMode = i;
-                                    }
-                                    ImGui::EndCombo();
-                                }
-
-                                ImGui::Checkbox("hex.builtin.view.disassembler.sh.fpu"_lang, &fpu);
-                                ImGui::SameLine();
-                                ImGui::Checkbox("hex.builtin.view.disassembler.sh.dsp"_lang, &dsp);
-
-                                this->m_mode = cs_mode(modes[selectionMode].second | (fpu ? CS_MODE_SHFPU : cs_mode(0)) | (dsp ? CS_MODE_SHDSP : cs_mode(0)));
-                            }
-                            break;
-                        case Architecture::TRICORE:
-                            {
-                                static u32 selectionMode = 0;
-
-                                std::pair<const char*, cs_mode> modes[] = {
-                                        { "hex.builtin.view.disassembler.tricore.110"_lang, CS_MODE_TRICORE_110 },
-                                        { "hex.builtin.view.disassembler.tricore.120"_lang, CS_MODE_TRICORE_120 },
-                                        { "hex.builtin.view.disassembler.tricore.130"_lang, CS_MODE_TRICORE_130 },
-                                        { "hex.builtin.view.disassembler.tricore.131"_lang, CS_MODE_TRICORE_131 },
-                                        { "hex.builtin.view.disassembler.tricore.160"_lang, CS_MODE_TRICORE_160 },
-                                        { "hex.builtin.view.disassembler.tricore.161"_lang, CS_MODE_TRICORE_161 },
-                                        { "hex.builtin.view.disassembler.tricore.162"_lang, CS_MODE_TRICORE_162 },
-                                };
-
-                                if (ImGui::BeginCombo("hex.builtin.view.disassembler.settings.mode"_lang, modes[selectionMode].first)) {
-                                    for (u32 i = 0; i < IM_ARRAYSIZE(modes); i++) {
-                                        if (ImGui::Selectable(modes[i].first))
-                                            selectionMode = i;
-                                    }
-                                    ImGui::EndCombo();
-                                }
-
-                                this->m_mode = cs_mode(modes[selectionMode].second);
-                            }
-                            break;
-                        case Architecture::WASM:
-                        #endif
-                        case Architecture::EVM:
-                        case Architecture::TMS320C64X:
-                        case Architecture::ARM64:
-                        case Architecture::SYSZ:
-                        case Architecture::XCORE:
-                            this->m_mode = cs_mode(0);
-                            break;
-                    }
-
-                    ImGuiExt::EndBox();
+        ImGui::BeginDisabled(!this->m_lines->empty());
+        if (ImGui::BeginCombo("##architectures", Lang(this->m_currArchitecture->getUnlocalizedName()))) {
+            for (const auto &architecture : architectures) {
+                if (ImGui::Selectable(Lang(architecture->getUnlocalizedName()))) {
+                    this->m_currArchitecture = architecture.get();
                 }
             }
 
-            // Draw disassemble button
-            ImGui::BeginDisabled(this->m_disassemblerTask.isRunning());
+            ImGui::EndCombo();
+        }
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+
+        if (this->m_lines->empty()) {
+            auto provider = ImHexApi::Provider::get();
+            if (ImGuiExt::DimmedButton("Disassemble", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                auto disassembly = this->m_currArchitecture->disassemble(provider, ImHexApi::HexEditor::getSelection().value());
+
+                for (const auto &instruction : disassembly)
+                    this->addLine(provider, instruction);
+            }
+
+            ImGuiExt::BeginSubWindow("Config");
             {
-                if (ImGui::Button("hex.builtin.view.disassembler.disassemble"_lang))
-                    this->disassemble();
+                this->m_currArchitecture->drawConfigInterface();
             }
-            ImGui::EndDisabled();
+            ImGuiExt::EndSubWindow();
+        } else {
+            if (ImGuiExt::DimmedButton("Reset", ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                this->m_lines->clear();
+            }
+        }
 
-            // Draw a spinner if the disassembler is running
-            if (this->m_disassemblerTask.isRunning()) {
-                ImGui::SameLine();
-                ImGuiExt::TextSpinner("hex.builtin.view.disassembler.disassembling"_lang);
+        if (ImGui::BeginTable("##disassembly", 4, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable, ImGui::GetContentRegionAvail())) {
+            ImGui::TableSetupScrollFreeze(0, 1);
+            ImGui::TableSetupColumn("##jumps");
+            ImGui::TableSetupColumn("##address", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 80_scaled);
+            ImGui::TableSetupColumn("##bytes", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 80_scaled);
+            ImGui::TableSetupColumn("##instruction", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize);
+
+            ImGui::TableHeadersRow();
+
+            ImGuiListClipper clipper;
+            clipper.Begin(this->m_lines->size(), ImGui::GetTextLineHeightWithSpacing());
+
+            int processingStart = 0, processingEnd = 0;
+
+            auto startCursorPos = ImGui::GetCursorScreenPos();
+            float jumpColumnWidth = 0.0F;
+            std::optional<u64> hoveredAddress;
+            while (clipper.Step()) {
+                processingStart = clipper.DisplayStart;
+                processingEnd = clipper.DisplayEnd;
+                for (auto i = processingStart; i < processingEnd; i += 1) {
+                    auto &line = this->m_lines->at(i);
+                    ImGui::TableNextRow();
+
+                    auto height = ImGui::CalcTextSize(line.bytes.c_str(), nullptr, false, 80_scaled).y;
+
+                    ImGui::TableNextColumn();
+                    {
+                        // Reserve some space to draw the jump lines later
+
+                        // Remember the position of the line so we can draw the jump lines later
+                        jumpColumnWidth = ImGui::GetContentRegionAvail().x;
+                        line.linePos = ImGui::GetCursorScreenPos() + ImVec2(jumpColumnWidth, height / 2);
+                    }
+
+                    ImGui::TableNextColumn();
+                    if (ImGui::Selectable(hex::format("0x{:08X}", line.region.getStartAddress()).c_str(), false, ImGuiSelectableFlags_SpanAllColumns, ImVec2(0, height))) {
+                        ImHexApi::HexEditor::setSelection(line.region);
+                    }
+
+                    if (ImGui::IsItemHovered())
+                        hoveredAddress = line.region.getStartAddress();
+
+                    ImGui::TableNextColumn();
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight));
+                    ImGuiExt::TextFormattedWrapped("{}", line.bytes);
+                    ImGui::PopStyleColor();
+
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormattedColored(ImGui::GetColorU32(ImGuiCol_HeaderActive), "{} ", line.mnemonic);
+                    ImGui::SameLine(0, 0);
+                    ImGuiExt::TextFormatted("{}", line.operands);
+                }
             }
 
-            ImGui::NewLine();
+            // Draw jump arrows
+            {
+                std::list<u64> destinations;
+                for (auto sourceLineIndex = processingStart; sourceLineIndex < processingEnd; sourceLineIndex += 1) {
+                    const auto &sourceLine = this->m_lines->at(sourceLineIndex);
 
-            ImGui::TextUnformatted("hex.builtin.view.disassembler.disassembly.title"_lang);
-            ImGui::Separator();
+                    if (sourceLine.jumpDestination.has_value()) {
+                        for (auto destinationLineIndex = processingStart; destinationLineIndex < processingEnd; destinationLineIndex += 1) {
+                            const auto &destinationLine = this->m_lines->at(destinationLineIndex);
 
-            // Draw disassembly table
-            if (ImGui::BeginTable("##disassembly", 4, ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable)) {
-                ImGui::TableSetupScrollFreeze(0, 1);
-                ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.address"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.offset"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.bytes"_lang);
-                ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.title"_lang);
-
-                if (!this->m_disassemblerTask.isRunning()) {
-                    ImGuiListClipper clipper;
-                    clipper.Begin(this->m_disassembly.size());
-
-                    ImGui::TableHeadersRow();
-                    while (clipper.Step()) {
-                        for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            const auto &instruction = this->m_disassembly[i];
-
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
-
-                            // Draw a selectable label for the address
-                            ImGui::PushID(i);
-                            if (ImGui::Selectable("##DisassemblyLine", false, ImGuiSelectableFlags_SpanAllColumns)) {
-                                ImHexApi::HexEditor::setSelection(instruction.offset, instruction.size);
+                            if (destinationLine.region.getStartAddress() == sourceLine.jumpDestination.value()) {
+                                drawJumpLine(sourceLine.linePos, destinationLine.linePos, jumpColumnWidth, destinations.size(), startCursorPos, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
+                                destinations.push_back(destinationLine.region.getStartAddress());
+                                break;
                             }
-                            ImGui::PopID();
-
-                            // Draw instruction address
-                            ImGui::SameLine();
-                            ImGuiExt::TextFormatted("0x{0:X}", instruction.address);
-
-                            // Draw instruction offset
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormatted("0x{0:X}", instruction.offset);
-
-                            // Draw instruction bytes
-                            ImGui::TableNextColumn();
-                            ImGui::TextUnformatted(instruction.bytes.c_str());
-
-                            // Draw instruction mnemonic and operands
-                            ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), "{}", instruction.mnemonic);
-                            ImGui::SameLine();
-                            ImGui::TextUnformatted(instruction.operators.c_str());
                         }
                     }
 
-                    clipper.End();
+                    std::erase_if(destinations, [&](u64 address) {
+                        return sourceLine.region.getStartAddress() == address;
+                    });
                 }
-
-                ImGui::EndTable();
             }
+
+            ImGui::EndTable();
         }
     }
 

@@ -701,7 +701,7 @@ namespace hex::plugin::builtin {
 
         auto provider = ImHexApi::Provider::get();
 
-        auto reader = prv::ProviderReader (provider);
+        auto reader = prv::ProviderReader(provider);
         reader.seek(selection.getStartAddress());
         reader.setEndAddress(selection.getEndAddress());
 

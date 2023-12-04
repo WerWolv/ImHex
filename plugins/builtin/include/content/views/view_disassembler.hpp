@@ -1,46 +1,36 @@
 #pragma once
 
-#include <hex/api/task_manager.hpp>
-
+#include <hex/api/content_registry.hpp>
 #include <hex/ui/view.hpp>
-#include <ui/widgets.hpp>
-
-#include <hex/helpers/disassembler.hpp>
-
-#include <string>
-#include <vector>
 
 namespace hex::plugin::builtin {
-
-    struct Disassembly {
-        u64 address;
-        u64 offset;
-        size_t size;
-        std::string bytes;
-        std::string mnemonic;
-        std::string operators;
-    };
 
     class ViewDisassembler : public View::Window {
     public:
         explicit ViewDisassembler();
-        ~ViewDisassembler() override;
 
         void drawContent() override;
 
+        ImGuiWindowFlags getWindowFlags() const override {
+            return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        }
+
     private:
-        TaskHolder m_disassemblerTask;
+        struct DisassemblyLine {
+            ImHexApi::HexEditor::ProviderRegion region;
+            std::string bytes;
+            std::string mnemonic;
+            std::string operands;
 
-        u64 m_baseAddress   = 0;
-        ui::RegionType m_range = ui::RegionType::EntireData;
-        Region m_codeRegion = { 0, 0 };
+            std::optional<u64> jumpDestination;
+            ImVec2 linePos;
+        };
 
-        Architecture m_architecture = Architecture::ARM;
-        cs_mode m_mode              = cs_mode(0);
+        void addLine(prv::Provider *provider, const ContentRegistry::Disassembler::Instruction &instruction);
 
-        std::vector<Disassembly> m_disassembly;
-
-        void disassemble();
+    private:
+        PerProvider<std::vector<DisassemblyLine>> m_lines;
+        ContentRegistry::Disassembler::Architecture *m_currArchitecture = nullptr;
     };
 
 }
