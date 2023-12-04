@@ -209,12 +209,14 @@ namespace hex::plugin::builtin {
             if (fontFile.empty())
                 fonts->Clear();
 
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
-                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
-                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
-            if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
-                cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
+                if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
+                    cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
+                if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
+                    cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
+                if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
+                    cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+            }
 
             auto loadDefaultFont = [&](const char *fontName, u32 flags = 0) {
                 ImFontConfig defaultConfig = cfg;
@@ -266,7 +268,7 @@ namespace hex::plugin::builtin {
 
                 ranges.push_back(fontRange);
 
-                cfg.FontBuilderFlags = startFlags | font.flags;
+                cfg.FontBuilderFlags = font.flags;
 
                 float descent = [&] {
                     ImFontAtlas atlas;
@@ -297,6 +299,7 @@ namespace hex::plugin::builtin {
                 cfg.GlyphOffset = { font.offset.x, font.offset.y - defaultFont->Descent + descent };
                 fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
+            cfg.FontBuilderFlags = startFlags;
 
             // Create bold and italic font
             cfg.MergeMode = false;

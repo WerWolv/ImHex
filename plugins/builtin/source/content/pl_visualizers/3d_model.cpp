@@ -558,6 +558,16 @@ namespace hex::plugin::builtin {
                 ImGui::PopID();
             }
 
+            ImGui::SameLine();
+            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+            ImGui::SameLine();
+
+            if (ImGuiExt::DimmedButton("hex.builtin.common.reset"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                s_translation      = { {  0.0F, 0.0F, -3.0F } };
+                s_rotation         = { {  0.0F, 0.0F,  0.0F } };
+                s_scaling            = 1.0F;
+            }
+
             // Draw more settings
             if (ImGui::CollapsingHeader("hex.builtin.pl_visualizer.3d.more_settings"_lang)) {
                 if (ImGuiExt::InputFilePicker("hex.builtin.pl_visualizer.3d.texture_file"_lang, s_texturePath, {}))
