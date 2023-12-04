@@ -538,13 +538,13 @@ jobs:
             release_num: rawhide
             mock_config: fedora-rawhide
           - name: Fedora
+            mock_release: f39
+            release_num: 39
+            mock_config: fedora-39
+          - name: Fedora
             mock_release: f38
             release_num: 38
             mock_config: fedora-38
-          - name: Fedora
-            mock_release: f37
-            release_num: 37
-            mock_config: fedora-37
           - name: RHEL-AlmaLinux
             mock_release: epel9
             release_num: 9
