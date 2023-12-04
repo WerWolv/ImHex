@@ -24,14 +24,17 @@ void main() {
     vec3 normalVector = normalize(vertexData.normal);
 
     vec3 lightDirection = normalize(vertexData.lightPosition - vertexData.fragPosition);
-    vec3 diffuse = vertexData.lightBrightness.y * max(dot(normalVector, lightDirection), 0.0) * vertexData.lightColor;
+    float diffuse = vertexData.lightBrightness.y * max(dot(normalVector, lightDirection), 0.0);
 
     // Specular lighting
     vec3 viewDirection = normalize(-vertexData.fragPosition);
     vec3 reflectDirection = normalize(-reflect(lightDirection, normalVector));
     float reflectionIntensity = pow(max(dot(viewDirection, reflectDirection), 0.0), vertexData.lightBrightness.w);
-    vec3 specular = vertexData.lightBrightness.z * reflectionIntensity * vertexData.lightColor;
+    float specular = vertexData.lightBrightness.z * reflectionIntensity;
 
-    outColor = (texture(modelTexture, vertexData.texCoord) + vertexData.fragColor) * vec4(ambient + diffuse + specular, 1.0);
+    float dst = distance(vertexData.lightPosition, vertexData.fragPosition);
+    float attn = 1./(1.0f + 0.1f*dst + 0.01f*dst*dst) ;
+    vec3 color = ((diffuse + specular)*attn + ambient) * vertexData.lightColor;
+    outColor = (texture(modelTexture, vertexData.texCoord) + vertexData.fragColor) * vec4(color, 1.0);
 }
 

@@ -492,83 +492,156 @@ namespace hex::gl {
 
     hex::gl::LightSourceVectors::LightSourceVectors(int res) {
         m_resolution = res;
+        auto res_sq = m_resolution * m_resolution;
         m_radius = 0.05f;
-        m_vertices.resize((res + 1) * (res + 1) * 3);
-        m_normals.resize((res + 1) * (res + 1) * 3);
-        m_colors.resize((res + 1) * (res + 1) * 4);
-        m_indices.resize((res + 1) * (res + 1) * 6);
+        m_vertices.resize((res_sq  + 2) * 3);
+        m_normals.resize((res_sq + 2) * 3);
+        m_colors.resize((res_sq + 2) * 4);
+        m_indices.resize(res_sq * 6);
 
 
         constexpr auto TwoPi = std::numbers::pi_v<float> * 2.0F;
         constexpr auto HalfPi = std::numbers::pi_v<float> / 2.0F;
         const auto dv = TwoPi / m_resolution;
-        const auto du = std::numbers::pi_v<float> / m_resolution;
+        const auto du = std::numbers::pi_v<float> / (m_resolution + 1);
 
-        int k = 0, l = 0, m = 0, n = 0;
+        m_normals[0] = 0;
+        m_normals[1] = 0;
+        m_normals[2] = 1;
+
+        m_vertices[0] = 0;
+        m_vertices[1] = 0;
+        m_vertices[2] = m_radius;
+
+        m_colors[0] = 1.0;
+        m_colors[1] = 1.0;
+        m_colors[2] = 1.0;
+        m_colors[3] = 1.0;
 
         // Vertical: pi/2 to  -pi/2
-        for (int i = 0; i < (m_resolution +1); i += 1) {
-            float u = HalfPi - i * du;
+        for (int i = 0; i < m_resolution; i += 1) {
+            float u = HalfPi - (i + 1) * du;
             float z  = std::sin(u);
             float xy = std::cos(u);
 
             // Horizontal: 0  to  2pi
-            for (int j = 0; j < (m_resolution+1); j += 1) {
+            for (int j = 0; j < m_resolution; j += 1) {
                 float v = j * dv;
                 float x = xy * std::cos(v);
                 float y = xy * std::sin(v);
 
-                m_normals[m    ] = x;
-                m_normals[m + 1] = y;
-                m_normals[m + 2] = z;
+                i32 n = (i * m_resolution + j + 1) * 3;
+                m_normals[n] = x;
+                m_normals[n + 1] = y;
+                m_normals[n + 2] = z;
 
-                m_vertices[m    ] = m_radius * x;
-                m_vertices[m + 1] = m_radius * y;
-                m_vertices[m + 2] = m_radius * z;
+                m_vertices[n] = m_radius * x;
+                m_vertices[n + 1] = m_radius * y;
+                m_vertices[n + 2] = m_radius * z;
 
-                m += 3;
-
-                m_colors[n    ] = 1.0f;;
+                n = (i * m_resolution + j + 1) * 4;
+                m_colors[n] = 1.0f;
                 m_colors[n + 1] = 1.0f;
                 m_colors[n + 2] = 1.0f;
                 m_colors[n + 3] = 1.0f;
-                n += 4;
-
-                if (i == 0) {
-                    m_indices[l    ] = k;
-                    m_indices[l + 1] = k + m_resolution;
-                    m_indices[l + 2] = k + m_resolution + 1;
-                    l += 3;
-                    k += 1;
-                } else if (i < m_resolution) {
-                    m_indices[l    ] = k;
-                    m_indices[l + 1] = k + m_resolution + 1;
-                    m_indices[l + 2] = k + 1;
-
-                    m_indices[l + 3] = k + 1;
-                    m_indices[l + 4] = k + m_resolution + 1;
-                    m_indices[l + 5] = k + m_resolution + 2;
-
-                    k += 1;
-                    l += 6;
-                } else {
-                    m_indices[l    ] = k;
-                    m_indices[l + 1] = k + m_resolution + 1;
-                    m_indices[l + 2] = k + 1;
-                    l += 3;
-                    k += 1;
-                }
             }
+        }
+
+        i32 n = ((res_sq + 1) * 3);
+        m_normals[n    ] = 0;
+        m_normals[n + 1] = 0;
+        m_normals[n + 2] = -1;
+
+        m_vertices[n    ] = 0;
+        m_vertices[n + 1] = 0;
+        m_vertices[n + 2] = -m_radius;
+
+        n = ((res_sq + 1) * 4);
+        m_colors[n    ] = 1.0;
+        m_colors[n + 1] = 1.0;
+        m_colors[n + 2] = 1.0;
+        m_colors[n + 3] = 1.0;
+
+        // that was the easy part, indices are a bit more complicated
+        // and may need some explaining. The RxR grid slices the globe
+        // into longitudes which are the vertical slices and latitudes
+        // which are the horizontal slices. The latitudes are all full
+        // circles except for the poles, so we don't count them as part
+        // of the grid. That means that there are R+2 latitudes and R
+        // longitudes.Between consecutive latitudes we have 2*R triangles.
+        // Since we have R true latitudes there are R-1 spaces between them so
+        // between the top and the bottom we have 2*R*(R-1) triangles.
+        // the top and bottom have R triangles each, so we have a total of
+        // 2*R*(R-1) + 2*R = 2*R*R triangles. Each triangle has 3 vertices,
+        // so we have 6*R*R indices.
+
+        // The North Pole is index 0 and the South Pole is index 6*res*res -1
+        // The first row of vertices is 1 to res, the second row is res+1 to 2*res etc.
+
+        // First, the North Pole
+        for (int i = 0; i < m_resolution; i += 1) {
+            m_indices[i * 3] = 0;
+            m_indices[i * 3 + 1] = i + 1;
+            if (i == m_resolution - 1)
+                m_indices[i * 3 + 2] = 1;
+            else
+                m_indices[i * 3 + 2] = (i + 2);
+        }
+        // Now the spaces between true latitudes
+        for (int i = 0; i < m_resolution - 1; i += 1) {
+            // k is the index of the first vertex of the i-th latitude
+            i32 k = i * m_resolution + 1;
+            // When we go a full circle we need to connect the last vertex to the first, so
+            // we do R-1 first because their indices can be computed easily
+            for (int j = 0; j < m_resolution - 1; j += 1) {
+                // We store the indices of the array where the vertices were store
+                // in the triplets that make the triangles. These triplets are stored in
+                // an array that has indices itself which can be confusing.
+                // l keeps track of the indices of the array that stores the triplets
+                // each i brings 6R and each j 6. 3R from the North Pole.
+                i32 l = (i * m_resolution + j) * 6 + 3 * m_resolution;
+
+                m_indices[l    ] = k + j;
+                m_indices[l + 1] = k + j + m_resolution + 1;
+                m_indices[l + 2] = k + j + 1;
+
+                m_indices[l + 3] = k + j;
+                m_indices[l + 4] = k + j + m_resolution;
+                m_indices[l + 5] = k + j + m_resolution + 1;
+            }
+            // Now the last vertex of the i-th latitude is connected to the first
+            i32 l = (( i + 1) * m_resolution - 1) * 6 + 3 * m_resolution;
+
+            m_indices[l    ] = k + m_resolution  - 1;
+            m_indices[l + 1] = k + m_resolution;
+            m_indices[l + 2] = k;
+
+            m_indices[l + 3] = k + m_resolution - 1;
+            m_indices[l + 4] = k + 2 * m_resolution - 1;
+            m_indices[l + 5] = k + m_resolution;
+
+        }
+        // Now the South Pole
+        i32 k = (m_resolution-1) * m_resolution + 1;
+        i32 l = 3 * m_resolution * ( 2 * m_resolution - 1);
+        for (int i = 0; i < m_resolution; i += 1) {
+            if (i == m_resolution -1)
+                m_indices[l + i * 3] = k;
+            else
+                m_indices[l + i * 3] = k + i + 1;
+
+            m_indices[l + i * 3 + 1] = k + i;
+            m_indices[l + i * 3 + 2] = k + m_resolution;
         }
     }
 
     void LightSourceVectors::moveTo(const Vector<float, 3> &positionVector) {
-        int k = 0;
-        for (int i = 0; i < (m_resolution + 1)*(m_resolution + 1); i += 1) {
+        auto vertexCount = m_vertices.size();
+
+        for (unsigned k = 0; k < vertexCount; k += 3) {
             m_vertices[k    ] = m_radius * m_normals[k    ] + positionVector[0];
             m_vertices[k + 1] = m_radius * m_normals[k + 1] + positionVector[1];
             m_vertices[k + 2] = m_radius * m_normals[k + 2] + positionVector[2];
-            k += 3;
         }
     }
 
@@ -577,15 +650,15 @@ namespace hex::gl {
 
         m_vertices = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.getVertices());
         m_indices  = gl::Buffer<u16>(gl::BufferType::Index, sourceVectors.getIndices());
-        //normals  = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.normals);
+        m_normals  = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.getNormals());
         m_colors   = gl::Buffer<float>(gl::BufferType::Vertex, sourceVectors.getColors());
 
         sourceVertexArray.addBuffer(0, m_vertices);
-        sourceVertexArray.addBuffer(1, m_colors, 4);
-        //sourceVertexArray.addBuffer(1, normals);
+        sourceVertexArray.addBuffer(1, m_normals);
+        sourceVertexArray.addBuffer(2, m_colors, 4);
 
         m_vertices.unbind();
-        //normals.unbind();
+        m_normals.unbind();
         m_colors.unbind();
         m_indices.unbind();
         sourceVertexArray.unbind();
@@ -604,7 +677,7 @@ namespace hex::gl {
         sourceVertexArray.bind();
 
         m_colors.update(sourceVectors.getColors());
-        sourceVertexArray.addBuffer(1, m_colors, 4);
+        sourceVertexArray.addBuffer(2, m_colors, 4);
 
         sourceVertexArray.unbind();
     }

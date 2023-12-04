@@ -1081,6 +1081,10 @@ namespace hex::gl {
             return m_vertices;
         }
 
+        const gl::Buffer<float>& getNormals() const {
+            return m_normals;
+        }
+
         const gl::Buffer<float>& getColors() const {
             return m_colors;
         }
@@ -1091,6 +1095,7 @@ namespace hex::gl {
 
     private:
         gl::Buffer<float> m_vertices;
+        gl::Buffer<float> m_normals;
         gl::Buffer<float> m_colors;
         gl::Buffer<u16> m_indices;
     };

@@ -70,8 +70,8 @@ namespace hex::plugin::builtin {
         ImVec2 s_renderingWindowSize;
 
         int s_drawMode = GL_TRIANGLES;
-        float s_nearLimit = 0.5f;
-        float s_farLimit = 100.0f;
+        float s_nearLimit = 0.9F;
+        float s_farLimit = 100.0F;
         float s_scaling = 1.0F;
         float s_max;
 
@@ -523,7 +523,7 @@ namespace hex::plugin::builtin {
                     ImGui::SliderFloat("Ambient Brightness",   &s_lightBrightness.data()[0], 0, 2);
                     ImGui::SliderFloat("Diffuse Brightness",   &s_lightBrightness.data()[1], 0, 2);
                     ImGui::SliderFloat("Specular Brightness ",  &s_lightBrightness.data()[2], 0, 2);
-                    ImGui::SliderFloat("Light source strength", &s_lightBrightness.data()[3], 0, 64);
+                    ImGui::SliderFloat("Object Reflectiveness", &s_lightBrightness.data()[3], 0, 64);
                     if (ImGui::ColorEdit3("Light Color", s_lightColor.data()))
                         s_shouldUpdateLightSource = true;
 
@@ -871,8 +871,8 @@ namespace hex::plugin::builtin {
             }
             if (s_drawLightSource) {
                 static auto sourceShader = gl::Shader(
-                        romfs::get("shaders/default/lineVertex.glsl").string(),
-                        romfs::get("shaders/default/lineFragment.glsl").string());
+                        romfs::get("shaders/default/lightVertex.glsl").string(),
+                        romfs::get("shaders/default/lightFragment.glsl").string());
                 sourceShader.bind();
 
                 sourceShader.setUniform("modelMatrix", model);
