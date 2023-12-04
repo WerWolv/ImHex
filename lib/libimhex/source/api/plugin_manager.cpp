@@ -67,7 +67,8 @@ namespace hex {
             if (this->m_handle != 0)
                 FreeLibrary(HMODULE(this->m_handle));
         #else
-            dlclose(reinterpret_cast<void*>(this->m_handle));
+            if (this->m_handle != 0)
+                dlclose(reinterpret_cast<void*>(this->m_handle));
         #endif
     }
 
