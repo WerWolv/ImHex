@@ -19,8 +19,6 @@
 
 #include <romfs/romfs.hpp>
 
-#include <stb_image.h>
-
 namespace hex::plugin::builtin {
 
     namespace {
@@ -517,15 +515,15 @@ namespace hex::plugin::builtin {
                 }
 
                 if (ImGui::BeginPopup("LightSettings")) {
-                    if (ImGui::DragFloat3("Position", s_lightPosition.data(), 0.05F)) {
+                    if (ImGui::DragFloat3("hex.builtin.pl_visualizer.3d.light_position"_lang, s_lightPosition.data(), 0.05F)) {
                         s_shouldUpdateLightSource = true;
                     }
 
-                    ImGui::SliderFloat("Ambient Brightness",   &s_lightBrightness.data()[0], 0, 2);
-                    ImGui::SliderFloat("Diffuse Brightness",   &s_lightBrightness.data()[1], 0, 2);
-                    ImGui::SliderFloat("Specular Brightness ",  &s_lightBrightness.data()[2], 0, 2);
-                    ImGui::SliderFloat("Object Reflectiveness", &s_lightBrightness.data()[3], 0, 64);
-                    if (ImGui::ColorEdit3("Light Color", s_lightColor.data()))
+                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.ambient_brightness"_lang,   &s_lightBrightness.data()[0], 0, 2);
+                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.diffuse_brightness"_lang,   &s_lightBrightness.data()[1], 0, 2);
+                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.specular_brightness"_lang,  &s_lightBrightness.data()[2], 0, 2);
+                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.object_reflectiveness"_lang, &s_lightBrightness.data()[3], 0, 64);
+                    if (ImGui::ColorEdit3("hex.builtin.pl_visualizer.3d.light_color"_lang, s_lightColor.data()))
                         s_shouldUpdateLightSource = true;
 
                     ImGui::EndPopup();
@@ -561,8 +559,8 @@ namespace hex::plugin::builtin {
             }
 
             // Draw more settings
-            if (ImGui::CollapsingHeader("More settings")) {
-                if (ImGuiExt::InputFilePicker("Texture File", s_texturePath, {}))
+            if (ImGui::CollapsingHeader("hex.builtin.pl_visualizer.3d.more_settings"_lang)) {
+                if (ImGuiExt::InputFilePicker("hex.builtin.pl_visualizer.3d.texture_file"_lang, s_texturePath, {}))
                     s_shouldUpdateTexture = true;
             }
         }
