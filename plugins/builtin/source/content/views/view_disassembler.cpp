@@ -34,19 +34,25 @@ namespace hex::plugin::builtin {
 
         auto drawList = ImGui::GetWindowDrawList();
 
-        if (start.y > end.y)
-            slot = slotCount - slot - 1;
-
         const auto width = (columnWidth / float(slotCount)) * float(slot + 1);
         const auto lineColor = ImColor::HSV(hovered ? 0.25F : 0.3F + (slot / float(slotCount)) * 0.7F, hovered ? 1.0F : 0.8F, hovered ? 1.0F : 0.8F);
         const auto thickness = 2.0_scaled;
+
+        // Handle jump to same address
+        if (start.y == end.y) {
+            start.y -= ImGui::GetTextLineHeight() / 2;
+            end.y   += ImGui::GetTextLineHeight() / 2;
+        } else if (start.y > end.y) {
+            slot = slotCount - (slot - 1);
+        }
+
 
         // Draw vertical arrow line
         drawList->AddLine(start - ImVec2(width, 0), end - ImVec2(width, 0), lineColor, thickness);
 
         // Draw horizontal arrow line at start
         drawList->AddLine(start - ImVec2(width, 0), start, lineColor, thickness);
-        
+
         if (endVisible) {
             // Draw horizontal arrow line at end
             drawList->AddLine(end   - ImVec2(width, 0), end,   lineColor, thickness);
@@ -157,7 +163,19 @@ namespace hex::plugin::builtin {
                 auto &firstVisibleLine = this->m_lines->at(processingStart);
                 auto &lastVisibleLine = this->m_lines->at(processingEnd - 1);
 
-                std::list<u64> destinations;
+                const u32 slotCount = std::floor(std::max<float>(1.0F, jumpColumnWidth / 10_scaled));
+                std::map<u64, u64> occupiedSlots;
+
+                auto findFreeSlot = [&](u64 jumpDestination) {
+                    for (u32 i = 0; i < slotCount; i += 1) {
+                        if (!occupiedSlots.contains(i) || occupiedSlots[i] == jumpDestination) {
+                            return i;
+                        }
+                    }
+
+                    return slotCount;
+                };
+
                 for (auto sourceLineIndex = processingStart; sourceLineIndex < processingEnd; sourceLineIndex += 1) {
                     const auto &sourceLine = this->m_lines->at(sourceLineIndex);
 
@@ -165,24 +183,31 @@ namespace hex::plugin::builtin {
                         for (auto destinationLineIndex = processingStart; destinationLineIndex < processingEnd; destinationLineIndex += 1) {
                             const auto &destinationLine = this->m_lines->at(destinationLineIndex);
 
+                            auto freeSlot = findFreeSlot(*jumpDestination);
+
+                            bool jumpFound = false;
                             if (*jumpDestination == destinationLine.region.getStartAddress()) {
-                                drawJumpLine(sourceLine.linePos, destinationLine.linePos, jumpColumnWidth, destinations.size(), true, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
-                                destinations.push_back(*jumpDestination);
-                                break;
+                                drawJumpLine(sourceLine.linePos, destinationLine.linePos, jumpColumnWidth, freeSlot, true, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
+                                jumpFound = true;
                             } else if (*jumpDestination > lastVisibleLine.region.getStartAddress()) {
-                                drawJumpLine(sourceLine.linePos, lastVisibleLine.linePos, jumpColumnWidth, destinations.size(), false, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
-                                destinations.push_back(*jumpDestination);
-                                break;
+                                drawJumpLine(sourceLine.linePos, lastVisibleLine.linePos, jumpColumnWidth, freeSlot, false, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
+                                jumpFound = true;
                             } else if (*jumpDestination < firstVisibleLine.region.getStartAddress()) {
-                                drawJumpLine(sourceLine.linePos, firstVisibleLine.linePos, jumpColumnWidth, destinations.size(), false, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
-                                destinations.push_back(*jumpDestination);
+                                drawJumpLine(sourceLine.linePos, firstVisibleLine.linePos, jumpColumnWidth, freeSlot, false, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
+                                jumpFound = true;
+                            }
+
+                            if (jumpFound) {
+                                if (!occupiedSlots.contains(freeSlot))
+                                    occupiedSlots[freeSlot] = *jumpDestination;
                                 break;
                             }
                         }
                     }
 
-                    std::erase_if(destinations, [&](u64 address) {
-                        return sourceLine.region.getStartAddress() == address;
+                    std::erase_if(occupiedSlots, [&](const auto &entry) {
+                        auto &[slot, destination] = entry;
+                        return sourceLine.region.getStartAddress() == destination;
                     });
                 }
             }
