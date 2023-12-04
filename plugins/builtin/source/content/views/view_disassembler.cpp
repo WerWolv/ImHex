@@ -26,7 +26,7 @@ namespace hex::plugin::builtin {
         this->m_lines.get(provider).emplace_back(ImHexApi::HexEditor::ProviderRegion { instruction.region, provider }, std::move(bytes), instruction.mnemonic, instruction.operands, instruction.jumpDestination, ImVec2());
     }
 
-    static void drawJumpLine(ImVec2 start, ImVec2 end, float columnWidth, u32 slot, ImVec2, bool hovered) {
+    static void drawJumpLine(ImVec2 start, ImVec2 end, float columnWidth, u32 slot, bool endVisible, bool hovered) {
         const u32 slotCount = std::floor(std::max<float>(1.0F, columnWidth / 10_scaled));
 
         if (slot >= slotCount)
@@ -41,15 +41,20 @@ namespace hex::plugin::builtin {
         const auto lineColor = ImColor::HSV(hovered ? 0.25F : 0.3F + (slot / float(slotCount)) * 0.7F, hovered ? 1.0F : 0.8F, hovered ? 1.0F : 0.8F);
         const auto thickness = 2.0_scaled;
 
-        // Draw line
-        drawList->AddLine(start - ImVec2(width, 0), start, lineColor, thickness);
-        drawList->AddLine(end   - ImVec2(width, 0), end,   lineColor, thickness);
+        // Draw vertical arrow line
         drawList->AddLine(start - ImVec2(width, 0), end - ImVec2(width, 0), lineColor, thickness);
 
-        //if (end.y >= startCursorPos.y + ImGui::GetScrollY())
-        // Draw arrow head
-        drawList->AddLine(end + scaled({ -5, -5 }), end, lineColor, thickness);
-        drawList->AddLine(end + scaled({ -5,  5 }), end, lineColor, thickness);
+        // Draw horizontal arrow line at start
+        drawList->AddLine(start - ImVec2(width, 0), start, lineColor, thickness);
+        
+        if (endVisible) {
+            // Draw horizontal arrow line at end
+            drawList->AddLine(end   - ImVec2(width, 0), end,   lineColor, thickness);
+
+            // Draw arrow head
+            drawList->AddLine(end + scaled({ -5, -5 }), end, lineColor, thickness);
+            drawList->AddLine(end + scaled({ -5,  5 }), end, lineColor, thickness);
+        }
     }
 
 
@@ -107,7 +112,6 @@ namespace hex::plugin::builtin {
 
             int processingStart = 0, processingEnd = 0;
 
-            auto startCursorPos = ImGui::GetCursorScreenPos();
             float jumpColumnWidth = 0.0F;
             std::optional<u64> hoveredAddress;
             while (clipper.Step()) {
@@ -149,18 +153,29 @@ namespace hex::plugin::builtin {
             }
 
             // Draw jump arrows
-            {
+            if (!this->m_lines->empty()) {
+                auto &firstVisibleLine = this->m_lines->at(processingStart);
+                auto &lastVisibleLine = this->m_lines->at(processingEnd - 1);
+
                 std::list<u64> destinations;
                 for (auto sourceLineIndex = processingStart; sourceLineIndex < processingEnd; sourceLineIndex += 1) {
                     const auto &sourceLine = this->m_lines->at(sourceLineIndex);
 
-                    if (sourceLine.jumpDestination.has_value()) {
+                    if (auto jumpDestination = sourceLine.jumpDestination; jumpDestination.has_value()) {
                         for (auto destinationLineIndex = processingStart; destinationLineIndex < processingEnd; destinationLineIndex += 1) {
                             const auto &destinationLine = this->m_lines->at(destinationLineIndex);
 
-                            if (destinationLine.region.getStartAddress() == sourceLine.jumpDestination.value()) {
-                                drawJumpLine(sourceLine.linePos, destinationLine.linePos, jumpColumnWidth, destinations.size(), startCursorPos, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
-                                destinations.push_back(destinationLine.region.getStartAddress());
+                            if (*jumpDestination == destinationLine.region.getStartAddress()) {
+                                drawJumpLine(sourceLine.linePos, destinationLine.linePos, jumpColumnWidth, destinations.size(), true, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
+                                destinations.push_back(*jumpDestination);
+                                break;
+                            } else if (*jumpDestination > lastVisibleLine.region.getStartAddress()) {
+                                drawJumpLine(sourceLine.linePos, lastVisibleLine.linePos, jumpColumnWidth, destinations.size(), false, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
+                                destinations.push_back(*jumpDestination);
+                                break;
+                            } else if (*jumpDestination < firstVisibleLine.region.getStartAddress()) {
+                                drawJumpLine(sourceLine.linePos, firstVisibleLine.linePos, jumpColumnWidth, destinations.size(), false, hoveredAddress == sourceLine.region.getStartAddress() || hoveredAddress == destinationLine.region.getStartAddress());
+                                destinations.push_back(*jumpDestination);
                                 break;
                             }
                         }
