@@ -3,6 +3,9 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
+#include <hex/api/imhex_api.hpp>
+#include <hex/api/localization_manager.hpp>
+
 namespace pl::ptrn { class Pattern; }
 namespace hex::prv { class Provider; }
 

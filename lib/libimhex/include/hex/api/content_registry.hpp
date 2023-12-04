@@ -17,6 +17,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "task_manager.hpp"
+
 using ImGuiDataType = int;
 using ImGuiInputTextFlags = int;
 struct ImColor;
@@ -1004,7 +1006,14 @@ namespace hex {
                 std::string mnemonic;
                 std::string operands;
 
-                std::optional<u64> jumpDestination;
+                enum class Type {
+                    Jump,
+                    Call,
+                    Return,
+                    Other
+                } type;
+
+                std::optional<u64> extraData;
             };
 
             class Architecture {
@@ -1017,7 +1026,7 @@ namespace hex {
                 }
 
                 virtual void drawConfigInterface() = 0;
-                virtual std::vector<Instruction> disassemble(prv::Provider *provider, const Region& region) = 0;
+                virtual std::vector<Instruction> disassemble(prv::Provider *provider, const Region& region, Task &task) = 0;
 
             private:
                 std::string m_unlocalizedName;
