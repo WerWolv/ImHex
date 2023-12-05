@@ -9,12 +9,21 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <fonts/fontawesome_font.h>
+#include <hex/api/event_manager.hpp>
 
 namespace hex::plugin::windows {
 
     void addFooterItems() {
 
+        static bool showResourceUsage = true;
+        EventManager::subscribe<EventSettingsChanged>([]{
+            showResourceUsage = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_resource_usage", true);
+        });
+
         ContentRegistry::Interface::addFooterItem([] {
+            if (!showResourceUsage)
+                return;
+
             static float cpuUsage = 0.0F;
 
             if (ImGuiExt::HasSecondPassed()) {
@@ -65,6 +74,9 @@ namespace hex::plugin::windows {
         });
 
         ContentRegistry::Interface::addFooterItem([] {
+            if (!showResourceUsage)
+                return;
+
             static MEMORYSTATUSEX memInfo;
             static PROCESS_MEMORY_COUNTERS_EX pmc;
 

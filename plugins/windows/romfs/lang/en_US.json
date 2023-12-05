@@ -18,6 +18,7 @@
         "hex.windows.provider.process_memory.utils.inject_dll.success": "Successfully injected DLL '{0}'!",
         "hex.windows.provider.process_memory.utils.inject_dll.failure": "Failed to inject DLL '{0}'!",
         "hex.builtin.setting.general.context_menu_entry": "Windows context menu entry",
+        "hex.builtin.setting.interface.show_resource_usage": "Show resource usage in footer",
         "hex.windows.view.tty_console.auto_scroll": "Auto scroll",
         "hex.windows.view.tty_console.baud": "Baud rate",
         "hex.windows.view.tty_console.clear": "Clear",

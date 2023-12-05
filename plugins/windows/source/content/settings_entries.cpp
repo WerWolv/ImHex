@@ -62,6 +62,8 @@ namespace hex::plugin::windows {
 
                     widget.load(hasImHexContextMenuEntry());
                 });
+
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.show_resource_usage", true);
     }
 
 }
