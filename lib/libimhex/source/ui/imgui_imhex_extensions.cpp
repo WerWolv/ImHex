@@ -56,6 +56,8 @@ namespace ImGuiExt {
 
     Texture::Texture(std::span<const std::byte> bytes, int width, int height) : Texture(reinterpret_cast<const ImU8*>(bytes.data()), bytes.size(), width, height) { }
 
+    Texture::Texture(const std::fs::path &path) : Texture(reinterpret_cast<const char *>(path.u8string().c_str())) { }
+
     Texture::Texture(const char *path) {
         unsigned char *imageData = stbi_load(path, &this->m_width, &this->m_height, nullptr, 4);
         if (imageData == nullptr)
@@ -382,7 +384,7 @@ namespace ImGuiExt {
         Separator();
     }
 
-    bool InfoTooltip(const char *text) {
+    bool InfoTooltip(const char *text, bool isSeparator) {
         static double lastMoveTime;
         static ImGuiID lastHoveredID;
 
@@ -393,7 +395,10 @@ namespace ImGuiExt {
         if (IsItemHovered() && (currTime - lastMoveTime) >= 0.5 && hoveredID == lastHoveredID) {
             if (!std::string_view(text).empty()) {
                 BeginTooltip();
-                TextUnformatted(text);
+                if (isSeparator)
+                    SeparatorText(text);
+                else
+                    TextUnformatted(text);
                 EndTooltip();
             }
 
@@ -893,6 +898,26 @@ namespace ImGuiExt {
         return toggled;
     }
 
+    bool DimmedIconToggle(const char *iconOn, const char *iconOff, bool *v) {
+        bool pushed = false;
+        bool toggled = false;
+
+        if (*v) {
+            PushStyleColor(ImGuiCol_Border, GetStyleColorVec4(ImGuiCol_ButtonActive));
+            pushed = true;
+        }
+
+        if (DimmedIconButton(*v ? iconOn : iconOff, GetStyleColorVec4(ImGuiCol_Text))) {
+            *v = !*v;
+            toggled = true;
+        }
+
+        if (pushed)
+            PopStyleColor();
+
+        return toggled;
+    }
+
     void TextOverlay(const char *text, ImVec2 pos) {
         const auto textSize = CalcTextSize(text);
         const auto textPos  = pos - textSize / 2;
@@ -935,6 +960,47 @@ namespace ImGuiExt {
 
     void EndSubWindow() {
         ImGui::EndChild();
+    }
+
+    bool VSliderAngle(const char* label, ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags) {
+        if (format == NULL)
+            format = "%.0f deg";
+        float v_deg = (*v_rad) * 360.0f / (2 * IM_PI);
+        bool value_changed = ImGui::VSliderFloat(label, size, &v_deg, v_degrees_min, v_degrees_max, format, flags);
+        *v_rad = v_deg * (2 * IM_PI) / 360.0f;
+        return value_changed;
+    }
+
+    bool InputFilePicker(const char *label, std::fs::path &path, const std::vector<hex::fs::ItemFilter> &validExtensions) {
+        bool picked = false;
+
+        ImGui::PushID(label);
+
+        const auto buttonSize = ImGui::CalcTextSize(ICON_VS_FOLDER) + ImGui::GetStyle().FramePadding * 2;
+        ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - ImGui::GetStyle().FramePadding.x);
+        std::string string = wolv::util::toUTF8String(path);
+        if (ImGui::InputText("##pathInput", string, ImGuiInputTextFlags_AutoSelectAll)) {
+            path = std::u8string(string.begin(), string.end());
+            picked = true;
+        }
+        ImGui::PopItemWidth();
+
+        ImGui::SameLine();
+
+        if (ImGui::Button(ICON_VS_FOLDER, buttonSize)) {
+            hex::fs::openFileBrowser(hex::fs::DialogMode::Open, validExtensions, [&](const std::fs::path &pickedPath) {
+                path = pickedPath;
+                picked = true;
+            });
+        }
+
+        ImGui::SameLine();
+
+        ImGui::TextUnformatted(label);
+
+        ImGui::PopID();
+
+        return picked;
     }
 
 }

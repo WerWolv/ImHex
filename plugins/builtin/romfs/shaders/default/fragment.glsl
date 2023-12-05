@@ -1,12 +1,40 @@
 #version 330 core
-in vec3 normal;
-out vec4 color;
+
+in VertexData {
+    vec3 normal;
+    vec4 fragColor;
+    vec2 texCoord;
+    vec3 lightPosition;
+    vec3 fragPosition;
+    vec4 lightBrightness;
+    vec3 lightColor;
+} vertexData;
+
+out vec4 outColor;
+
+uniform sampler2D modelTexture;
 
 void main() {
-    vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(vec3(0, 0, -1));
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * vec3(1.0, 1.0, 1.0);
+    vec3 ambientLightColor = vec3(1.0, 1.0, 1.0);
 
-    color = vec4(1.0f, 0.5f, 0.2f, 1.0f) * vec4(diffuse, 1.0) + 0.1;
+    // Ambient lighting
+    vec3 ambient = vertexData.lightBrightness.x * ambientLightColor;
+
+    // Diffuse lighting
+    vec3 normalVector = normalize(vertexData.normal);
+
+    vec3 lightDirection = normalize(vertexData.lightPosition - vertexData.fragPosition);
+    float diffuse = vertexData.lightBrightness.y * max(dot(normalVector, lightDirection), 0.0);
+
+    // Specular lighting
+    vec3 viewDirection = normalize(-vertexData.fragPosition);
+    vec3 reflectDirection = normalize(-reflect(lightDirection, normalVector));
+    float reflectionIntensity = pow(max(dot(viewDirection, reflectDirection), 0.0), vertexData.lightBrightness.w);
+    float specular = vertexData.lightBrightness.z * reflectionIntensity;
+
+    float dst = distance(vertexData.lightPosition, vertexData.fragPosition);
+    float attn = 1./(1.0f + 0.1f*dst + 0.01f*dst*dst) ;
+    vec3 color = ((diffuse + specular)*attn + ambient) * vertexData.lightColor;
+    outColor = (texture(modelTexture, vertexData.texCoord) + vertexData.fragColor) * vec4(color, 1.0);
 }
+

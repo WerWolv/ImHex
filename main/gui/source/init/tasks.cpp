@@ -1,4 +1,5 @@
 #include "init/tasks.hpp"
+#include "misc/freetype/imgui_freetype.h"
 
 #include <imgui.h>
 

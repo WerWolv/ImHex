@@ -80,6 +80,17 @@ add_imhex_plugin(
         source/content/tools/tcp_client_server.cpp
         source/content/tools/wiki_explainer.cpp
 
+        source/content/pl_visualizers/line_plot.cpp
+        source/content/pl_visualizers/scatter_plot.cpp
+        source/content/pl_visualizers/image.cpp
+        source/content/pl_visualizers/disassembler.cpp
+        source/content/pl_visualizers/3d_model.cpp
+        source/content/pl_visualizers/sound.cpp
+        source/content/pl_visualizers/chunk_entropy.cpp
+        source/content/pl_visualizers/hex_viewer.cpp
+        source/content/pl_visualizers/coordinates.cpp
+        source/content/pl_visualizers/timestamp.cpp
+
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
         source/content/views/view_pattern_data.cpp

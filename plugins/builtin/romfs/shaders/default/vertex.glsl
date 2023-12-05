@@ -1,36 +1,39 @@
 #version 330 core
 layout (location = 0) in vec3 in_Position;
-layout (location = 1) in vec3 in_Normal;
+layout (location = 1) in vec4 in_Color;
+layout (location = 2) in vec3 in_Normal;
+layout (location = 3) in vec2 in_TexCoord;
 
-/*uniform float time;*/
-uniform float scale;
-uniform vec3 rotation;
-uniform vec3 translation;
+uniform mat4 modelScale;
 
-out vec3 normal;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
 
-mat4 rotationMatrix(vec3 axis, float angle) {
-    axis = normalize(axis);
-    float s = sin(angle);
-    float c = cos(angle);
-    float oc = 1.0 - c;
+uniform vec3 lightPosition;
+uniform vec4 lightBrightness;
+uniform vec3 lightColor;
 
-    return mat4(oc * axis.x * axis.x + c,           oc * axis.x * axis.y - axis.z * s,  oc * axis.z * axis.x + axis.y * s,  0.0,
-    oc * axis.x * axis.y + axis.z * s,  oc * axis.y * axis.y + c,           oc * axis.y * axis.z - axis.x * s,  0.0,
-    oc * axis.z * axis.x - axis.y * s,  oc * axis.y * axis.z + axis.x * s,  oc * axis.z * axis.z + c,           0.0,
-    0.0,                                0.0,                                0.0,                                1.0);
-}
-
-mat4 viewMatrix(vec3 rotation) {
-    mat4 rotationX = rotationMatrix(vec3(1, 0, 0), rotation.x);
-    mat4 rotationY = rotationMatrix(vec3(0, 1, 0), rotation.y);
-    mat4 rotationZ = rotationMatrix(vec3(0, 0, 1), rotation.z);
-
-    return rotationX * rotationY * rotationZ;
-}
+out VertexData {
+     vec3 normal;
+     vec4 fragColor;
+     vec2 texCoord;
+     vec3 lightPosition;
+     vec3 fragPosition;
+     vec4 lightBrightness;
+     vec3 lightColor;
+} vertexData;
 
 void main() {
-    mat4 view = viewMatrix(rotation);
-    normal = (vec4(in_Normal, 1.0) * view).xyz * -1;
-    gl_Position = vec4((in_Position + translation) * -scale, 1.0) * view;
+     gl_Position                   = projectionMatrix * viewMatrix * modelScale * vec4(in_Position, 1.0);
+
+     vertexData.normal             = mat3(transpose(inverse(modelScale))) * in_Normal;
+     vertexData.fragPosition       = vec3(viewMatrix * modelScale * vec4(in_Position, 1.0));
+     vertexData.fragColor          = in_Color;
+     vertexData.texCoord           = in_TexCoord;
+     vertexData.lightBrightness    = lightBrightness;
+     vertexData.lightColor         = lightColor;
+
+     // Transform world-space light position to view-space light position
+     vertexData.lightPosition      = vec3(viewMatrix * modelMatrix * vec4(lightPosition, 1.0));
 }
