@@ -66,6 +66,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "decode",     "Decode a string",                              hex::plugin::builtin::handleDecodeCommand           },
     { "magic",      "Identify file types",                          hex::plugin::builtin::handleMagicCommand            },
     { "pl",         "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand  },
+    { "hexdump",    "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {

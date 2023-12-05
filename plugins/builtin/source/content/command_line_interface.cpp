@@ -1,5 +1,6 @@
 #include "content/command_line_interface.hpp"
 
+#include <content/providers/file_provider.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/event_manager.hpp>
 
@@ -11,6 +12,7 @@
 #include <romfs/romfs.hpp>
 
 #include <hex/api/plugin_manager.hpp>
+#include <hex/helpers/utils.hpp>
 #include <hex/subcommands/subcommands.hpp>
 
 #include <wolv/utils/string.hpp>
@@ -272,6 +274,32 @@ namespace hex::plugin::builtin {
         }
 
         std::exit(pl::cli::executeCommandLineInterface(processedArgs));
+    }
+
+    void handleHexdumpCommand(const std::vector<std::string> &args) {
+        if (args.size() < 1 || args.size() > 3) {
+            log::println("usage: imhex --hexdump <file> <offset> <size>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        std::fs::path filePath = reinterpret_cast<const char8_t*>(args[0].data());
+
+        FileProvider provider;
+
+        provider.setPath(filePath);
+        if (!provider.open()) {
+            log::println("Failed to open file '{}'", args[0]);
+            std::exit(EXIT_FAILURE);
+        }
+
+        u64 startAddress = args.size() >= 2 ? std::stoull(args[1], nullptr, 0) : 0x00;
+        u64 size         = args.size() >= 3 ? std::stoull(args[2], nullptr, 0) : provider.getActualSize();
+
+        size = std::min(size, provider.getActualSize());
+
+        log::print("{}", hex::generateHexView(startAddress, size - startAddress, &provider));
+
+        std::exit(EXIT_SUCCESS);
     }
 
 

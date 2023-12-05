@@ -17,6 +17,7 @@ namespace hex::plugin::builtin {
     void handleDecodeCommand(const std::vector<std::string> &args);
     void handleMagicCommand(const std::vector<std::string> &args);
     void handlePatternLanguageCommand(const std::vector<std::string> &args);
+    void handleHexdumpCommand(const std::vector<std::string> &args);
 
 
     void registerCommandForwarders();
