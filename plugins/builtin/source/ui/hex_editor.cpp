@@ -759,8 +759,8 @@ namespace hex::plugin::builtin::ui {
                         ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.data_size"_lang);
                         ImGui::SameLine();
                         ImGuiExt::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
-                                                       this->m_provider->getActualSize(),
-                                                       this->m_provider->getActualSize(),
+                                                       this->m_provider->getBaseAddress(),
+                                                       this->m_provider->getBaseAddress() + this->m_provider->getActualSize(),
                                                        this->m_showHumanReadableUnits
                                                            ? hex::toByteString(this->m_provider->getActualSize())
                                                            : hex::format("{}", this->m_provider->getActualSize())

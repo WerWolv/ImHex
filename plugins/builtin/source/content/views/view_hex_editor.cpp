@@ -16,6 +16,7 @@
 #include <content/popups/popup_file_chooser.hpp>
 
 #include <imgui_internal.h>
+#include <content/popups/popup_blocking_task.hpp>
 
 using namespace std::literals::string_literals;
 
@@ -692,7 +693,10 @@ namespace hex::plugin::builtin {
 
     static void saveAs() {
         fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-            ImHexApi::Provider::get()->saveAs(path);
+            auto provider = ImHexApi::Provider::get();
+            PopupBlockingTask::open(TaskManager::createTask("Saving...", TaskManager::NoProgress, [=](Task &){
+                provider->saveAs(path);
+            }));
         });
     }
 

@@ -9,10 +9,13 @@
 
 #include <hex/helpers/magic.hpp>
 #include <wolv/io/file.hpp>
+#include <wolv/literals.hpp>
 
 #include <nlohmann/json.hpp>
 
 namespace hex::prv {
+
+    using namespace wolv::literals;
 
     namespace {
 
@@ -53,21 +56,13 @@ namespace hex::prv {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
 
         if (file.isValid()) {
-            std::vector<u8> buffer(std::min<size_t>(0xFF'FFFF, this->getActualSize()), 0x00);
+            std::vector<u8> buffer(std::min<size_t>(2_MiB, this->getActualSize()), 0x00);
             size_t bufferSize = 0;
 
             for (u64 offset = 0; offset < this->getActualSize(); offset += bufferSize) {
-                bufferSize = buffer.size();
+                bufferSize = std::min<size_t>(buffer.size(), this->getActualSize() - offset);
 
-                auto [region, valid] = this->getRegionValidity(offset + this->getBaseAddress());
-                if (!valid)
-                    offset = region.getEndAddress() + 1;
-
-                auto [newRegion, newValid] = this->getRegionValidity(offset + this->getBaseAddress());
-                bufferSize = std::min<size_t>(bufferSize, (newRegion.getEndAddress() - offset) + 1);
-                bufferSize = std::min<size_t>(bufferSize, this->getActualSize() - offset);
-
-                this->read(offset + this->getBaseAddress(), buffer.data(), bufferSize, true);
+                this->read(this->getBaseAddress() + offset, buffer.data(), bufferSize, true);
                 file.writeBuffer(buffer.data(), bufferSize);
             }
 

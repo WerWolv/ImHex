@@ -490,6 +490,8 @@
         "hex.builtin.popup.exit_application.desc": "You have unsaved changes made to your Project.\nAre you sure you want to exit?",
         "hex.builtin.popup.exit_application.title": "Exit Application?",
         "hex.builtin.popup.waiting_for_tasks.title": "Waiting for Tasks",
+        "hex.builtin.popup.blocking_task.title": "Running Task",
+        "hex.builtin.popup.blocking_task.desc": "A task is currently executing.",
         "hex.builtin.popup.save_layout.title": "Save Layout",
         "hex.builtin.popup.save_layout.desc": "Enter a name under which to save the current layout.",
         "hex.builtin.popup.waiting_for_tasks.desc": "There are still tasks running in the background.\nImHex will close after they are finished.",

@@ -207,6 +207,9 @@ namespace hex {
             return 0;
 
         auto task = this->m_task.lock();
+        if (task->getMaxValue() == 0)
+            return 0;
+
         return u32((task->getValue() * 100) / task->getMaxValue());
     }
 
