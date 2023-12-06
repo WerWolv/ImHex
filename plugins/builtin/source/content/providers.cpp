@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
                     auto providerSettings = nlohmann::json::parse(tar.readString(basePath / hex::format("{}.json", id)));
 
                     auto providerType = providerSettings.at("type").get<std::string>();
-                    auto provider = ImHexApi::Provider::createProvider(providerType, true, false);
+                    auto newProvider = ImHexApi::Provider::createProvider(providerType, true, false);
                     ON_SCOPE_EXIT {
                         if (!success) {
                             for (auto &task : TaskManager::getRunningTasks())
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
                         }
                     };
 
-                    if (provider == nullptr) {
+                    if (newProvider == nullptr) {
                         // If a provider is not created, it will be overwritten when saving the project,
                         // so we should prevent the project from loading at all
                         showError(hex::format("hex.builtin.popup.error.project.load"_lang,
@@ -70,19 +70,19 @@ namespace hex::plugin::builtin {
                         break;
                     }
 
-                    provider->setID(id);
+                    newProvider->setID(id);
                     bool loaded = false;
                     try {
-                        provider->loadSettings(providerSettings.at("settings"));
+                        newProvider->loadSettings(providerSettings.at("settings"));
                         loaded = true;
                     } catch (const std::exception &e){
-                            providerWarnings[provider] = e.what();
+                            providerWarnings[newProvider] = e.what();
                     }
                     if (loaded) {
-                        if (!provider->open() || !provider->isAvailable() || !provider->isReadable()) {
-                            providerWarnings[provider] = provider->getErrorMessage();
+                        if (!newProvider->open() || !newProvider->isAvailable() || !newProvider->isReadable()) {
+                            providerWarnings[newProvider] = newProvider->getErrorMessage();
                         } else
-                            EventManager::post<EventProviderOpened>(provider);
+                            EventManager::post<EventProviderOpened>(newProvider);
                     }
                 }
 

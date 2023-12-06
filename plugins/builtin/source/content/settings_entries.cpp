@@ -255,8 +255,8 @@ namespace hex::plugin::builtin {
                         this->m_editing = false;
                         ShortcutManager::resumeShortcuts();
 
-                        if (!this->m_hasDuplicate) {
                             settingChanged = true;
+                        if (!this->m_hasDuplicate) {
                         }
                     }
                 }
