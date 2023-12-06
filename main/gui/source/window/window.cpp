@@ -793,6 +793,21 @@ namespace hex {
             if (!view->shouldProcess())
                 continue;
 
+            const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
+                const auto &[unlocalizedName, view] = entry;
+
+                return view->hasViewMenuItemEntry() && view->shouldProcess();
+            });
+
+            ImGuiWindowClass windowClass = {};
+
+            windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoCloseButton;
+
+            if (openViewCount <= 1 || LayoutManager::isLayoutLocked())
+                windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags_NoTabBar;
+
+            ImGui::SetNextWindowClass(&windowClass);
+
             // Draw view
             view->draw();
 

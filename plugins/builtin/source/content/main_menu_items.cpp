@@ -521,7 +521,7 @@ namespace hex::plugin::builtin {
                 if (view->hasViewMenuItemEntry()) {
                     auto &state = view->getWindowOpenState();
 
-                    if (ImGui::MenuItem(Lang(view->getUnlocalizedName()), "", &state, ImHexApi::Provider::isValid()))
+                    if (ImGui::MenuItem(Lang(view->getUnlocalizedName()), "", &state, ImHexApi::Provider::isValid() && !LayoutManager::isLayoutLocked()))
                         view->setWindowJustOpened(state);
                 }
             }
@@ -547,6 +547,14 @@ namespace hex::plugin::builtin {
                 LayoutManager::save(name);
             });
         }, ImHexApi::Provider::isValid);
+
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 1150, [] {
+            bool locked = LayoutManager::isLayoutLocked();
+            if (ImGui::MenuItem(locked ? "Unlock Layout" : "Lock Layout", nullptr, &locked)) {
+                LayoutManager::lockLayout(locked);
+                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", locked);
+            }
+        });
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.layout" }, 1200);
 

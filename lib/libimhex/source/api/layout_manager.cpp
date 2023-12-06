@@ -1,11 +1,11 @@
 #include <hex/api/layout_manager.hpp>
 
 #include <hex/helpers/fs.hpp>
+#include <hex/helpers/logger.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <imgui.h>
-
-#include <fmt/format.h>
+#include <hex/api/content_registry.hpp>
 
 namespace hex {
 
@@ -14,6 +14,8 @@ namespace hex {
         std::optional<std::fs::path> s_layoutPathToLoad;
         std::optional<std::string> s_layoutStringToLoad;
         std::vector<LayoutManager::Layout> s_layouts;
+
+        bool s_layoutLocked = false;
 
     }
 
@@ -32,8 +34,22 @@ namespace hex {
         std::transform(fileName.begin(), fileName.end(), fileName.begin(), tolower);
         fileName += ".hexlyt";
 
-        const auto path = hex::fs::getDefaultPaths(fs::ImHexPath::Layouts).front() / fileName;
-        ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(path).c_str());
+        std::fs::path layoutPath;
+        for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
+            if (!hex::fs::isPathWritable(layoutPath))
+                continue;
+
+            layoutPath = path / fileName;
+        }
+
+        if (layoutPath.empty()) {
+            log::error("Failed to save layout '{}'. No writable path found", name);
+            return;
+        }
+
+        const auto pathString = wolv::util::toUTF8String(layoutPath);
+        ImGui::SaveIniSettingsToDisk(pathString.c_str());
+        log::info("Layout '{}' saved to {}", name, pathString);
 
         LayoutManager::reload();
     }
@@ -44,13 +60,16 @@ namespace hex {
 
     void LayoutManager::process() {
         if (s_layoutPathToLoad.has_value()) {
-            ImGui::LoadIniSettingsFromDisk(wolv::util::toUTF8String(*s_layoutPathToLoad).c_str());
+            const auto pathString = wolv::util::toUTF8String(*s_layoutPathToLoad);
+            ImGui::LoadIniSettingsFromDisk(pathString.c_str());
             s_layoutPathToLoad = std::nullopt;
+            log::info("Loaded layout from {}", pathString);
         }
 
         if (s_layoutStringToLoad.has_value()) {
             ImGui::LoadIniSettingsFromMemory(s_layoutStringToLoad->c_str());
             s_layoutStringToLoad = std::nullopt;
+            log::info("Loaded layout from string");
         }
     }
 
@@ -83,6 +102,15 @@ namespace hex {
         s_layoutPathToLoad.reset();
         s_layoutStringToLoad.reset();
         s_layouts.clear();
+    }
+
+    bool LayoutManager::isLayoutLocked() {
+        return s_layoutLocked;
+    }
+
+    void LayoutManager::lockLayout(bool locked) {
+        log::info("Layout {}", locked ? "locked" : "unlocked");
+        s_layoutLocked = locked;
     }
 
 }

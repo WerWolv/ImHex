@@ -15,6 +15,7 @@
 #include <nlohmann/json.hpp>
 
 #include <utility>
+#include <hex/api/layout_manager.hpp>
 #include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
@@ -489,6 +490,11 @@ namespace hex::plugin::builtin {
 
     }
 
+    static void loadLayoutSettings() {
+        const bool locked = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", false);
+        LayoutManager::lockLayout(locked);
+    }
+
     static void loadThemeSettings() {
         auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
 
@@ -512,6 +518,7 @@ namespace hex::plugin::builtin {
     }
 
     void loadSettings() {
+        loadLayoutSettings();
         loadThemeSettings();
         loadFolderSettings();
     }

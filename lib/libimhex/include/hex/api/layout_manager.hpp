@@ -4,8 +4,6 @@
 
 #include <string>
 
-#include <nlohmann/json_fwd.hpp>
-
 namespace hex {
 
     class LayoutManager {
@@ -54,6 +52,18 @@ namespace hex {
          * @brief Reset the layout manager
          */
         static void reset();
+
+        /**
+         * @brief Checks is the current layout is locked
+         */
+        static bool isLayoutLocked();
+
+        /**
+         * @brief Locks or unlocks the current layout
+         * @note If the layout is locked, it cannot be modified by the user anymore
+         * @param locked True to lock the layout, false to unlock it
+         */
+        static void lockLayout(bool locked);
 
     private:
         LayoutManager() = default;
