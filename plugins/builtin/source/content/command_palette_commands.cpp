@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::CommandPaletteCommands::add(
             ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
-            "#",
+            "=",
             "hex.builtin.command.calc.desc",
             [](auto input) {
                 wolv::math_eval::MathEvaluator<long double> evaluator;
@@ -24,7 +24,7 @@ namespace hex::plugin::builtin {
 
                 std::optional<long double> result = evaluator.evaluate(input);
                 if (result.has_value())
-                    return hex::format("#{0} = {1}", input.data(), result.value());
+                    return hex::format("{0} = {1}", input.data(), result.value());
                 else if (evaluator.hasError())
                     return hex::format("Error: {}", *evaluator.getLastError());
                 else

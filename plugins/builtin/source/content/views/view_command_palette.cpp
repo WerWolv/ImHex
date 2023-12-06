@@ -53,24 +53,29 @@ namespace hex::plugin::builtin {
             if (ImGui::InputText("##command_input", this->m_commandBuffer)) {
                 this->m_lastResults = this->getCommandResults(this->m_commandBuffer);
             }
+
             ImGui::PopStyleVar(2);
             ImGui::PopStyleColor(3);
             ImGui::PopItemWidth();
             ImGui::SetItemDefaultFocus();
 
-            // Handle giving back focus to the input text box
-            if (this->m_focusInputTextBox) {
-                ImGui::SetKeyboardFocusHere(-1);
-                ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
-
+            if (this->m_moveCursorToEnd) {
                 auto textState = ImGui::GetInputTextState(ImGui::GetID("##command_input"));
                 if (textState != nullptr) {
                     textState->Stb.cursor =
                     textState->Stb.select_start =
                     textState->Stb.select_end = this->m_commandBuffer.size();
                 }
+                this->m_moveCursorToEnd = false;
+            }
+
+            // Handle giving back focus to the input text box
+            if (this->m_focusInputTextBox) {
+                ImGui::SetKeyboardFocusHere(-1);
+                ImGui::ActivateItemByID(ImGui::GetID("##command_input"));
 
                 this->m_focusInputTextBox = false;
+                this->m_moveCursorToEnd = true;
             }
 
             // Execute the currently selected command when pressing enter
@@ -148,7 +153,7 @@ namespace hex::plugin::builtin {
 
             auto AutoComplete = [this, currCommand = command](auto) {
                 this->focusInputTextBox();
-                this->m_commandBuffer = currCommand;
+                this->m_commandBuffer = currCommand + " ";
                 this->m_lastResults = this->getCommandResults(currCommand);
             };
 
@@ -160,7 +165,7 @@ namespace hex::plugin::builtin {
                     if (match != MatchType::PerfectMatch)
                         results.push_back({ command + " (" + Lang(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
-                        auto matchedCommand = input.substr(command.length());
+                        auto matchedCommand = wolv::util::trim(input.substr(command.length()));
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }
                 }
@@ -172,7 +177,7 @@ namespace hex::plugin::builtin {
                     if (match != MatchType::PerfectMatch)
                         results.push_back({ command + " (" + Lang(unlocalizedDescription) + ")", "", AutoComplete });
                     else {
-                        auto matchedCommand = input.substr(command.length() + 1);
+                        auto matchedCommand = wolv::util::trim(input.substr(command.length() + 1));
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }
                 }
@@ -185,7 +190,7 @@ namespace hex::plugin::builtin {
 
             auto processedInput = input;
             if (processedInput.starts_with(command))
-                processedInput = processedInput.substr(command.length());
+                processedInput = wolv::util::trim(processedInput.substr(command.length()));
 
             for (const auto &[description, callback] : queryCallback(processedInput)) {
                 if (type == ContentRegistry::CommandPaletteCommands::Type::SymbolCommand) {
