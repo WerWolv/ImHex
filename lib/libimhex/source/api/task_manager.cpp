@@ -82,8 +82,11 @@ namespace hex {
     }
 
     void Task::update(u64 value) {
+        // Update the current progress value of the task
         this->m_currValue.store(value, std::memory_order_relaxed);
 
+        // Check if the task has been interrupted by the main thread and if yes,
+        // throw an exception that is generally not caught by the task
         if (this->m_shouldInterrupt.load(std::memory_order_relaxed)) [[unlikely]]
             throw TaskInterruptor();
     }
@@ -96,6 +99,7 @@ namespace hex {
     void Task::interrupt() {
         this->m_shouldInterrupt = true;
 
+        // Call the interrupt callback on the current thread if one is set
         if (this->m_interruptCallback)
             this->m_interruptCallback();
     }
@@ -157,59 +161,62 @@ namespace hex {
     void Task::exception(const char *message) {
         std::scoped_lock lock(this->m_mutex);
 
+        // Store information about the caught exception
         this->m_exceptionMessage = message;
         this->m_hadException = true;
     }
 
 
     bool TaskHolder::isRunning() const {
-        if (this->m_task.expired())
+        auto task = this->m_task.lock();
+        if (!task)
             return false;
 
-        auto task = this->m_task.lock();
         return !task->isFinished();
     }
 
     bool TaskHolder::hadException() const {
-        if (this->m_task.expired())
+        auto task = this->m_task.lock();
+        if (!task)
             return false;
 
-        auto task = this->m_task.lock();
         return !task->hadException();
     }
 
     bool TaskHolder::shouldInterrupt() const {
-        if (this->m_task.expired())
+        auto task = this->m_task.lock();
+        if (!task)
             return false;
 
-        auto task = this->m_task.lock();
         return !task->shouldInterrupt();
     }
 
     bool TaskHolder::wasInterrupted() const {
-        if (this->m_task.expired())
+        auto task = this->m_task.lock();
+        if (!task)
             return false;
 
-        auto task = this->m_task.lock();
         return !task->wasInterrupted();
     }
 
     void TaskHolder::interrupt() const {
-        if (this->m_task.expired())
+        auto task = this->m_task.lock();
+        if (!task)
             return;
 
-        auto task = this->m_task.lock();
         task->interrupt();
     }
 
     u32 TaskHolder::getProgress() const {
-        if (this->m_task.expired())
-            return 0;
-
         auto task = this->m_task.lock();
+        if (!task)
+            return false;
+
+        // If the max value is 0, the task has no progress
         if (task->getMaxValue() == 0)
             return 0;
 
+        // Calculate the progress of the task from 0 to 100
         return u32((task->getValue() * 100) / task->getMaxValue());
     }
 
@@ -219,49 +226,74 @@ namespace hex {
 
         log::debug("Initializing task manager thread pool with {} workers.", threadCount);
 
+        // Create worker threads
         for (u32 i = 0; i < threadCount; i++)
             s_workers.emplace_back(TaskManager::runner);
     }
 
     void TaskManager::exit() {
-        for (auto &task : s_tasks)
+        // Interrupt all tasks
+        for (auto &task : s_tasks) {
             task->interrupt();
+        }
 
+        // Ask worker threads to exit after finishing their task
         for (auto &thread : s_workers)
             thread.request_stop();
 
+        // Wake up all the idle worker threads so they can exit
         s_jobCondVar.notify_all();
 
+        // Wait for all worker threads to exit
         s_workers.clear();
+
+        s_tasks.clear();
+        s_taskQueue.clear();
     }
 
     void TaskManager::runner(const std::stop_token &stopToken) {
         while (true) {
             std::shared_ptr<Task> task;
+
+            // Set the thread name to "Idle Task" while waiting for a task
+            setThreadName("Idle Task");
+
             {
+                // Wait for a task to be added to the queue
                 std::unique_lock lock(s_queueMutex);
                 s_jobCondVar.wait(lock, [&] {
                     return !s_taskQueue.empty() || stopToken.stop_requested();
                 });
+
+                // Check if the thread should exit
                 if (stopToken.stop_requested())
                     break;
 
+                // Grab the next task from the queue
                 task = std::move(s_taskQueue.front());
                 s_taskQueue.pop_front();
             }
 
             try {
+                // Set the thread name to the name of the task
                 setThreadName(Lang(task->m_unlocalizedName));
+
+                // Execute the task
                 task->m_function(*task);
-                setThreadName("Idle Task");
-                log::debug("Finished task {}", task->m_unlocalizedName);
+
+                log::debug("Task '{}' finished", task->m_unlocalizedName);
             } catch (const Task::TaskInterruptor &) {
+                // Handle the task being interrupted by user request
                 task->interruption();
             } catch (const std::exception &e) {
-                log::error("Exception in task {}: {}", task->m_unlocalizedName, e.what());
+                log::error("Exception in task '{}': {}", task->m_unlocalizedName, e.what());
+
+                // Handle the task throwing an uncaught exception
                 task->exception(e.what());
             } catch (...) {
-                log::error("Exception in task {}", task->m_unlocalizedName);
+                log::error("Exception in task '{}'", task->m_unlocalizedName);
+
+                // Handle the task throwing an uncaught exception of unknown type
                 task->exception("Unknown Exception");
             }
 
@@ -269,39 +301,43 @@ namespace hex {
         }
     }
 
-    TaskHolder TaskManager::createTask(std::string name, u64 maxValue, std::function<void(Task &)> function) {
-        log::debug("Creating task {}", name);
-        std::unique_lock lock(s_queueMutex);
-        auto task = std::make_shared<Task>(std::move(name), maxValue, false, std::move(function));
+    TaskHolder TaskManager::createTask(std::string name, u64 maxValue, bool background, std::function<void(Task&)> function) {
+        std::scoped_lock lock(s_queueMutex);
+
+        // Construct new task
+        auto task = std::make_shared<Task>(std::move(name), maxValue, background, std::move(function));
+
         s_tasks.emplace_back(task);
-        s_taskQueue.emplace_back(task);
+
+        // Add task to the queue for the worker to pick up
+        s_taskQueue.emplace_back(std::move(task));
 
         s_jobCondVar.notify_one();
 
         return TaskHolder(s_tasks.back());
+    }
+
+
+    TaskHolder TaskManager::createTask(std::string name, u64 maxValue, std::function<void(Task &)> function) {
+        log::debug("Creating task {}", name);
+        return createTask(std::move(name), maxValue, false, std::move(function));
     }
 
     TaskHolder TaskManager::createBackgroundTask(std::string name, std::function<void(Task &)> function) {
         log::debug("Creating background task {}", name);
-        std::unique_lock lock(s_queueMutex);
-
-        auto task = std::make_shared<Task>(std::move(name), 0, true, std::move(function));
-        s_tasks.emplace_back(task);
-        s_taskQueue.emplace_back(task);
-
-        s_jobCondVar.notify_one();
-
-        return TaskHolder(s_tasks.back());
+        return createTask(std::move(name), 0, true, std::move(function));
     }
 
     void TaskManager::collectGarbage() {
         {
-            std::unique_lock lock1(s_queueMutex);
-            std::erase_if(s_tasks, [](const auto &task) { return task->isFinished() && !task->hadException(); });
+            std::scoped_lock lock(s_queueMutex);
+            std::erase_if(s_tasks, [](const auto &task) {
+                return task->isFinished() && !task->hadException();
+            });
         }
 
         if (s_tasks.empty()) {
-            std::unique_lock lock2(s_deferredCallsMutex);
+            std::scoped_lock lock(s_deferredCallsMutex);
             for (auto &call : s_tasksFinishedCallbacks)
                 call();
             s_tasksFinishedCallbacks.clear();
@@ -314,7 +350,7 @@ namespace hex {
     }
 
     size_t TaskManager::getRunningTaskCount() {
-        std::unique_lock lock(s_queueMutex);
+        std::scoped_lock lock(s_queueMutex);
 
         return std::count_if(s_tasks.begin(), s_tasks.end(), [](const auto &task){
             return !task->isBackgroundTask();
@@ -322,7 +358,7 @@ namespace hex {
     }
 
     size_t TaskManager::getRunningBackgroundTaskCount() {
-        std::unique_lock lock(s_queueMutex);
+        std::scoped_lock lock(s_queueMutex);
 
         return std::count_if(s_tasks.begin(), s_tasks.end(), [](const auto &task){
             return task->isBackgroundTask();

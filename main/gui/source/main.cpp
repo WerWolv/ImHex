@@ -116,14 +116,12 @@ namespace {
 
 
     /**
-     * @brief Deinitializes ImHex by running all exit tasks and terminating all asynchronous tasks
+     * @brief Deinitializes ImHex by running all exit tasks
      */
     void deinitializeImHex() {
         // Run exit tasks
         init::runExitTasks();
 
-        // Terminate all asynchronous tasks
-        TaskManager::exit();
     }
 
     /**

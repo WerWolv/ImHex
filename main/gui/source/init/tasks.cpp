@@ -63,8 +63,10 @@ namespace hex::init {
         // destructors to be called correctly. To prevent crashes when ImHex exits, we need to delete all shared data
 
         EventManager::post<EventImHexClosing>();
-
         EventManager::clear();
+
+        // Terminate all asynchronous tasks
+        TaskManager::exit();
 
         while (ImHexApi::Provider::isValid())
             ImHexApi::Provider::remove(ImHexApi::Provider::get());
@@ -113,8 +115,6 @@ namespace hex::init {
         ContentRegistry::Interface::impl::getTitleBarButtons().clear();
 
         ShortcutManager::clearShortcuts();
-
-        TaskManager::getRunningTasks().clear();
 
         ContentRegistry::DataProcessorNode::impl::getEntries().clear();
 

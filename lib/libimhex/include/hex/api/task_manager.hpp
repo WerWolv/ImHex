@@ -166,6 +166,8 @@ namespace hex {
 
     private:
         static void runner(const std::stop_token &stopToken);
+
+        static TaskHolder createTask(std::string name, u64 maxValue, bool background, std::function<void(Task &)> function);
     };
 
 }

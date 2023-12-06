@@ -84,9 +84,12 @@ namespace hex::plugin::builtin {
                 const auto &tasks = TaskManager::getRunningTasks();
                 const auto &frontTask = tasks.front();
 
-                const auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / frontTask->getMaxValue();
+                if (frontTask == nullptr)
+                    return;
 
-                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, progress * 100);
+                const auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
+
+                ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, u32(progress * 100));
 
                 const auto widgetStart = ImGui::GetCursorPos();
                 {
@@ -113,7 +116,7 @@ namespace hex::plugin::builtin {
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
-                        ImGuiExt::SmallProgressBar(frontTask->getMaxValue() == 0 ? 1 : (float(frontTask->getValue()) / frontTask->getMaxValue()), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
+                        ImGuiExt::SmallProgressBar(task->getMaxValue() == 0 ? 1 : (float(task->getValue()) / float(task->getMaxValue())), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
                         ImGui::SameLine();
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
