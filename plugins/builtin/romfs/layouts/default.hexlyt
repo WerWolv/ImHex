@@ -149,15 +149,15 @@ DockSpace       ID=0x81A8BB71 Window=0xF9B0A590 Pos=161,350 Size=2560,1427 Split
     DockNode    ID=0x00000004 Parent=0x00000002 SizeRef=52,0 Selected=0xCACA884B
 
 [ImHex][General]
-hex.builtin.view.bookmarks.name=1
+hex.builtin.view.bookmarks.name=0
 hex.builtin.view.command_palette.name=0
 hex.builtin.view.constants.name=0
 hex.builtin.view.data_inspector.name=1
-hex.builtin.view.data_processor.name=1
+hex.builtin.view.data_processor.name=0
 hex.builtin.view.diff.name=0
 hex.builtin.view.disassembler.name=0
-hex.builtin.view.find.name=1
-hex.builtin.view.hashes.name=1
+hex.builtin.view.find.name=0
+hex.builtin.view.hashes.name=0
 hex.builtin.view.help.about.name=0
 hex.builtin.view.hex_editor.name=1
 hex.builtin.view.information.name=0
