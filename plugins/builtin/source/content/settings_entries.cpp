@@ -192,13 +192,13 @@ namespace hex::plugin::builtin {
 
         class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
-            KeybindingWidget(View *view, const Shortcut &shortcut) : m_view(view), m_shortcut(shortcut), m_defaultShortcut(shortcut) {}
+            KeybindingWidget(View *view, const Shortcut &shortcut) : m_view(view), m_shortcut(shortcut), m_drawShortcut(shortcut), m_defaultShortcut(shortcut) {}
 
             bool draw(const std::string &name) override {
                 std::string label;
 
                 if (!this->m_editing)
-                    label = this->m_shortcut.toString();
+                    label = this->m_drawShortcut.toString();
                 else
                     label = "...";
 
@@ -226,12 +226,16 @@ namespace hex::plugin::builtin {
 
                 bool settingChanged = false;
 
-                ImGui::BeginDisabled(this->m_shortcut == this->m_defaultShortcut);
+                ImGui::BeginDisabled(this->m_drawShortcut == this->m_defaultShortcut);
                 if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, this->m_defaultShortcut, this->m_view);
-                    this->m_shortcut = this->m_defaultShortcut;
 
-                    settingChanged = true;
+                    this->m_drawShortcut = this->m_defaultShortcut;
+                    if (!this->m_hasDuplicate) {
+                        this->m_shortcut = this->m_defaultShortcut;
+                        settingChanged = true;
+                    }
+
                 }
                 ImGui::EndDisabled();
 
@@ -251,7 +255,9 @@ namespace hex::plugin::builtin {
                         this->m_editing = false;
                         ShortcutManager::resumeShortcuts();
 
-                        settingChanged = true;
+                        if (!this->m_hasDuplicate) {
+                            settingChanged = true;
+                        }
                     }
                 }
 
@@ -270,6 +276,7 @@ namespace hex::plugin::builtin {
                 auto newShortcut = Shortcut(keys);
                 this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
                 this->m_shortcut = std::move(newShortcut);
+                this->m_drawShortcut = this->m_shortcut;
             }
 
             nlohmann::json store() override {
@@ -286,7 +293,6 @@ namespace hex::plugin::builtin {
         private:
             bool detectShortcut() {
                 if (const auto &shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
-                    log::info("Changed shortcut to {}", shortcut->toString());
                     auto keys = this->m_shortcut.getKeys();
                     std::erase_if(keys, [](Key key) {
                         return key != AllowWhileTyping && key != CurrentView;
@@ -298,11 +304,16 @@ namespace hex::plugin::builtin {
 
                     auto newShortcut = Shortcut(std::move(keys));
                     this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
+                    this->m_drawShortcut = std::move(newShortcut);
 
                     if (!this->m_hasDuplicate) {
-                        this->m_shortcut = std::move(newShortcut);
-                        return true;
+                        this->m_shortcut = this->m_drawShortcut;
+                        log::info("Changed shortcut to {}", shortcut->toString());
+                    } else {
+                        log::warn("Changing shortcut failed as it overlapped with another one", shortcut->toString());
                     }
+
+                    return true;
                 }
 
                 return false;
@@ -310,7 +321,7 @@ namespace hex::plugin::builtin {
 
         private:
             View *m_view = nullptr;
-            Shortcut m_shortcut, m_defaultShortcut;
+            Shortcut m_shortcut, m_drawShortcut, m_defaultShortcut;
             bool m_editing = false;
             bool m_hasDuplicate = false;
         };
