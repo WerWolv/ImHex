@@ -34,10 +34,7 @@ namespace hex {
         void setupNativeWindow();
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
-        void drawTitleBar();
-
-        void drawTitleBarBorderless() const;
-        void drawTitleBarBorder();
+        void drawTitleBar() const;
 
         void frameBegin();
         void frame();

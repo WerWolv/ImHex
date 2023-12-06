@@ -250,7 +250,7 @@ namespace hex {
         }
     }
 
-    void Window::drawTitleBarBorderless() const {
+    void Window::drawTitleBar() const {
         auto titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
         auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
@@ -259,49 +259,55 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
+        const auto windowSize = ImHexApi::System::getMainWindowSize();
+        const auto searchBoxSize = ImVec2(std::sqrt(windowSize.x) * 14_scaled, titleBarHeight - 3_scaled);
+        const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 3_scaled);
+
         // Custom titlebar buttons implementation for borderless window mode
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
         // Draw custom title bar buttons
         if (!titleBarButtons.empty()) {
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * float(4 + titleBarButtons.size()));
-            for (const auto &[icon, tooltip, callback]: titleBarButtons) {
-                if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
-                    callback();
+
+            if (ImGui::GetCursorPosX() > (searchBoxPos.x + searchBoxSize.x)) {
+                for (const auto &[icon, tooltip, callback]: titleBarButtons) {
+                    if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
+                        callback();
+                    }
+                    ImGuiExt::InfoTooltip(Lang(tooltip));
                 }
-                ImGuiExt::InfoTooltip(Lang(tooltip));
             }
         }
 
-        // Draw minimize, restore and maximize buttons
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
-        if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
-            glfwIconifyWindow(this->m_window);
-        if (glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED)) {
-            if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
-                glfwRestoreWindow(this->m_window);
-        } else {
-            if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
-                glfwMaximizeWindow(this->m_window);
+        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+            // Draw minimize, restore and maximize buttons
+            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
+            if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
+                glfwIconifyWindow(this->m_window);
+            if (glfwGetWindowAttrib(this->m_window, GLFW_MAXIMIZED)) {
+                if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
+                    glfwRestoreWindow(this->m_window);
+            } else {
+                if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
+                    glfwMaximizeWindow(this->m_window);
+            }
+
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
+
+            // Draw close button
+            if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
+                ImHexApi::System::closeImHex();
+            }
+
+            ImGui::PopStyleColor(2);
         }
 
-
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
-
-        // Draw close button
-        if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
-            ImHexApi::System::closeImHex();
-        }
-
-        ImGui::PopStyleColor(5);
+        ImGui::PopStyleColor(3);
         ImGui::PopStyleVar();
 
         {
-            const auto windowSize = ImHexApi::System::getMainWindowSize();
-            const auto searchBoxSize = ImVec2(std::sqrt(windowSize.x) * 14_scaled, titleBarHeight - 3_scaled);
-            const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 3_scaled);
-
             const auto buttonColor = [](float alpha) {
                 return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
             };
@@ -320,40 +326,6 @@ namespace hex {
 
             ImGui::PopStyleVar(3);
             ImGui::PopStyleColor(3);
-        }
-    }
-
-    void Window::drawTitleBarBorder() {
-        auto titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
-        auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
-
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
-        ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
-
-        auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
-
-        // Draw custom title bar buttons
-        if (!titleBarButtons.empty()) {
-            ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * (titleBarButtons.size() + 0.5F));
-            for (const auto &[icon, tooltip, callback]: titleBarButtons) {
-                if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
-                    callback();
-                }
-                ImGuiExt::InfoTooltip(Lang(tooltip));
-            }
-        }
-
-        ImGui::PopStyleColor(3);
-        ImGui::PopStyleVar();
-    }
-
-    void Window::drawTitleBar() {
-        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
-            drawTitleBarBorderless();
-        } else {
-            drawTitleBarBorder();
         }
     }
 
@@ -1127,7 +1099,7 @@ namespace hex {
             }
         });
 
-        glfwSetWindowSizeLimits(this->m_window, 720_scaled, 480_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+        glfwSetWindowSizeLimits(this->m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         glfwShowWindow(this->m_window);
     }

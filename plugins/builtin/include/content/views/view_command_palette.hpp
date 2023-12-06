@@ -20,8 +20,8 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool shouldProcess() const override { return true; }
 
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }
-        [[nodiscard]] ImVec2 getMinSize() const override { return scaled({ 600, 150 }); }
-        [[nodiscard]] ImVec2 getMaxSize() const override { return scaled({ 600, 150 }); }
+        [[nodiscard]] ImVec2 getMinSize() const override { return ImVec2(std::min(ImHexApi::System::getMainWindowSize().x, 600_scaled), 150_scaled); }
+        [[nodiscard]] ImVec2 getMaxSize() const override { return this->getMinSize(); }
 
     private:
         enum class MatchType

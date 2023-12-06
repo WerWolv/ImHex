@@ -189,4 +189,4 @@ hex.builtin.tools.ieee754=0
 hex.builtin.tools.invariant_multiplication=0
 hex.builtin.tools.tcp_client_server=0
 hex.builtin.tools.euclidean_algorithm=0
-MainWindowSize=720,1000
+MainWindowSize=600,800
