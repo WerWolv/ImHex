@@ -376,7 +376,7 @@ namespace hex {
             }();
 
             const auto menuBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
-            auto sidebarPos   = ImGui::GetCursorPos() + ImVec2(0, menuBarHeight);
+            auto sidebarPos   = ImGui::GetCursorPos();
             auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 
             ImGui::SetCursorPosX(sidebarWidth);
@@ -439,47 +439,17 @@ namespace hex {
 
                     bool open = static_cast<u32>(openWindow) == index;
                     if (open) {
-                        static float width = 200_scaled;
 
                         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -1_scaled));
-                        ImGui::SetNextWindowSize(ImVec2(width, dockSpaceSize.y + 11_scaled - footerHeight));
+                        ImGui::SetNextWindowSize(ImVec2(0, dockSpaceSize.y + 5_scaled));
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1);
                         ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00000000);
-                        if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                            if (ImGui::BeginTable("##Table", 2)) {
-                                ImGui::TableSetupColumn("Main", ImGuiTableColumnFlags_WidthStretch, 1.0F);
-                                ImGui::TableSetupColumn("Slider", ImGuiTableColumnFlags_WidthFixed, 1);
-
-                                ImGui::TableNextRow();
-                                ImGui::TableNextColumn();
-
+                        if (ImGui::Begin("SideBarWindow", &open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                            if (ImGui::BeginChild("##Content", ImVec2(), ImGuiChildFlags_ResizeX)) {
                                 callback();
-
-                                ImGui::TableNextColumn();
-
-                                static bool dragging = false;
-                                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-                                ImGui::Button("##Resize", ImGui::GetContentRegionAvail());
-                                ImGui::PopStyleVar();
-
-                                if (ImGui::IsMouseDragging(ImGuiMouseButton_Left, 0)) {
-                                    if (ImGui::IsItemHovered())
-                                        dragging = true;
-                                } else {
-                                    dragging = false;
-                                }
-                                if (ImGui::IsItemHovered()) {
-                                    ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
-                                }
-
-                                if (dragging) {
-                                    width += ImGui::GetMouseDragDelta(ImGuiMouseButton_Left, 0).x;
-                                    ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
-                                }
-
-                                ImGui::EndTable();
                             }
+                            ImGui::EndChild();
 
                             if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && !sideBarFocused) {
                                 openWindow = -1;
@@ -583,7 +553,7 @@ namespace hex {
             if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
                 drawList->AddLine(
                         ImGui::GetWindowPos() + sidebarPos + ImVec2(sidebarWidth - 1_scaled, -2_scaled),
-                        ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled + menuBarHeight * 2),
+                        ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled + menuBarHeight),
                         ImGui::GetColorU32(ImGuiCol_Separator));
             }
         }
