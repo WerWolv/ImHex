@@ -696,7 +696,10 @@ namespace hex::plugin::builtin::ui {
             ImGui::GetWindowDrawList()->AddLine(windowEndPos - ImVec2(0, size.y - 1_scaled), windowEndPos - size + ImVec2(0, 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator), 2.0_scaled);
 
             if (ImGui::BeginChild("##footer", size, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                if (ImGui::BeginTable("##footer_table", 2)) {
+                if (ImGui::BeginTable("##footer_table", 3, ImGuiTableFlags_SizingFixedFit)) {
+                    ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5f);
+                    ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
+                    ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
                     ImGui::TableNextRow();
 
                     // Page slider
@@ -709,10 +712,19 @@ namespace hex::plugin::builtin::ui {
 
                         ImGui::BeginDisabled(pageCount <= 1);
                         {
+                            ImGui::PushItemWidth(-1);
                             if (ImGui::SliderScalar("##page_selection", ImGuiDataType_U32, &page, &MinPage, &pageCount, hex::format("0x%02llX / 0x{:02X}", pageCount).c_str()))
                                 this->m_provider->setCurrentPage(page - 1);
+                            ImGui::PopItemWidth();
                         }
                         ImGui::EndDisabled();
+                    }
+
+                    // Collapse button
+                    ImGui::TableNextColumn();
+                    {
+                        if (ImGuiExt::DimmedIconButton(this->m_footerCollapsed ? ICON_VS_FOLD_UP : ICON_VS_FOLD_DOWN, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                            this->m_footerCollapsed = !this->m_footerCollapsed;
                     }
 
                     // Page Address
@@ -728,135 +740,142 @@ namespace hex::plugin::builtin::ui {
                        );
                     }
 
-                    ImGui::TableNextRow();
+                    if (!this->m_footerCollapsed) {
+                        ImGui::TableNextRow();
 
-                    // Selection
-                    ImGui::TableNextColumn();
-                    {
-                        auto selection = getSelection();
-                        std::string value;
-                        if (isSelectionValid()) {
-                            value = hex::format("0x{0:08X} - 0x{1:08X} (0x{2:X} | {3})",
-                                                selection.getStartAddress(),
-                                                selection.getEndAddress(),
-                                                selection.getSize(),
-                                                this->m_showHumanReadableUnits
-                                                    ? hex::toByteString(selection.getSize())
-                                                    : hex::format("{}", selection.getSize())
+                        // Selection
+                        ImGui::TableNextColumn();
+                        {
+                            auto selection = getSelection();
+                            std::string value;
+                            if (isSelectionValid()) {
+                                value = hex::format("0x{0:08X} - 0x{1:08X} (0x{2:X} | {3})",
+                                                    selection.getStartAddress(),
+                                                    selection.getEndAddress(),
+                                                    selection.getSize(),
+                                                    this->m_showHumanReadableUnits
+                                                        ? hex::toByteString(selection.getSize())
+                                                        : hex::format("{}", selection.getSize())
+                                );
+                            }
+                            else
+                                value = std::string("hex.builtin.hex_editor.selection.none"_lang);
+
+                            ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.selection"_lang);
+                            ImGui::SameLine();
+                            ImGuiExt::TextFormattedSelectable(value);
+                        }
+
+                        ImGui::TableNextColumn();
+
+                        // Loaded data size
+                        ImGui::TableNextColumn();
+                        {
+                            ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.data_size"_lang);
+                            ImGui::SameLine();
+                            ImGuiExt::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
+                                                           this->m_provider->getBaseAddress(),
+                                                           this->m_provider->getBaseAddress() + this->m_provider->getActualSize(),
+                                                           this->m_showHumanReadableUnits
+                                                               ? hex::toByteString(this->m_provider->getActualSize())
+                                                               : hex::format("{}", this->m_provider->getActualSize())
                             );
                         }
-                        else
-                            value = std::string("hex.builtin.hex_editor.selection.none"_lang);
 
-                        ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.selection"_lang);
-                        ImGui::SameLine();
-                        ImGuiExt::TextFormattedSelectable(value);
-                    }
-
-                    // Loaded data size
-                    ImGui::TableNextColumn();
-                    {
-                        ImGuiExt::TextFormatted("{}:", "hex.builtin.hex_editor.data_size"_lang);
-                        ImGui::SameLine();
-                        ImGuiExt::TextFormattedSelectable("0x{0:08X} (0x{1:X} | {2})",
-                                                       this->m_provider->getBaseAddress(),
-                                                       this->m_provider->getBaseAddress() + this->m_provider->getActualSize(),
-                                                       this->m_showHumanReadableUnits
-                                                           ? hex::toByteString(this->m_provider->getActualSize())
-                                                           : hex::format("{}", this->m_provider->getActualSize())
-                        );
-                    }
-
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 2_scaled);
-
-                    // Upper/lower case hex
-                    ImGuiExt::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &this->m_upperCaseHex);
-                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.uppercase_hex"_lang);
-
-                    ImGui::SameLine();
-
-                    // Grayed out zeros
-                    ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &this->m_grayOutZero);
-                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.gray_out_zero"_lang);
-
-                    ImGui::SameLine();
-
-                    // ASCII view
-                    ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_KEY, &this->m_showAscii);
-                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.ascii_view"_lang);
-
-                    ImGui::SameLine(0, 1_scaled);
-
-                    // Custom encoding view
-                    ImGui::BeginDisabled(!this->m_currCustomEncoding.has_value());
-                    ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &this->m_showCustomEncoding);
-                    ImGui::EndDisabled();
-
-                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
-
-                    ImGui::SameLine();
-
-                    // Human-readable units
-                    ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &this->m_showHumanReadableUnits);
-                    ImGuiExt::InfoTooltip("hex.builtin.hex_editor.human_readable_units_footer"_lang);
-
-                    ImGui::TableNextColumn();
-
-                    // Visualizer
-                    {
-                        auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
-
-                        ImGuiExt::TextFormatted("{}: ", "hex.builtin.hex_editor.visualizer"_lang);
-
-                        ImGui::SameLine(0, 0);
-
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
                         {
-                            bool hasEndianess = this->m_currDataVisualizer->getBytesPerCell() > 1;
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 2_scaled);
 
-                            if (!hasEndianess)
-                                this->m_dataVisualizerEndianness = std::endian::native;
+                            // Upper/lower case hex
+                            ImGuiExt::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &this->m_upperCaseHex);
+                            ImGuiExt::InfoTooltip("hex.builtin.hex_editor.uppercase_hex"_lang);
 
-                            ImGui::BeginDisabled(!hasEndianess);
-                            {
-                                int sliderPos = this->m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
-                                ImGui::PushItemWidth(60_scaled);
-                                ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
-                                ImGui::PopItemWidth();
-                                this->m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
-                            }
+                            ImGui::SameLine();
+
+                            // Grayed out zeros
+                            ImGuiExt::DimmedIconToggle(ICON_VS_LIGHTBULB, &this->m_grayOutZero);
+                            ImGuiExt::InfoTooltip("hex.builtin.hex_editor.gray_out_zero"_lang);
+
+                            ImGui::SameLine();
+
+                            // ASCII view
+                            ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_KEY, &this->m_showAscii);
+                            ImGuiExt::InfoTooltip("hex.builtin.hex_editor.ascii_view"_lang);
+
+                            ImGui::SameLine(0, 1_scaled);
+
+                            // Custom encoding view
+                            ImGui::BeginDisabled(!this->m_currCustomEncoding.has_value());
+                            ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &this->m_showCustomEncoding);
                             ImGui::EndDisabled();
+
+                            ImGuiExt::InfoTooltip("hex.builtin.hex_editor.custom_encoding_view"_lang);
+
+                            ImGui::SameLine();
+
+                            // Human-readable units
+                            ImGuiExt::DimmedIconToggle(ICON_VS_SYMBOL_NUMERIC, &this->m_showHumanReadableUnits);
+                            ImGuiExt::InfoTooltip("hex.builtin.hex_editor.human_readable_units_footer"_lang);
                         }
 
-                        ImGui::SameLine(0, 2_scaled);
-                        ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x / 3) * 2);
-                        if (ImGui::BeginCombo("##visualizer", Lang(this->m_currDataVisualizer->getUnlocalizedName()))) {
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
 
-                            for (const auto &visualizer : visualizers) {
-                                if (ImGui::Selectable(Lang(visualizer->getUnlocalizedName()))) {
-                                    this->m_currDataVisualizer = visualizer;
-                                    this->m_encodingLineStartAddresses.clear();
+                        // Visualizer
+                        {
+                            auto &visualizers = ContentRegistry::HexEditor::impl::getVisualizers();
 
-                                    if (this->m_bytesPerRow < visualizer->getBytesPerCell())
-                                        this->m_bytesPerRow = visualizer->getBytesPerCell();
+                            ImGuiExt::TextFormatted("{}: ", "hex.builtin.hex_editor.visualizer"_lang);
+
+                            ImGui::SameLine(0, 0);
+
+                            {
+                                bool hasEndianess = this->m_currDataVisualizer->getBytesPerCell() > 1;
+
+                                if (!hasEndianess)
+                                    this->m_dataVisualizerEndianness = std::endian::native;
+
+                                ImGui::BeginDisabled(!hasEndianess);
+                                {
+                                    int sliderPos = this->m_dataVisualizerEndianness == std::endian::little ? 0 : 1;
+                                    ImGui::PushItemWidth(60_scaled);
+                                    ImGui::SliderInt("##visualizer_endianness", &sliderPos, 0, 1, sliderPos == 0 ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
+                                    ImGui::PopItemWidth();
+                                    this->m_dataVisualizerEndianness = sliderPos == 0 ? std::endian::little : std::endian::big;
                                 }
+                                ImGui::EndDisabled();
                             }
 
-                            ImGui::EndCombo();
-                        }
-                        ImGui::PopItemWidth();
+                            ImGui::SameLine(0, 2_scaled);
+                            ImGui::PushItemWidth((ImGui::GetContentRegionAvail().x / 3) * 2);
+                            if (ImGui::BeginCombo("##visualizer", Lang(this->m_currDataVisualizer->getUnlocalizedName()))) {
 
-                        ImGui::SameLine(0, 2_scaled);
-                        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-                        int bytesPerRow = this->m_bytesPerRow / this->getBytesPerCell();
-                        if (ImGui::SliderInt("##row_size", &bytesPerRow, 1, 32 / this->getBytesPerCell(), hex::format("{}", bytesPerRow * this->getBytesPerCell()).c_str())) {
-                            this->m_bytesPerRow = bytesPerRow * this->getBytesPerCell();
-                            this->m_encodingLineStartAddresses.clear();
+                                for (const auto &visualizer : visualizers) {
+                                    if (ImGui::Selectable(Lang(visualizer->getUnlocalizedName()))) {
+                                        this->m_currDataVisualizer = visualizer;
+                                        this->m_encodingLineStartAddresses.clear();
 
-                            ContentRegistry::Settings::write("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", this->m_bytesPerRow);
+                                        if (this->m_bytesPerRow < visualizer->getBytesPerCell())
+                                            this->m_bytesPerRow = visualizer->getBytesPerCell();
+                                    }
+                                }
+
+                                ImGui::EndCombo();
+                            }
+                            ImGui::PopItemWidth();
+
+                            ImGui::SameLine(0, 2_scaled);
+                            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                            int bytesPerRow = this->m_bytesPerRow / this->getBytesPerCell();
+                            if (ImGui::SliderInt("##row_size", &bytesPerRow, 1, 32 / this->getBytesPerCell(), hex::format("{}", bytesPerRow * this->getBytesPerCell()).c_str())) {
+                                this->m_bytesPerRow = bytesPerRow * this->getBytesPerCell();
+                                this->m_encodingLineStartAddresses.clear();
+
+                                ContentRegistry::Settings::write("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", this->m_bytesPerRow);
+                            }
+                            ImGui::PopItemWidth();
                         }
-                        ImGui::PopItemWidth();
                     }
 
                     ImGui::EndTable();
@@ -891,16 +910,20 @@ namespace hex::plugin::builtin::ui {
     void HexEditor::draw(float height) {
         const auto width = ImGui::GetContentRegionAvail().x;
 
-        auto FooterSize = ImVec2(width, ImGui::GetTextLineHeightWithSpacing() * 3.6F);
-        auto TableSize  = ImVec2(width, height - FooterSize.y);
+        auto footerSize = ImVec2(width, 0);
+        if (!this->m_footerCollapsed)
+            footerSize.y = ImGui::GetTextLineHeightWithSpacing() * 3.6F;
+        else
+            footerSize.y = ImGui::GetTextLineHeightWithSpacing() * 1.4F;
 
-        if (TableSize.y <= 0)
-            TableSize.y = height;
+        auto tableSize  = ImVec2(width, height - footerSize.y);
+        if (tableSize.y <= 0)
+            tableSize.y = height;
 
-        this->drawEditor(TableSize);
+        this->drawEditor(tableSize);
 
-        if (TableSize.y > 0)
-            this->drawFooter(FooterSize);
+        if (tableSize.y > 0)
+            this->drawFooter(tableSize);
 
         this->m_selectionChanged = false;
     }

@@ -262,6 +262,7 @@ namespace hex::plugin::builtin::ui {
         bool m_showHumanReadableUnits = true;
         bool m_syncScrolling = false;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
+        bool m_footerCollapsed = true;
 
         std::optional<EncodingFile> m_currCustomEncoding;
         std::vector<u64> m_encodingLineStartAddresses;
