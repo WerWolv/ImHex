@@ -8,6 +8,7 @@
 #include "content/providers/motorola_srec_provider.hpp"
 #include "content/providers/memory_file_provider.hpp"
 #include "content/providers/view_provider.hpp"
+#include <content/providers/process_memory_provider.hpp>
 #include "content/popups/popup_notification.hpp"
 #include "content/helpers/notification.hpp"
 
@@ -33,6 +34,10 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<MotorolaSRECProvider>();
         ContentRegistry::Provider::add<MemoryFileProvider>(false);
         ContentRegistry::Provider::add<ViewProvider>(false);
+
+        #if defined(OS_WINDOWS) ||defined (OS_LINUX)
+            ContentRegistry::Provider::add<ProcessMemoryProvider>();
+        #endif
 
         ProjectFile::registerHandler({
             .basePath = "providers",

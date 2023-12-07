@@ -60,6 +60,7 @@ add_imhex_plugin(
         source/content/providers/intel_hex_provider.cpp
         source/content/providers/motorola_srec_provider.cpp
         source/content/providers/memory_file_provider.cpp
+        source/content/providers/process_memory_provider.cpp
 
         source/content/tools/ascii_table.cpp
         source/content/tools/base_converter.cpp

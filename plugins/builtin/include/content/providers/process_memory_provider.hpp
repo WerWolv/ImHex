@@ -1,5 +1,7 @@
 #pragma once
 
+#if defined(OS_WINDOWS) || defined (OS_LINUX)
+
 #include <hex/providers/provider.hpp>
 #include <hex/api/localization_manager.hpp>
 
@@ -8,15 +10,30 @@
 #include <hex/helpers/utils.hpp>
 
 #include <set>
+#include <thread>
 
-namespace hex::plugin::windows {
+#include <nlohmann/json.hpp>
+
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#elif defined(OS_LINUX)
+    #include <sys/types.h>
+#endif
+
+namespace hex::plugin::builtin {
 
     class ProcessMemoryProvider : public hex::prv::Provider {
     public:
         ProcessMemoryProvider() = default;
         ~ProcessMemoryProvider() override = default;
 
-        [[nodiscard]] bool isAvailable() const override { return this->m_processHandle != nullptr; }
+        [[nodiscard]] bool isAvailable() const override {
+            #ifdef _WIN32
+                return this->m_processHandle != nullptr;
+            #elif __linux__
+                return this->m_processId != -1;
+            #endif
+        }
         [[nodiscard]] bool isReadable() const override { return true; }
         [[nodiscard]] bool isWritable() const override { return true; }
         [[nodiscard]] bool isResizable() const override { return false; }
@@ -25,19 +42,16 @@ namespace hex::plugin::windows {
 
         void readRaw(u64 address, void *buffer, size_t size) override;
         void writeRaw(u64 address, const void *buffer, size_t size) override;
-        [[nodiscard]] u64 getActualSize() const override { return std::numeric_limits<u64>::max(); }
+        [[nodiscard]] u64 getActualSize() const override { return 0xFFFF'FFFF'FFFF;  }
 
         void save() override {}
 
-        [[nodiscard]] std::string getName() const override { return hex::format("hex.windows.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
+        [[nodiscard]] std::string getName() const override { return hex::format("hex.builtin.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
         [[nodiscard]] std::vector<Description> getDataDescription() const override {
-            if (this->m_selectedProcess == nullptr)
-                return {};
-            else
-                return {
-                    { "hex.windows.provider.process_memory.process_name"_lang, this->m_selectedProcess->name },
-                    { "hex.windows.provider.process_memory.process_id"_lang, std::to_string(this->m_selectedProcess->id) }
-                };
+            return {
+                    { "hex.builtin.provider.process_memory.process_name"_lang, this->m_selectedProcess->name },
+                    { "hex.builtin.provider.process_memory.process_id"_lang, std::to_string(this->m_selectedProcess->id) }
+            };
         }
 
         [[nodiscard]] bool open() override;
@@ -48,11 +62,11 @@ namespace hex::plugin::windows {
         bool drawLoadInterface() override;
         void drawInterface() override;
 
-        void loadSettings(const nlohmann::json &) override;
-        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override;
+        void loadSettings(const nlohmann::json &) override {}
+        [[nodiscard]] nlohmann::json storeSettings(nlohmann::json) const override { return { }; }
 
         [[nodiscard]] std::string getTypeName() const override {
-            return "hex.windows.provider.process_memory";
+            return "hex.builtin.provider.process_memory";
         }
 
         [[nodiscard]] std::pair<Region, bool> getRegionValidity(u64) const override;
@@ -88,9 +102,15 @@ namespace hex::plugin::windows {
             return hex::containsIgnoreCase(memoryRegion.name, search);
         });
 
-        void* m_processHandle = reinterpret_cast<void*>(-1);
+#ifdef _WIN32
+        HANDLE m_processHandle = nullptr;
+#elif __linux__
+        pid_t m_processId = -1;
+#endif
 
         bool m_enumerationFailed = false;
     };
 
 }
+
+#endif
