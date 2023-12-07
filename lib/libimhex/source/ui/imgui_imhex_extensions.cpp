@@ -41,8 +41,8 @@ namespace ImGuiExt {
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
         #if defined(GL_UNPACK_ROW_LENGTH)
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -1001,6 +1001,57 @@ namespace ImGuiExt {
         ImGui::PopID();
 
         return picked;
+    }
+
+    bool ToggleSwitch(const char *label, bool *v) {
+        ImGuiWindow* window = GetCurrentWindow();
+        if (window->SkipItems)
+            return false;
+
+        ImGuiContext& g = *GImGui;
+        const ImGuiStyle& style = g.Style;
+        const ImGuiID id = window->GetID(label);
+        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+
+        const ImVec2 size = ImVec2(GetFrameHeight() * 2.0F, GetFrameHeight());
+        const ImVec2 pos = window->DC.CursorPos;
+        const ImRect total_bb(pos, pos + ImVec2(size.x + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), label_size.y + style.FramePadding.y * 2.0f));
+        ItemSize(total_bb, style.FramePadding.y);
+        if (!ItemAdd(total_bb, id))
+        {
+            IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
+            return false;
+        }
+
+        bool hovered, held;
+        bool pressed = ButtonBehavior(total_bb, id, &hovered, &held);
+        if (pressed)
+        {
+            *v = !(*v);
+            MarkItemEdited(id);
+        }
+
+        const ImRect knob_bb(pos, pos + size);
+
+        window->DrawList->AddRectFilled(knob_bb.Min, knob_bb.Max, GetColorU32(held ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : *v ? ImGuiCol_ButtonActive : ImGuiCol_Button), size.y / 2);
+
+        if (*v)
+            window->DrawList->AddCircleFilled(knob_bb.Max - ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_Text), 16);
+        else
+            window->DrawList->AddCircleFilled(knob_bb.Min + ImVec2(size.y / 2, size.y / 2), (size.y - style.ItemInnerSpacing.y) / 2, GetColorU32(ImGuiCol_Text), 16);
+
+        ImVec2 label_pos = ImVec2(knob_bb.Max.x + style.ItemInnerSpacing.x, knob_bb.Min.y + style.FramePadding.y);
+        if (g.LogEnabled)
+            LogRenderedText(&label_pos, *v ? "((*)  )" : "(  (*))");
+        if (label_size.x > 0.0f)
+            RenderText(label_pos, label);
+
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
+        return pressed;
+    }
+
+    bool ToggleSwitch(const char *label, bool v) {
+        return ToggleSwitch(label, &v);
     }
 
 }

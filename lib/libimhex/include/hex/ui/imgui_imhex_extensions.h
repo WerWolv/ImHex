@@ -289,6 +289,9 @@ namespace ImGuiExt {
 
     bool InputFilePicker(const char *label, std::fs::path &path, const std::vector<hex::fs::ItemFilter> &validExtensions);
 
+    bool ToggleSwitch(const char *label, bool *v);
+    bool ToggleSwitch(const char *label, bool v);
+
     template<typename T>
     constexpr ImGuiDataType getImGuiDataType() {
         if constexpr      (std::same_as<T, u8>)     return ImGuiDataType_U8;
