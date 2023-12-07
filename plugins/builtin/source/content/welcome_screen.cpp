@@ -205,7 +205,7 @@ namespace hex::plugin::builtin {
                         ImGui::TextUnformatted(ICON_VS_ARROW_RIGHT);
                         ImGui::SameLine(0, 2_scaled);
 
-                        ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX);
+                        ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.open_other"_lang, ImVec2(200_scaled, ImGui::GetTextLineHeightWithSpacing() * 6), ImGuiChildFlags_AutoResizeX);
                         for (const auto &unlocalizedProviderName : ContentRegistry::Provider::impl::getEntries()) {
                             if (ImGuiExt::Hyperlink(Lang(unlocalizedProviderName))) {
                                 ImHexApi::Provider::createProvider(unlocalizedProviderName);
