@@ -31,7 +31,7 @@ namespace hex::plugin::builtin {
 
         void readRaw(u64 offset, void *buffer, size_t size) override { hex::unused(offset, buffer, size); }
         void writeRaw(u64 offset, const void *buffer, size_t size) override { hex::unused(offset, buffer, size); }
-        [[nodiscard]] size_t getActualSize() const override { return 0x00; }
+        [[nodiscard]] u64 getActualSize() const override { return 0x00; }
 
         [[nodiscard]] std::string getName() const override { return "None"; }
         [[nodiscard]] std::vector<Description> getDataDescription() const override { return { }; }

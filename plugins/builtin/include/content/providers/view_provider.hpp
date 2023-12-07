@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
             this->m_provider->write(offset + this->m_startAddress, buffer, size);
         }
 
-        [[nodiscard]] size_t getActualSize() const override { return this->m_size; }
+        [[nodiscard]] u64 getActualSize() const override { return this->m_size; }
 
         [[nodiscard]] std::string getName() const override {
             if (this->m_provider == nullptr)

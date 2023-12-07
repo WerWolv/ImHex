@@ -335,7 +335,7 @@ namespace hex::plugin::builtin {
 #endif
     }
 
-    size_t DiskProvider::getActualSize() const {
+    u64 DiskProvider::getActualSize() const {
         return this->m_diskSize;
     }
 

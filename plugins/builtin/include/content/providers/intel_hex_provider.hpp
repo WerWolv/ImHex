@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        [[nodiscard]] size_t getActualSize() const override;
+        [[nodiscard]] u64 getActualSize() const override;
 
         bool open() override;
         void close() override;

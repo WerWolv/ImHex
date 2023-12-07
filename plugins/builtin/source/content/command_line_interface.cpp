@@ -295,7 +295,7 @@ namespace hex::plugin::builtin {
         u64 startAddress = args.size() >= 2 ? std::stoull(args[1], nullptr, 0) : 0x00;
         u64 size         = args.size() >= 3 ? std::stoull(args[2], nullptr, 0) : provider.getActualSize();
 
-        size = std::min(size, provider.getActualSize());
+        size = std::min<u64>(size, provider.getActualSize());
 
         log::print("{}", hex::generateHexView(startAddress, size - startAddress, &provider));
 

@@ -137,7 +137,7 @@ namespace hex::prv {
          * @brief Get the full size of the data in this provider
          * @return The size of the entire available data of this provider
          */
-        [[nodiscard]] virtual size_t getActualSize() const = 0;
+        [[nodiscard]] virtual u64 getActualSize() const = 0;
 
         /**
          * @brief Gets the type name of this provider

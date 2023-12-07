@@ -25,7 +25,7 @@ namespace hex::plugin::windows {
 
         void readRaw(u64 address, void *buffer, size_t size) override;
         void writeRaw(u64 address, const void *buffer, size_t size) override;
-        [[nodiscard]] size_t getActualSize() const override { return 0xFFFF'FFFF'FFFF;  }
+        [[nodiscard]] u64 getActualSize() const override { return std::numeric_limits<u64>::max(); }
 
         void save() override {}
 

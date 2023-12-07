@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
         Provider::save();
     }
 
-    size_t GDBProvider::getActualSize() const {
+    u64 GDBProvider::getActualSize() const {
         return this->m_size;
     }
 

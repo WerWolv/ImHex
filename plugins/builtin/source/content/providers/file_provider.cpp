@@ -138,7 +138,7 @@ namespace hex::plugin::builtin {
         this->resizeRaw(newSize);
     }
 
-    size_t FileProvider::getActualSize() const {
+    u64 FileProvider::getActualSize() const {
         return this->m_fileSize;
     }
 

@@ -43,7 +43,7 @@ namespace hex::test {
             std::memcpy(m_data->data() + offset, buffer, size);
         }
 
-        [[nodiscard]] size_t getActualSize() const override {
+        [[nodiscard]] u64 getActualSize() const override {
             return this->m_data->size();
         }
 

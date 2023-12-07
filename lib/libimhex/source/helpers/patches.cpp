@@ -36,7 +36,7 @@ namespace hex {
                     this->m_patches[offset] = static_cast<const u8*>(buffer)[i];
             }
 
-            [[nodiscard]] size_t getActualSize() const override {
+            [[nodiscard]] u64 getActualSize() const override {
                 if (this->m_patches.empty())
                     return 0;
                 else

@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
         hex::unused(offset, buffer, size);
     }
 
-    size_t IntelHexProvider::getActualSize() const {
+    u64 IntelHexProvider::getActualSize() const {
         return this->m_dataSize;
     }
 
