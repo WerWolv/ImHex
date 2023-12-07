@@ -258,6 +258,9 @@ namespace hex::plugin::builtin {
 
                 if (providerSelectorVisible) {
                     for (size_t i = 0; i < providers.size(); i++) {
+                        if (providers.size() == 1)
+                            break;
+
                         auto &tabProvider = providers[i];
                         const auto selectedProviderIndex = ImHexApi::Provider::getCurrentProviderIndex();
 
