@@ -569,6 +569,12 @@ namespace hex {
                     ImGui::SameLine();
                 }
 
+                if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
+                    if (ImGui::CloseButton(ImGui::GetID("ProviderCloseButton"), ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetContentRegionAvail().x - 17_scaled, 3_scaled))) {
+                        ImHexApi::Provider::remove(provider);
+                    }
+                }
+
                 ImGui::EndMenuBar();
             }
 

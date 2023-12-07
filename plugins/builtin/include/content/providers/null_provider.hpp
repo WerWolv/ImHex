@@ -11,7 +11,7 @@ namespace hex::plugin::builtin {
             EventManager::subscribe<EventProviderOpened>([this](auto *newProvider) {
                 if (newProvider == this)
                     return;
-                
+
                 ImHexApi::Provider::remove(this, true);
             });
         }
