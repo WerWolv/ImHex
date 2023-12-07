@@ -9,7 +9,7 @@ namespace hex {
     enum class Architecture : i32
     {
         ARM         = CS_ARCH_ARM,
-        ARM64       = CS_ARCH_ARM64,
+        ARM64       = CS_ARCH_AARCH64,
         MIPS        = CS_ARCH_MIPS,
         X86         = CS_ARCH_X86,
         PPC         = CS_ARCH_PPC,
@@ -50,7 +50,7 @@ namespace hex {
             std::array<const char *, static_cast<u32>(Architecture::MAX) + 1> names = { };
 
             names[CS_ARCH_ARM]          = "ARM";
-            names[CS_ARCH_ARM64]        = "AArch64";
+            names[CS_ARCH_AARCH64]        = "AArch64";
             names[CS_ARCH_MIPS]         = "MIPS";
             names[CS_ARCH_X86]          = "Intel x86";
             names[CS_ARCH_PPC]          = "PowerPC";

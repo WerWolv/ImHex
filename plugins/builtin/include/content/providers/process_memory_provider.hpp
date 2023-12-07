@@ -1,23 +1,24 @@
 #pragma once
 
+#if defined(OS_WINDOWS) || defined (OS_LINUX)
+
 #include <hex/providers/provider.hpp>
-#include <hex/api/localization.hpp>
+#include <hex/api/localization_manager.hpp>
 
-#ifdef _WIN32
-#  include <windows.h>
-#elif __linux__
-#  include <sys/types.h>
-#endif
-
-#include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/ui/widgets.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <array>
-#include <mutex>
-#include <string_view>
+#include <set>
 #include <thread>
+
+#include <nlohmann/json.hpp>
+
+#if defined(OS_WINDOWS)
+    #include <windows.h>
+#elif defined(OS_LINUX)
+    #include <sys/types.h>
+#endif
 
 namespace hex::plugin::builtin {
 
@@ -27,11 +28,11 @@ namespace hex::plugin::builtin {
         ~ProcessMemoryProvider() override = default;
 
         [[nodiscard]] bool isAvailable() const override {
-#ifdef _WIN32
-            return this->m_processHandle != nullptr;
-#elif __linux__
-            return this->m_processId != -1;
-#endif
+            #ifdef _WIN32
+                return this->m_processHandle != nullptr;
+            #elif __linux__
+                return this->m_processId != -1;
+            #endif
         }
         [[nodiscard]] bool isReadable() const override { return true; }
         [[nodiscard]] bool isWritable() const override { return true; }
@@ -39,12 +40,9 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isSavable() const override { return false; }
         [[nodiscard]] bool isDumpable() const override { return false; }
 
-        void read(u64 address, void *buffer, size_t size, bool) override { this->readRaw(address, buffer, size); }
-        void write(u64 address, const void *buffer, size_t size) override { this->writeRaw(address, buffer, size); }
-
         void readRaw(u64 address, void *buffer, size_t size) override;
         void writeRaw(u64 address, const void *buffer, size_t size) override;
-        [[nodiscard]] size_t getActualSize() const override { return 0xFFFF'FFFF'FFFF;  }
+        [[nodiscard]] u64 getActualSize() const override { return 0xFFFF'FFFF'FFFF;  }
 
         void save() override {}
 
@@ -81,7 +79,7 @@ namespace hex::plugin::builtin {
         struct Process {
             u32 id;
             std::string name;
-            ImGui::Texture icon;
+            ImGuiExt::Texture icon;
         };
 
         struct MemoryRegion {
@@ -114,3 +112,5 @@ namespace hex::plugin::builtin {
     };
 
 }
+
+#endif

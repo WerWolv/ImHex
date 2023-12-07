@@ -1,15 +1,13 @@
+#if defined(OS_WINDOWS) || defined (OS_LINUX)
+
 #include <content/providers/process_memory_provider.hpp>
 
 #if defined(OS_WINDOWS)
-#  include <windows.h>
-#  include <psapi.h>
-#  include <shellapi.h>
+    #include <windows.h>
+    #include <psapi.h>
+    #include <shellapi.h>
 #elif defined(OS_LINUX)
-#  include <filesystem>
-#  include <fstream>
-#  include <iostream>
-#  include <cerrno>
-#  include <sys/uio.h>
+    #include <sys/uio.h>
 #endif
 
 #include <imgui.h>
@@ -18,6 +16,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/ui/view.hpp>
 
+#include <wolv/io/fs.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
 
@@ -107,99 +106,96 @@ namespace hex::plugin::builtin {
 
     bool ProcessMemoryProvider::drawLoadInterface() {
         if (this->m_processes.empty() && !this->m_enumerationFailed) {
-#if defined(OS_WINDOWS)
-            DWORD numProcesses = 0;
-            std::vector<DWORD> processIds;
+            #if defined(OS_WINDOWS)
+                DWORD numProcesses = 0;
+                std::vector<DWORD> processIds;
 
-            do {
-                processIds.resize(processIds.size() + 1024);
-                if (EnumProcesses(processIds.data(), processIds.size() * sizeof(DWORD), &numProcesses) == FALSE) {
-                    processIds.clear();
-                    this->m_enumerationFailed = true;
-                    break;
-                }
-            } while (numProcesses == processIds.size() * sizeof(DWORD));
+                do {
+                    processIds.resize(processIds.size() + 1024);
+                    if (EnumProcesses(processIds.data(), processIds.size() * sizeof(DWORD), &numProcesses) == FALSE) {
+                        processIds.clear();
+                        this->m_enumerationFailed = true;
+                        break;
+                    }
+                } while (numProcesses == processIds.size() * sizeof(DWORD));
 
-            processIds.resize(numProcesses / sizeof(DWORD));
+                processIds.resize(numProcesses / sizeof(DWORD));
 
-            auto dc = GetDC(nullptr);
-            ON_SCOPE_EXIT { ReleaseDC(nullptr, dc); };
-            for (auto processId : processIds) {
-                HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
-                if (processHandle == nullptr)
-                    continue;
+                auto dc = GetDC(nullptr);
+                ON_SCOPE_EXIT { ReleaseDC(nullptr, dc); };
+                for (auto processId : processIds) {
+                    HANDLE processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+                    if (processHandle == nullptr)
+                        continue;
 
-                ON_SCOPE_EXIT { CloseHandle(processHandle); };
+                    ON_SCOPE_EXIT { CloseHandle(processHandle); };
 
-                char processName[MAX_PATH];
-                if (GetModuleBaseNameA(processHandle, nullptr, processName, MAX_PATH) == 0)
-                    continue;
+                    char processName[MAX_PATH];
+                    if (GetModuleBaseNameA(processHandle, nullptr, processName, MAX_PATH) == 0)
+                        continue;
 
-                ImGui::Texture texture;
-                {
-                    HMODULE moduleHandle = nullptr;
-                    DWORD numModules = 0;
-                    if (EnumProcessModules(processHandle, &moduleHandle, sizeof(HMODULE), &numModules) != FALSE) {
-                        char modulePath[MAX_PATH];
-                        if (GetModuleFileNameExA(processHandle, moduleHandle, modulePath, MAX_PATH) != FALSE) {
-                            SHFILEINFOA fileInfo;
-                            if (SHGetFileInfoA(modulePath, 0, &fileInfo, sizeof(SHFILEINFOA), SHGFI_ICON | SHGFI_SMALLICON) > 0) {
-                                ON_SCOPE_EXIT { DestroyIcon(fileInfo.hIcon); };
+                    ImGui::Texture texture;
+                    {
+                        HMODULE moduleHandle = nullptr;
+                        DWORD numModules = 0;
+                        if (EnumProcessModules(processHandle, &moduleHandle, sizeof(HMODULE), &numModules) != FALSE) {
+                            char modulePath[MAX_PATH];
+                            if (GetModuleFileNameExA(processHandle, moduleHandle, modulePath, MAX_PATH) != FALSE) {
+                                SHFILEINFOA fileInfo;
+                                if (SHGetFileInfoA(modulePath, 0, &fileInfo, sizeof(SHFILEINFOA), SHGFI_ICON | SHGFI_SMALLICON) > 0) {
+                                    ON_SCOPE_EXIT { DestroyIcon(fileInfo.hIcon); };
 
-                                ICONINFO iconInfo;
-                                if (GetIconInfo(fileInfo.hIcon, &iconInfo) != FALSE) {
-                                    ON_SCOPE_EXIT { DeleteObject(iconInfo.hbmColor); DeleteObject(iconInfo.hbmMask); };
+                                    ICONINFO iconInfo;
+                                    if (GetIconInfo(fileInfo.hIcon, &iconInfo) != FALSE) {
+                                        ON_SCOPE_EXIT { DeleteObject(iconInfo.hbmColor); DeleteObject(iconInfo.hbmMask); };
 
-                                    BITMAP bitmap;
-                                    if (GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bitmap) > 0) {
-                                        BITMAPINFO bitmapInfo = { };
-                                        bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-                                        bitmapInfo.bmiHeader.biWidth = bitmap.bmWidth;
-                                        bitmapInfo.bmiHeader.biHeight = -bitmap.bmHeight;
-                                        bitmapInfo.bmiHeader.biPlanes = 1;
-                                        bitmapInfo.bmiHeader.biBitCount = 32;
-                                        bitmapInfo.bmiHeader.biCompression = BI_RGB;
+                                        BITMAP bitmap;
+                                        if (GetObject(iconInfo.hbmColor, sizeof(BITMAP), &bitmap) > 0) {
+                                            BITMAPINFO bitmapInfo = { };
+                                            bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+                                            bitmapInfo.bmiHeader.biWidth = bitmap.bmWidth;
+                                            bitmapInfo.bmiHeader.biHeight = -bitmap.bmHeight;
+                                            bitmapInfo.bmiHeader.biPlanes = 1;
+                                            bitmapInfo.bmiHeader.biBitCount = 32;
+                                            bitmapInfo.bmiHeader.biCompression = BI_RGB;
 
-                                        std::vector<u32> pixels(bitmap.bmWidth * bitmap.bmHeight * 4);
-                                        if (GetDIBits(dc, iconInfo.hbmColor, 0, bitmap.bmHeight, pixels.data(), &bitmapInfo, DIB_RGB_COLORS) > 0) {
-                                            for (auto &pixel : pixels)
-                                                pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
+                                            std::vector<u32> pixels(bitmap.bmWidth * bitmap.bmHeight * 4);
+                                            if (GetDIBits(dc, iconInfo.hbmColor, 0, bitmap.bmHeight, pixels.data(), &bitmapInfo, DIB_RGB_COLORS) > 0) {
+                                                for (auto &pixel : pixels)
+                                                    pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                            texture = ImGui::Texture((u8*)pixels.data(), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
+                                                texture = ImGui::Texture((u8*)pixels.data(), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+
+                    this->m_processes.push_back({ processId, processName, std::move(texture) });
                 }
+            #elif defined(OS_LINUX)
+                for (const auto& entry : std::fs::directory_iterator("/proc")) {
+                    if (!std::fs::is_directory(entry)) continue;
 
-                this->m_processes.push_back({ processId, processName, std::move(texture) });
-            }
-#elif defined(OS_LINUX)
-            for (const auto& entry : std::fs::directory_iterator("/proc")) {
-                if (!std::fs::is_directory(entry)) continue;
+                    auto path = entry.path();
+                    u32 processId;
+                    try {
+                        processId = std::stoi(path.filename());
+                    } catch (...) {
+                        continue; // not a PID
+                    }
 
-                auto path = entry.path();
-                u32 processId;
-                try {
-                    processId = std::stoi(path.filename());
-                } catch (...) {
-                    continue; // not a PID
+                    wolv::io::File file(path /"cmdline", wolv::io::File::Mode::Read);
+                    if (!file.isValid())
+                        continue;
+
+                    std::string processName = file.readString(0xF'FFFF);
+
+                    this->m_processes.push_back({ processId, processName, ImGuiExt::Texture() });
                 }
-
-                std::ifstream file(path / "cmdline");
-                if (!file) continue;
-                std::stringstream buffer;
-                buffer << file.rdbuf();
-                file.close();
-                std::string processName = buffer.str();
-
-                ImGui::Texture texture;
-
-                this->m_processes.push_back({ processId, processName, std::move(texture) });
-            }
-#endif
+            #endif
         }
 
         if (this->m_enumerationFailed) {
@@ -242,18 +238,20 @@ namespace hex::plugin::builtin {
     }
 
     void ProcessMemoryProvider::drawInterface() {
-        ImGui::Header("hex.builtin.provider.process_memory.memory_regions"_lang, true);
+        ImGuiExt::Header("hex.builtin.provider.process_memory.memory_regions"_lang, true);
 
         auto availableX = ImGui::GetContentRegionAvail().x;
         ImGui::PushItemWidth(availableX);
         const auto &filtered = this->m_regionSearchWidget.draw(this->m_memoryRegions);
         ImGui::PopItemWidth();
-#if defined(OS_WINDOWS)
-        auto availableY = 400_scaled;
-#else
-        // take up full height on Linux since there are no DLL injection controls
-        auto availableY = ImGui::GetContentRegionAvail().y;
-#endif
+
+        #if defined(OS_WINDOWS)
+            auto availableY = 400_scaled;
+        #else
+            // Take up full height on Linux since there are no DLL injection controls
+            auto availableY = ImGui::GetContentRegionAvail().y;
+        #endif
+
         if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, availableY))) {
             ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
             ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
@@ -283,109 +281,100 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
 
-#if defined(OS_WINDOWS)
-        ImGui::Header("hex.builtin.provider.process_memory.utils"_lang);
+        #if defined(OS_WINDOWS)
+            ImGui::Header("hex.builtin.provider.process_memory.utils"_lang);
 
-        if (ImGui::Button("hex.builtin.provider.process_memory.utils.inject_dll"_lang)) {
-            hex::fs::openFileBrowser(fs::DialogMode::Open, { { "DLL File", "dll" } }, [this](const std::fs::path &path) {
-                const auto &dllPath = path.native();
-                const auto dllPathLength = (dllPath.length() + 1) * sizeof(std::fs::path::value_type);
+            if (ImGui::Button("hex.builtin.provider.process_memory.utils.inject_dll"_lang)) {
+                hex::fs::openFileBrowser(fs::DialogMode::Open, { { "DLL File", "dll" } }, [this](const std::fs::path &path) {
+                    const auto &dllPath = path.native();
+                    const auto dllPathLength = (dllPath.length() + 1) * sizeof(std::fs::path::value_type);
 
-                if (auto pathAddress = VirtualAllocEx(this->m_processHandle, nullptr, dllPathLength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); pathAddress != nullptr) {
-                    if (WriteProcessMemory(this->m_processHandle, pathAddress, dllPath.c_str(), dllPathLength, nullptr) != FALSE) {
-                        auto loadLibraryW = reinterpret_cast<LPTHREAD_START_ROUTINE>(reinterpret_cast<void*>(GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW")));
-                        if (loadLibraryW != nullptr) {
-                            if (auto threadHandle = CreateRemoteThread(this->m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
-                                WaitForSingleObject(threadHandle, INFINITE);
-                                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
-                                this->reloadProcessModules();
-                                CloseHandle(threadHandle);
-                                return;
+                    if (auto pathAddress = VirtualAllocEx(this->m_processHandle, nullptr, dllPathLength, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE); pathAddress != nullptr) {
+                        if (WriteProcessMemory(this->m_processHandle, pathAddress, dllPath.c_str(), dllPathLength, nullptr) != FALSE) {
+                            auto loadLibraryW = reinterpret_cast<LPTHREAD_START_ROUTINE>(reinterpret_cast<void*>(GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryW")));
+                            if (loadLibraryW != nullptr) {
+                                if (auto threadHandle = CreateRemoteThread(this->m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
+                                    WaitForSingleObject(threadHandle, INFINITE);
+                                    EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                    this->reloadProcessModules();
+                                    CloseHandle(threadHandle);
+                                    return;
+                                }
                             }
                         }
                     }
-                }
 
-                EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
-            });
-        }
-#endif
+                    EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                });
+            }
+        #endif
     }
 
     void ProcessMemoryProvider::reloadProcessModules() {
         this->m_memoryRegions.clear();
 
-#if defined(OS_WINDOWS)
-        DWORD numModules = 0;
-        std::vector<HMODULE> modules;
+        #if defined(OS_WINDOWS)
+            DWORD numModules = 0;
+            std::vector<HMODULE> modules;
 
-        do {
-            modules.resize(modules.size() + 1024);
-            if (EnumProcessModules(this->m_processHandle, modules.data(), modules.size() * sizeof(HMODULE), &numModules) == FALSE) {
-                modules.clear();
-                break;
+            do {
+                modules.resize(modules.size() + 1024);
+                if (EnumProcessModules(this->m_processHandle, modules.data(), modules.size() * sizeof(HMODULE), &numModules) == FALSE) {
+                    modules.clear();
+                    break;
+                }
+            } while (numModules == modules.size() * sizeof(HMODULE));
+
+            modules.resize(numModules / sizeof(HMODULE));
+
+            for (auto &module : modules) {
+                MODULEINFO moduleInfo;
+                if (GetModuleInformation(this->m_processHandle, module, &moduleInfo, sizeof(MODULEINFO)) == FALSE)
+                    continue;
+
+                char moduleName[MAX_PATH];
+                if (GetModuleFileNameExA(this->m_processHandle, module, moduleName, MAX_PATH) == FALSE)
+                    continue;
+
+                this->m_memoryRegions.insert({ { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, std::fs::path(moduleName).filename().string() });
             }
-        } while (numModules == modules.size() * sizeof(HMODULE));
 
-        modules.resize(numModules / sizeof(HMODULE));
+            MEMORY_BASIC_INFORMATION memoryInfo;
+            for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
+                if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+                    break;
 
-        for (auto &module : modules) {
-            MODULEINFO moduleInfo;
-            if (GetModuleInformation(this->m_processHandle, module, &moduleInfo, sizeof(MODULEINFO)) == FALSE)
-                continue;
+                std::string name;
+                if (memoryInfo.State & MEM_IMAGE)   continue;
+                if (memoryInfo.State & MEM_FREE)    continue;
+                if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
+                if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
+                if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
+                if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
 
-            char moduleName[MAX_PATH];
-            if (GetModuleFileNameExA(this->m_processHandle, module, moduleName, MAX_PATH) == FALSE)
-                continue;
+                this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
+            }
 
-            this->m_memoryRegions.insert({ { u64(moduleInfo.lpBaseOfDll), size_t(moduleInfo.SizeOfImage) }, std::fs::path(moduleName).filename().string() });
-        }
+        #elif defined(OS_LINUX)
 
-        MEMORY_BASIC_INFORMATION memoryInfo;
-        for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
-            if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
-                break;
+            wolv::io::File file(std::fs::path("/proc") / std::to_string(this->m_processId) / "maps", wolv::io::File::Mode::Read);
 
-            std::string name;
-            if (memoryInfo.State & MEM_IMAGE)   continue;
-            if (memoryInfo.State & MEM_FREE)    continue;
-            if (memoryInfo.State & MEM_COMMIT)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.commit"_lang);
-            if (memoryInfo.State & MEM_RESERVE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.reserve"_lang);
-            if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
-            if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
+            if (!file.isValid())
+                return;
 
-            this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
-        }
+            for (const auto &line : wolv::util::splitString(file.readString(0xF'FFFF), "\n")) {
+                const auto &split = wolv::util::splitString(line, " ");
+                if (split.size() < 6)
+                    continue;
 
-#elif defined(OS_LINUX)
+                u64 start = std::stoull(split[0].substr(0, split[0].find('-')), nullptr, 16);
+                u64 end   = std::stoull(split[0].substr(split[0].find('-') + 1), nullptr, 16);
 
-        std::ifstream file(std::fs::path("/proc") / std::to_string(this->m_processId) / "maps");
+                const auto &name = split[5];
 
-        if (!file) return;
-
-        std::string line;
-        while (std::getline(file, line)) {
-            std::istringstream iss(line);
-
-            u64 start, end;
-            char hyphen;
-            std::string permissions, offset, device, inode, name;
-
-            // example lines:
-            // 7fa432d93000-7fa432ef2000 r-xp 00026000 00:18 6022974                    /usr/lib/libc.so.6
-            // 7fa432ef2000-7fa432f47000 r--p 00185000 00:18 6022974                    /usr/lib/libc.so.6
-            // 7fa432f47000-7fa432fab000 r--p 001d9000 00:18 6022974                    /usr/lib/libc.so.6
-            // 7fa432fab000-7fa432fad000 rw-p 0023d000 00:18 6022974                    /usr/lib/libc.so.6
-            iss >> std::hex >> start >> hyphen >> end >> permissions >> offset >> device >> inode;
-
-            std::getline(iss, name);
-            name = wolv::util::trim(name);
-
-            this->m_memoryRegions.insert({ { start, end - start }, name });
-        }
-
-        file.close();
-#endif
+                this->m_memoryRegions.insert({ { start, end - start }, name });
+            }
+        #endif
     }
 
 
@@ -416,3 +405,5 @@ namespace hex::plugin::builtin {
     }
 
 }
+
+#endif
