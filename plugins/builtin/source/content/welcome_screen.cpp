@@ -152,7 +152,7 @@ namespace hex::plugin::builtin {
             ImGui::SetCursorPos((ImGui::GetContentRegionAvail() - backdropSize) / 2);
             ImGui::Image(s_backdropTexture, backdropSize);
 
-            ImGuiExt::TextFormattedCentered("Drop file here to get started");
+            ImGuiExt::TextFormattedCentered("hex.builtin.welcome.drop_file"_lang);
         }
 
         void drawWelcomeScreenContentFull() {
@@ -390,9 +390,9 @@ namespace hex::plugin::builtin {
                             {
                                 const ImVec2 windowSize = scaled({ 150, 60 });
                                 ImGui::SetCursorPos(ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
-                                ImGuiExt::BeginSubWindow("Quick Settings", windowSize);
+                                ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize);
                                 {
-                                    if (ImGuiExt::ToggleSwitch("Simplified", &s_simplifiedWelcomeScreen))
+                                    if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen))
                                         ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
                                 }
                                 ImGuiExt::EndSubWindow();

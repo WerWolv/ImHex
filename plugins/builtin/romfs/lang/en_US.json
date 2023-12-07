@@ -256,6 +256,7 @@
         "hex.builtin.menu.help": "Help",
         "hex.builtin.menu.help.ask_for_help": "Ask Documentation...",
         "hex.builtin.menu.layout": "Layout",
+        "hex.builtin.menu.layout.lock": "Lock Layout",
         "hex.builtin.menu.layout.save": "Save Layout",
         "hex.builtin.menu.view": "View",
         "hex.builtin.menu.view.debug": "Show Debugging View",
@@ -1103,6 +1104,7 @@
         "hex.builtin.welcome.server_contact.crash_logs_only": "Just crash logs",
         "hex.builtin.welcome.customize.settings.desc": "Change preferences of ImHex",
         "hex.builtin.welcome.customize.settings.title": "Settings",
+        "hex.builtin.welcome.drop_file": "Drop a file here to get started...",
         "hex.builtin.welcome.header.customize": "Customize",
         "hex.builtin.welcome.header.help": "Help",
         "hex.builtin.welcome.header.learn": "Learn",
@@ -1111,6 +1113,7 @@
         "hex.builtin.welcome.header.start": "Start",
         "hex.builtin.welcome.header.update": "Updates",
         "hex.builtin.welcome.header.various": "Various",
+        "hex.builtin.welcome.header.quick_settings": "Quick Settings",
         "hex.builtin.welcome.help.discord": "Discord Server",
         "hex.builtin.welcome.help.discord.link": "https://imhex.werwolv.net/discord",
         "hex.builtin.welcome.help.gethelp": "Get Help",
@@ -1148,6 +1151,7 @@
         "hex.builtin.welcome.tip_of_the_day": "Tip of the Day",
         "hex.builtin.welcome.update.desc": "ImHex {0} just released! Download it here.",
         "hex.builtin.welcome.update.link": "https://github.com/WerWolv/ImHex/releases/latest",
-        "hex.builtin.welcome.update.title": "New Update available!"
+        "hex.builtin.welcome.update.title": "New Update available!",
+        "hex.builtin.welcome.quick_settings.simplified": "Simplified"
     }
 }

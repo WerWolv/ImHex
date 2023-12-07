@@ -550,7 +550,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 1150, [] {
             bool locked = LayoutManager::isLayoutLocked();
-            if (ImGui::MenuItem(locked ? "Unlock Layout" : "Lock Layout", nullptr, &locked)) {
+            if (ImGui::MenuItem("hex.builtin.menu.layout.lock"_lang, nullptr, &locked, ImHexApi::Provider::isValid())) {
                 LayoutManager::lockLayout(locked);
                 ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", locked);
             }
