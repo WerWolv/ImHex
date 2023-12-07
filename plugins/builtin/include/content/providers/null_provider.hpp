@@ -1,13 +1,24 @@
 #pragma once
 
 #include <hex/providers/provider.hpp>
+#include <hex/api/event_manager.hpp>
 
 namespace hex::plugin::builtin {
 
     class NullProvider : public hex::prv::Provider {
     public:
-        explicit NullProvider() = default;
-        ~NullProvider() override = default;
+        NullProvider() {
+            EventManager::subscribe<EventProviderOpened>([this](auto *newProvider) {
+                if (newProvider == this)
+                    return;
+                
+                ImHexApi::Provider::remove(this, true);
+            });
+        }
+
+        ~NullProvider() override {
+            EventManager::unsubscribe<EventProviderOpened>(this);
+        }
 
         [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool isReadable() const override { return true; }
