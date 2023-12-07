@@ -121,7 +121,7 @@ namespace hex {
             if (ProjectFile::hasPath()) {
                 // If a project is open, show the project name instead of the file name
 
-                title += " - Project " + hex::limitStringLength(ProjectFile::getPath().stem().string(), 32);
+                title = "Project " + hex::limitStringLength(ProjectFile::getPath().stem().string(), 32);
 
                 if (ImHexApi::Provider::isDirty())
                     title += " (*)";
@@ -129,7 +129,7 @@ namespace hex {
             } else if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
                 if (provider != nullptr) {
-                    title += " - " + hex::limitStringLength(provider->getName(), 32);
+                    title = hex::limitStringLength(provider->getName(), 32);
 
                     if (provider->isDirty())
                         title += " (*)";
@@ -141,8 +141,12 @@ namespace hex {
 
             this->m_windowTitle = title;
 
-            if (this->m_window != nullptr)
+            if (this->m_window != nullptr) {
+                if (title != "ImHex")
+                    title = "ImHex - " + title;
+
                 glfwSetWindowTitle(this->m_window, title.c_str());
+            }
         });
 
         // Handle opening popups
