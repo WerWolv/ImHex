@@ -23,13 +23,13 @@
 namespace hex::plugin::builtin {
 
     bool ProcessMemoryProvider::open() {
-#if defined(OS_WINDOWS)
-        this->m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, this->m_selectedProcess->id);
-        if (this->m_processHandle == nullptr)
-            return false;
-#elif defined(OS_LINUX)
-        this->m_processId = this->m_selectedProcess->id;
-#endif
+        #if defined(OS_WINDOWS)
+            this->m_processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, this->m_selectedProcess->id);
+            if (this->m_processHandle == nullptr)
+                return false;
+        #elif defined(OS_LINUX)
+            this->m_processId = pid_t(this->m_selectedProcess->id);
+        #endif
 
         this->reloadProcessModules();
 
@@ -37,53 +37,52 @@ namespace hex::plugin::builtin {
     }
 
     void ProcessMemoryProvider::close() {
-#if defined(OS_WINDOWS)
-        CloseHandle(this->m_processHandle);
-        this->m_processHandle = nullptr;
-#elif defined(OS_LINUX)
-        this->m_processId = -1;
-#endif
+        #if defined(OS_WINDOWS)
+            CloseHandle(this->m_processHandle);
+            this->m_processHandle = nullptr;
+        #elif defined(OS_LINUX)
+            this->m_processId = -1;
+        #endif
     }
 
     void ProcessMemoryProvider::readRaw(u64 address, void *buffer, size_t size) {
-#if defined(OS_WINDOWS)
-        ReadProcessMemory(this->m_processHandle, (LPCVOID)address, buffer, size, nullptr);
-#elif defined(OS_LINUX)
-        const iovec local {
-            .iov_base = buffer,
-            .iov_len = size,
-        };
-        const iovec remote = {
-            .iov_base = (void*) address,
-            .iov_len = size,
-        };
+        #if defined(OS_WINDOWS)
+            ReadProcessMemory(this->m_processHandle, reinterpret_cast<LPCVOID>(address), buffer, size, nullptr);
+        #elif defined(OS_LINUX)
+            const iovec local {
+                .iov_base = buffer,
+                .iov_len = size,
+            };
+            const iovec remote = {
+                .iov_base = reinterpret_cast<void*>(address),
+                .iov_len = size,
+            };
 
-        auto read = process_vm_readv(this->m_processId, &local, 1, &remote, 1, 0);
+            auto read = process_vm_readv(this->m_processId, &local, 1, &remote, 1, 0);
 
-        if (read == -1) {
-            // TODO error handling strerror(errno)
-        }
-#endif
+            if (read == -1) {
+                // TODO error handling strerror(errno)
+            }
+        #endif
     }
     void ProcessMemoryProvider::writeRaw(u64 address, const void *buffer, size_t size) {
-#if defined(OS_WINDOWS)
-        WriteProcessMemory(this->m_processHandle, (LPVOID)address, buffer, size, nullptr);
-#elif defined(OS_LINUX)
-        const iovec local {
-            .iov_base = (void*) buffer,
-            .iov_len = size,
-        };
-        const iovec remote = {
-            .iov_base = (void*) address,
-            .iov_len = size,
-        };
+        #if defined(OS_WINDOWS)
+            WriteProcessMemory(this->m_processHandle, reinterpret_cast<LPVOID>(address), buffer, size, nullptr);
+        #elif defined(OS_LINUX)
+            const iovec local {
+                .iov_base = const_cast<void*>(buffer),
+                .iov_len = size,
+            };
+            const iovec remote = {
+                .iov_base = reinterpret_cast<void*>(address),
+                .iov_len = size,
+            };
 
-        auto read = process_vm_writev(this->m_processId, &local, 1, &remote, 1, 0);
-
-        if (read == -1) {
-            // TODO error handling strerror(errno)
-        }
-#endif
+            auto read = process_vm_writev(this->m_processId, &local, 1, &remote, 1, 0);
+            if (read == -1) {
+                // TODO error handling strerror(errno)
+            }
+        #endif
     }
 
     std::pair<Region, bool> ProcessMemoryProvider::getRegionValidity(u64 address) const {
@@ -134,7 +133,7 @@ namespace hex::plugin::builtin {
                     if (GetModuleBaseNameA(processHandle, nullptr, processName, MAX_PATH) == 0)
                         continue;
 
-                    ImGui::Texture texture;
+                    ImGuiExt::Texture texture;
                     {
                         HMODULE moduleHandle = nullptr;
                         DWORD numModules = 0;
@@ -164,7 +163,7 @@ namespace hex::plugin::builtin {
                                                 for (auto &pixel : pixels)
                                                     pixel = (pixel & 0xFF00FF00) | ((pixel & 0xFF) << 16) | ((pixel & 0xFF0000) >> 16);
 
-                                                texture = ImGui::Texture((u8*)pixels.data(), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
+                                                texture = ImGuiExt::Texture(reinterpret_cast<const u8*>(pixels.data()), pixels.size(), bitmap.bmWidth, bitmap.bmHeight);
                                             }
                                         }
                                     }
@@ -173,14 +172,14 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    this->m_processes.push_back({ processId, processName, std::move(texture) });
+                    this->m_processes.push_back({ u32(processId), processName, std::move(texture) });
                 }
             #elif defined(OS_LINUX)
                 for (const auto& entry : std::fs::directory_iterator("/proc")) {
                     if (!std::fs::is_directory(entry)) continue;
 
-                    auto path = entry.path();
-                    u32 processId;
+                    const auto &path = entry.path();
+                    u32 processId = 0;
                     try {
                         processId = std::stoi(path.filename());
                     } catch (...) {
@@ -193,7 +192,7 @@ namespace hex::plugin::builtin {
 
                     std::string processName = file.readString(0xF'FFFF);
 
-                    this->m_processes.push_back({ processId, processName, ImGuiExt::Texture() });
+                    this->m_processes.emplace_back(processId, processName, ImGuiExt::Texture());
                 }
             #endif
         }
@@ -260,12 +259,12 @@ namespace hex::plugin::builtin {
 
             ImGui::TableHeadersRow();
 
-            for (auto &memoryRegion : filtered) {
-                ImGui::PushID(memoryRegion->region.getStartAddress());
+            for (const auto &memoryRegion : filtered) {
+                ImGui::PushID(&memoryRegion);
 
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::Text("0x%016lX - 0x%016lX", memoryRegion->region.getStartAddress(), memoryRegion->region.getEndAddress());
+                ImGuiExt::TextFormatted("0x{0:016X} - 0x{1:016X}", memoryRegion->region.getStartAddress(), memoryRegion->region.getEndAddress());
 
                 ImGui::TableNextColumn();
                 ImGui::TextUnformatted(hex::toByteString(memoryRegion->region.getSize()).c_str());
@@ -282,7 +281,7 @@ namespace hex::plugin::builtin {
         }
 
         #if defined(OS_WINDOWS)
-            ImGui::Header("hex.builtin.provider.process_memory.utils"_lang);
+            ImGuiExt::Header("hex.builtin.provider.process_memory.utils"_lang);
 
             if (ImGui::Button("hex.builtin.provider.process_memory.utils.inject_dll"_lang)) {
                 hex::fs::openFileBrowser(fs::DialogMode::Open, { { "DLL File", "dll" } }, [this](const std::fs::path &path) {
@@ -341,7 +340,7 @@ namespace hex::plugin::builtin {
 
             MEMORY_BASIC_INFORMATION memoryInfo;
             for (u64 address = 0; address < this->getActualSize(); address += memoryInfo.RegionSize) {
-                if (VirtualQueryEx(this->m_processHandle, (LPCVOID)address, &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+                if (VirtualQueryEx(this->m_processHandle, reinterpret_cast<LPCVOID>(address), &memoryInfo, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
                     break;
 
                 std::string name;
@@ -352,7 +351,7 @@ namespace hex::plugin::builtin {
                 if (memoryInfo.State & MEM_PRIVATE) name += hex::format("{} ", "hex.builtin.provider.process_memory.region.private"_lang);
                 if (memoryInfo.State & MEM_MAPPED)  name += hex::format("{} ", "hex.builtin.provider.process_memory.region.mapped"_lang);
 
-                this->m_memoryRegions.insert({ { (u64)memoryInfo.BaseAddress, (u64)memoryInfo.BaseAddress + memoryInfo.RegionSize }, name });
+                this->m_memoryRegions.insert({ { reinterpret_cast<u64>(memoryInfo.BaseAddress), reinterpret_cast<u64>(memoryInfo.BaseAddress) + memoryInfo.RegionSize }, name });
             }
 
         #elif defined(OS_LINUX)
@@ -367,9 +366,8 @@ namespace hex::plugin::builtin {
                 if (split.size() < 6)
                     continue;
 
-                u64 start = std::stoull(split[0].substr(0, split[0].find('-')), nullptr, 16);
-                u64 end   = std::stoull(split[0].substr(split[0].find('-') + 1), nullptr, 16);
-
+                const u64 start = std::stoull(split[0].substr(0, split[0].find('-')), nullptr, 16);
+                const u64 end   = std::stoull(split[0].substr(split[0].find('-') + 1), nullptr, 16);
                 const auto &name = split[5];
 
                 this->m_memoryRegions.insert({ { start, end - start }, name });
