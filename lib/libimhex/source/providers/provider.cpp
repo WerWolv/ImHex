@@ -160,8 +160,8 @@ namespace hex::prv {
         return this->getPageSize() * this->getCurrentPage();
     }
 
-    size_t Provider::getSize() const {
-        return std::min(this->getActualSize() - this->getPageSize() * this->m_currPage, this->getPageSize());
+    u64 Provider::getSize() const {
+        return std::min<u64>(this->getActualSize() - this->getPageSize() * this->m_currPage, this->getPageSize());
     }
 
     std::optional<u32> Provider::getPageOfAddress(u64 address) const {

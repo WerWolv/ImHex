@@ -171,10 +171,10 @@ namespace hex::plugin::builtin {
             }
 
             if (cacheLine != this->m_cache.end())
-                std::memcpy(buffer, &cacheLine->data[0] + (offset % CacheLineSize), std::min(size, cacheLine->data.size()));
+                std::memcpy(buffer, &cacheLine->data[0] + (offset % CacheLineSize), std::min<u64>(size, cacheLine->data.size()));
         } else {
             while (size > 0) {
-                size_t readSize = std::min(size, CacheLineSize);
+                size_t readSize = std::min<u64>(size, CacheLineSize);
 
                 auto data = gdb::readMemory(this->m_socket, offset, size);
                 if (!data.empty())

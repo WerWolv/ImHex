@@ -37,7 +37,7 @@ namespace hex {
             return (byte & pattern.mask) == pattern.value;
         }
 
-        [[nodiscard]] size_t getSize() const {
+        [[nodiscard]] u64 getSize() const {
             return this->m_patterns.size();
         }
 

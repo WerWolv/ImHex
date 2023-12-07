@@ -182,7 +182,7 @@ namespace hex::prv {
         virtual void setBaseAddress(u64 address);
         [[nodiscard]] virtual u64 getBaseAddress() const;
         [[nodiscard]] virtual u64 getCurrentPageAddress() const;
-        [[nodiscard]] virtual size_t getSize() const;
+        [[nodiscard]] virtual u64 getSize() const;
         [[nodiscard]] virtual std::optional<u32> getPageOfAddress(u64 address) const;
 
         [[nodiscard]] virtual std::vector<Description> getDataDescription() const;

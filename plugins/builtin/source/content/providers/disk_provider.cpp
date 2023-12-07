@@ -250,7 +250,7 @@ namespace hex::plugin::builtin {
                     this->m_sectorBufferAddress = seekPosition.QuadPart;
                 }
 
-                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), this->m_sectorBuffer.data() + (offset & (this->m_sectorSize - 1)), std::min(this->m_sectorSize, size));
+                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), this->m_sectorBuffer.data() + (offset & (this->m_sectorSize - 1)), std::min<u64>(this->m_sectorSize, size));
 
                 size = std::max<ssize_t>(static_cast<ssize_t>(size) - this->m_sectorSize, 0);
                 offset += this->m_sectorSize;
@@ -273,7 +273,7 @@ namespace hex::plugin::builtin {
 
             std::memcpy(reinterpret_cast<u8 *>(buffer) + (offset - startOffset),
                         this->m_sectorBuffer.data() + (offset & (this->m_sectorSize - 1)),
-                        std::min(this->m_sectorSize, size));
+                        std::min<u64>(this->m_sectorSize, size));
 
             size = std::max<ssize_t>(static_cast<ssize_t>(size) - this->m_sectorSize, 0);
             offset += this->m_sectorSize;
@@ -294,7 +294,7 @@ namespace hex::plugin::builtin {
 
             while (size > 0) {
                 u64 sectorBase  = offset - (offset % this->m_sectorSize);
-                size_t currSize = std::min(size, this->m_sectorSize);
+                size_t currSize = std::min<u64>(size, this->m_sectorSize);
 
                 this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
                 std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
@@ -319,7 +319,7 @@ namespace hex::plugin::builtin {
 
         while (size > 0) {
             u64 sectorBase  = offset - (offset % this->m_sectorSize);
-            size_t currSize = std::min(size, this->m_sectorSize);
+            size_t currSize = std::min<u64>(size, this->m_sectorSize);
 
             this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
             std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
