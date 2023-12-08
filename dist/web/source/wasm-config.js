@@ -35,7 +35,7 @@ var Module = {
     postRun: [],
     onRuntimeInitialized: function() {
         // Triggered when the wasm module is loaded and ready to use.
-        document.getElementById("loading_text").style.display = "none"
+        document.getElementById("loading").style.display = "none"
         document.getElementById("canvas").style.display = "initial"
     },
     print:   (function() { })(),

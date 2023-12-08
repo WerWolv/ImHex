@@ -4,12 +4,12 @@
     <link rel="manifest" href="manifest.json" />
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
     <!-- Primary Meta Tags -->
-    <title>ImHex Web - Online Hex Editor</title>
+    <title>ImHex Web - Free Online Hex Editor for Reverse Engineers</title>
     <meta name="title" content="ImHex">
-    <meta name="description" content="A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.">
+    <meta name="description" content="Free and extremely powerful Online Hex Editor">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
 
     <!-- Open Graph / Facebook -->
@@ -65,7 +65,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <p id="loading_text">ImHex is loading...</p>
+    <div id="loading" class="centered">
+        <img src="https://raw.githubusercontent.com/WerWolv/ImHex/master/plugins/builtin/romfs/assets/dark/banner.png" id="logo"/>
+        <p id="loading_text">A Free open source Hex Editor available natively and on the web!</p>
+
+        <div style="height: 50%"></div>
+
+        <div class="loading_ripple">
+            <div class="lds-ripple"><div></div><div></div></div>
+        </div>
+    </div>
+
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
     <script type="text/javascript" src="wasm-config.js"></script>
