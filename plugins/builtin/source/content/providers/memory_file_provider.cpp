@@ -66,11 +66,11 @@ namespace hex::plugin::builtin {
         });
     }
 
-    void MemoryFileProvider::resizeRaw(size_t newSize) {
+    void MemoryFileProvider::resizeRaw(u64 newSize) {
         this->m_data.resize(newSize);
     }
 
-    void MemoryFileProvider::insertRaw(u64 offset, size_t size) {
+    void MemoryFileProvider::insertRaw(u64 offset, u64 size) {
         auto oldSize = this->getActualSize();
         this->resizeRaw(oldSize + size);
 
@@ -89,7 +89,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void MemoryFileProvider::removeRaw(u64 offset, size_t size) {
+    void MemoryFileProvider::removeRaw(u64 offset, u64 size) {
         auto oldSize = this->getActualSize();
         std::vector<u8> buffer(0x1000);
 

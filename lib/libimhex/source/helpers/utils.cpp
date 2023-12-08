@@ -71,6 +71,20 @@ namespace hex {
             return { data + index + 1 };
     }
 
+    std::string toLower(std::string string) {
+        for (char &c : string)
+            c = std::tolower(c);
+
+        return string;
+    }
+
+    std::string toUpper(std::string string) {
+        for (char &c : string)
+            c = std::toupper(c);
+
+        return string;
+    }
+
     std::vector<u8> parseHexString(std::string string) {
         if (string.empty())
             return { };

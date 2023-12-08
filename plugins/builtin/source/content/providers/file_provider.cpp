@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
             Provider::saveAs(path);
     }
 
-    void FileProvider::resizeRaw(size_t newSize) {
+    void FileProvider::resizeRaw(u64 newSize) {
         this->close();
 
         {
@@ -94,7 +94,7 @@ namespace hex::plugin::builtin {
         (void)this->open();
     }
 
-    void FileProvider::insertRaw(u64 offset, size_t size) {
+    void FileProvider::insertRaw(u64 offset, u64 size) {
         auto oldSize = this->getActualSize();
         this->resizeRaw(oldSize + size);
 
@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void FileProvider::removeRaw(u64 offset, size_t size) {
+    void FileProvider::removeRaw(u64 offset, u64 size) {
         if (offset > this->getActualSize() || size == 0)
             return;
 

@@ -63,6 +63,9 @@ namespace hex {
     [[nodiscard]] std::string to_string(u128 value);
     [[nodiscard]] std::string to_string(i128 value);
 
+    [[nodiscard]] std::string toLower(std::string string);
+    [[nodiscard]] std::string toUpper(std::string string);
+
     [[nodiscard]] std::vector<u8> parseHexString(std::string string);
     [[nodiscard]] std::optional<u8> parseBinaryString(const std::string &string);
     [[nodiscard]] std::string toByteString(u64 bytes);

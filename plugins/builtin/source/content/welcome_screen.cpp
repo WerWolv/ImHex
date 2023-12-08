@@ -350,9 +350,7 @@ namespace hex::plugin::builtin {
                         ImGui::Image(s_infoBannerTexture, ImVec2(width, width / s_infoBannerTexture.getAspectRatio()));
 
                         if (ImGui::IsItemClicked()) {
-                            hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link",
-                                ImHexApi::System::getOSName() | std::views::transform([](char c) { return std::tolower(c); })
-                            ));
+                            hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
                         }
                     }
                     ImGuiExt::EndSubWindow();
@@ -644,10 +642,7 @@ namespace hex::plugin::builtin {
             if (!s_infoBannerTexture.isValid()) {
                 TaskManager::createBackgroundTask("Load banner", [](auto&) {
                     HttpRequest request("GET",
-                        ImHexApiURL + hex::format("/info/{}/image",
-                                ImHexApi::System::getOSName() | std::views::transform([](char c) { return std::tolower(c); })
-                            )
-                        );
+                        ImHexApiURL + hex::format("/info/{}/image", hex::toLower(ImHexApi::System::getOSName())));
 
                     auto response = request.downloadFile().get();
 

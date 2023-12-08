@@ -34,7 +34,7 @@ EM_JS(bool, isDarkModeEnabled, (), {
 
 EMSCRIPTEN_KEEPALIVE
 extern "C" void handleThemeChange() {
-    hex::hex::EventOSThemeChanged::post();
+    hex::EventOSThemeChanged::post();
 }
 
 namespace hex {

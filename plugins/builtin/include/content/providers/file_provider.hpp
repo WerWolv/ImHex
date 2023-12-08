@@ -20,9 +20,9 @@ namespace hex::plugin::builtin {
         [[nodiscard]] bool isResizable() const override;
         [[nodiscard]] bool isSavable() const override;
 
-        void resizeRaw(size_t newSize) override;
-        void insertRaw(u64 offset, size_t size) override;
-        void removeRaw(u64 offset, size_t size) override;
+        void resizeRaw(u64 newSize) override;
+        void insertRaw(u64 offset, u64 size) override;
+        void removeRaw(u64 offset, u64 size) override;
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;

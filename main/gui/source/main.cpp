@@ -170,8 +170,8 @@ namespace {
             emscripten_set_main_loop_arg([](void *arg) {
                 auto splashWindow = reinterpret_cast<WindowSplash*>(arg);
 
-                FrameResult res = splashWindow->fullFrame();
-                if (res == FrameResult::success) {
+                FrameResult frameResult = splashWindow->fullFrame();
+                if (frameResult == FrameResult::Success) {
                     handleFileOpenRequest();
 
                     // Clean up everything after the main window is closed
