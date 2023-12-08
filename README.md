@@ -88,6 +88,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - CRC16 and CRC32 with custom initial values and polynomials
   - MD4, MD5
   - SHA-1, SHA-224, SHA-256, SHA-384, SHA-512
+- Diffing
+  - Compare binaries and analyze differences with ease
 - Disassembler supporting many architectures (frontend for Capstone)
   - ARM32 (ARM, Thumb, Cortex-M, AArch32)
   - ARM64
