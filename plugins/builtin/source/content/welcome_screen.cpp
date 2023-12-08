@@ -348,6 +348,12 @@ namespace hex::plugin::builtin {
                     ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.info"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
                     {
                         ImGui::Image(s_infoBannerTexture, ImVec2(width, width / s_infoBannerTexture.getAspectRatio()));
+
+                        if (ImGui::IsItemClicked()) {
+                            hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link",
+                                ImHexApi::System::getOSName() | std::views::transform([](char c) { return std::tolower(c); })
+                            ));
+                        }
                     }
                     ImGuiExt::EndSubWindow();
                     ImGui::PopStyleVar();
@@ -638,7 +644,7 @@ namespace hex::plugin::builtin {
             if (!s_infoBannerTexture.isValid()) {
                 TaskManager::createBackgroundTask("Load banner", [](auto&) {
                     HttpRequest request("GET",
-                        ImHexApiURL + hex::format("/{}/info_banner",
+                        ImHexApiURL + hex::format("/info/{}/image",
                                 ImHexApi::System::getOSName() | std::views::transform([](char c) { return std::tolower(c); })
                             )
                         );
