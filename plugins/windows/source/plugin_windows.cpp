@@ -18,7 +18,6 @@ namespace hex::plugin::windows {
     void addFooterItems();
     void addTitleBarButtons();
     void registerSettings();
-    void registerProviders();
 }
 
 static void detectSystemTheme() {
@@ -70,7 +69,6 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
 
     addFooterItems();
     registerSettings();
-    registerProviders();
 
     detectSystemTheme();
     checkBorderlessWindowOverride();

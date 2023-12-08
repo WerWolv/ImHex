@@ -13,7 +13,6 @@ if (WIN32)
 
             source/content/ui_items.cpp
             source/content/settings_entries.cpp
-            source/content/providers.cpp
         INCLUDES
             include
     )
