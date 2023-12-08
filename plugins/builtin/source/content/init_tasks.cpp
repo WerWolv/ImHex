@@ -107,7 +107,7 @@ namespace hex::plugin::builtin {
         }
 
         bool configureUIScale() {
-            int interfaceScaleSetting = int(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling", 0.0F).get<float>() * 10.0F);
+            int interfaceScaleSetting = int(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F).get<float>() * 10.0F);
 
             float interfaceScaling;
             if (interfaceScaleSetting == 0)
