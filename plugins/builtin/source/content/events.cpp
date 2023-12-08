@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
                 PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
             } else {
-                EventManager::post<EventProviderOpened>(fileProvider);
+                EventProviderOpened::post(fileProvider);
             }
         }
     }
@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
     void registerEventHandlers() {
 
         static bool imhexClosing = false;
-        EventManager::subscribe<EventWindowClosing>([](GLFWwindow *window) {
+        EventWindowClosing::subscribe([](GLFWwindow *window) {
             imhexClosing = false;
             if (ImHexApi::Provider::isDirty() && !imhexClosing) {
                 glfwSetWindowShouldClose(window, GLFW_FALSE);
@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderClosing>([](const prv::Provider *provider, bool *shouldClose) {
+        EventProviderClosing::subscribe([](const prv::Provider *provider, bool *shouldClose) {
             if (provider->isDirty()) {
                 *shouldClose = false;
                 PopupUnsavedChanges::open("hex.builtin.popup.close_provider.desc"_lang,
@@ -78,28 +78,28 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
+        EventProviderChanged::subscribe([](hex::prv::Provider *oldProvider, hex::prv::Provider *newProvider) {
             hex::unused(oldProvider);
             hex::unused(newProvider);
 
-            EventManager::post<RequestUpdateWindowTitle>();
+            RequestUpdateWindowTitle::post();
         });
 
-        EventManager::subscribe<EventProviderOpened>([](hex::prv::Provider *provider) {
+        EventProviderOpened::subscribe([](hex::prv::Provider *provider) {
             if (provider != nullptr && ImHexApi::Provider::get() == provider)
-                EventManager::post<RequestUpdateWindowTitle>();
-            EventManager::post<EventProviderChanged>(nullptr, provider);
+                RequestUpdateWindowTitle::post();
+            EventProviderChanged::post(nullptr, provider);
         });
 
-        EventManager::subscribe<RequestOpenFile>(openFile);
+        RequestOpenFile::subscribe(openFile);
 
-        EventManager::subscribe<RequestOpenWindow>([](const std::string &name) {
+        RequestOpenWindow::subscribe([](const std::string &name) {
             if (name == "Create File") {
                 auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
                 if (newProvider != nullptr && !newProvider->open())
                     hex::ImHexApi::Provider::remove(newProvider);
                 else
-                    EventManager::post<EventProviderOpened>(newProvider);
+                    EventProviderOpened::post(newProvider);
             } else if (name == "Open File") {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     if (path.extension() == ".hexproj") {
@@ -118,7 +118,7 @@ namespace hex::plugin::builtin {
                         if (!newProvider->open())
                             hex::ImHexApi::Provider::remove(newProvider);
                         else {
-                            EventManager::post<EventProviderOpened>(newProvider);
+                            EventProviderOpened::post(newProvider);
                             AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
                         }
 
@@ -134,12 +134,12 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderChanged>([](auto, auto) {
-            EventManager::post<EventHighlightingChanged>();
+        EventProviderChanged::subscribe([](auto, auto) {
+            EventHighlightingChanged::post();
         });
 
         // Handles the provider initialization, and calls EventProviderOpened if successful
-        EventManager::subscribe<EventProviderCreated>([](hex::prv::Provider *provider) {    
+        EventProviderCreated::subscribe([](hex::prv::Provider *provider) {
             if (provider->shouldSkipLoadInterface())
                 return;
 
@@ -154,7 +154,7 @@ namespace hex::plugin::builtin {
                     return;
                 }
 
-                EventManager::post<EventProviderOpened>(provider);
+                EventProviderOpened::post(provider);
             }
             else if (!provider->hasLoadInterface()) {
                 if (!provider->open() || !provider->isAvailable()) {
@@ -163,23 +163,23 @@ namespace hex::plugin::builtin {
                     return;
                 }
 
-                EventManager::post<EventProviderOpened>(provider);
+                EventProviderOpened::post(provider);
             }
         });
 
-        EventManager::subscribe<EventRegionSelected>([](const ImHexApi::HexEditor::ProviderRegion &region) {
+        EventRegionSelected::subscribe([](const ImHexApi::HexEditor::ProviderRegion &region) {
            ImHexApi::HexEditor::impl::setCurrentSelection(region);
         });
 
-        EventManager::subscribe<RequestOpenInfoPopup>([](const std::string &message) {
+        RequestOpenInfoPopup::subscribe([](const std::string &message) {
             PopupInfo::open(message);
         });
 
-        EventManager::subscribe<RequestOpenErrorPopup>([](const std::string &message) {
+        RequestOpenErrorPopup::subscribe([](const std::string &message) {
             PopupError::open(message);
         });
 
-        EventManager::subscribe<RequestOpenFatalPopup>([](const std::string &message) {
+        RequestOpenFatalPopup::subscribe([](const std::string &message) {
             PopupFatal::open(message);
         });
 

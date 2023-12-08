@@ -156,13 +156,13 @@ namespace hex::prv {
          */
         [[nodiscard]] virtual std::string getName() const = 0;
 
-        void resize(size_t newSize);
-        void insert(u64 offset, size_t size);
-        void remove(u64 offset, size_t size);
+        void resize(u64 newSize);
+        void insert(u64 offset, u64 size);
+        void remove(u64 offset, u64 size);
 
-        virtual void resizeRaw(size_t newSize) { hex::unused(newSize); }
-        virtual void insertRaw(u64 offset, size_t size) { hex::unused(offset, size); }
-        virtual void removeRaw(u64 offset, size_t size) { hex::unused(offset, size); }
+        virtual void resizeRaw(u64 newSize) { hex::unused(newSize); }
+        virtual void insertRaw(u64 offset, u64 size) { hex::unused(offset, size); }
+        virtual void removeRaw(u64 offset, u64 size) { hex::unused(offset, size); }
 
         virtual void save();
         virtual void saveAs(const std::fs::path &path);
@@ -172,8 +172,8 @@ namespace hex::prv {
         void applyOverlays(u64 offset, void *buffer, size_t size) const;
         [[nodiscard]] const std::list<std::unique_ptr<Overlay>> &getOverlays() const;
 
-        [[nodiscard]] size_t getPageSize() const;
-        void setPageSize(size_t pageSize);
+        [[nodiscard]] u64 getPageSize() const;
+        void setPageSize(u64 pageSize);
 
         [[nodiscard]] u32 getPageCount() const;
         [[nodiscard]] u32 getCurrentPage() const;
@@ -255,7 +255,7 @@ namespace hex::prv {
 
         std::string m_errorMessage;
 
-        size_t m_pageSize = MaxPageSize;
+        u64 m_pageSize = MaxPageSize;
     };
 
 }

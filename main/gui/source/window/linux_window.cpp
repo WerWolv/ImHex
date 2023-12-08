@@ -67,7 +67,7 @@ namespace hex {
 
     void Window::setupNativeWindow() {
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
-        EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem] {
+        EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
 
             std::array<char, 128> buffer = { 0 };
@@ -83,11 +83,11 @@ namespace hex {
             auto exitCode = WEXITSTATUS(pclose(pipe));
             if (exitCode != 0) return;
 
-            EventManager::post<RequestChangeTheme>(hex::containsIgnoreCase(result, "uint32 1") ? "Light" : "Dark");
+            RequestChangeTheme::post(hex::containsIgnoreCase(result, "uint32 1") ? "Light" : "Dark");
         });
 
         if (themeFollowSystem)
-            EventManager::post<EventOSThemeChanged>();
+            EventOSThemeChanged::post();
     }
 
     void Window::beginNativeWindowFrame() {

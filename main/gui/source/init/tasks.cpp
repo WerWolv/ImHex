@@ -62,7 +62,7 @@ namespace hex::init {
         // This is a bit of a hack but necessary because when ImHex gets closed, all plugins are unloaded in order for
         // destructors to be called correctly. To prevent crashes when ImHex exits, we need to delete all shared data
 
-        EventManager::post<EventImHexClosing>();
+        EventImHexClosing::post();
         EventManager::clear();
 
         // Terminate all asynchronous tasks

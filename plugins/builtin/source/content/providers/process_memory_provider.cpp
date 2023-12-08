@@ -294,7 +294,7 @@ namespace hex::plugin::builtin {
                             if (loadLibraryW != nullptr) {
                                 if (auto threadHandle = CreateRemoteThread(this->m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
                                     WaitForSingleObject(threadHandle, INFINITE);
-                                    EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                    RequestOpenErrorPopup::post(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
                                     this->reloadProcessModules();
                                     CloseHandle(threadHandle);
                                     return;
@@ -303,7 +303,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    EventManager::post<RequestOpenErrorPopup>(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                    RequestOpenErrorPopup::post(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
                 });
             }
         #endif

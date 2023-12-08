@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
     }
 
     void addGlobalUIItems() {
-        EventManager::subscribe<EventFrameEnd>(drawGlobalPopups);
+        EventFrameEnd::subscribe(drawGlobalPopups);
     }
 
     void addFooterItems() {
@@ -163,7 +163,7 @@ namespace hex::plugin::builtin {
         });
 
         static bool providerJustChanged = true;
-        EventManager::subscribe<EventProviderChanged>([](auto, auto) { providerJustChanged = true; });
+        EventProviderChanged::subscribe([](auto, auto) { providerJustChanged = true; });
 
         ContentRegistry::Interface::addToolbarItem([] {
             auto provider      = ImHexApi::Provider::get();
@@ -196,12 +196,12 @@ namespace hex::plugin::builtin {
                     if (newProvider != nullptr && !newProvider->open())
                         hex::ImHexApi::Provider::remove(newProvider);
                     else
-                        EventManager::post<EventProviderOpened>(newProvider);
+                        EventProviderOpened::post(newProvider);
                 }
 
                 // Open file
                 if (ImGuiExt::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
-                    EventManager::post<RequestOpenWindow>("Open File");
+                    RequestOpenWindow::post("Open File");
             }
             ImGui::EndDisabled();
 

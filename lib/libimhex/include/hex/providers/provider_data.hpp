@@ -73,20 +73,20 @@ namespace hex {
 
     private:
         void onCreate() {
-            EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
+            EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
                 this->m_data.emplace(provider, T());
             });
 
-            EventManager::subscribe<EventProviderDeleted>(this, [this](prv::Provider *provider){
+            EventProviderDeleted::subscribe(this, [this](prv::Provider *provider){
                 this->m_data.erase(provider);
             });
 
-            EventManager::subscribe<EventImHexClosing>(this, [this] {
+            EventImHexClosing::subscribe(this, [this] {
                 this->m_data.clear();
             });
 
             // Moves the data of this PerProvider instance from one provider to another
-            EventManager::subscribe<MovePerProviderData>(this, [this](prv::Provider *from, prv::Provider *to) {
+            MovePerProviderData::subscribe(this, [this](prv::Provider *from, prv::Provider *to) {
                 // Get the value from the old provider, (removes it from the map)
                 auto node = m_data.extract(from);
 
@@ -103,9 +103,9 @@ namespace hex {
         }
 
         void onDestroy() {
-            EventManager::unsubscribe<EventProviderOpened>(this);
-            EventManager::unsubscribe<EventProviderDeleted>(this);
-            EventManager::unsubscribe<EventImHexClosing>(this);
+            EventProviderOpened::unsubscribe(this);
+            EventProviderDeleted::unsubscribe(this);
+            EventImHexClosing::unsubscribe(this);
         }
 
     private:

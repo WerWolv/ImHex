@@ -6,7 +6,7 @@
 namespace hex::plugin::builtin {
 
     ViewProviderSettings::ViewProviderSettings() : View::Modal("hex.builtin.view.provider_settings.name") {
-        EventManager::subscribe<EventProviderCreated>(this, [this](const hex::prv::Provider *provider) {
+        EventProviderCreated::subscribe(this, [this](const hex::prv::Provider *provider) {
             if (provider->hasLoadInterface() && !provider->shouldSkipLoadInterface())
                 this->getWindowOpenState() = true;
         });
@@ -25,7 +25,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewProviderSettings::~ViewProviderSettings() {
-        EventManager::unsubscribe<EventProviderCreated>(this);
+        EventProviderCreated::unsubscribe(this);
     }
 
     void ViewProviderSettings::drawContent() {
@@ -39,7 +39,7 @@ namespace hex::plugin::builtin {
             ImGui::BeginDisabled(!settingsValid);
             if (ImGui::Button("hex.builtin.common.open"_lang)) {
                 if (provider->open()) {
-                    EventManager::post<EventProviderOpened>(provider);
+                    EventProviderOpened::post(provider);
 
                     this->getWindowOpenState() = false;
                     ImGui::CloseCurrentPopup();

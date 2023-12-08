@@ -144,10 +144,10 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternEditor::~ViewPatternEditor() {
-        EventManager::unsubscribe<RequestSetPatternLanguageCode>(this);
-        EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventProviderChanged>(this);
-        EventManager::unsubscribe<EventProviderClosed>(this);
+        RequestSetPatternLanguageCode::unsubscribe(this);
+        EventFileLoaded::unsubscribe(this);
+        EventProviderChanged::unsubscribe(this);
+        EventProviderClosed::unsubscribe(this);
     }
 
     void ViewPatternEditor::drawContent() {
@@ -345,7 +345,7 @@ namespace hex::plugin::builtin {
                 this->m_hasUnevaluatedChanges = false;
 
                 auto code = this->m_textEditor.GetText();
-                EventManager::post<EventPatternEditorChanged>(code);
+                EventPatternEditorChanged::post(code);
 
                 TaskManager::createBackgroundTask("Pattern Parsing", [this, code, provider](auto &){
                     this->parsePattern(code, provider);
@@ -749,7 +749,7 @@ namespace hex::plugin::builtin {
                         variable.value = this->m_lastEvaluationOutVars->at(name);
                 }
 
-                EventManager::post<EventHighlightingChanged>();
+                EventHighlightingChanged::post();
             }
 
             this->m_lastEvaluationProcessed = true;
@@ -996,7 +996,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::evaluatePattern(const std::string &code, prv::Provider *provider) {
-        EventManager::post<EventPatternEvaluating>();
+        EventPatternEvaluating::post();
 
         auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
 
@@ -1014,7 +1014,7 @@ namespace hex::plugin::builtin {
         this->m_accessHistory = {};
         this->m_accessHistoryIndex = 0;
 
-        EventManager::post<EventHighlightingChanged>();
+        EventHighlightingChanged::post();
 
         TaskManager::createTask("hex.builtin.view.pattern_editor.evaluating", TaskManager::NoProgress, [this, code, provider](auto &task) {
             auto lock = std::scoped_lock(ContentRegistry::PatternLanguage::getRuntimeLock());
@@ -1095,40 +1095,40 @@ namespace hex::plugin::builtin {
             }
 
             TaskManager::doLater([code] {
-                EventManager::post<EventPatternExecuted>(code);
+                EventPatternExecuted::post(code);
             });
         });
     }
 
     void ViewPatternEditor::registerEvents() {
-        EventManager::subscribe<RequestLoadPatternLanguageFile>(this, [this](const std::fs::path &path) {
+        RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
             this->loadPatternFile(path, ImHexApi::Provider::get());
         });
 
-        EventManager::subscribe<RequestSavePatternLanguageFile>(this, [this](const std::fs::path &path) {
+        RequestSavePatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
             wolv::io::File file(path, wolv::io::File::Mode::Create);
             file.writeString(wolv::util::trim(this->m_textEditor.GetText()));
         });
 
-        EventManager::subscribe<RequestSetPatternLanguageCode>(this, [this](const std::string &code) {
+        RequestSetPatternLanguageCode::subscribe(this, [this](const std::string &code) {
             this->m_textEditor.SetText(code);
             this->m_sourceCode = code;
             this->m_hasUnevaluatedChanges = true;
         });
 
-        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+        EventSettingsChanged::subscribe(this, [this] {
             this->m_syncPatternSourceCode = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", false);
             this->m_autoLoadPatterns      = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", true);
         });
 
-        EventManager::subscribe<EventProviderOpened>(this, [this](prv::Provider *provider) {
+        EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
             this->m_shouldAnalyze.get(provider) = true;
             this->m_envVarEntries->push_back({ 0, "", 0, EnvVarType::Integer });
 
             this->m_debuggerDrawer.get(provider) = std::make_unique<ui::PatternDrawer>();
         });
 
-        EventManager::subscribe<EventProviderChanged>(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
+        EventProviderChanged::subscribe(this, [this](prv::Provider *oldProvider, prv::Provider *newProvider) {
             if (!this->m_syncPatternSourceCode) {
                 if (oldProvider != nullptr)
                     this->m_sourceCode.get(oldProvider) = this->m_textEditor.GetText();
@@ -1144,7 +1144,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
+        EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             if (this->m_syncPatternSourceCode && ImHexApi::Provider::getProviders().empty()) {
                 this->m_textEditor.SetText("");
                 this->m_sourceCode = "";
@@ -1286,7 +1286,7 @@ namespace hex::plugin::builtin {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
 
             if (file.isValid()) {
-                EventManager::post<RequestSetPatternLanguageCode>(file.readString());
+                RequestSetPatternLanguageCode::post(file.readString());
                 return true;
             } else {
                 return false;

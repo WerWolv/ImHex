@@ -306,7 +306,7 @@ namespace hex::plugin::builtin {
     void registerCommandForwarders() {
         hex::subcommands::registerSubCommand("open", [](const std::vector<std::string> &args){
             for (auto &arg : args) {
-                EventManager::post<RequestOpenFile>(arg);
+                RequestOpenFile::post(arg);
             }
         });
     }

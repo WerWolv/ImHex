@@ -23,7 +23,7 @@ namespace hex::init {
         bool async;
     };
 
-    enum FrameResult{ success, failure, wait };
+    enum FrameResult{ Success, Failure, Running };
 
     struct Highlight {
         ImVec2 start;
@@ -59,8 +59,8 @@ namespace hex::init {
         void initImGui();
         void initMyself();
 
-        void exitGLFW();
-        void exitImGui();
+        void exitGLFW() const;
+        void exitImGui() const;
 
         std::future<bool> processTasksAsync();
 

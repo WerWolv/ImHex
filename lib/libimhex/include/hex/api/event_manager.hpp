@@ -13,12 +13,18 @@
 
 #include <wolv/types/type_name.hpp>
 
-#define EVENT_DEF_IMPL(event_name, event_name_string, should_log, ...)                      \
-    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                        \
-        constexpr static auto Id = [] { return hex::impl::EventId(event_name_string); }();  \
-        constexpr static auto ShouldLog = (should_log);                                     \
-        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }            \
-    }
+#define EVENT_DEF_IMPL(event_name, event_name_string, should_log, ...)                                                                          \
+    struct event_name final : public hex::impl::Event<__VA_ARGS__> {                                                                            \
+        constexpr static auto Id = [] { return hex::impl::EventId(event_name_string); }();                                                      \
+        constexpr static auto ShouldLog = (should_log);                                                                                         \
+        explicit event_name(Callback func) noexcept : Event(std::move(func)) { }                                                                \
+                                                                                                                                                \
+        static EventManager::EventList::iterator subscribe(Event::Callback function) { return EventManager::subscribe<event_name>(function); }  \
+        static void subscribe(void *token, Event::Callback function) { EventManager::subscribe<event_name>(token, function); }                  \
+        static void unsubscribe(const EventManager::EventList::iterator &token) noexcept { EventManager::unsubscribe(token); }                  \
+        static void unsubscribe(void *token) noexcept { EventManager::unsubscribe<event_name>(token); }                                         \
+        static void post(auto &&...args) noexcept { EventManager::post<event_name>(std::forward<decltype(args)>(args)...); }                    \
+    };
 
 #define EVENT_DEF(event_name, ...)          EVENT_DEF_IMPL(event_name, #event_name, true, __VA_ARGS__)
 #define EVENT_DEF_NO_LOG(event_name, ...)   EVENT_DEF_IMPL(event_name, #event_name, false, __VA_ARGS__)

@@ -85,7 +85,7 @@ namespace hex::plugin::windows {
         if (this->m_portHandle == INVALID_HANDLE_VALUE) {
             if (ImGui::Button("hex.windows.view.tty_console.connect"_lang))
                 if (!this->connect())
-                    EventManager::post<RequestOpenErrorPopup>("hex.windows.view.tty_console.connect_error"_lang);
+                    RequestOpenErrorPopup::post("hex.windows.view.tty_console.connect_error"_lang);
         } else {
             if (ImGui::Button("hex.windows.view.tty_console.disconnect"_lang))
                 this->disconnect();
@@ -184,7 +184,7 @@ namespace hex::plugin::windows {
 
     bool ViewTTYConsole::connect() {
         if (this->m_comPorts.empty() || static_cast<size_t>(this->m_selectedPort) >= this->m_comPorts.size()) {
-            EventManager::post<RequestOpenErrorPopup>("hex.windows.view.tty_console.no_available_port"_lang);
+            RequestOpenErrorPopup::post("hex.windows.view.tty_console.no_available_port"_lang);
             return true;    // If false, connect_error error popup will override this error popup
         }
         this->m_portHandle = ::CreateFile((R"(\\.\)" + this->m_comPorts[this->m_selectedPort].first).c_str(),

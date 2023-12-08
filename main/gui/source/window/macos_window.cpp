@@ -42,17 +42,17 @@ namespace hex {
 
     void Window::setupNativeWindow() {
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
-        EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem] {
+        EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
 
             if (!isMacosSystemDarkModeEnabled())
-                EventManager::post<RequestChangeTheme>("Light");
+                RequestChangeTheme::post("Light");
             else
-                EventManager::post<RequestChangeTheme>("Dark");
+                RequestChangeTheme::post("Dark");
         });
 
         if (themeFollowSystem)
-            EventManager::post<EventOSThemeChanged>();
+            EventOSThemeChanged::post();
     }
 
     void Window::beginNativeWindowFrame() {

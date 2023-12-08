@@ -17,7 +17,7 @@
 namespace hex::plugin::builtin {
 
     void registerThemeHandlers() {
-        EventManager::subscribe<RequestInitThemeHandlers>([] {
+        RequestInitThemeHandlers::subscribe([] {
             {
                 const static ThemeManager::ColorMap ImGuiColorMap = {
                     { "text",                           ImGuiCol_Text                   },
@@ -253,7 +253,7 @@ namespace hex::plugin::builtin {
     }
 
     void registerStyleHandlers() {
-        EventManager::subscribe<RequestInitThemeHandlers>([] {
+        RequestInitThemeHandlers::subscribe([] {
             {
                 auto &style = ImGui::GetStyle();
                 const static ThemeManager::StyleMap ImGuiStyleMap = {

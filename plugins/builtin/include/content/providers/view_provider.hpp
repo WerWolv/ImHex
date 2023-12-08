@@ -10,13 +10,13 @@ namespace hex::plugin::builtin {
     class ViewProvider : public hex::prv::Provider {
     public:
         explicit ViewProvider() {
-            EventManager::subscribe<EventProviderClosing>(this, [this](const prv::Provider *provider, bool*) {
+            EventProviderClosing::subscribe(this, [this](const prv::Provider *provider, bool*) {
                 if (this->m_provider == provider)
                     ImHexApi::Provider::remove(this, false);
             });
         }
         ~ViewProvider() override {
-            EventManager::unsubscribe<EventProviderClosing>(this);
+            EventProviderClosing::unsubscribe(this);
         }
 
         [[nodiscard]] bool isAvailable() const override {

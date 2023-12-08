@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
         this->m_patternDrawer = std::make_unique<ui::PatternDrawer>();
 
         // Handle tree style setting changes
-        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+        EventSettingsChanged::subscribe(this, [this] {
             auto patternStyle = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0);
             this->m_patternDrawer->setTreeStyle(patternStyle);
 
@@ -21,15 +21,15 @@ namespace hex::plugin::builtin {
         });
 
         // Reset the pattern drawer when the provider changes
-        EventManager::subscribe<EventProviderChanged>(this, [this](auto, auto) {
+        EventProviderChanged::subscribe(this, [this](auto, auto) {
             this->m_patternDrawer->reset();
         });
 
-        EventManager::subscribe<EventPatternEvaluating>(this, [this]{
+        EventPatternEvaluating::subscribe(this, [this]{
             this->m_patternDrawer->reset();
         });
 
-        EventManager::subscribe<EventPatternExecuted>(this, [this](auto){
+        EventPatternExecuted::subscribe(this, [this](auto){
             this->m_patternDrawer->reset();
         });
 
@@ -38,10 +38,10 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternData::~ViewPatternData() {
-        EventManager::unsubscribe<EventSettingsChanged>(this);
-        EventManager::unsubscribe<EventProviderChanged>(this);
-        EventManager::unsubscribe<EventPatternEvaluating>(this);
-        EventManager::unsubscribe<EventPatternExecuted>(this);
+        EventSettingsChanged::unsubscribe(this);
+        EventProviderChanged::unsubscribe(this);
+        EventPatternEvaluating::unsubscribe(this);
+        EventPatternExecuted::unsubscribe(this);
     }
 
     void ViewPatternData::drawContent() {

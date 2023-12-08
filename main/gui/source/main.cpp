@@ -129,7 +129,7 @@ namespace {
      */
     void handleFileOpenRequest() {
         if (auto path = hex::getInitialFilePath(); path.has_value()) {
-            EventManager::post<RequestOpenFile>(path.value());
+            RequestOpenFile::post(path.value());
         }
     }
 
@@ -160,7 +160,7 @@ namespace {
 
             splashWindow->startStartupTasks();
 
-            EventManager::subscribe<RequestRestartImHex>([&] {
+            RequestRestartImHex::subscribe([&] {
                 MAIN_THREAD_EM_ASM({
                     location.reload();
                 });
@@ -214,7 +214,7 @@ namespace {
             do {
                 // Register an event handler that will make ImHex restart when requested
                 shouldRestart = false;
-                EventManager::subscribe<RequestRestartImHex>([&] {
+                RequestRestartImHex::subscribe([&] {
                     shouldRestart = true;
                 });
 

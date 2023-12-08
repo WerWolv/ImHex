@@ -34,7 +34,7 @@ EM_JS(bool, isDarkModeEnabled, (), {
 
 EMSCRIPTEN_KEEPALIVE
 extern "C" void handleThemeChange() {
-    hex::EventManager::post<hex::EventOSThemeChanged>();
+    hex::hex::EventOSThemeChanged::post();
 }
 
 namespace hex {
@@ -65,14 +65,14 @@ namespace hex {
         setupThemeListener();
 
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
-        EventManager::subscribe<EventOSThemeChanged>(this, [themeFollowSystem] {
+        EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
 
-            EventManager::post<RequestChangeTheme>(!isDarkModeEnabled() ? "Light" : "Dark");
+            RequestChangeTheme::post(!isDarkModeEnabled() ? "Light" : "Dark");
         });
 
         if (themeFollowSystem)
-            EventManager::post<EventOSThemeChanged>();
+            EventOSThemeChanged::post();
     }
 
     void Window::beginNativeWindowFrame() {

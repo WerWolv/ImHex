@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
                     if (ImGui::ColorEdit4(colorName.c_str(), reinterpret_cast<float*>(&color.Value), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf)) {
                         // Update the color value
                         handler.setFunction(colorId, color);
-                        EventManager::post<EventThemeChanged>();
+                        EventThemeChanged::post();
                     }
 
                     if (ImGui::IsItemHovered()) {
@@ -96,11 +96,11 @@ namespace hex::plugin::builtin {
                     // Determine which one it is and draw the appropriate slider
                     if (auto floatValue = std::get_if<float*>(&value); floatValue != nullptr) {
                         if (ImGui::SliderFloat(styleName.c_str(), *floatValue, min, max, "%.1f")) {
-                            EventManager::post<EventThemeChanged>();
+                            EventThemeChanged::post();
                         }
                     } else if (auto vecValue = std::get_if<ImVec2*>(&value); vecValue != nullptr) {
                         if (ImGui::SliderFloat2(styleName.c_str(), &(*vecValue)->x, min, max, "%.1f")) {
-                            EventManager::post<EventThemeChanged>();
+                            EventThemeChanged::post();
                         }
                     }
                 }

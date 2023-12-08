@@ -187,27 +187,27 @@ namespace hex::plugin::builtin {
 
 
         void registerEvents() {
-            EventManager::subscribe<EventRegionSelected>([](const auto &region) {
+            EventRegionSelected::subscribe([](const auto &region) {
                 if (region.getSize() > 1)
                     AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.select_byte.name");
             });
 
-            EventManager::subscribe<EventBookmarkCreated>([](const auto&) {
+            EventBookmarkCreated::subscribe([](const auto&) {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.create_bookmark.name");
             });
 
-            EventManager::subscribe<EventPatchCreated>([](u64, u8, u8) {
+            EventPatchCreated::subscribe([](u64, u8, u8) {
                 AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.modify_byte.name");
             });
 
 
-            EventManager::subscribe<EventImHexStartupFinished>(AchievementManager::loadProgress);
-            EventManager::subscribe<EventAchievementUnlocked>([](const Achievement &) {
+            EventImHexStartupFinished::subscribe(AchievementManager::loadProgress);
+            EventAchievementUnlocked::subscribe([](const Achievement &) {
                 AchievementManager::storeProgress();
             });
 
             // Clear temporary achievements when the last provider is closed
-            EventManager::subscribe<EventProviderChanged>([](hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
+            EventProviderChanged::subscribe([](hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
                 hex::unused(oldProvider);
                 if (newProvider == nullptr) {
                     AchievementManager::clearTemporary();

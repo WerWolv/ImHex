@@ -128,7 +128,7 @@ namespace hex {
             achievement->setUnlocked(true);
 
             if (achievement->isUnlocked())
-                EventManager::post<EventAchievementUnlocked>(*achievement);
+                EventAchievementUnlocked::post(*achievement);
 
             return;
         }

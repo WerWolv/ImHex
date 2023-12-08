@@ -114,7 +114,7 @@ private:
 };
 
 SCRIPT_API(void showMessageBox, const char *message) {
-    hex::EventManager::post<hex::RequestOpenInfoPopup>(message);
+    hex::RequestOpenInfoPopup::post(message);
 }
 
 SCRIPT_API(void showInputTextBox, const char *title, const char *message, char *buffer, u32 bufferSize) {

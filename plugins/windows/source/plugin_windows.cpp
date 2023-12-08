@@ -23,7 +23,7 @@ namespace hex::plugin::windows {
 
 static void detectSystemTheme() {
     // Setup system theme change detector
-    EventManager::subscribe<EventOSThemeChanged>([] {
+    EventOSThemeChanged::subscribe([] {
         bool themeFollowSystem = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>() == ThemeManager::NativeTheme;
         if (!themeFollowSystem)
             return;
@@ -35,7 +35,7 @@ static void detectSystemTheme() {
 
             auto error = RegQueryValueEx(hkey, "AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
             if (error == ERROR_SUCCESS) {
-                EventManager::post<RequestChangeTheme>(value == 0 ? "Dark" : "Light");
+                RequestChangeTheme::post(value == 0 ? "Dark" : "Light");
             } else {
                 ImHexApi::System::impl::setBorderlessWindowMode(false);
             }
@@ -44,11 +44,11 @@ static void detectSystemTheme() {
         }
     });
 
-    EventManager::subscribe<EventWindowInitialized>([=] {
+    EventWindowInitialized::subscribe([=] {
         bool themeFollowSystem = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>() == ThemeManager::NativeTheme;
 
         if (themeFollowSystem)
-            EventManager::post<EventOSThemeChanged>();
+            EventOSThemeChanged::post();
     });
 }
 

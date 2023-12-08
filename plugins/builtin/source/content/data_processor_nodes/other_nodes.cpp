@@ -60,14 +60,14 @@ namespace hex::plugin::builtin {
     class NodeDataSelection : public dp::Node {
     public:
         NodeDataSelection() : Node("hex.builtin.nodes.data_access.selection.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.address"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.size") }) {
-            EventManager::subscribe<EventRegionSelected>(this, [this](const auto &region) {
+            EventRegionSelected::subscribe(this, [this](const auto &region) {
                 this->m_address = region.address;
                 this->m_size    = region.size;
             });
         }
 
         ~NodeDataSelection() override {
-            EventManager::unsubscribe<EventRegionSelected>(this);
+            EventRegionSelected::unsubscribe(this);
         }
 
         void process() override {

@@ -106,8 +106,8 @@ namespace hex::plugin::builtin {
         }
 
         resetPath.release();
-        EventManager::post<EventProjectOpened>();
-        EventManager::post<RequestUpdateWindowTitle>();
+        EventProjectOpened::post();
+        RequestUpdateWindowTitle::post();
 
         return true;
     }
@@ -169,7 +169,7 @@ namespace hex::plugin::builtin {
         AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.save_project.name");
 
         // Request, as this puts us into a project state
-        EventManager::post<RequestUpdateWindowTitle>();
+        RequestUpdateWindowTitle::post();
 
         return result;
     }

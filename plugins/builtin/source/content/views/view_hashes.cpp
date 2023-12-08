@@ -49,7 +49,7 @@ namespace hex::plugin::builtin {
     };
 
     ViewHashes::ViewHashes() : View::Window("hex.builtin.view.hashes.name") {
-        EventManager::subscribe<EventRegionSelected>(this, [this](const auto &providerRegion) {
+        EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
             for (auto &function : this->m_hashFunctions.get(providerRegion.getProvider()))
                 function.reset();
         });
@@ -124,7 +124,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewHashes::~ViewHashes() {
-        EventManager::unsubscribe<EventRegionSelected>(this);
+        EventRegionSelected::unsubscribe(this);
     }
 
 

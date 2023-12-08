@@ -81,7 +81,7 @@ namespace hex::plugin::builtin::ui {
 
             if (this->m_selectionChanged) {
                 auto selection = this->getSelection();
-                EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, this->m_provider });
+                EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, this->m_provider });
                 this->m_shouldModifyValue = true;
             }
         }

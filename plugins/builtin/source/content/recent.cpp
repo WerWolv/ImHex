@@ -28,7 +28,7 @@ namespace hex::plugin::builtin::recent {
 
     void registerEventHandlers() {
         // Save every opened provider as a "recent" shortcut
-        (void)EventManager::subscribe<EventProviderOpened>([](const prv::Provider *provider) {
+        (void)EventProviderOpened::subscribe([](const prv::Provider *provider) {
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
@@ -62,7 +62,7 @@ namespace hex::plugin::builtin::recent {
         });
 
         // Save opened projects as a "recent" shortcut
-        (void)EventManager::subscribe<EventProjectOpened>([] {
+        (void)EventProjectOpened::subscribe([] {
              if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
@@ -164,7 +164,7 @@ namespace hex::plugin::builtin::recent {
                 return;
             }
 
-            EventManager::post<EventProviderOpened>(provider);
+            EventProviderOpened::post(provider);
 
             updateRecentEntries();
         }

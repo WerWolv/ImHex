@@ -8,7 +8,7 @@ namespace hex::plugin::builtin {
     class NullProvider : public hex::prv::Provider {
     public:
         NullProvider() {
-            EventManager::subscribe<EventProviderOpened>([this](auto *newProvider) {
+            EventProviderOpened::subscribe([this](auto *newProvider) {
                 if (newProvider == this)
                     return;
 
@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
         }
 
         ~NullProvider() override {
-            EventManager::unsubscribe<EventProviderOpened>(this);
+            EventProviderOpened::unsubscribe(this);
         }
 
         [[nodiscard]] bool isAvailable() const override { return true; }

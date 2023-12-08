@@ -18,7 +18,7 @@ namespace hex::plugin::builtin {
     ViewDiff::ViewDiff() : View::Window("hex.builtin.view.diff.name") {
 
         // Clear the selected diff providers when a provider is closed
-        EventManager::subscribe<EventProviderClosed>(this, [this](prv::Provider *) {
+        EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             for (u8 i = 0; i < 2; i++) {
                 this->m_columns[i].provider = -1;
                 this->m_columns[i].hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewDiff::~ViewDiff() {
-        EventManager::unsubscribe<EventProviderClosed>(this);
+        EventProviderClosed::unsubscribe(this);
     }
 
     namespace {

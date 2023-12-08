@@ -452,7 +452,7 @@ namespace hex::plugin::builtin {
         }
 
         this->m_occurrenceTree->clear();
-        EventManager::post<EventHighlightingChanged>();
+        EventHighlightingChanged::post();
 
         this->m_searchTask = TaskManager::createTask("hex.builtin.view.find.searching", searchRegion.getSize(), [this, settings = this->m_searchSettings, searchRegion](auto &task) {
             auto provider = ImHexApi::Provider::get();
@@ -482,7 +482,7 @@ namespace hex::plugin::builtin {
                 this->m_occurrenceTree->insert({ occurrence.region.getStartAddress(), occurrence.region.getEndAddress() }, occurrence);
 
             TaskManager::doLater([] {
-                EventManager::post<EventHighlightingChanged>();
+                EventHighlightingChanged::post();
             });
         });
     }
@@ -828,7 +828,7 @@ namespace hex::plugin::builtin {
                     this->m_sortedOccurrences->clear();
                     this->m_occurrenceTree->clear();
 
-                    EventManager::post<EventHighlightingChanged>();
+                    EventHighlightingChanged::post();
                 }
             }
             ImGui::EndDisabled();

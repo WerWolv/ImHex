@@ -809,7 +809,7 @@ namespace hex {
         namespace impl {
 
             void add(const std::string &typeName, ProviderCreationFunction creationFunction) {
-                (void)EventManager::subscribe<RequestCreateProvider>([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, prv::Provider **provider) {
+                (void)RequestCreateProvider::subscribe([expectedName = typeName, creationFunction](const std::string &name, bool skipLoadInterface, bool selectProvider, prv::Provider **provider) {
                     if (name != expectedName) return;
 
                     prv::Provider *newProvider = creationFunction();

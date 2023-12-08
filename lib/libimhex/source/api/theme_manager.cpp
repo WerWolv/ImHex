@@ -194,7 +194,7 @@ namespace hex {
 
         s_currTheme = name;
 
-        EventManager::post<EventThemeChanged>();
+        EventThemeChanged::post();
     }
 
     const std::string &ThemeManager::getImageTheme() {

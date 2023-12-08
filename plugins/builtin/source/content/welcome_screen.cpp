@@ -187,12 +187,12 @@ namespace hex::plugin::builtin {
                             if (newProvider != nullptr && !newProvider->open())
                                 hex::ImHexApi::Provider::remove(newProvider);
                             else
-                                EventManager::post<EventProviderOpened>(newProvider);
+                                EventProviderOpened::post(newProvider);
                         }
                         if (ImGuiExt::IconHyperlink(ICON_VS_GO_TO_FILE, "hex.builtin.welcome.start.open_file"_lang))
-                            EventManager::post<RequestOpenWindow>("Open File");
+                            RequestOpenWindow::post("Open File");
                         if (ImGuiExt::IconHyperlink(ICON_VS_NOTEBOOK, "hex.builtin.welcome.start.open_project"_lang))
-                            EventManager::post<RequestOpenWindow>("Open Project");
+                            RequestOpenWindow::post("Open Project");
                         if (ImGuiExt::IconHyperlink(ICON_VS_TELESCOPE, "hex.builtin.welcome.start.open_other"_lang))
                             otherProvidersVisible = !otherProvidersVisible;
                     }
@@ -300,7 +300,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.customize"_lang, ImVec2(ImGui::GetContentRegionAvail().x - windowPadding, 0), ImGuiChildFlags_AutoResizeX);
                 {
                     if (ImGuiExt::DescriptionButton("hex.builtin.welcome.customize.settings.title"_lang, "hex.builtin.welcome.customize.settings.desc"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-                        EventManager::post<RequestOpenWindow>("Settings");
+                        RequestOpenWindow::post("Settings");
                 }
                 ImGuiExt::EndSubWindow();
                 ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
@@ -322,7 +322,7 @@ namespace hex::plugin::builtin {
 
                     if (auto [unlocked, total] = AchievementManager::getProgress(); unlocked != total) {
                         if (ImGuiExt::DescriptionButtonProgress("hex.builtin.welcome.learn.achievements.title"_lang, "hex.builtin.welcome.learn.achievements.desc"_lang, float(unlocked) / float(total), size)) {
-                            EventManager::post<RequestOpenWindow>("Achievements");
+                            RequestOpenWindow::post("Achievements");
                         }
                     }
                 }
@@ -362,7 +362,7 @@ namespace hex::plugin::builtin {
                 auto provider = ImHexApi::Provider::createProvider("hex.builtin.provider.null");
                 if (provider != nullptr)
                     if (provider->open())
-                        EventManager::post<EventProviderOpened>(provider);
+                        EventProviderOpened::post(provider);
             }
         }
 
@@ -462,15 +462,15 @@ namespace hex::plugin::builtin {
         recent::registerEventHandlers();
         recent::updateRecentEntries();
 
-        (void)EventManager::subscribe<EventFrameBegin>(drawWelcomeScreen);
+        (void)EventFrameBegin::subscribe(drawWelcomeScreen);
 
         // Sets a background when they are no views
-        (void)EventManager::subscribe<EventFrameBegin>([]{
+        (void)EventFrameBegin::subscribe([]{
             if (ImHexApi::Provider::isValid() && !isAnyViewOpen())
                 drawNoViewsBackground();
         });
 
-        (void)EventManager::subscribe<EventSettingsChanged>([] {
+        (void)EventSettingsChanged::subscribe([] {
             {
                 auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
 
@@ -478,7 +478,7 @@ namespace hex::plugin::builtin {
                     static std::string lastTheme;
 
                     if (theme != lastTheme) {
-                        EventManager::post<RequestChangeTheme>(theme);
+                        RequestChangeTheme::post(theme);
                         lastTheme = theme;
                     }
                 }
@@ -500,7 +500,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        (void)EventManager::subscribe<RequestChangeTheme>([](const std::string &theme) {
+        (void)RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
                 return ImGuiExt::Texture(romfs::get(path).span());
             };
@@ -514,12 +514,12 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderCreated>([](auto) {
+        EventProviderCreated::subscribe([](auto) {
             if (!isAnyViewOpen())
                 loadDefaultLayout();
         });
 
-        EventManager::subscribe<EventWindowInitialized>([] {
+        EventWindowInitialized::subscribe([] {
             // Documentation of the value above the setting definition
             auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
             if (allowServerContact == 2) {
@@ -533,11 +533,11 @@ namespace hex::plugin::builtin {
         });
 
         // Clear project context if we go back to the welcome screen
-        EventManager::subscribe<EventProviderChanged>([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
+        EventProviderChanged::subscribe([](const hex::prv::Provider *oldProvider, const hex::prv::Provider *newProvider) {
             hex::unused(oldProvider);
             if (newProvider == nullptr) {
                 ProjectFile::clearPath();
-                EventManager::post<RequestUpdateWindowTitle>();
+                RequestUpdateWindowTitle::post();
             }
         });
 
@@ -582,7 +582,7 @@ namespace hex::plugin::builtin {
                             } else {
                                 ProjectFile::setPath("");
                             }
-                            EventManager::post<RequestUpdateWindowTitle>();
+                            RequestUpdateWindowTitle::post();
                         }else{
                             if (hasProject) {
                                 ProjectFile::setPath(crashFileData["project"].get<std::string>());

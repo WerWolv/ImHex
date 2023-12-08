@@ -370,12 +370,12 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderCreated>(this, [this](auto *provider) {
+        EventProviderCreated::subscribe(this, [this](auto *provider) {
             this->m_mainWorkspace.get(provider) = { };
             this->m_workspaceStack.get(provider).push_back(&this->m_mainWorkspace.get(provider));
         });
 
-        EventManager::subscribe<EventProviderChanged>(this, [this](const auto *, const auto *) {
+        EventProviderChanged::subscribe(this, [this](const auto *, const auto *) {
             for (auto *workspace : *this->m_workspaceStack) {
                 for (auto &node : workspace->nodes) {
                     node->setCurrentOverlay(nullptr);
@@ -387,7 +387,7 @@ namespace hex::plugin::builtin {
             this->m_updateNodePositions = true;
         });
 
-        EventManager::subscribe<EventDataChanged>(this, [this] {
+        EventDataChanged::subscribe(this, [this] {
             ViewDataProcessor::processNodes(*this->m_workspaceStack->back());
         });
 
@@ -427,11 +427,11 @@ namespace hex::plugin::builtin {
     }
 
     ViewDataProcessor::~ViewDataProcessor() {
-        EventManager::unsubscribe<EventProviderCreated>(this);
-        EventManager::unsubscribe<EventProviderChanged>(this);
-        EventManager::unsubscribe<RequestChangeTheme>(this);
-        EventManager::unsubscribe<EventFileLoaded>(this);
-        EventManager::unsubscribe<EventDataChanged>(this);
+        EventProviderCreated::unsubscribe(this);
+        EventProviderChanged::unsubscribe(this);
+        RequestChangeTheme::unsubscribe(this);
+        EventFileLoaded::unsubscribe(this);
+        EventDataChanged::unsubscribe(this);
     }
 
 

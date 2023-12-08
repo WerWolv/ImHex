@@ -14,10 +14,10 @@ namespace hex::messaging {
     }
 
     void setupEvents() {
-        EventManager::subscribe<SendMessageToMainInstance>([](const std::string &eventName, const std::vector<u8> &eventData) {
+        SendMessageToMainInstance::subscribe([](const std::string &eventName, const std::vector<u8> &eventData) {
             log::debug("Forwarding message {} (maybe to us)", eventName);
             if (ImHexApi::System::isMainInstance()) {
-                EventManager::subscribe<EventImHexStartupFinished>([eventName, eventData]{
+                EventImHexStartupFinished::subscribe([eventName, eventData]{
                     ImHexApi::Messaging::impl::runHandler(eventName, eventData);
                 });
             } else {

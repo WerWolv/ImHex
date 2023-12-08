@@ -60,11 +60,11 @@ namespace hex::plugin::builtin {
             return std::nullopt;
         });
 
-        EventManager::subscribe<EventProviderSaved>([](auto *) {
-            EventManager::post<EventHighlightingChanged>();
+        EventProviderSaved::subscribe([](auto *) {
+            EventHighlightingChanged::post();
         });
 
-        EventManager::subscribe<EventProviderDataModified>(this, [](prv::Provider *provider, u64 offset, u64 size, const u8 *data) {
+        EventProviderDataModified::subscribe(this, [](prv::Provider *provider, u64 offset, u64 size, const u8 *data) {
             if (size == 0)
                 return;
 
@@ -75,13 +75,13 @@ namespace hex::plugin::builtin {
             provider->getUndoStack().add<undo::OperationWrite>(offset, size, oldData.data(), data);
         });
 
-        EventManager::subscribe<EventProviderDataInserted>(this, [](prv::Provider *provider, u64 offset, u64 size) {
+        EventProviderDataInserted::subscribe(this, [](prv::Provider *provider, u64 offset, u64 size) {
             offset -= provider->getBaseAddress();
 
             provider->getUndoStack().add<undo::OperationInsert>(offset, size);
         });
 
-        EventManager::subscribe<EventProviderDataRemoved>(this, [](prv::Provider *provider, u64 offset, u64 size) {
+        EventProviderDataRemoved::subscribe(this, [](prv::Provider *provider, u64 offset, u64 size) {
             offset -= provider->getBaseAddress();
 
             provider->getUndoStack().add<undo::OperationRemove>(offset, size);
@@ -177,7 +177,7 @@ namespace hex::plugin::builtin {
             const auto &operations = provider->getUndoStack().getAppliedOperations();
             if (this->m_numOperations.get(provider) != operations.size()) {
                 this->m_numOperations.get(provider) = operations.size();
-                EventManager::post<EventHighlightingChanged>();
+                EventHighlightingChanged::post();
             }
         }
     }

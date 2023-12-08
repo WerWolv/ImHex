@@ -157,14 +157,14 @@ namespace hex::plugin::builtin {
     class PopupFind : public ViewHexEditor::Popup {
     public:
         PopupFind() {
-            EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
+            EventRegionSelected::subscribe(this, [this](Region region) {
                 this->m_searchPosition = this->m_nextSearchPosition.value_or(region.getStartAddress());
                 this->m_nextSearchPosition.reset();
             });
         }
 
         ~PopupFind() override {
-            EventManager::unsubscribe<EventRegionSelected>(this);
+            EventRegionSelected::unsubscribe(this);
         }
 
         void draw(ViewHexEditor *editor) override {
@@ -636,10 +636,10 @@ namespace hex::plugin::builtin {
     }
 
     ViewHexEditor::~ViewHexEditor() {
-        EventManager::unsubscribe<RequestSelectionChange>(this);
-        EventManager::unsubscribe<EventProviderChanged>(this);
-        EventManager::unsubscribe<EventProviderOpened>(this);
-        EventManager::unsubscribe<EventHighlightingChanged>(this);
+        RequestSelectionChange::unsubscribe(this);
+        EventProviderChanged::unsubscribe(this);
+        EventProviderOpened::unsubscribe(this);
+        EventHighlightingChanged::unsubscribe(this);
     }
 
     void ViewHexEditor::drawPopup() {
@@ -676,7 +676,7 @@ namespace hex::plugin::builtin {
 
         // Right click menu
         if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
-            EventManager::post<RequestOpenPopup>("hex.builtin.menu.edit");
+            RequestOpenPopup::post("hex.builtin.menu.edit");
     }
 
     void ViewHexEditor::drawContent() {
@@ -774,7 +774,7 @@ namespace hex::plugin::builtin {
             this->m_selectionStart->reset();
             this->m_selectionEnd->reset();
 
-            EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), provider });
+            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), provider });
         });
 
         ShortcutManager::addShortcut(this, Keys::Enter, "hex.builtin.view.hex_editor.shortcut.enter_editing", [this] {
@@ -953,13 +953,13 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::registerEvents() {
-        EventManager::subscribe<RequestSelectionChange>(this, [this](Region region) {
+        RequestSelectionChange::subscribe(this, [this](Region region) {
             auto provider = ImHexApi::Provider::get();
 
             if (region == Region::Invalid()) {
                 this->m_selectionStart->reset();
                 this->m_selectionEnd->reset();
-                EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion({ Region::Invalid(), nullptr }));
+                EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion({ Region::Invalid(), nullptr }));
 
                 return;
             }
@@ -975,7 +975,7 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventManager::subscribe<EventProviderChanged>(this, [this](auto *oldProvider, auto *newProvider) {
+        EventProviderChanged::subscribe(this, [this](auto *oldProvider, auto *newProvider) {
             if (oldProvider != nullptr) {
                 auto selection = this->m_hexEditor.getSelection();
 
@@ -998,15 +998,15 @@ namespace hex::plugin::builtin {
 
             this->m_hexEditor.forceUpdateScrollPosition();
             if (isSelectionValid()) {
-                EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), newProvider });
+                EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), newProvider });
             }
         });
 
-        EventManager::subscribe<EventProviderOpened>(this, [](auto *) {
+        EventProviderOpened::subscribe(this, [](auto *) {
            ImHexApi::HexEditor::clearSelection();
         });
 
-        EventManager::subscribe<EventHighlightingChanged>(this, [this]{
+        EventHighlightingChanged::subscribe(this, [this]{
            this->m_foregroundHighlights->clear();
            this->m_backgroundHighlights->clear();
         });
@@ -1311,7 +1311,7 @@ namespace hex::plugin::builtin {
                                                     if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
                                                         viewProvider->setProvider(selection->getStartAddress(), selection->getSize(), selection->getProvider());
                                                         if (viewProvider->open())
-                                                            EventManager::post<EventProviderOpened>(viewProvider);
+                                                            EventProviderOpened::post(viewProvider);
                                                     }
                                                 },
                                                 [] { return ImHexApi::HexEditor::isSelectionValid() && ImHexApi::Provider::isValid(); });

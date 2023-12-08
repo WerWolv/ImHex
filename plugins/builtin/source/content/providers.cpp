@@ -87,7 +87,7 @@ namespace hex::plugin::builtin {
                         if (!newProvider->open() || !newProvider->isAvailable() || !newProvider->isReadable()) {
                             providerWarnings[newProvider] = newProvider->getErrorMessage();
                         } else
-                            EventManager::post<EventProviderOpened>(newProvider);
+                            EventProviderOpened::post(newProvider);
                     }
                 }
 

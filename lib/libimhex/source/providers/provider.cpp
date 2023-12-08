@@ -32,12 +32,10 @@ namespace hex::prv {
         this->m_overlays.clear();
 
         if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && selection->provider == this)
-            EventManager::post<EventRegionSelected>(ImHexApi::HexEditor::ProviderRegion { { 0x00, 0x00 }, nullptr });
+            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion { { 0x00, 0x00 }, nullptr });
     }
 
     void Provider::read(u64 offset, void *buffer, size_t size, bool overlays) {
-        hex::unused(overlays);
-
         this->readRaw(offset - this->getBaseAddress(), buffer, size);
 
         if (overlays)
@@ -45,12 +43,12 @@ namespace hex::prv {
     }
 
     void Provider::write(u64 offset, const void *buffer, size_t size) {
-        EventManager::post<EventProviderDataModified>(this, offset, size, static_cast<const u8*>(buffer));
+        EventProviderDataModified::post(this, offset, size, static_cast<const u8*>(buffer));
         this->markDirty();
     }
 
     void Provider::save() {
-        EventManager::post<EventProviderSaved>(this);
+        EventProviderSaved::post(this);
     }
     void Provider::saveAs(const std::fs::path &path) {
         wolv::io::File file(path, wolv::io::File::Mode::Create);
@@ -66,29 +64,29 @@ namespace hex::prv {
                 file.writeBuffer(buffer.data(), bufferSize);
             }
 
-            EventManager::post<EventProviderSaved>(this);
+            EventProviderSaved::post(this);
         }
     }
 
-    void Provider::resize(size_t newSize) {
+    void Provider::resize(u64 newSize) {
         i64 difference = newSize - this->getActualSize();
 
         if (difference > 0)
-            EventManager::post<EventProviderDataInserted>(this, this->getActualSize(), difference);
+            EventProviderDataInserted::post(this, this->getActualSize(), difference);
         else if (difference < 0)
-            EventManager::post<EventProviderDataRemoved>(this, this->getActualSize(), -difference);
+            EventProviderDataRemoved::post(this, this->getActualSize(), -difference);
 
         this->markDirty();
     }
 
-    void Provider::insert(u64 offset, size_t size) {
-        EventManager::post<EventProviderDataInserted>(this, offset, size);
+    void Provider::insert(u64 offset, u64 size) {
+        EventProviderDataInserted::post(this, offset, size);
 
         this->markDirty();
     }
 
-    void Provider::remove(u64 offset, size_t size) {
-        EventManager::post<EventProviderDataRemoved>(this, offset, size);
+    void Provider::remove(u64 offset, u64 size) {
+        EventProviderDataRemoved::post(this, offset, size);
 
         this->markDirty();
     }
@@ -120,11 +118,11 @@ namespace hex::prv {
     }
 
 
-    size_t Provider::getPageSize() const {
+    u64 Provider::getPageSize() const {
         return this->m_pageSize;
     }
 
-    void Provider::setPageSize(size_t pageSize) {
+    void Provider::setPageSize(u64 pageSize) {
         if (pageSize > MaxPageSize)
             pageSize = MaxPageSize;
         if (pageSize == 0)

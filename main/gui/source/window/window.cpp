@@ -86,17 +86,17 @@ namespace hex {
         this->m_logoTexture = ImGuiExt::Texture(romfs::get("logo.png").span());
 
         ContentRegistry::Settings::impl::store();
-        EventManager::post<EventSettingsChanged>();
-        EventManager::post<EventWindowInitialized>();
-        EventManager::post<EventImHexStartupFinished>();
+        EventSettingsChanged::post();
+        EventWindowInitialized::post();
+        EventImHexStartupFinished::post();
     }
 
     Window::~Window() {
-        EventManager::unsubscribe<EventProviderDeleted>(this);
-        EventManager::unsubscribe<RequestCloseImHex>(this);
-        EventManager::unsubscribe<RequestUpdateWindowTitle>(this);
-        EventManager::unsubscribe<EventAbnormalTermination>(this);
-        EventManager::unsubscribe<RequestOpenPopup>(this);
+        EventProviderDeleted::unsubscribe(this);
+        RequestCloseImHex::unsubscribe(this);
+        RequestUpdateWindowTitle::unsubscribe(this);
+        EventAbnormalTermination::unsubscribe(this);
+        RequestOpenPopup::unsubscribe(this);
 
         this->exitImGui();
         this->exitGLFW();
@@ -104,18 +104,18 @@ namespace hex {
 
     void Window::registerEventHandlers() {
         // Initialize default theme
-        EventManager::post<RequestChangeTheme>("Dark");
+        RequestChangeTheme::post("Dark");
 
         // Handle the close window request by telling GLFW to shut down
-        EventManager::subscribe<RequestCloseImHex>(this, [this](bool noQuestions) {
+        RequestCloseImHex::subscribe(this, [this](bool noQuestions) {
             glfwSetWindowShouldClose(this->m_window, GLFW_TRUE);
 
             if (!noQuestions)
-                EventManager::post<EventWindowClosing>(this->m_window);
+                EventWindowClosing::post(this->m_window);
         });
 
         // Handle updating the window title
-        EventManager::subscribe<RequestUpdateWindowTitle>(this, [this] {
+        RequestUpdateWindowTitle::subscribe(this, [this] {
             std::string title = "ImHex";
 
             if (ProjectFile::hasPath()) {
@@ -150,7 +150,7 @@ namespace hex {
         });
 
         // Handle opening popups
-        EventManager::subscribe<RequestOpenPopup>(this, [this](auto name) {
+        RequestOpenPopup::subscribe(this, [this](auto name) {
             std::scoped_lock lock(this->m_popupMutex);
 
             this->m_popupsToOpen.push_back(name);
@@ -325,7 +325,7 @@ namespace hex {
 
             ImGui::SetCursorPos(searchBoxPos);
             if (ImGui::Button(this->m_windowTitle.c_str(), searchBoxSize)) {
-                EventManager::post<EventSearchBoxClicked>();
+                EventSearchBoxClicked::post();
             }
 
             ImGui::PopStyleVar(3);
@@ -756,7 +756,7 @@ namespace hex {
             }
         }
 
-        EventManager::post<EventFrameBegin>();
+        EventFrameBegin::post();
     }
 
     void Window::frame() {
@@ -828,7 +828,7 @@ namespace hex {
     }
 
     void Window::frameEnd() {
-        EventManager::post<EventFrameEnd>();
+        EventFrameEnd::post();
 
         // Clean up all tasks that are done
         TaskManager::collectGarbage();
@@ -1063,7 +1063,7 @@ namespace hex {
 
         // Register window close callback
         glfwSetWindowCloseCallback(this->m_window, [](GLFWwindow *window) {
-            EventManager::post<EventWindowClosing>(window);
+            EventWindowClosing::post(window);
         });
 
         // Register file drop callback
@@ -1090,7 +1090,7 @@ namespace hex {
 
                 // If no custom handler was found, just open the file regularly
                 if (!handled)
-                    EventManager::post<RequestOpenFile>(path);
+                    RequestOpenFile::post(path);
             }
         });
 
@@ -1224,7 +1224,7 @@ namespace hex {
         for (const auto &plugin : PluginManager::getPlugins())
             plugin.setImGuiContext(ImGui::GetCurrentContext());
 
-        EventManager::post<RequestInitThemeHandlers>();
+        RequestInitThemeHandlers::post();
     }
 
     void Window::exitGLFW() {

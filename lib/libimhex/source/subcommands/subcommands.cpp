@@ -101,7 +101,7 @@ namespace hex::subcommands {
         }
         data.erase(data.end()-1);
         
-        EventManager::post<SendMessageToMainInstance>(hex::format("command/{}", cmdName), data);
+        SendMessageToMainInstance::post(hex::format("command/{}", cmdName), data);
     }
 
     void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler) {

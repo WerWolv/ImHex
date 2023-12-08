@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
 
     ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name") {
         // Handle region selection
-        EventManager::subscribe<EventRegionSelected>(this, [this](const auto &region) {
+        EventRegionSelected::subscribe(this, [this](const auto &region) {
 
             // Save current selection
             if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
@@ -35,11 +35,11 @@ namespace hex::plugin::builtin {
             this->m_shouldInvalidate = true;
         });
 
-        EventManager::subscribe<EventProviderClosed>(this, [this](const auto*) {
+        EventProviderClosed::subscribe(this, [this](const auto*) {
             this->m_selectedProvider = nullptr;
         });
 
-        EventManager::subscribe<EventSettingsChanged>(this, [this] {
+        EventSettingsChanged::subscribe(this, [this] {
             auto filterValues = ContentRegistry::Settings::read("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", nlohmann::json::array()).get<std::vector<std::string>>();
 
             this->m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
@@ -47,9 +47,9 @@ namespace hex::plugin::builtin {
     }
 
     ViewDataInspector::~ViewDataInspector() {
-        EventManager::unsubscribe<EventRegionSelected>(this);
-        EventManager::unsubscribe<EventProviderClosed>(this);
-        EventManager::unsubscribe<EventSettingsChanged>(this);
+        EventRegionSelected::unsubscribe(this);
+        EventProviderClosed::unsubscribe(this);
+        EventSettingsChanged::unsubscribe(this);
     }
 
 

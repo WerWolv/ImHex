@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::CommunicationInterface::registerNetworkEndpoint("pattern_editor/set_code", [](const nlohmann::json &data) -> nlohmann::json {
             auto code = data.at("code").get<std::string>();
 
-            EventManager::post<RequestSetPatternLanguageCode>(code);
+            RequestSetPatternLanguageCode::post(code);
 
             return { };
         });

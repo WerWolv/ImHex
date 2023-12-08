@@ -464,7 +464,7 @@ namespace hex::plugin::builtin {
 
         /* Experiments */
         ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.experiments", "hex.builtin.setting.experiments.description");
-        EventManager::subscribe<EventImHexStartupFinished>([]{
+        EventImHexStartupFinished::subscribe([]{
             for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
                 ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
                         .setTooltip(Lang(experiment.unlocalizedDescription))
@@ -477,7 +477,7 @@ namespace hex::plugin::builtin {
         });
 
         /* Shorcuts */
-        EventManager::subscribe<EventImHexStartupFinished>([]{
+        EventImHexStartupFinished::subscribe([]{
             for (const auto &shortcutEntry : ShortcutManager::getGlobalShortcuts()) {
                 ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", "hex.builtin.setting.shortcuts.global", shortcutEntry.unlocalizedName, nullptr, shortcutEntry.shortcut);
             }

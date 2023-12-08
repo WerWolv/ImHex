@@ -16,11 +16,11 @@ namespace hex::plugin::builtin {
         });
 
         // Add newly unlocked achievements to the display queue
-        EventManager::subscribe<EventAchievementUnlocked>(this, [this](const Achievement &achievement) {
+        EventAchievementUnlocked::subscribe(this, [this](const Achievement &achievement) {
             this->m_achievementUnlockQueue.push_back(&achievement);
         });
 
-        EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
+        RequestOpenWindow::subscribe(this, [this](const std::string &name) {
             if (name == "Achievements") {
                 TaskManager::doLater([this] {
                     this->getWindowOpenState() = true;
@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewAchievements::~ViewAchievements() {
-        EventManager::unsubscribe<EventAchievementUnlocked>(this);
+        EventAchievementUnlocked::unsubscribe(this);
     }
 
     void drawAchievement(ImDrawList *drawList, const AchievementManager::AchievementNode *node, ImVec2 position) {

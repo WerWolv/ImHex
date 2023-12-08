@@ -11,7 +11,7 @@ namespace hex::plugin::builtin {
 
     ViewSettings::ViewSettings() : View::Modal("hex.builtin.view.settings.name") {
         // Handle window open requests
-        EventManager::subscribe<RequestOpenWindow>(this, [this](const std::string &name) {
+        RequestOpenWindow::subscribe(this, [this](const std::string &name) {
             if (name == "Settings") {
                 TaskManager::doLater([this] {
                     this->getWindowOpenState() = true;
@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewSettings::~ViewSettings() {
-        EventManager::unsubscribe<RequestOpenWindow>(this);
+        RequestOpenWindow::unsubscribe(this);
     }
 
     void ViewSettings::drawContent() {
@@ -83,7 +83,7 @@ namespace hex::plugin::builtin {
                                         log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName, setting.unlocalizedName, nlohmann::to_string(newValue));
 
                                         // Signal that the setting was changed
-                                        EventManager::post<EventSettingsChanged>();
+                                        EventSettingsChanged::post();
                                         widget->onChanged();
 
                                         // Request a restart if the setting requires it

@@ -164,7 +164,7 @@ namespace hex::plugin::builtin {
 
         // Initialize the selected rule iterators to point to the end of the rules lists
         this->m_selectedRule = this->m_rules->end();
-        EventManager::subscribe<EventProviderCreated>([this](prv::Provider *provider) {
+        EventProviderCreated::subscribe([this](prv::Provider *provider) {
             this->m_selectedRule.get(provider) = this->m_rules.get(provider).end();
         });
     }
@@ -193,7 +193,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2());
                 if (ImGui::Checkbox("##enabled", &rule.enabled)) {
-                    EventManager::post<EventHighlightingChanged>();
+                    EventHighlightingChanged::post();
                 }
                 ImGui::PopStyleVar();
 
@@ -273,7 +273,7 @@ namespace hex::plugin::builtin {
 
                         // If any of the inputs have changed, update the highlight
                         if (updateHighlight)
-                            EventManager::post<EventHighlightingChanged>();
+                            EventHighlightingChanged::post();
                     }
 
                     ImGui::EndTable();

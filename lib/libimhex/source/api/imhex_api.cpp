@@ -82,7 +82,7 @@ namespace hex {
                 id, Highlighting {region, color}
             });
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
 
             return id;
         }
@@ -90,7 +90,7 @@ namespace hex {
         void removeBackgroundHighlight(u32 id) {
             impl::getBackgroundHighlights().erase(id);
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
         }
 
         u32 addBackgroundHighlightingProvider(const impl::HighlightingFunction &function) {
@@ -100,7 +100,7 @@ namespace hex {
 
             impl::getBackgroundHighlightingFunctions().insert({ id, function });
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
 
             return id;
         }
@@ -108,7 +108,7 @@ namespace hex {
         void removeBackgroundHighlightingProvider(u32 id) {
             impl::getBackgroundHighlightingFunctions().erase(id);
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
         }
 
         u32 addForegroundHighlight(const Region &region, color_t color) {
@@ -120,7 +120,7 @@ namespace hex {
                 id, Highlighting {region, color}
             });
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
 
             return id;
         }
@@ -128,7 +128,7 @@ namespace hex {
         void removeForegroundHighlight(u32 id) {
             impl::getForegroundHighlights().erase(id);
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
         }
 
         u32 addForegroundHighlightingProvider(const impl::HighlightingFunction &function) {
@@ -138,7 +138,7 @@ namespace hex {
 
             impl::getForegroundHighlightingFunctions().insert({ id, function });
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
 
             return id;
         }
@@ -146,7 +146,7 @@ namespace hex {
         void removeForegroundHighlightingProvider(u32 id) {
             impl::getForegroundHighlightingFunctions().erase(id);
 
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
         }
 
         static u32 tooltipId = 0;
@@ -190,7 +190,7 @@ namespace hex {
         }
 
         void setSelection(const ProviderRegion &region) {
-            EventManager::post<RequestSelectionChange>(region);
+            RequestSelectionChange::post(region);
         }
 
         void setSelection(u64 address, size_t size, prv::Provider *provider) {
@@ -204,7 +204,7 @@ namespace hex {
 
         u64 add(Region region, const std::string &name, const std::string &comment, u32 color) {
             u64 id = 0;
-            EventManager::post<RequestAddBookmark>(region, name, comment, color, &id);
+            RequestAddBookmark::post(region, name, comment, color, &id);
 
             return id;
         }
@@ -214,7 +214,7 @@ namespace hex {
         }
 
         void remove(u64 id) {
-            EventManager::post<RequestRemoveBookmark>(id);
+            RequestRemoveBookmark::post(id);
         }
 
     }
@@ -256,7 +256,7 @@ namespace hex {
             if (index < s_providers.size() && s_currentProvider != index) {
                 auto oldProvider  = get();
                 s_currentProvider = index;
-                EventManager::post<EventProviderChanged>(oldProvider, get());
+                EventProviderChanged::post(oldProvider, get());
             }
         }
 
@@ -291,7 +291,7 @@ namespace hex {
                 provider->skipLoadInterface();
 
             s_providers.push_back(provider);
-            EventManager::post<EventProviderCreated>(provider);
+            EventProviderCreated::post(provider);
 
             if (select || s_providers.size() == 1)
                 setCurrentProvider(s_providers.size() - 1);
@@ -308,7 +308,7 @@ namespace hex {
                 impl::s_closingProviders.push_back(provider);
 
                 bool shouldClose = true;
-                EventManager::post<EventProviderClosing>(provider, &shouldClose);
+                EventProviderClosing::post(provider, &shouldClose);
                 if (!shouldClose)
                     return;
             }
@@ -350,13 +350,13 @@ namespace hex {
                 setCurrentProvider(0);
 
             if (s_providers.empty())
-                EventManager::post<EventProviderChanged>(provider, nullptr);
+                EventProviderChanged::post(provider, nullptr);
 
             provider->close();
-            EventManager::post<EventProviderClosed>(provider);
+            EventProviderClosed::post(provider);
 
             TaskManager::runWhenTasksFinished([provider] {
-                EventManager::post<EventProviderDeleted>(provider);
+                EventProviderDeleted::post(provider);
                 std::erase(impl::s_closingProviders, provider);
                 delete provider;
             });
@@ -364,7 +364,7 @@ namespace hex {
 
         prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface, bool select) {
             prv::Provider* result = nullptr;
-            EventManager::post<RequestCreateProvider>(unlocalizedName, skipLoadInterface, select, &result);
+            RequestCreateProvider::post(unlocalizedName, skipLoadInterface, select, &result);
 
             return result;
         }
@@ -440,16 +440,16 @@ namespace hex {
         }
 
         void closeImHex(bool noQuestions) {
-            EventManager::post<RequestCloseImHex>(noQuestions);
+            RequestCloseImHex::post(noQuestions);
         }
 
         void restartImHex() {
-            EventManager::post<RequestRestartImHex>();
-            EventManager::post<RequestCloseImHex>(false);
+            RequestRestartImHex::post();
+            RequestCloseImHex::post(false);
         }
 
         void setTaskBarProgress(TaskProgressState state, TaskProgressType type, u32 progress) {
-            EventManager::post<EventSetTaskBarIconState>(u32(state), u32(type), progress);
+            EventSetTaskBarIconState::post(u32(state), u32(type), progress);
         }
 
 
@@ -503,8 +503,8 @@ namespace hex {
         void enableSystemThemeDetection(bool enabled) {
             s_systemThemeDetection = enabled;
 
-            EventManager::post<EventSettingsChanged>();
-            EventManager::post<EventOSThemeChanged>();
+            EventSettingsChanged::post();
+            EventOSThemeChanged::post();
         }
 
         bool usesSystemThemeDetection() {
@@ -666,7 +666,7 @@ namespace hex {
                     break;
             }
 
-            EventManager::subscribe<EventImHexClosing>([executablePath, updateTypeString] {
+            EventImHexClosing::subscribe([executablePath, updateTypeString] {
                 hex::executeCommand(
                         hex::format("{} {}",
                                     wolv::util::toUTF8String(executablePath),
@@ -681,7 +681,7 @@ namespace hex {
         }
 
         void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function) {
-            EventManager::post<RequestAddInitTask>(name, async, function);
+            RequestAddInitTask::post(name, async, function);
         }
 
     }

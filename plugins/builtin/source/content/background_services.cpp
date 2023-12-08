@@ -24,7 +24,7 @@ namespace hex::plugin::builtin {
             static wolv::net::SocketServer networkInterfaceServer(31337);
 
             AT_FIRST_TIME {
-                EventManager::subscribe<EventImHexClosing>([]{
+                EventImHexClosing::subscribe([]{
                     networkInterfaceServer.shutdown();
                 });
             };
@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
     }
 
     void registerBackgroundServices() {
-        EventManager::subscribe<EventSettingsChanged>([]{
+        EventSettingsChanged::subscribe([]{
             networkInterfaceServiceEnabled = bool(ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.network_interface", false));
         });
 

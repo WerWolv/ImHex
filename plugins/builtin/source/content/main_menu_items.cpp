@@ -377,12 +377,12 @@ namespace hex::plugin::builtin {
             if (newProvider != nullptr && !newProvider->open())
                 hex::ImHexApi::Provider::remove(newProvider);
             else
-                EventManager::post<EventProviderOpened>(newProvider);
+                EventProviderOpened::post(newProvider);
         }, noRunningTasks);
 
         /* Open File */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, 1100, CTRLCMD + Keys::O, [] {
-            EventManager::post<RequestOpenWindow>("Open File");
+            RequestOpenWindow::post("Open File");
         }, noRunningTasks);
 
         /* Open Other */
@@ -596,7 +596,7 @@ namespace hex::plugin::builtin {
         createExtrasMenu();
         createHelpMenu();
 
-        (void)EventManager::subscribe<EventFrameEnd>([] {
+        (void)EventFrameEnd::subscribe([] {
             if (g_demoWindowOpen) {
                 ImGui::ShowDemoWindow(&g_demoWindowOpen);
                 ImPlot::ShowDemoWindow(&g_demoWindowOpen);

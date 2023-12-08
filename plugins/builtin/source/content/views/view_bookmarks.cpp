@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
     ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name") {
 
         // Handle bookmark add requests sent by the API
-        EventManager::subscribe<RequestAddBookmark>(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
+        RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
             if (name.empty()) {
                 name = hex::format("hex.builtin.view.bookmarks.default_title"_lang, region.address, region.address + region.size - 1);
             }
@@ -46,11 +46,11 @@ namespace hex::plugin::builtin {
 
             ImHexApi::Provider::markDirty();
 
-            EventManager::post<EventBookmarkCreated>(this->m_bookmarks->back().entry);
-            EventManager::post<EventHighlightingChanged>();
+            EventBookmarkCreated::post(this->m_bookmarks->back().entry);
+            EventHighlightingChanged::post();
         });
 
-        EventManager::subscribe<RequestRemoveBookmark>([this](u64 id) {
+        RequestRemoveBookmark::subscribe([this](u64 id) {
             std::erase_if(this->m_bookmarks.get(), [id](const auto &bookmark) {
                 return bookmark.entry.id == id;
             });
@@ -188,8 +188,8 @@ namespace hex::plugin::builtin {
     }
 
     ViewBookmarks::~ViewBookmarks() {
-        EventManager::unsubscribe<RequestAddBookmark>(this);
-        EventManager::unsubscribe<EventProviderDeleted>(this);
+        RequestAddBookmark::unsubscribe(this);
+        EventProviderDeleted::unsubscribe(this);
     }
 
     static void drawColorPopup(ImColor &color) {
@@ -235,7 +235,7 @@ namespace hex::plugin::builtin {
         }
 
         if (colorChanged)
-            EventManager::post<EventHighlightingChanged>();
+            EventHighlightingChanged::post();
     }
 
     void ViewBookmarks::drawContent() {
@@ -372,7 +372,7 @@ namespace hex::plugin::builtin {
                                 if (auto *viewProvider = dynamic_cast<ViewProvider*>(newProvider); viewProvider != nullptr) {
                                     viewProvider->setProvider(region.getStartAddress(), region.getSize(), provider);
                                     if (viewProvider->open()) {
-                                        EventManager::post<EventProviderOpened>(viewProvider);
+                                        EventProviderOpened::post(viewProvider);
                                         AchievementManager::unlockAchievement("hex.builtin.achievement.hex_editor", "hex.builtin.achievement.hex_editor.open_new_view.name");
                                     }
                                 }
@@ -434,7 +434,7 @@ namespace hex::plugin::builtin {
             // Remove the bookmark that was marked for removal
             if (bookmarkToRemove != this->m_bookmarks->end()) {
                 this->m_bookmarks->erase(bookmarkToRemove);
-                EventManager::post<EventHighlightingChanged>();
+                EventHighlightingChanged::post();
             }
         }
         ImGui::EndChild();

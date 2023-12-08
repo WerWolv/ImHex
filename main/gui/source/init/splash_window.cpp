@@ -44,7 +44,7 @@ namespace hex::init {
 
         ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
 
-        EventManager::subscribe<RequestAddInitTask>([this](const std::string& name, bool async, const TaskFunction &function){
+        RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
             this->m_tasks.push_back(Task{ name, function, async });
         });
     }
@@ -295,23 +295,26 @@ namespace hex::init {
         // Check if all background tasks have finished so the splash screen can be closed
         if (this->tasksSucceeded.wait_for(0s) == std::future_status::ready) {
             if (this->tasksSucceeded.get()) {
-                log::debug("All tasks finished with success !");
-                return FrameResult::success;
+                log::debug("All tasks finished successfully!");
+                return FrameResult::Success;
             } else {
                 log::warn("All tasks finished, but some failed");
-                return FrameResult::failure;
+                return FrameResult::Failure;
             }
         }
 
-        return FrameResult::wait;
+        return FrameResult::Running;
     }
 
     bool WindowSplash::loop() {
         // Splash window rendering loop
         while (true) {
-            auto res = this->fullFrame();
-            if (res == FrameResult::success) return true;
-            else if (res == FrameResult::failure) return false;
+            auto frameResult = this->fullFrame();
+
+            if (frameResult == FrameResult::Success)
+                return true;
+            else if (frameResult == FrameResult::Failure)
+                return false;
         }
     }
 
@@ -457,10 +460,10 @@ namespace hex::init {
         u32 lastPos = 0;
         u32 lastCount = 0;
         for (auto &highlight : this->highlights) {
-            auto newPos = lastPos + lastCount + (rng() % 40);
-            auto newCount = (rng() % 7) + 3;
-            highlight.start.x = newPos % 13;
-            highlight.start.y = newPos / 13;
+            u32 newPos = lastPos + lastCount + (rng() % 40);
+            u32 newCount = (rng() % 7) + 3;
+            highlight.start.x = float(newPos % 13);
+            highlight.start.y = float(newPos / 13);
             highlight.count = newCount;
 
             {
@@ -483,12 +486,12 @@ namespace hex::init {
         this->tasksSucceeded = processTasksAsync();
     }
 
-    void WindowSplash::exitGLFW() {
+    void WindowSplash::exitGLFW() const {
         glfwDestroyWindow(this->m_window);
         glfwTerminate();
     }
 
-    void WindowSplash::exitImGui() {
+    void WindowSplash::exitImGui() const {
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();

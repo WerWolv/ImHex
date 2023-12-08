@@ -8,13 +8,13 @@ namespace hex::plugin::builtin {
     ViewCommandPalette::ViewCommandPalette() : View::Special("hex.builtin.view.command_palette.name") {
         // Add global shortcut to open the command palette
         ShortcutManager::addGlobalShortcut(CTRLCMD + SHIFT + Keys::P, "hex.builtin.view.command_palette.name", [this] {
-            EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
+            RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
             this->m_commandPaletteOpen = true;
             this->m_justOpened         = true;
         });
 
-        EventManager::subscribe<EventSearchBoxClicked>([this] {
-            EventManager::post<RequestOpenPopup>("hex.builtin.view.command_palette.name"_lang);
+        EventSearchBoxClicked::subscribe([this] {
+            RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
             this->m_commandPaletteOpen = true;
             this->m_justOpened         = true;
         });

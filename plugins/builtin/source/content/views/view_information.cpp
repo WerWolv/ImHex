@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
     using namespace hex::literals;
 
     ViewInformation::ViewInformation() : View::Window("hex.builtin.view.information.name") {
-        EventManager::subscribe<EventDataChanged>(this, [this] {
+        EventDataChanged::subscribe(this, [this] {
             this->m_dataValid = false;
             this->m_plainTextCharacterPercentage = -1.0;
             this->m_averageEntropy = -1.0;
@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
             this->m_analyzedRegion = { 0, 0 };
         });
 
-        EventManager::subscribe<EventRegionSelected>(this, [this](Region region) {
+        EventRegionSelected::subscribe(this, [this](Region region) {
             // Set the position of the diagram relative to the place where 
             // the user clicked inside the hex editor view 
             if (this->m_blockSize != 0) {
@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
             } 
         });
 
-        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
+        EventProviderDeleted::subscribe(this, [this](const auto*) {
             this->m_dataValid = false;
         });
 
@@ -58,9 +58,9 @@ namespace hex::plugin::builtin {
     }
 
     ViewInformation::~ViewInformation() {
-        EventManager::unsubscribe<EventDataChanged>(this);
-        EventManager::unsubscribe<EventRegionSelected>(this);
-        EventManager::unsubscribe<EventProviderDeleted>(this);
+        EventDataChanged::unsubscribe(this);
+        EventRegionSelected::unsubscribe(this);
+        EventProviderDeleted::unsubscribe(this);
     }
 
     void ViewInformation::analyze() {

@@ -56,10 +56,10 @@ namespace hex::plugin::builtin {
                 if (!fileProvider->open())
                     ImHexApi::Provider::remove(newProvider);
                 else {
-                    EventManager::post<MovePerProviderData>(this, fileProvider);
+                    MovePerProviderData::post(this, fileProvider);
 
                     fileProvider->markDirty(false);
-                    EventManager::post<EventProviderOpened>(newProvider);
+                    EventProviderOpened::post(newProvider);
                     ImHexApi::Provider::remove(this, true);
                 }
             }

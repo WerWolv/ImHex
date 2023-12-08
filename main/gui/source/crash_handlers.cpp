@@ -73,7 +73,7 @@ namespace hex::crash {
 
     extern "C" void triggerSafeShutdown(int signalNumber = 0) {
         // Trigger an event so that plugins can handle crashes
-        EventManager::post<EventAbnormalTermination>(signalNumber);
+        EventAbnormalTermination::post(signalNumber);
 
         // Run exit tasks
         init::runExitTasks();
@@ -174,8 +174,8 @@ namespace hex::crash {
         // because this save is responsible for telling us which files
         // were opened in case there wasn't a project
         // Only do it when ImHex has finished its loading
-        EventManager::subscribe<EventImHexStartupFinished>([] {
-            EventManager::subscribe<EventAbnormalTermination>([](int) {
+        EventImHexStartupFinished::subscribe([] {
+            EventAbnormalTermination::subscribe([](int) {
                 // Save ImGui settings
                 auto imguiSettingsPath = hex::getImGuiSettingsPath();
                 if (!imguiSettingsPath.empty())
@@ -192,7 +192,7 @@ namespace hex::crash {
         });
 
         // Change the crash callback when ImHex has finished startup
-        EventManager::subscribe<EventImHexStartupFinished>([]{
+        EventImHexStartupFinished::subscribe([]{
             crashCallback = saveCrashFile;
         });
     }

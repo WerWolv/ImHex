@@ -10,15 +10,15 @@ using namespace std::literals::string_literals;
 namespace hex::plugin::builtin {
 
     ViewDisassembler::ViewDisassembler() : View::Window("hex.builtin.view.disassembler.name") {
-        EventManager::subscribe<EventProviderDeleted>(this, [this](const auto*) {
+        EventProviderDeleted::subscribe(this, [this](const auto*) {
             this->m_disassembly.clear();
         });
     }
 
     ViewDisassembler::~ViewDisassembler() {
-        EventManager::unsubscribe<EventDataChanged>(this);
-        EventManager::unsubscribe<EventRegionSelected>(this);
-        EventManager::unsubscribe<EventProviderDeleted>(this);
+        EventDataChanged::unsubscribe(this);
+        EventRegionSelected::unsubscribe(this);
+        EventProviderDeleted::unsubscribe(this);
     }
 
     void ViewDisassembler::disassemble() {

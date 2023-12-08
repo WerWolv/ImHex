@@ -76,7 +76,7 @@ namespace hex {
                 if (lParam == 0) break;
 
                 if (LPCTSTR(lParam) == std::string_view("ImmersiveColorSet")) {
-                    EventManager::post<EventOSThemeChanged>();
+                    EventOSThemeChanged::post();
                 }
 
                 break;
@@ -336,7 +336,7 @@ namespace hex {
                 CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskbarList4, &g_taskbarList);
             }
 
-            EventManager::subscribe<EventSetTaskBarIconState>([hwnd](u32 state, u32 type, u32 progress){
+            EventSetTaskBarIconState::subscribe([hwnd](u32 state, u32 type, u32 progress){
                 using enum ImHexApi::System::TaskProgressState;
                 switch (ImHexApi::System::TaskProgressState(state)) {
                     case Reset:
@@ -379,7 +379,7 @@ namespace hex {
             ULONG dataSize;
         };
 
-        EventManager::subscribe<EventThemeChanged>([this]{
+        EventThemeChanged::subscribe([this]{
             auto hwnd = glfwGetWin32Window(this->m_window);
 
             static auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
