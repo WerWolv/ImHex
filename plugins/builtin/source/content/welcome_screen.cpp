@@ -637,7 +637,12 @@ namespace hex::plugin::builtin {
 
             if (!s_infoBannerTexture.isValid()) {
                 TaskManager::createBackgroundTask("Load banner", [](auto&) {
-                    HttpRequest request("GET", ImHexApiURL + std::string("/info_banner"));
+                    HttpRequest request("GET",
+                        ImHexApiURL + hex::format("/{}/info_banner",
+                                ImHexApi::System::getOSName() | std::views::transform([](char c) { return std::tolower(c); })
+                            )
+                        );
+
                     auto response = request.downloadFile().get();
 
                     if (response.isSuccess()) {
