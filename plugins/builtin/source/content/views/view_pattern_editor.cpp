@@ -164,7 +164,7 @@ namespace hex::plugin::builtin {
             textEditorSize.y += height;
 
             if (availableSize.y > 1)
-                textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3);
+                textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, std::max(1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3));
 
             this->m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
 
