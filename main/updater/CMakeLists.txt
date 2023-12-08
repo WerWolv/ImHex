@@ -10,6 +10,5 @@ add_dependencies(imhex_all updater)
 set_target_properties(updater PROPERTIES
         OUTPUT_NAME "imhex-updater"
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../..
-        CXX_VISIBILITY_PRESET hidden
         POSITION_INDEPENDENT_CODE ON
 )

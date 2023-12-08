@@ -108,7 +108,7 @@ macro(configurePackingResources)
             set(CPACK_PACKAGE_INSTALL_DIRECTORY "ImHex")
             set_property(INSTALL "$<TARGET_FILE_NAME:main>"
                     PROPERTY CPACK_START_MENU_SHORTCUTS "ImHex"
-                    )
+            )
             set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/resources/dist/windows/LICENSE.rtf")
         endif()
     elseif (APPLE)
@@ -212,27 +212,27 @@ macro(createPackage)
     elseif(UNIX AND NOT APPLE)
 
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
-        
+
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/dist/DEBIAN/control.in ${CMAKE_BINARY_DIR}/DEBIAN/control)
-        
+
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_PREFIX}/share/licenses/imhex)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/imhex.desktop DESTINATION ${CMAKE_INSTALL_PREFIX}/share/applications)
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/resources/icon.png DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pixmaps RENAME imhex.png)
         install(FILES "$<TARGET_FILE:libimhex>" DESTINATION "${CMAKE_INSTALL_LIBDIR}" PERMISSIONS ${LIBRARY_PERMISSIONS})
         downloadImHexPatternsFiles("./share/imhex")
-        
+
         # install AppStream file
         install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/dist/net.werwolv.imhex.metainfo.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
-        
+
         # install symlink for the old standard name
         file(CREATE_LINK net.werwolv.imhex.metainfo.xml ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appdata.xml SYMBOLIC)
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/net.werwolv.imhex.appdata.xml DESTINATION ${CMAKE_INSTALL_PREFIX}/share/metainfo)
 
     endif()
-    
+
     if (IMHEX_GENERATE_PACKAGE AND APPLE)
         include(PostprocessBundle)
-        
+
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
 
         set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
@@ -245,7 +245,7 @@ macro(createPackage)
         add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
 
         downloadImHexPatternsFiles("${IMHEX_BUNDLE_PATH}/Contents/MacOS")
-        
+
         install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
         install(TARGETS main BUNDLE DESTINATION ".")
         install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
@@ -414,9 +414,9 @@ function(downloadImHexPatternsFiles dest)
         endif ()
 
         FetchContent_Declare(
-            imhex_patterns
-            GIT_REPOSITORY https://github.com/WerWolv/ImHex-Patterns.git
-            GIT_TAG origin/master
+                imhex_patterns
+                GIT_REPOSITORY https://github.com/WerWolv/ImHex-Patterns.git
+                GIT_TAG origin/master
         )
 
         message(STATUS "Downloading ImHex-Patterns repo branch ${PATTERNS_BRANCH}...")
@@ -445,6 +445,10 @@ macro(setupCompilerFlags target)
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wall -Wextra -Wpedantic -Werror")
         endif()
 
+        if (UNIX)
+            set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -rdynamic")
+        endif()
+
         set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
 
         # Disable some warnings
@@ -466,6 +470,7 @@ macro(setupCompilerFlags target)
     endif ()
 
     # Set actual CMake flags
+    set_target_properties(${target} PROPERTIES COMPILE_FLAGS "${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
     set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS}    ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}")
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS}  ${IMHEX_COMMON_FLAGS} ${IMHEX_C_CXX_FLAGS}  ${IMHEX_CXX_FLAGS}")
     set(CMAKE_OBJC_FLAGS "${CMAKE_OBJC_FLAGS} ${IMHEX_COMMON_FLAGS}")
@@ -475,12 +480,12 @@ endmacro()
 macro(setUninstallTarget)
     if(NOT TARGET uninstall)
         configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-        IMMEDIATE @ONLY)
-    
+                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+                IMMEDIATE @ONLY)
+
         add_custom_target(uninstall
-        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+                COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
     endif()
 endmacro()
 
@@ -673,7 +678,7 @@ function(generatePDBs)
         add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb
                 WORKING_DIRECTORY ${cv2pdb_SOURCE_DIR}
                 COMMAND
-                (${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
+        (${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
                 ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
                 $<TARGET_FILE:${PDB}>) || (exit 0)
                 DEPENDS $<TARGET_FILE:${PDB}>
