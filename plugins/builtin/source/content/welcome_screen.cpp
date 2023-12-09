@@ -342,14 +342,14 @@ namespace hex::plugin::builtin {
                 }
 
                 if (s_infoBannerTexture.isValid()) {
-                    auto width = ImGui::GetContentRegionAvail().x - windowPadding;
                     static bool hovered = false;
 
                     ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Border));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
                     ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.info"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
                     {
-                        ImGui::Image(s_infoBannerTexture, ImVec2(width, width / s_infoBannerTexture.getAspectRatio()));
+                        const auto height = 80_scaled;
+                        ImGui::Image(s_infoBannerTexture, ImVec2(height * s_infoBannerTexture.getAspectRatio(), height));
                         hovered = ImGui::IsItemHovered();
 
                         if (ImGui::IsItemClicked()) {
