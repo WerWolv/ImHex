@@ -445,7 +445,7 @@ macro(setupCompilerFlags target)
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wall -Wextra -Wpedantic -Werror")
         endif()
 
-        if (UNIX AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        if (UNIX AND NOT APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU")
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -rdynamic")
         endif()
 
