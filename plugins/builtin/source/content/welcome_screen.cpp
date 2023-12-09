@@ -343,11 +343,14 @@ namespace hex::plugin::builtin {
 
                 if (s_infoBannerTexture.isValid()) {
                     auto width = ImGui::GetContentRegionAvail().x - windowPadding;
+                    static bool hovered = false;
 
+                    ImGui::PushStyleColor(ImGuiCol_Border, ImGui::GetStyleColorVec4(hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Border));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
                     ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.info"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
                     {
                         ImGui::Image(s_infoBannerTexture, ImVec2(width, width / s_infoBannerTexture.getAspectRatio()));
+                        hovered = ImGui::IsItemHovered();
 
                         if (ImGui::IsItemClicked()) {
                             hex::openWebpage(ImHexApiURL + hex::format("/info/{}/link", hex::toLower(ImHexApi::System::getOSName())));
@@ -355,6 +358,8 @@ namespace hex::plugin::builtin {
                     }
                     ImGuiExt::EndSubWindow();
                     ImGui::PopStyleVar();
+                    ImGui::PopStyleColor();
+
                 }
 
 
@@ -394,12 +399,14 @@ namespace hex::plugin::builtin {
                             {
                                 const ImVec2 windowSize = scaled({ 150, 60 });
                                 ImGui::SetCursorPos(ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
+                                ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
                                 ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize);
                                 {
                                     if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen))
                                         ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
                                 }
                                 ImGuiExt::EndSubWindow();
+                                ImGui::PopStyleColor();
                                 hovered = ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlappedByItem | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
                             }
