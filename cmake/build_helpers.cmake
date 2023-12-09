@@ -452,7 +452,7 @@ macro(setupCompilerFlags target)
         set(IMHEX_CXX_FLAGS "-fexceptions -frtti")
 
         # Disable some warnings
-        set(IMHEX_C_CXX_FLAGS "-Wno-array-bounds -Wno-deprecated-declarations")
+        set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option -Wno-array-bounds -Wno-deprecated-declarations")
 
         if (IMHEX_ENABLE_UNITY_BUILD AND WIN32)
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wa,-mbig-obj")
