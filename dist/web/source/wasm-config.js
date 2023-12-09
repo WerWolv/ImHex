@@ -30,6 +30,10 @@ function glfwCreateStandardCursorCustom(shape) {
     return shape
 }
 
+var notWorkingTimer = setTimeout(() => {
+    document.getElementById("not_working").classList.add("visible")
+}, 5000);
+
 var Module = {
     preRun:  [],
     postRun: [],
@@ -37,9 +41,11 @@ var Module = {
         // Triggered when the wasm module is loaded and ready to use.
         document.getElementById("loading").style.display = "none"
         document.getElementById("canvas").style.display = "initial"
+
+        clearTimeout(notWorkingTimer);
     },
     print:   (function() { })(),
-    printErr: function(text) { },
+    printErr: function(text) {  },
     canvas: (function() {
         let canvas = document.getElementById('canvas');
         // As a default initial behavior, pop up an alert when webgl context is lost. To make your
