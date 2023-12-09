@@ -22,6 +22,7 @@
         "hex.windows.view.tty_console.send_eot": "EOT 보내기",
         "hex.windows.view.tty_console.send_etx": "ETX 보내기",
         "hex.windows.view.tty_console.send_sub": "SUB 보내기",
-        "hex.windows.view.tty_console.stop_bits": "스톱 비트"
+        "hex.windows.view.tty_console.stop_bits": "스톱 비트",
+        "hex.builtin.setting.interface.show_resource_usage": "하단에 리소스 사용량 표시"
     }
 }
