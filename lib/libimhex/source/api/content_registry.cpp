@@ -376,6 +376,14 @@ namespace hex {
                 return this->m_value;
             }
 
+            bool Label::draw(const std::string& name) {
+                ImGui::NewLine();
+                ImGui::TextUnformatted(name.c_str());
+
+                return false;
+            }
+
+
         }
 
     }

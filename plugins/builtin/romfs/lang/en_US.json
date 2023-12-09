@@ -563,6 +563,7 @@
         "hex.builtin.setting.font.glyphs": "Glyphs",
         "hex.builtin.setting.font.custom_font": "Custom Font",
         "hex.builtin.setting.font.custom_font_enable": "Use custom font",
+        "hex.builtin.setting.font.custom_font_info": "The following settings are only available when a custom font has been selected.",
         "hex.builtin.setting.font.font_bold": "Bold",
         "hex.builtin.setting.font.font_italic": "Italic",
         "hex.builtin.setting.font.font_antialias": "Antialiasing",

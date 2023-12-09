@@ -130,7 +130,7 @@ namespace hex {
                     Interface m_interface = Interface(this);
                 };
 
-                class Checkbox      : public Widget {
+                class Checkbox : public Widget {
                 public:
                     explicit Checkbox(bool defaultValue) : m_value(defaultValue) { }
 
@@ -144,6 +144,7 @@ namespace hex {
                 private:
                     bool m_value;
                 };
+
                 class SliderInteger : public Widget {
                 public:
                     SliderInteger(i32 defaultValue, i32 min, i32 max) : m_value(defaultValue), m_min(min), m_max(max) { }
@@ -158,7 +159,8 @@ namespace hex {
                     int m_value;
                     i32 m_min, m_max;
                 };
-                class SliderFloat   : public Widget {
+
+                class SliderFloat : public Widget {
                 public:
                     SliderFloat(float defaultValue, float min, float max) : m_value(defaultValue), m_min(min), m_max(max) { }
                     bool draw(const std::string &name) override;
@@ -172,7 +174,8 @@ namespace hex {
                     float m_value;
                     float m_min, m_max;
                 };
-                class ColorPicker   : public Widget {
+
+                class ColorPicker : public Widget {
                 public:
                     explicit ColorPicker(ImColor defaultColor);
 
@@ -186,7 +189,8 @@ namespace hex {
                 private:
                     std::array<float, 4> m_value{};
                 };
-                class DropDown      : public Widget {
+
+                class DropDown : public Widget {
                 public:
                     explicit DropDown(const std::vector<std::string> &items, const std::vector<nlohmann::json> &settingsValues, const nlohmann::json &defaultItem) : m_items(items), m_settingsValues(settingsValues), m_defaultItem(defaultItem) { }
 
@@ -205,7 +209,8 @@ namespace hex {
 
                     int m_value = -1;
                 };
-                class TextBox       : public Widget {
+
+                class TextBox : public Widget {
                 public:
                     explicit TextBox(std::string defaultValue) : m_value(std::move(defaultValue)) { }
 
@@ -220,20 +225,29 @@ namespace hex {
                 private:
                     std::string m_value;
                 };
-                class FilePicker    : public Widget {
+
+                class FilePicker : public Widget {
                 public:
                     bool draw(const std::string &name) override;
 
                     void load(const nlohmann::json &data) override;
                     nlohmann::json store() override;
 
-                    [[nodiscard]]
-                    std::fs::path getPath() const { return this->m_value; }
+                    [[nodiscard]] std::fs::path getPath() const {
+                        return this->m_value;
+                    }
 
                 private:
                     std::string m_value;
                 };
 
+                class Label : public Widget {
+                public:
+                    bool draw(const std::string &name) override;
+
+                    void load(const nlohmann::json &) override {}
+                    nlohmann::json store() override { return {}; }
+                };
 
             }
 
