@@ -70,11 +70,16 @@ namespace ImGuiExt {
 
     class Texture {
     public:
+        enum class Filter {
+            Linear,
+            Nearest
+        };
+
         Texture() = default;
-        Texture(const ImU8 *buffer, int size, int width = 0, int height = 0);
-        Texture(std::span<const std::byte> bytes, int width = 0, int height = 0);
-        explicit Texture(const char *path);
-        explicit Texture(const std::fs::path &path);
+        Texture(const ImU8 *buffer, int size, Filter filter = Filter::Nearest, int width = 0, int height = 0);
+        Texture(std::span<const std::byte> bytes, Filter filter = Filter::Nearest, int width = 0, int height = 0);
+        explicit Texture(const char *path, Filter filter = Filter::Nearest);
+        explicit Texture(const std::fs::path &path, Filter filter = Filter::Nearest);
         Texture(unsigned int texture, int width, int height);
         Texture(const Texture&) = delete;
         Texture(Texture&& other) noexcept;

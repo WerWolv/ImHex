@@ -83,7 +83,7 @@ namespace hex {
         this->setupNativeWindow();
         this->registerEventHandlers();
 
-        this->m_logoTexture = ImGuiExt::Texture(romfs::get("logo.png").span());
+        this->m_logoTexture = ImGuiExt::Texture(romfs::get("logo.png").span(), ImGuiExt::Texture::Filter::Linear);
 
         ContentRegistry::Settings::impl::store();
         EventSettingsChanged::post();

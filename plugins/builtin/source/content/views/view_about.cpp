@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
 
             // Draw the ImHex icon
             if (!this->m_logoTexture.isValid())
-                this->m_logoTexture = ImGuiExt::Texture(romfs::get("assets/common/logo.png").span());
+                this->m_logoTexture = ImGuiExt::Texture(romfs::get("assets/common/logo.png").span(), ImGuiExt::Texture::Filter::Linear);
 
             ImGui::Image(this->m_logoTexture, scaled({ 100, 100 }));
             if (ImGui::IsItemHovered() && ImGui::IsItemClicked()) {
@@ -116,9 +116,9 @@ namespace hex::plugin::builtin {
         };
 
         static std::array DonationPages = {
-            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/paypal.png").span<std::byte>()),  "https://werwolv.net/donate"           },
-            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/github.png").span<std::byte>()),  "https://github.com/sponsors/WerWolv"  },
-            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/patreon.png").span<std::byte>()), "https://patreon.com/werwolv"          },
+            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/paypal.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear),  "https://werwolv.net/donate"           },
+            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/github.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear),  "https://github.com/sponsors/WerWolv"  },
+            DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/patreon.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear), "https://patreon.com/werwolv"          },
         };
 
         ImGui::NewLine();

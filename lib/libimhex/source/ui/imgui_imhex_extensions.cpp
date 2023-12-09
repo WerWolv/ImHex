@@ -22,8 +22,24 @@
 namespace ImGuiExt {
 
     using namespace ImGui;
+
+    namespace {
+
+        constexpr auto getGLFilter(Texture::Filter filter) {
+            switch (filter) {
+                using enum Texture::Filter;
+                case Nearest:
+                    return GL_NEAREST;
+                case Linear:
+                    return GL_LINEAR;
+            }
+
+            return GL_NEAREST;
+        }
+
+    }
     
-    Texture::Texture(const ImU8 *buffer, int size, int width, int height) {
+    Texture::Texture(const ImU8 *buffer, int size, Filter filter, int width, int height) {
         unsigned char *imageData = stbi_load_from_memory(buffer, size, &this->m_width, &this->m_height, nullptr, 4);
         if (imageData == nullptr) {
             if (width * height * 4 > size)
@@ -41,8 +57,8 @@ namespace ImGuiExt {
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getGLFilter(filter));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getGLFilter(filter));
 
         #if defined(GL_UNPACK_ROW_LENGTH)
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -54,11 +70,11 @@ namespace ImGuiExt {
         this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
 
-    Texture::Texture(std::span<const std::byte> bytes, int width, int height) : Texture(reinterpret_cast<const ImU8*>(bytes.data()), bytes.size(), width, height) { }
+    Texture::Texture(std::span<const std::byte> bytes, Filter filter, int width, int height) : Texture(reinterpret_cast<const ImU8*>(bytes.data()), bytes.size(), filter, width, height) { }
 
-    Texture::Texture(const std::fs::path &path) : Texture(reinterpret_cast<const char *>(path.u8string().c_str())) { }
+    Texture::Texture(const std::fs::path &path, Filter filter) : Texture(reinterpret_cast<const char *>(path.u8string().c_str()), filter) { }
 
-    Texture::Texture(const char *path) {
+    Texture::Texture(const char *path, Filter filter) {
         unsigned char *imageData = stbi_load(path, &this->m_width, &this->m_height, nullptr, 4);
         if (imageData == nullptr)
             return;
@@ -67,8 +83,8 @@ namespace ImGuiExt {
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, getGLFilter(filter));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, getGLFilter(filter));
 
         #if defined(GL_UNPACK_ROW_LENGTH)
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
@@ -962,8 +978,8 @@ namespace ImGuiExt {
         ImGui::EndChild();
     }
 
-    bool VSliderAngle(const char* label, ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags) {
-        if (format == NULL)
+    bool VSliderAngle(const char* label, const ImVec2& size, float* v_rad, float v_degrees_min, float v_degrees_max, const char* format, ImGuiSliderFlags flags) {
+        if (format == nullptr)
             format = "%.0f deg";
         float v_deg = (*v_rad) * 360.0f / (2 * IM_PI);
         bool value_changed = ImGui::VSliderFloat(label, size, &v_deg, v_degrees_min, v_degrees_max, format, flags);
@@ -1011,7 +1027,7 @@ namespace ImGuiExt {
         ImGuiContext& g = *GImGui;
         const ImGuiStyle& style = g.Style;
         const ImGuiID id = window->GetID(label);
-        const ImVec2 label_size = CalcTextSize(label, NULL, true);
+        const ImVec2 label_size = CalcTextSize(label, nullptr, true);
 
         const ImVec2 size = ImVec2(GetFrameHeight() * 2.0F, GetFrameHeight());
         const ImVec2 pos = window->DC.CursorPos;

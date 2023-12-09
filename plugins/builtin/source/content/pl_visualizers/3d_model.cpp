@@ -783,7 +783,7 @@ namespace hex::plugin::builtin {
                 vertexArray.bind();
                 if (s_shouldUpdateTexture) {
                     s_shouldUpdateTexture = false;
-                    s_modelTexture = ImGuiExt::Texture(s_texturePath);
+                    s_modelTexture = ImGuiExt::Texture(s_texturePath, ImGuiExt::Texture::Filter::Nearest);
                 }
 
                 if (s_drawTexture)

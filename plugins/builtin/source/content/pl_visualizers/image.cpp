@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
             auto pattern  = arguments[0].toPattern();
 
             auto data = pattern->getBytes();
-            texture = ImGuiExt::Texture(data.data(), data.size());
+            texture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Nearest);
             scale = 200_scaled / texture.getSize().x;
         }
 
@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
             auto height = arguments[2].toUnsigned();
 
             auto data = pattern->getBytes();
-            texture = ImGuiExt::Texture(data.data(), data.size(), width, height);
+            texture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Nearest, width, height);
         }
 
         if (texture.isValid())

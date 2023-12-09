@@ -443,8 +443,8 @@ namespace hex::init {
     void WindowSplash::initMyself() {
 
         // Load splash screen image from romfs
-        this->splashBackgroundTexture = ImGuiExt::Texture(romfs::get("splash_background.png").span());
-        this->splashTextTexture = ImGuiExt::Texture(romfs::get("splash_text.png").span());
+        this->splashBackgroundTexture = ImGuiExt::Texture(romfs::get("splash_background.png").span(), ImGuiExt::Texture::Filter::Linear);
+        this->splashTextTexture = ImGuiExt::Texture(romfs::get("splash_text.png").span(), ImGuiExt::Texture::Filter::Linear);
 
         // If the image couldn't be loaded correctly, something went wrong during the build process
         // Close the application since this would lead to errors later on anyway.

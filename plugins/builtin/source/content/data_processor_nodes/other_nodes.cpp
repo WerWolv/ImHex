@@ -286,7 +286,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &rawData = this->getBufferOnInput(0);
 
-            this->m_texture = ImGuiExt::Texture(rawData.data(), rawData.size());
+            this->m_texture = ImGuiExt::Texture(rawData.data(), rawData.size(), ImGuiExt::Texture::Filter::Nearest);
         }
 
     private:
@@ -317,7 +317,7 @@ namespace hex::plugin::builtin {
             if (requiredBytes > rawData.size())
                 throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
-            this->m_texture = ImGuiExt::Texture(rawData.data(), rawData.size(), width, height);
+            this->m_texture = ImGuiExt::Texture(rawData.data(), rawData.size(), ImGuiExt::Texture::Filter::Nearest, width, height);
         }
 
     private:

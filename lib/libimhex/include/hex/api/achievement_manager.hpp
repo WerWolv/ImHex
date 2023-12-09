@@ -150,7 +150,7 @@ namespace hex {
             if (this->m_icon.isValid())
                 return m_icon;
 
-            this->m_icon = ImGuiExt::Texture(this->m_iconData.data(), this->m_iconData.size());
+            this->m_icon = ImGuiExt::Texture(this->m_iconData.data(), this->m_iconData.size(), ImGuiExt::Texture::Filter::Linear);
 
             return this->m_icon;
         }

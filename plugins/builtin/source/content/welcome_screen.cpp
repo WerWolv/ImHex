@@ -513,7 +513,7 @@ namespace hex::plugin::builtin {
 
         (void)RequestChangeTheme::subscribe([](const std::string &theme) {
             auto changeTexture = [&](const std::string &path) {
-                return ImGuiExt::Texture(romfs::get(path).span());
+                return ImGuiExt::Texture(romfs::get(path).span(), ImGuiExt::Texture::Filter::Linear);
             };
 
             ThemeManager::changeTheme(theme);
@@ -639,7 +639,7 @@ namespace hex::plugin::builtin {
             for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Resources)) {
                 const auto infoBannerPath = defaultPath / "info_banner.png";
                 if (wolv::io::fs::exists(infoBannerPath)) {
-                    s_infoBannerTexture = ImGuiExt::Texture(wolv::util::toUTF8String(infoBannerPath).c_str());
+                    s_infoBannerTexture = ImGuiExt::Texture(wolv::util::toUTF8String(infoBannerPath).c_str(), ImGuiExt::Texture::Filter::Linear);
 
                     if (s_infoBannerTexture.isValid())
                         break;
@@ -656,7 +656,7 @@ namespace hex::plugin::builtin {
                     if (response.isSuccess()) {
                         const auto &data = response.getData();
                         TaskManager::doLater([data] {
-                            s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size());
+                            s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
                         });
                     }
                 });
