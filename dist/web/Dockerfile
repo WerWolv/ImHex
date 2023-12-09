@@ -83,6 +83,8 @@ COPY --from=build [             \
     "/build/favicon.ico",       \
     "/build/icon.png",          \
     "/build/manifest.json",     \
+    "/build/robots.txt",        \
+    "/build/sitemap.xml",       \
                                 \
     # Destination               \
     "./"                        \
