@@ -8,7 +8,6 @@
 #include <hex/data_processor/node.hpp>
 
 #include <filesystem>
-#include <thread>
 #include <jthread.hpp>
 
 #if defined(OS_WEB)
@@ -1000,6 +999,11 @@ namespace hex {
 
         namespace impl {
 
+            struct Service {
+                std::string name;
+                std::jthread thread;
+            };
+
             std::vector<Service> &getServices() {
                 static std::vector<Service> services;
 
@@ -1007,14 +1011,18 @@ namespace hex {
             }
 
             void stopServices() {
-                for (auto &service : getServices()) {
+                auto &services = getServices();
+
+                for (auto &service : services) {
                     service.thread.request_stop();
                 }
 
-                for (auto &service : getServices()) {
+                for (auto &service : services) {
                     if (service.thread.joinable())
                         service.thread.join();
                 }
+
+                services.clear();
             }
 
         }

@@ -702,11 +702,22 @@ function(generateSDKDirectory)
         set(SDK_PATH "share/imhex/sdk")
     endif()
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib DESTINATION "${SDK_PATH}")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party")
+
+
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/sdk/CMakeLists.txt DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
     install(TARGETS libimhex RUNTIME DESTINATION "${SDK_PATH}/lib")
     install(TARGETS libimhex LIBRARY DESTINATION "${SDK_PATH}/lib")
+endfunction()
+
+function(addIncludesFromLibrary target library)
+    get_target_property(library_include_dirs ${library} INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(${target} PRIVATE ${library_include_dirs})
 endfunction()

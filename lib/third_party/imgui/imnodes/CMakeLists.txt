@@ -13,4 +13,5 @@ target_include_directories(imgui_imnodes PUBLIC
 )
 
 target_link_libraries(imgui_imnodes PRIVATE imgui_includes)
+target_include_directories(imgui_all_includes INTERFACE include)
 set_property(TARGET imgui_imnodes PROPERTY POSITION_INDEPENDENT_CODE ON)

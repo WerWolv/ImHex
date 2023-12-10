@@ -15,6 +15,8 @@ if (WIN32)
             source/content/settings_entries.cpp
         INCLUDES
             include
+        LIBRARIES
+            ${JTHREAD_LIBRARIES}
     )
 
 endif ()

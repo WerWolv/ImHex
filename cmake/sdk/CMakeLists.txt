@@ -11,9 +11,7 @@ set(IMHEX_EXTERNAL_PLUGIN_BUILD ON)
 add_custom_target(imhex_all)
 add_subdirectory(lib/third_party/fmt)
 add_subdirectory(lib/third_party/imgui)
-add_subdirectory(lib/third_party/jthread)
 add_subdirectory(lib/third_party/nlohmann_json)
-add_subdirectory(lib/third_party/microtar)
 
 add_subdirectory(lib/external/libwolv)
 

@@ -5,6 +5,8 @@
 
 #include <algorithm>
 
+#include <jthread.hpp>
+
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <processthreadsapi.h>
@@ -227,8 +229,57 @@ namespace hex {
         log::debug("Initializing task manager thread pool with {} workers.", threadCount);
 
         // Create worker threads
-        for (u32 i = 0; i < threadCount; i++)
-            s_workers.emplace_back(TaskManager::runner);
+        for (u32 i = 0; i < threadCount; i++) {
+            s_workers.emplace_back([](const std::stop_token &stopToken) {
+                while (true) {
+                    std::shared_ptr<Task> task;
+
+                    // Set the thread name to "Idle Task" while waiting for a task
+                    setThreadName("Idle Task");
+
+                    {
+                        // Wait for a task to be added to the queue
+                        std::unique_lock lock(s_queueMutex);
+                        s_jobCondVar.wait(lock, [&] {
+                            return !s_taskQueue.empty() || stopToken.stop_requested();
+                        });
+
+                        // Check if the thread should exit
+                        if (stopToken.stop_requested())
+                            break;
+
+                        // Grab the next task from the queue
+                        task = std::move(s_taskQueue.front());
+                        s_taskQueue.pop_front();
+                    }
+
+                    try {
+                        // Set the thread name to the name of the task
+                        setThreadName(Lang(task->m_unlocalizedName));
+
+                        // Execute the task
+                        task->m_function(*task);
+
+                        log::debug("Task '{}' finished", task->m_unlocalizedName);
+                    } catch (const Task::TaskInterruptor &) {
+                        // Handle the task being interrupted by user request
+                        task->interruption();
+                    } catch (const std::exception &e) {
+                        log::error("Exception in task '{}': {}", task->m_unlocalizedName, e.what());
+
+                        // Handle the task throwing an uncaught exception
+                        task->exception(e.what());
+                    } catch (...) {
+                        log::error("Exception in task '{}'", task->m_unlocalizedName);
+
+                        // Handle the task throwing an uncaught exception of unknown type
+                        task->exception("Unknown Exception");
+                    }
+
+                    task->finish();
+                }
+            });
+        }
     }
 
     void TaskManager::exit() {
@@ -249,56 +300,6 @@ namespace hex {
 
         s_tasks.clear();
         s_taskQueue.clear();
-    }
-
-    void TaskManager::runner(const std::stop_token &stopToken) {
-        while (true) {
-            std::shared_ptr<Task> task;
-
-            // Set the thread name to "Idle Task" while waiting for a task
-            setThreadName("Idle Task");
-
-            {
-                // Wait for a task to be added to the queue
-                std::unique_lock lock(s_queueMutex);
-                s_jobCondVar.wait(lock, [&] {
-                    return !s_taskQueue.empty() || stopToken.stop_requested();
-                });
-
-                // Check if the thread should exit
-                if (stopToken.stop_requested())
-                    break;
-
-                // Grab the next task from the queue
-                task = std::move(s_taskQueue.front());
-                s_taskQueue.pop_front();
-            }
-
-            try {
-                // Set the thread name to the name of the task
-                setThreadName(Lang(task->m_unlocalizedName));
-
-                // Execute the task
-                task->m_function(*task);
-
-                log::debug("Task '{}' finished", task->m_unlocalizedName.get());
-            } catch (const Task::TaskInterruptor &) {
-                // Handle the task being interrupted by user request
-                task->interruption();
-            } catch (const std::exception &e) {
-                log::error("Exception in task '{}': {}", task->m_unlocalizedName.get(), e.what());
-
-                // Handle the task throwing an uncaught exception
-                task->exception(e.what());
-            } catch (...) {
-                log::error("Exception in task '{}'", task->m_unlocalizedName.get());
-
-                // Handle the task throwing an uncaught exception of unknown type
-                task->exception("Unknown Exception");
-            }
-
-            task->finish();
-        }
     }
 
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, bool background, std::function<void(Task&)> function) {

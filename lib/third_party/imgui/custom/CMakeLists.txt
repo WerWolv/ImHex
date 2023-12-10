@@ -15,6 +15,7 @@ target_include_directories(imgui_custom PUBLIC
 
 target_link_libraries(imgui_custom PRIVATE imgui_includes)
 set_property(TARGET imgui_custom PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(imgui_all_includes INTERFACE include)
 
 find_package(PkgConfig REQUIRED)
 find_package(OpenGL REQUIRED)
