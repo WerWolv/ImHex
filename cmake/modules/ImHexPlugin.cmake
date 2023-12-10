@@ -53,7 +53,9 @@ macro(add_imhex_plugin)
     target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE ${LIBROMFS_LIBRARY})
 
     # Add the new plugin to the main dependency list so it gets built by default
-    add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
+    if (TARGET imhex_all)
+        add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
+    endif()
 endmacro()
 
 macro(add_romfs_resource input output)
