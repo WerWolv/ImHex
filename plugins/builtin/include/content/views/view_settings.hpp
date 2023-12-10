@@ -10,6 +10,7 @@ namespace hex::plugin::builtin {
         ~ViewSettings() override;
 
         void drawContent() override;
+        void drawAlwaysVisibleContent() override;
 
         [[nodiscard]] bool shouldDraw() const override { return true; }
         [[nodiscard]] bool hasViewMenuItemEntry() const override { return false; }

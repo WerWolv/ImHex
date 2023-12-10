@@ -103,7 +103,9 @@ namespace hex::plugin::builtin {
 
             ImGui::EndTabBar();
         }
+    }
 
+    void ViewSettings::drawAlwaysVisibleContent() {
         // If a restart is required, ask the user if they want to restart
         if (!this->getWindowOpenState() && this->m_restartRequested) {
             PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
@@ -114,5 +116,6 @@ namespace hex::plugin::builtin {
             );
         }
     }
+
 
 }

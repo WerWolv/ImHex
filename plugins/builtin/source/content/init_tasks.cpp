@@ -107,13 +107,13 @@ namespace hex::plugin::builtin {
         }
 
         bool configureUIScale() {
-            int interfaceScaleSetting = int(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 0.0F).get<float>() * 10.0F);
+            int interfaceScaleSetting = int(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F).get<float>() * 10.0F);
 
             float interfaceScaling;
             if (interfaceScaleSetting == 0)
                 interfaceScaling = ImHexApi::System::getNativeScale();
             else
-                interfaceScaling = int(interfaceScaleSetting / 10.0F);
+                interfaceScaling = interfaceScaleSetting / 10.0F;
 
             ImHexApi::System::impl::setGlobalScale(interfaceScaling);
 
@@ -121,7 +121,10 @@ namespace hex::plugin::builtin {
         }
 
         bool loadFontsImpl(bool loadUnicode) {
-            const float defaultFontSize = ImHexApi::Fonts::DefaultFontSize * std::round(ImHexApi::System::getGlobalScale());
+            float defaultFontSize = ImHexApi::Fonts::DefaultFontSize * ImHexApi::System::getGlobalScale();
+
+            if (defaultFontSize == 0.0F)
+                defaultFontSize = ImHexApi::Fonts::DefaultFontSize;
 
             // Reset used font size back to the default size
             ImHexApi::Fonts::impl::setFontSize(defaultFontSize);
@@ -348,8 +351,8 @@ namespace hex::plugin::builtin {
     }
 
     void addInitTasks() {
+        ImHexApi::System::addStartupTask("Configuring UI scale", true, configureUIScale);
         ImHexApi::System::addStartupTask("Loading fonts", true, loadFonts);
         ImHexApi::System::addStartupTask("Checking for updates", true, checkForUpdates);
-        ImHexApi::System::addStartupTask("Configuring UI scale", true, configureUIScale);
     }
 }
