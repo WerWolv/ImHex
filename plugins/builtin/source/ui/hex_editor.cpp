@@ -923,7 +923,7 @@ namespace hex::plugin::builtin::ui {
         this->drawEditor(tableSize);
 
         if (tableSize.y > 0)
-            this->drawFooter(tableSize);
+            this->drawFooter(footerSize);
 
         this->m_selectionChanged = false;
     }
