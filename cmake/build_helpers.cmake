@@ -704,10 +704,13 @@ function(generateSDKDirectory)
 
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party")
-
+    if (NOT USE_SYSTEM_FMT)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
+    if (NOT USE_SYSTEM_NLOHMANN_JSON)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
 
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")

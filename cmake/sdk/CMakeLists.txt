@@ -7,11 +7,18 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_helpers.cmake")
 set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
 include(ImHexPlugin)
 
+function(add_subdirectory_if_exists folder)
+    if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${folder}/CMakeLists.txt")
+        add_subdirectory("${folder}")
+    endif()
+endfunction()
+
 set(IMHEX_EXTERNAL_PLUGIN_BUILD ON)
 add_custom_target(imhex_all)
-add_subdirectory(lib/third_party/fmt)
+
 add_subdirectory(lib/third_party/imgui)
-add_subdirectory(lib/third_party/nlohmann_json)
+add_subdirectory_if_exists(lib/third_party/fmt)
+add_subdirectory_if_exists(lib/third_party/nlohmann_json)
 
 add_subdirectory(lib/external/libwolv)
 
