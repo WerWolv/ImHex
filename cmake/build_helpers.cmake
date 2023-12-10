@@ -256,8 +256,8 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        set (CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
-        set (CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
+        set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
+        set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         if(WIN32) # Forwarder is only needed on Windows
@@ -694,7 +694,13 @@ function(generatePDBs)
 endfunction()
 
 function(generateSDKDirectory)
-    set(SDK_PATH "./sdk")
+    if (WIN32)
+        set(SDK_PATH "./sdk")
+    elseif (APPLE)
+        set(SDK_PATH "imhex.app/Contents/Resources/sdk")
+    else()
+        set(SDK_PATH "share/imhex/sdk")
+    endif()
 
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex/include DESTINATION "${SDK_PATH}")
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
