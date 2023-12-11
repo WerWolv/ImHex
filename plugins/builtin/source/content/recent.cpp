@@ -31,21 +31,35 @@ namespace hex::plugin::builtin::recent {
 
 
         class PopupAutoBackups : public Popup<PopupAutoBackups> {
+        private:
+            struct BackupEntry {
+                std::string displayName;
+                std::fs::path path;
+            };
         public:
-            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups"_lang, true, true) { }
+            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups"_lang, true, true) {
+                for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
+                    for (const auto &entry : std::fs::directory_iterator(backupPath)) {
+                        if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
+                            wolv::io::File backupFile(entry.path(), wolv::io::File::Mode::Read);
+
+                            this->m_backups.emplace_back(
+                                hex::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, fmt::gmtime(backupFile.getFileInfo()->st_ctime)),
+                                entry.path()
+                            );
+                        }
+                    }
+                }
+            }
+
             void drawContent() override {
                 if (ImGui::BeginTable("AutoBackups", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
-                        for (const auto &entry : std::fs::directory_iterator(backupPath)) {
-                            if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
-                                auto lastWriteTime = std::chrono::file_clock::to_sys(std::fs::last_write_time(entry.path()));
-                                if (ImGui::Selectable(hex::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, fmt::gmtime(lastWriteTime)).c_str(), false, ImGuiSelectableFlags_DontClosePopups)) {
-                                    ProjectFile::load(entry.path());
-                                    Popup::close();
-                                }
-                            }
+                    for (const auto &backup : this->m_backups | std::views::reverse | std::views::take(10)) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        if (ImGui::Selectable(backup.displayName.c_str())) {
+                            ProjectFile::load(backup.path);
+                            Popup::close();
                         }
                     }
 
@@ -56,6 +70,9 @@ namespace hex::plugin::builtin::recent {
             [[nodiscard]] ImGuiWindowFlags getFlags() const override {
                 return ImGuiWindowFlags_AlwaysAutoResize;
             }
+
+        private:
+            std::vector<BackupEntry> m_backups;
         };
 
     }
