@@ -94,7 +94,7 @@ namespace hex {
 
     void WorkspaceManager::reset() {
         s_workspaces.clear();
-        s_currentWorkspace = {};
+        s_currentWorkspace = WorkspaceManager::s_workspaces.end();
     }
 
 
