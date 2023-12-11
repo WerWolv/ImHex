@@ -1,5 +1,6 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
+#include <hex/api/workspace_manager.hpp>
 
 #include <init/tasks.hpp>
 
@@ -176,10 +177,7 @@ namespace hex::crash {
         // Only do it when ImHex has finished its loading
         EventImHexStartupFinished::subscribe([] {
             EventAbnormalTermination::subscribe([](int) {
-                // Save ImGui settings
-                auto imguiSettingsPath = hex::getImGuiSettingsPath();
-                if (!imguiSettingsPath.empty())
-                    ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(imguiSettingsPath).c_str());
+                WorkspaceManager::exportToFile();
 
                 // Create crash backup if any providers are open
                 if (ImHexApi::Provider::isValid()) {

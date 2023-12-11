@@ -45,6 +45,7 @@ add_imhex_plugin(
         source/content/report_generators.cpp
         source/content/init_tasks.cpp
         source/content/fonts.cpp
+        source/content/workspaces.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp

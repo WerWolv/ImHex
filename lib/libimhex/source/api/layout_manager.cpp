@@ -6,6 +6,7 @@
 
 #include <imgui.h>
 #include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
 
 namespace hex {
 
@@ -24,7 +25,7 @@ namespace hex {
         s_layoutPathToLoad = path;
     }
 
-    void LayoutManager::loadString(const std::string &content) {
+    void LayoutManager::loadFromString(const std::string &content) {
         s_layoutStringToLoad = content;
     }
 
@@ -53,6 +54,11 @@ namespace hex {
 
         LayoutManager::reload();
     }
+
+    std::string LayoutManager::saveToString() {
+        return ImGui::SaveIniSettingsToMemory();
+    }
+
 
     std::vector<LayoutManager::Layout> LayoutManager::getLayouts() {
         return s_layouts;

@@ -292,7 +292,7 @@ namespace hex {
 
             void setCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedDescription);
 
-            nlohmann::json read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue);
+            [[nodiscard]] nlohmann::json read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue);
             void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &value);
         }
 

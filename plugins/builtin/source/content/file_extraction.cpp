@@ -8,7 +8,7 @@ namespace hex::plugin::builtin {
     void extractBundledFiles() {
         for (const auto &romfsPath : romfs::list("auto_extract")) {
             for (const auto &imhexPath : fs::getDataPaths()) {
-                wolv::io::File file(imhexPath, wolv::io::File::Mode::Create);
+                wolv::io::File file(imhexPath / std::fs::relative(romfsPath, "auto_extract"), wolv::io::File::Mode::Create);
 
                 if (!file.isValid())
                     continue;

@@ -30,6 +30,7 @@
 
 #include <string>
 #include <random>
+#include <hex/api/workspace_manager.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -136,7 +137,7 @@ namespace hex::plugin::builtin {
         };
 
         void loadDefaultLayout() {
-            LayoutManager::loadString(std::string(romfs::get("layouts/default.hexlyt").string()));
+            LayoutManager::loadFromString(std::string(romfs::get("layouts/default.hexlyt").string()));
         }
 
         bool isAnyViewOpen() {
@@ -402,8 +403,10 @@ namespace hex::plugin::builtin {
                                 ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
                                 ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize);
                                 {
-                                    if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen))
+                                    if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
                                         ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
+                                        WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
+                                    }
                                 }
                                 ImGuiExt::EndSubWindow();
                                 ImGui::PopStyleColor();

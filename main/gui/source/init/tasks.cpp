@@ -15,6 +15,7 @@
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/workspace_manager.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -131,6 +132,7 @@ namespace hex::init {
         ContentRegistry::Experiments::impl::getExperiments().clear();
         ContentRegistry::Reports::impl::getGenerators().clear();
 
+        WorkspaceManager::reset();
         LayoutManager::reset();
 
         ThemeManager::reset();

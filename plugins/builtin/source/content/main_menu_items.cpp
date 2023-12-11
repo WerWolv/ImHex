@@ -16,6 +16,7 @@
 #include <content/global_actions.hpp>
 #include <content/popups/popup_notification.hpp>
 #include <content/popups/popup_text_input.hpp>
+#include <hex/api/workspace_manager.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -540,28 +541,28 @@ namespace hex::plugin::builtin {
     static void createLayoutMenu() {
         LayoutManager::reload();
 
-        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.layout", 4000);
+        ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.workspace", 4000);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.layout", "hex.builtin.menu.layout.save" }, 1100, Shortcut::None, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout", "hex.builtin.menu.workspace.layout.save" }, 1100, Shortcut::None, [] {
             PopupTextInput::open("hex.builtin.popup.save_layout.title"_lang, "hex.builtin.popup.save_layout.desc"_lang, [](const std::string &name) {
                 LayoutManager::save(name);
             });
         }, ImHexApi::Provider::isValid);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 1150, [] {
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 1150, [] {
             bool locked = LayoutManager::isLayoutLocked();
-            if (ImGui::MenuItem("hex.builtin.menu.layout.lock"_lang, nullptr, &locked, ImHexApi::Provider::isValid())) {
+            if (ImGui::MenuItem("hex.builtin.menu.workspace.layout.lock"_lang, nullptr, &locked, ImHexApi::Provider::isValid())) {
                 LayoutManager::lockLayout(locked);
                 ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", locked);
             }
         });
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.layout" }, 1200);
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 1200);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.layout" }, 2000, [] {
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 2000, [] {
             for (const auto &path : romfs::list("layouts")) {
                 if (ImGui::MenuItem(wolv::util::capitalizeString(path.stem().string()).c_str(), "", false, ImHexApi::Provider::isValid())) {
-                    LayoutManager::loadString(std::string(romfs::get(path).string()));
+                    LayoutManager::loadFromString(std::string(romfs::get(path).string()));
                 }
             }
 
@@ -574,6 +575,29 @@ namespace hex::plugin::builtin {
                     }
                     else
                         LayoutManager::load(path);
+                }
+            }
+        });
+    }
+
+    static void createWorkspaceMenu() {
+        createLayoutMenu();
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.workspace" }, 3000);
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.create" }, 3100, Shortcut::None, [] {
+            PopupTextInput::open("hex.builtin.popup.create_workspace.title"_lang, "hex.builtin.popup.create_workspace.desc"_lang, [](const std::string &name) {
+                WorkspaceManager::createWorkspace(name);
+            });
+        }, ImHexApi::Provider::isValid);
+
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace" }, 3200, [] {
+            const auto &workspaces = WorkspaceManager::getWorkspaces();
+            for (auto it = workspaces.begin(); it != workspaces.end(); ++it) {
+                const auto &[name, workspace] = *it;
+
+                if (ImGui::MenuItem(name.c_str(), "", it == WorkspaceManager::getCurrentWorkspace(), ImHexApi::Provider::isValid())) {
+                    WorkspaceManager::switchWorkspace(name);
                 }
             }
         });
@@ -592,7 +616,7 @@ namespace hex::plugin::builtin {
         createFileMenu();
         createEditMenu();
         createViewMenu();
-        createLayoutMenu();
+        createWorkspaceMenu();
         createExtrasMenu();
         createHelpMenu();
 

@@ -423,6 +423,9 @@ namespace hex::fs {
             case ImHexPath::Layouts:
                 result = appendPath(getDataPaths(), "layouts");
                 break;
+            case ImHexPath::Workspaces:
+                result = appendPath(getDataPaths(), "workspaces");
+                break;
         }
 
         // Remove all paths that don't exist if requested

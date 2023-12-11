@@ -7,6 +7,8 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
+#include <hex/api/workspace_manager.hpp>
+#include <hex/api/project_file_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
@@ -35,22 +37,11 @@
 
 #include <fonts/codicons_font.h>
 
-#include <hex/api/project_file_manager.hpp>
-
 #include <GLFW/glfw3.h>
 
 namespace hex {
 
     using namespace std::literals::chrono_literals;
-
-    static std::fs::path s_imguiSettingsPath;
-
-    /**
-     * @brief returns the path to load/save imgui settings to, or an empty path if no location was found
-     */
-    std::fs::path getImGuiSettingsPath() {
-        return s_imguiSettingsPath;
-    }
 
     Window::Window() {
         stacktrace::initialize();
@@ -97,6 +88,9 @@ namespace hex {
         RequestUpdateWindowTitle::unsubscribe(this);
         EventAbnormalTermination::unsubscribe(this);
         RequestOpenPopup::unsubscribe(this);
+
+        WorkspaceManager::exportToFile();
+        ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", WorkspaceManager::getCurrentWorkspace()->first);
 
         this->exitImGui();
         this->exitGLFW();
@@ -764,6 +758,8 @@ namespace hex {
     void Window::frame() {
         auto &io = ImGui::GetIO();
 
+        this->m_anyViewsOpen = ImHexApi::Provider::isValid();
+
         // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
@@ -856,7 +852,8 @@ namespace hex {
 
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
-        LayoutManager::process();
+        if (this->m_anyViewsOpen)
+            LayoutManager::process();
     }
 
     void Window::initGLFW() {
@@ -1200,16 +1197,6 @@ namespace hex {
             ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
 
             io.IniFilename = nullptr;
-            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                if (std::fs::exists(dir) && (fs::isPathWritable(dir))) {
-                    s_imguiSettingsPath = dir / "interface.ini";
-                    break;
-                }
-            }
-
-            if (!s_imguiSettingsPath.empty() && wolv::io::fs::exists(s_imguiSettingsPath)) {
-                ImGui::LoadIniSettingsFromDisk(wolv::util::toUTF8String(s_imguiSettingsPath).c_str());
-            }
         }
 
 
@@ -1250,8 +1237,6 @@ namespace hex {
     }
 
     void Window::exitImGui() {
-        ImGui::SaveIniSettingsToDisk(wolv::util::toUTF8String(s_imguiSettingsPath).c_str());
-
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImPlot::DestroyContext();

@@ -39,6 +39,7 @@ namespace hex::plugin::builtin {
     void registerProjectHandlers();
     void registerAchievements();
     void registerReportGenerators();
+    void loadWorkspaces();
 
     void addFooterItems();
     void addTitleBarButtons();
@@ -79,6 +80,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     addInitTasks();
     loadFonts();
+    extractBundledFiles();
 
     registerEventHandlers();
     registerDataVisualizers();
@@ -107,6 +109,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerCommandForwarders();
     registerAchievements();
     registerReportGenerators();
+    loadWorkspaces();
 
     addFooterItems();
     addTitleBarButtons();
@@ -116,8 +119,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerMainMenuEntries();
 
     handleBorderlessWindowMode();
-
-    extractBundledFiles();
 }
 
 // This is the default plugin

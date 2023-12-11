@@ -26,10 +26,16 @@ namespace hex {
         static void load(const std::fs::path &path);
 
         /**
+         * @brief Saves the current layout to a string
+         * @return String containing the layout
+         */
+        static std::string saveToString();
+
+        /**
          * @brief Load a layout from a string
          * @param content Layout string
          */
-        static void loadString(const std::string &content);
+        static void loadFromString(const std::string &content);
 
         /**
          * @brief Get a list of all layouts

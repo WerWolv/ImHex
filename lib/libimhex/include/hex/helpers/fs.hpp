@@ -50,6 +50,7 @@ namespace hex::fs {
         Libraries,
         Nodes,
         Layouts,
+        Workspaces,
 
         END
     };
