@@ -324,9 +324,7 @@ namespace hex::plugin::builtin {
                     ImGui::SameLine();
 
                     if (auto max = runtime.getMaximumPatternCount(); max >= std::numeric_limits<u32>::max()) {
-                        ImGuiExt::TextFormatted("{} / {}",
-                                             runtime.getCreatedPatternCount(),
-                                             ICON_FA_INFINITY);
+                        ImGuiExt::TextFormatted("{}", runtime.getCreatedPatternCount());
                     } else {
                         ImGuiExt::TextFormatted("{} / {}",
                                              runtime.getCreatedPatternCount(),

@@ -7,7 +7,6 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
 
 #include <vector>
@@ -123,7 +122,7 @@ namespace hex::plugin::builtin {
             ImGui::SameLine();
             if (ImGui::Button("CE", buttonSize)) mathInput.clear();
             ImGui::SameLine();
-            if (ImGui::Button(ICON_FA_BACKSPACE, buttonSize)) mathInput.clear();
+            if (ImGui::Button(ICON_VS_DISCARD, buttonSize)) mathInput.clear();
 
             ImGui::SameLine();
             ImGui::NewLine();

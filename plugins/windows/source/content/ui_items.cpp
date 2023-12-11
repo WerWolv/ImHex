@@ -6,9 +6,9 @@
 #include <psapi.h>
 
 #include <imgui.h>
+#include <fonts/codicons_font.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <fonts/fontawesome_font.h>
 #include <hex/api/event_manager.hpp>
 
 namespace hex::plugin::windows {
@@ -70,7 +70,7 @@ namespace hex::plugin::windows {
                 cpuUsage *= 100;
             }
 
-            ImGuiExt::TextFormatted(ICON_FA_TACHOMETER_ALT " {0:2}.{1:02}%", u32(cpuUsage), u32(cpuUsage * 100) % 100);
+            ImGuiExt::TextFormatted(ICON_VS_DASHBOARD " {0:2}.{1:02}%", u32(cpuUsage), u32(cpuUsage * 100) % 100);
         });
 
         ContentRegistry::Interface::addFooterItem([] {
@@ -89,7 +89,7 @@ namespace hex::plugin::windows {
             auto totalMem = memInfo.ullTotalPhys;
             auto usedMem  = pmc.WorkingSetSize;
 
-            ImGuiExt::TextFormatted(ICON_FA_MICROCHIP " {0} / {1}", hex::toByteString(usedMem), hex::toByteString(totalMem));
+            ImGuiExt::TextFormatted(ICON_VS_CHIP " {0} / {1}", hex::toByteString(usedMem), hex::toByteString(totalMem));
         });
     }
 

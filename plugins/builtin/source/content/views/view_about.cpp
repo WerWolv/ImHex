@@ -61,9 +61,14 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     {
                         // Draw basic information about ImHex and its version
-                        ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv  " ICON_FA_CODE_BRANCH, ImHexApi::System::getImHexVersion());
+                        ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv", ImHexApi::System::getImHexVersion());
+                    }
 
-                        ImGui::SameLine();
+                    ImGui::TableNextColumn();
+                    {
+                        ImGuiExt::TextFormatted(" {} ", ICON_VS_SOURCE_CONTROL);
+
+                        ImGui::SameLine(0, 0);
 
                         // Draw a clickable link to the current commit
                         if (ImGuiExt::Hyperlink(hex::format("{0}@{1}", ImHexApi::System::getCommitBranch(), ImHexApi::System::getCommitHash()).c_str()))

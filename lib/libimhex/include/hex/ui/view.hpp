@@ -6,7 +6,6 @@
 #include <imgui_internal.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <fonts/fontawesome_font.h>
 #include <fonts/codicons_font.h>
 
 #include <hex/api/imhex_api.hpp>

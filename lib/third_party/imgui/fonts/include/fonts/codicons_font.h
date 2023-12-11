@@ -9,7 +9,7 @@ extern const unsigned int codicons_compressed_size;
 extern const unsigned int codicons_compressed_data[52184/4];
 
 #define ICON_MIN_VS 0xea60
-#define ICON_MAX_VS 0xebdd
+#define ICON_MAX_VS 0xec19
 #define ICON_VS_ADD "\xee\xa9\xa0"	// U+ea60
 #define ICON_VS_PLUS "\xee\xa9\xa0"	// U+ea60
 #define ICON_VS_GIST_NEW "\xee\xa9\xa0"	// U+ea60
@@ -473,3 +473,4 @@ extern const unsigned int codicons_compressed_data[52184/4];
 #define ICON_VS_GIT_PULL_REQUEST_DRAFT "\xee\xaf\x9b"	// U+ebdb
 #define ICON_VS_DEBUG_ALL "\xee\xaf\x9c"	// U+ebdc
 #define ICON_VS_DEBUG_COVERAGE "\xee\xaf\x9d"	// U+ebdd
+#define ICON_VS_CHIP "\xee\xb0\x99"   // U+ec19

@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 # https://unifoundry.com/unifont/index.html
 # https://github.com/microsoft/vscode-codicons
-# https://github.com/FortAwesome/Font-Awesome
 project(imgui_fonts)
 
 set(CMAKE_CXX_STANDARD 17)

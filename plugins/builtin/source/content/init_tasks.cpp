@@ -27,7 +27,7 @@ namespace hex::plugin::builtin {
             int checkForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
 
             // Check if we should check for updates
-            if (checkForUpdates == 1){
+            if (checkForUpdates == 1) {
                 HttpRequest request("GET", GitHubApiURL + "/releases/latest"s);
 
                 // Query the GitHub API for the latest release version
