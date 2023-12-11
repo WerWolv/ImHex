@@ -552,6 +552,8 @@ namespace hex {
                         ImGui::GetWindowPos() + sidebarPos + ImGui::GetWindowSize() - ImVec2(dockSpaceSize.x + 1_scaled, footerHeight - ImGui::GetStyle().FramePadding.y - 1_scaled + menuBarHeight),
                         ImGui::GetColorU32(ImGuiCol_Separator));
             }
+        } else {
+            ImGui::PopStyleVar();
         }
         ImGui::End();
         ImGui::PopStyleVar(2);
