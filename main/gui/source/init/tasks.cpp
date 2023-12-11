@@ -1,5 +1,4 @@
 #include "init/tasks.hpp"
-#include "misc/freetype/imgui_freetype.h"
 
 #include <imgui.h>
 
@@ -246,29 +245,35 @@ namespace hex::init {
         return true;
     }
 
-    bool clearOldLogs() {
+    bool deleteOldFiles() {
         bool result = true;
-        for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Logs)) {
-            try {
-                std::vector<std::filesystem::directory_entry> files;
 
-                for (const auto& file : std::filesystem::directory_iterator(path))
-                    files.push_back(file);
+        auto keepNewest = [&](u32 count, fs::ImHexPath pathType) {
+            for (const auto &path : fs::getDefaultPaths(pathType)) {
+                try {
+                    std::vector<std::filesystem::directory_entry> files;
 
-                if (files.size() <= 10)
-                    return true;
+                    for (const auto& file : std::filesystem::directory_iterator(path))
+                        files.push_back(file);
 
-                std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
-                    return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
-                });
+                    if (files.size() <= count)
+                        return;
 
-                for (auto it = files.begin() + 10; it != files.end(); it += 1)
-                    std::filesystem::remove(it->path());
-            } catch (std::filesystem::filesystem_error &e) {
-                log::error("Failed to clear old log! {}", e.what());
-                result = false;
+                    std::sort(files.begin(), files.end(), [](const auto& a, const auto& b) {
+                        return std::filesystem::last_write_time(a) > std::filesystem::last_write_time(b);
+                    });
+
+                    for (auto it = files.begin() + count; it != files.end(); it += 1)
+                        std::filesystem::remove(it->path());
+                } catch (std::filesystem::filesystem_error &e) {
+                    log::error("Failed to clear old file! {}", e.what());
+                    result = false;
+                }
             }
-        }
+        };
+
+        keepNewest(10, fs::ImHexPath::Logs);
+        keepNewest(25, fs::ImHexPath::Backups);
 
         return result;
     }
@@ -329,7 +334,7 @@ namespace hex::init {
             { "Saving settings",         storeSettings,    false },
             { "Cleaning up shared data", deleteSharedData, false },
             { "Unloading plugins",       unloadPlugins,    false },
-            { "Clearing old logs",       clearOldLogs,     false },
+            { "Deleting old files",      deleteOldFiles,   false },
         };
     }
 
