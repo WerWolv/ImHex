@@ -165,10 +165,10 @@ namespace hex::plugin::builtin {
         public:
             bool draw(const std::string &name) override {
                 auto format = [this] -> std::string {
-                        if (this->m_value == 0)
-                            return "hex.builtin.setting.interface.scaling.native"_lang;
-                        else
-                            return "x%.1f";
+                    if (this->m_value == 0)
+                        return "hex.builtin.setting.interface.scaling.native"_lang;
+                    else
+                        return "x%.1f";
                 }();
 
                 if (ImGui::SliderFloat(name.data(), &this->m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
@@ -189,6 +189,39 @@ namespace hex::plugin::builtin {
 
         private:
             float m_value = 0;
+        };
+
+        class AutoBackupWidget : public ContentRegistry::Settings::Widgets::Widget {
+        public:
+            bool draw(const std::string &name) override {
+                auto format = [this] -> std::string {
+                    auto value = this->m_value * 30;
+                    if (value == 0)
+                        return "hex.builtin.common.off"_lang;
+                    else if (value < 60)
+                        return hex::format("hex.builtin.setting.general.auto_backup_time.format.simple"_lang, value);
+                    else
+                        return hex::format("hex.builtin.setting.general.auto_backup_time.format.extended"_lang, value / 60, value % 60);
+                }();
+
+                if (ImGui::SliderInt(name.data(), &this->m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput)) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            void load(const nlohmann::json &data) override {
+                if (data.is_number())
+                    this->m_value = data.get<int>();
+            }
+
+            nlohmann::json store() override {
+                return this->m_value;
+            }
+
+        private:
+            int m_value = 0;
         };
 
         class KeybindingWidget : public ContentRegistry::Settings::Widgets::Widget {
@@ -337,6 +370,7 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
+        ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);

@@ -38,6 +38,7 @@ namespace hex::fs {
         Plugins,
         Yara,
         Config,
+        Backups,
         Resources,
         Constants,
         Encodings,

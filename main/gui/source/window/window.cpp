@@ -158,7 +158,7 @@ namespace hex {
     }
 
     void Window::fullFrame() {
-        this->m_lastFrameTime = glfwGetTime();
+        this->m_lastStartFrameTime = glfwGetTime();
 
         glfwPollEvents();
 
@@ -171,7 +171,7 @@ namespace hex {
     void Window::loop() {
         u64 frameCount = 0;
         while (!glfwWindowShouldClose(this->m_window)) {
-            this->m_lastFrameTime = glfwGetTime();
+            this->m_lastStartFrameTime = glfwGetTime();
 
             if (!glfwGetWindowAttrib(this->m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(this->m_window, GLFW_ICONIFIED)) {
                 // If the application is minimized or not visible, don't render anything
@@ -189,10 +189,10 @@ namespace hex {
                             frameCount < 100;
 
                     // Calculate the time until the next frame
-                    const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastFrameTime));
+                    const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - this->m_lastStartFrameTime));
 
                     // If the frame rate has been unlocked for 5 seconds, lock it again
-                    if ((this->m_lastFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
+                    if ((this->m_lastStartFrameTime - this->m_frameRateUnlockTime) > 5 && this->m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
                         this->m_frameRateTemporarilyUnlocked = false;
                     }
 
@@ -200,7 +200,7 @@ namespace hex {
                     if (frameRateUnlocked || this->m_frameRateTemporarilyUnlocked) {
                         if (!this->m_frameRateTemporarilyUnlocked) {
                             this->m_frameRateTemporarilyUnlocked = true;
-                            this->m_frameRateUnlockTime = this->m_lastFrameTime;
+                            this->m_frameRateUnlockTime = this->m_lastStartFrameTime;
                         }
                     } else {
                         glfwWaitEventsTimeout(timeout);
@@ -222,12 +222,14 @@ namespace hex {
                 glfwSwapInterval(0);
             } else {
                 glfwSwapInterval(0);
-                const auto frameTime = glfwGetTime() - this->m_lastFrameTime;
+                const auto frameTime = glfwGetTime() - this->m_lastStartFrameTime;
                 const auto targetFrameTime = 1.0 / targetFPS;
                 if (frameTime < targetFrameTime) {
                     glfwWaitEventsTimeout(targetFrameTime - frameTime);
                 }
             }
+
+            this->m_lastFrameTime = glfwGetTime() - this->m_lastStartFrameTime;
         }
     }
 
@@ -665,10 +667,10 @@ namespace hex {
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
                     if (popupDelay <= -1.0) {
-                        popupDelay = 200;
+                        popupDelay = 0.2;
                     } else {
                         popupDelay -= this->m_lastFrameTime;
-                        if (popupDelay < 0) {
+                        if (popupDelay < 0 || popups.size() == 1) {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
                             name = Lang(currPopup->getUnlocalizedName());

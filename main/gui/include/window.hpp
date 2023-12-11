@@ -53,6 +53,7 @@ namespace hex {
 
         std::string m_windowTitle;
 
+        double m_lastStartFrameTime = 0;
         double m_lastFrameTime = 0;
 
         ImGuiExt::Texture m_logoTexture;

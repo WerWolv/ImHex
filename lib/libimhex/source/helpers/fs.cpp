@@ -375,6 +375,9 @@ namespace hex::fs {
             case ImHexPath::Config:
                 result = appendPath(getConfigPaths(), "config");
                 break;
+            case ImHexPath::Backups:
+                result = appendPath(getDataPaths(), "backups");
+                break;
             case ImHexPath::Encodings:
                 result = appendPath(getDataPaths(), "encodings");
                 break;

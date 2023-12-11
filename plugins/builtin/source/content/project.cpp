@@ -164,12 +164,12 @@ namespace hex::plugin::builtin {
         // If saveLocation is false, reset the project path (do not release the lock)
         if (updateLocation) {
             resetPath.release();
+
+            // Request, as this puts us into a project state
+            RequestUpdateWindowTitle::post();
         }
 
         AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.save_project.name");
-
-        // Request, as this puts us into a project state
-        RequestUpdateWindowTitle::post();
 
         return result;
     }

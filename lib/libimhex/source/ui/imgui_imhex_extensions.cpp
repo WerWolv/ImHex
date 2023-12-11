@@ -40,6 +40,9 @@ namespace ImGuiExt {
     }
     
     Texture::Texture(const ImU8 *buffer, int size, Filter filter, int width, int height) {
+        if (size == 0)
+            return;
+
         unsigned char *imageData = stbi_load_from_memory(buffer, size, &this->m_width, &this->m_height, nullptr, 4);
         if (imageData == nullptr) {
             if (width * height * 4 > size)

@@ -23,8 +23,43 @@ namespace hex::plugin::builtin::recent {
     constexpr static auto MaxRecentEntries = 5;
     constexpr static auto BackupFileName = "crash_backup.hexproj";
 
-    static std::atomic_bool s_recentEntriesUpdating = false;
-    static std::list<RecentEntry> s_recentEntries;
+    namespace {
+
+        std::atomic_bool s_recentEntriesUpdating = false;
+        std::list<RecentEntry> s_recentEntries;
+        std::atomic_bool s_autoBackupsFound = false;
+
+
+        class PopupAutoBackups : public Popup<PopupAutoBackups> {
+        public:
+            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups"_lang, true, true) { }
+            void drawContent() override {
+                if (ImGui::BeginTable("AutoBackups", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5))) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
+                        for (const auto &entry : std::fs::directory_iterator(backupPath)) {
+                            if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
+                                auto lastWriteTime = std::chrono::file_clock::to_sys(std::fs::last_write_time(entry.path()));
+                                if (ImGui::Selectable(hex::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, fmt::gmtime(lastWriteTime)).c_str(), false, ImGuiSelectableFlags_DontClosePopups)) {
+                                    ProjectFile::load(entry.path());
+                                    Popup::close();
+                                }
+                            }
+                        }
+                    }
+
+                    ImGui::EndTable();
+                }
+            }
+
+            [[nodiscard]] ImGuiWindowFlags getFlags() const override {
+                return ImGuiWindowFlags_AlwaysAutoResize;
+            }
+        };
+
+    }
+
 
     void registerEventHandlers() {
         // Save every opened provider as a "recent" shortcut
@@ -93,7 +128,7 @@ namespace hex::plugin::builtin::recent {
     }
 
     void updateRecentEntries() {
-        TaskManager::createBackgroundTask("Updating recent files", [](auto&){
+        TaskManager::createBackgroundTask("Updating recent files", [](auto&) {
             if (s_recentEntriesUpdating)
                 return;
 
@@ -145,6 +180,16 @@ namespace hex::plugin::builtin::recent {
             }
 
             std::copy(uniqueProviders.begin(), uniqueProviders.end(), std::front_inserter(s_recentEntries));
+
+            s_autoBackupsFound = false;
+            for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
+                for (const auto &entry : std::fs::directory_iterator(backupPath)) {
+                    if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
+                        s_autoBackupsFound = true;
+                        break;
+                    }
+                }
+            }
         });
     }
 
@@ -172,13 +217,12 @@ namespace hex::plugin::builtin::recent {
 
 
     void draw() {
-        if (s_recentEntries.empty())
+        if (s_recentEntries.empty() && !s_autoBackupsFound)
             return;
 
         ImGuiExt::BeginSubWindow("hex.builtin.welcome.start.recent"_lang, ImVec2(), ImGuiChildFlags_AutoResizeX);
         {
             if (!s_recentEntriesUpdating) {
-
                 for (auto it = s_recentEntries.begin(); it != s_recentEntries.end();) {
                     const auto &recentEntry = *it;
                     bool shouldRemove = false;
@@ -199,8 +243,38 @@ namespace hex::plugin::builtin::recent {
                         loadRecentEntry(recentEntry);
                         break;
                     }
-                    if (!isProject)
-                        ImGui::SetItemTooltip("%s", Lang(recentEntry.type).get().c_str());
+
+                    if (ImGui::IsItemHovered() && ImGui::GetIO().KeyShift) {
+                        if (ImGui::BeginTooltip()) {
+                            if (ImGui::BeginTable("##RecentEntryTooltip", 2, ImGuiTableFlags_RowBg)) {
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted("hex.builtin.common.name"_lang);
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted(recentEntry.displayName.c_str());
+
+                                ImGui::TableNextRow();
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted("hex.builtin.common.type"_lang);
+                                ImGui::TableNextColumn();
+
+                                if (isProject) {
+                                    ImGui::TextUnformatted("hex.builtin.common.project"_lang);
+
+                                    ImGui::TableNextRow();
+                                    ImGui::TableNextColumn();
+                                    ImGui::TextUnformatted("hex.builtin.common.path"_lang);
+                                    ImGui::TableNextColumn();
+                                    ImGui::TextUnformatted(recentEntry.data["path"].get<std::string>().c_str());
+                                } else {
+                                    ImGui::TextUnformatted(Lang(recentEntry.type));
+                                }
+
+                                ImGui::EndTable();
+                            }
+                            ImGui::EndTooltip();
+                        }
+                    }
 
                     // Detect right click on recent provider
                     std::string popupID = hex::format("RecentEntryMenu.{}", recentEntry.getHash());
@@ -222,6 +296,12 @@ namespace hex::plugin::builtin::recent {
                     } else {
                         ++it;
                     }
+                }
+
+                if (s_autoBackupsFound) {
+                    ImGui::Separator();
+                    if (ImGuiExt::Hyperlink(hex::format("{} {}", ICON_VS_ARCHIVE, "hex.builtin.welcome.start.recent.auto_backups"_lang).c_str()))
+                        PopupAutoBackups::open();
                 }
             }
         }
