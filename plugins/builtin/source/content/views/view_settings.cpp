@@ -87,8 +87,10 @@ namespace hex::plugin::builtin {
                                         widget->onChanged();
 
                                         // Request a restart if the setting requires it
-                                        if (widget->doesRequireRestart())
+                                        if (widget->doesRequireRestart()) {
                                             this->m_restartRequested = true;
+                                            this->m_triggerPopup = true;
+                                        }
                                     }
                                 }
                             }
@@ -107,7 +109,8 @@ namespace hex::plugin::builtin {
 
     void ViewSettings::drawAlwaysVisibleContent() {
         // If a restart is required, ask the user if they want to restart
-        if (!this->getWindowOpenState() && this->m_restartRequested) {
+        if (!this->getWindowOpenState() && this->m_triggerPopup) {
+            this->m_triggerPopup = false;
             PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
                 ImHexApi::System::restartImHex,
                 [this]{

@@ -20,6 +20,7 @@ namespace hex::plugin::builtin {
 
     private:
         bool m_restartRequested = false;
+        bool m_triggerPopup = false;
     };
 
 }
