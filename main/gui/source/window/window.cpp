@@ -760,8 +760,6 @@ namespace hex {
     void Window::frame() {
         auto &io = ImGui::GetIO();
 
-        this->m_anyViewsOpen = ImHexApi::Provider::isValid();
-
         // Loop through all views and draw them
         for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
             ImGui::GetCurrentContext()->NextWindowData.ClearFlags();
@@ -854,8 +852,8 @@ namespace hex {
 
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
-        if (this->m_anyViewsOpen)
-            LayoutManager::process();
+        LayoutManager::process();
+        WorkspaceManager::process();
     }
 
     void Window::initGLFW() {

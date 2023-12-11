@@ -25,11 +25,13 @@ namespace hex {
 
         static void reset();
 
+        static void process();
+
     private:
         WorkspaceManager() = default;
 
         static std::map<std::string, WorkspaceManager::Workspace> s_workspaces;
-        static decltype(s_workspaces)::iterator s_currentWorkspace;
+        static decltype(s_workspaces)::iterator s_currentWorkspace, s_previousWorkspace;
     };
 
 }

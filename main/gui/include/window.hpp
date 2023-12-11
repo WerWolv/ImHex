@@ -66,8 +66,6 @@ namespace hex {
         bool m_frameRateTemporarilyUnlocked = false;
         double m_frameRateUnlockTime = 0;
 
-        bool m_anyViewsOpen = false;
-
         ImGuiExt::ImHexCustomData m_imguiCustomData;
     };
 

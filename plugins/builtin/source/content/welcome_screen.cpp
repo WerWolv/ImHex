@@ -528,11 +528,6 @@ namespace hex::plugin::builtin {
             }
         });
 
-        EventProviderCreated::subscribe([](auto) {
-            if (!isAnyViewOpen())
-                loadDefaultLayout();
-        });
-
         EventWindowInitialized::subscribe([] {
             // Documentation of the value above the setting definition
             auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);

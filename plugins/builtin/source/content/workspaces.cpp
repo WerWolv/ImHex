@@ -1,8 +1,8 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
 #include <hex/helpers/fs.hpp>
-#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -21,7 +21,10 @@ namespace hex::plugin::builtin {
         }
 
         std::string currentWorkspace = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", "Default");
-        WorkspaceManager::switchWorkspace(currentWorkspace);
+
+        TaskManager::doLater([currentWorkspace] {
+            WorkspaceManager::switchWorkspace(currentWorkspace);
+        });
     }
 
 }
