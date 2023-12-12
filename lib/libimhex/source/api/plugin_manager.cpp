@@ -42,8 +42,6 @@ namespace hex {
         this->m_functions.setImGuiContextFunction      = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
         this->m_functions.isBuiltinPluginFunction      = getPluginFunction<PluginFunctions::IsBuiltinPluginFunc>("isBuiltinPlugin");
         this->m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
-
-        log::info("Loaded plugin '{}'", wolv::util::toUTF8String(path.filename()));
     }
 
     Plugin::Plugin(hex::PluginFunctions functions) {
