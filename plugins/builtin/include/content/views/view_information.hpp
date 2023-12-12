@@ -45,7 +45,7 @@ namespace hex::plugin::builtin {
 
         void analyze();
 
-        int m_inputChunkSize    = 0;
+        u32 m_inputChunkSize    = 0;
         ui::RegionType m_selectionType  = ui::RegionType::EntireData;
     };
 

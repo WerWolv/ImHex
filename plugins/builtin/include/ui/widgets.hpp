@@ -40,15 +40,15 @@ namespace hex::plugin::builtin::ui {
             case RegionType::Region:
                 ImGui::SameLine();
 
-                const auto width = ImGui::GetContentRegionAvail().x / 2 - ImGui::CalcTextSize(" - ").x / 2 - ImGui::GetStyle().FramePadding.x * 4;
+                const auto width = ImGui::GetContentRegionAvail().x / 2 - ImGui::CalcTextSize(" - ").x / 2;
                 u64 start = region->getStartAddress(), end = region->getEndAddress();
 
                 ImGui::PushItemWidth(width);
                 ImGuiExt::InputHexadecimal("##start", &start);
                 ImGui::PopItemWidth();
-                ImGui::SameLine();
+                ImGui::SameLine(0, 0);
                 ImGui::TextUnformatted(" - ");
-                ImGui::SameLine();
+                ImGui::SameLine(0, 0);
                 ImGui::PushItemWidth(width);
                 ImGuiExt::InputHexadecimal("##end", &end);
                 ImGui::PopItemWidth();

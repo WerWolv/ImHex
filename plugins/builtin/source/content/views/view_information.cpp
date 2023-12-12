@@ -73,7 +73,7 @@ namespace hex::plugin::builtin {
                 this->m_analyzedRegion = { provider->getBaseAddress(), provider->getActualSize() };
             }
 
-            if (this->m_inputChunkSize <= 0) {
+            if (this->m_inputChunkSize == 0) {
                 this->m_inputChunkSize = 256;
             }
 
@@ -144,14 +144,14 @@ namespace hex::plugin::builtin {
                 ImGuiExt::BeginSubWindow("hex.builtin.common.settings"_lang);
                 {
                     if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedSame, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                        ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
-                        ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
+                        ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+                        ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ui::regionSelectionPicker(&this->m_analysisRegion, provider, &this->m_selectionType, false);
 
                         ImGui::TableNextColumn();
-                        ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
+                        ImGuiExt::InputHexadecimal("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize);
 
                         ImGui::EndTable();
                     }
