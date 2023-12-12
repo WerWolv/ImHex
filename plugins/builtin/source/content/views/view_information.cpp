@@ -141,17 +141,29 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                 ImGui::BeginDisabled(this->m_analyzerTask.isRunning());
+                ImGuiExt::BeginSubWindow("hex.builtin.common.settings"_lang);
                 {
-                    ImGuiExt::Header("hex.builtin.common.settings"_lang, true);
+                    if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedSame, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+                        ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
+                        ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ui::regionSelectionPicker(&this->m_analysisRegion, provider, &this->m_selectionType, false);
 
-                    ui::regionSelectionPicker(&this->m_analysisRegion, provider, &this->m_selectionType, false);
+                        ImGui::TableNextColumn();
+                        ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
+
+                        ImGui::EndTable();
+                    }
                     ImGui::NewLine();
 
-                    ImGui::InputInt("hex.builtin.view.information.block_size"_lang, &this->m_inputChunkSize, ImGuiInputTextFlags_CharsDecimal);
-
-                    if (ImGui::Button("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                    ImGui::SetCursorPosX(50_scaled);
+                    if (ImGuiExt::DimmedButton("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x - 50_scaled, 0)))
                         this->analyze();
+
+
                 }
+                ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();
 
                 if (this->m_analyzerTask.isRunning()) {
@@ -282,8 +294,17 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
                         ImGui::TableNextColumn();
-                        if (this->m_averageEntropy < 0) ImGui::TextUnformatted("???");
-                        else ImGuiExt::TextFormatted("{:.5f}", std::abs(this->m_averageEntropy));
+                        if (this->m_averageEntropy < 0)
+                            ImGui::TextUnformatted("???");
+                        else {
+                            auto entropy = std::abs(this->m_averageEntropy);
+                            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
+                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
+                            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor::HSV(0.3F - (0.3F * entropy), 0.6F, 0.8F, 1.0F).Value);
+                            ImGui::ProgressBar(entropy, ImVec2(200_scaled, ImGui::GetTextLineHeight()), hex::format("{:.5f}", entropy).c_str());
+                            ImGui::PopStyleColor(2);
+                            ImGui::PopStyleVar();
+                        }
 
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.highest_entropy"_lang);
@@ -314,8 +335,16 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
                         ImGui::TableNextColumn();
-                        if (this->m_plainTextCharacterPercentage < 0) ImGui::TextUnformatted("???");
-                        else ImGuiExt::TextFormatted("{:.2f}%", this->m_plainTextCharacterPercentage);
+                        if (this->m_plainTextCharacterPercentage < 0)
+                            ImGui::TextUnformatted("???");
+                        else {
+                            ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
+                            ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
+                            ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor::HSV(0.3F * (this->m_plainTextCharacterPercentage / 100.0F), 0.8F, 0.6F, 1.0F).Value);
+                            ImGui::ProgressBar(this->m_plainTextCharacterPercentage / 100.0F, ImVec2(200_scaled, ImGui::GetTextLineHeight()));
+                            ImGui::PopStyleColor(2);
+                            ImGui::PopStyleVar();
+                        }
 
                         ImGui::EndTable();
                     }
