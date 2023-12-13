@@ -109,8 +109,12 @@ namespace hex {
                     if (windowPos.y < mainWindowPos.y)
                         windowPos.y = mainWindowPos.y + 10_scaled;
 
+                    auto &style = ImGui::GetStyle();
+
+                    ImVec2 shadowOffset = ImVec2(ImCos(style.WindowShadowOffsetAngle), ImSin(style.WindowShadowOffsetAngle)) * style.WindowShadowOffsetDist;
                     drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
                     drawList->AddRect(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_Border));
+                    drawList->AddShadowRect(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowShadow), style.WindowShadowSize, shadowOffset, ImDrawFlags_ShadowCutOutShapeBackground);
                     drawList->AddText(nullptr, 0.0F, windowPos + margin, ImGui::GetColorU32(ImGuiCol_Text), text, nullptr, windowSize.x - margin.x * 2);
                 }
             }
