@@ -11,12 +11,15 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include <set>
 #include <string>
 
 
 #include <hex/api/imhex_api.hpp>
 
 #include <fonts/codicons_font.h>
+#include <hex/api/task_manager.hpp>
+#include <hex/api/theme_manager.hpp>
 
 
 namespace ImGuiExt {
@@ -172,7 +175,7 @@ namespace ImGuiExt {
         GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
         PopStyleColor();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
     }
 
@@ -204,7 +207,7 @@ namespace ImGuiExt {
         GetWindowDrawList()->AddLine(ImVec2(pos.x, pos.y + size.y), pos + size, ImU32(col));
         PopStyleColor();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
     }
 
@@ -239,7 +242,7 @@ namespace ImGuiExt {
         GetWindowDrawList()->AddLine(bb.Min + ImVec2(g.FontSize * 0.5 + style.FramePadding.x, size.y), pos + size - ImVec2(g.FontSize * 0.5 + style.FramePadding.x, 0), ImU32(col));
         PopStyleColor();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
     }
 
@@ -290,7 +293,7 @@ namespace ImGuiExt {
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
     }
 
@@ -345,7 +348,7 @@ namespace ImGuiExt {
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
     }
 
@@ -570,7 +573,7 @@ namespace ImGuiExt {
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
         return pressed;
     }
 
@@ -613,7 +616,7 @@ namespace ImGuiExt {
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, symbol, g.LastItemData.StatusFlags);
         return pressed;
     }
 
@@ -656,7 +659,7 @@ namespace ImGuiExt {
         // if (pressed && !(flags & ImGuiButtonFlags_DontClosePopups) && (window->Flags & ImGuiWindowFlags_Popup))
         //    CloseCurrentPopup();
 
-        IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.LastItemStatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(id, symbol, g.LastItemData.StatusFlags);
         return pressed;
     }
 

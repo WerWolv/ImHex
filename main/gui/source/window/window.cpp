@@ -9,6 +9,7 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 #include <hex/api/project_file_manager.hpp>
+#include <hex/api/tutorial_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
@@ -828,6 +829,8 @@ namespace hex {
     void Window::frameEnd() {
         EventFrameEnd::post();
 
+        TutorialManager::drawTutorial();
+
         // Clean up all tasks that are done
         TaskManager::collectGarbage();
 
@@ -1194,7 +1197,10 @@ namespace hex {
             };
 
             handler.UserData   = this;
-            ImGui::GetCurrentContext()->SettingsHandlers.push_back(handler);
+
+            auto context = ImGui::GetCurrentContext();
+            context->SettingsHandlers.push_back(handler);
+            context->TestEngineHookItems = true;
 
             io.IniFilename = nullptr;
         }

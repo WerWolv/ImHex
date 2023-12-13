@@ -17,6 +17,7 @@ set(LIBIMHEX_SOURCES
         source/api/workspace_manager.cpp
         source/api/achievement_manager.cpp
         source/api/localization_manager.cpp
+        source/api/tutorial_manager.cpp
 
         source/data_processor/attribute.cpp
         source/data_processor/link.cpp

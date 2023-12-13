@@ -160,8 +160,6 @@ namespace hex::plugin::builtin {
                     ImGui::SetCursorPosX(50_scaled);
                     if (ImGuiExt::DimmedButton("hex.builtin.view.information.analyze"_lang, ImVec2(ImGui::GetContentRegionAvail().x - 50_scaled, 0)))
                         this->analyze();
-
-
                 }
                 ImGuiExt::EndSubWindow();
                 ImGui::EndDisabled();

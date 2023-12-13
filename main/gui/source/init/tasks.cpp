@@ -14,6 +14,7 @@
 #include <hex/api/plugin_manager.hpp>
 #include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/tutorial_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
 #include <hex/ui/view.hpp>
@@ -137,6 +138,7 @@ namespace hex::init {
         ThemeManager::reset();
 
         AchievementManager::getAchievements().clear();
+        TutorialManager::reset();
 
         ProjectFile::getHandlers().clear();
         ProjectFile::getProviderHandlers().clear();
