@@ -27,6 +27,9 @@ namespace hex::plugin::builtin {
                     this->m_function();
 
                 ImGui::SetWindowPos((ImHexApi::System::getMainWindowSize() - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
+
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                    this->close();
             }
 
             [[nodiscard]] ImGuiWindowFlags getFlags() const override {

@@ -68,6 +68,9 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGui::EndChild();
+
+            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                this->close();
         }
 
         [[nodiscard]] ImGuiWindowFlags getFlags() const override {

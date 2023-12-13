@@ -36,6 +36,9 @@ namespace hex::plugin::builtin {
             ImGui::NewLine();
             ImGui::InputText("##result", this->m_result, ImGuiInputTextFlags_ReadOnly);
             ImGui::PopItemWidth();
+
+            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                this->close();
         }
 
         [[nodiscard]] ImGuiWindowFlags getFlags() const override {

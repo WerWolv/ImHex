@@ -176,6 +176,9 @@ namespace hex {
 
                     ImGui::EndPopup();
                 }
+
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                    this->getWindowOpenState() = false;
             }
         }
     };

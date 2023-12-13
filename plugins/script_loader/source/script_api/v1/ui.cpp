@@ -34,7 +34,7 @@ public:
         }
         ImGui::SameLine();
         ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0))) {
+        if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             s_yesNoQuestionBoxResult = false;
             this->close();
         }
@@ -87,7 +87,7 @@ public:
         ImGui::EndDisabled();
         ImGui::SameLine();
         ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button("hex.builtin.common.cancel"_lang, ImVec2(width / 3, 0))) {
+        if (ImGui::Button("hex.builtin.common.cancel"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             s_inputTextBoxResult = "";
             this->close();
         }

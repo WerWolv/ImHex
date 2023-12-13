@@ -87,6 +87,9 @@ namespace hex::plugin::builtin {
                     Popup::close();
                 }, {}, this->m_multiple);
             }
+
+            if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                this->close();
         }
 
         [[nodiscard]] ImGuiWindowFlags getFlags() const override {

@@ -92,7 +92,7 @@ namespace hex::plugin::builtin {
                         }
                 );
 
-                if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+                if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                     this->close();
             }
 
