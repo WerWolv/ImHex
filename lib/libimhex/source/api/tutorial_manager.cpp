@@ -4,6 +4,7 @@
 
 #include <imgui_internal.h>
 #include <hex/helpers/utils.hpp>
+#include <wolv/utils/core.hpp>
 
 #include <map>
 
@@ -17,6 +18,40 @@ namespace hex {
         std::map<ImGuiID, std::string> s_highlights;
         std::vector<std::pair<ImRect, std::string>> s_highlightDisplays;
 
+
+        class IDStack {
+        public:
+            IDStack() {
+                idStack.push_back(0);
+            }
+
+            void add(const std::string &string) {
+                const ImGuiID seed = idStack.back();
+                const ImGuiID id = ImHashStr(string.c_str(), string.length(), seed);
+
+                idStack.push_back(id);
+            }
+
+            void add(const void *pointer) {
+                const ImGuiID seed = idStack.back();
+                const ImGuiID id = ImHashData(&pointer, sizeof(pointer), seed);
+
+                idStack.push_back(id);
+            }
+
+            void add(int value) {
+                const ImGuiID seed = idStack.back();
+                const ImGuiID id = ImHashData(&value, sizeof(value), seed);
+
+                idStack.push_back(id);
+            }
+
+            ImGuiID get() {
+                return idStack.back();
+            }
+        private:
+            ImVector<ImGuiID> idStack;
+        };
 
     }
 
@@ -158,13 +193,9 @@ namespace hex {
         s_highlightDisplays.clear();
     }
 
-    TutorialManager::IDStack::IDStack() {
-        idStack.push_back(0);
-    }
-
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::addStep() {
         auto &newStep = this->m_steps.emplace_back(this);
-        this->m_currentStep = this->m_steps.begin();
+        this->m_currentStep = this->m_steps.end();
         this->m_latestStep  = this->m_currentStep;
 
         return newStep;
@@ -193,19 +224,24 @@ namespace hex {
 
     void TutorialManager::Tutorial::Step::advance(i32 steps) const {
         m_parent->m_currentStep->removeHighlights();
-        std::advance(s_currentTutorial->second.m_currentStep, steps);
+        std::advance(m_parent->m_currentStep, steps);
 
         if (m_parent->m_currentStep != m_parent->m_steps.end())
             m_parent->m_currentStep->addHighlights();
     }
 
 
-    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(const std::string& unlocalizedText, std::initializer_list<std::variant<std::string, int>>&& ids) {
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(const std::string& unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
         IDStack idStack;
 
         for (const auto &id : ids) {
-            std::visit([&idStack](const auto &id) {
-                idStack.add(id);
+            std::visit(wolv::util::overloaded {
+                [&idStack](const Lang &id) {
+                    idStack.add(id.get());
+                },
+                [&idStack](const auto &id) {
+                    idStack.add(id);
+                }
             }, id);
         }
 
@@ -217,7 +253,7 @@ namespace hex {
         return *this;
     }
 
-    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(std::initializer_list<std::variant<std::string, int>>&& ids) {
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
         return this->addHighlight("", std::move(ids));
     }
 
@@ -265,32 +301,6 @@ namespace hex {
             this->advance();
             this->m_parent->m_latestStep = this->m_parent->m_currentStep;
         }
-    }
-
-
-    void TutorialManager::IDStack::add(const std::string &string) {
-        const ImGuiID seed = idStack.back();
-        const ImGuiID id = ImHashStr(string.c_str(), string.length(), seed);
-
-        idStack.push_back(id);
-    }
-
-    void TutorialManager::IDStack::add(const void *pointer) {
-        const ImGuiID seed = idStack.back();
-        const ImGuiID id = ImHashData(&pointer, sizeof(pointer), seed);
-
-        idStack.push_back(id);
-    }
-
-    void TutorialManager::IDStack::add(int value) {
-        const ImGuiID seed = idStack.back();
-        const ImGuiID id = ImHashData(&value, sizeof(value), seed);
-
-        idStack.push_back(id);
-    }
-
-    ImGuiID TutorialManager::IDStack::get() {
-        return idStack.back();
     }
 
 }

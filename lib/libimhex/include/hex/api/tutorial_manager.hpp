@@ -2,6 +2,8 @@
 
 #include <hex.hpp>
 
+#include <hex/api/localization_manager.hpp>
+
 #include <string>
 #include <list>
 #include <variant>
@@ -11,20 +13,6 @@
 namespace hex {
 
     class TutorialManager {
-    private:
-        class IDStack {
-        public:
-            IDStack();
-
-            void add(const void *pointer);
-            void add(const std::string &string);
-            void add(int value);
-
-            ImGuiID get();
-        private:
-            ImVector<ImGuiID> idStack;
-        };
-
     public:
         enum class Position : u8 {
             None    = 0,
@@ -49,14 +37,14 @@ namespace hex {
                  * @param ids ID of the element to highlight
                  * @return Current step
                  */
-                Step& addHighlight(const std::string &unlocalizedText, std::initializer_list<std::variant<std::string, int>> &&ids);
+                Step& addHighlight(const std::string &unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>> &&ids);
 
                 /**
                  * @brief Adds a highlighting to a specific element
                  * @param ids ID of the element to highlight
                  * @return Current step
                  */
-                Step& addHighlight(std::initializer_list<std::variant<std::string, int>> &&ids);
+                Step& addHighlight(std::initializer_list<std::variant<Lang, std::string, int>> &&ids);
 
                 /**
                  * @brief Sets the text that will be displayed in the tutorial message box
