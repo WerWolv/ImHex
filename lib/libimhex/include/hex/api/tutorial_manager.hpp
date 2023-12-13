@@ -61,6 +61,9 @@ namespace hex {
                  */
                 Step& allowSkip();
 
+                Step& onAppear(std::function<void()> callback);
+                Step& onComplete(std::function<void()> callback);
+
 
                 /**
                  * @brief Checks if this step is the current step
@@ -76,7 +79,7 @@ namespace hex {
             private:
                 struct Highlight {
                     std::string unlocalizedText;
-                    ImGuiID highlightId;
+                    std::vector<std::variant<Lang, std::string, int>> highlightIds;
                 };
 
                 struct Message {
@@ -97,6 +100,7 @@ namespace hex {
                 Tutorial *m_parent;
                 std::vector<Highlight> m_highlights;
                 std::optional<Message> m_message;
+                std::function<void()> m_onAppear, m_onComplete;
             };
 
             Step& addStep();

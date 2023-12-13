@@ -82,6 +82,9 @@ add_imhex_plugin(
         source/content/tools/tcp_client_server.cpp
         source/content/tools/wiki_explainer.cpp
 
+        source/content/tutorials/tutorials.cpp
+        source/content/tutorials/introduction.cpp
+
         source/content/pl_visualizers/line_plot.cpp
         source/content/pl_visualizers/scatter_plot.cpp
         source/content/pl_visualizers/image.cpp

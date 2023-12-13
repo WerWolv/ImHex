@@ -522,8 +522,7 @@ namespace hex::plugin::builtin {
                 if (view->hasViewMenuItemEntry()) {
                     auto &state = view->getWindowOpenState();
 
-                    if (ImGui::MenuItem(Lang(view->getUnlocalizedName()), "", &state, ImHexApi::Provider::isValid() && !LayoutManager::isLayoutLocked()))
-                        view->setWindowJustOpened(state);
+                    ImGui::MenuItem(Lang(view->getUnlocalizedName()), "", &state, ImHexApi::Provider::isValid() && !LayoutManager::isLayoutLocked());
                 }
             }
 

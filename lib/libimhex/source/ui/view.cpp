@@ -59,6 +59,13 @@ namespace hex {
         this->m_windowJustOpened = state;
     }
 
+    void View::trackViewOpenState() {
+        if (this->m_windowOpen && !this->m_prevWindowOpen)
+            this->setWindowJustOpened(true);
+        this->m_prevWindowOpen = this->m_windowOpen;
+    }
+
+
     void View::discardNavigationRequests() {
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;

@@ -145,6 +145,7 @@ namespace hex::plugin::builtin {
 
     ViewPatternEditor::~ViewPatternEditor() {
         RequestSetPatternLanguageCode::unsubscribe(this);
+        RequestRunPatternCode::unsubscribe(this);
         EventFileLoaded::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         EventProviderClosed::unsubscribe(this);
@@ -1101,6 +1102,10 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::registerEvents() {
         RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
             this->loadPatternFile(path, ImHexApi::Provider::get());
+        });
+
+        RequestRunPatternCode::subscribe(this, [this] {
+            this->m_triggerAutoEvaluate = true;
         });
 
         RequestSavePatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {

@@ -39,6 +39,7 @@ namespace hex::plugin::builtin {
     void registerProjectHandlers();
     void registerAchievements();
     void registerReportGenerators();
+    void registerTutorials();
     void loadWorkspaces();
 
     void addFooterItems();
@@ -109,6 +110,7 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerCommandForwarders();
     registerAchievements();
     registerReportGenerators();
+    registerTutorials();
     loadWorkspaces();
 
     addFooterItems();

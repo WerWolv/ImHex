@@ -27,6 +27,9 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTable("Tutorials", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImGui::GetContentRegionAvail())) {
                 for (const auto &tutorial : tutorials | std::views::values) {
+                    if (this->m_selectedTutorial == nullptr)
+                        this->m_selectedTutorial = &tutorial;
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 

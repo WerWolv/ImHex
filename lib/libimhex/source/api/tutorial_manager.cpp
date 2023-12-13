@@ -1,6 +1,7 @@
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <imgui_internal.h>
 #include <hex/helpers/utils.hpp>
@@ -91,14 +92,22 @@ namespace hex {
 
             {
                 if (!unlocalizedText.empty()) {
-                    const auto margin   = ImGui::GetStyle().WindowPadding;
+                    const auto mainWindowPos = ImHexApi::System::getMainWindowPosition();
+                    const auto mainWindowSize = ImHexApi::System::getMainWindowSize();
 
-                    const ImVec2 windowPos  = { rect.Min.x + 20_scaled, rect.Max.y + 10_scaled };
+                    const auto margin = ImGui::GetStyle().WindowPadding;
+
+                    ImVec2 windowPos  = { rect.Min.x + 20_scaled, rect.Max.y + 10_scaled };
                     ImVec2 windowSize = { std::max<float>(rect.Max.x - rect.Min.x - 40_scaled, 300_scaled), 0 };
 
                     const char* text = Lang(unlocalizedText);
                     const auto textSize = ImGui::CalcTextSize(text, nullptr, false, windowSize.x - margin.x * 2);
                     windowSize.y = textSize.y + margin.y * 2;
+
+                    if (windowPos.y + windowSize.y > mainWindowPos.y + mainWindowSize.y)
+                        windowPos.y = rect.Min.y - windowSize.y - 10_scaled;
+                    if (windowPos.y < mainWindowPos.y)
+                        windowPos.y = mainWindowPos.y + 10_scaled;
 
                     drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
                     drawList->AddRect(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_Border));
@@ -170,7 +179,7 @@ namespace hex {
 
             ImGui::SameLine();
 
-            ImGui::BeginDisabled(s_currentTutorial->second.m_currentStep == s_currentTutorial->second.m_steps.end() || (!message->allowSkip && s_currentTutorial->second.m_currentStep == s_currentTutorial->second.m_latestStep));
+            ImGui::BeginDisabled(!message->allowSkip && s_currentTutorial->second.m_currentStep == s_currentTutorial->second.m_latestStep);
             if (ImGui::ArrowButton("Forwards", ImGuiDir_Right)) {
                 s_currentTutorial->second.m_currentStep->advance(1);
             }
@@ -221,19 +230,51 @@ namespace hex {
     }
 
     void TutorialManager::Tutorial::Step::addHighlights() const {
-        for (const auto &[text, id] : this->m_highlights) {
-            s_highlights.emplace(id, text.c_str());
+        if (this->m_onAppear)
+            this->m_onAppear();
+
+        for (const auto &[text, ids] : this->m_highlights) {
+            IDStack idStack;
+
+            for (const auto &id : ids) {
+                std::visit(wolv::util::overloaded {
+                    [&idStack](const Lang &id) {
+                        idStack.add(id.get());
+                    },
+                    [&idStack](const auto &id) {
+                        idStack.add(id);
+                    }
+                }, id);
+            }
+
+            s_highlights.emplace(idStack.get(), text.c_str());
         }
     }
 
     void TutorialManager::Tutorial::Step::removeHighlights() const {
-        for (const auto &[text, id] : this->m_highlights) {
-            s_highlights.erase(id);
+        for (const auto &[text, ids] : this->m_highlights) {
+            IDStack idStack;
+
+            for (const auto &id : ids) {
+                std::visit(wolv::util::overloaded {
+                    [&idStack](const Lang &id) {
+                        idStack.add(id.get());
+                    },
+                    [&idStack](const auto &id) {
+                        idStack.add(id);
+                    }
+                }, id);
+            }
+
+            s_highlights.erase(idStack.get());
         }
     }
 
     void TutorialManager::Tutorial::Step::advance(i32 steps) const {
         m_parent->m_currentStep->removeHighlights();
+
+        if (m_parent->m_currentStep == m_parent->m_latestStep && steps > 0)
+            std::advance(m_parent->m_latestStep, steps);
         std::advance(m_parent->m_currentStep, steps);
 
         if (m_parent->m_currentStep != m_parent->m_steps.end())
@@ -244,22 +285,9 @@ namespace hex {
 
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(const std::string& unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
-        IDStack idStack;
-
-        for (const auto &id : ids) {
-            std::visit(wolv::util::overloaded {
-                [&idStack](const Lang &id) {
-                    idStack.add(id.get());
-                },
-                [&idStack](const auto &id) {
-                    idStack.add(id);
-                }
-            }, id);
-        }
-
         this->m_highlights.emplace_back(
             unlocalizedText,
-            idStack.get()
+            ids
         );
 
         return *this;
@@ -297,6 +325,19 @@ namespace hex {
         return *this;
     }
 
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::onAppear(std::function<void()> callback) {
+        this->m_onAppear = std::move(callback);
+
+        return *this;
+    }
+
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::onComplete(std::function<void()> callback) {
+        this->m_onComplete = std::move(callback);
+
+        return *this;
+    }
+
+
 
 
     bool TutorialManager::Tutorial::Step::isCurrent() const {
@@ -311,7 +352,12 @@ namespace hex {
     void TutorialManager::Tutorial::Step::complete() const {
         if (this->isCurrent()) {
             this->advance();
-            this->m_parent->m_latestStep = this->m_parent->m_currentStep;
+
+            if (this->m_onComplete) {
+                TaskManager::doLater([this] {
+                    this->m_onComplete();
+                });
+            }
         }
     }
 

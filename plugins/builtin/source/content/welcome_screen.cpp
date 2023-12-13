@@ -30,6 +30,8 @@
 
 #include <string>
 #include <random>
+#include <content/popups/popup_question.hpp>
+#include <hex/api/tutorial_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
 namespace hex::plugin::builtin {
@@ -539,6 +541,16 @@ namespace hex::plugin::builtin {
                     PopupTelemetryRequest::open();
                 #endif
             }
+
+            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
+                PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
+                    []{
+                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
+                    },
+                    []{ });
+            }
+
+            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
         });
 
         // Clear project context if we go back to the welcome screen

@@ -789,6 +789,7 @@ namespace hex {
 
             // Draw view
             view->draw();
+            view->trackViewOpenState();
 
             if (view->getWindowOpenState()) {
                 auto window    = ImGui::FindWindowByName(view->getName().c_str());
@@ -806,6 +807,7 @@ namespace hex {
                     // Dock the window if it's not already docked
                     if (view->didWindowJustOpen() && !ImGui::IsWindowDocked()) {
                         ImGui::DockBuilderDockWindow(windowName.c_str(), ImHexApi::System::getMainDockSpaceId());
+                        EventViewOpened::post(view.get());
                     }
 
                     ImGui::End();
