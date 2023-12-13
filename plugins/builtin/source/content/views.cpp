@@ -22,6 +22,7 @@
 #include "content/views/view_logs.hpp"
 #include "content/views/view_achievements.hpp"
 #include "content/views/view_highlight_rules.hpp"
+#include "content/views/view_tutorials.hpp"
 
 namespace hex::plugin::builtin {
 
@@ -50,6 +51,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewLogs>();
         ContentRegistry::Views::add<ViewAchievements>();
         ContentRegistry::Views::add<ViewHighlightRules>();
+        ContentRegistry::Views::add<ViewTutorials>();
     }
 
 }

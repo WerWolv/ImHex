@@ -55,6 +55,16 @@ namespace hex {
 
     }
 
+
+    const std::map<std::string, TutorialManager::Tutorial>& TutorialManager::getTutorials() {
+        return s_tutorials;
+    }
+
+    std::map<std::string, TutorialManager::Tutorial>::iterator TutorialManager::getCurrentTutorial() {
+        return s_currentTutorial;
+    }
+
+
     TutorialManager::Tutorial& TutorialManager::createTutorial(const std::string& unlocalizedName, const std::string& unlocalizedDescription) {
         return s_tutorials.try_emplace(unlocalizedName, Tutorial(unlocalizedName, unlocalizedDescription)).first->second;
     }
@@ -228,6 +238,8 @@ namespace hex {
 
         if (m_parent->m_currentStep != m_parent->m_steps.end())
             m_parent->m_currentStep->addHighlights();
+        else
+            s_currentTutorial = s_tutorials.end();
     }
 
 

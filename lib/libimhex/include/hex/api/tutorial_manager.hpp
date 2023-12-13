@@ -101,6 +101,9 @@ namespace hex {
 
             Step& addStep();
 
+            const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
+            const std::string& getUnlocalizedDescription() const { return this->m_unlocalizedDescription; }
+
         private:
             friend class TutorialManager;
 
@@ -112,6 +115,17 @@ namespace hex {
             decltype(m_steps)::iterator m_currentStep, m_latestStep;
         };
 
+        /**
+         * @brief Gets a list of all tutorials
+         * @return List of all tutorials
+         */
+        static const std::map<std::string, Tutorial>& getTutorials();
+
+        /**
+         * @brief Gets the currently running tutorial
+         * @return Iterator pointing to the current tutorial
+         */
+        static std::map<std::string, Tutorial>::iterator getCurrentTutorial();
 
         /**
          * @brief Creates a new tutorial that can be started later
