@@ -333,7 +333,7 @@ namespace hex {
 
             ImGui::PushTextWrapPos(300_scaled);
             if (!this->m_windowTitleFull.empty())
-                ImGui::SetItemTooltip(this->m_windowTitleFull.c_str());
+                ImGui::SetItemTooltip("%s", this->m_windowTitleFull.c_str());
             ImGui::PopTextWrapPos();
 
             ImGui::PopStyleVar(3);
