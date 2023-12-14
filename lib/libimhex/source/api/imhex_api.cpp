@@ -321,6 +321,9 @@ namespace hex {
                 if (it == s_providers.begin()) {
                     // If the first provider is being closed, select the one that's the first one now
                     setCurrentProvider(0);
+
+                    if (s_providers.size() > 1)
+                        EventProviderChanged::post(s_providers[0], s_providers[1]);
                 }
                 else if (std::distance(s_providers.begin(), it) == s_currentProvider) {
                     // If the current provider is being closed, select the one that's before it
