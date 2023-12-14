@@ -1112,7 +1112,7 @@
         "hex.builtin.view.hex_editor.shortcut.selection_right": "선택 영역을 오른쪽으로 이동",
         "hex.builtin.view.hex_editor.shortcut.cursor_down": "커서를 아래로 이동",
         "hex.builtin.view.hex_editor.shortcut.cursor_page_down": "커서를 한 페이지 아래로 이동",
-        "hex.builtin.view.highlight_rules.help_text": "파일의 각 바이트에 대해 판단할 수학 표현식을 입력합니다.\\n\\n표현식에는 '값' 및 '오프셋' 변수를 사용할 수 있습니다.\\n표현식이 참으로 판단되면(결과가 0보다 크면) 해당 바이트가 지정 색상으로 강조 표시됩니다.",
+        "hex.builtin.view.highlight_rules.help_text": "파일의 각 바이트에 대해 판단할 수학 표현식을 입력합니다.\n\n표현식에는 '값' 및 '오프셋' 변수를 사용할 수 있습니다.\n표현식이 참으로 판단되면(결과가 0보다 크면) 해당 바이트가 지정 색상으로 강조 표시됩니다.",
         "hex.builtin.view.pattern_editor.shortcut.run_pattern": "패턴 실행",
         "hex.builtin.menu.file.export.report": "보고",
         "hex.builtin.menu.file.export.report.popup.export_error": "새 보고서 파일을 만들지 못했습니다!",

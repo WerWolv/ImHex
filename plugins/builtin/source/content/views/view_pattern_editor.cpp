@@ -1260,7 +1260,7 @@ namespace hex::plugin::builtin {
                 const auto &types = this->m_parserRuntime->getInternals().parser->getTypes();
                 bool hasPlaceableTypes = std::any_of(types.begin(), types.end(), [](const auto &type) { return !type.second->isTemplateType(); });
 
-                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang, hasPlaceableTypes)) {
+                if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
                     auto selection = ImHexApi::HexEditor::getSelection();
 
                     for (const auto &[typeName, type] : types) {
