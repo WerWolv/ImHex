@@ -111,30 +111,33 @@ namespace hex {
 
         // Handle updating the window title
         RequestUpdateWindowTitle::subscribe(this, [this] {
+            std::string prefix, postfix;
             std::string title = "ImHex";
 
             if (ProjectFile::hasPath()) {
                 // If a project is open, show the project name instead of the file name
 
-                title = "Project " + hex::limitStringLength(ProjectFile::getPath().stem().string(), 32);
+                prefix  = "Project ";
+                title   = ProjectFile::getPath().stem().string();
 
                 if (ImHexApi::Provider::isDirty())
-                    title += " (*)";
+                    postfix += " (*)";
 
             } else if (ImHexApi::Provider::isValid()) {
                 auto provider = ImHexApi::Provider::get();
                 if (provider != nullptr) {
-                    title = hex::limitStringLength(provider->getName(), 32);
+                    title = provider->getName();
 
                     if (provider->isDirty())
-                        title += " (*)";
+                        postfix += " (*)";
 
                     if (!provider->isWritable())
-                        title += " (Read Only)";
+                        postfix += " (Read Only)";
                 }
             }
 
-            this->m_windowTitle = title;
+            this->m_windowTitle     = prefix + hex::limitStringLength(title, 32) + postfix;
+            this->m_windowTitleFull = prefix + title + postfix;
 
             if (this->m_window != nullptr) {
                 if (title != "ImHex")
@@ -322,8 +325,16 @@ namespace hex {
 
             ImGui::SetCursorPos(searchBoxPos);
             if (ImGui::Button(this->m_windowTitle.c_str(), searchBoxSize)) {
-                EventSearchBoxClicked::post();
+                EventSearchBoxClicked::post(ImGuiMouseButton_Left);
             }
+
+            if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                EventSearchBoxClicked::post(ImGuiMouseButton_Right);
+
+            ImGui::PushTextWrapPos(300_scaled);
+            if (!this->m_windowTitleFull.empty())
+                ImGui::SetItemTooltip(this->m_windowTitleFull.c_str());
+            ImGui::PopTextWrapPos();
 
             ImGui::PopStyleVar(3);
             ImGui::PopStyleColor(3);

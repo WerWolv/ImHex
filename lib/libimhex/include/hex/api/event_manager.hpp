@@ -250,7 +250,7 @@ namespace hex {
     EVENT_DEF(EventStoreContentRemoved, const std::fs::path&);
     EVENT_DEF(EventImHexClosing);
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
-    EVENT_DEF(EventSearchBoxClicked);
+    EVENT_DEF(EventSearchBoxClicked, u32);
     EVENT_DEF(EventViewOpened, View*);
 
     EVENT_DEF(EventProviderDataModified, prv::Provider *, u64, u64, const u8*);

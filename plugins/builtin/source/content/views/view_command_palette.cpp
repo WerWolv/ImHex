@@ -13,10 +13,12 @@ namespace hex::plugin::builtin {
             this->m_justOpened         = true;
         });
 
-        EventSearchBoxClicked::subscribe([this] {
-            RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
-            this->m_commandPaletteOpen = true;
-            this->m_justOpened         = true;
+        EventSearchBoxClicked::subscribe([this](ImGuiMouseButton button) {
+            if (button == ImGuiMouseButton_Left) {
+                RequestOpenPopup::post("hex.builtin.view.command_palette.name"_lang);
+                this->m_commandPaletteOpen = true;
+                this->m_justOpened         = true;
+            }
         });
     }
 

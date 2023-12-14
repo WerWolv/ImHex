@@ -49,7 +49,7 @@ namespace hex {
 
         GLFWwindow *m_window = nullptr;
 
-        std::string m_windowTitle;
+        std::string m_windowTitle, m_windowTitleFull;
 
         double m_lastStartFrameTime = 0;
         double m_lastFrameTime = 0;
