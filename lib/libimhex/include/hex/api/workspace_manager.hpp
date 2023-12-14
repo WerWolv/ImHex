@@ -18,7 +18,7 @@ namespace hex {
         static void switchWorkspace(const std::string &name);
 
         static void importFromFile(const std::fs::path &path);
-        static bool exportToFile(std::fs::path path = {});
+        static bool exportToFile(std::fs::path path = {}, std::string workspaceName = {});
 
         static const auto& getWorkspaces() { return s_workspaces; }
         static const auto& getCurrentWorkspace() { return s_currentWorkspace; }
@@ -30,7 +30,7 @@ namespace hex {
     private:
         WorkspaceManager() = default;
 
-        static std::map<std::string, WorkspaceManager::Workspace> s_workspaces;
+        static std::map<std::string, Workspace> s_workspaces;
         static decltype(s_workspaces)::iterator s_currentWorkspace, s_previousWorkspace;
     };
 

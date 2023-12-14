@@ -12,8 +12,8 @@
 namespace hex {
 
     std::map<std::string, WorkspaceManager::Workspace> WorkspaceManager::s_workspaces;
-    decltype(WorkspaceManager::s_workspaces)::iterator WorkspaceManager::s_currentWorkspace  = WorkspaceManager::s_workspaces.end();
-    decltype(WorkspaceManager::s_workspaces)::iterator WorkspaceManager::s_previousWorkspace = WorkspaceManager::s_workspaces.end();
+    decltype(WorkspaceManager::s_workspaces)::iterator WorkspaceManager::s_currentWorkspace  = s_workspaces.end();
+    decltype(WorkspaceManager::s_workspaces)::iterator WorkspaceManager::s_previousWorkspace = s_workspaces.end();
 
     void WorkspaceManager::createWorkspace(const std::string& name, const std::string &layout) {
         s_workspaces[name] = Workspace {
@@ -22,14 +22,13 @@ namespace hex {
         };
 
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
-            if (WorkspaceManager::exportToFile(path / (name + ".hexws")))
+            if (exportToFile(path / (name + ".hexws")))
                 break;
         }
     }
 
     void WorkspaceManager::switchWorkspace(const std::string& name) {
-        auto newWorkspace = s_workspaces.find(name);
-
+        const auto newWorkspace = s_workspaces.find(name);
         if (newWorkspace != s_workspaces.end()) {
             s_currentWorkspace = newWorkspace;
             log::info("Switching to workspace '{}'", name);
@@ -59,7 +58,7 @@ namespace hex {
         }
     }
 
-    bool WorkspaceManager::exportToFile(std::fs::path path) {
+    bool WorkspaceManager::exportToFile(std::fs::path path, std::string workspaceName) {
         if (path.empty()) {
             if (s_currentWorkspace == s_workspaces.end())
                 return false;
@@ -67,14 +66,17 @@ namespace hex {
             path = s_currentWorkspace->second.path;
         }
 
+        if (workspaceName.empty())
+            workspaceName = s_currentWorkspace->first;
+
         wolv::io::File file(path, wolv::io::File::Mode::Create);
 
         if (!file.isValid())
             return false;
 
         nlohmann::json json;
-        json["name"] = s_currentWorkspace->first;
-        json["layout"] = LayoutManager::saveToString();
+        json["name"]    = workspaceName;
+        json["layout"]  = LayoutManager::saveToString();
 
         file.writeString(json.dump(4));
 
@@ -85,7 +87,7 @@ namespace hex {
     void WorkspaceManager::process() {
         if (s_previousWorkspace != s_currentWorkspace) {
             if (s_previousWorkspace != s_workspaces.end())
-                WorkspaceManager::exportToFile(s_previousWorkspace->second.path);
+                exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first);
 
             ImGui::LoadIniSettingsFromMemory(s_currentWorkspace->second.layout.c_str());
 
@@ -96,8 +98,8 @@ namespace hex {
 
     void WorkspaceManager::reset() {
         s_workspaces.clear();
-        s_currentWorkspace  = WorkspaceManager::s_workspaces.end();
-        s_previousWorkspace = WorkspaceManager::s_workspaces.end();
+        s_currentWorkspace  = s_workspaces.end();
+        s_previousWorkspace = s_workspaces.end();
     }
 
 
