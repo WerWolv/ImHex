@@ -18,6 +18,7 @@ namespace hex::plugin::builtin {
     void handleMagicCommand(const std::vector<std::string> &args);
     void handlePatternLanguageCommand(const std::vector<std::string> &args);
     void handleHexdumpCommand(const std::vector<std::string> &args);
+    void handleDemangleCommand(const std::vector<std::string> &args);
 
 
     void registerCommandForwarders();

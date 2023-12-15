@@ -19,9 +19,9 @@
 #include <wolv/math_eval/math_evaluator.hpp>
 
 #include <pl/cli/cli.hpp>
+#include <llvm/Demangle/Demangle.h>
 
 namespace hex::plugin::builtin {
-
     using namespace hex::literals;
 
     void handleVersionCommand(const std::vector<std::string> &args) {
@@ -300,6 +300,15 @@ namespace hex::plugin::builtin {
         log::print("{}", hex::generateHexView(startAddress, size - startAddress, &provider));
 
         std::exit(EXIT_SUCCESS);
+    }
+
+    void handleDemangleCommand(const std::vector<std::string> &args) {
+        if (args.size() != 1) {
+            log::println("usage: imhex --demangle <identifier>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        log::println("{}", llvm::demangle(args[0]));
     }
 
 

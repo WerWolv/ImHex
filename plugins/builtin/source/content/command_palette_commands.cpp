@@ -214,7 +214,7 @@ namespace hex::plugin::builtin {
         };
 
         std::vector<std::string> splitConversionCommandInput(const std::string &input) {
-            std::vector<std::string> parts = wolv::util::splitString(input, " ");
+            std::vector<std::string> parts = wolv::util::splitString(input, " ", true);
             std::erase_if(parts, [](auto &part) { return part.empty(); });
 
             return parts;
