@@ -74,7 +74,7 @@ namespace hex::prv {
         if (difference > 0)
             EventProviderDataInserted::post(this, this->getActualSize(), difference);
         else if (difference < 0)
-            EventProviderDataRemoved::post(this, this->getActualSize(), -difference);
+            EventProviderDataRemoved::post(this, this->getActualSize() + difference, -difference);
 
         this->markDirty();
     }
