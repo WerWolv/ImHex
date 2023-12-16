@@ -27,7 +27,7 @@ body {
     left: 0;
 }
 
-h1, h2 {
+h1, h2, h5 {
     color: #F0F0F0;
     font-size: 20px;
     font-family: monospace;
@@ -38,8 +38,13 @@ h1, h2 {
 }
 
 h2 {
+    margin-top: 15px;
+    font-size: 17px;
+}
+
+h5 {
     margin-top: 0px;
-    font-size: 18px;
+    font-size: 17px;
 }
 
 #not_working {
