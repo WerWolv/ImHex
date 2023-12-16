@@ -74,6 +74,8 @@ a:hover {
     color: #F0F0F0;
     background-color: #0A0A0A;
     padding: 10px;
+    font-family: monospace;
+    font-size: 15px;
 
     display: flex;
     justify-content: center;

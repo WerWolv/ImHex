@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en-us">
 <head>
-    <link rel="manifest" href="manifest.json" />
-    <meta charset="utf-8">
+    <title>ImHex Web - Free Online Hex Editor for Reverse Engineers</title>
+
+    <link rel="manifest" href="manifest.json">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Primary Meta Tags -->
-    <title>ImHex Web - Free Online Hex Editor for Reverse Engineers</title>
     <meta name="title" content="ImHex">
     <meta name="description" content="Free and extremely powerful Online Hex Editor for your Web Browser. ImHex is a free and open source Hex Editor for Reverse Engineers and Developers and Data Analysts.">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -27,7 +27,7 @@
           content="A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.">
     <meta property="twitter:image" content="https://imhex.werwolv.net/assets/splash_wasm.png">
 
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css">
 
     <script type="application/ld+json">
         {
@@ -57,13 +57,12 @@
         }
     </script>
 
-    <title>ImHex Web</title>
     <script src="enable-threads.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="loading" class="centered">
-        <img src="https://raw.githubusercontent.com/WerWolv/ImHex/master/plugins/builtin/romfs/assets/dark/banner.png" id="logo" alt="ImHex Logo"/>
+        <img src="https://raw.githubusercontent.com/WerWolv/ImHex/master/plugins/builtin/romfs/assets/dark/banner.png" id="logo" alt="ImHex Logo">
         <h1>A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.</h1>
         <h2>Available both natively and on the web</h2>
         <h5>ImHex runs directly in your web browser with the help of Emscripten and WebAssembly.</h5>
@@ -92,7 +91,7 @@
 
     <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
 
-    <script type="text/javascript" src="wasm-config.js"></script>
-    <script async type="text/javascript" src="imhex.js"></script>
+    <script src="wasm-config.js"></script>
+    <script async src="imhex.js"></script>
 </body>
 </html>
