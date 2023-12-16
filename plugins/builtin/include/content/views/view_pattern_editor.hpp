@@ -187,6 +187,13 @@ namespace hex::plugin::builtin {
 
         std::array<AccessData, 512> m_accessHistory;
         u32 m_accessHistoryIndex = 0;
+        bool replace = false;
+        static inline std::array<std::string,256> m_findHistory;
+        static inline u32 m_findHistorySize = 0;
+        static inline u32 m_findHistoryIndex = 0;
+        static inline std::array<std::string,256> m_replaceHistory;
+        static inline u32 m_replaceHistorySize = 0;
+        static inline u32 m_replaceHistoryIndex = 0;
 
     private:
         void drawConsole(ImVec2 size);
@@ -196,6 +203,10 @@ namespace hex::plugin::builtin {
         void drawDebugger(ImVec2 size);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
+
+        void drawFindReplaceDialog(std::string &findWord,unsigned &position, unsigned &count, bool &requestFocus);
+
+        void historyInsert(std::array<std::string,256> &history,u32 &size,  u32 &index, const std::string &value);
 
         void loadPatternFile(const std::fs::path &path, prv::Provider *provider);
 

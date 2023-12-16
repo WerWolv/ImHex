@@ -24,7 +24,7 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
 TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 
 TextEditor::TextEditor()
-    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true), mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {
+    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true), mWholeWord(false),mFindRegEx(false),mMatchCase(false) ,mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {
     SetLanguageDefinition(LanguageDefinition::HLSL());
     mLines.push_back(Line());
 }
@@ -671,6 +671,16 @@ void TextEditor::HandleKeyboardInputs() {
             EnterCharacter('\n', false);
         else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab)))
             EnterCharacter('\t', shift);
+        else if (!ctrl && !alt && !shift && ImGui::IsKeyPressed(ImGuiKey_F3))
+            FindNext(true);
+        else if (!ctrl && !alt && shift && ImGui::IsKeyPressed(ImGuiKey_F3))
+            FindPrevious(true);
+        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_C))
+            SetMatchCase(!GetMatchCase());
+        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_R))
+            SetFindRegEx(!GetFindRegEx());
+        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_W))
+            SetWholeWord(!GetWholeWord());
 
         if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
             for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
@@ -1764,6 +1774,306 @@ void TextEditor::Undo(int aSteps) {
 void TextEditor::Redo(int aSteps) {
     while (CanRedo() && aSteps-- > 0)
         mUndoBuffer[mUndoIndex++].Redo(this);
+}
+
+void TextEditor::SelectFound(Coordinates found) {
+    auto selectionStart = found, selectionEnd = found;
+    selectionStart.mColumn -= GetSelectionLength();
+    SetSelection(selectionStart, selectionEnd);
+    SetCursorPosition(selectionEnd);
+    mScrollToCursor = true;
+}
+
+bool TextEditor::CheckReversedSearch(Coordinates targetPos, Coordinates startPos, bool wrapAround) {
+
+    if(wrapAround) {
+        if ((startPos > mState.mCursorPosition && targetPos <= mState.mCursorPosition && targetPos < startPos)  ||
+            (startPos > mState.mCursorPosition && targetPos > mState.mCursorPosition && targetPos > startPos)) {
+            SelectFound(startPos);
+            return true;
+        }
+    }
+
+    if (startPos < mState.mCursorPosition && targetPos <= mState.mCursorPosition && targetPos > startPos) {
+        SelectFound(startPos);
+        return true;
+    }
+
+    return false;
+}
+
+// Using FindNext looks for the entry that finds
+// the target string as the next match.
+bool TextEditor::FindPrevious(bool wrapAround) {
+    auto targetPos = mState.mCursorPosition;
+    Coordinates startingPos = Coordinates(0, 0);
+    SetCursorPosition(startingPos);
+    auto wasFound = FindNext(wrapAround);
+
+    // if Cursor didn't move and FindNext returned false
+    // then string can't be found
+    if (mState.mCursorPosition == startingPos) {
+        if (wasFound) {// fringe case
+            SelectFound(targetPos);
+            return true;
+        }
+        SetCursorPosition(targetPos);
+        return false;
+    }
+
+    // Save first instance position to avoid repetitions
+    startingPos = mState.mCursorPosition;
+    auto firstPos = mState.mCursorPosition;
+    wasFound = FindNext(wrapAround);
+
+    // if Cursor didn't move then there is only one instance of the string
+    if (mState.mCursorPosition == firstPos) {
+        SelectFound(firstPos);
+        return true;
+    }
+    if (CheckReversedSearch(targetPos, startingPos,wrapAround))
+        return true;
+
+    // The matching condition is that before FindNext the cursor was located before the saved
+    // position and after FindNext the cursor is located after or at the saved position
+    while (mState.mCursorPosition != firstPos) {
+        startingPos = mState.mCursorPosition;
+        wasFound = FindNext(wrapAround);
+
+        if (!wasFound) {
+            SelectFound(targetPos);
+            SetCursorPosition(targetPos);
+            return false;
+        }
+
+        if (CheckReversedSearch(targetPos, startingPos,wrapAround))
+            return true;
+    }
+
+    if (CheckReversedSearch(targetPos, startingPos,wrapAround))
+        return true;
+
+    SelectFound(targetPos);
+    SetCursorPosition(targetPos);
+    return false;
+}
+
+// returns true if the string was found
+// returns false if the string was not found
+// and the cursor is not moved
+bool TextEditor::FindNext(bool wrapAround) {
+    auto curPos = mState.mCursorPosition;
+    unsigned long selectionLength = mFindWord.length();
+    size_t cindex = 0;
+
+    for (size_t ln = 0; ln < curPos.mLine; ln++)
+        cindex += GetLineCharacterCount(ln) + 1;
+    cindex += curPos.mColumn;
+
+    std::string wordLower = mFindWord;
+    if (!GetMatchCase())
+        std::transform(wordLower.begin(), wordLower.end(), wordLower.begin(), ::tolower);
+
+    std::string textSrc = GetText();
+    if (!GetMatchCase())
+        std::transform(textSrc.begin(), textSrc.end(), textSrc.begin(), ::tolower);
+
+    size_t textLoc;
+    if (GetWholeWord() || GetFindRegEx()) {
+
+        std::regex regularExpression;
+        if (GetFindRegEx()) {
+            try {
+                regularExpression.assign(mFindWord);
+            } catch (std::regex_error &e) {
+                return false;
+            }
+        } else
+            regularExpression.assign("\\b" + wordLower + "\\b");
+
+        std::sregex_iterator iter = std::sregex_iterator(textSrc.begin(), textSrc.end(), regularExpression);
+        std::sregex_iterator end;
+        while (iter != end ) {
+            iter++;
+            if (iter->position() > cindex)
+                break;
+        }
+
+        if (iter == end && !wrapAround)
+            return false;
+
+        textLoc = iter->position();
+        selectionLength = iter->length();
+        if (wrapAround) {
+            if (iter == end)
+                iter = std::sregex_iterator(textSrc.begin(), textSrc.end(), regularExpression);
+            textLoc = iter->position();
+            selectionLength = iter->length();
+        }
+    } else {
+        // non regex search
+        textLoc = textSrc.find(wordLower, cindex);
+        if (textLoc == std::string::npos && !wrapAround)
+            return false;
+
+        if (wrapAround) {
+            if (textLoc == std::string::npos)
+                textLoc = textSrc.find(wordLower, 0);
+        }
+    }
+    if (textLoc != std::string::npos) {
+        curPos.mLine = curPos.mColumn = 0;
+        cindex = 0;
+
+        for (size_t ln = 0; ln < mLines.size(); ln++) {
+            int charCount = GetLineCharacterCount(ln) + 1;
+
+            if (cindex + charCount > textLoc) {
+                curPos.mLine = ln;
+                curPos.mColumn = textLoc - cindex;
+
+                auto &line = mLines[curPos.mLine];
+                for (int i = 0; i < line.size(); i++)
+                    if (line[i].mChar == '\t')
+                        curPos.mColumn += (mTabSize - 1);
+                break;
+            } else {// just keep adding
+                cindex += charCount;
+            }
+        }
+    } else
+        return false;
+
+    auto selStart = curPos, selEnd = curPos;
+    SetSelectionLength(selectionLength);
+    selEnd.mColumn += selectionLength;
+    SetSelection(selStart, selEnd);
+    SetCursorPosition(selEnd);
+    mScrollToCursor = true;
+    return true;
+}
+
+void TextEditor::CountOccurrences(unsigned &position, unsigned &count) {
+    position = 0;
+    count = 0;
+
+    if (mFindWord.empty()) {
+        mScrollToCursor = true;
+        return;
+    }
+
+    bool wasFound;
+    auto startingPos = mState.mCursorPosition;
+    auto state = mState;
+    Coordinates begin = Coordinates(0,0);
+    mState.mCursorPosition = begin;
+    wasFound = FindNext(false);
+    auto initialPos = mState.mCursorPosition;
+
+    if (!wasFound) {
+        mState = state;
+        mScrollToCursor = true;
+        return;
+    }
+
+    count++;
+    position++;
+
+    while( mState.mCursorPosition < startingPos && position < GetText().length()) {
+        wasFound = FindNext(false);
+
+        if (wasFound) {
+            count++;
+            position++;
+
+        } else {
+            mState = state;
+            mScrollToCursor = true;
+            return;
+        }
+    }
+    while (wasFound && count < GetText().length()) {
+        wasFound = FindNext(false);
+        if (wasFound)
+            count++;
+    }
+
+    if (count == GetText().length() || position == GetText().length() ) {
+        count = 0;
+        position = 0;
+        mState = state;
+        mScrollToCursor = true;
+        return;
+    }
+
+    mState = state;
+    mScrollToCursor = true;
+    return;
+}
+
+bool TextEditor::Replace(bool next) {
+    auto state = mState;
+
+    if (mState.mCursorPosition == mState.mSelectionEnd && mState.mSelectionEnd > mState.mSelectionStart) {
+
+        mState.mCursorPosition = mState.mSelectionStart;
+        if(mState.mSelectionEnd.mColumn == 0) {
+            mState.mCursorPosition.mLine--;
+            mState.mCursorPosition.mColumn = GetLineMaxColumn(mState.mCursorPosition.mLine);
+        } else
+            mState.mCursorPosition.mColumn--;
+    }
+
+    bool canFind;
+    if (next)
+        canFind = FindNext(true);
+    else
+        canFind = FindPrevious(true);
+
+    if(canFind) {
+        UndoRecord u;
+        u.mBefore = mState;
+
+        auto selectionEnd = mState.mSelectionEnd;
+
+        u.mRemoved = GetSelectedText();
+        u.mRemovedStart = mState.mSelectionStart;
+        u.mRemovedEnd = mState.mSelectionEnd;
+
+        DeleteSelection();
+        if (GetFindRegEx()) {
+            std::string replacedText = std::regex_replace(GetText(), std::regex(mFindWord), mReplaceWord, std::regex_constants::format_first_only | std::regex_constants::format_no_copy);
+            u.mAdded = replacedText;
+        } else
+            u.mAdded = mReplaceWord;
+
+        u.mAddedStart = GetActualCursorCoordinates();
+
+        InsertText(u.mAdded);
+        SetCursorPosition(mState.mSelectionEnd);
+
+        u.mAddedEnd = GetActualCursorCoordinates();
+
+        mScrollToCursor = true;
+        ImGui::SetKeyboardFocusHere(0);
+
+        u.mAfter = mState;
+        AddUndo(u);
+
+        return true;
+    }
+    mState = state;
+    return false;
+}
+
+bool TextEditor::ReplaceAll() {
+    unsigned position, count;
+    CountOccurrences(position, count);
+
+    for (unsigned i = 0; i < count; i++)
+        Replace(true);
+
+    return true;
 }
 
 const TextEditor::Palette &TextEditor::GetDarkPalette() {

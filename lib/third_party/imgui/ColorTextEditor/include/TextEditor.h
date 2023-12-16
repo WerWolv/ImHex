@@ -259,7 +259,25 @@ public:
 	void Cut();
 	void Paste();
 	void Delete();
-
+	bool FindNext(bool wrapAround);
+    bool FindPrevious(bool wrapAround);
+    bool Replace(bool right);
+    bool ReplaceAll();
+	std::string &GetFindWord()  { return mFindWord; }
+	void SetFindWord(const std::string &aFindWord) { mFindWord = aFindWord; }
+	std::string &GetReplaceWord()  { return mReplaceWord; }
+	void SetReplaceWord(const std::string &aReplaceWord) { mReplaceWord = aReplaceWord; }
+    void SelectFound(Coordinates found);
+    bool CheckReversedSearch(Coordinates targetPos, Coordinates startPos, bool wrapped);
+    void CountOccurrences(unsigned &position, unsigned &count);
+    bool GetMatchCase() const { return mMatchCase; }
+    void SetMatchCase(bool matchCase)  { mMatchCase = matchCase; }
+    bool GetWholeWord()  const { return mWholeWord; }
+    void SetWholeWord(bool wholeWord)  { mWholeWord = wholeWord; }
+    bool GetFindRegEx()  const { return mFindRegEx; }
+    void SetFindRegEx(bool findRegEx)  { mFindRegEx = findRegEx; }
+    unsigned GetSelectionLength() const { return mSelectionLength; }
+    void SetSelectionLength(unsigned aLength) { mSelectionLength = aLength; }
 	bool CanUndo() const;
 	bool CanRedo() const;
 	void Undo(int aSteps = 1);
@@ -379,8 +397,13 @@ private:
 	Palette mPalette;
 	LanguageDefinition mLanguageDefinition;
 	RegexList mRegexList;
-
-	bool mCheckComments;
+	std::string mFindWord;
+	std::string mReplaceWord;
+    bool mMatchCase;
+    bool mWholeWord;
+    bool mFindRegEx;
+    unsigned mSelectionLength;
+    bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;
 	ImVec2 mCharAdvance;
