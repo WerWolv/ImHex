@@ -263,17 +263,17 @@ namespace hex::plugin::builtin::ui {
     }
 
     void HexEditor::drawSelectionFrame(u32 x, u32 y, Region selection, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &backgroundColor) const {
+        auto drawList = ImGui::GetWindowDrawList();
+
+        // Draw background color
+        drawList->AddRectFilled(cellPos, cellPos + cellSize, backgroundColor);
+
         if (!this->isSelectionValid()) return;
 
         if (!Region { byteAddress, 1 }.isWithin(selection))
             return;
 
         const color_t SelectionFrameColor = ImGui::GetColorU32(ImGuiCol_Text);
-
-        auto drawList = ImGui::GetWindowDrawList();
-
-        // Draw background color
-        drawList->AddRectFilled(cellPos, cellPos + cellSize, backgroundColor);
 
         // Draw vertical line at the left of first byte and the start of the line
         if (x == 0 || byteAddress == selection.getStartAddress())
