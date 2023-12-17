@@ -664,7 +664,7 @@
         "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "Vai a",
         "hex.builtin.view.bookmarks.button.remove": "Rimuovi",
-        "hex.builtin.view.bookmarks.default_title": "Segnalibro [0x{0:X} - 0x{1:X}]",
+        "hex.builtin.view.bookmarks.default_title": "Segnalibro [0x{0:02X} - 0x{1:02X}]",
         "hex.builtin.view.bookmarks.header.color": "Colore",
         "hex.builtin.view.bookmarks.header.comment": "Commento",
         "hex.builtin.view.bookmarks.header.name": "Nome",

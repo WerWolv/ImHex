@@ -665,7 +665,7 @@
         "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "Gehe zu",
         "hex.builtin.view.bookmarks.button.remove": "Entfernen",
-        "hex.builtin.view.bookmarks.default_title": "Lesezeichen [0x{0:X} - 0x{1:X}]",
+        "hex.builtin.view.bookmarks.default_title": "Lesezeichen [0x{0:02X} - 0x{1:02X}]",
         "hex.builtin.view.bookmarks.header.color": "Farbe",
         "hex.builtin.view.bookmarks.header.comment": "Kommentar",
         "hex.builtin.view.bookmarks.header.name": "Name",

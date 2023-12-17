@@ -766,7 +766,7 @@
         "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "Jump to",
         "hex.builtin.view.bookmarks.button.remove": "Remove",
-        "hex.builtin.view.bookmarks.default_title": "Bookmark [0x{0:X} - 0x{1:X}]",
+        "hex.builtin.view.bookmarks.default_title": "Bookmark [0x{0:02X} - 0x{1:02X}]",
         "hex.builtin.view.bookmarks.header.color": "Color",
         "hex.builtin.view.bookmarks.header.comment": "Comment",
         "hex.builtin.view.bookmarks.header.name": "Name",

@@ -678,7 +678,7 @@
         "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "跳至",
         "hex.builtin.view.bookmarks.button.remove": "移除",
-        "hex.builtin.view.bookmarks.default_title": "書籤 [0x0:{X} - 0x1:{X}]",
+        "hex.builtin.view.bookmarks.default_title": "書籤 [0x{0:02X} - 0x{1:02X}]",
         "hex.builtin.view.bookmarks.header.color": "顏色",
         "hex.builtin.view.bookmarks.header.comment": "註解",
         "hex.builtin.view.bookmarks.header.name": "名稱",

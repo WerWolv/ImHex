@@ -678,7 +678,7 @@
         "hex.builtin.view.bookmarks.address": "0x{0:02X} ~ 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "이동하기",
         "hex.builtin.view.bookmarks.button.remove": "지우기",
-        "hex.builtin.view.bookmarks.default_title": "북마크 [0x{0:X} ~ 0x{1:X}]",
+        "hex.builtin.view.bookmarks.default_title": "북마크 [0x{0:02X} ~ 0x{1:02X}]",
         "hex.builtin.view.bookmarks.header.color": "색상",
         "hex.builtin.view.bookmarks.header.comment": "설명",
         "hex.builtin.view.bookmarks.header.name": "이름",

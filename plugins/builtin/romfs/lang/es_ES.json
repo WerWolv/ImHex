@@ -664,7 +664,7 @@
         "hex.builtin.view.bookmarks.address": "0x{0:02X} - 0x{1:02X}",
         "hex.builtin.view.bookmarks.button.jump": "Saltar a",
         "hex.builtin.view.bookmarks.button.remove": "Eliminar",
-        "hex.builtin.view.bookmarks.default_title": "Marcador [0x{0:X} - 0x{1:X}]",
+        "hex.builtin.view.bookmarks.default_title": "Marcador [0x{0:02X} - 0x{1:02X}]",
         "hex.builtin.view.bookmarks.header.color": "Color",
         "hex.builtin.view.bookmarks.header.comment": "Comentario",
         "hex.builtin.view.bookmarks.header.name": "Nombre",
