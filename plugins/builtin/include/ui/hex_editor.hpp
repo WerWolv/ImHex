@@ -26,7 +26,7 @@ namespace hex::plugin::builtin::ui {
         enum class CellType { None, Hex, ASCII };
 
         void drawCell(u64 address, const u8 *data, size_t size, bool hovered, CellType cellType);
-        void drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize) const;
+        void drawSelectionFrame(u32 x, u32 y, Region selection, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &backgroundColor) const;
         void drawEditor(const ImVec2 &size);
         void drawFooter(const ImVec2 &size);
         void drawTooltip(u64 address, const u8 *data, size_t size) const;
