@@ -70,11 +70,6 @@ Pos=1233,38
 Size=687,1021
 Collapsed=0
 
-[Window][###hex.builtin.view.provider_settings.name]
-Pos=822,38
-Size=637,720
-Collapsed=0
-
 [Window][###hex.builtin.view.provider_settings.load_popup]
 Pos=585,322
 Size=314,208
