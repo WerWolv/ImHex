@@ -14,7 +14,63 @@
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
 
+#include <complex>
+
 namespace hex::plugin::builtin {
+
+    class PopupEE : public Popup<PopupEE> {
+    public:
+        PopupEE() : Popup("Se" /* Not going to */ "cr" /* make it that easy */ "et") {
+
+        }
+
+        void drawContent() override {
+            ImGuiIO& io = ImGui::GetIO();
+            ImVec2 size = scaled({ 320, 180 });
+            ImGui::InvisibleButton("canvas", size);
+            ImVec2 p0 = ImGui::GetItemRectMin();
+            ImVec2 p1 = ImGui::GetItemRectMax();
+
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            drawList->PushClipRect(p0, p1);
+
+            ImVec4 mouseData;
+            mouseData.x = (io.MousePos.x - p0.x) / size.x;
+            mouseData.y = (io.MousePos.y - p0.y) / size.y;
+            mouseData.z = io.MouseDownDuration[0];
+            mouseData.w = io.MouseDownDuration[1];
+
+            fx(drawList, p0, p1, size, mouseData, float(ImGui::GetTime()));
+        }
+
+        void fx(ImDrawList* drawList, ImVec2 startPos, ImVec2 endPos, ImVec2, ImVec4, float t) {
+            const float CircleRadius = 5_scaled;
+            const float Gap = 1_scaled;
+
+            constexpr static auto func = [](u32 x, u32 y, float t) {
+                return std::sin(t - std::sqrt(std::pow((x - 14), 2) + std::pow((y - 8), 2)));
+            };
+
+            float x = startPos.x + CircleRadius + Gap;
+            u32 ix = 0;
+            while (x < endPos.x) {
+                float y = startPos.y + CircleRadius + Gap;
+                u32 iy = 0;
+                while (y < endPos.y) {
+                    const float result = func(ix, iy, t);
+                    const float radius = CircleRadius * std::abs(result);
+                    const auto  color  = result < 0 ? ImColor(0xFF, 0, 0, 0xFF) : ImColor(0xFF, 0xFF, 0xFF, 0xFF);
+                    drawList->AddCircleFilled(ImVec2(x, y), radius, color);
+
+                    y  += CircleRadius * 2 + Gap;
+                    iy += 1;
+                }
+
+                x  += CircleRadius * 2 + Gap;
+                ix += 1;
+            }
+        }
+    };
 
     ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name") {
         // Add "About" menu item to the help menu
@@ -36,8 +92,7 @@ namespace hex::plugin::builtin {
     }
 
 
-    void ViewAbout::drawAboutMainPage()
-    {
+    void ViewAbout::drawAboutMainPage() {
         // Draw main about table
         if (ImGui::BeginTable("about_table", 2, ImGuiTableFlags_SizingFixedFit)) {
             ImGui::TableNextRow();
@@ -48,9 +103,16 @@ namespace hex::plugin::builtin {
                 this->m_logoTexture = ImGuiExt::Texture(romfs::get("assets/common/logo.png").span(), ImGuiExt::Texture::Filter::Linear);
 
             ImGui::Image(this->m_logoTexture, scaled({ 100, 100 }));
-            if (ImGui::IsItemHovered() && ImGui::IsItemClicked()) {
+            if (ImGui::IsItemClicked()) {
                 this->m_clickCount += 1;
             }
+
+            if (this->m_clickCount >= (2 * 3 + 4)) {
+                this->getWindowOpenState() = false;
+                PopupEE::open();
+                this->m_clickCount = 0;
+            }
+
             ImGui::TableNextColumn();
 
             ImGuiExt::BeginSubWindow("Build Information", ImVec2(0, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);

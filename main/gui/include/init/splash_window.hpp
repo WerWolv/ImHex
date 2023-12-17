@@ -74,7 +74,7 @@ namespace hex::init {
         ImGuiExt::Texture splashBackgroundTexture;
         ImGuiExt::Texture splashTextTexture;
         std::future<bool> tasksSucceeded;
-        std::array<Highlight, 3> highlights;
+        std::array<Highlight, 4> highlights;
         float progressLerp = 0.0F;
     };
 
