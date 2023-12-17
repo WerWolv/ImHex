@@ -1,10 +1,11 @@
 #if !defined(OS_WEB)
-#include <hex/helpers/logger.hpp>
+
 
 #include "content/providers/disk_provider.hpp"
 
 #include <hex/api/localization_manager.hpp>
 
+#include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/ui/imgui_imhex_extensions.h>
@@ -15,6 +16,7 @@
 #include <filesystem>
 
 #include <imgui.h>
+#include <fonts/codicons_font.h>
 
 #include <nlohmann/json.hpp>
 
@@ -428,12 +430,20 @@ namespace hex::plugin::builtin {
     bool DiskProvider::drawLoadInterface() {
         #if defined(OS_WINDOWS)
 
-            if (this->m_availableDrives.empty())
+            if (this->m_availableDrives.empty()) {
                 this->reloadDrives();
+                this->m_elevated = hex::isProcessElevated();
+            }
+
+            if (!this->m_elevated) {
+                ImGui::PushTextWrapPos(0);
+                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError), ICON_VS_SHIELD "{}", "hex.builtin.provider.disk.elevation"_lang);
+                ImGui::PopTextWrapPos();
+                ImGui::NewLine();
+            }
 
             ImGui::PushItemWidth(300_scaled);
             if (ImGui::BeginListBox("hex.builtin.provider.disk.selected_disk"_lang)) {
-
                 ImGui::PushID(1);
                 for (const auto &[path, friendlyName] : this->m_availableDrives) {
                     if (ImGui::Selectable(friendlyName.c_str(), this->m_path == path)) {

@@ -60,6 +60,7 @@ namespace hex::plugin::builtin {
         std::set<DriveInfo> m_availableDrives;
         std::fs::path m_path;
         std::string m_friendlyName;
+        bool m_elevated = false;
 
 #if defined(OS_WINDOWS)
         void *m_diskHandle = reinterpret_cast<void*>(-1);
