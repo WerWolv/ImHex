@@ -909,7 +909,7 @@
         "hex.builtin.view.patches.name": "Patches",
         "hex.builtin.view.patches.offset": "Desvio",
         "hex.builtin.view.patches.orig": "Valor Original",
-        "hex.builtin.view.patches.patch": "Valor Atualizado",
+        "hex.builtin.view.patches.patch": "",
         "hex.builtin.view.patches.remove": "Remover Atualização",
         "hex.builtin.view.pattern_data.name": "Padrão de Dados",
         "hex.builtin.view.pattern_editor.accept_pattern": "Aceitar padrão",

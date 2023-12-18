@@ -18,24 +18,24 @@ namespace hex::plugin::builtin {
         static std::string rgba8;
 
         struct BitValue {
-            int   bits;
-            float color;
-            float saturationMultiplier;
-            char  name;
-            u8    index;
+            int         bits;
+            float       color;
+            float       saturationMultiplier;
+            const char *name;
+            u8          index;
         };
 
         static std::array bitValues = {
-            BitValue{ 8, 0.00F, 1.0F, 'R', 0 },
-            BitValue{ 8, 0.33F, 1.0F, 'G', 1 },
-            BitValue{ 8, 0.66F, 1.0F, 'B', 2 },
-            BitValue{ 8, 0.00F, 0.0F, 'A', 3 }
+            BitValue{ 8, 0.00F, 1.0F, "R", 0 },
+            BitValue{ 8, 0.33F, 1.0F, "G", 1 },
+            BitValue{ 8, 0.66F, 1.0F, "B", 2 },
+            BitValue{ 8, 0.00F, 0.0F, "A", 3 }
         };
 
         if (ImGui::BeginTable("##color_picker_table", 3, ImGuiTableFlags_BordersInnerV)) {
-            ImGui::TableSetupColumn(" Color Picker", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 300_scaled);
-            ImGui::TableSetupColumn(" Components", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 105_scaled);
-            ImGui::TableSetupColumn(" Formats", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize);
+            ImGui::TableSetupColumn(hex::format(" {}", "hex.builtin.tools.color"_lang).c_str(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 300_scaled);
+            ImGui::TableSetupColumn(hex::format(" {}", "hex.builtin.tools.color.components"_lang).c_str(), ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 105_scaled);
+            ImGui::TableSetupColumn(hex::format(" {}", "hex.builtin.tools.color.formats"_lang).c_str(), ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_NoResize);
 
             ImGui::TableHeadersRow();
 
@@ -43,19 +43,21 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             // Draw main color picker widget
-            ImVec2 startCursor, endCursor;
             {
                 ImGui::PushItemWidth(-1);
-                startCursor = ImGui::GetCursorPos();
                 ImGui::ColorPicker4("hex.builtin.tools.color"_lang, pickedColor.data(), ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_DisplayHex);
-                endCursor = ImGui::GetCursorPos();
                 ImGui::ColorButton("##color_button", ImColor(pickedColor[0], pickedColor[1], pickedColor[2], pickedColor[3]), ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoDragDrop | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(300_scaled, 0));
                 ImGui::PopItemWidth();
             }
 
             ImGui::TableNextColumn();
 
-            const auto colorFormatName = hex::format("{}{}{}{}", bitValues[0].name, bitValues[1].name, bitValues[2].name, bitValues[3].name);
+            const auto colorFormatName = hex::format("{}{}{}{}",
+                bitValues[0].bits > 0 ? bitValues[0].name : "",
+                bitValues[1].bits > 0 ? bitValues[1].name : "",
+                bitValues[2].bits > 0 ? bitValues[2].name : "",
+                bitValues[3].bits > 0 ? bitValues[3].name : ""
+            );
 
             // Draw color bit count sliders
             {
@@ -71,7 +73,7 @@ namespace hex::plugin::builtin {
                     // Draw slider
                     ImGui::PushID(&bitValue->bits);
                     auto format = hex::format("%d\n{}", bitValue->name);
-                    ImGui::VSliderInt("##slider", ImVec2(18_scaled, (endCursor - startCursor).y - 3_scaled), &bitValue->bits, 0, 16, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
+                    ImGui::VSliderInt("##slider", ImVec2(18_scaled, 350_scaled), &bitValue->bits, 0, 16, format.c_str(), ImGuiSliderFlags_AlwaysClamp);
                     ImGui::PopID();
 
                     ImGui::PopStyleColor(4);
@@ -135,7 +137,7 @@ namespace hex::plugin::builtin {
                 }
 
                 // Draw a table with the color values
-                if (ImGui::BeginTable("##value_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX , ImVec2(0, 0))) {
+                if (ImGui::BeginTable("##value_table", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoHostExtendX , ImVec2(230_scaled, 0))) {
                     ImGui::TableSetupColumn("name",  ImGuiTableColumnFlags_WidthFixed);
                     ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthStretch);
 
@@ -158,7 +160,7 @@ namespace hex::plugin::builtin {
 
                     // Draw the different representations
 
-                    drawValue("HEX", [&] {
+                    drawValue("hex.builtin.tools.color.formats.hex"_lang, [&] {
                         u64 hexValue = 0;
                         for (u32 index = 0; auto &bitValue : bitValues) {
                             hexValue <<= bitValue.bits;
@@ -173,15 +175,15 @@ namespace hex::plugin::builtin {
                         return hex::format("{}({}, {}, {}, {})", colorFormatName, intColor[0], intColor[1], intColor[2], intColor[3]);
                     });
 
-                    drawValue("Vector4f", [&] {
+                    drawValue("hex.builtin.tools.color.formats.vec4"_lang, [&] {
                         return hex::format("{{ {:.2}F, {:.2}F, {:.2}F, {:.2}F }}", floatColor[0], floatColor[1], floatColor[2], floatColor[3]);
                     });
 
-                    drawValue("Percentage", [&] {
+                    drawValue("hex.builtin.tools.color.formats.percent"_lang, [&] {
                         return hex::format("{{ {}%, {}%, {}%, {}% }}", u32(floatColor[0] * 100), u32(floatColor[1] * 100), u32(floatColor[2] * 100), u32(floatColor[3] * 100));
                     });
 
-                    drawValue("Color Name", [&] -> std::string {
+                    drawValue("hex.builtin.tools.color.formats.color_name"_lang, [&] -> std::string {
                         const static auto ColorTable = [] {
                             auto colorMap = nlohmann::json::parse(romfs::get("assets/common/color_names.json").string()).get<std::map<std::string, std::string>>();
 

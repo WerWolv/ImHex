@@ -909,7 +909,7 @@
         "hex.builtin.view.patches.name": "パッチ",
         "hex.builtin.view.patches.offset": "オフセット",
         "hex.builtin.view.patches.orig": "元の値",
-        "hex.builtin.view.patches.patch": "パッチした値",
+        "hex.builtin.view.patches.patch": "",
         "hex.builtin.view.patches.remove": "パッチを削除",
         "hex.builtin.view.pattern_data.name": "パターンデータ",
         "hex.builtin.view.pattern_editor.accept_pattern": "使用できるパターン",

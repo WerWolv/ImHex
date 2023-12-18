@@ -923,7 +923,7 @@
         "hex.builtin.view.patches.name": "修補程式",
         "hex.builtin.view.patches.offset": "位移",
         "hex.builtin.view.patches.orig": "原始數值",
-        "hex.builtin.view.patches.patch": "修補後的值",
+        "hex.builtin.view.patches.patch": "",
         "hex.builtin.view.patches.remove": "移除修補程式",
         "hex.builtin.view.pattern_data.name": "模式資料",
         "hex.builtin.view.pattern_editor.accept_pattern": "接受模式",

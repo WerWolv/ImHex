@@ -923,7 +923,7 @@
         "hex.builtin.view.patches.name": "패치",
         "hex.builtin.view.patches.offset": "오프셋",
         "hex.builtin.view.patches.orig": "원본 값",
-        "hex.builtin.view.patches.patch": "패치된 값",
+        "hex.builtin.view.patches.patch": "",
         "hex.builtin.view.patches.remove": "패치 제거",
         "hex.builtin.view.pattern_data.name": "패턴 데이터",
         "hex.builtin.view.pattern_editor.accept_pattern": "패턴 적용",
