@@ -182,12 +182,16 @@ namespace hex::plugin::builtin {
         });
 
         EventFrameBegin::subscribe([] {
-            if (ImGui::BeginPopup("ProviderMenu")) {
-                if (rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty())
+            if (rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty()) {
+                if (ImGui::BeginPopup("ProviderMenu")) {
                     drawProviderContextMenu(rightClickedProvider);
-
-                ImGui::EndPopup();
+                    ImGui::EndPopup();
+                }
             }
+        });
+
+        EventProviderChanged::subscribe([](auto, auto){
+            rightClickedProvider = nullptr;
         });
 
         ContentRegistry::Interface::addToolbarItem([] {
