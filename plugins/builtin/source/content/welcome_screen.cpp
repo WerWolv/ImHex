@@ -10,7 +10,6 @@
 #include <hex/ui/view.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/debugging.hpp>
 
 #include <hex/api/project_file_manager.hpp>
 

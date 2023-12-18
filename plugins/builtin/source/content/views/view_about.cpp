@@ -3,6 +3,7 @@
 #include <hex/api_urls.hpp>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/plugin_manager.hpp>
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
@@ -188,7 +189,6 @@ namespace hex::plugin::builtin {
             DonationPage { ImGuiExt::Texture(romfs::get("assets/common/donation/patreon.png").span<std::byte>(), ImGuiExt::Texture::Filter::Linear), "https://patreon.com/werwolv"          },
         };
 
-        ImGui::NewLine();
         if (ImGui::BeginTable("DonationLinks", 5, ImGuiTableFlags_SizingStretchSame)) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
@@ -261,7 +261,6 @@ namespace hex::plugin::builtin {
     }
 
     void ViewAbout::drawLibraryCreditsPage() {
-
         struct Library {
             const char *name;
             const char *author;
@@ -335,6 +334,53 @@ namespace hex::plugin::builtin {
         drawTable("External", ExternalLibraries);
         drawTable("Third Party", ThirdPartyLibraries);
     }
+
+    void ViewAbout::drawLoadedPlugins() {
+        const auto &plugins = PluginManager::getPlugins();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+        ImGuiExt::BeginSubWindow("hex.builtin.view.help.about.plugins"_lang);
+        ImGui::PopStyleVar();
+        {
+            if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit)) {
+                ImGui::TableSetupScrollFreeze(0, 1);
+                ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.plugin"_lang);
+                ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.author"_lang);
+                ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.desc"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5);
+                ImGui::TableSetupColumn("##loaded", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
+
+                ImGui::TableHeadersRow();
+
+                ImGuiListClipper clipper;
+                clipper.Begin(plugins.size());
+
+                while (clipper.Step()) {
+                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+                        const auto &plugin = plugins[i];
+
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormattedColored(
+                            plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight) : ImGui::GetStyleColorVec4(ImGuiCol_Text),
+                            "{}", plugin.getPluginName().c_str()
+                        );
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
+                        ImGui::TableNextColumn();
+                        ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
+                    }
+                }
+
+                clipper.End();
+
+                ImGui::EndTable();
+            }
+        }
+        ImGuiExt::EndSubWindow();
+    }
+
 
     void ViewAbout::drawPathsPage() {
         constexpr static std::array<std::pair<const char *, fs::ImHexPath>, size_t(fs::ImHexPath::END)> PathTypes = {
@@ -651,6 +697,7 @@ namespace hex::plugin::builtin {
             Tab { "ImHex",                                      &ViewAbout::drawAboutMainPage       },
             Tab { "hex.builtin.view.help.about.contributor",    &ViewAbout::drawContributorPage     },
             Tab { "hex.builtin.view.help.about.libs",           &ViewAbout::drawLibraryCreditsPage  },
+            Tab { "hex.builtin.view.help.about.plugins",        &ViewAbout::drawLoadedPlugins       },
             Tab { "hex.builtin.view.help.about.paths",          &ViewAbout::drawPathsPage           },
             Tab { "hex.builtin.view.help.about.release_notes",  &ViewAbout::drawReleaseNotesPage    },
             Tab { "hex.builtin.view.help.about.commits",        &ViewAbout::drawCommitHistoryPage   },

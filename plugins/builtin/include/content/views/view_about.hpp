@@ -27,6 +27,7 @@ namespace hex::plugin::builtin {
         void drawAboutMainPage();
         void drawContributorPage();
         void drawLibraryCreditsPage();
+        void drawLoadedPlugins();
         void drawPathsPage();
         void drawReleaseNotesPage();
         void drawCommitHistoryPage();
