@@ -414,7 +414,7 @@ namespace hex::plugin::builtin {
                 ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImVec2 { ImHexApi::System::getMainWindowSize().x - windowSize.x - 100_scaled, 0 });
                 ImGui::SetNextWindowSize(windowSize);
                 if (ImGui::Begin("##achievement_unlocked", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs)) {
-                    ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
+                    ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
 
                     // Draw unlock text
                     ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "{}", "hex.builtin.view.achievements.unlocked"_lang);

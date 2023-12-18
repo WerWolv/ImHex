@@ -148,6 +148,7 @@ namespace hex::plugin::builtin {
     void MemoryFileProvider::renameFile() {
         PopupTextInput::open("hex.builtin.provider.mem_file.rename"_lang, "hex.builtin.provider.mem_file.rename.desc"_lang, [this](const std::string &name) {
             this->m_name = name;
+            RequestUpdateWindowTitle::post();
         });
     }
 

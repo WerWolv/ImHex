@@ -386,16 +386,20 @@ namespace hex::plugin::builtin {
                         u64 begin = region.getStartAddress();
                         u64 end   = region.getEndAddress();
 
-                        ImGui::PushItemWidth(100_scaled);
-                        ImGuiExt::InputHexadecimal("##begin", &begin);
-                        ImGui::SameLine();
-                        ImGui::TextUnformatted(" - ");
-                        ImGui::SameLine();
-                        ImGuiExt::InputHexadecimal("##end", &end);
-                        ImGui::PopItemWidth();
+                        if (!locked) {
+                            ImGui::PushItemWidth(100_scaled);
+                            ImGuiExt::InputHexadecimal("##begin", &begin);
+                            ImGui::SameLine(0, 0);
+                            ImGui::TextUnformatted(" - ");
+                            ImGui::SameLine(0, 0);
+                            ImGuiExt::InputHexadecimal("##end", &end);
+                            ImGui::PopItemWidth();
 
-                        if (end > begin)
-                            region = Region(begin, end - begin + 1);
+                            if (end > begin)
+                                region = Region(begin, end - begin + 1);
+                        } else {
+                            ImGuiExt::TextFormatted("0x{:02X} - 0x{:02X}", begin, end);
+                        }
 
                         ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
                         ImGui::TableNextColumn();

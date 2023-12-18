@@ -57,12 +57,7 @@ namespace hex::plugin::builtin {
             if (!detached) continue;
 
             // Create a new window for the tool
-            if (ImGui::Begin(View::toWindowName(name).c_str(), &detached, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
-                if (!ImGui::IsWindowDocked())
-                    ImGui::SetWindowSize(scaled(ImVec2(600, 0)));
-
-                ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
-
+            if (ImGui::Begin(View::toWindowName(name).c_str(), &detached, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
                 // Draw the tool
                 function();
 
@@ -71,7 +66,7 @@ namespace hex::plugin::builtin {
                     this->m_dragStartIterator = tools.end();
 
                     // Attach the newly created window to the cursor, so it gets dragged around
-                    GImGui->MovingWindow = ImGui::GetCurrentWindow();
+                    GImGui->MovingWindow = ImGui::GetCurrentWindowRead();
                     GImGui->ActiveId = GImGui->MovingWindow->MoveId;
                 }
             }

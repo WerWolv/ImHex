@@ -45,6 +45,12 @@ namespace hex::plugin::builtin {
             return ImGuiWindowFlags_AlwaysAutoResize;
         }
 
+        ImVec2 getMinSize() const override {
+            return scaled({ 400, 200 });
+        }
+
+        ImVec2 getMaxSize() const override { return this->getMinSize(); }
+
     private:
         std::string m_input;
         std::string m_result;

@@ -262,16 +262,18 @@ namespace hex::plugin::builtin::ui {
         }
     }
 
-    void HexEditor::drawSelectionFrame(u32 x, u32 y, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize) const {
+    void HexEditor::drawSelectionFrame(u32 x, u32 y, Region selection, u64 byteAddress, u16 bytesPerCell, const ImVec2 &cellPos, const ImVec2 &cellSize, const ImColor &backgroundColor) const {
+        auto drawList = ImGui::GetWindowDrawList();
+
+        // Draw background color
+        drawList->AddRectFilled(cellPos, cellPos + cellSize, backgroundColor);
+
         if (!this->isSelectionValid()) return;
 
-        const auto selection = getSelection();
         if (!Region { byteAddress, 1 }.isWithin(selection))
             return;
 
         const color_t SelectionFrameColor = ImGui::GetColorU32(ImGuiCol_Text);
-
-        auto drawList = ImGui::GetWindowDrawList();
 
         // Draw vertical line at the left of first byte and the start of the line
         if (x == 0 || byteAddress == selection.getStartAddress())
@@ -302,6 +304,12 @@ namespace hex::plugin::builtin::ui {
             this->m_bytesPerRow = 64;
             ContentRegistry::Settings::write("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", this->m_bytesPerRow);
             return;
+        }
+
+        const auto selection = getSelection();
+
+        if (this->m_provider == nullptr || this->m_provider->getActualSize() == 0) {
+            ImGuiExt::TextFormattedCentered("{}", "hex.builtin.hex_editor.no_bytes"_lang);
         }
 
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
@@ -363,6 +371,12 @@ namespace hex::plugin::builtin::ui {
                 ImGuiListClipper clipper;
 
                 u64 numRows = std::ceil(this->m_provider->getSize() / static_cast<long double>(this->m_bytesPerRow));
+                if (numRows == 0) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("        ");
+                }
+
                 clipper.Begin(numRows + size.y / CharacterSize.y - 3, CharacterSize.y);
                 while (clipper.Step()) {
                     this->m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
@@ -449,13 +463,8 @@ namespace hex::plugin::builtin::ui {
 
                                 // Draw highlights and selection
                                 if (backgroundColor.has_value()) {
-                                    auto drawList = ImGui::GetWindowDrawList();
-
-                                    // Draw background color
-                                    drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
-
                                     // Draw frame around mouse selection
-                                    this->drawSelectionFrame(x, y, byteAddress, bytesPerCell, cellStartPos, cellSize);
+                                    this->drawSelectionFrame(x, y, selection, byteAddress, bytesPerCell, cellStartPos, cellSize, backgroundColor.value());
                                 }
 
                                 const bool cellHovered = ImGui::IsMouseHoveringRect(cellStartPos, cellStartPos + cellSize, false);
@@ -513,12 +522,7 @@ namespace hex::plugin::builtin::ui {
 
                                         // Draw highlights and selection
                                         if (backgroundColor.has_value()) {
-                                            auto drawList = ImGui::GetWindowDrawList();
-
-                                            // Draw background color
-                                            drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
-
-                                            this->drawSelectionFrame(x, y, byteAddress, 1, cellStartPos, cellSize);
+                                            this->drawSelectionFrame(x, y, selection, byteAddress, 1, cellStartPos, cellSize, backgroundColor.value());
                                         }
 
                                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (this->m_characterCellPadding * 1_scaled) / 2);
@@ -587,12 +591,7 @@ namespace hex::plugin::builtin::ui {
 
                                             // Draw highlights and selection
                                             if (backgroundColor.has_value()) {
-                                                auto drawList = ImGui::GetWindowDrawList();
-
-                                                // Draw background color
-                                                drawList->AddRectFilled(cellStartPos, cellStartPos + cellSize, backgroundColor.value());
-
-                                                this->drawSelectionFrame(x, y, address, 1, cellStartPos, cellSize);
+                                                this->drawSelectionFrame(x, y, selection, address, 1, cellStartPos, cellSize, backgroundColor.value());
                                             }
 
                                             auto startPos = ImGui::GetCursorPos();
@@ -676,8 +675,6 @@ namespace hex::plugin::builtin::ui {
                         this->m_scrollPosition = ImGui::GetScrollY();
                     }
                 }
-
-
             }
 
             ImGui::EndTable();

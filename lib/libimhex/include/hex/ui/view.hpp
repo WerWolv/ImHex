@@ -167,13 +167,12 @@ namespace hex {
 
         void draw() final {
             if (this->shouldDraw()) {
-                ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
-
                 if (this->getWindowOpenState())
                     ImGui::OpenPopup(View::toWindowName(this->getUnlocalizedName()).c_str());
 
                 ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-                if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), &this->getWindowOpenState(), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | this->getWindowFlags())) {
+                ImGui::SetNextWindowSizeConstraints(this->getMinSize(), this->getMaxSize());
+                if (ImGui::BeginPopupModal(View::toWindowName(this->getUnlocalizedName()).c_str(), this->hasCloseButton() ? &this->getWindowOpenState() : nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | this->getWindowFlags())) {
                     this->drawContent();
 
                     ImGui::EndPopup();
@@ -183,6 +182,8 @@ namespace hex {
                     this->getWindowOpenState() = false;
             }
         }
+
+        virtual bool hasCloseButton() const { return true; }
     };
 
 }

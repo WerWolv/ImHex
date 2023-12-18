@@ -13,6 +13,8 @@
 #include <wolv/io/file.hpp>
 #include <wolv/utils/string.hpp>
 
+#include <ranges>
+
 namespace hex::plugin::builtin {
 
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
@@ -275,12 +277,15 @@ namespace hex::plugin::builtin {
                             // Turn the entered value into bytes
                             auto bytes = editingFunction.value()(this->m_editingValue, this->m_endian);
 
+                            if (this->m_invert)
+                                std::ranges::transform(bytes, bytes.begin(), [](auto byte) { return byte ^ 0xFF; });
+
                             // Write those bytes to the selected provider at the current address
                             this->m_selectedProvider->write(this->m_startAddress, bytes.data(), bytes.size());
 
                             // Disable editing mode
                             this->m_editingValue.clear();
-                            editing                  = false;
+                            editing = false;
 
                             // Reload all inspector rows
                             this->m_shouldInvalidate = true;
@@ -288,7 +293,7 @@ namespace hex::plugin::builtin {
                         ImGui::PopStyleVar();
 
                         // Disable editing mode when clicking outside the input text box
-                        if (!ImGui::IsItemHovered() && ImGui::IsAnyMouseDown()) {
+                        if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
                             this->m_editingValue.clear();
                             editing = false;
                         }

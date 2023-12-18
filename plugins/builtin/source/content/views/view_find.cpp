@@ -740,7 +740,9 @@ namespace hex::plugin::builtin {
                         ImGui::EndDisabled();
                     }
 
-                    ImGui::Checkbox("hex.builtin.view.find.value.range"_lang, &settings.range);
+                    if (ImGui::Checkbox("hex.builtin.view.find.value.range"_lang, &settings.range)) {
+                        settings.inputMax = settings.inputMin;
+                    }
                     ImGui::NewLine();
 
                     const std::array<std::string, 10> InputTypes = {

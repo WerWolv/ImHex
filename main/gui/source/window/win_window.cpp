@@ -402,7 +402,7 @@ namespace hex {
     }
 
     void Window::beginNativeWindowFrame() {
-        g_titleBarHeight = ImGui::GetCurrentWindow()->MenuBarHeight();
+        g_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
     }
 
     void Window::endNativeWindowFrame() {

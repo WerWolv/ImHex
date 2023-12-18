@@ -29,9 +29,9 @@ namespace hex::dbg {
                 if constexpr (std::same_as<Type, bool>) {
                     ImGui::Checkbox(name.data(), &variable);
                 } else if constexpr (std::integral<Type> || std::floating_point<Type>) {
-                    ImGui::InputScalar(name.data(), ImGuiExt::getImGuiDataType<Type>(), &variable);
+                    ImGui::DragScalar(name.data(), ImGuiExt::getImGuiDataType<Type>(), &variable);
                 } else if constexpr (std::same_as<Type, ImVec2>) {
-                    ImGui::InputFloat2(name.data(), &variable.x);
+                    ImGui::DragFloat2(name.data(), &variable.x);
                 } else if constexpr (std::same_as<Type, std::string>) {
                     ImGui::InputText(name.data(), variable);
                 } else if constexpr (std::same_as<Type, ImColor>) {

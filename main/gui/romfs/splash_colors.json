@@ -1,0 +1,71 @@
+[
+    {
+        "name": "Default Colors",
+        "colors": [
+            "random",
+            "random",
+            "random"
+        ]
+    },
+    {
+        "name": "Christmas",
+        "colors": [
+            "#d3011a",
+            "#00843b"
+        ],
+        "time": {
+            "start": [ 12, 24 ],
+            "end": [ 12, 26 ]
+        }
+    },
+    {
+        "name": "Pride",
+        "colors": [
+            "#5dcefa",
+            "#f6a6b9",
+            "#fdfdfd"
+        ],
+        "time": {
+            "start": [ 6, 1 ],
+            "end": [ 6, 1 ]
+        }
+    },
+    {
+        "name": "Pride",
+        "colors": [
+            "#e40001",
+            "#fe8a00",
+            "#fdec00",
+            "#007d22",
+            "#004bfe",
+            "#740585"
+        ],
+        "time": {
+            "start": [ 6, 1 ],
+            "end": [ 6, 1 ]
+        }
+    },
+    {
+        "name": "Pride",
+        "colors": [
+            "#fb0073",
+            "#b24b98",
+            "#0134ab"
+        ],
+        "time": {
+            "start": [ 6, 1 ],
+            "end": [ 6, 1 ]
+        }
+    },
+    {
+        "name": "UA",
+        "colors": [
+            "#005bbc",
+            "#ffd600"
+        ],
+        "time": {
+            "start": [ 2, 20 ],
+            "end": [ 2, 20 ]
+        }
+    }
+]

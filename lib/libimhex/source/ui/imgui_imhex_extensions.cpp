@@ -281,10 +281,12 @@ namespace ImGuiExt {
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, true, style.FrameRounding);
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
-        RenderTextWrapped(bb.Min + style.FramePadding * 2, label, nullptr, CalcWrapWidthForPos(window->DC.CursorPos, window->DC.TextWrapPos));
+        RenderTextClipped(bb.Min + style.FramePadding * 2, bb.Max - style.FramePadding, label, nullptr, nullptr);
         PopStyleColor();
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text));
-        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &bb);
+        auto clipBb = bb;
+        clipBb.Max.x -= style.FramePadding.x;
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &clipBb);
         PopStyleColor();
 
         PopStyleVar(2);
@@ -332,10 +334,12 @@ namespace ImGuiExt {
         RenderNavHighlight(bb, id);
         RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_ButtonActive));
-        RenderTextWrapped(bb.Min + style.FramePadding * 2, label, nullptr, CalcWrapWidthForPos(window->DC.CursorPos, window->DC.TextWrapPos));
+        RenderTextClipped(bb.Min + style.FramePadding * 2, bb.Max - style.FramePadding, label, nullptr, nullptr);
         PopStyleColor();
         PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text));
-        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &bb);
+        auto clipBb = bb;
+        clipBb.Max.x -= style.FramePadding.x;
+        RenderTextClipped(bb.Min + style.FramePadding * 2 + ImVec2(style.FramePadding.x * 2, label_size.y), bb.Max - style.FramePadding, description, nullptr, &text_size, style.ButtonTextAlign, &clipBb);
         PopStyleColor();
 
         RenderFrame(ImVec2(bb.Min.x, bb.Max.y - 5 * hex::ImHexApi::System::getGlobalScale()), bb.Max, GetColorU32(ImGuiCol_ScrollbarBg), false, style.FrameRounding);

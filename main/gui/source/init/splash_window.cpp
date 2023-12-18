@@ -7,6 +7,7 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/logger.hpp>
+#include <fmt/chrono.h>
 
 #include <romfs/romfs.hpp>
 
@@ -24,7 +25,7 @@
 #include <future>
 #include <numeric>
 #include <random>
-
+#include <nlohmann/json.hpp>
 
 using namespace std::literals::chrono_literals;
 
@@ -40,7 +41,7 @@ namespace hex::init {
     WindowSplash::WindowSplash() : m_window(nullptr) {
         this->initGLFW();
         this->initImGui();
-        this->initMyself();
+        this->loadAssets();
 
         ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
 
@@ -76,6 +77,65 @@ namespace hex::init {
 
         // Center the splash screen on the monitor
         glfwSetWindowPos(window, monitorX + (mode->width - windowWidth) / 2, monitorY + (mode->height - windowHeight) / 2);
+    }
+
+    static ImColor getHighlightColor(u32 index) {
+        static auto highlightConfig = nlohmann::json::parse(romfs::get("splash_colors.json").string());
+        static std::list<nlohmann::json> selectedConfigs;
+
+        if (selectedConfigs.empty()) {
+            const auto now = []{
+                const auto now = std::chrono::system_clock::now();
+                const auto time = std::chrono::system_clock::to_time_t(now);
+
+                return fmt::localtime(time);
+            }();
+
+            for (const auto &colorConfig : highlightConfig) {
+                if (!colorConfig.contains("time"))
+                    selectedConfigs.push_back(colorConfig);
+                else {
+                    const auto &time = colorConfig["time"];
+                    const auto &start = time["start"];
+                    const auto &end = time["end"];
+
+                    if ((now.tm_mon + 1) >= start[0] && (now.tm_mon + 1) <= end[0]) {
+                        if (now.tm_mday >= start[1] && now.tm_mday <= end[1]) {
+                            selectedConfigs.push_back(colorConfig);
+                        }
+                    }
+                }
+            }
+
+            // Remove the default color theme if there's another one available
+            if (selectedConfigs.size() != 1)
+                selectedConfigs.erase(selectedConfigs.begin());
+        }
+
+        std::mt19937 random(std::random_device{}());
+
+        static const auto &selectedConfig = *std::next(selectedConfigs.begin(), random() % selectedConfigs.size());
+
+        const auto colorString = selectedConfig["colors"][index % selectedConfig["colors"].size()].get<std::string>();
+
+        log::debug("Using '{}' highlight color theme", selectedConfig["name"].get<std::string>());
+        if (colorString == "random") {
+            float r, g, b;
+            ImGui::ColorConvertHSVtoRGB(
+                    float(random() % 360) / 100.0F,
+                    float(25 + random() % 70) / 100.0F,
+                    float(85 + random() % 10) / 100.0F,
+                    r, g, b);
+
+            return { r, g, b, 0x50 / 255.0F };
+        } else if (colorString.starts_with("#")) {
+            u32 color = std::strtoul(colorString.substr(1).c_str(), nullptr, 16);
+
+            return IM_COL32((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, 0x50);
+        } else {
+            log::error("Invalid color string '{}'", colorString);
+            return IM_COL32(0xFF, 0x00, 0xFF, 0xFF);
+        }
     }
 
     void WindowSplash::createTask(const Task& task) {
@@ -440,7 +500,7 @@ namespace hex::init {
     /**
      * @brief Initialize resources for the splash window
      */
-    void WindowSplash::initMyself() {
+    void WindowSplash::loadAssets() {
 
         // Load splash screen image from romfs
         this->splashBackgroundTexture = ImGuiExt::Texture(romfs::get("splash_background.png").span(), ImGuiExt::Texture::Filter::Linear);
@@ -453,31 +513,23 @@ namespace hex::init {
             std::exit(EXIT_FAILURE);
         }
 
-
-
         std::mt19937 rng(std::random_device{}());
 
         u32 lastPos = 0;
         u32 lastCount = 0;
+        u32 index = 0;
         for (auto &highlight : this->highlights) {
-            u32 newPos = lastPos + lastCount + (rng() % 40);
+            u32 newPos = lastPos + lastCount + (rng() % 35);
             u32 newCount = (rng() % 7) + 3;
             highlight.start.x = float(newPos % 13);
             highlight.start.y = float(newPos / 13);
             highlight.count = newCount;
 
-            {
-                float r, g, b;
-                ImGui::ColorConvertHSVtoRGB(
-                        (rng() % 360) / 100.0F,
-                        (25 + rng() % 70) / 100.0F,
-                        (85 + rng() % 10) / 100.0F,
-                        r, g, b);
-                highlight.color = ImColor(r, g, b, 0x50 / 255.0F);
-            }
+            highlight.color = getHighlightColor(index);
 
             lastPos = newPos;
             lastCount = newCount;
+            index += 1;
         }
     }
 

@@ -179,7 +179,7 @@ namespace hex::plugin::builtin::recent {
                     uniqueProviders.insert(RecentEntry {
                         .displayName    = jsonData.at("displayName"),
                         .type           = jsonData.at("type"),
-                        .entryFilePath       = path,
+                        .entryFilePath  = path,
                         .data           = jsonData
                     });
                 } catch (...) { }

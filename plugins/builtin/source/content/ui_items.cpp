@@ -95,13 +95,13 @@ namespace hex::plugin::builtin {
                 {
                     ImGuiExt::TextSpinner(hex::format("({})", taskCount).c_str());
                     ImGui::SameLine();
-                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindow()->MenuBarHeight() - 10_scaled) / 2.0);
+                    ImGuiExt::SmallProgressBar(progress, (ImGui::GetCurrentWindowRead()->MenuBarHeight() - 10_scaled) / 2.0);
                     ImGui::SameLine();
                 }
                 const auto widgetEnd = ImGui::GetCursorPos();
 
                 ImGui::SetCursorPos(widgetStart);
-                ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindow()->MenuBarHeight()));
+                ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
                 ImGui::SetCursorPos(widgetEnd);
 
                 ImGuiExt::InfoTooltip(hex::format("[{:.1f}%] {}", progress * 100.0F, Lang(frontTask->getUnlocalizedName())).c_str());
@@ -146,6 +146,14 @@ namespace hex::plugin::builtin {
         });
     }
 
+    static void drawProviderContextMenu(prv::Provider *provider) {
+        for (const auto &menuEntry : provider->getMenuEntries()) {
+            if (ImGui::MenuItem(menuEntry.name.c_str())) {
+                menuEntry.callback();
+            }
+        }
+    }
+
     void addToolbarItems() {
         ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, "hex.builtin.shortcut.prev_provider", []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
@@ -164,6 +172,21 @@ namespace hex::plugin::builtin {
 
         static bool providerJustChanged = true;
         EventProviderChanged::subscribe([](auto, auto) { providerJustChanged = true; });
+
+        static prv::Provider *rightClickedProvider = nullptr;
+        EventSearchBoxClicked::subscribe([](ImGuiMouseButton button){
+            if (button == ImGuiMouseButton_Right) {
+                rightClickedProvider = ImHexApi::Provider::get();
+                RequestOpenPopup::post("ProviderMenu");
+            }
+        });
+
+        EventFrameBegin::subscribe([] {
+            if (ImGui::BeginPopup("ProviderMenu") && rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty()) {
+                 drawProviderContextMenu(rightClickedProvider);
+                 ImGui::EndPopup();
+             }
+        });
 
         ContentRegistry::Interface::addToolbarItem([] {
             auto provider      = ImHexApi::Provider::get();
@@ -328,20 +351,9 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        if (!tabProvider->getMenuEntries().empty()) {
-                            std::string popupID = std::string("ProviderMenu.") + std::to_string(tabProvider->getID());
-                            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
-                                ImGui::OpenPopup(popupID.c_str());
-                            }
-
-                            if (ImGui::BeginPopup(popupID.c_str())) {
-                                for (const auto &menuEntry : tabProvider->getMenuEntries()) {
-                                    if (ImGui::MenuItem(menuEntry.name.c_str())) {
-                                        menuEntry.callback();
-                                    }
-                                }
-                                ImGui::EndPopup();
-                            }
+                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
+                            rightClickedProvider = tabProvider;
+                            RequestOpenPopup::post("ProviderMenu");
                         }
                     }
                     ImGui::EndTabBar();

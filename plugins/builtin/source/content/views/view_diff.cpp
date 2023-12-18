@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
             auto &otherProvider = providers[otherId];
 
             // Handle the case where one provider is larger than the other one
-            if (address > otherProvider->getActualSize()) {
+            if ((address - otherProvider->getBaseAddress()) > otherProvider->getActualSize()) {
                 if (otherIndex == 1)
                     return getDiffColor(ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffAdded));
                 else

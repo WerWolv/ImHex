@@ -3,8 +3,8 @@
 #include <functional>
 #include <future>
 #include <list>
+#include <ranges>
 #include <string>
-#include <vector>
 
 #include <mutex>
 
@@ -57,7 +57,7 @@ namespace hex::init {
 
         void initGLFW();
         void initImGui();
-        void initMyself();
+        void loadAssets();
 
         void exitGLFW() const;
         void exitImGui() const;
@@ -74,7 +74,7 @@ namespace hex::init {
         ImGuiExt::Texture splashBackgroundTexture;
         ImGuiExt::Texture splashTextTexture;
         std::future<bool> tasksSucceeded;
-        std::array<Highlight, 3> highlights;
+        std::array<Highlight, 4> highlights;
         float progressLerp = 0.0F;
     };
 
