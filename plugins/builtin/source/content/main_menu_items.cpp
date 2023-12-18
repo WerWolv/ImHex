@@ -526,11 +526,10 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            ImGui::Separator();
-
             #if defined(DEBUG)
-                ImGui::MenuItem("hex.builtin.menu.view.demo"_lang, "", &g_demoWindowOpen);
+                ImGui::Separator();
 
+                ImGui::MenuItem("hex.builtin.menu.view.demo"_lang, "", &g_demoWindowOpen);
                 ImGui::MenuItem("hex.builtin.menu.view.debug"_lang, "", &hex::dbg::impl::getDebugWindowState());
             #endif
         });
