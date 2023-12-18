@@ -367,7 +367,7 @@ namespace hex::plugin::builtin {
                                 const ImVec2 windowSize = scaled({ 150, 60 });
                                 ImGui::SetCursorPos(ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
                                 ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
-                                ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize);
+                                ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize, ImGuiChildFlags_AutoResizeY);
                                 {
                                     if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
                                         ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
