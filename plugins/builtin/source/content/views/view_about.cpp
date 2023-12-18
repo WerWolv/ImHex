@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
             const float CircleRadius = 5_scaled;
             const float Gap = 1_scaled;
 
-            constexpr static auto func = [](u32 x, u32 y, float t) {
+            constexpr static auto func = [](i32 x, i32 y, float t) {
                 return std::sin(t - std::sqrt(std::pow((x - 14), 2) + std::pow((y - 8), 2)));
             };
 
