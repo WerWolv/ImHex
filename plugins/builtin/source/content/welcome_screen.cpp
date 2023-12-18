@@ -383,7 +383,7 @@ namespace hex::plugin::builtin {
             if (ImGui::Begin("ImHexDockSpace")) {
                 if (!ImHexApi::Provider::isValid()) {
                     static std::array<char, 256> title;
-                    ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
+                    ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
                     if (ImGui::Begin(title.data(), nullptr, ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBringToFrontOnFocus)) {
                         ImGui::Dummy({});
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 10, 10 }));
@@ -392,6 +392,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
                         ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
                         if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
+                            ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
                             if (s_simplifiedWelcomeScreen)
                                 drawWelcomeScreenContentSimplified();
                             else
@@ -421,6 +422,7 @@ namespace hex::plugin::builtin {
                         ImGui::PopStyleVar();
                     }
                     ImGui::End();
+                    ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
                 }
             }
             ImGui::End();
@@ -432,7 +434,7 @@ namespace hex::plugin::builtin {
         void drawNoViewsBackground() {
             if (ImGui::Begin("ImHexDockSpace")) {
                 static std::array<char, 256> title;
-                ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindow()->Name, ImGui::GetID("ImHexMainDock"));
+                ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
                 if (ImGui::Begin(title.data())) {
                     ImGui::Dummy({});
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, scaled({ 10, 10 }));

@@ -66,7 +66,7 @@ namespace hex::plugin::builtin {
                     this->m_dragStartIterator = tools.end();
 
                     // Attach the newly created window to the cursor, so it gets dragged around
-                    GImGui->MovingWindow = ImGui::GetCurrentWindow();
+                    GImGui->MovingWindow = ImGui::GetCurrentWindowRead();
                     GImGui->ActiveId = GImGui->MovingWindow->MoveId;
                 }
             }

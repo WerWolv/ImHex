@@ -163,7 +163,7 @@ namespace hex {
 
         ImGui::SetNextWindowPos(position, ImGuiCond_Always, pivot);
         if (ImGui::Begin("##TutorialMessage", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
-            ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindow());
+            ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
 
             if (!message->unlocalizedTitle.empty())
                 ImGuiExt::Header(Lang(message->unlocalizedTitle), true);
