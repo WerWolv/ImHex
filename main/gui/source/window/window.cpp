@@ -131,7 +131,7 @@ namespace hex {
                     if (provider->isDirty())
                         postfix += " (*)";
 
-                    if (!provider->isWritable())
+                    if (!provider->isWritable() && provider->getActualSize() != 0)
                         postfix += " (Read Only)";
                 }
             }
