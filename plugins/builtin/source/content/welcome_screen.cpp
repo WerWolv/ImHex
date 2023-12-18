@@ -365,7 +365,7 @@ namespace hex::plugin::builtin {
                             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, hovered ? 1.0F : 0.3F);
                             {
                                 const ImVec2 windowSize = scaled({ 150, 60 });
-                                ImGui::SetCursorPos(ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
+                                ImGui::SetCursorScreenPos(ImGui::GetWindowPos() + ImGui::GetWindowSize() - windowSize - ImGui::GetStyle().WindowPadding);
                                 ImGui::PushStyleColor(ImGuiCol_ChildBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
                                 ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize, ImGuiChildFlags_AutoResizeY);
                                 {
