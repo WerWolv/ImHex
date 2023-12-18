@@ -156,7 +156,7 @@ To use ImHex, the following minimal system requirements need to be met:
   - **Windows**: Windows 7 or higher (Windows 10/11 recommended)
   - **macOS**: macOS 11 (Big Sur) or higher, 
   - **Linux**: "Modern" Linux. The following distributions have official releases available. Other distros are supported through the AppImage and Flatpak releases.
-    - Ubuntu 22.04/23.04
+    - Ubuntu 22.04/23.04/23.10
     - Fedora 36/37
     - RHEL/AlmaLinux 9
     - Arch Linux
