@@ -3,8 +3,8 @@
 #include <functional>
 #include <future>
 #include <list>
+#include <ranges>
 #include <string>
-#include <vector>
 
 #include <mutex>
 
@@ -57,7 +57,7 @@ namespace hex::init {
 
         void initGLFW();
         void initImGui();
-        void initMyself();
+        void loadAssets();
 
         void exitGLFW() const;
         void exitImGui() const;

@@ -42,7 +42,7 @@ namespace hex::init {
     WindowSplash::WindowSplash() : m_window(nullptr) {
         this->initGLFW();
         this->initImGui();
-        this->initMyself();
+        this->loadAssets();
 
         ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
 
@@ -132,10 +132,10 @@ namespace hex::init {
         } else if (colorString.starts_with("#")) {
             u32 color = std::strtoul(colorString.substr(1).c_str(), nullptr, 16);
 
-            return ImColor((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, 0x50);
+            return IM_COL32((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF, 0x50);
         } else {
             log::error("Invalid color string '{}'", colorString);
-            return { 0xFF, 0x00, 0xFF, 0xFF };
+            return IM_COL32(0xFF, 0x00, 0xFF, 0xFF);
         }
     }
 
@@ -501,7 +501,7 @@ namespace hex::init {
     /**
      * @brief Initialize resources for the splash window
      */
-    void WindowSplash::initMyself() {
+    void WindowSplash::loadAssets() {
 
         // Load splash screen image from romfs
         this->splashBackgroundTexture = ImGuiExt::Texture(romfs::get("splash_background.png").span(), ImGuiExt::Texture::Filter::Linear);
