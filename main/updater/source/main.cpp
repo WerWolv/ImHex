@@ -103,6 +103,7 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
         UpdateHandler { "macos-dmg",        ".dmg",  "hdiutil attach {}"                                        },
         UpdateHandler { "linux-deb-22.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
         UpdateHandler { "linux-deb-23.04",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
+        UpdateHandler { "linux-deb-23.10",  ".deb",  "sudo apt update && sudo apt install -y --fix-broken {}"   },
     };
 
     for (const auto &handler : UpdateHandlers) {
