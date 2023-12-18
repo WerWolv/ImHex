@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
                 ImGui::TableNextColumn();
                 ImGui::Image(s_bannerTexture, s_bannerTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale())));
 
-                ImGui::PushTextWrapPos(500_scaled);
+                ImGui::PushTextWrapPos(std::min(500_scaled, ImGui::GetContentRegionAvail().x));
                 ImGuiExt::TextFormattedWrapped("A Hex Editor for Reverse Engineers, Programmers and people who value their retinas when working at 3 AM.");
                 ImGui::PopTextWrapPos();
 
