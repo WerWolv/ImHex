@@ -182,7 +182,7 @@ namespace hex::plugin::builtin {
         });
 
         EventFrameBegin::subscribe([] {
-            if (ImGui::BeginPopup("ProviderMenu") && rightClickedProvider != nullptr) {
+            if (ImGui::BeginPopup("ProviderMenu") && rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty()) {
                  drawProviderContextMenu(rightClickedProvider);
                  ImGui::EndPopup();
              }
@@ -351,11 +351,9 @@ namespace hex::plugin::builtin {
                             break;
                         }
 
-                        if (!tabProvider->getMenuEntries().empty()) {
-                            if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
-                                rightClickedProvider = tabProvider;
-                                RequestOpenPopup::post("ProviderMenu");
-                            }
+                        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
+                            rightClickedProvider = tabProvider;
+                            RequestOpenPopup::post("ProviderMenu");
                         }
                     }
                     ImGui::EndTabBar();
