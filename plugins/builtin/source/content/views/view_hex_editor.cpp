@@ -774,7 +774,9 @@ namespace hex::plugin::builtin {
             this->m_selectionStart->reset();
             this->m_selectionEnd->reset();
 
-            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), provider });
+            this->m_hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+
+            EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ Region::Invalid(), provider });
         });
 
         ShortcutManager::addShortcut(this, Keys::Enter, "hex.builtin.view.hex_editor.shortcut.enter_editing", [this] {
