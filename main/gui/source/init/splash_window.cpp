@@ -25,7 +25,6 @@
 #include <future>
 #include <numeric>
 #include <random>
-#include <ranges>
 #include <nlohmann/json.hpp>
 
 using namespace std::literals::chrono_literals;
@@ -518,7 +517,8 @@ namespace hex::init {
 
         u32 lastPos = 0;
         u32 lastCount = 0;
-        for (const auto &[index, highlight] : this->highlights | std::views::enumerate) {
+        u32 index = 0;
+        for (auto &highlight : this->highlights) {
             u32 newPos = lastPos + lastCount + (rng() % 35);
             u32 newCount = (rng() % 7) + 3;
             highlight.start.x = float(newPos % 13);
@@ -529,6 +529,7 @@ namespace hex::init {
 
             lastPos = newPos;
             lastCount = newCount;
+            index += 1;
         }
     }
 
