@@ -146,6 +146,14 @@ namespace hex::plugin::builtin {
         });
     }
 
+    static void drawProviderContextMenu(prv::Provider *provider) {
+        for (const auto &menuEntry : provider->getMenuEntries()) {
+            if (ImGui::MenuItem(menuEntry.name.c_str())) {
+                menuEntry.callback();
+            }
+        }
+    }
+
     void addToolbarItems() {
         ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, "hex.builtin.shortcut.prev_provider", []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
@@ -164,6 +172,21 @@ namespace hex::plugin::builtin {
 
         static bool providerJustChanged = true;
         EventProviderChanged::subscribe([](auto, auto) { providerJustChanged = true; });
+
+        static prv::Provider *rightClickedProvider = nullptr;
+        EventSearchBoxClicked::subscribe([](ImGuiMouseButton button){
+            if (button == ImGuiMouseButton_Right) {
+                rightClickedProvider = ImHexApi::Provider::get();
+                RequestOpenPopup::post("ProviderMenu");
+            }
+        });
+
+        EventFrameBegin::subscribe([] {
+            if (ImGui::BeginPopup("ProviderMenu") && rightClickedProvider != nullptr) {
+                 drawProviderContextMenu(rightClickedProvider);
+                 ImGui::EndPopup();
+             }
+        });
 
         ContentRegistry::Interface::addToolbarItem([] {
             auto provider      = ImHexApi::Provider::get();
@@ -329,18 +352,9 @@ namespace hex::plugin::builtin {
                         }
 
                         if (!tabProvider->getMenuEntries().empty()) {
-                            std::string popupID = std::string("ProviderMenu.") + std::to_string(tabProvider->getID());
                             if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsItemHovered()) {
-                                ImGui::OpenPopup(popupID.c_str());
-                            }
-
-                            if (ImGui::BeginPopup(popupID.c_str())) {
-                                for (const auto &menuEntry : tabProvider->getMenuEntries()) {
-                                    if (ImGui::MenuItem(menuEntry.name.c_str())) {
-                                        menuEntry.callback();
-                                    }
-                                }
-                                ImGui::EndPopup();
+                                rightClickedProvider = tabProvider;
+                                RequestOpenPopup::post("ProviderMenu");
                             }
                         }
                     }
