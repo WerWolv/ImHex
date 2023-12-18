@@ -308,6 +308,10 @@ namespace hex::plugin::builtin::ui {
 
         const auto selection = getSelection();
 
+        if (this->m_provider == nullptr || this->m_provider->getActualSize() == 0) {
+            ImGuiExt::TextFormattedCentered("{}", "hex.builtin.hex_editor.no_bytes"_lang);
+        }
+
         ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
         if (ImGui::BeginTable("##hex", byteColumnCount, ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
             View::discardNavigationRequests();
@@ -367,6 +371,12 @@ namespace hex::plugin::builtin::ui {
                 ImGuiListClipper clipper;
 
                 u64 numRows = std::ceil(this->m_provider->getSize() / static_cast<long double>(this->m_bytesPerRow));
+                if (numRows == 0) {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormatted("        ");
+                }
+
                 clipper.Begin(numRows + size.y / CharacterSize.y - 3, CharacterSize.y);
                 while (clipper.Step()) {
                     this->m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
@@ -665,8 +675,6 @@ namespace hex::plugin::builtin::ui {
                         this->m_scrollPosition = ImGui::GetScrollY();
                     }
                 }
-
-
             }
 
             ImGui::EndTable();
