@@ -1,13 +1,15 @@
 #pragma once
 
 #include <hex.hpp>
-#include <GLFW/glfw3.h>
+#include <hex/api/localization_manager.hpp>
 
 #include <functional>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
+
+#include <GLFW/glfw3.h>
 
 struct ImGuiWindow;
 
@@ -391,7 +393,7 @@ namespace hex {
         using Callback = std::function<void()>;
         struct ShortcutEntry {
             Shortcut shortcut;
-            std::string unlocalizedName;
+            UnlocalizedString unlocalizedName;
             Callback callback;
         };
 
@@ -401,7 +403,7 @@ namespace hex {
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
-        static void addGlobalShortcut(const Shortcut &shortcut, const std::string &unlocalizedName, const Callback &callback);
+        static void addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
 
         /**
          * @brief Add a view-specific shortcut. View-specific shortcuts can only be triggered when the specified view is focused.
@@ -410,7 +412,7 @@ namespace hex {
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
-        static void addShortcut(View *view, const Shortcut &shortcut, const std::string &unlocalizedName, const Callback &callback);
+        static void addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
 
 
         /**

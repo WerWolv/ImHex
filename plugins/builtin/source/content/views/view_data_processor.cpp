@@ -579,7 +579,7 @@ namespace hex::plugin::builtin {
                     nlohmann::json nodeJson = nlohmann::json::parse(file.readString());
 
                     // Add the loaded node to the list of custom nodes
-                    this->m_customNodes.push_back(CustomNode { Lang(nodeJson.at("name")), nodeJson });
+                    this->m_customNodes.push_back(CustomNode { Lang(nodeJson.at("name").get<std::string>()), nodeJson });
                 } catch (nlohmann::json::exception &e) {
                     log::warn("Failed to load custom node '{}': {}", entry.path().string(), e.what());
                 }
@@ -1077,7 +1077,7 @@ namespace hex::plugin::builtin {
 
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
-                if (data.contains("name") && entry.name == data["type"].get<std::string>())
+                if (data.contains("name") && entry.unlocalizedName == data["type"].get<std::string>())
                     newNode = entry.creatorFunction();
             }
 

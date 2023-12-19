@@ -24,7 +24,7 @@ namespace hex {
 
         struct Tutorial {
             Tutorial() = delete;
-            Tutorial(const std::string &unlocalizedName, const std::string &unlocalizedDescription) :
+            Tutorial(const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription) :
                 m_unlocalizedName(unlocalizedName),
                 m_unlocalizedDescription(unlocalizedDescription) { }
 
@@ -37,7 +37,7 @@ namespace hex {
                  * @param ids ID of the element to highlight
                  * @return Current step
                  */
-                Step& addHighlight(const std::string &unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>> &&ids);
+                Step& addHighlight(const UnlocalizedString &unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>> &&ids);
 
                 /**
                  * @brief Adds a highlighting to a specific element
@@ -53,7 +53,7 @@ namespace hex {
                  * @param position Position of the message box
                  * @return Current step
                  */
-                Step& setMessage(const std::string &unlocalizedTitle, const std::string &unlocalizedMessage, Position position = Position::None);
+                Step& setMessage(const UnlocalizedString &unlocalizedTitle, const UnlocalizedString &unlocalizedMessage, Position position = Position::None);
 
                 /**
                  * @brief Allows this step to be skipped by clicking on the advance button
@@ -78,14 +78,14 @@ namespace hex {
 
             private:
                 struct Highlight {
-                    std::string unlocalizedText;
+                    UnlocalizedString unlocalizedText;
                     std::vector<std::variant<Lang, std::string, int>> highlightIds;
                 };
 
                 struct Message {
                     Position position;
-                    std::string unlocalizedTitle;
-                    std::string unlocalizedMessage;
+                    UnlocalizedString unlocalizedTitle;
+                    UnlocalizedString unlocalizedMessage;
                     bool allowSkip;
                 };
 
@@ -105,16 +105,16 @@ namespace hex {
 
             Step& addStep();
 
-            const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
-            const std::string& getUnlocalizedDescription() const { return this->m_unlocalizedDescription; }
+            const UnlocalizedString& getUnlocalizedName() const { return this->m_unlocalizedName; }
+            const UnlocalizedString& getUnlocalizedDescription() const { return this->m_unlocalizedDescription; }
 
         private:
             friend class TutorialManager;
 
             void start();
 
-            std::string m_unlocalizedName;
-            std::string m_unlocalizedDescription;
+            UnlocalizedString m_unlocalizedName;
+            UnlocalizedString m_unlocalizedDescription;
             std::list<Step> m_steps;
             decltype(m_steps)::iterator m_currentStep, m_latestStep;
         };
@@ -137,13 +137,13 @@ namespace hex {
          * @param unlocalizedDescription
          * @return Reference to created tutorial
          */
-        static Tutorial& createTutorial(const std::string &unlocalizedName, const std::string &unlocalizedDescription);
+        static Tutorial& createTutorial(const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription);
 
         /**
          * @brief Starts the tutorial with the given name
          * @param unlocalizedName Name of tutorial to start
          */
-        static void startTutorial(const std::string &unlocalizedName);
+        static void startTutorial(const UnlocalizedString &unlocalizedName);
 
 
         /**

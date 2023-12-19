@@ -75,7 +75,8 @@ namespace hex {
     }
 
     Lang::Lang(const char *unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
-    Lang::Lang(std::string unlocalizedString) : m_unlocalizedString(std::move(unlocalizedString)) { }
+    Lang::Lang(const std::string &unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
+    Lang::Lang(const UnlocalizedString &unlocalizedString) : m_unlocalizedString(unlocalizedString.get()) { }
     Lang::Lang(std::string_view unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
 
     Lang::operator std::string() const {

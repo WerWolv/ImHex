@@ -1044,7 +1044,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file" }, 1300);
 
         /* Save */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save"_lang }, 1350,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save" }, 1350,
                                                 CTRLCMD + Keys::S,
                                                 save,
                                                 [] {
@@ -1055,7 +1055,7 @@ namespace hex::plugin::builtin {
                                                 });
 
         /* Save As */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save_as"_lang }, 1375,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.save_as" }, 1375,
                                                 CTRLCMD + SHIFT + Keys::S,
                                                 saveAs,
                                                 [] {

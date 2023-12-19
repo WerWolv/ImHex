@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <optional>
 #include <span>
@@ -338,7 +339,7 @@ namespace hex {
              * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
              * @param select Whether to select the provider after adding it
              */
-            prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface = false, bool select = true);
+            prv::Provider* createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface = false, bool select = true);
 
         }
 

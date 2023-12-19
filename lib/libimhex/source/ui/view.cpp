@@ -7,7 +7,7 @@
 
 namespace hex {
 
-    View::View(std::string unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
+    View::View(UnlocalizedString unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
 
     bool View::shouldDraw() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
@@ -43,7 +43,7 @@ namespace hex {
         return this->m_windowOpen;
     }
 
-    const std::string &View::getUnlocalizedName() const {
+    const UnlocalizedString &View::getUnlocalizedName() const {
         return this->m_unlocalizedViewName;
     }
 
@@ -71,8 +71,8 @@ namespace hex {
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
     }
 
-    std::string View::toWindowName(const std::string &unlocalizedName) {
-        return Lang(unlocalizedName) + "###" + unlocalizedName;
+    std::string View::toWindowName(const UnlocalizedString &unlocalizedName) {
+        return Lang(unlocalizedName) + "###" + unlocalizedName.get();
     }
 
 }

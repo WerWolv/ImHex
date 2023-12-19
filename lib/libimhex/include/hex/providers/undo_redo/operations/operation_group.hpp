@@ -10,7 +10,7 @@ namespace hex::prv::undo {
 
     class OperationGroup : public Operation {
     public:
-        explicit OperationGroup(std::string unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
+        explicit OperationGroup(UnlocalizedString unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
 
         OperationGroup(const OperationGroup &other) {
             for (const auto &operation : other.m_operations)
@@ -59,7 +59,7 @@ namespace hex::prv::undo {
         }
 
     private:
-        std::string m_unlocalizedName;
+        UnlocalizedString m_unlocalizedName;
         std::vector<std::unique_ptr<Operation>> m_operations;
 
         u64 m_startAddress = std::numeric_limits<u64>::max();

@@ -231,21 +231,21 @@ namespace hex {
         }
     }
 
-    static void createNestedMenu(std::span<const std::string> menuItems, const Shortcut &shortcut, const std::function<void()> &callback, const std::function<bool()> &enabledCallback) {
+    static void createNestedMenu(std::span<const UnlocalizedString> menuItems, const Shortcut &shortcut, const std::function<void()> &callback, const std::function<bool()> &enabledCallback) {
         const auto &name = menuItems.front();
 
-        if (name == ContentRegistry::Interface::impl::SeparatorValue) {
+        if (name.get() == ContentRegistry::Interface::impl::SeparatorValue) {
             ImGui::Separator();
             return;
         }
 
-        if (name == ContentRegistry::Interface::impl::SubMenuValue) {
+        if (name.get() == ContentRegistry::Interface::impl::SubMenuValue) {
             callback();
         } else if (menuItems.size() == 1) {
             if (ImGui::MenuItem(Lang(name), shortcut.toString().c_str(), false, enabledCallback()))
                 callback();
         } else {
-            bool isSubmenu = *(menuItems.begin() + 1) == ContentRegistry::Interface::impl::SubMenuValue;
+            bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;
 
             if (ImGui::BeginMenu(Lang(name), isSubmenu ? enabledCallback() : true)) {
                 createNestedMenu({ menuItems.begin() + 1, menuItems.end() }, shortcut, callback, enabledCallback);
@@ -760,7 +760,7 @@ namespace hex {
         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
             const auto &[unlocalizedNames, shortcut, view, callback, enabledCallback] = menuItem;
 
-            if (ImGui::BeginPopup(unlocalizedNames.front().c_str())) {
+            if (ImGui::BeginPopup(unlocalizedNames.front().get().c_str())) {
                 createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, *shortcut, callback, enabledCallback);
                 ImGui::EndPopup();
             }
@@ -1178,7 +1178,7 @@ namespace hex {
                 Window* window = static_cast<Window*>(handler->UserData);
 
                 for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
-                    std::string format = view->getUnlocalizedName() + "=%d";
+                    std::string format = view->getUnlocalizedName().get() + "=%d";
                     sscanf(line, format.c_str(), &view->getWindowOpenState());
                 }
                 for (auto &[name, function, detached] : ContentRegistry::Tools::impl::getEntries()) {

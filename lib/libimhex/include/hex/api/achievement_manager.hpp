@@ -13,6 +13,7 @@
 
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
+#include <hex/api/localization_manager.hpp>
 
 namespace hex {
 
@@ -20,13 +21,13 @@ namespace hex {
 
     class Achievement {
     public:
-        explicit Achievement(std::string unlocalizedCategory, std::string unlocalizedName) : m_unlocalizedCategory(std::move(unlocalizedCategory)), m_unlocalizedName(std::move(unlocalizedName)) { }
+        explicit Achievement(UnlocalizedString unlocalizedCategory, UnlocalizedString unlocalizedName) : m_unlocalizedCategory(std::move(unlocalizedCategory)), m_unlocalizedName(std::move(unlocalizedName)) { }
 
         /**
          * @brief Returns the unlocalized name of the achievement
          * @return Unlocalized name of the achievement
          */
-        [[nodiscard]] const std::string &getUnlocalizedName() const {
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const {
             return this->m_unlocalizedName;
         }
 
@@ -34,7 +35,7 @@ namespace hex {
          * @brief Returns the unlocalized category of the achievement
          * @return Unlocalized category of the achievement
          */
-        [[nodiscard]] const std::string &getUnlocalizedCategory() const {
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedCategory() const {
             return this->m_unlocalizedCategory;
         }
 
@@ -135,7 +136,7 @@ namespace hex {
          * @brief Returns the unlocalized description of the achievement
          * @return Unlocalized description of the achievement
          */
-        [[nodiscard]] const std::string &getUnlocalizedDescription() const {
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedDescription() const {
             return this->m_unlocalizedDescription;
         }
 
@@ -273,8 +274,8 @@ namespace hex {
         }
 
     private:
-        std::string m_unlocalizedCategory, m_unlocalizedName;
-        std::string m_unlocalizedDescription;
+        UnlocalizedString m_unlocalizedCategory, m_unlocalizedName;
+        UnlocalizedString m_unlocalizedDescription;
 
         bool m_blacked = false;
         bool m_invisible = false;
@@ -364,7 +365,7 @@ namespace hex {
          * @param unlocalizedCategory Unlocalized category of the achievement
          * @param unlocalizedName Unlocalized name of the achievement
          */
-        static void unlockAchievement(const std::string &unlocalizedCategory, const std::string &unlocalizedName);
+        static void unlockAchievement(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName);
 
         /**
          * @brief Returns all registered achievements

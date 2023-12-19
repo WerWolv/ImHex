@@ -91,8 +91,8 @@ namespace hex::plugin::builtin {
             autoBackupTime = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", 0).get<int>() * 30;
         });
 
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface"_lang, handleNetworkInterfaceService);
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup"_lang, handleAutoBackup);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup", handleAutoBackup);
     }
 
 }

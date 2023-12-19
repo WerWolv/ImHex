@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
 
         // Add the settings menu item to the Extras menu
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name"_lang }, 4000, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, 4000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
     }
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
                                         ContentRegistry::Settings::write(category.unlocalizedName, setting.unlocalizedName, newValue);
 
                                         // Print a debug message
-                                        log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName, setting.unlocalizedName, nlohmann::to_string(newValue));
+                                        log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName.get(), setting.unlocalizedName.get(), nlohmann::to_string(newValue));
 
                                         // Signal that the setting was changed
                                         EventSettingsChanged::post();

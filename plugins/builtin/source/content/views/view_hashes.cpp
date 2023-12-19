@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
                   m_hash(hash) { }
 
         void drawContent() override {
-            ImGuiExt::Header(this->getUnlocalizedName().c_str(), true);
+            ImGuiExt::Header(this->getUnlocalizedName(), true);
 
             ImGui::PushItemWidth(-1);
             if (ImGui::InputTextMultiline("##input", this->m_input)) {

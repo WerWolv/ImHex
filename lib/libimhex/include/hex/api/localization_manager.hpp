@@ -32,10 +32,13 @@ namespace hex {
         [[nodiscard]] const std::string &getSelectedLanguage();
     }
 
+    struct UnlocalizedString;
+
     class Lang {
     public:
         explicit Lang(const char *unlocalizedString);
-        explicit Lang(std::string unlocalizedString);
+        explicit Lang(const std::string &unlocalizedString);
+        explicit Lang(const UnlocalizedString &unlocalizedString);
         explicit Lang(std::string_view unlocalizedString);
 
         [[nodiscard]] operator std::string() const;
@@ -59,6 +62,43 @@ namespace hex {
     [[nodiscard]] inline Lang operator""_lang(const char *string, size_t) {
         return Lang(string);
     }
+
+
+    struct UnlocalizedString {
+    public:
+        UnlocalizedString() = default;
+        UnlocalizedString(auto && arg) : m_unlocalizedString(std::forward<decltype(arg)>(arg)) {
+            static_assert(!std::same_as<std::remove_cvref_t<decltype(arg)>, Lang>, "Expected a unlocalized name, got a localized one!");
+        }
+
+        [[nodiscard]] operator std::string() const {
+            return m_unlocalizedString;
+        }
+
+        [[nodiscard]] operator std::string_view() const {
+            return m_unlocalizedString;
+        }
+
+        [[nodiscard]] operator const char *() const {
+            return m_unlocalizedString.c_str();
+        }
+
+        [[nodiscard]] const std::string &get() const {
+            return m_unlocalizedString;
+        }
+
+        [[nodiscard]] bool empty() const {
+            return m_unlocalizedString.empty();
+        }
+
+        auto operator<=>(const UnlocalizedString &) const = default;
+        auto operator<=>(const std::string &other) const {
+            return m_unlocalizedString <=> other;
+        }
+
+    private:
+        std::string m_unlocalizedString;
+    };
 
 }
 

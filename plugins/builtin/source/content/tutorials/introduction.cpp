@@ -92,7 +92,7 @@ namespace hex::plugin::builtin {
             })
             .onAppear([&step] {
                 EventViewOpened::subscribe([&step](View *view){
-                    if (view->getUnlocalizedName() == "hex.builtin.view.tutorials.name")
+                    if (view->getUnlocalizedName() == UnlocalizedString("hex.builtin.view.tutorials.name"))
                         step.complete();
                 });
             })

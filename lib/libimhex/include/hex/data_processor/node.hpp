@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <hex/helpers/intrinsics.hpp>
 #include <hex/data_processor/attribute.hpp>
@@ -21,17 +22,17 @@ namespace hex::dp {
 
     class Node {
     public:
-        Node(std::string unlocalizedTitle, std::vector<Attribute> attributes);
+        Node(UnlocalizedString unlocalizedTitle, std::vector<Attribute> attributes);
 
         virtual ~Node() = default;
 
         [[nodiscard]] int getId() const { return this->m_id; }
         void setId(int id) { this->m_id = id; }
 
-        [[nodiscard]] const std::string &getUnlocalizedName() const { return this->m_unlocalizedName; }
-        void setUnlocalizedName(const std::string &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const { return this->m_unlocalizedName; }
+        void setUnlocalizedName(const UnlocalizedString &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
 
-        [[nodiscard]] const std::string &getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
         void setUnlocalizedTitle(std::string title) { this->m_unlocalizedTitle = std::move(title); }
 
         [[nodiscard]] std::vector<Attribute> &getAttributes() { return this->m_attributes; }
@@ -81,7 +82,7 @@ namespace hex::dp {
 
     private:
         int m_id;
-        std::string m_unlocalizedTitle, m_unlocalizedName;
+        UnlocalizedString m_unlocalizedTitle, m_unlocalizedName;
         std::vector<Attribute> m_attributes;
         std::set<u32> m_processedInputs;
         prv::Overlay *m_overlay = nullptr;

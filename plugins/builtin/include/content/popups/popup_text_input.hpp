@@ -14,12 +14,12 @@ namespace hex::plugin::builtin {
 
     class PopupTextInput : public Popup<PopupTextInput> {
     public:
-        PopupTextInput(std::string unlocalizedName, std::string message, std::function<void(std::string)> function)
+        PopupTextInput(UnlocalizedString unlocalizedName, UnlocalizedString message, std::function<void(std::string)> function)
             : hex::Popup<PopupTextInput>(std::move(unlocalizedName), false),
               m_message(std::move(message)), m_function(std::move(function)) { }
 
         void drawContent() override {
-            ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
+            ImGuiExt::TextFormattedWrapped("{}", Lang(this->m_message));
             ImGui::NewLine();
 
             ImGui::PushItemWidth(-1);
@@ -65,7 +65,7 @@ namespace hex::plugin::builtin {
     private:
         std::string m_input;
 
-        std::string m_message;
+        UnlocalizedString m_message;
         std::function<void(std::string)> m_function;
         bool m_justOpened = true;
     };

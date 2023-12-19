@@ -37,7 +37,7 @@ namespace hex::plugin::builtin::recent {
                 std::fs::path path;
             };
         public:
-            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups"_lang, true, true) {
+            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", true, true) {
                 for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
                     for (const auto &entry : std::fs::directory_iterator(backupPath)) {
                         if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {

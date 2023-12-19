@@ -11,11 +11,12 @@
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/shortcut_manager.hpp>
 #include <hex/api/event_manager.hpp>
+#include <hex/api/localization_manager.hpp>
+
 #include <hex/providers/provider.hpp>
 #include <hex/providers/provider_data.hpp>
 #include <hex/helpers/utils.hpp>
 
-#include <hex/api/localization_manager.hpp>
 
 #include <map>
 #include <string>
@@ -23,7 +24,7 @@
 namespace hex {
 
     class View {
-        explicit View(std::string unlocalizedName);
+        explicit View(UnlocalizedString unlocalizedName);
     public:
         virtual ~View() = default;
 
@@ -86,7 +87,7 @@ namespace hex {
         [[nodiscard]] bool &getWindowOpenState();
         [[nodiscard]] const bool &getWindowOpenState() const;
 
-        [[nodiscard]] const std::string &getUnlocalizedName() const;
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const;
         [[nodiscard]] std::string getName() const;
 
         [[nodiscard]] bool didWindowJustOpen();
@@ -96,7 +97,7 @@ namespace hex {
 
         static void discardNavigationRequests();
 
-        [[nodiscard]] static std::string toWindowName(const std::string &unlocalizedName);
+        [[nodiscard]] static std::string toWindowName(const UnlocalizedString &unlocalizedName);
 
     public:
         class Window;
@@ -105,7 +106,7 @@ namespace hex {
         class Modal;
 
     private:
-        std::string m_unlocalizedViewName;
+        UnlocalizedString m_unlocalizedViewName;
         bool m_windowOpen = false, m_prevWindowOpen = false;
         std::map<Shortcut, ShortcutManager::ShortcutEntry> m_shortcuts;
         bool m_windowJustOpened = false;
@@ -119,7 +120,7 @@ namespace hex {
      */
     class View::Window : public View {
     public:
-        explicit Window(std::string unlocalizedName) : View(std::move(unlocalizedName)) {}
+        explicit Window(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName)) {}
 
         void draw() final {
             if (this->shouldDraw()) {
@@ -138,7 +139,7 @@ namespace hex {
      */
     class View::Special : public View {
     public:
-        explicit Special(std::string unlocalizedName) : View(std::move(unlocalizedName)) {}
+        explicit Special(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName)) {}
 
         void draw() final {
             if (this->shouldDraw()) {
@@ -153,7 +154,7 @@ namespace hex {
      */
     class View::Floating : public View::Window {
     public:
-        explicit Floating(std::string unlocalizedName) : Window(std::move(unlocalizedName)) {}
+        explicit Floating(UnlocalizedString unlocalizedName) : Window(std::move(unlocalizedName)) {}
 
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoDocking; }
     };
@@ -163,7 +164,7 @@ namespace hex {
      */
     class View::Modal : public View {
     public:
-        explicit Modal(std::string unlocalizedName) : View(std::move(unlocalizedName)) {}
+        explicit Modal(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName)) {}
 
         void draw() final {
             if (this->shouldDraw()) {

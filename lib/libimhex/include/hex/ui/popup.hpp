@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <memory>
 #include <string>
@@ -17,7 +18,7 @@ namespace hex {
 
         class PopupBase {
         public:
-            explicit PopupBase(std::string unlocalizedName, bool closeButton, bool modal)
+            explicit PopupBase(UnlocalizedString unlocalizedName, bool closeButton, bool modal)
                 : m_unlocalizedName(std::move(unlocalizedName)), m_closeButton(closeButton), m_modal(modal) { }
 
             virtual ~PopupBase() = default;
@@ -35,7 +36,7 @@ namespace hex {
 
             [[nodiscard]] static std::vector<std::unique_ptr<PopupBase>> &getOpenPopups();
 
-            [[nodiscard]] const std::string &getUnlocalizedName() const {
+            [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const {
                 return this->m_unlocalizedName;
             }
 
@@ -57,7 +58,7 @@ namespace hex {
 
         private:
 
-            std::string m_unlocalizedName;
+            UnlocalizedString m_unlocalizedName;
             bool m_closeButton, m_modal;
             std::atomic<bool> m_close = false;
         };
@@ -68,7 +69,7 @@ namespace hex {
     template<typename T>
     class Popup : public impl::PopupBase {
     protected:
-        explicit Popup(std::string unlocalizedName, bool closeButton = true, bool modal = true) : PopupBase(std::move(unlocalizedName), closeButton, modal) { }
+        explicit Popup(UnlocalizedString unlocalizedName, bool closeButton = true, bool modal = true) : PopupBase(std::move(unlocalizedName), closeButton, modal) { }
 
     public:
         template<typename ...Args>

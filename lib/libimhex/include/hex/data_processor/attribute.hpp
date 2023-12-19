@@ -1,5 +1,7 @@
 #pragma once
+
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <string>
 #include <string_view>
@@ -23,7 +25,7 @@ namespace hex::dp {
             Out
         };
 
-        Attribute(IOType ioType, Type type, std::string unlocalizedName);
+        Attribute(IOType ioType, Type type, UnlocalizedString unlocalizedName);
         ~Attribute();
 
         [[nodiscard]] int getId() const { return this->m_id; }
@@ -31,7 +33,7 @@ namespace hex::dp {
 
         [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
         [[nodiscard]] Type getType() const { return this->m_type; }
-        [[nodiscard]] const std::string &getUnlocalizedName() const { return this->m_unlocalizedName; }
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const { return this->m_unlocalizedName; }
 
         void addConnectedAttribute(int linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
         void removeConnectedAttribute(int linkId) { this->m_connectedAttributes.erase(linkId); }
@@ -56,7 +58,7 @@ namespace hex::dp {
         int m_id;
         IOType m_ioType;
         Type m_type;
-        std::string m_unlocalizedName;
+        UnlocalizedString m_unlocalizedName;
         std::map<int, Attribute *> m_connectedAttributes;
         Node *m_parentNode = nullptr;
 

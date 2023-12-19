@@ -66,11 +66,11 @@ namespace hex {
     }
 
 
-    TutorialManager::Tutorial& TutorialManager::createTutorial(const std::string& unlocalizedName, const std::string& unlocalizedDescription) {
+    TutorialManager::Tutorial& TutorialManager::createTutorial(const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription) {
         return s_tutorials.try_emplace(unlocalizedName, Tutorial(unlocalizedName, unlocalizedDescription)).first->second;
     }
 
-    void TutorialManager::startTutorial(const std::string& unlocalizedName) {
+    void TutorialManager::startTutorial(const UnlocalizedString &unlocalizedName) {
         s_currentTutorial = s_tutorials.find(unlocalizedName);
         if (s_currentTutorial == s_tutorials.end())
             return;
@@ -251,7 +251,7 @@ namespace hex {
                 }, id);
             }
 
-            s_highlights.emplace(idStack.get(), text.c_str());
+            s_highlights.emplace(idStack.get(), text);
         }
     }
 
@@ -288,7 +288,7 @@ namespace hex {
     }
 
 
-    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(const std::string& unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(const UnlocalizedString &unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
         this->m_highlights.emplace_back(
             unlocalizedText,
             ids
@@ -298,12 +298,12 @@ namespace hex {
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
-        return this->addHighlight("", std::move(ids));
+        return this->addHighlight("", std::forward<decltype(ids)>(ids));
     }
 
 
 
-    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::setMessage(const std::string& unlocalizedTitle, const std::string& unlocalizedMessage, Position position) {
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::setMessage(const UnlocalizedString &unlocalizedTitle, const UnlocalizedString &unlocalizedMessage, Position position) {
         this->m_message = Message {
             position,
             unlocalizedTitle,

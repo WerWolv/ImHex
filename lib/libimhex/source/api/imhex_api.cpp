@@ -365,7 +365,7 @@ namespace hex {
             });
         }
 
-        prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface, bool select) {
+        prv::Provider* createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface, bool select) {
             prv::Provider* result = nullptr;
             RequestCreateProvider::post(unlocalizedName, skipLoadInterface, select, &result);
 

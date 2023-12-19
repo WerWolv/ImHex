@@ -9,7 +9,7 @@ namespace hex::dp {
 
     int Node::s_idCounter = 1;
 
-    Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
+    Node::Node(UnlocalizedString unlocalizedTitle, std::vector<Attribute> attributes) : m_id(s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
         for (auto &attr : this->m_attributes)
             attr.setParentNode(this);
     }

@@ -542,14 +542,14 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.workspace", 4000);
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout", "hex.builtin.menu.workspace.layout.save" }, 1100, Shortcut::None, [] {
-            PopupTextInput::open("hex.builtin.popup.save_layout.title"_lang, "hex.builtin.popup.save_layout.desc"_lang, [](const std::string &name) {
+            PopupTextInput::open("hex.builtin.popup.save_layout.title", "hex.builtin.popup.save_layout.desc", [](const std::string &name) {
                 LayoutManager::save(name);
             });
         }, ImHexApi::Provider::isValid);
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.layout" }, 1150, [] {
             bool locked = LayoutManager::isLayoutLocked();
-            if (ImGui::MenuItem("hex.builtin.menu.workspace.layout.lock"_lang, nullptr, &locked, ImHexApi::Provider::isValid())) {
+            if (ImGui::MenuItem("hex.builtin.menu.workspace.layout.lock", nullptr, &locked, ImHexApi::Provider::isValid())) {
                 LayoutManager::lockLayout(locked);
                 ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", locked);
             }
@@ -584,7 +584,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.workspace" }, 3000);
 
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.workspace", "hex.builtin.menu.workspace.create" }, 3100, Shortcut::None, [] {
-            PopupTextInput::open("hex.builtin.popup.create_workspace.title"_lang, "hex.builtin.popup.create_workspace.desc"_lang, [](const std::string &name) {
+            PopupTextInput::open("hex.builtin.popup.create_workspace.title", "hex.builtin.popup.create_workspace.desc", [](const std::string &name) {
                 WorkspaceManager::createWorkspace(name);
             });
         }, ImHexApi::Provider::isValid);

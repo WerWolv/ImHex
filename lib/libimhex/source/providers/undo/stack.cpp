@@ -5,12 +5,13 @@
 
 #include <wolv/utils/guards.hpp>
 
+#include <atomic>
 
 namespace hex::prv::undo {
 
     namespace {
 
-        std::atomic_bool s_locked;
+        std::atomic<bool> s_locked;
         std::mutex s_mutex;
 
     }
@@ -66,7 +67,7 @@ namespace hex::prv::undo {
         }
     }
 
-    void Stack::groupOperations(u32 count, const std::string &unlocalizedName) {
+    void Stack::groupOperations(u32 count, const UnlocalizedString &unlocalizedName) {
         if (count <= 1)
             return;
 

@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
         template<typename T>
         class PopupNotification : public Popup<T> {
         public:
-            PopupNotification(std::string unlocalizedName, std::string message, std::function<void()> function)
+            PopupNotification(UnlocalizedString unlocalizedName, std::string message, std::function<void()> function)
                 : hex::Popup<T>(std::move(unlocalizedName), false),
                   m_message(std::move(message)), m_function(std::move(function)) { }
 

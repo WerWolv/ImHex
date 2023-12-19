@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
 #include <hex/helpers/concepts.hpp>
 
 #include <pl/pattern_language.hpp>
@@ -254,18 +255,18 @@ namespace hex {
             namespace impl {
 
                 struct Entry {
-                    std::string unlocalizedName;
+                    UnlocalizedString unlocalizedName;
                     std::unique_ptr<Widgets::Widget> widget;
                 };
 
                 struct SubCategory {
-                    std::string unlocalizedName;
+                    UnlocalizedString unlocalizedName;
                     std::vector<Entry> entries;
                 };
 
                 struct Category {
-                    std::string unlocalizedName;
-                    std::string unlocalizedDescription;
+                    UnlocalizedString unlocalizedName;
+                    UnlocalizedString unlocalizedDescription;
                     std::vector<SubCategory> subCategories;
                 };
 
@@ -274,14 +275,14 @@ namespace hex {
                 void clear();
 
                 std::vector<Category> &getSettings();
-                nlohmann::json& getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue);
+                nlohmann::json& getSetting(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &defaultValue);
                 nlohmann::json &getSettingsData();
 
-                Widgets::Widget* add(const std::string &unlocalizedCategory, const std::string &unlocalizedSubCategory, const std::string &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
+                Widgets::Widget* add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
             }
 
             template<std::derived_from<Widgets::Widget> T>
-            Widgets::Widget::Interface& add(const std::string &unlocalizedCategory, const std::string &unlocalizedSubCategory, const std::string &unlocalizedName, auto && ... args) {
+            Widgets::Widget::Interface& add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, auto && ... args) {
                 return impl::add(
                         unlocalizedCategory,
                         unlocalizedSubCategory,
@@ -290,10 +291,10 @@ namespace hex {
                     )->getInterface();
             }
 
-            void setCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedDescription);
+            void setCategoryDescription(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedDescription);
 
-            [[nodiscard]] nlohmann::json read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue);
-            void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &value);
+            [[nodiscard]] nlohmann::json read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &defaultValue);
+            void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value);
         }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
@@ -318,7 +319,7 @@ namespace hex {
                 struct Entry {
                     Type type;
                     std::string command;
-                    std::string unlocalizedDescription;
+                    UnlocalizedString unlocalizedDescription;
                     DisplayCallback displayCallback;
                     ExecuteCallback executeCallback;
                 };
@@ -346,7 +347,7 @@ namespace hex {
             void add(
                 Type type,
                 const std::string &command,
-                const std::string &unlocalizedDescription,
+                const UnlocalizedString &unlocalizedDescription,
                 const impl::DisplayCallback &displayCallback,
                 const impl::ExecuteCallback &executeCallback = [](auto) {});
 
@@ -484,7 +485,7 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the view
              * @return The view if it exists, nullptr otherwise
              */
-            View* getViewByName(const std::string &unlocalizedName);
+            View* getViewByName(const UnlocalizedString &unlocalizedName);
         }
 
         /* Tools Registry. Allows adding new entries to the tools window */
@@ -509,7 +510,7 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the tool
              * @param function The function that will be called to draw the tool
              */
-            void add(const std::string &unlocalizedName, const impl::Callback &function);
+            void add(const UnlocalizedString &unlocalizedName, const impl::Callback &function);
         }
 
         /* Data Inspector Registry. Allows adding of new types to the data inspector */
@@ -529,7 +530,7 @@ namespace hex {
                 using GeneratorFunction = std::function<DisplayFunction(const std::vector<u8> &, std::endian, NumberDisplayStyle)>;
 
                 struct Entry {
-                    std::string unlocalizedName;
+                    UnlocalizedString unlocalizedName;
                     size_t requiredSize;
                     size_t maxSize;
                     GeneratorFunction generatorFunction;
@@ -547,7 +548,7 @@ namespace hex {
              * @param displayGeneratorFunction The function that will be called to generate the display function
              * @param editingFunction The function that will be called to edit the data
              */
-            void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
+            void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
 
             /**
              * @brief Adds a new entry to the data inspector
@@ -557,7 +558,7 @@ namespace hex {
              * @param displayGeneratorFunction The function that will be called to generate the display function
              * @param editingFunction The function that will be called to edit the data
              */
-            void add(const std::string &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
+            void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
         }
 
         /* Data Processor Node Registry. Allows adding new processor nodes to be used in the data processor */
@@ -568,8 +569,8 @@ namespace hex {
                 using CreatorFunction = std::function<std::unique_ptr<dp::Node>()>;
 
                 struct Entry {
-                    std::string category;
-                    std::string name;
+                    UnlocalizedString unlocalizedCategory;
+                    UnlocalizedString unlocalizedName;
                     CreatorFunction creatorFunction;
                 };
 
@@ -588,10 +589,10 @@ namespace hex {
              * @param args Arguments passed to the constructor of the node
              */
             template<std::derived_from<dp::Node> T, typename... Args>
-            void add(const std::string &unlocalizedCategory, const std::string &unlocalizedName, Args &&...args) {
+            void add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, Args &&...args) {
                 add(impl::Entry {
-                    unlocalizedCategory.c_str(),
-                    unlocalizedName.c_str(),
+                    unlocalizedCategory,
+                    unlocalizedName,
                     [=, ...args = std::forward<Args>(args)] mutable {
                         auto node = std::make_unique<T>(std::forward<Args>(args)...);
                         node->setUnlocalizedName(unlocalizedName);
@@ -636,11 +637,11 @@ namespace hex {
                 using ClickCallback     = std::function<void()>;
 
                 struct MainMenuItem {
-                    std::string unlocalizedName;
+                    UnlocalizedString unlocalizedName;
                 };
 
                 struct MenuItem {
-                    std::vector<std::string> unlocalizedNames;
+                    std::vector<UnlocalizedString> unlocalizedNames;
                     std::unique_ptr<Shortcut> shortcut;
                     View *view;
                     MenuCallback callback;
@@ -655,7 +656,7 @@ namespace hex {
 
                 struct TitleBarButton {
                     std::string icon;
-                    std::string unlocalizedTooltip;
+                    UnlocalizedString unlocalizedTooltip;
                     ClickCallback callback;
                 };
 
@@ -678,7 +679,7 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the entry
              * @param priority The priority of the entry. Lower values are displayed first
              */
-            void registerMainMenuItem(const std::string &unlocalizedName, u32 priority);
+            void registerMainMenuItem(const UnlocalizedString &unlocalizedName, u32 priority);
 
             /**
              * @brief Adds a new main menu entry
@@ -689,7 +690,7 @@ namespace hex {
              * @param enabledCallback The function to call to determine if the entry is enabled
              * @param view The view to use for the entry. If nullptr, the shortcut will work globally
              */
-            void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; }, View *view = nullptr);
+            void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; }, View *view = nullptr);
 
             /**
              * @brief Adds a new main menu sub-menu entry
@@ -698,14 +699,14 @@ namespace hex {
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
              */
-            void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+            void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
 
             /**
              * @brief Adds a new main menu separator
              * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
              * @param priority The priority of the entry. Lower values are displayed first
              */
-            void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority);
+            void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority);
 
 
             /**
@@ -740,7 +741,7 @@ namespace hex {
              * @param unlocalizedTooltip The unlocalized tooltip to use for the button
              * @param function The function to call when the button is clicked
              */
-            void addTitleBarButton(const std::string &icon, const std::string &unlocalizedTooltip, const impl::ClickCallback &function);
+            void addTitleBarButton(const std::string &icon, const UnlocalizedString &unlocalizedTooltip, const impl::ClickCallback &function);
 
         }
 
@@ -749,7 +750,7 @@ namespace hex {
 
             namespace impl {
 
-                void addProviderName(const std::string &unlocalizedName);
+                void addProviderName(const UnlocalizedString &unlocalizedName);
 
                 using ProviderCreationFunction = prv::Provider*(*)();
                 void add(const std::string &typeName, ProviderCreationFunction creationFunction);
@@ -784,7 +785,7 @@ namespace hex {
 
                 using Callback = std::function<std::string(prv::Provider *provider, u64 address, size_t size)>;
                 struct Entry {
-                    std::string unlocalizedName;
+                    UnlocalizedString unlocalizedName;
                     Callback callback;
                 };
 
@@ -798,7 +799,7 @@ namespace hex {
              * @param unlocalizedName The unlocalized name of the formatter
              * @param callback The function to call to format the data
              */
-            void add(const std::string &unlocalizedName, const impl::Callback &callback);
+            void add(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
 
         }
 
@@ -831,7 +832,7 @@ namespace hex {
 
             class DataVisualizer {
             public:
-                DataVisualizer(std::string unlocalizedName, u16 bytesPerCell, u16 maxCharsPerCell)
+                DataVisualizer(UnlocalizedString unlocalizedName, u16 bytesPerCell, u16 maxCharsPerCell)
                     : m_unlocalizedName(std::move(unlocalizedName)),
                       m_bytesPerCell(bytesPerCell),
                       m_maxCharsPerCell(maxCharsPerCell) { }
@@ -844,7 +845,7 @@ namespace hex {
                 [[nodiscard]] u16 getBytesPerCell() const { return this->m_bytesPerCell; }
                 [[nodiscard]] u16 getMaxCharsPerCell() const { return this->m_maxCharsPerCell; }
 
-                [[nodiscard]] const std::string& getUnlocalizedName() const { return this->m_unlocalizedName; }
+                [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return this->m_unlocalizedName; }
 
             protected:
                 const static int TextInputFlags;
@@ -853,7 +854,7 @@ namespace hex {
                 bool drawDefaultTextEditingTextBox(u64 address, std::string &data, ImGuiInputTextFlags flags) const;
 
             private:
-                std::string m_unlocalizedName;
+                UnlocalizedString m_unlocalizedName;
                 u16 m_bytesPerCell;
                 u16 m_maxCharsPerCell;
             };
@@ -881,7 +882,7 @@ namespace hex {
              * @param unlocalizedName Unlocalized name of the data visualizer
              * @return The data visualizer, or nullptr if it doesn't exist
              */
-            std::shared_ptr<DataVisualizer> getVisualizerByName(const std::string &unlocalizedName);
+            std::shared_ptr<DataVisualizer> getVisualizerByName(const UnlocalizedString &unlocalizedName);
 
         }
 
@@ -890,7 +891,7 @@ namespace hex {
 
             class Hash {
             public:
-                explicit Hash(std::string unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
+                explicit Hash(UnlocalizedString unlocalizedName) : m_unlocalizedName(std::move(unlocalizedName)) {}
                 virtual ~Hash() = default;
 
                 class Function {
@@ -932,7 +933,7 @@ namespace hex {
                 [[nodiscard]] virtual nlohmann::json store() const = 0;
                 virtual void load(const nlohmann::json &json) = 0;
 
-                [[nodiscard]] const std::string &getUnlocalizedName() const {
+                [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const {
                     return this->m_unlocalizedName;
                 }
 
@@ -942,7 +943,7 @@ namespace hex {
                 }
 
             private:
-                std::string m_unlocalizedName;
+                UnlocalizedString m_unlocalizedName;
             };
 
             namespace impl {
@@ -980,7 +981,7 @@ namespace hex {
                 void stopServices();
             }
 
-            void registerService(const std::string &unlocalizedName, const impl::Callback &callback);
+            void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback);
         }
 
         /* Network Communication Interface Registry. Allows adding new communication interface endpoints */
@@ -1002,14 +1003,14 @@ namespace hex {
             namespace impl {
 
                 struct Experiment {
-                    std::string unlocalizedName, unlocalizedDescription;
+                    UnlocalizedString unlocalizedName, unlocalizedDescription;
                     bool enabled;
                 };
 
                 std::map<std::string, Experiment> &getExperiments();
             }
 
-            void addExperiment(const std::string &experimentName, const std::string &unlocalizedName, const std::string &unlocalizedDescription = "");
+            void addExperiment(const std::string &experimentName, const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription = "");
             void enableExperiement(const std::string &experimentName, bool enabled);
 
             [[nodiscard]] bool isExperimentEnabled(const std::string &experimentName);

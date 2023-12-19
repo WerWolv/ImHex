@@ -55,7 +55,7 @@ namespace hex {
         #endif
     }
 
-    Task::Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
+    Task::Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
     : m_unlocalizedName(std::move(unlocalizedName)), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
 
     Task::Task(hex::Task &&other) noexcept {
@@ -138,7 +138,7 @@ namespace hex {
         return this->m_exceptionMessage;
     }
 
-    const std::string &Task::getUnlocalizedName() {
+    const UnlocalizedString &Task::getUnlocalizedName() {
         return this->m_unlocalizedName;
     }
 
@@ -281,17 +281,17 @@ namespace hex {
                 // Execute the task
                 task->m_function(*task);
 
-                log::debug("Task '{}' finished", task->m_unlocalizedName);
+                log::debug("Task '{}' finished", task->m_unlocalizedName.get());
             } catch (const Task::TaskInterruptor &) {
                 // Handle the task being interrupted by user request
                 task->interruption();
             } catch (const std::exception &e) {
-                log::error("Exception in task '{}': {}", task->m_unlocalizedName, e.what());
+                log::error("Exception in task '{}': {}", task->m_unlocalizedName.get(), e.what());
 
                 // Handle the task throwing an uncaught exception
                 task->exception(e.what());
             } catch (...) {
-                log::error("Exception in task '{}'", task->m_unlocalizedName);
+                log::error("Exception in task '{}'", task->m_unlocalizedName.get());
 
                 // Handle the task throwing an uncaught exception of unknown type
                 task->exception("Unknown Exception");
