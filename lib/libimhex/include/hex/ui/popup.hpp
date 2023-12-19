@@ -56,8 +56,9 @@ namespace hex {
                 return m_close;
             }
 
+        protected:
+            static std::mutex& getMutex();
         private:
-
             UnlocalizedString m_unlocalizedName;
             bool m_closeButton, m_modal;
             std::atomic<bool> m_close = false;
@@ -74,8 +75,7 @@ namespace hex {
     public:
         template<typename ...Args>
         static void open(Args && ... args) {
-            static std::mutex mutex;
-            std::lock_guard lock(mutex);
+            std::lock_guard lock(getMutex());
 
             auto popup = std::make_unique<T>(std::forward<Args>(args)...);
 

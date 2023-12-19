@@ -39,6 +39,7 @@
 #include <fonts/codicons_font.h>
 
 #include <GLFW/glfw3.h>
+#include <hex/ui/toast.hpp>
 
 namespace hex {
 
@@ -751,6 +752,45 @@ namespace hex {
                     currPopup = nullptr;
                 }
             }
+        }
+
+        // Draw Toasts
+        {
+            static std::unique_ptr<impl::ToastBase> currToast;
+            if (currToast == nullptr) {
+                if (auto &queuedToasts = impl::ToastBase::getQueuedToasts(); !queuedToasts.empty()) {
+                    currToast = std::move(queuedToasts.front());
+                    queuedToasts.pop_front();
+
+                    currToast->setAppearTime(ImGui::GetTime());
+                }
+            } else {
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5_scaled);
+                ImGui::SetNextWindowSize(scaled({ 280, 60 }));
+                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }), ImGuiCond_Always, ImVec2(1, 1));
+                if (ImGui::Begin("##Toast", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs)) {
+                    auto drawList = ImGui::GetWindowDrawList();
+
+                    const auto min = ImGui::GetWindowPos();
+                    const auto max = min + ImGui::GetWindowSize();
+
+                    drawList->PushClipRect(min, min + scaled({ 5, 60 }));
+                    drawList->AddRectFilled(min, max, currToast->getColor(), 5_scaled);
+                    drawList->PopClipRect();
+
+                    ImGui::Indent();
+                    currToast->draw();
+                    ImGui::Unindent();
+                }
+                ImGui::End();
+                ImGui::PopStyleVar();
+
+                if ((currToast->getAppearTime() + impl::ToastBase::VisibilityTime) < ImGui::GetTime()) {
+                    currToast.reset();
+                }
+            }
+
+
         }
 
         // Run all deferred calls
