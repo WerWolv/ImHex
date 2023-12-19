@@ -10,11 +10,11 @@ namespace hex::prv {
     public:
         Overlay() = default;
 
-        void setAddress(u64 address) { this->m_address = address; }
-        [[nodiscard]] u64 getAddress() const { return this->m_address; }
+        void setAddress(u64 address) { m_address = address; }
+        [[nodiscard]] u64 getAddress() const { return m_address; }
 
-        [[nodiscard]] u64 getSize() const { return this->m_data.size(); }
-        [[nodiscard]] std::vector<u8> &getData() { return this->m_data; }
+        [[nodiscard]] u64 getSize() const { return m_data.size(); }
+        [[nodiscard]] std::vector<u8> &getData() { return m_data; }
 
     private:
         u64 m_address = 0;

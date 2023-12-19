@@ -112,14 +112,14 @@ namespace hex::plugin::builtin {
             : Hash(name), m_crcFunction(crcFunction), m_polynomial(polynomial), m_initialValue(initialValue), m_xorOut(xorOut), m_reflectIn(reflectIn), m_reflectOut(reflectOut) {}
 
         void draw() override {
-            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.poly"_lang, &this->m_polynomial);
-            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.iv"_lang, &this->m_initialValue);
-            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.xor_out"_lang, &this->m_xorOut);
+            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.poly"_lang, &m_polynomial);
+            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.iv"_lang, &m_initialValue);
+            ImGuiExt::InputHexadecimal("hex.builtin.hash.crc.xor_out"_lang, &m_xorOut);
 
             ImGui::NewLine();
 
-            ImGui::Checkbox("hex.builtin.hash.crc.refl_in"_lang, &this->m_reflectIn);
-            ImGui::Checkbox("hex.builtin.hash.crc.refl_out"_lang, &this->m_reflectOut);
+            ImGui::Checkbox("hex.builtin.hash.crc.refl_in"_lang, &m_reflectIn);
+            ImGui::Checkbox("hex.builtin.hash.crc.refl_out"_lang, &m_reflectOut);
         }
 
         Function create(std::string name) override {
@@ -139,22 +139,22 @@ namespace hex::plugin::builtin {
         [[nodiscard]] nlohmann::json store() const override {
             nlohmann::json result;
 
-            result["polynomial"] = this->m_polynomial;
-            result["initialValue"] = this->m_initialValue;
-            result["xorOut"] = this->m_xorOut;
-            result["reflectIn"] = this->m_reflectIn;
-            result["reflectOut"] = this->m_reflectOut;
+            result["polynomial"] = m_polynomial;
+            result["initialValue"] = m_initialValue;
+            result["xorOut"] = m_xorOut;
+            result["reflectIn"] = m_reflectIn;
+            result["reflectOut"] = m_reflectOut;
 
             return result;
         }
 
         void load(const nlohmann::json &json) override {
             try {
-                this->m_polynomial      = json.at("polynomial");
-                this->m_initialValue    = json.at("initialValue");
-                this->m_xorOut          = json.at("xorOut");
-                this->m_reflectIn       = json.at("reflectIn");
-                this->m_reflectOut      = json.at("reflectOut");
+                m_polynomial      = json.at("polynomial");
+                m_initialValue    = json.at("initialValue");
+                m_xorOut          = json.at("xorOut");
+                m_reflectIn       = json.at("reflectIn");
+                m_reflectOut      = json.at("reflectOut");
             } catch (std::exception&) { }
         }
 

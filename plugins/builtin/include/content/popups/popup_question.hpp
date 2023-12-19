@@ -17,20 +17,20 @@ namespace hex::plugin::builtin {
                   m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
 
         void drawContent() override {
-            ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
+            ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
             ImGui::NewLine();
             ImGui::Separator();
 
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.builtin.common.yes"_lang, ImVec2(width / 3, 0))) {
-                this->m_yesFunction();
+                m_yesFunction();
                 this->close();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
             if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0))) {
-                this->m_noFunction();
+                m_noFunction();
                 this->close();
             }
 

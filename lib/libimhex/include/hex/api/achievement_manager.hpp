@@ -28,7 +28,7 @@ namespace hex {
          * @return Unlocalized name of the achievement
          */
         [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const {
-            return this->m_unlocalizedName;
+            return m_unlocalizedName;
         }
 
         /**
@@ -36,7 +36,7 @@ namespace hex {
          * @return Unlocalized category of the achievement
          */
         [[nodiscard]] const UnlocalizedString &getUnlocalizedCategory() const {
-            return this->m_unlocalizedCategory;
+            return m_unlocalizedCategory;
         }
 
         /**
@@ -44,7 +44,7 @@ namespace hex {
          * @return Whether the achievement is unlocked
          */
         [[nodiscard]] bool isUnlocked() const {
-            return this->m_progress == this->m_maxProgress;
+            return m_progress == m_maxProgress;
         }
 
         /**
@@ -53,7 +53,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setDescription(std::string description) {
-            this->m_unlocalizedDescription = std::move(description);
+            m_unlocalizedDescription = std::move(description);
 
             return *this;
         }
@@ -64,7 +64,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& addRequirement(std::string requirement) {
-            this->m_requirements.emplace_back(std::move(requirement));
+            m_requirements.emplace_back(std::move(requirement));
 
             return *this;
         }
@@ -75,7 +75,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& addVisibilityRequirement(std::string requirement) {
-            this->m_visibilityRequirements.emplace_back(std::move(requirement));
+            m_visibilityRequirements.emplace_back(std::move(requirement));
 
             return *this;
         }
@@ -85,7 +85,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setBlacked() {
-            this->m_blacked = true;
+            m_blacked = true;
 
             return *this;
         }
@@ -95,7 +95,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setInvisible() {
-            this->m_invisible = true;
+            m_invisible = true;
 
             return *this;
         }
@@ -105,7 +105,7 @@ namespace hex {
          * @return Whether the achievement is blacked
          */
         [[nodiscard]] bool isBlacked() const {
-            return this->m_blacked;
+            return m_blacked;
         }
 
         /**
@@ -113,7 +113,7 @@ namespace hex {
          * @return Whether the achievement is invisible
          */
         [[nodiscard]] bool isInvisible() const {
-            return this->m_invisible;
+            return m_invisible;
         }
 
         /**
@@ -121,7 +121,7 @@ namespace hex {
          * @return List of requirements of the achievement
          */
         [[nodiscard]] const std::vector<std::string> &getRequirements() const {
-            return this->m_requirements;
+            return m_requirements;
         }
 
         /**
@@ -129,7 +129,7 @@ namespace hex {
          * @return List of visibility requirements of the achievement
          */
         [[nodiscard]] const std::vector<std::string> &getVisibilityRequirements() const {
-            return this->m_visibilityRequirements;
+            return m_visibilityRequirements;
         }
 
         /**
@@ -137,7 +137,7 @@ namespace hex {
          * @return Unlocalized description of the achievement
          */
         [[nodiscard]] const UnlocalizedString &getUnlocalizedDescription() const {
-            return this->m_unlocalizedDescription;
+            return m_unlocalizedDescription;
         }
 
         /**
@@ -145,15 +145,15 @@ namespace hex {
          * @return Icon of the achievement
          */
         [[nodiscard]] const ImGuiExt::Texture &getIcon() const {
-            if (this->m_iconData.empty())
-                return this->m_icon;
-
-            if (this->m_icon.isValid())
+            if (m_iconData.empty())
                 return m_icon;
 
-            this->m_icon = ImGuiExt::Texture(this->m_iconData.data(), this->m_iconData.size(), ImGuiExt::Texture::Filter::Linear);
+            if (m_icon.isValid())
+                return m_icon;
 
-            return this->m_icon;
+            m_icon = ImGuiExt::Texture(m_iconData.data(), m_iconData.size(), ImGuiExt::Texture::Filter::Linear);
+
+            return m_icon;
         }
 
         /**
@@ -162,9 +162,9 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setIcon(std::span<const std::byte> data) {
-            this->m_iconData.reserve(data.size());
+            m_iconData.reserve(data.size());
             for (auto &byte : data)
-                this->m_iconData.emplace_back(static_cast<u8>(byte));
+                m_iconData.emplace_back(static_cast<u8>(byte));
 
             return *this;
         }
@@ -175,7 +175,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setIcon(std::span<const u8> data) {
-            this->m_iconData.assign(data.begin(), data.end());
+            m_iconData.assign(data.begin(), data.end());
 
             return *this;
         }
@@ -186,7 +186,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setIcon(std::vector<u8> data) {
-            this->m_iconData = std::move(data);
+            m_iconData = std::move(data);
 
             return *this;
         }
@@ -197,9 +197,9 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setIcon(const std::vector<std::byte> &data) {
-            this->m_iconData.reserve(data.size());
+            m_iconData.reserve(data.size());
             for (auto &byte : data)
-                this->m_iconData.emplace_back(static_cast<u8>(byte));
+                m_iconData.emplace_back(static_cast<u8>(byte));
 
             return *this;
         }
@@ -210,7 +210,7 @@ namespace hex {
          * @return Reference to the achievement
          */
         Achievement& setRequiredProgress(u32 progress) {
-            this->m_maxProgress = progress;
+            m_maxProgress = progress;
 
             return *this;
         }
@@ -220,7 +220,7 @@ namespace hex {
          * @return Required progress to unlock the achievement
          */
         [[nodiscard]] u32 getRequiredProgress() const {
-            return this->m_maxProgress;
+            return m_maxProgress;
         }
 
         /**
@@ -228,7 +228,7 @@ namespace hex {
          * @return Current progress of the achievement
          */
         [[nodiscard]] u32 getProgress() const {
-            return this->m_progress;
+            return m_progress;
         }
 
         /**
@@ -236,7 +236,7 @@ namespace hex {
          * @param callback Callback to call when the achievement is clicked
          */
         void setClickCallback(const std::function<void(Achievement &)> &callback) {
-            this->m_clickCallback = callback;
+            m_clickCallback = callback;
         }
 
         /**
@@ -244,7 +244,7 @@ namespace hex {
          * @return Callback to call when the achievement is clicked
          */
         [[nodiscard]] const std::function<void(Achievement &)> &getClickCallback() const {
-            return this->m_clickCallback;
+            return m_clickCallback;
         }
 
         /**
@@ -252,7 +252,7 @@ namespace hex {
          * @return Whether the achievement is temporary
          */
         [[nodiscard]] bool isTemporary() const {
-            return this->m_temporary;
+            return m_temporary;
         }
 
         /**
@@ -261,16 +261,16 @@ namespace hex {
          */
         void setUnlocked(bool unlocked) {
             if (unlocked) {
-                if (this->m_progress < this->m_maxProgress)
-                    this->m_progress++;
+                if (m_progress < m_maxProgress)
+                    m_progress++;
             } else {
-                this->m_progress = 0;
+                m_progress = 0;
             }
         }
 
     protected:
         void setProgress(u32 progress) {
-            this->m_progress = progress;
+            m_progress = progress;
         }
 
     private:

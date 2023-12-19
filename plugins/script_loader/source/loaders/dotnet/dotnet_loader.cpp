@@ -166,7 +166,7 @@ namespace hex::script::loader {
 
             component_entry_point_fn entryPoint = nullptr;
             u32 result = loadAssembly(
-                    this->m_assemblyLoaderPathString.c_str(),
+                    m_assemblyLoaderPathString.c_str(),
                     dotnetType,
                     dotnetTypeMethod,
                     nullptr,
@@ -179,7 +179,7 @@ namespace hex::script::loader {
                 continue;
             }
 
-            this->m_loadAssembly = [entryPoint](const std::fs::path &path) -> bool {
+            m_loadAssembly = [entryPoint](const std::fs::path &path) -> bool {
                 auto string = wolv::util::toUTF8String(path);
                 auto result = entryPoint(string.data(), string.size());
 
@@ -212,7 +212,7 @@ namespace hex::script::loader {
                     continue;
 
                 this->addScript(entry.path().stem().string(), [this, scriptPath] {
-                    hex::unused(this->m_loadAssembly(scriptPath));
+                    hex::unused(m_loadAssembly(scriptPath));
                 });
             }
         }

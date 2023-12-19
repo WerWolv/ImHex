@@ -105,8 +105,8 @@ namespace hex {
 
             Step& addStep();
 
-            const UnlocalizedString& getUnlocalizedName() const { return this->m_unlocalizedName; }
-            const UnlocalizedString& getUnlocalizedDescription() const { return this->m_unlocalizedDescription; }
+            const UnlocalizedString& getUnlocalizedName() const { return m_unlocalizedName; }
+            const UnlocalizedString& getUnlocalizedDescription() const { return m_unlocalizedDescription; }
 
         private:
             friend class TutorialManager;

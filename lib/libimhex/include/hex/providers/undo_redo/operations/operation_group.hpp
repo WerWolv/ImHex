@@ -14,40 +14,40 @@ namespace hex::prv::undo {
 
         OperationGroup(const OperationGroup &other) {
             for (const auto &operation : other.m_operations)
-                this->m_operations.emplace_back(operation->clone());
+                m_operations.emplace_back(operation->clone());
         }
 
         void undo(Provider *provider) override {
-            for (auto &operation : this->m_operations)
+            for (auto &operation : m_operations)
                 operation->undo(provider);
         }
 
         void redo(Provider *provider) override {
-            for (auto &operation : this->m_operations)
+            for (auto &operation : m_operations)
                 operation->redo(provider);
         }
 
         void addOperation(std::unique_ptr<Operation> &&newOperation) {
             auto newRegion = newOperation->getRegion();
-            if (newRegion.getStartAddress() < this->m_startAddress)
-                this->m_startAddress = newRegion.getStartAddress();
-            if (newRegion.getEndAddress() > this->m_endAddress)
-                this->m_endAddress = newRegion.getEndAddress();
+            if (newRegion.getStartAddress() < m_startAddress)
+                m_startAddress = newRegion.getStartAddress();
+            if (newRegion.getEndAddress() > m_endAddress)
+                m_endAddress = newRegion.getEndAddress();
 
-            if (this->m_formattedContent.size() <= 10)
-                this->m_formattedContent.emplace_back(newOperation->format());
+            if (m_formattedContent.size() <= 10)
+                m_formattedContent.emplace_back(newOperation->format());
             else
-                this->m_formattedContent.back() = hex::format("[{}x] ...", (this->m_operations.size() - 10) + 1);
+                m_formattedContent.back() = hex::format("[{}x] ...", (m_operations.size() - 10) + 1);
 
-            this->m_operations.emplace_back(std::move(newOperation));
+            m_operations.emplace_back(std::move(newOperation));
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("{}", Lang(this->m_unlocalizedName));
+            return hex::format("{}", Lang(m_unlocalizedName));
         }
 
         [[nodiscard]] Region getRegion() const override {
-            return Region { this->m_startAddress, (this->m_endAddress - this->m_startAddress) + 1 };
+            return Region { m_startAddress, (m_endAddress - m_startAddress) + 1 };
         }
 
         std::unique_ptr<Operation> clone() const override {
@@ -55,7 +55,7 @@ namespace hex::prv::undo {
         }
 
         std::vector<std::string> formatContent() const override {
-            return this->m_formattedContent;
+            return m_formattedContent;
         }
 
     private:

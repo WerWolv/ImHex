@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
                 if (!rules.is_array())
                     return false;
 
-                this->m_matches.get(provider).clear();
+                m_matches.get(provider).clear();
 
                 for (auto &rule : rules) {
                     if (!rule.contains("name") || !rule.contains("path"))
@@ -70,7 +70,7 @@ namespace hex::plugin::builtin {
                     if (!name.is_string() || !path.is_string())
                         return false;
 
-                    this->m_rules.get(provider).emplace_back(std::fs::path(name.get<std::string>()), std::fs::path(path.get<std::string>()));
+                    m_rules.get(provider).emplace_back(std::fs::path(name.get<std::string>()), std::fs::path(path.get<std::string>()));
                 }
 
                 return true;
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
 
                 data["rules"] = nlohmann::json::array();
 
-                for (auto &[name, path] : this->m_rules.get(provider)) {
+                for (auto &[name, path] : m_rules.get(provider)) {
                     data["rules"].push_back({
                         { "name", wolv::util::toUTF8String(name) },
                         { "path", wolv::util::toUTF8String(path) }
@@ -102,10 +102,10 @@ namespace hex::plugin::builtin {
         ImGuiExt::Header("hex.builtin.view.yara.header.rules"_lang, true);
 
         if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-            for (u32 i = 0; i < this->m_rules->size(); i++) {
-                const bool selected = (this->m_selectedRule == i);
-                if (ImGui::Selectable(wolv::util::toUTF8String((*this->m_rules)[i].first).c_str(), selected)) {
-                    this->m_selectedRule = i;
+            for (u32 i = 0; i < m_rules->size(); i++) {
+                const bool selected = (m_selectedRule == i);
+                if (ImGui::Selectable(wolv::util::toUTF8String((*m_rules)[i].first).c_str(), selected)) {
+                    m_selectedRule = i;
                 }
             }
             ImGui::EndListBox();
@@ -126,15 +126,15 @@ namespace hex::plugin::builtin {
 
             PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
                 [&](const auto &path) {
-                    this->m_rules->push_back({ path.filename(), path });
+                    m_rules->push_back({ path.filename(), path });
                 });
         }
 
         ImGui::SameLine();
         if (ImGuiExt::IconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            if (this->m_selectedRule < this->m_rules->size()) {
-                this->m_rules->erase(this->m_rules->begin() + this->m_selectedRule);
-                this->m_selectedRule = std::min(this->m_selectedRule, u32(this->m_rules->size() - 1));
+            if (m_selectedRule < m_rules->size()) {
+                m_rules->erase(m_rules->begin() + m_selectedRule);
+                m_selectedRule = std::min(m_selectedRule, u32(m_rules->size() - 1));
             }
         }
 
@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
         if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
         ImGui::SameLine();
 
-        if (this->m_matcherTask.isRunning()) {
+        if (m_matcherTask.isRunning()) {
             ImGui::SameLine();
             ImGuiExt::TextSpinner("hex.builtin.view.yara.matching"_lang);
         }
@@ -163,13 +163,13 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
-            if (!this->m_matches->empty() && (sortSpecs->SpecsDirty || this->m_sortedMatches->empty())) {
-                this->m_sortedMatches->clear();
-                std::transform(this->m_matches->begin(), this->m_matches->end(), std::back_inserter(*this->m_sortedMatches), [](auto &match) {
+            if (!m_matches->empty() && (sortSpecs->SpecsDirty || m_sortedMatches->empty())) {
+                m_sortedMatches->clear();
+                std::transform(m_matches->begin(), m_matches->end(), std::back_inserter(*m_sortedMatches), [](auto &match) {
                     return &match;
                 });
 
-                std::sort(this->m_sortedMatches->begin(), this->m_sortedMatches->end(), [&sortSpecs](const YaraMatch *left, const YaraMatch *right) -> bool {
+                std::sort(m_sortedMatches->begin(), m_sortedMatches->end(), [&sortSpecs](const YaraMatch *left, const YaraMatch *right) -> bool {
                     if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("identifier"))
                         return left->identifier < right->identifier;
                     else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("variable"))
@@ -183,18 +183,18 @@ namespace hex::plugin::builtin {
                 });
 
                 if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Descending)
-                    std::reverse(this->m_sortedMatches->begin(), this->m_sortedMatches->end());
+                    std::reverse(m_sortedMatches->begin(), m_sortedMatches->end());
 
                 sortSpecs->SpecsDirty = false;
             }
 
-            if (!this->m_matcherTask.isRunning()) {
+            if (!m_matcherTask.isRunning()) {
                 ImGuiListClipper clipper;
-                clipper.Begin(this->m_sortedMatches->size());
+                clipper.Begin(m_sortedMatches->size());
 
                 while (clipper.Step()) {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *(*this->m_sortedMatches)[i];
+                        auto &[identifier, variableName, address, size, wholeDataMatch, highlightId, tooltipId] = *(*m_sortedMatches)[i];
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGui::PushID(i);
@@ -232,10 +232,10 @@ namespace hex::plugin::builtin {
         if (ImGui::BeginChild("##console", consoleSize, true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_HorizontalScrollbar)) {
             ImGuiListClipper clipper;
 
-            clipper.Begin(this->m_consoleMessages.size());
+            clipper.Begin(m_consoleMessages.size());
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    const auto &message = this->m_consoleMessages[i];
+                    const auto &message = m_consoleMessages[i];
 
                     if (ImGui::Selectable(message.c_str()))
                         ImGui::SetClipboardText(message.c_str());
@@ -245,19 +245,19 @@ namespace hex::plugin::builtin {
     }
 
     void ViewYara::clearResult() {
-        for (const auto &match : *this->m_matches) {
+        for (const auto &match : *m_matches) {
             ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
             ImHexApi::HexEditor::removeTooltip(match.tooltipId);
         }
 
-        this->m_matches->clear();
-        this->m_consoleMessages.clear();
+        m_matches->clear();
+        m_consoleMessages.clear();
     }
 
     void ViewYara::applyRules() {
         this->clearResult();
 
-        this->m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
+        m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
             if (!ImHexApi::Provider::isValid()) return;
 
             struct ResultContext {
@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
             ResultContext resultContext;
             resultContext.task = &task;
 
-            for (const auto &[fileName, filePath] : *this->m_rules) {
+            for (const auto &[fileName, filePath] : *m_rules) {
                 YR_COMPILER *compiler = nullptr;
                 yr_compiler_create(&compiler);
                 ON_SCOPE_EXIT {
@@ -300,7 +300,7 @@ namespace hex::plugin::builtin {
                     currFilePath.data()
                 );
 
-                wolv::io::File file((*this->m_rules)[this->m_selectedRule].second, wolv::io::File::Mode::Read);
+                wolv::io::File file((*m_rules)[m_selectedRule].second, wolv::io::File::Mode::Read);
                 if (!file.isValid()) return;
 
                 if (yr_compiler_add_file(compiler, file.getHandle(), nullptr, nullptr) != 0) {
@@ -310,7 +310,7 @@ namespace hex::plugin::builtin {
                     TaskManager::doLater([this, errorMessage = wolv::util::trim(errorMessage)] {
                         this->clearResult();
 
-                        this->m_consoleMessages.push_back(hex::format("hex.builtin.view.yara.error"_lang, errorMessage));
+                        m_consoleMessages.push_back(hex::format("hex.builtin.view.yara.error"_lang, errorMessage));
                     });
 
                     return;
@@ -417,22 +417,22 @@ namespace hex::plugin::builtin {
 
             }
             TaskManager::doLater([this, resultContext] {
-                for (const auto &match : *this->m_matches) {
+                for (const auto &match : *m_matches) {
                     ImHexApi::HexEditor::removeBackgroundHighlight(match.highlightId);
                     ImHexApi::HexEditor::removeTooltip(match.tooltipId);
                 }
 
-                this->m_consoleMessages = resultContext.consoleMessages;
+                m_consoleMessages = resultContext.consoleMessages;
 
-                std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(*this->m_matches));
+                std::move(resultContext.newMatches.begin(), resultContext.newMatches.end(), std::back_inserter(*m_matches));
 
-                auto uniques = std::set(this->m_matches->begin(), this->m_matches->end(), [](const auto &l, const auto &r) {
+                auto uniques = std::set(m_matches->begin(), m_matches->end(), [](const auto &l, const auto &r) {
                     return std::tie(l.address, l.size, l.wholeDataMatch, l.identifier, l.variable) <
                            std::tie(r.address, r.size, r.wholeDataMatch, r.identifier, r.variable);
                 });
 
-                this->m_matches->clear();
-                std::move(uniques.begin(), uniques.end(), std::back_inserter(*this->m_matches));
+                m_matches->clear();
+                std::move(uniques.begin(), uniques.end(), std::back_inserter(*m_matches));
 
                 constexpr static color_t YaraColor = 0x70B4771F;
                 for (auto &match : uniques) {

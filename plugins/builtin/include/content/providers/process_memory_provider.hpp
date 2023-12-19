@@ -29,9 +29,9 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] bool isAvailable() const override {
             #ifdef _WIN32
-                return this->m_processHandle != nullptr;
+                return m_processHandle != nullptr;
             #elif __linux__
-                return this->m_processId != -1;
+                return m_processId != -1;
             #endif
         }
         [[nodiscard]] bool isReadable() const override { return true; }
@@ -46,11 +46,11 @@ namespace hex::plugin::builtin {
 
         void save() override {}
 
-        [[nodiscard]] std::string getName() const override { return hex::format("hex.builtin.provider.process_memory.name"_lang, this->m_selectedProcess != nullptr ? this->m_selectedProcess->name : ""); }
+        [[nodiscard]] std::string getName() const override { return hex::format("hex.builtin.provider.process_memory.name"_lang, m_selectedProcess != nullptr ? m_selectedProcess->name : ""); }
         [[nodiscard]] std::vector<Description> getDataDescription() const override {
             return {
-                    { "hex.builtin.provider.process_memory.process_name"_lang, this->m_selectedProcess->name },
-                    { "hex.builtin.provider.process_memory.process_id"_lang, std::to_string(this->m_selectedProcess->id) }
+                    { "hex.builtin.provider.process_memory.process_name"_lang, m_selectedProcess->name },
+                    { "hex.builtin.provider.process_memory.process_id"_lang, std::to_string(m_selectedProcess->id) }
             };
         }
 

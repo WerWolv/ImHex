@@ -19,8 +19,8 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::Combo("hex.builtin.nodes.crypto.aes.mode"_lang, &this->m_mode, "ECB\0CBC\0CFB128\0CTR\0GCM\0CCM\0OFB\0");
-            ImGui::Combo("hex.builtin.nodes.crypto.aes.key_length"_lang, &this->m_keyLength, "128 Bits\000192 Bits\000256 Bits\000");
+            ImGui::Combo("hex.builtin.nodes.crypto.aes.mode"_lang, &m_mode, "ECB\0CBC\0CFB128\0CTR\0GCM\0CCM\0OFB\0");
+            ImGui::Combo("hex.builtin.nodes.crypto.aes.key_length"_lang, &m_keyLength, "128 Bits\000192 Bits\000256 Bits\000");
             ImGui::PopItemWidth();
         }
 
@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
             std::copy(iv.begin(), iv.end(), ivData.begin());
             std::copy(nonce.begin(), nonce.end(), nonceData.begin());
 
-            auto output = crypt::aesDecrypt(static_cast<crypt::AESMode>(this->m_mode), static_cast<crypt::KeyLength>(this->m_keyLength), key, nonceData, ivData, input);
+            auto output = crypt::aesDecrypt(static_cast<crypt::AESMode>(m_mode), static_cast<crypt::KeyLength>(m_keyLength), key, nonceData, ivData, input);
 
             this->setBufferOnOutput(4, output);
         }
@@ -50,13 +50,13 @@ namespace hex::plugin::builtin {
             j = nlohmann::json::object();
 
             j["data"]               = nlohmann::json::object();
-            j["data"]["mode"]       = this->m_mode;
-            j["data"]["key_length"] = this->m_keyLength;
+            j["data"]["mode"]       = m_mode;
+            j["data"]["key_length"] = m_keyLength;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_mode      = j["data"]["mode"];
-            this->m_keyLength = j["data"]["key_length"];
+            m_mode      = j["data"]["mode"];
+            m_keyLength = j["data"]["key_length"];
         }
 
     private:

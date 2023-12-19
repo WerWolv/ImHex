@@ -42,46 +42,46 @@ namespace hex::gl {
         Vector() = default;
         Vector(const T val) {
             for (size_t i = 0; i < Size; i++)
-                this->m_data[i] = val;
+                m_data[i] = val;
         }
 
         Vector(std::array<T, Size> data) : m_data(data) { }
         Vector(Vector &&other) noexcept : m_data(std::move(other.m_data)) { }
         Vector(const Vector &other) : m_data(other.m_data) { }
 
-        T &operator[](size_t index) { return this->m_data[index]; }
-        const T &operator[](size_t index) const { return this->m_data[index]; }
+        T &operator[](size_t index) { return m_data[index]; }
+        const T &operator[](size_t index) const { return m_data[index]; }
 
-        std::array<T, Size> &asArray()  { return this->m_data; }
+        std::array<T, Size> &asArray()  { return m_data; }
 
-        T *data() { return this->m_data.data(); }
-        const T *data() const { return this->m_data.data(); }
+        T *data() { return m_data.data(); }
+        const T *data() const { return m_data.data(); }
 
-        [[nodiscard]] size_t size() const { return this->m_data.size(); }
+        [[nodiscard]] size_t size() const { return m_data.size(); }
 
         auto operator=(const Vector& other) {
             for (size_t i = 0; i < Size; i++)
-                this->m_data[i] = other[i];
+                m_data[i] = other[i];
             return *this;
         }
 
         auto operator+=(const Vector& other) {
             for (size_t i = 0; i < Size; i++)
-                this->m_data[i] += other.m_data[i];
+                m_data[i] += other.m_data[i];
 
             return *this;
         }
 
         auto operator+=(const T scalar) {
             for (size_t i = 0; i < Size; i++)
-                this->m_data[i] += scalar;
+                m_data[i] += scalar;
 
             return *this;
         }
 
         auto operator-=(Vector other) {
             for (size_t i = 0; i < Size; i++)
-                this->m_data[i] -= other.m_data[i];
+                m_data[i] -= other.m_data[i];
 
             return *this;
         }
@@ -89,14 +89,14 @@ namespace hex::gl {
 
         auto operator-=(const T scalar) {
             for (size_t i = 0; i < Size; i++)
-                this->m_data[i] -= scalar;
+                m_data[i] -= scalar;
 
             return *this;
         }
 
         Vector operator*=(const T scalar) {
             for (size_t i = 0; i < Size; i++)
-                this->m_data[i] *= scalar;
+                m_data[i] *= scalar;
 
             return *this;
         }
@@ -125,15 +125,15 @@ namespace hex::gl {
         auto dot(const Vector& other) {
             T result = 0;
             for (size_t i = 0; i < Size; i++)
-                result += this->m_data[i] * other[i];
+                result += m_data[i] * other[i];
             return result;
         }
 
         auto cross(const Vector& other) {
             static_assert(Size == 3, "Cross product is only defined for 3D vectors");
-            return Vector({this->m_data[1] * other[2] - this->m_data[2] * other[1],
-                           this->m_data[2] * other[0] - this->m_data[0] * other[2],
-                           this->m_data[0] * other[1] - this->m_data[1] * other[0]});
+            return Vector({m_data[1] * other[2] - m_data[2] * other[1],
+                           m_data[2] * other[0] - m_data[0] * other[2],
+                           m_data[0] * other[1] - m_data[1] * other[0]});
         }
 
         auto magnitude() {
@@ -150,7 +150,7 @@ namespace hex::gl {
 
         auto operator==(const Vector& other) {
             for (size_t i = 0; i < Size; i++)
-                if (this->m_data[i] != other[i])
+                if (m_data[i] != other[i])
                     return false;
             return true;
         }

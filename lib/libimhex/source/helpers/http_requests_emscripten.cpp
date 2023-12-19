@@ -5,25 +5,25 @@
 namespace hex {
 
     HttpRequest::HttpRequest(std::string method, std::string url) : m_method(std::move(method)), m_url(std::move(url)) {
-        emscripten_fetch_attr_init(&this->m_attr);
+        emscripten_fetch_attr_init(&m_attr);
     }
 
     HttpRequest::HttpRequest(HttpRequest &&other) noexcept {
-        this->m_attr = other.m_attr;
+        m_attr = other.m_attr;
 
-        this->m_method = std::move(other.m_method);
-        this->m_url = std::move(other.m_url);
-        this->m_headers = std::move(other.m_headers);
-        this->m_body = std::move(other.m_body);
+        m_method = std::move(other.m_method);
+        m_url = std::move(other.m_url);
+        m_headers = std::move(other.m_headers);
+        m_body = std::move(other.m_body);
     }
 
     HttpRequest& HttpRequest::operator=(HttpRequest &&other) noexcept {
-        this->m_attr = other.m_attr;
+        m_attr = other.m_attr;
 
-        this->m_method = std::move(other.m_method);
-        this->m_url = std::move(other.m_url);
-        this->m_headers = std::move(other.m_headers);
-        this->m_body = std::move(other.m_body);
+        m_method = std::move(other.m_method);
+        m_url = std::move(other.m_url);
+        m_headers = std::move(other.m_headers);
+        m_body = std::move(other.m_body);
 
         return *this;
     }

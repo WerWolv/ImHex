@@ -11,18 +11,18 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
-            if (this->m_value.has_value())
-                ImGuiExt::TextFormatted("0x{0:X}", this->m_value.value());
+            if (m_value.has_value())
+                ImGuiExt::TextFormatted("0x{0:X}", m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->m_value.reset();
+            m_value.reset();
             const auto &input = this->getIntegerOnInput(0);
 
-            this->m_value = input;
+            m_value = input;
         }
 
     private:
@@ -35,18 +35,18 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(150_scaled);
-            if (this->m_value.has_value())
-                ImGuiExt::TextFormatted("{0}", this->m_value.value());
+            if (m_value.has_value())
+                ImGuiExt::TextFormatted("{0}", m_value.value());
             else
                 ImGui::TextUnformatted("???");
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->m_value.reset();
+            m_value.reset();
             const auto &input = this->getFloatOnInput(0);
 
-            this->m_value = input;
+            m_value = input;
         }
 
     private:
@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
             if (ImGui::BeginChild("##hex_view", scaled(ImVec2(ImGui::CalcTextSize(Header.c_str()).x, 200)), true)) {
                 ImGui::TextUnformatted(Header.c_str());
 
-                auto size = this->m_buffer.size();
+                auto size = m_buffer.size();
                 ImGuiListClipper clipper;
 
                 clipper.Begin((size + 0x0F) / 0x10);
@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
                         std::string line = hex::format(" {:08X}:  ", y * 0x10);
                         for (u32 x = 0; x < 0x10; x++) {
                             if (x < lineSize)
-                                line += hex::format("{:02X} ", this->m_buffer[y * 0x10 + x]);
+                                line += hex::format("{:02X} ", m_buffer[y * 0x10 + x]);
                             else
                                 line += "   ";
 
@@ -85,7 +85,7 @@ namespace hex::plugin::builtin {
                         line += "   ";
 
                         for (u32 x = 0; x < lineSize; x++) {
-                            auto c = char(this->m_buffer[y * 0x10 + x]);
+                            auto c = char(m_buffer[y * 0x10 + x]);
                             if (std::isprint(c))
                                 line += c;
                             else
@@ -100,7 +100,7 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            this->m_buffer = this->getBufferOnInput(0);
+            m_buffer = this->getBufferOnInput(0);
         }
 
     private:
@@ -114,7 +114,7 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             constexpr static auto LineLength = 50;
             if (ImGui::BeginChild("##string_view", scaled(ImVec2(ImGui::CalcTextSize(" ").x * (LineLength + 4), 150)), true)) {
-                std::string_view string = this->m_value;
+                std::string_view string = m_value;
 
                 ImGuiListClipper clipper;
                 clipper.Begin((string.length() + (LineLength - 1)) / LineLength);
@@ -135,7 +135,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &input = this->getBufferOnInput(0);
 
-            this->m_value = hex::encodeByteString(input);
+            m_value = hex::encodeByteString(input);
         }
 
     private:
@@ -148,7 +148,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::Text("%s", this->m_display.c_str());
+            ImGui::Text("%s", m_display.c_str());
             ImGui::PopItemWidth();
         }
 
@@ -165,7 +165,7 @@ namespace hex::plugin::builtin {
                     display += (byte & (1 << i)) != 0 ? '1' : '0';
                 }
             }
-            this->m_display = wolv::util::trim(display);
+            m_display = wolv::util::trim(display);
         }
 
     private:

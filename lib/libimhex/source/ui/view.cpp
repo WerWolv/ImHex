@@ -36,33 +36,33 @@ namespace hex {
 
 
     bool &View::getWindowOpenState() {
-        return this->m_windowOpen;
+        return m_windowOpen;
     }
 
     const bool &View::getWindowOpenState() const {
-        return this->m_windowOpen;
+        return m_windowOpen;
     }
 
     const UnlocalizedString &View::getUnlocalizedName() const {
-        return this->m_unlocalizedViewName;
+        return m_unlocalizedViewName;
     }
 
     std::string View::getName() const {
-        return View::toWindowName(this->m_unlocalizedViewName);
+        return View::toWindowName(m_unlocalizedViewName);
     }
 
     bool View::didWindowJustOpen() {
-        return std::exchange(this->m_windowJustOpened, false);
+        return std::exchange(m_windowJustOpened, false);
     }
 
     void View::setWindowJustOpened(bool state) {
-        this->m_windowJustOpened = state;
+        m_windowJustOpened = state;
     }
 
     void View::trackViewOpenState() {
-        if (this->m_windowOpen && !this->m_prevWindowOpen)
+        if (m_windowOpen && !m_prevWindowOpen)
             this->setWindowJustOpened(true);
-        this->m_prevWindowOpen = this->m_windowOpen;
+        m_prevWindowOpen = m_windowOpen;
     }
 
 

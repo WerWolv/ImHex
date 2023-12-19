@@ -18,10 +18,10 @@ namespace hex::plugin::builtin::ui {
         void draw(float height = ImGui::GetContentRegionAvail().y);
 
         void setProvider(prv::Provider *provider) {
-            this->m_provider = provider;
-            this->m_currValidRegion = { Region::Invalid(), false };
+            m_provider = provider;
+            m_currValidRegion = { Region::Invalid(), false };
         }
-        void setUnknownDataCharacter(char character) { this->m_unknownDataCharacter = character; }
+        void setUnknownDataCharacter(char character) { m_unknownDataCharacter = character; }
     private:
         enum class CellType { None, Hex, ASCII };
 
@@ -36,36 +36,36 @@ namespace hex::plugin::builtin::ui {
 
     public:
         void setSelectionUnchecked(std::optional<u64> start, std::optional<u64> end) {
-            this->m_selectionStart = start;
-            this->m_selectionEnd = end;
-            this->m_cursorPosition = end;
+            m_selectionStart = start;
+            m_selectionEnd = end;
+            m_cursorPosition = end;
         }
         void setSelection(const Region &region) { this->setSelection(region.getStartAddress(), region.getEndAddress()); }
         void setSelection(u128 start, u128 end) {
             if (!ImHexApi::Provider::isValid())
                 return;
 
-            if (start > this->m_provider->getBaseAddress() + this->m_provider->getActualSize())
+            if (start > m_provider->getBaseAddress() + m_provider->getActualSize())
                 return;
 
-            if (start < this->m_provider->getBaseAddress())
+            if (start < m_provider->getBaseAddress())
                 return;
 
-            if (this->m_provider->getActualSize() == 0)
+            if (m_provider->getActualSize() == 0)
                 return;
 
-            const size_t maxAddress = this->m_provider->getActualSize() + this->m_provider->getBaseAddress() - 1;
+            const size_t maxAddress = m_provider->getActualSize() + m_provider->getBaseAddress() - 1;
 
             constexpr static auto alignDown = [](u128 value, u128 alignment) {
                 return value & ~(alignment - 1);
             };
 
-            this->m_selectionChanged = this->m_selectionStart != start || this->m_selectionEnd != end;
+            m_selectionChanged = m_selectionStart != start || m_selectionEnd != end;
 
-            if (!this->m_selectionStart.has_value()) this->m_selectionStart = start;
-            if (!this->m_selectionEnd.has_value())   this->m_selectionEnd = end;
+            if (!m_selectionStart.has_value()) m_selectionStart = start;
+            if (!m_selectionEnd.has_value())   m_selectionEnd = end;
 
-            if (auto bytesPerCell = this->m_currDataVisualizer->getBytesPerCell(); bytesPerCell > 1) {
+            if (auto bytesPerCell = m_currDataVisualizer->getBytesPerCell(); bytesPerCell > 1) {
                 if (end > start) {
                     start = alignDown(start, bytesPerCell);
                     end   = alignDown(end, bytesPerCell) + (bytesPerCell - 1);
@@ -75,14 +75,14 @@ namespace hex::plugin::builtin::ui {
                 }
             }
 
-            this->m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
-            this->m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
-            this->m_cursorPosition = this->m_selectionEnd;
+            m_selectionStart = std::clamp<u128>(start, 0, maxAddress);
+            m_selectionEnd = std::clamp<u128>(end, 0, maxAddress);
+            m_cursorPosition = m_selectionEnd;
 
-            if (this->m_selectionChanged) {
+            if (m_selectionChanged) {
                 auto selection = this->getSelection();
-                EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, this->m_provider });
-                this->m_shouldModifyValue = true;
+                EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ { selection.address, selection.size }, m_provider });
+                m_shouldModifyValue = true;
             }
         }
 
@@ -90,138 +90,138 @@ namespace hex::plugin::builtin::ui {
             if (!isSelectionValid())
                 return Region::Invalid();
 
-            const auto start = std::min(this->m_selectionStart.value(), this->m_selectionEnd.value());
-            const auto end   = std::max(this->m_selectionStart.value(), this->m_selectionEnd.value());
+            const auto start = std::min(m_selectionStart.value(), m_selectionEnd.value());
+            const auto end   = std::max(m_selectionStart.value(), m_selectionEnd.value());
             const size_t size = end - start + 1;
 
             return { start, size };
         }
 
         [[nodiscard]] std::optional<u64> getCursorPosition() const {
-            return this->m_cursorPosition;
+            return m_cursorPosition;
         }
 
         void setCursorPosition(u64 cursorPosition) {
-            this->m_cursorPosition = cursorPosition;
+            m_cursorPosition = cursorPosition;
         }
 
         [[nodiscard]] bool isSelectionValid() const {
-            return this->m_selectionStart.has_value() && this->m_selectionEnd.has_value();
+            return m_selectionStart.has_value() && m_selectionEnd.has_value();
         }
 
         void jumpToSelection(bool center = true) {
-            this->m_shouldJumpToSelection = true;
+            m_shouldJumpToSelection = true;
 
             if (center)
-                this->m_centerOnJump = true;
+                m_centerOnJump = true;
         }
 
         void scrollToSelection() {
-            this->m_shouldScrollToSelection = true;
+            m_shouldScrollToSelection = true;
         }
 
         void jumpIfOffScreen() {
-            this->m_shouldJumpWhenOffScreen = true;
+            m_shouldJumpWhenOffScreen = true;
         }
 
         [[nodiscard]] u16 getBytesPerRow() const {
-            return this->m_bytesPerRow;
+            return m_bytesPerRow;
         }
 
         [[nodiscard]] u16 getBytesPerCell() const {
-            return this->m_currDataVisualizer->getBytesPerCell();
+            return m_currDataVisualizer->getBytesPerCell();
         }
 
         void setBytesPerRow(u16 bytesPerRow) {
-            this->m_bytesPerRow = bytesPerRow;
+            m_bytesPerRow = bytesPerRow;
         }
 
         [[nodiscard]] u16 getVisibleRowCount() const {
-            return this->m_visibleRowCount;
+            return m_visibleRowCount;
         }
 
         void setSelectionColor(color_t color) {
-            this->m_selectionColor = color;
+            m_selectionColor = color;
         }
 
         void enableUpperCaseHex(bool upperCaseHex) {
-            this->m_upperCaseHex = upperCaseHex;
+            m_upperCaseHex = upperCaseHex;
         }
 
         void enableGrayOutZeros(bool grayOutZeros) {
-            this->m_grayOutZero = grayOutZeros;
+            m_grayOutZero = grayOutZeros;
         }
 
         void enableShowAscii(bool showAscii) {
-            this->m_showAscii = showAscii;
+            m_showAscii = showAscii;
         }
 
         void enableShowHumanReadableUnits(bool showHumanReadableUnits) {
-            this->m_showHumanReadableUnits = showHumanReadableUnits;
+            m_showHumanReadableUnits = showHumanReadableUnits;
         }
 
         void enableSyncScrolling(bool syncScrolling) {
-            this->m_syncScrolling = syncScrolling;
+            m_syncScrolling = syncScrolling;
         }
 
         void setByteCellPadding(u32 byteCellPadding) {
-            this->m_byteCellPadding = byteCellPadding;
+            m_byteCellPadding = byteCellPadding;
         }
 
         void setCharacterCellPadding(u32 characterCellPadding) {
-            this->m_characterCellPadding = characterCellPadding;
+            m_characterCellPadding = characterCellPadding;
         }
 
         [[nodiscard]] const std::optional<EncodingFile>& getCustomEncoding() const {
-            return this->m_currCustomEncoding;
+            return m_currCustomEncoding;
         }
 
         void setCustomEncoding(const EncodingFile &encoding) {
-            this->m_currCustomEncoding = encoding;
-            this->m_encodingLineStartAddresses.clear();
+            m_currCustomEncoding = encoding;
+            m_encodingLineStartAddresses.clear();
         }
 
         void setCustomEncoding(EncodingFile &&encoding) {
-            this->m_currCustomEncoding = std::move(encoding);
-            this->m_encodingLineStartAddresses.clear();
+            m_currCustomEncoding = std::move(encoding);
+            m_encodingLineStartAddresses.clear();
         }
 
         void forceUpdateScrollPosition() {
-            this->m_shouldUpdateScrollPosition = true;
+            m_shouldUpdateScrollPosition = true;
         }
 
         void setForegroundHighlightCallback(const std::function<std::optional<color_t>(u64, const u8 *, size_t)> &callback) {
-            this->m_foregroundColorCallback = callback;
+            m_foregroundColorCallback = callback;
         }
 
         void setBackgroundHighlightCallback(const std::function<std::optional<color_t>(u64, const u8 *, size_t)> &callback) {
-            this->m_backgroundColorCallback = callback;
+            m_backgroundColorCallback = callback;
         }
 
         void setTooltipCallback(const std::function<void(u64, const u8 *, size_t)> &callback) {
-            this->m_tooltipCallback = callback;
+            m_tooltipCallback = callback;
         }
 
         [[nodiscard]] float getScrollPosition() const {
-            return this->m_scrollPosition;
+            return m_scrollPosition;
         }
 
         void setScrollPosition(float scrollPosition) {
-            this->m_scrollPosition = scrollPosition;
+            m_scrollPosition = scrollPosition;
         }
 
         void setEditingAddress(u64 address) {
-            this->m_editingAddress = address;
-            this->m_shouldModifyValue = false;
-            this->m_enteredEditingMode = true;
+            m_editingAddress = address;
+            m_shouldModifyValue = false;
+            m_enteredEditingMode = true;
 
-            this->m_editingBytes.resize(this->m_currDataVisualizer->getBytesPerCell());
-            this->m_provider->read(address + this->m_provider->getBaseAddress(), this->m_editingBytes.data(), this->m_editingBytes.size());
-            this->m_editingCellType = CellType::Hex;
+            m_editingBytes.resize(m_currDataVisualizer->getBytesPerCell());
+            m_provider->read(address + m_provider->getBaseAddress(), m_editingBytes.data(), m_editingBytes.size());
+            m_editingCellType = CellType::Hex;
         }
 
         void clearEditingAddress() {
-            this->m_editingAddress = std::nullopt;
+            m_editingAddress = std::nullopt;
         }
 
     private:

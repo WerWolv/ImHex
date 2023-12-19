@@ -19,17 +19,17 @@ namespace hex::plugin::builtin {
               m_message(std::move(message)), m_function(std::move(function)) { }
 
         void drawContent() override {
-            ImGuiExt::TextFormattedWrapped("{}", Lang(this->m_message));
+            ImGuiExt::TextFormattedWrapped("{}", Lang(m_message));
             ImGui::NewLine();
 
             ImGui::PushItemWidth(-1);
 
-            if (this->m_justOpened) {
+            if (m_justOpened) {
                 ImGui::SetKeyboardFocusHere();
-                this->m_justOpened = false;
+                m_justOpened = false;
             }
 
-            ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, this->m_input);
+            ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, m_input);
             ImGui::PopItemWidth();
 
             ImGui::NewLine();
@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
             if (ImGui::Button("hex.builtin.common.okay"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter))) {
-                this->m_function(this->m_input);
+                m_function(m_input);
                 this->close();
             }
             ImGui::SameLine();

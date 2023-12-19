@@ -31,10 +31,10 @@ namespace hex::plugin::builtin {
         class ServerContactWidget : public ContentRegistry::Settings::Widgets::Widget {
         public:
             bool draw(const std::string &name) override {
-                bool enabled = this->m_value == 1;
+                bool enabled = m_value == 1;
 
                 if (ImGui::Checkbox(name.data(), &enabled)) {
-                    this->m_value = enabled ? 1 : 0;
+                    m_value = enabled ? 1 : 0;
                     return true;
                 }
 
@@ -43,11 +43,11 @@ namespace hex::plugin::builtin {
 
             void load(const nlohmann::json &data) override {
                 if (data.is_number())
-                    this->m_value = data.get<int>();
+                    m_value = data.get<int>();
             }
 
             nlohmann::json store() override {
-                return this->m_value;
+                return m_value;
             }
 
         private:
@@ -58,15 +58,15 @@ namespace hex::plugin::builtin {
         public:
             bool draw(const std::string &name) override {
                 auto format = [this] -> std::string {
-                    if (this->m_value > 200)
+                    if (m_value > 200)
                         return "hex.builtin.setting.interface.fps.unlocked"_lang;
-                    else if (this->m_value < 15)
+                    else if (m_value < 15)
                         return "hex.builtin.setting.interface.fps.native"_lang;
                     else
                         return "%d FPS";
                 }();
 
-                if (ImGui::SliderInt(name.data(), &this->m_value, 14, 201, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
+                if (ImGui::SliderInt(name.data(), &m_value, 14, 201, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
                     return true;
                 }
 
@@ -75,11 +75,11 @@ namespace hex::plugin::builtin {
 
             void load(const nlohmann::json &data) override {
                 if (data.is_number())
-                    this->m_value = data.get<int>();
+                    m_value = data.get<int>();
             }
 
             nlohmann::json store() override {
-                return this->m_value;
+                return m_value;
             }
 
         private:
@@ -94,10 +94,10 @@ namespace hex::plugin::builtin {
                 if (!ImGui::BeginListBox("", ImVec2(-40_scaled, 280_scaled))) {
                     return false;
                 } else {
-                    for (size_t n = 0; n < this->m_paths.size(); n++) {
-                        const bool isSelected = (this->m_itemIndex == n);
-                        if (ImGui::Selectable(wolv::util::toUTF8String(this->m_paths[n]).c_str(), isSelected)) {
-                            this->m_itemIndex = n;
+                    for (size_t n = 0; n < m_paths.size(); n++) {
+                        const bool isSelected = (m_itemIndex == n);
+                        if (ImGui::Selectable(wolv::util::toUTF8String(m_paths[n]).c_str(), isSelected)) {
+                            m_itemIndex = n;
                         }
 
                         if (isSelected) {
@@ -111,9 +111,9 @@ namespace hex::plugin::builtin {
 
                 if (ImGuiExt::IconButton(ICON_VS_NEW_FOLDER, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
                     fs::openFileBrowser(fs::DialogMode::Folder, {}, [&](const std::fs::path &path) {
-                        if (std::find(this->m_paths.begin(), this->m_paths.end(), path) == this->m_paths.end()) {
-                            this->m_paths.emplace_back(path);
-                            ImHexApi::System::setAdditionalFolderPaths(this->m_paths);
+                        if (std::find(m_paths.begin(), m_paths.end(), path) == m_paths.end()) {
+                            m_paths.emplace_back(path);
+                            ImHexApi::System::setAdditionalFolderPaths(m_paths);
 
                             result = true;
                         }
@@ -122,9 +122,9 @@ namespace hex::plugin::builtin {
                 ImGuiExt::InfoTooltip("hex.builtin.setting.folders.add_folder"_lang);
 
                 if (ImGuiExt::IconButton(ICON_VS_REMOVE_CLOSE, ImGui::GetStyleColorVec4(ImGuiCol_Text), ImVec2(30, 30))) {
-                    if (!this->m_paths.empty()) {
-                        this->m_paths.erase(std::next(this->m_paths.begin(), this->m_itemIndex));
-                        ImHexApi::System::setAdditionalFolderPaths(this->m_paths);
+                    if (!m_paths.empty()) {
+                        m_paths.erase(std::next(m_paths.begin(), m_itemIndex));
+                        ImHexApi::System::setAdditionalFolderPaths(m_paths);
 
                         result = true;
                     }
@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
                     std::vector<std::string> pathStrings = data;
 
                     for (const auto &pathString : pathStrings) {
-                        this->m_paths.emplace_back(pathString);
+                        m_paths.emplace_back(pathString);
                     }
                 }
             }
@@ -149,7 +149,7 @@ namespace hex::plugin::builtin {
             nlohmann::json store() override {
                 std::vector<std::string> pathStrings;
 
-                for (const auto &path : this->m_paths) {
+                for (const auto &path : m_paths) {
                     pathStrings.push_back(wolv::util::toUTF8String(path));
                 }
 
@@ -165,13 +165,13 @@ namespace hex::plugin::builtin {
         public:
             bool draw(const std::string &name) override {
                 auto format = [this] -> std::string {
-                    if (this->m_value == 0)
+                    if (m_value == 0)
                         return "hex.builtin.setting.interface.scaling.native"_lang;
                     else
                         return "x%.1f";
                 }();
 
-                if (ImGui::SliderFloat(name.data(), &this->m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
+                if (ImGui::SliderFloat(name.data(), &m_value, 0, 10, format.c_str(), ImGuiSliderFlags_AlwaysClamp)) {
                     return true;
                 }
 
@@ -180,11 +180,11 @@ namespace hex::plugin::builtin {
 
             void load(const nlohmann::json &data) override {
                 if (data.is_number())
-                    this->m_value = data.get<float>();
+                    m_value = data.get<float>();
             }
 
             nlohmann::json store() override {
-                return this->m_value;
+                return m_value;
             }
 
         private:
@@ -195,7 +195,7 @@ namespace hex::plugin::builtin {
         public:
             bool draw(const std::string &name) override {
                 auto format = [this] -> std::string {
-                    auto value = this->m_value * 30;
+                    auto value = m_value * 30;
                     if (value == 0)
                         return "hex.builtin.common.off"_lang;
                     else if (value < 60)
@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
                         return hex::format("hex.builtin.setting.general.auto_backup_time.format.extended"_lang, value / 60, value % 60);
                 }();
 
-                if (ImGui::SliderInt(name.data(), &this->m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput)) {
+                if (ImGui::SliderInt(name.data(), &m_value, 0, (30 * 60) / 30, format.c_str(), ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_NoInput)) {
                     return true;
                 }
 
@@ -213,11 +213,11 @@ namespace hex::plugin::builtin {
 
             void load(const nlohmann::json &data) override {
                 if (data.is_number())
-                    this->m_value = data.get<int>();
+                    m_value = data.get<int>();
             }
 
             nlohmann::json store() override {
-                return this->m_value;
+                return m_value;
             }
 
         private:
@@ -231,8 +231,8 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &name) override {
                 std::string label;
 
-                if (!this->m_editing)
-                    label = this->m_drawShortcut.toString();
+                if (!m_editing)
+                    label = m_drawShortcut.toString();
                 else
                     label = "...";
 
@@ -240,14 +240,14 @@ namespace hex::plugin::builtin {
                     label = "???";
 
 
-                if (this->m_hasDuplicate)
+                if (m_hasDuplicate)
                     ImGui::PushStyleColor(ImGuiCol_Text, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_LoggerError));
 
                 ImGui::PushID(this);
                 if (ImGui::Button(label.c_str(), ImVec2(250_scaled, 0))) {
-                    this->m_editing = !this->m_editing;
+                    m_editing = !m_editing;
 
-                    if (this->m_editing)
+                    if (m_editing)
                         ShortcutManager::pauseShortcuts();
                     else
                         ShortcutManager::resumeShortcuts();
@@ -255,18 +255,18 @@ namespace hex::plugin::builtin {
 
                 ImGui::SameLine();
 
-                if (this->m_hasDuplicate)
+                if (m_hasDuplicate)
                     ImGui::PopStyleColor();
 
                 bool settingChanged = false;
 
-                ImGui::BeginDisabled(this->m_drawShortcut == this->m_defaultShortcut);
+                ImGui::BeginDisabled(m_drawShortcut == m_defaultShortcut);
                 if (ImGuiExt::IconButton(ICON_VS_X, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, this->m_defaultShortcut, this->m_view);
+                    m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, m_defaultShortcut, m_view);
 
-                    this->m_drawShortcut = this->m_defaultShortcut;
-                    if (!this->m_hasDuplicate) {
-                        this->m_shortcut = this->m_defaultShortcut;
+                    m_drawShortcut = m_defaultShortcut;
+                    if (!m_hasDuplicate) {
+                        m_shortcut = m_defaultShortcut;
                         settingChanged = true;
                     }
 
@@ -274,7 +274,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndDisabled();
 
                 if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                    this->m_editing = false;
+                    m_editing = false;
                     ShortcutManager::resumeShortcuts();
                 }
 
@@ -284,13 +284,13 @@ namespace hex::plugin::builtin {
 
                 ImGui::PopID();
 
-                if (this->m_editing) {
+                if (m_editing) {
                     if (this->detectShortcut()) {
-                        this->m_editing = false;
+                        m_editing = false;
                         ShortcutManager::resumeShortcuts();
 
                             settingChanged = true;
-                        if (!this->m_hasDuplicate) {
+                        if (!m_hasDuplicate) {
                         }
                     }
                 }
@@ -308,15 +308,15 @@ namespace hex::plugin::builtin {
                     return;
 
                 auto newShortcut = Shortcut(keys);
-                this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
-                this->m_shortcut = std::move(newShortcut);
-                this->m_drawShortcut = this->m_shortcut;
+                m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, newShortcut, m_view);
+                m_shortcut = std::move(newShortcut);
+                m_drawShortcut = m_shortcut;
             }
 
             nlohmann::json store() override {
                 std::vector<u32> keys;
 
-                for (const auto &key : this->m_shortcut.getKeys()) {
+                for (const auto &key : m_shortcut.getKeys()) {
                     if (key != CurrentView)
                         keys.push_back(key.getKeyCode());
                 }
@@ -327,7 +327,7 @@ namespace hex::plugin::builtin {
         private:
             bool detectShortcut() {
                 if (const auto &shortcut = ShortcutManager::getPreviousShortcut(); shortcut.has_value()) {
-                    auto keys = this->m_shortcut.getKeys();
+                    auto keys = m_shortcut.getKeys();
                     std::erase_if(keys, [](Key key) {
                         return key != AllowWhileTyping && key != CurrentView;
                     });
@@ -337,11 +337,11 @@ namespace hex::plugin::builtin {
                     }
 
                     auto newShortcut = Shortcut(std::move(keys));
-                    this->m_hasDuplicate = !ShortcutManager::updateShortcut(this->m_shortcut, newShortcut, this->m_view);
-                    this->m_drawShortcut = std::move(newShortcut);
+                    m_hasDuplicate = !ShortcutManager::updateShortcut(m_shortcut, newShortcut, m_view);
+                    m_drawShortcut = std::move(newShortcut);
 
-                    if (!this->m_hasDuplicate) {
-                        this->m_shortcut = this->m_drawShortcut;
+                    if (!m_hasDuplicate) {
+                        m_shortcut = m_drawShortcut;
                         log::info("Changed shortcut to {}", shortcut->toString());
                     } else {
                         log::warn("Changing shortcut failed as it overlapped with another one", shortcut->toString());

@@ -28,7 +28,7 @@ namespace hex::prv::undo {
         ON_SCOPE_EXIT { s_locked = false; };
 
         // If there are no operations, we can't undo anything.
-        if (this->m_undoStack.empty())
+        if (m_undoStack.empty())
             return;
 
         for (u32 i = 0; i < count; i += 1) {
@@ -38,9 +38,9 @@ namespace hex::prv::undo {
             }
 
             // Move last element from the undo stack to the redo stack
-            this->m_redoStack.emplace_back(std::move(this->m_undoStack.back()));
-            this->m_redoStack.back()->undo(this->m_provider);
-            this->m_undoStack.pop_back();
+            m_redoStack.emplace_back(std::move(m_undoStack.back()));
+            m_redoStack.back()->undo(m_provider);
+            m_undoStack.pop_back();
         }
     }
 
@@ -51,7 +51,7 @@ namespace hex::prv::undo {
         ON_SCOPE_EXIT { s_locked = false; };
 
         // If there are no operations, we can't redo anything.
-        if (this->m_redoStack.empty())
+        if (m_redoStack.empty())
             return;
 
         for (u32 i = 0; i < count; i += 1) {
@@ -61,9 +61,9 @@ namespace hex::prv::undo {
             }
 
             // Move last element from the undo stack to the redo stack
-            this->m_undoStack.emplace_back(std::move(this->m_redoStack.back()));
-            this->m_undoStack.back()->redo(this->m_provider);
-            this->m_redoStack.pop_back();
+            m_undoStack.emplace_back(std::move(m_redoStack.back()));
+            m_undoStack.back()->redo(m_provider);
+            m_redoStack.pop_back();
         }
     }
 
@@ -73,17 +73,17 @@ namespace hex::prv::undo {
 
         auto operation = std::make_unique<OperationGroup>(unlocalizedName);
 
-        i64 startIndex = std::max<i64>(0, this->m_undoStack.size() - count);
+        i64 startIndex = std::max<i64>(0, m_undoStack.size() - count);
 
         // Move operations from our stack to the group in the same order they were added
         for (u32 i = 0; i < count; i += 1) {
             i64 index = startIndex + i;
 
-            operation->addOperation(std::move(this->m_undoStack[index]));
+            operation->addOperation(std::move(m_undoStack[index]));
         }
 
         // Remove the empty operations from the stack
-        this->m_undoStack.resize(startIndex);
+        m_undoStack.resize(startIndex);
         this->add(std::move(operation));
     }
 
@@ -106,23 +106,23 @@ namespace hex::prv::undo {
         std::scoped_lock lock(s_mutex);
 
         // Clear the redo stack
-        this->m_redoStack.clear();
+        m_redoStack.clear();
 
         // Insert the new operation at the end of the list
-        this->m_undoStack.emplace_back(std::move(operation));
+        m_undoStack.emplace_back(std::move(operation));
 
         // Do the operation
-        this->getLastOperation()->redo(this->m_provider);
+        this->getLastOperation()->redo(m_provider);
 
         return true;
     }
 
     bool Stack::canUndo() const {
-        return !this->m_undoStack.empty();
+        return !m_undoStack.empty();
     }
 
     bool Stack::canRedo() const {
-        return !this->m_redoStack.empty();
+        return !m_redoStack.empty();
     }
 
 

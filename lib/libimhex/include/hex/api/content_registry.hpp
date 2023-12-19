@@ -64,32 +64,32 @@ namespace hex {
                         friend class Widget;
 
                         Interface& requiresRestart() {
-                            this->m_requiresRestart = true;
+                            m_requiresRestart = true;
 
                             return *this;
                         }
 
                         Interface& setEnabledCallback(std::function<bool()> callback) {
-                            this->m_enabledCallback = std::move(callback);
+                            m_enabledCallback = std::move(callback);
 
                             return *this;
                         }
 
                         Interface& setChangedCallback(std::function<void(Widget&)> callback) {
-                            this->m_changedCallback = std::move(callback);
+                            m_changedCallback = std::move(callback);
 
                             return *this;
                         }
 
                         Interface& setTooltip(const std::string &tooltip) {
-                            this->m_tooltip = tooltip;
+                            m_tooltip = tooltip;
 
                             return *this;
                         }
 
                         [[nodiscard]]
                         Widget& getWidget() const {
-                            return *this->m_widget;
+                            return *m_widget;
                         }
 
                     private:
@@ -104,27 +104,27 @@ namespace hex {
 
                     [[nodiscard]]
                     bool doesRequireRestart() const {
-                        return this->m_interface.m_requiresRestart;
+                        return m_interface.m_requiresRestart;
                     }
 
                     [[nodiscard]]
                     bool isEnabled() const {
-                        return !this->m_interface.m_enabledCallback || this->m_interface.m_enabledCallback();
+                        return !m_interface.m_enabledCallback || m_interface.m_enabledCallback();
                     }
 
                     [[nodiscard]]
                     const std::optional<std::string>& getTooltip() const {
-                        return this->m_interface.m_tooltip;
+                        return m_interface.m_tooltip;
                     }
 
                     void onChanged() {
-                        if (this->m_interface.m_changedCallback)
-                            this->m_interface.m_changedCallback(*this);
+                        if (m_interface.m_changedCallback)
+                            m_interface.m_changedCallback(*this);
                     }
 
                     [[nodiscard]]
                     Interface& getInterface() {
-                        return this->m_interface;
+                        return m_interface;
                     }
 
                 private:
@@ -140,7 +140,7 @@ namespace hex {
                     void load(const nlohmann::json &data) override;
                     nlohmann::json store() override;
 
-                    [[nodiscard]] bool isChecked() const { return this->m_value; }
+                    [[nodiscard]] bool isChecked() const { return m_value; }
 
                 private:
                     bool m_value;
@@ -154,7 +154,7 @@ namespace hex {
                     void load(const nlohmann::json &data) override;
                     nlohmann::json store() override;
 
-                    [[nodiscard]] i32 getValue() const { return this->m_value; }
+                    [[nodiscard]] i32 getValue() const { return m_value; }
 
                 private:
                     int m_value;
@@ -169,7 +169,7 @@ namespace hex {
                     void load(const nlohmann::json &data) override;
                     nlohmann::json store() override;
 
-                    [[nodiscard]] float getValue() const { return this->m_value; }
+                    [[nodiscard]] float getValue() const { return m_value; }
 
                 private:
                     float m_value;
@@ -221,7 +221,7 @@ namespace hex {
                     nlohmann::json store() override;
 
                     [[nodiscard]]
-                    const std::string& getValue() const { return this->m_value; }
+                    const std::string& getValue() const { return m_value; }
 
                 private:
                     std::string m_value;
@@ -235,7 +235,7 @@ namespace hex {
                     nlohmann::json store() override;
 
                     [[nodiscard]] std::fs::path getPath() const {
-                        return this->m_value;
+                        return m_value;
                     }
 
                 private:
@@ -842,10 +842,10 @@ namespace hex {
                 virtual void draw(u64 address, const u8 *data, size_t size, bool upperCase) = 0;
                 virtual bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) = 0;
 
-                [[nodiscard]] u16 getBytesPerCell() const { return this->m_bytesPerCell; }
-                [[nodiscard]] u16 getMaxCharsPerCell() const { return this->m_maxCharsPerCell; }
+                [[nodiscard]] u16 getBytesPerCell() const { return m_bytesPerCell; }
+                [[nodiscard]] u16 getMaxCharsPerCell() const { return m_maxCharsPerCell; }
 
-                [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return this->m_unlocalizedName; }
+                [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const { return m_unlocalizedName; }
 
             protected:
                 const static int TextInputFlags;
@@ -903,20 +903,20 @@ namespace hex {
 
                     }
 
-                    [[nodiscard]] Hash *getType() { return this->m_type; }
-                    [[nodiscard]] const Hash *getType() const { return this->m_type; }
-                    [[nodiscard]] const std::string &getName() const { return this->m_name; }
+                    [[nodiscard]] Hash *getType() { return m_type; }
+                    [[nodiscard]] const Hash *getType() const { return m_type; }
+                    [[nodiscard]] const std::string &getName() const { return m_name; }
 
                     const std::vector<u8>& get(const Region& region, prv::Provider *provider) {
-                        if (this->m_cache.empty()) {
-                            this->m_cache = this->m_callback(region, provider);
+                        if (m_cache.empty()) {
+                            m_cache = m_callback(region, provider);
                         }
 
-                        return this->m_cache;
+                        return m_cache;
                     }
 
                     void reset() {
-                        this->m_cache.clear();
+                        m_cache.clear();
                     }
 
                 private:
@@ -934,7 +934,7 @@ namespace hex {
                 virtual void load(const nlohmann::json &json) = 0;
 
                 [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const {
-                    return this->m_unlocalizedName;
+                    return m_unlocalizedName;
                 }
 
             protected:

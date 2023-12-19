@@ -34,8 +34,8 @@ namespace hex {
                 Highlighting() = default;
                 Highlighting(Region region, color_t color);
 
-                [[nodiscard]] const Region &getRegion() const { return this->m_region; }
-                [[nodiscard]] const color_t &getColor() const { return this->m_color; }
+                [[nodiscard]] const Region &getRegion() const { return m_region; }
+                [[nodiscard]] const color_t &getColor() const { return m_color; }
 
             private:
                 Region m_region = {};
@@ -47,9 +47,9 @@ namespace hex {
                 Tooltip() = default;
                 Tooltip(Region region, std::string value, color_t color);
 
-                [[nodiscard]] const Region &getRegion() const { return this->m_region; }
-                [[nodiscard]] const color_t &getColor() const { return this->m_color; }
-                [[nodiscard]] const std::string &getValue() const { return this->m_value; }
+                [[nodiscard]] const Region &getRegion() const { return m_region; }
+                [[nodiscard]] const color_t &getColor() const { return m_color; }
+                [[nodiscard]] const std::string &getValue() const { return m_value; }
 
             private:
                 Region m_region = {};

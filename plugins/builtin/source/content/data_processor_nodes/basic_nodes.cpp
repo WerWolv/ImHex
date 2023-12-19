@@ -29,27 +29,27 @@ namespace hex::plugin::builtin {
             constexpr static int StepSize = 1, FastStepSize = 10;
 
             ImGui::PushItemWidth(100_scaled);
-            ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &this->m_size, &StepSize, &FastStepSize);
+            ImGui::InputScalar("hex.builtin.nodes.constants.buffer.size"_lang, ImGuiDataType_U32, &m_size, &StepSize, &FastStepSize);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            if (this->m_buffer.size() != this->m_size)
-                this->m_buffer.resize(this->m_size, 0x00);
+            if (m_buffer.size() != m_size)
+                m_buffer.resize(m_size, 0x00);
 
-            this->setBufferOnOutput(0, this->m_buffer);
+            this->setBufferOnOutput(0, m_buffer);
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["size"] = this->m_size;
-            j["data"] = this->m_buffer;
+            j["size"] = m_size;
+            j["data"] = m_buffer;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_size   = j.at("size");
-            this->m_buffer = j.at("data").get<std::vector<u8>>();
+            m_size   = j.at("size");
+            m_buffer = j.at("data").get<std::vector<u8>>();
         }
 
     private:
@@ -64,21 +64,21 @@ namespace hex::plugin::builtin {
         }
 
         void drawNode() override {
-            ImGui::InputTextMultiline("##string", this->m_value, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput);
+            ImGui::InputTextMultiline("##string", m_value, ImVec2(150_scaled, 0), ImGuiInputTextFlags_AllowTabInput);
         }
 
         void process() override {
-            this->setBufferOnOutput(0, hex::decodeByteString(this->m_value));
+            this->setBufferOnOutput(0, hex::decodeByteString(m_value));
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["data"] = this->m_value;
+            j["data"] = m_value;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_value = j.at("data").get<std::string>();
+            m_value = j.at("data").get<std::string>();
         }
 
     private:
@@ -91,22 +91,22 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGuiExt::InputHexadecimal("##integer_value", &this->m_value);
+            ImGuiExt::InputHexadecimal("##integer_value", &m_value);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->setIntegerOnOutput(0, this->m_value);
+            this->setIntegerOnOutput(0, m_value);
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["data"] = this->m_value;
+            j["data"] = m_value;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_value = j.at("data");
+            m_value = j.at("data");
         }
 
     private:
@@ -119,22 +119,22 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::InputScalar("##floatValue", ImGuiDataType_Float, &this->m_value, nullptr, nullptr, "%f", ImGuiInputTextFlags_CharsDecimal);
+            ImGui::InputScalar("##floatValue", ImGuiDataType_Float, &m_value, nullptr, nullptr, "%f", ImGuiInputTextFlags_CharsDecimal);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->setFloatOnOutput(0, this->m_value);
+            this->setFloatOnOutput(0, m_value);
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["data"] = this->m_value;
+            j["data"] = m_value;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_value = j.at("data");
+            m_value = j.at("data");
         }
 
     private:
@@ -151,30 +151,30 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(200_scaled);
-            ImGui::ColorPicker4("##colorPicker", &this->m_color.Value.x, ImGuiColorEditFlags_AlphaBar);
+            ImGui::ColorPicker4("##colorPicker", &m_color.Value.x, ImGuiColorEditFlags_AlphaBar);
             ImGui::PopItemWidth();
         }
 
         void process() override {
-            this->setBufferOnOutput(0, wolv::util::toBytes<u8>(u8(this->m_color.Value.x * 0xFF)));
-            this->setBufferOnOutput(1, wolv::util::toBytes<u8>(u8(this->m_color.Value.y * 0xFF)));
-            this->setBufferOnOutput(2, wolv::util::toBytes<u8>(u8(this->m_color.Value.z * 0xFF)));
-            this->setBufferOnOutput(3, wolv::util::toBytes<u8>(u8(this->m_color.Value.w * 0xFF)));
+            this->setBufferOnOutput(0, wolv::util::toBytes<u8>(u8(m_color.Value.x * 0xFF)));
+            this->setBufferOnOutput(1, wolv::util::toBytes<u8>(u8(m_color.Value.y * 0xFF)));
+            this->setBufferOnOutput(2, wolv::util::toBytes<u8>(u8(m_color.Value.z * 0xFF)));
+            this->setBufferOnOutput(3, wolv::util::toBytes<u8>(u8(m_color.Value.w * 0xFF)));
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
             j["data"]      = nlohmann::json::object();
-            j["data"]["r"] = this->m_color.Value.x;
-            j["data"]["g"] = this->m_color.Value.y;
-            j["data"]["b"] = this->m_color.Value.z;
-            j["data"]["a"] = this->m_color.Value.w;
+            j["data"]["r"] = m_color.Value.x;
+            j["data"]["g"] = m_color.Value.y;
+            j["data"]["b"] = m_color.Value.z;
+            j["data"]["a"] = m_color.Value.w;
         }
 
         void load(const nlohmann::json &j) override {
             const auto &color = j.at("data");
-            this->m_color = ImVec4(color.at("r"), color.at("g"), color.at("b"), color.at("a"));
+            m_color = ImVec4(color.at("r"), color.at("g"), color.at("b"), color.at("a"));
         }
 
     private:
@@ -188,7 +188,7 @@ namespace hex::plugin::builtin {
         }
 
         void drawNode() override {
-            ImGui::InputTextMultiline("##string", this->m_comment, scaled(ImVec2(150, 100)));
+            ImGui::InputTextMultiline("##string", m_comment, scaled(ImVec2(150, 100)));
         }
 
         void process() override {
@@ -197,11 +197,11 @@ namespace hex::plugin::builtin {
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["comment"] = this->m_comment;
+            j["comment"] = m_comment;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_comment = j["comment"].get<std::string>();
+            m_comment = j["comment"].get<std::string>();
         }
 
     private:

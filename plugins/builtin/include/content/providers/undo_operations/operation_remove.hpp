@@ -13,20 +13,20 @@ namespace hex::plugin::builtin::undo {
             m_offset(offset), m_size(size) { }
 
         void undo(prv::Provider *provider) override {
-            provider->insertRaw(this->m_offset, this->m_size);
+            provider->insertRaw(m_offset, m_size);
 
-            provider->writeRaw(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
+            provider->writeRaw(m_offset, m_removedData.data(), m_removedData.size());
         }
 
         void redo(prv::Provider *provider) override {
-            this->m_removedData.resize(this->m_size);
-            provider->readRaw(this->m_offset, this->m_removedData.data(), this->m_removedData.size());
+            m_removedData.resize(m_size);
+            provider->readRaw(m_offset, m_removedData.data(), m_removedData.size());
 
-            provider->removeRaw(this->m_offset, this->m_size);
+            provider->removeRaw(m_offset, m_size);
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("hex.builtin.undo_operation.remove"_lang, hex::toByteString(this->m_size), this->m_offset);
+            return hex::format("hex.builtin.undo_operation.remove"_lang, hex::toByteString(m_size), m_offset);
         }
 
         std::unique_ptr<Operation> clone() const override {
@@ -34,7 +34,7 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] Region getRegion() const override {
-            return { this->m_offset, this->m_size };
+            return { m_offset, m_size };
         }
 
         bool shouldHighlight() const override { return false; }

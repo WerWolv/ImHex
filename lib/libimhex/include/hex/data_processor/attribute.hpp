@@ -28,29 +28,29 @@ namespace hex::dp {
         Attribute(IOType ioType, Type type, UnlocalizedString unlocalizedName);
         ~Attribute();
 
-        [[nodiscard]] int getId() const { return this->m_id; }
-        void setId(int id) { this->m_id = id; }
+        [[nodiscard]] int getId() const { return m_id; }
+        void setId(int id) { m_id = id; }
 
-        [[nodiscard]] IOType getIOType() const { return this->m_ioType; }
-        [[nodiscard]] Type getType() const { return this->m_type; }
-        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const { return this->m_unlocalizedName; }
+        [[nodiscard]] IOType getIOType() const { return m_ioType; }
+        [[nodiscard]] Type getType() const { return m_type; }
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const { return m_unlocalizedName; }
 
-        void addConnectedAttribute(int linkId, Attribute *to) { this->m_connectedAttributes.insert({ linkId, to }); }
-        void removeConnectedAttribute(int linkId) { this->m_connectedAttributes.erase(linkId); }
-        [[nodiscard]] std::map<int, Attribute *> &getConnectedAttributes() { return this->m_connectedAttributes; }
+        void addConnectedAttribute(int linkId, Attribute *to) { m_connectedAttributes.insert({ linkId, to }); }
+        void removeConnectedAttribute(int linkId) { m_connectedAttributes.erase(linkId); }
+        [[nodiscard]] std::map<int, Attribute *> &getConnectedAttributes() { return m_connectedAttributes; }
 
-        [[nodiscard]] Node *getParentNode() const { return this->m_parentNode; }
+        [[nodiscard]] Node *getParentNode() const { return m_parentNode; }
 
         [[nodiscard]] std::vector<u8>& getOutputData() {
-            if (!this->m_outputData.empty())
-                return this->m_outputData;
+            if (!m_outputData.empty())
+                return m_outputData;
             else
-                return this->m_defaultData;
+                return m_defaultData;
         }
 
-        void clearOutputData() { this->m_outputData.clear(); }
+        void clearOutputData() { m_outputData.clear(); }
 
-        [[nodiscard]] std::vector<u8>& getDefaultData() { return this->m_defaultData; }
+        [[nodiscard]] std::vector<u8>& getDefaultData() { return m_defaultData; }
 
         static void setIdCounter(int id);
 
@@ -66,7 +66,7 @@ namespace hex::dp {
         std::vector<u8> m_defaultData;
 
         friend class Node;
-        void setParentNode(Node *node) { this->m_parentNode = node; }
+        void setParentNode(Node *node) { m_parentNode = node; }
 
         static int s_idCounter;
     };

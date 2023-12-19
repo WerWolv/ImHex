@@ -69,39 +69,39 @@ namespace hex::gl {
 
         ON_SCOPE_EXIT { glDeleteShader(vertexShader); glDeleteShader(fragmentShader); };
 
-        this->m_program = glCreateProgram();
+        m_program = glCreateProgram();
 
-        glAttachShader(this->m_program, vertexShader);
-        glAttachShader(this->m_program, fragmentShader);
-        glLinkProgram(this->m_program);
+        glAttachShader(m_program, vertexShader);
+        glAttachShader(m_program, fragmentShader);
+        glLinkProgram(m_program);
 
         int result = false;
-        glGetProgramiv(this->m_program, GL_LINK_STATUS, &result);
+        glGetProgramiv(m_program, GL_LINK_STATUS, &result);
         if (!result) {
             std::vector<char> log(512);
-            glGetShaderInfoLog(this->m_program, log.size(), nullptr, log.data());
+            glGetShaderInfoLog(m_program, log.size(), nullptr, log.data());
             log::error("Failed to link shader: {}", log.data());
         }
     }
 
     Shader::~Shader() {
-        if (this->m_program != 0)
-            glDeleteProgram(this->m_program);
+        if (m_program != 0)
+            glDeleteProgram(m_program);
     }
 
     Shader::Shader(Shader &&other) noexcept {
-        this->m_program = other.m_program;
+        m_program = other.m_program;
         other.m_program = 0;
     }
 
     Shader& Shader::operator=(Shader &&other) noexcept {
-        this->m_program = other.m_program;
+        m_program = other.m_program;
         other.m_program = 0;
         return *this;
     }
 
     void Shader::bind() const {
-        glUseProgram(this->m_program);
+        glUseProgram(m_program);
     }
 
     void Shader::unbind() const {
@@ -118,16 +118,16 @@ namespace hex::gl {
 
 
     GLint Shader::getUniformLocation(std::string_view name) {
-        auto uniform = this->m_uniforms.find(name.data());
-        if (uniform == this->m_uniforms.end()) {
-            auto location = glGetUniformLocation(this->m_program, name.data());
+        auto uniform = m_uniforms.find(name.data());
+        if (uniform == m_uniforms.end()) {
+            auto location = glGetUniformLocation(m_program, name.data());
             if (location == -1) {
                 log::warn("Uniform '{}' not found in shader", name);
                 return -1;
             }
 
-            this->m_uniforms[name.data()] = location;
-            uniform = this->m_uniforms.find(name.data());
+            m_uniforms[name.data()] = location;
+            uniform = m_uniforms.find(name.data());
         }
 
         return uniform->second;
@@ -151,66 +151,66 @@ namespace hex::gl {
 
     template<typename T>
     Buffer<T>::Buffer(BufferType type, std::span<const T> data) : m_size(data.size()), m_type(GLuint(type)) {
-        glGenBuffers(1, &this->m_buffer);
-        glBindBuffer(this->m_type, this->m_buffer);
-        glBufferData(this->m_type, data.size_bytes(), data.data(), GL_STATIC_DRAW);
-        glBindBuffer(this->m_type, 0);
+        glGenBuffers(1, &m_buffer);
+        glBindBuffer(m_type, m_buffer);
+        glBufferData(m_type, data.size_bytes(), data.data(), GL_STATIC_DRAW);
+        glBindBuffer(m_type, 0);
     }
 
     template<typename T>
     Buffer<T>::~Buffer() {
-        glDeleteBuffers(1, &this->m_buffer);
+        glDeleteBuffers(1, &m_buffer);
     }
 
     template<typename T>
     Buffer<T>::Buffer(Buffer &&other) noexcept {
-        this->m_buffer = other.m_buffer;
-        this->m_size = other.m_size;
-        this->m_type = other.m_type;
+        m_buffer = other.m_buffer;
+        m_size = other.m_size;
+        m_type = other.m_type;
         other.m_buffer = -1;
     }
 
     template<typename T>
     Buffer<T>& Buffer<T>::operator=(Buffer &&other) noexcept {
-        this->m_buffer = other.m_buffer;
-        this->m_size = other.m_size;
-        this->m_type = other.m_type;
+        m_buffer = other.m_buffer;
+        m_size = other.m_size;
+        m_type = other.m_type;
         other.m_buffer = -1;
         return *this;
     }
 
     template<typename T>
     void Buffer<T>::bind() const {
-        glBindBuffer(this->m_type, this->m_buffer);
+        glBindBuffer(m_type, m_buffer);
     }
 
     template<typename T>
     void Buffer<T>::unbind() const {
-        glBindBuffer(this->m_type, 0);
+        glBindBuffer(m_type, 0);
     }
 
     template<typename T>
     size_t Buffer<T>::getSize() const {
-        return this->m_size;
+        return m_size;
     }
 
     template<typename T>
     void Buffer<T>::draw(unsigned primitive) const {
-        switch (this->m_type) {
+        switch (m_type) {
             case GL_ARRAY_BUFFER:
-                glDrawArrays(primitive, 0, this->m_size);
+                glDrawArrays(primitive, 0, m_size);
                 break;
             case GL_ELEMENT_ARRAY_BUFFER:
-                glDrawElements(primitive, this->m_size, impl::getType<T>(), nullptr);
+                glDrawElements(primitive, m_size, impl::getType<T>(), nullptr);
                  break;
         }
     }
 
     template<typename T>
     void Buffer<T>::update(std::span<const T> data) {
-        glBindBuffer(this->m_type, this->m_buffer);
-        glBufferSubData(this->m_type, 0, data.size_bytes(), data.data());
-        glBindBuffer(this->m_type, 0);
+        glBindBuffer(m_type, m_buffer);
+        glBufferSubData(m_type, 0, data.size_bytes(), data.data());
+        glBindBuffer(m_type, 0);
     }
 
     template class Buffer<float>;
@@ -219,26 +219,26 @@ namespace hex::gl {
     template class Buffer<u8>;
 
     VertexArray::VertexArray() {
-        glGenVertexArrays(1, &this->m_array);
+        glGenVertexArrays(1, &m_array);
     }
 
     VertexArray::~VertexArray() {
-        glDeleteVertexArrays(1, &this->m_array);
+        glDeleteVertexArrays(1, &m_array);
     }
 
     VertexArray::VertexArray(VertexArray &&other) noexcept {
-        this->m_array = other.m_array;
+        m_array = other.m_array;
         other.m_array = -1;
     }
 
     VertexArray& VertexArray::operator=(VertexArray &&other) noexcept {
-        this->m_array = other.m_array;
+        m_array = other.m_array;
         other.m_array = -1;
         return *this;
     }
 
     void VertexArray::bind() const {
-        glBindVertexArray(this->m_array);
+        glBindVertexArray(m_array);
     }
 
     void VertexArray::unbind() const {
@@ -247,8 +247,8 @@ namespace hex::gl {
 
 
     Texture::Texture(u32 width, u32 height) : m_texture(0), m_width(width), m_height(height) {
-        glGenTextures(1, &this->m_texture);
-        glBindTexture(GL_TEXTURE_2D, this->m_texture);
+        glGenTextures(1, &m_texture);
+        glBindTexture(GL_TEXTURE_2D, m_texture);
 
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
@@ -259,26 +259,26 @@ namespace hex::gl {
     }
 
     Texture::~Texture() {
-        if (this->m_texture != 0)
-            glDeleteTextures(1, &this->m_texture);
+        if (m_texture != 0)
+            glDeleteTextures(1, &m_texture);
     }
 
     Texture::Texture(Texture &&other) noexcept {
-        this->m_texture = other.m_texture;
+        m_texture = other.m_texture;
         other.m_texture = -1;
 
-        this->m_width = other.m_width;
-        this->m_height = other.m_height;
+        m_width = other.m_width;
+        m_height = other.m_height;
     }
 
     Texture& Texture::operator=(Texture &&other) noexcept {
-        this->m_texture = other.m_texture;
+        m_texture = other.m_texture;
         other.m_texture = -1;
         return *this;
     }
 
     void Texture::bind() const {
-        glBindTexture(GL_TEXTURE_2D, this->m_texture);
+        glBindTexture(GL_TEXTURE_2D, m_texture);
     }
 
     void Texture::unbind() const {
@@ -286,59 +286,59 @@ namespace hex::gl {
     }
 
     GLuint Texture::getTexture() const {
-        return this->m_texture;
+        return m_texture;
     }
 
     u32 Texture::getWidth() const {
-        return this->m_width;
+        return m_width;
     }
 
     u32 Texture::getHeight() const {
-        return this->m_height;
+        return m_height;
     }
 
     GLuint Texture::release() {
-        auto copy = this->m_texture;
-        this->m_texture = -1;
+        auto copy = m_texture;
+        m_texture = -1;
 
         return copy;
     }
 
     FrameBuffer::FrameBuffer(u32 width, u32 height) {
-        glGenFramebuffers(1, &this->m_frameBuffer);
-        glBindFramebuffer(GL_FRAMEBUFFER, this->m_frameBuffer);
+        glGenFramebuffers(1, &m_frameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
 
-        glGenRenderbuffers(1, &this->m_renderBuffer);
-        glBindRenderbuffer(GL_RENDERBUFFER, this->m_renderBuffer);
+        glGenRenderbuffers(1, &m_renderBuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, m_renderBuffer);
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, this->m_renderBuffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_renderBuffer);
 
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     FrameBuffer::~FrameBuffer() {
-        glDeleteFramebuffers(1, &this->m_frameBuffer);
-        glDeleteRenderbuffers(1, &this->m_renderBuffer);
+        glDeleteFramebuffers(1, &m_frameBuffer);
+        glDeleteRenderbuffers(1, &m_renderBuffer);
     }
 
     FrameBuffer::FrameBuffer(FrameBuffer &&other) noexcept {
-        this->m_frameBuffer = other.m_frameBuffer;
+        m_frameBuffer = other.m_frameBuffer;
         other.m_frameBuffer = -1;
-        this->m_renderBuffer = other.m_renderBuffer;
+        m_renderBuffer = other.m_renderBuffer;
         other.m_renderBuffer = -1;
     }
 
     FrameBuffer& FrameBuffer::operator=(FrameBuffer &&other) noexcept {
-        this->m_frameBuffer = other.m_frameBuffer;
+        m_frameBuffer = other.m_frameBuffer;
         other.m_frameBuffer = -1;
-        this->m_renderBuffer = other.m_renderBuffer;
+        m_renderBuffer = other.m_renderBuffer;
         other.m_renderBuffer = -1;
         return *this;
     }
 
     void FrameBuffer::bind() const {
-        glBindFramebuffer(GL_FRAMEBUFFER, this->m_frameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
     }
 
     void FrameBuffer::unbind() const {
@@ -346,7 +346,7 @@ namespace hex::gl {
     }
 
     void FrameBuffer::attachTexture(const Texture &texture) const {
-        glBindFramebuffer(GL_FRAMEBUFFER, this->m_frameBuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
         texture.bind();
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture.getTexture(), 0);

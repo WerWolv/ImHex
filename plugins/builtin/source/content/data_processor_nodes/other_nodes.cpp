@@ -61,8 +61,8 @@ namespace hex::plugin::builtin {
     public:
         NodeDataSelection() : Node("hex.builtin.nodes.data_access.selection.header", { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.address"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.data_access.selection.size") }) {
             EventRegionSelected::subscribe(this, [this](const auto &region) {
-                this->m_address = region.address;
-                this->m_size    = region.size;
+                m_address = region.address;
+                m_size    = region.size;
             });
         }
 
@@ -71,8 +71,8 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            this->setIntegerOnOutput(0, this->m_address);
-            this->setIntegerOnOutput(1, this->m_size);
+            this->setIntegerOnOutput(0, m_address);
+            this->setIntegerOnOutput(1, m_size);
         }
 
     private:
@@ -232,17 +232,17 @@ namespace hex::plugin::builtin {
         NodeVisualizerDigram() : Node("hex.builtin.nodes.visualizer.digram.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            this->m_digram.draw(scaled({ 200, 200 }));
+            m_digram.draw(scaled({ 200, 200 }));
 
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                this->m_digram.draw(scaled({ 600, 600 }));
+                m_digram.draw(scaled({ 600, 600 }));
                 ImGui::EndTooltip();
             }
         }
 
         void process() override {
-            this->m_digram.process(this->getBufferOnInput(0));
+            m_digram.process(this->getBufferOnInput(0));
         }
 
     private:
@@ -254,16 +254,16 @@ namespace hex::plugin::builtin {
         NodeVisualizerLayeredDistribution() : Node("hex.builtin.nodes.visualizer.layered_dist.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            this->m_layeredDistribution.draw(scaled({ 200, 200 }));
+            m_layeredDistribution.draw(scaled({ 200, 200 }));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                this->m_layeredDistribution.draw(scaled({ 600, 600 }));
+                m_layeredDistribution.draw(scaled({ 600, 600 }));
                 ImGui::EndTooltip();
             }
         }
 
         void process() override {
-            this->m_layeredDistribution.process(this->getBufferOnInput(0));
+            m_layeredDistribution.process(this->getBufferOnInput(0));
         }
 
     private:
@@ -275,10 +275,10 @@ namespace hex::plugin::builtin {
         NodeVisualizerImage() : Node("hex.builtin.nodes.visualizer.image.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input") }) { }
 
         void drawNode() override {
-            ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 200, 200)));
+            ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 200, 200)));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 600, 600)));
+                ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 600, 600)));
                 ImGui::EndTooltip();
             }
         }
@@ -286,7 +286,7 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &rawData = this->getBufferOnInput(0);
 
-            this->m_texture = ImGuiExt::Texture(rawData.data(), rawData.size(), ImGuiExt::Texture::Filter::Nearest);
+            m_texture = ImGuiExt::Texture(rawData.data(), rawData.size(), ImGuiExt::Texture::Filter::Nearest);
         }
 
     private:
@@ -298,16 +298,16 @@ namespace hex::plugin::builtin {
         NodeVisualizerImageRGBA() : Node("hex.builtin.nodes.visualizer.image_rgba.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.width"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.nodes.common.height") }) { }
 
         void drawNode() override {
-            ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 200, 200)));
+            ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 200, 200)));
             if (ImGui::IsItemHovered() && ImGui::IsKeyDown(ImGuiKey_LeftShift)) {
                 ImGui::BeginTooltip();
-                ImGui::Image(this->m_texture, scaled(ImVec2(this->m_texture.getAspectRatio() * 600, 600)));
+                ImGui::Image(m_texture, scaled(ImVec2(m_texture.getAspectRatio() * 600, 600)));
                 ImGui::EndTooltip();
             }
         }
 
         void process() override {
-            this->m_texture = { };
+            m_texture = { };
 
             const auto &rawData = this->getBufferOnInput(0);
             const auto &width = this->getIntegerOnInput(1);
@@ -317,7 +317,7 @@ namespace hex::plugin::builtin {
             if (requiredBytes > rawData.size())
                 throwNodeError(hex::format("Image requires at least {} bytes of data, but only {} bytes are available", requiredBytes, rawData.size()));
 
-            this->m_texture = ImGuiExt::Texture(rawData.data(), rawData.size(), ImGuiExt::Texture::Filter::Nearest, width, height);
+            m_texture = ImGuiExt::Texture(rawData.data(), rawData.size(), ImGuiExt::Texture::Filter::Nearest, width, height);
         }
 
     private:
@@ -342,7 +342,7 @@ namespace hex::plugin::builtin {
             if (ImPlot::BeginPlot("##distribution", viewSize, ImPlotFlags_NoLegend | ImPlotFlags_NoMenus | ImPlotFlags_NoBoxSelect)) {
                 ImPlot::SetupAxes("Address", "Count", ImPlotAxisFlags_Lock, ImPlotAxisFlags_Lock);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
-                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(this->m_counts.begin(), this->m_counts.end())) * 1.1F, ImGuiCond_Always);
+                ImPlot::SetupAxesLimits(0, 256, 1, double(*std::max_element(m_counts.begin(), m_counts.end())) * 1.1F, ImGuiCond_Always);
 
                 static auto x = [] {
                     std::array<ImU64, 256> result { 0 };
@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
                 }();
 
 
-                ImPlot::PlotBars<ImU64>("##bytes", x.data(), this->m_counts.data(), x.size(), 1);
+                ImPlot::PlotBars<ImU64>("##bytes", x.data(), m_counts.data(), x.size(), 1);
 
                 ImPlot::EndPlot();
             }
@@ -360,9 +360,9 @@ namespace hex::plugin::builtin {
         void process() override {
             const auto &buffer = this->getBufferOnInput(0);
 
-            this->m_counts.fill(0x00);
+            m_counts.fill(0x00);
             for (const auto &byte : buffer) {
-                this->m_counts[byte]++;
+                m_counts[byte]++;
             }
         }
 
@@ -377,7 +377,7 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
-            ImGui::InputText("##name", this->m_name);
+            ImGui::InputText("##name", m_name);
             ImGui::PopItemWidth();
         }
 
@@ -387,7 +387,7 @@ namespace hex::plugin::builtin {
 
             const auto &outVars = runtime.getOutVariables();
 
-            if (outVars.contains(this->m_name)) {
+            if (outVars.contains(m_name)) {
                 std::visit(wolv::util::overloaded {
                     [](const std::string &) {},
                     [](pl::ptrn::Pattern *) {},
@@ -397,20 +397,20 @@ namespace hex::plugin::builtin {
 
                         this->setBufferOnOutput(0, buffer);
                     }
-                }, outVars.at(this->m_name));
+                }, outVars.at(m_name));
             } else {
-                throwNodeError(hex::format("Out variable '{}' has not been defined!", this->m_name));
+                throwNodeError(hex::format("Out variable '{}' has not been defined!", m_name));
             }
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["name"] = this->m_name;
+            j["name"] = m_name;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_name = j["name"].get<std::string>();
+            m_name = j["name"].get<std::string>();
         }
 
     private:

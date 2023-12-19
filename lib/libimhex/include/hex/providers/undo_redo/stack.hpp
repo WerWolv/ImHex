@@ -39,21 +39,21 @@ namespace hex::prv::undo {
         bool add(std::unique_ptr<Operation> &&operation);
 
         const std::vector<std::unique_ptr<Operation>> &getAppliedOperations() const {
-            return this->m_undoStack;
+            return m_undoStack;
         }
 
         const std::vector<std::unique_ptr<Operation>> &getUndoneOperations() const {
-            return this->m_redoStack;
+            return m_redoStack;
         }
 
         void reset() {
-            this->m_undoStack.clear();
-            this->m_redoStack.clear();
+            m_undoStack.clear();
+            m_redoStack.clear();
         }
 
     private:
         [[nodiscard]] Operation* getLastOperation() const {
-            return this->m_undoStack.back().get();
+            return m_undoStack.back().get();
         }
 
     private:

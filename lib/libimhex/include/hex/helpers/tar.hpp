@@ -44,7 +44,7 @@ namespace hex {
         void extract(const std::fs::path &path, const std::fs::path &outputPath);
         void extractAll(const std::fs::path &outputPath);
 
-        [[nodiscard]] bool isValid() const { return this->m_valid; }
+        [[nodiscard]] bool isValid() const { return m_valid; }
 
     private:
         mtar_t m_ctx = { };

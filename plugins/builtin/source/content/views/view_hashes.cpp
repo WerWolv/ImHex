@@ -22,19 +22,19 @@ namespace hex::plugin::builtin {
             ImGuiExt::Header(this->getUnlocalizedName(), true);
 
             ImGui::PushItemWidth(-1);
-            if (ImGui::InputTextMultiline("##input", this->m_input)) {
+            if (ImGui::InputTextMultiline("##input", m_input)) {
                 auto provider = std::make_unique<MemoryFileProvider>();
-                provider->resize(this->m_input.size());
-                provider->writeRaw(0x00, this->m_input.data(), this->m_input.size());
+                provider->resize(m_input.size());
+                provider->writeRaw(0x00, m_input.data(), m_input.size());
 
-                this->m_hash.reset();
-                auto bytes = this->m_hash.get(Region { 0x00, provider->getActualSize() }, provider.get());
+                m_hash.reset();
+                auto bytes = m_hash.get(Region { 0x00, provider->getActualSize() }, provider.get());
 
-                this->m_result = crypt::encode16(bytes);
+                m_result = crypt::encode16(bytes);
             }
 
             ImGui::NewLine();
-            ImGui::InputText("##result", this->m_result, ImGuiInputTextFlags_ReadOnly);
+            ImGui::InputText("##result", m_result, ImGuiInputTextFlags_ReadOnly);
             ImGui::PopItemWidth();
 
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
@@ -59,7 +59,7 @@ namespace hex::plugin::builtin {
 
     ViewHashes::ViewHashes() : View::Window("hex.builtin.view.hashes.name") {
         EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
-            for (auto &function : this->m_hashFunctions.get(providerRegion.getProvider()))
+            for (auto &function : m_hashFunctions.get(providerRegion.getProvider()))
                 function.reset();
         });
 
@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
             auto selection = ImHexApi::HexEditor::getSelection();
 
             if (selection.has_value() && ImGui::GetIO().KeyShift) {
-                auto &hashFunctions = this->m_hashFunctions.get(selection->getProvider());
+                auto &hashFunctions = m_hashFunctions.get(selection->getProvider());
                 if (!hashFunctions.empty() && selection.has_value() && selection->overlaps(Region { address, size })) {
                     ImGui::BeginTooltip();
 
@@ -117,7 +117,7 @@ namespace hex::plugin::builtin {
                     return true;
 
                 auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                this->m_hashFunctions->clear();
+                m_hashFunctions->clear();
 
                 return this->importHashes(provider, data);
             },
@@ -140,29 +140,29 @@ namespace hex::plugin::builtin {
     void ViewHashes::drawContent() {
         const auto &hashes = ContentRegistry::Hashes::impl::getHashes();
 
-        if (this->m_selectedHash == nullptr && !hashes.empty()) {
-            this->m_selectedHash = hashes.front().get();
+        if (m_selectedHash == nullptr && !hashes.empty()) {
+            m_selectedHash = hashes.front().get();
         }
 
-        if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, this->m_selectedHash != nullptr ? Lang(this->m_selectedHash->getUnlocalizedName()) : "")) {
+        if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, m_selectedHash != nullptr ? Lang(m_selectedHash->getUnlocalizedName()) : "")) {
 
             for (const auto &hash : hashes) {
-                if (ImGui::Selectable(Lang(hash->getUnlocalizedName()), this->m_selectedHash == hash.get())) {
-                    this->m_selectedHash = hash.get();
-                    this->m_newHashName.clear();
+                if (ImGui::Selectable(Lang(hash->getUnlocalizedName()), m_selectedHash == hash.get())) {
+                    m_selectedHash = hash.get();
+                    m_newHashName.clear();
                 }
             }
 
             ImGui::EndCombo();
         }
 
-        if (this->m_newHashName.empty() && this->m_selectedHash != nullptr)
-            this->m_newHashName = hex::format("{} {}", Lang(this->m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
+        if (m_newHashName.empty() && m_selectedHash != nullptr)
+            m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
 
         if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvail().x, 200_scaled), true)) {
-            if (this->m_selectedHash != nullptr) {
+            if (m_selectedHash != nullptr) {
                 auto startPos = ImGui::GetCursorPosY();
-                this->m_selectedHash->draw();
+                m_selectedHash->draw();
 
                 // Check if no elements have been added
                 if (startPos == ImGui::GetCursorPosY()) {
@@ -173,13 +173,13 @@ namespace hex::plugin::builtin {
         ImGui::EndChild();
 
 
-        ImGuiExt::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, this->m_newHashName);
+        ImGuiExt::InputTextIcon("##hash_name", ICON_VS_SYMBOL_KEY, m_newHashName);
         ImGui::SameLine();
 
-        ImGui::BeginDisabled(this->m_newHashName.empty() || this->m_selectedHash == nullptr);
+        ImGui::BeginDisabled(m_newHashName.empty() || m_selectedHash == nullptr);
         if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            if (this->m_selectedHash != nullptr) {
-                this->m_hashFunctions->push_back(this->m_selectedHash->create(this->m_newHashName));
+            if (m_selectedHash != nullptr) {
+                m_hashFunctions->push_back(m_selectedHash->create(m_newHashName));
                 AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.create_hash.name");
             }
         }
@@ -200,8 +200,8 @@ namespace hex::plugin::builtin {
             auto selection = ImHexApi::HexEditor::getSelection();
 
             std::optional<u32> indexToRemove;
-            for (u32 i = 0; i < this->m_hashFunctions->size(); i++) {
-                auto &function = (*this->m_hashFunctions)[i];
+            for (u32 i = 0; i < m_hashFunctions->size(); i++) {
+                auto &function = (*m_hashFunctions)[i];
 
                 ImGui::PushID(i);
 
@@ -242,7 +242,7 @@ namespace hex::plugin::builtin {
             }
 
             if (indexToRemove.has_value()) {
-                this->m_hashFunctions->erase(this->m_hashFunctions->begin() + indexToRemove.value());
+                m_hashFunctions->erase(m_hashFunctions->begin() + indexToRemove.value());
             }
 
             ImGui::EndTable();
@@ -265,7 +265,7 @@ namespace hex::plugin::builtin {
                     auto newFunction = newHash->create(hash["name"]);
                     newFunction.getType()->load(hash["settings"]);
 
-                    this->m_hashFunctions.get(provider).push_back(std::move(newFunction));
+                    m_hashFunctions.get(provider).push_back(std::move(newFunction));
                     break;
                 }
             }
@@ -277,7 +277,7 @@ namespace hex::plugin::builtin {
     bool ViewHashes::exportHashes(prv::Provider *provider, nlohmann::json &json) {
         json["hashes"] = nlohmann::json::array();
         size_t index = 0;
-        for (const auto &hashFunction : this->m_hashFunctions.get(provider)) {
+        for (const auto &hashFunction : m_hashFunctions.get(provider)) {
             json["hashes"][index] = {
                     { "name", hashFunction.getName() },
                     { "type", hashFunction.getType()->getUnlocalizedName() },

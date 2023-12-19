@@ -110,27 +110,27 @@ namespace hex::crypt {
         }
 
         constexpr void reset() {
-            this->m_value = reflect(m_init, NumBits);
+            m_value = reflect(m_init, NumBits);
         }
 
         constexpr void processBytes(const unsigned char *data, std::size_t size) {
             for (std::size_t i = 0; i < size; i++) {
                 u8 byte;
-                if (this->m_reflectInput)
+                if (m_reflectInput)
                     byte = data[i];
                 else
                     byte = reflect(data[i]);
 
-                this->m_value = this->m_table[(this->m_value ^ byte) & 0xFFL] ^ (this->m_value >> 8);
+                m_value = m_table[(m_value ^ byte) & 0xFFL] ^ (m_value >> 8);
             }
         }
 
         [[nodiscard]]
         constexpr u64 checksum() const {
-            if (this->m_reflectOutput)
-                return this->m_value ^ m_xorOut;
+            if (m_reflectOutput)
+                return m_value ^ m_xorOut;
             else
-                return reflect(this->m_value, NumBits) ^ m_xorOut;
+                return reflect(m_value, NumBits) ^ m_xorOut;
         }
 
     private:

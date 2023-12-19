@@ -44,9 +44,9 @@ namespace hex::init {
         void createTask(const Task &task);
 
         void addStartupTask(const std::string &taskName, const TaskFunction &function, bool async) {
-            std::scoped_lock lock(this->m_tasksMutex);
+            std::scoped_lock lock(m_tasksMutex);
 
-            this->m_tasks.emplace_back(taskName, function, async);
+            m_tasks.emplace_back(taskName, function, async);
         }
 
     private:

@@ -15,12 +15,12 @@ namespace hex::plugin::builtin {
         PopupTelemetryRequest()
                 : hex::Popup<PopupTelemetryRequest>("hex.builtin.common.question", false) {
             // Check if there is a telemetry uuid
-            this->m_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
-            if(this->m_uuid.empty()) {
+            m_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
+            if(m_uuid.empty()) {
                 // Generate a new uuid
-                this->m_uuid = wolv::hash::generateUUID();
+                m_uuid = wolv::hash::generateUUID();
                 // Save
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", this->m_uuid);
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", m_uuid);
             }
         }
 
@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.uuid"_lang);
                     ImGui::TableNextColumn();
-                    ImGui::TextWrapped("%s", this->m_uuid.c_str());
+                    ImGui::TextWrapped("%s", m_uuid.c_str());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();

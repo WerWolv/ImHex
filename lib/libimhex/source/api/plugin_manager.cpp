@@ -19,73 +19,73 @@ namespace hex {
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
 
         #if defined(OS_WINDOWS)
-            this->m_handle = uintptr_t(LoadLibraryW(path.c_str()));
+            m_handle = uintptr_t(LoadLibraryW(path.c_str()));
 
-            if (this->m_handle == uintptr_t(INVALID_HANDLE_VALUE) || this->m_handle == 0) {
+            if (m_handle == uintptr_t(INVALID_HANDLE_VALUE) || m_handle == 0) {
                 log::error("LoadLibraryW failed: {}!", std::system_category().message(::GetLastError()));
                 return;
             }
         #else
-            this->m_handle = uintptr_t(dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY));
+            m_handle = uintptr_t(dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY));
 
-            if (this->m_handle == 0) {
+            if (m_handle == 0) {
                 log::error("dlopen failed: {}!", dlerror());
                 return;
             }
         #endif
 
-        this->m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
-        this->m_functions.getPluginNameFunction        = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
-        this->m_functions.getPluginAuthorFunction      = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
-        this->m_functions.getPluginDescriptionFunction = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
-        this->m_functions.getCompatibleVersionFunction = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
-        this->m_functions.setImGuiContextFunction      = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
-        this->m_functions.isBuiltinPluginFunction      = getPluginFunction<PluginFunctions::IsBuiltinPluginFunc>("isBuiltinPlugin");
-        this->m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
+        m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
+        m_functions.getPluginNameFunction        = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
+        m_functions.getPluginAuthorFunction      = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
+        m_functions.getPluginDescriptionFunction = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
+        m_functions.getCompatibleVersionFunction = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
+        m_functions.setImGuiContextFunction      = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
+        m_functions.isBuiltinPluginFunction      = getPluginFunction<PluginFunctions::IsBuiltinPluginFunc>("isBuiltinPlugin");
+        m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
     }
 
     Plugin::Plugin(hex::PluginFunctions functions) {
-        this->m_handle = 0;
-        this->m_functions = functions;
+        m_handle = 0;
+        m_functions = functions;
     }
 
 
     Plugin::Plugin(Plugin &&other) noexcept {
-        this->m_handle = other.m_handle;
+        m_handle = other.m_handle;
         other.m_handle = 0;
 
-        this->m_path   = std::move(other.m_path);
+        m_path   = std::move(other.m_path);
 
-        this->m_functions = other.m_functions;
+        m_functions = other.m_functions;
         other.m_functions = {};
     }
 
     Plugin::~Plugin() {
         #if defined(OS_WINDOWS)
-            if (this->m_handle != 0)
-                FreeLibrary(HMODULE(this->m_handle));
+            if (m_handle != 0)
+                FreeLibrary(HMODULE(m_handle));
         #else
-            if (this->m_handle != 0)
-                dlclose(reinterpret_cast<void*>(this->m_handle));
+            if (m_handle != 0)
+                dlclose(reinterpret_cast<void*>(m_handle));
         #endif
     }
 
     bool Plugin::initializePlugin() const {
-        const auto pluginName = wolv::util::toUTF8String(this->m_path.filename());
+        const auto pluginName = wolv::util::toUTF8String(m_path.filename());
 
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != ImHexApi::System::getImHexVersion()) {
             if (requestedVersion.empty()) {
-                log::warn("Plugin '{}' did not specify a compatible version, assuming it is compatible with the current version of ImHex.", wolv::util::toUTF8String(this->m_path.filename()));
+                log::warn("Plugin '{}' did not specify a compatible version, assuming it is compatible with the current version of ImHex.", wolv::util::toUTF8String(m_path.filename()));
             } else {
-                log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(this->m_path.filename()), requestedVersion);
+                log::error("Refused to load plugin '{}' which was built for a different version of ImHex: '{}'", wolv::util::toUTF8String(m_path.filename()), requestedVersion);
                 return false;
             }
         }
 
-        if (this->m_functions.initializePluginFunction != nullptr) {
+        if (m_functions.initializePluginFunction != nullptr) {
             try {
-                this->m_functions.initializePluginFunction();
+                m_functions.initializePluginFunction();
             } catch (const std::exception &e) {
                 log::error("Plugin '{}' threw an exception on init: {}", pluginName, e.what());
                 return false;
@@ -100,61 +100,61 @@ namespace hex {
 
         log::info("Plugin '{}' initialized successfully", pluginName);
 
-        this->m_initialized = true;
+        m_initialized = true;
         return true;
     }
 
     std::string Plugin::getPluginName() const {
-        if (this->m_functions.getPluginNameFunction != nullptr)
-            return this->m_functions.getPluginNameFunction();
+        if (m_functions.getPluginNameFunction != nullptr)
+            return m_functions.getPluginNameFunction();
         else
-            return hex::format("Unknown Plugin @ 0x{0:016X}", this->m_handle);
+            return hex::format("Unknown Plugin @ 0x{0:016X}", m_handle);
     }
 
     std::string Plugin::getPluginAuthor() const {
-        if (this->m_functions.getPluginAuthorFunction != nullptr)
-            return this->m_functions.getPluginAuthorFunction();
+        if (m_functions.getPluginAuthorFunction != nullptr)
+            return m_functions.getPluginAuthorFunction();
         else
             return "Unknown";
     }
 
     std::string Plugin::getPluginDescription() const {
-        if (this->m_functions.getPluginDescriptionFunction != nullptr)
-            return this->m_functions.getPluginDescriptionFunction();
+        if (m_functions.getPluginDescriptionFunction != nullptr)
+            return m_functions.getPluginDescriptionFunction();
         else
             return "";
     }
 
     std::string Plugin::getCompatibleVersion() const {
-        if (this->m_functions.getCompatibleVersionFunction != nullptr)
-            return this->m_functions.getCompatibleVersionFunction();
+        if (m_functions.getCompatibleVersionFunction != nullptr)
+            return m_functions.getCompatibleVersionFunction();
         else
             return "";
     }
 
     void Plugin::setImGuiContext(ImGuiContext *ctx) const {
-        if (this->m_functions.setImGuiContextFunction != nullptr)
-            this->m_functions.setImGuiContextFunction(ctx);
+        if (m_functions.setImGuiContextFunction != nullptr)
+            m_functions.setImGuiContextFunction(ctx);
     }
 
     [[nodiscard]] bool Plugin::isBuiltinPlugin() const {
-        if (this->m_functions.isBuiltinPluginFunction != nullptr)
-            return this->m_functions.isBuiltinPluginFunction();
+        if (m_functions.isBuiltinPluginFunction != nullptr)
+            return m_functions.isBuiltinPluginFunction();
         else
             return false;
     }
 
     const std::fs::path &Plugin::getPath() const {
-        return this->m_path;
+        return m_path;
     }
 
     bool Plugin::isLoaded() const {
-        return this->m_initialized;
+        return m_initialized;
     }
 
     std::span<SubCommand> Plugin::getSubCommands() const {
-        if (this->m_functions.getSubCommandsFunction != nullptr) {
-            auto result = this->m_functions.getSubCommandsFunction();
+        if (m_functions.getSubCommandsFunction != nullptr) {
+            auto result = m_functions.getSubCommandsFunction();
             return *static_cast<std::vector<SubCommand>*>(result);
         } else
             return { };
@@ -163,9 +163,9 @@ namespace hex {
 
     void *Plugin::getPluginFunction(const std::string &symbol) const {
         #if defined(OS_WINDOWS)
-            return reinterpret_cast<void *>(GetProcAddress(HMODULE(this->m_handle), symbol.c_str()));
+            return reinterpret_cast<void *>(GetProcAddress(HMODULE(m_handle), symbol.c_str()));
         #else
-            return dlsym(reinterpret_cast<void*>(this->m_handle), symbol.c_str());
+            return dlsym(reinterpret_cast<void*>(m_handle), symbol.c_str());
         #endif
     }
 

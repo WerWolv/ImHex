@@ -140,7 +140,7 @@ namespace hex {
 
         auto operator<=>(const Key &) const = default;
 
-        [[nodiscard]] constexpr u32 getKeyCode() const { return this->m_key; }
+        [[nodiscard]] constexpr u32 getKeyCode() const { return m_key; }
     private:
         u32 m_key = 0;
     };
@@ -181,17 +181,17 @@ namespace hex {
         }
 
         Shortcut &operator+=(const Key &other) {
-            this->m_keys.insert(other);
+            m_keys.insert(other);
 
             return *this;
         }
 
         bool operator<(const Shortcut &other) const {
-            return this->m_keys < other.m_keys;
+            return m_keys < other.m_keys;
         }
 
         bool operator==(const Shortcut &other) const {
-            auto thisKeys = this->m_keys;
+            auto thisKeys = m_keys;
             auto otherKeys = other.m_keys;
 
             thisKeys.erase(CurrentView);
@@ -203,7 +203,7 @@ namespace hex {
         }
 
         bool isLocal() const {
-            return this->m_keys.contains(CurrentView);
+            return m_keys.contains(CurrentView);
         }
 
         std::string toString() const {
@@ -223,7 +223,7 @@ namespace hex {
 
             constexpr static auto Concatination = " + ";
 
-            auto keys = this->m_keys;
+            auto keys = m_keys;
             if (keys.erase(CTRL) > 0) {
                 result += CTRL_NAME;
                 result += Concatination;
@@ -369,7 +369,7 @@ namespace hex {
             return result;
         }
 
-        const std::set<Key>& getKeys() const { return this->m_keys; }
+        const std::set<Key>& getKeys() const { return m_keys; }
 
     private:
         friend Shortcut operator+(const Key &lhs, const Key &rhs);

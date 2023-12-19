@@ -33,14 +33,14 @@ namespace hex {
 
             void writeRaw(u64 offset, const void *buffer, size_t size) override {
                 for (u64 i = 0; i < size; i += 1)
-                    this->m_patches[offset] = static_cast<const u8*>(buffer)[i];
+                    m_patches[offset] = static_cast<const u8*>(buffer)[i];
             }
 
             [[nodiscard]] u64 getActualSize() const override {
-                if (this->m_patches.empty())
+                if (m_patches.empty())
                     return 0;
                 else
-                    return this->m_patches.rbegin()->first;
+                    return m_patches.rbegin()->first;
             }
 
             void resizeRaw(u64 newSize) override {
@@ -50,29 +50,29 @@ namespace hex {
             void insertRaw(u64 offset, u64 size) override {
                 std::vector<std::pair<u64, u8>> patchesToMove;
 
-                for (auto &[address, value] : this->m_patches) {
+                for (auto &[address, value] : m_patches) {
                     if (address > offset)
                         patchesToMove.emplace_back(address, value);
                 }
 
                 for (const auto &[address, value] : patchesToMove)
-                    this->m_patches.erase(address);
+                    m_patches.erase(address);
                 for (const auto &[address, value] : patchesToMove)
-                    this->m_patches.insert({ address + size, value });
+                    m_patches.insert({ address + size, value });
             }
 
             void removeRaw(u64 offset, u64 size) override {
                 std::vector<std::pair<u64, u8>> patchesToMove;
 
-                for (auto &[address, value] : this->m_patches) {
+                for (auto &[address, value] : m_patches) {
                     if (address > offset)
                         patchesToMove.emplace_back(address, value);
                 }
 
                 for (const auto &[address, value] : patchesToMove)
-                    this->m_patches.erase(address);
+                    m_patches.erase(address);
                 for (const auto &[address, value] : patchesToMove)
-                    this->m_patches.insert({ address - size, value });
+                    m_patches.insert({ address - size, value });
             }
 
             [[nodiscard]] std::string getName() const override {
@@ -82,7 +82,7 @@ namespace hex {
             [[nodiscard]] std::string getTypeName() const override { return ""; }
 
             const std::map<u64, u8>& getPatches() const {
-                return this->m_patches;
+                return m_patches;
             }
         private:
             std::map<u64, u8> m_patches;
@@ -111,7 +111,7 @@ namespace hex {
         std::vector<u64> addresses;
         std::vector<u8> values;
 
-        for (const auto &[address, value] : this->m_patches) {
+        for (const auto &[address, value] : m_patches) {
             addresses.push_back(address);
             values.push_back(value);
         }
@@ -161,7 +161,7 @@ namespace hex {
         std::vector<u64> addresses;
         std::vector<u8> values;
 
-        for (const auto &[address, value] : this->m_patches) {
+        for (const auto &[address, value] : m_patches) {
             addresses.push_back(address);
             values.push_back(value);
         }

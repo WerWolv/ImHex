@@ -176,60 +176,60 @@ namespace hex {
         namespace Widgets {
 
             bool Checkbox::draw(const std::string &name) {
-                return ImGui::Checkbox(name.c_str(), &this->m_value);
+                return ImGui::Checkbox(name.c_str(), &m_value);
             }
 
             void Checkbox::load(const nlohmann::json &data) {
                 if (data.is_number()) {
-                    this->m_value = data.get<int>() != 0;
+                    m_value = data.get<int>() != 0;
                 } else if (data.is_boolean()) {
-                    this->m_value = data.get<bool>();
+                    m_value = data.get<bool>();
                 } else {
                     log::warn("Invalid data type loaded from settings for checkbox!");
                 }
             }
 
             nlohmann::json Checkbox::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             bool SliderInteger::draw(const std::string &name) {
-                return ImGui::SliderInt(name.c_str(), &this->m_value, this->m_min, this->m_max);
+                return ImGui::SliderInt(name.c_str(), &m_value, m_min, m_max);
             }
 
             void SliderInteger::load(const nlohmann::json &data) {
                 if (data.is_number_integer()) {
-                    this->m_value = data.get<int>();
+                    m_value = data.get<int>();
                 } else {
                     log::warn("Invalid data type loaded from settings for slider!");
                 }
             }
 
             nlohmann::json SliderInteger::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             bool SliderFloat::draw(const std::string &name) {
-                return ImGui::SliderFloat(name.c_str(), &this->m_value, this->m_min, this->m_max);
+                return ImGui::SliderFloat(name.c_str(), &m_value, m_min, m_max);
             }
 
             void SliderFloat::load(const nlohmann::json &data) {
                 if (data.is_number()) {
-                    this->m_value = data.get<float>();
+                    m_value = data.get<float>();
                 } else {
                     log::warn("Invalid data type loaded from settings for slider!");
                 }
             }
 
             nlohmann::json SliderFloat::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             ColorPicker::ColorPicker(ImColor defaultColor) {
-                this->m_value = {
+                m_value = {
                         defaultColor.Value.x,
                         defaultColor.Value.y,
                         defaultColor.Value.z,
@@ -238,43 +238,43 @@ namespace hex {
             }
 
             bool ColorPicker::draw(const std::string &name) {
-                return ImGui::ColorEdit4(name.c_str(), this->m_value.data(), ImGuiColorEditFlags_NoInputs);
+                return ImGui::ColorEdit4(name.c_str(), m_value.data(), ImGuiColorEditFlags_NoInputs);
             }
 
             void ColorPicker::load(const nlohmann::json &data) {
                 if (data.is_number()) {
                     ImColor color(data.get<u32>());
-                    this->m_value = { color.Value.x, color.Value.y, color.Value.z, color.Value.w };
+                    m_value = { color.Value.x, color.Value.y, color.Value.z, color.Value.w };
                 } else {
                     log::warn("Invalid data type loaded from settings for color picker!");
                 }
             }
 
             nlohmann::json ColorPicker::store() {
-                const ImColor color(this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3]);
+                const ImColor color(m_value[0], m_value[1], m_value[2], m_value[3]);
 
                 return static_cast<ImU32>(color);
             }
 
             ImColor ColorPicker::getColor() const {
-                return { this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3] };
+                return { m_value[0], m_value[1], m_value[2], m_value[3] };
             }
 
 
             bool DropDown::draw(const std::string &name) {
                 const char *preview = "";
-                if (static_cast<size_t>(this->m_value) < this->m_items.size())
-                    preview = this->m_items[this->m_value].c_str();
+                if (static_cast<size_t>(m_value) < m_items.size())
+                    preview = m_items[m_value].c_str();
 
                 bool changed = false;
                 if (ImGui::BeginCombo(name.c_str(), Lang(preview))) {
 
                     int index = 0;
-                    for (const auto &item : this->m_items) {
-                        const bool selected = index == this->m_value;
+                    for (const auto &item : m_items) {
+                        const bool selected = index == m_value;
 
                         if (ImGui::Selectable(Lang(item), selected)) {
-                            this->m_value = index;
+                            m_value = index;
                             changed = true;
                         }
 
@@ -291,60 +291,60 @@ namespace hex {
             }
 
             void DropDown::load(const nlohmann::json &data) {
-                this->m_value = 0;
+                m_value = 0;
 
                 int defaultItemIndex = 0;
 
                 int index = 0;
-                for (const auto &item : this->m_settingsValues) {
-                    if (item == this->m_defaultItem)
+                for (const auto &item : m_settingsValues) {
+                    if (item == m_defaultItem)
                         defaultItemIndex = index;
 
                     if (item == data) {
-                        this->m_value = index;
+                        m_value = index;
                         return;
                     }
 
                     index += 1;
                 }
 
-                this->m_value = defaultItemIndex;
+                m_value = defaultItemIndex;
             }
 
             nlohmann::json DropDown::store() {
-                if (this->m_value == -1)
-                    return this->m_defaultItem;
-                if (static_cast<size_t>(this->m_value) >= this->m_items.size())
-                    return this->m_defaultItem;
+                if (m_value == -1)
+                    return m_defaultItem;
+                if (static_cast<size_t>(m_value) >= m_items.size())
+                    return m_defaultItem;
 
-                return this->m_settingsValues[this->m_value];
+                return m_settingsValues[m_value];
             }
 
             const nlohmann::json& DropDown::getValue() const {
-                return this->m_settingsValues[this->m_value];
+                return m_settingsValues[m_value];
             }
 
 
             bool TextBox::draw(const std::string &name) {
-                return ImGui::InputText(name.c_str(), this->m_value);
+                return ImGui::InputText(name.c_str(), m_value);
             }
 
             void TextBox::load(const nlohmann::json &data) {
                 if (data.is_string()) {
-                    this->m_value = data.get<std::string>();
+                    m_value = data.get<std::string>();
                 } else {
                     log::warn("Invalid data type loaded from settings for text box!");
                 }
             }
 
             nlohmann::json TextBox::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             bool FilePicker::draw(const std::string &name) {
                 bool changed = false;
-                if (ImGui::InputText("##font_path", this->m_value)) {
+                if (ImGui::InputText("##font_path", m_value)) {
                     changed = true;
                 }
 
@@ -353,7 +353,7 @@ namespace hex {
                 if (ImGuiExt::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
                                                [&](const std::fs::path &path) {
-                                                   this->m_value = wolv::util::toUTF8String(path);
+                                                   m_value = wolv::util::toUTF8String(path);
                                                });
                 }
 
@@ -366,14 +366,14 @@ namespace hex {
 
             void FilePicker::load(const nlohmann::json &data) {
                 if (data.is_string()) {
-                    this->m_value = data.get<std::string>();
+                    m_value = data.get<std::string>();
                 } else {
                     log::warn("Invalid data type loaded from settings for file picker!");
                 }
             }
 
             nlohmann::json FilePicker::store() {
-                return this->m_value;
+                return m_value;
             }
 
             bool Label::draw(const std::string& name) {

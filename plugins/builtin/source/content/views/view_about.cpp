@@ -100,18 +100,18 @@ namespace hex::plugin::builtin {
             ImGui::TableNextColumn();
 
             // Draw the ImHex icon
-            if (!this->m_logoTexture.isValid())
-                this->m_logoTexture = ImGuiExt::Texture(romfs::get("assets/common/logo.png").span(), ImGuiExt::Texture::Filter::Linear);
+            if (!m_logoTexture.isValid())
+                m_logoTexture = ImGuiExt::Texture(romfs::get("assets/common/logo.png").span(), ImGuiExt::Texture::Filter::Linear);
 
-            ImGui::Image(this->m_logoTexture, scaled({ 100, 100 }));
+            ImGui::Image(m_logoTexture, scaled({ 100, 100 }));
             if (ImGui::IsItemClicked()) {
-                this->m_clickCount += 1;
+                m_clickCount += 1;
             }
 
-            if (this->m_clickCount >= (2 * 3 + 4)) {
+            if (m_clickCount >= (2 * 3 + 4)) {
                 this->getWindowOpenState() = false;
                 PopupEE::open();
-                this->m_clickCount = 0;
+                m_clickCount = 0;
             }
 
             ImGui::TableNextColumn();
@@ -451,13 +451,13 @@ namespace hex::plugin::builtin {
         AT_FIRST_TIME {
             static HttpRequest request("GET", GitHubApiURL + std::string("/releases/tags/v") + ImHexApi::System::getImHexVersion(false));
 
-            this->m_releaseNoteRequest = request.execute();
+            m_releaseNoteRequest = request.execute();
         };
 
         // Wait for the request to finish and parse the response
-        if (this->m_releaseNoteRequest.valid()) {
-            if (this->m_releaseNoteRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-                auto response = this->m_releaseNoteRequest.get();
+        if (m_releaseNoteRequest.valid()) {
+            if (m_releaseNoteRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                auto response = m_releaseNoteRequest.get();
                 nlohmann::json json;
 
                 if (response.isSuccess()) {
@@ -553,13 +553,13 @@ namespace hex::plugin::builtin {
         // Set up the request to get the commit history the first time the page is opened
         AT_FIRST_TIME {
             static HttpRequest request("GET", GitHubApiURL + std::string("/commits?per_page=100"));
-            this->m_commitHistoryRequest = request.execute();
+            m_commitHistoryRequest = request.execute();
         };
 
         // Wait for the request to finish and parse the response
-        if (this->m_commitHistoryRequest.valid()) {
-            if (this->m_commitHistoryRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-                auto response = this->m_commitHistoryRequest.get();
+        if (m_commitHistoryRequest.valid()) {
+            if (m_commitHistoryRequest.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                auto response = m_commitHistoryRequest.get();
                 nlohmann::json json;
 
                 if (response.isSuccess()) {

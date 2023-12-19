@@ -25,26 +25,26 @@ namespace hex::plugin::builtin {
 
             // Save current selection
             if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
-                this->m_validBytes = 0;
-                this->m_selectedProvider = nullptr;
+                m_validBytes = 0;
+                m_selectedProvider = nullptr;
             } else {
-                this->m_validBytes   = u64(region.getProvider()->getActualSize() - region.address);
-                this->m_startAddress = region.address;
-                this->m_selectedProvider = region.getProvider();
+                m_validBytes   = u64(region.getProvider()->getActualSize() - region.address);
+                m_startAddress = region.address;
+                m_selectedProvider = region.getProvider();
             }
 
             // Invalidate inspector rows
-            this->m_shouldInvalidate = true;
+            m_shouldInvalidate = true;
         });
 
         EventProviderClosed::subscribe(this, [this](const auto*) {
-            this->m_selectedProvider = nullptr;
+            m_selectedProvider = nullptr;
         });
 
         EventSettingsChanged::subscribe(this, [this] {
             auto filterValues = ContentRegistry::Settings::read("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", nlohmann::json::array()).get<std::vector<std::string>>();
 
-            this->m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
+            m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
         });
     }
 
@@ -56,10 +56,10 @@ namespace hex::plugin::builtin {
 
 
     void ViewDataInspector::updateInspectorRows() {
-        this->m_updateTask = TaskManager::createBackgroundTask("Update Inspector", [this, validBytes = this->m_validBytes, startAddress = this->m_startAddress, endian = this->m_endian, invert = this->m_invert, numberDisplayStyle = this->m_numberDisplayStyle](auto &) {
-            this->m_workData.clear();
+        m_updateTask = TaskManager::createBackgroundTask("Update Inspector", [this, validBytes = m_validBytes, startAddress = m_startAddress, endian = m_endian, invert = m_invert, numberDisplayStyle = m_numberDisplayStyle](auto &) {
+            m_workData.clear();
 
-            if (this->m_selectedProvider == nullptr)
+            if (m_selectedProvider == nullptr)
                return;
 
             // Decode bytes using registered inspectors
@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
 
                // Try to read as many bytes as requested and possible
                std::vector<u8> buffer(validBytes > entry.maxSize ? entry.maxSize : validBytes);
-               this->m_selectedProvider->read(startAddress, buffer.data(), buffer.size());
+               m_selectedProvider->read(startAddress, buffer.data(), buffer.size());
 
                // Handle invert setting
                if (invert) {
@@ -78,7 +78,7 @@ namespace hex::plugin::builtin {
                }
 
                // Insert processed data into the inspector list
-               this->m_workData.push_back({
+               m_workData.push_back({
                     entry.unlocalizedName,
                     entry.generatorFunction(buffer, endian, numberDisplayStyle),
                     entry.editingFunction,
@@ -94,13 +94,13 @@ namespace hex::plugin::builtin {
             };
 
             // Setup a new pattern language runtime
-            ContentRegistry::PatternLanguage::configureRuntime(this->m_runtime, this->m_selectedProvider);
+            ContentRegistry::PatternLanguage::configureRuntime(m_runtime, m_selectedProvider);
 
             // Setup the runtime to read from the selected provider
-            this->m_runtime.setDataSource(this->m_selectedProvider->getBaseAddress(), this->m_selectedProvider->getActualSize(),
+            m_runtime.setDataSource(m_selectedProvider->getBaseAddress(), m_selectedProvider->getActualSize(),
                                          [this, invert](u64 offset, u8 *buffer, size_t size) {
                                              // Read bytes from the selected provider
-                                             this->m_selectedProvider->read(offset, buffer, size);
+                                             m_selectedProvider->read(offset, buffer, size);
 
                                              // Handle invert setting
                                              if (invert) {
@@ -110,13 +110,13 @@ namespace hex::plugin::builtin {
                                          });
 
             // Prevent dangerous function calls
-            this->m_runtime.setDangerousFunctionCallHandler([] { return false; });
+            m_runtime.setDangerousFunctionCallHandler([] { return false; });
 
             // Set the default endianness based on the endian setting
-            this->m_runtime.setDefaultEndian(endian);
+            m_runtime.setDefaultEndian(endian);
 
             // Set start address to the selected address
-            this->m_runtime.setStartAddress(startAddress);
+            m_runtime.setStartAddress(startAddress);
 
             // Loop over all files in the inspectors folder and execute them
             for (const auto &folderPath : fs::getDefaultPaths(fs::ImHexPath::Inspectors)) {
@@ -133,10 +133,10 @@ namespace hex::plugin::builtin {
 
                        // Execute the inspector file
                        if (!inspectorCode.empty()) {
-                           if (this->m_runtime.executeString(inspectorCode, {}, inVariables, true)) {
+                           if (m_runtime.executeString(inspectorCode, {}, inVariables, true)) {
 
                                // Loop over patterns produced by the runtime
-                               const auto &patterns = this->m_runtime.getPatterns();
+                               const auto &patterns = m_runtime.getPatterns();
                                for (const auto &pattern : patterns) {
                                    // Skip hidden patterns
                                    if (pattern->getVisibility() == pl::ptrn::Visibility::Hidden)
@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
                                        };
 
                                        // Insert the inspector into the list
-                                       this->m_workData.push_back({
+                                       m_workData.push_back({
                                             pattern->getDisplayName(),
                                             displayFunction,
                                             editingFunction,
@@ -180,7 +180,7 @@ namespace hex::plugin::builtin {
                                    }
                                }
                            } else {
-                               const auto& error = this->m_runtime.getError();
+                               const auto& error = m_runtime.getError();
 
                                log::error("Failed to execute custom inspector file '{}'!", wolv::util::toUTF8String(filePath));
                                if (error.has_value())
@@ -191,46 +191,46 @@ namespace hex::plugin::builtin {
                }
             }
 
-            this->m_dataValid = true;
+            m_dataValid = true;
 
         });
     }
 
     void ViewDataInspector::drawContent() {
-        if (this->m_dataValid && !this->m_updateTask.isRunning()) {
-            this->m_dataValid = false;
-            this->m_cachedData = std::move(this->m_workData);
+        if (m_dataValid && !m_updateTask.isRunning()) {
+            m_dataValid = false;
+            m_cachedData = std::move(m_workData);
         }
 
-        if (this->m_shouldInvalidate && !this->m_updateTask.isRunning()) {
-            this->m_shouldInvalidate = false;
+        if (m_shouldInvalidate && !m_updateTask.isRunning()) {
+            m_shouldInvalidate = false;
 
             this->updateInspectorRows();
         }
 
-        if (this->m_selectedProvider != nullptr && this->m_selectedProvider->isReadable() && this->m_validBytes > 0) {
-            u32 validLineCount = this->m_cachedData.size();
-            if (!this->m_tableEditingModeEnabled) {
-                validLineCount = std::count_if(this->m_cachedData.begin(), this->m_cachedData.end(), [this](const auto &entry) {
-                    return !this->m_hiddenValues.contains(entry.filterValue);
+        if (m_selectedProvider != nullptr && m_selectedProvider->isReadable() && m_validBytes > 0) {
+            u32 validLineCount = m_cachedData.size();
+            if (!m_tableEditingModeEnabled) {
+                validLineCount = std::count_if(m_cachedData.begin(), m_cachedData.end(), [this](const auto &entry) {
+                    return !m_hiddenValues.contains(entry.filterValue);
                 });
             }
 
-            if (ImGui::BeginTable("##datainspector", this->m_tableEditingModeEnabled ? 3 : 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (validLineCount + 1)))) {
+            if (ImGui::BeginTable("##datainspector", m_tableEditingModeEnabled ? 3 : 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * (validLineCount + 1)))) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.name"_lang, ImGuiTableColumnFlags_WidthFixed);
                 ImGui::TableSetupColumn("hex.builtin.view.data_inspector.table.value"_lang, ImGuiTableColumnFlags_WidthStretch);
 
-                if (this->m_tableEditingModeEnabled)
+                if (m_tableEditingModeEnabled)
                     ImGui::TableSetupColumn("##favorite", ImGuiTableColumnFlags_WidthFixed, ImGui::GetTextLineHeight());
 
                 ImGui::TableHeadersRow();
 
                 int inspectorRowId = 1;
-                for (auto &[unlocalizedName, displayFunction, editingFunction, editing, filterValue] : this->m_cachedData) {
+                for (auto &[unlocalizedName, displayFunction, editingFunction, editing, filterValue] : m_cachedData) {
                     bool grayedOut = false;
-                    if (this->m_hiddenValues.contains(filterValue)) {
-                        if (!this->m_tableEditingModeEnabled)
+                    if (m_hiddenValues.contains(filterValue)) {
+                        if (!m_tableEditingModeEnabled)
                             continue;
                         else
                             grayedOut = true;
@@ -262,7 +262,7 @@ namespace hex::plugin::builtin {
                         // Enter editing mode when double-clicking the row
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && editingFunction.has_value()) {
                             editing              = true;
-                            this->m_editingValue = copyValue;
+                            m_editingValue = copyValue;
                         }
 
                     } else {
@@ -273,49 +273,49 @@ namespace hex::plugin::builtin {
                         ImGui::SetKeyboardFocusHere();
 
                         // Draw input text box
-                        if (ImGui::InputText("##InspectorLineEditing", this->m_editingValue, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
+                        if (ImGui::InputText("##InspectorLineEditing", m_editingValue, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
                             // Turn the entered value into bytes
-                            auto bytes = editingFunction.value()(this->m_editingValue, this->m_endian);
+                            auto bytes = editingFunction.value()(m_editingValue, m_endian);
 
-                            if (this->m_invert)
+                            if (m_invert)
                                 std::ranges::transform(bytes, bytes.begin(), [](auto byte) { return byte ^ 0xFF; });
 
                             // Write those bytes to the selected provider at the current address
-                            this->m_selectedProvider->write(this->m_startAddress, bytes.data(), bytes.size());
+                            m_selectedProvider->write(m_startAddress, bytes.data(), bytes.size());
 
                             // Disable editing mode
-                            this->m_editingValue.clear();
+                            m_editingValue.clear();
                             editing = false;
 
                             // Reload all inspector rows
-                            this->m_shouldInvalidate = true;
+                            m_shouldInvalidate = true;
                         }
                         ImGui::PopStyleVar();
 
                         // Disable editing mode when clicking outside the input text box
                         if (!ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
-                            this->m_editingValue.clear();
+                            m_editingValue.clear();
                             editing = false;
                         }
                     }
 
                     ImGui::EndDisabled();
 
-                    if (this->m_tableEditingModeEnabled) {
+                    if (m_tableEditingModeEnabled) {
                         ImGui::TableNextColumn();
 
                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                         ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetStyleColorVec4(ImGuiCol_Text));
 
-                        bool hidden = this->m_hiddenValues.contains(filterValue);
+                        bool hidden = m_hiddenValues.contains(filterValue);
                         if (ImGuiExt::DimmedButton(hidden ? ICON_VS_EYE : ICON_VS_EYE_CLOSED)) {
                             if (hidden)
-                                this->m_hiddenValues.erase(filterValue);
+                                m_hiddenValues.erase(filterValue);
                             else
-                                this->m_hiddenValues.insert(filterValue);
+                                m_hiddenValues.insert(filterValue);
 
                             {
-                                std::vector filterValues(this->m_hiddenValues.begin(), this->m_hiddenValues.end());
+                                std::vector filterValues(m_hiddenValues.begin(), m_hiddenValues.end());
 
                                 ContentRegistry::Settings::write("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", filterValues);
                             }
@@ -332,7 +332,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGuiExt::DimmedButtonToggle("hex.builtin.common.edit"_lang, &this->m_tableEditingModeEnabled, ImVec2(ImGui::GetContentRegionAvail().x, 0));
+            ImGuiExt::DimmedButtonToggle("hex.builtin.common.edit"_lang, &m_tableEditingModeEnabled, ImVec2(ImGui::GetContentRegionAvail().x, 0));
 
             ImGui::NewLine();
             ImGui::Separator();
@@ -343,7 +343,7 @@ namespace hex::plugin::builtin {
             // Draw endian setting
             {
                 int selection = [this] {
-                   switch (this->m_endian) {
+                   switch (m_endian) {
                        default:
                        case std::endian::little:    return 0;
                        case std::endian::big:       return 1;
@@ -353,12 +353,12 @@ namespace hex::plugin::builtin {
                 std::array options = { "hex.builtin.common.little"_lang, "hex.builtin.common.big"_lang };
 
                 if (ImGui::SliderInt("hex.builtin.common.endian"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
-                    this->m_shouldInvalidate = true;
+                    m_shouldInvalidate = true;
 
                     switch (selection) {
                         default:
-                        case 0: this->m_endian = std::endian::little;   break;
-                        case 1: this->m_endian = std::endian::big;      break;
+                        case 0: m_endian = std::endian::little;   break;
+                        case 1: m_endian = std::endian::big;      break;
                     }
                 }
             }
@@ -366,7 +366,7 @@ namespace hex::plugin::builtin {
             // Draw radix setting
             {
                 int selection = [this] {
-                    switch (this->m_numberDisplayStyle) {
+                    switch (m_numberDisplayStyle) {
                         default:
                         case NumberDisplayStyle::Decimal:       return 0;
                         case NumberDisplayStyle::Hexadecimal:   return 1;
@@ -376,26 +376,26 @@ namespace hex::plugin::builtin {
                 std::array options = { "hex.builtin.common.decimal"_lang, "hex.builtin.common.hexadecimal"_lang, "hex.builtin.common.octal"_lang };
 
                 if (ImGui::SliderInt("hex.builtin.common.number_format"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
-                    this->m_shouldInvalidate = true;
+                    m_shouldInvalidate = true;
 
                     switch (selection) {
                         default:
-                        case 0: this->m_numberDisplayStyle =  NumberDisplayStyle::Decimal;     break;
-                        case 1: this->m_numberDisplayStyle =  NumberDisplayStyle::Hexadecimal; break;
-                        case 2: this->m_numberDisplayStyle =  NumberDisplayStyle::Octal;       break;
+                        case 0: m_numberDisplayStyle =  NumberDisplayStyle::Decimal;     break;
+                        case 1: m_numberDisplayStyle =  NumberDisplayStyle::Hexadecimal; break;
+                        case 2: m_numberDisplayStyle =  NumberDisplayStyle::Octal;       break;
                     }
                 }
             }
 
             // Draw invert setting
             {
-                int selection = this->m_invert ? 1 : 0;
+                int selection = m_invert ? 1 : 0;
                 std::array options = { "hex.builtin.common.no"_lang, "hex.builtin.common.yes"_lang };
 
                 if (ImGui::SliderInt("hex.builtin.view.data_inspector.invert"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
-                    this->m_shouldInvalidate = true;
+                    m_shouldInvalidate = true;
 
-                    this->m_invert = selection == 1;
+                    m_invert = selection == 1;
                 }
             }
         } else {

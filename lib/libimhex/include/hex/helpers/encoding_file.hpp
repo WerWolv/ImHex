@@ -29,13 +29,13 @@ namespace hex {
 
         [[nodiscard]] std::pair<std::string_view, size_t> getEncodingFor(std::span<u8> buffer) const;
         [[nodiscard]] size_t getEncodingLengthFor(std::span<u8> buffer) const;
-        [[nodiscard]] size_t getLongestSequence() const { return this->m_longestSequence; }
+        [[nodiscard]] size_t getLongestSequence() const { return m_longestSequence; }
 
-        [[nodiscard]] bool valid() const { return this->m_valid; }
+        [[nodiscard]] bool valid() const { return m_valid; }
 
-        [[nodiscard]] const std::string& getTableContent() const { return this->m_tableContent; }
+        [[nodiscard]] const std::string& getTableContent() const { return m_tableContent; }
 
-        [[nodiscard]] const std::string& getName() const { return this->m_name; }
+        [[nodiscard]] const std::string& getName() const { return m_name; }
 
     private:
         void parse(const std::string &content);

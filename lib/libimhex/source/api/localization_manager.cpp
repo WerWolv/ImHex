@@ -31,13 +31,13 @@ namespace hex {
                 if (value.empty())
                     continue;
 
-                this->m_entries.insert({ key, value });
+                m_entries.insert({ key, value });
             }
 
         }
 
         const std::map<std::string, std::string> &LanguageDefinition::getEntries() const {
-            return this->m_entries;
+            return m_entries;
         }
 
         void loadLanguage(const std::string &language) {
@@ -121,10 +121,10 @@ namespace hex {
 
     const std::string &Lang::get() const {
         auto &lang = LocalizationManager::s_currStrings;
-        if (lang.contains(this->m_unlocalizedString))
-            return lang[this->m_unlocalizedString];
+        if (lang.contains(m_unlocalizedString))
+            return lang[m_unlocalizedString];
         else
-            return this->m_unlocalizedString;
+            return m_unlocalizedString;
     }
 
 }

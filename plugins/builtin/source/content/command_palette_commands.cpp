@@ -180,12 +180,12 @@ namespace hex::plugin::builtin {
                 }
 
                 unitString = wolv::util::trim(unitString);
-                this->m_unitString = unitString;
+                m_unitString = unitString;
                 if (unitString.empty()) {
                     if (multiplier == 1)
                         return { Unit::Unitless, 1 };
                     else {
-                        this->m_unitString = unitStringCopy;
+                        m_unitString = unitStringCopy;
                         return { Unit::Unitless, 1 };
                     }
 

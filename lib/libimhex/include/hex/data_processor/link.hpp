@@ -6,11 +6,11 @@ namespace hex::dp {
     public:
         Link(int from, int to);
 
-        [[nodiscard]] int getId() const { return this->m_id; }
-        void setId(int id) { this->m_id = id; }
+        [[nodiscard]] int getId() const { return m_id; }
+        void setId(int id) { m_id = id; }
 
-        [[nodiscard]] int getFromId() const { return this->m_from; }
-        [[nodiscard]] int getToId() const { return this->m_to; }
+        [[nodiscard]] int getFromId() const { return m_from; }
+        [[nodiscard]] int getToId() const { return m_to; }
 
         static void setIdCounter(int id);
 

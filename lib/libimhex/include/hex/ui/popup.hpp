@@ -37,23 +37,23 @@ namespace hex {
             [[nodiscard]] static std::vector<std::unique_ptr<PopupBase>> &getOpenPopups();
 
             [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const {
-                return this->m_unlocalizedName;
+                return m_unlocalizedName;
             }
 
             [[nodiscard]] bool hasCloseButton() const {
-                return this->m_closeButton;
+                return m_closeButton;
             }
 
             [[nodiscard]] bool isModal() const {
-                return this->m_modal;
+                return m_modal;
             }
 
             void close() {
-                this->m_close = true;
+                m_close = true;
             }
 
             [[nodiscard]] bool shouldClose() const {
-                return this->m_close;
+                return m_close;
             }
 
         private:

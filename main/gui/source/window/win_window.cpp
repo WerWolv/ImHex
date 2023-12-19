@@ -296,7 +296,7 @@ namespace hex {
 
     void Window::setupNativeWindow() {
         // Setup borderless window
-        auto hwnd = glfwGetWin32Window(this->m_window);
+        auto hwnd = glfwGetWin32Window(m_window);
 
         bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
 
@@ -380,7 +380,7 @@ namespace hex {
         };
 
         EventThemeChanged::subscribe([this]{
-            auto hwnd = glfwGetWin32Window(this->m_window);
+            auto hwnd = glfwGetWin32Window(m_window);
 
             static auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
             if (user32Dll != nullptr) {

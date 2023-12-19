@@ -13,15 +13,15 @@ namespace hex::plugin::builtin::undo {
             m_offset(offset), m_size(size) { }
 
         void undo(prv::Provider *provider) override {
-            provider->removeRaw(this->m_offset, this->m_size);
+            provider->removeRaw(m_offset, m_size);
         }
 
         void redo(prv::Provider *provider) override {
-            provider->insertRaw(this->m_offset, this->m_size);
+            provider->insertRaw(m_offset, m_size);
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("hex.builtin.undo_operation.insert"_lang, hex::toByteString(this->m_size), this->m_offset);
+            return hex::format("hex.builtin.undo_operation.insert"_lang, hex::toByteString(m_size), m_offset);
         }
 
         std::unique_ptr<Operation> clone() const override {
@@ -29,7 +29,7 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] Region getRegion() const override {
-            return { this->m_offset, this->m_size };
+            return { m_offset, m_size };
         }
 
     private:

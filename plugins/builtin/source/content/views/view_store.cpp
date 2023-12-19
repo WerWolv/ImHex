@@ -29,13 +29,13 @@ namespace hex::plugin::builtin {
 
     ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name") {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, 1000, Shortcut::None, [&, this] {
-            if (this->m_requestStatus == RequestStatus::NotAttempted)
+            if (m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
 
             this->getWindowOpenState() = true;
         });
 
-        this->m_httpRequest.setTimeout(30'0000);
+        m_httpRequest.setTimeout(30'0000);
 
         addCategory("hex.builtin.view.store.tab.patterns",     "patterns",     fs::ImHexPath::Patterns);
         addCategory("hex.builtin.view.store.tab.includes",     "includes",     fs::ImHexPath::PatternsInclude);
@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
         addCategory("hex.builtin.view.store.tab.encodings",    "encodings",    fs::ImHexPath::Encodings);
         addCategory("hex.builtin.view.store.tab.constants",    "constants",    fs::ImHexPath::Constants);
         addCategory("hex.builtin.view.store.tab.themes",       "themes",       fs::ImHexPath::Themes, [this]{
-            auto themeFile = wolv::io::File(this->m_downloadPath, wolv::io::File::Mode::Read);
+            auto themeFile = wolv::io::File(m_downloadPath, wolv::io::File::Mode::Read);
 
             ThemeManager::addTheme(themeFile.readString());
         });
@@ -114,12 +114,12 @@ namespace hex::plugin::builtin {
                     const auto buttonSize = ImVec2(100_scaled, ImGui::GetTextLineHeightWithSpacing());
 
                     ImGui::PushID(id);
-                    ImGui::BeginDisabled(this->m_updateAllTask.isRunning() || (this->m_download.valid() && this->m_download.wait_for(0s) != std::future_status::ready));
+                    ImGui::BeginDisabled(m_updateAllTask.isRunning() || (m_download.valid() && m_download.wait_for(0s) != std::future_status::ready));
                     {
                         if (entry.downloading) {
-                            ImGui::ProgressBar(this->m_httpRequest.getProgress(), buttonSize, "");
+                            ImGui::ProgressBar(m_httpRequest.getProgress(), buttonSize, "");
 
-                            if (this->m_download.valid() && this->m_download.wait_for(0s) == std::future_status::ready) {
+                            if (m_download.valid() && m_download.wait_for(0s) == std::future_status::ready) {
                                 this->handleDownloadFinished(category, entry);
                             }
 
@@ -169,8 +169,8 @@ namespace hex::plugin::builtin {
         ImGuiExt::Header("hex.builtin.view.store.desc"_lang, true);
 
         bool reloading = false;
-        if (this->m_apiRequest.valid()) {
-            if (this->m_apiRequest.wait_for(0s) != std::future_status::ready)
+        if (m_apiRequest.valid()) {
+            if (m_apiRequest.wait_for(0s) != std::future_status::ready)
                 reloading = true;
             else
                 this->parseResponse();
@@ -189,15 +189,15 @@ namespace hex::plugin::builtin {
 
         // Align the button to the right
         ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::GetCursorPosX() - 25_scaled);
-        ImGui::BeginDisabled(this->m_updateAllTask.isRunning() || this->m_updateCount == 0);
+        ImGui::BeginDisabled(m_updateAllTask.isRunning() || m_updateCount == 0);
         if (ImGuiExt::IconButton(ICON_VS_CLOUD_DOWNLOAD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            this->m_updateAllTask = TaskManager::createTask("Update All...", this->m_updateCount, [this](auto &task) {
+            m_updateAllTask = TaskManager::createTask("Update All...", m_updateCount, [this](auto &task) {
                 u32 progress = 0;
-                for (auto &category : this->m_categories) {
+                for (auto &category : m_categories) {
                     for (auto &entry : category.entries) {
                         if (entry.hasUpdate) {
                             entry.downloading = this->download(category.path, entry.fileName, entry.link, true);
-                            this->m_download.wait();
+                            m_download.wait();
                             this->handleDownloadFinished(category, entry);
                             task.update(progress);
                         }
@@ -205,12 +205,12 @@ namespace hex::plugin::builtin {
                 }
             });
         }
-        ImGuiExt::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, this->m_updateCount.load()).c_str());
+        ImGuiExt::InfoTooltip(hex::format("hex.builtin.view.store.update_count"_lang, m_updateCount.load()).c_str());
 
         ImGui::EndDisabled();
 
         if (ImGui::BeginTabBar("storeTabs")) {
-            for (auto &category : this->m_categories) {
+            for (auto &category : m_categories) {
                 this->drawTab(category);
             }
 
@@ -221,22 +221,22 @@ namespace hex::plugin::builtin {
 
     void ViewStore::refresh() {
         // Do not refresh if a refresh is already in progress
-        if (this->m_requestStatus == RequestStatus::InProgress)
+        if (m_requestStatus == RequestStatus::InProgress)
             return;
-        this->m_requestStatus = RequestStatus::InProgress;
+        m_requestStatus = RequestStatus::InProgress;
 
-        for (auto &category : this->m_categories) {
+        for (auto &category : m_categories) {
             category.entries.clear();
         }
 
-        this->m_httpRequest.setUrl(ImHexApiURL + "/store"s);
-        this->m_apiRequest = this->m_httpRequest.execute();
+        m_httpRequest.setUrl(ImHexApiURL + "/store"s);
+        m_apiRequest = m_httpRequest.execute();
     }
 
     void ViewStore::parseResponse() {
-        auto response = this->m_apiRequest.get();
-        this->m_requestStatus = response.isSuccess() ? RequestStatus::Succeeded : RequestStatus::Failed;
-        if (this->m_requestStatus == RequestStatus::Succeeded) {
+        auto response = m_apiRequest.get();
+        m_requestStatus = response.isSuccess() ? RequestStatus::Succeeded : RequestStatus::Failed;
+        if (m_requestStatus == RequestStatus::Succeeded) {
             auto json = nlohmann::json::parse(response.getData());
 
             auto parseStoreEntries = [](auto storeJson, StoreCategory &category) {
@@ -262,23 +262,23 @@ namespace hex::plugin::builtin {
                 });
             };
 
-            for (auto &category : this->m_categories) {
+            for (auto &category : m_categories) {
                 parseStoreEntries(json, category);
             }
 
-            this->m_updateCount = 0;
-            for (auto &category : this->m_categories) {
+            m_updateCount = 0;
+            for (auto &category : m_categories) {
                 for (auto &entry : category.entries) {
                     if (entry.hasUpdate)
-                        this->m_updateCount += 1;
+                        m_updateCount += 1;
                 }
             }
         }
-        this->m_apiRequest = {};
+        m_apiRequest = {};
     }
 
     void ViewStore::drawContent() {
-        if (this->m_requestStatus == RequestStatus::Failed)
+        if (m_requestStatus == RequestStatus::Failed)
             ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed), "hex.builtin.view.store.netfailed"_lang);
 
         this->drawStore();
@@ -301,10 +301,10 @@ namespace hex::plugin::builtin {
 
             if (!update || wolv::io::fs::exists(fullPath)) {
                 downloading          = true;
-                this->m_downloadPath = fullPath;
+                m_downloadPath = fullPath;
 
-                this->m_httpRequest.setUrl(url);
-                this->m_download     = this->m_httpRequest.downloadFile(fullPath);
+                m_httpRequest.setUrl(url);
+                m_download     = m_httpRequest.downloadFile(fullPath);
                 break;
             }
         }
@@ -334,27 +334,27 @@ namespace hex::plugin::builtin {
     }
 
     void ViewStore::addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback) {
-        this->m_categories.push_back({ unlocalizedName, requestName, path, { }, std::move(downloadCallback) });
+        m_categories.push_back({ unlocalizedName, requestName, path, { }, std::move(downloadCallback) });
     }
 
     void ViewStore::handleDownloadFinished(const StoreCategory &category, StoreEntry &entry) {
         entry.downloading = false;
 
-        auto response = this->m_download.get();
+        auto response = m_download.get();
         if (response.isSuccess()) {
             if (entry.hasUpdate)
-                this->m_updateCount -= 1;
+                m_updateCount -= 1;
 
             entry.installed = true;
             entry.hasUpdate = false;
             entry.system = false;
 
             if (entry.isFolder) {
-                Tar tar(this->m_downloadPath, Tar::Mode::Read);
-                tar.extractAll(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
-                EventStoreContentDownloaded::post(this->m_downloadPath.parent_path() / this->m_downloadPath.stem());
+                Tar tar(m_downloadPath, Tar::Mode::Read);
+                tar.extractAll(m_downloadPath.parent_path() / m_downloadPath.stem());
+                EventStoreContentDownloaded::post(m_downloadPath.parent_path() / m_downloadPath.stem());
             } else {
-                EventStoreContentDownloaded::post(this->m_downloadPath);
+                EventStoreContentDownloaded::post(m_downloadPath);
             }
 
             category.downloadCallback();
@@ -362,7 +362,7 @@ namespace hex::plugin::builtin {
             log::error("Download failed! HTTP Code {}", response.getStatusCode());
 
 
-        this->m_download = {};
+        m_download = {};
     }
 
 }

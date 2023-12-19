@@ -26,20 +26,20 @@ namespace hex::dp {
 
         virtual ~Node() = default;
 
-        [[nodiscard]] int getId() const { return this->m_id; }
-        void setId(int id) { this->m_id = id; }
+        [[nodiscard]] int getId() const { return m_id; }
+        void setId(int id) { m_id = id; }
 
-        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const { return this->m_unlocalizedName; }
-        void setUnlocalizedName(const UnlocalizedString &unlocalizedName) { this->m_unlocalizedName = unlocalizedName; }
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const { return m_unlocalizedName; }
+        void setUnlocalizedName(const UnlocalizedString &unlocalizedName) { m_unlocalizedName = unlocalizedName; }
 
-        [[nodiscard]] const UnlocalizedString &getUnlocalizedTitle() const { return this->m_unlocalizedTitle; }
-        void setUnlocalizedTitle(std::string title) { this->m_unlocalizedTitle = std::move(title); }
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedTitle() const { return m_unlocalizedTitle; }
+        void setUnlocalizedTitle(std::string title) { m_unlocalizedTitle = std::move(title); }
 
-        [[nodiscard]] std::vector<Attribute> &getAttributes() { return this->m_attributes; }
-        [[nodiscard]] const std::vector<Attribute> &getAttributes() const { return this->m_attributes; }
+        [[nodiscard]] std::vector<Attribute> &getAttributes() { return m_attributes; }
+        [[nodiscard]] const std::vector<Attribute> &getAttributes() const { return m_attributes; }
 
         void setCurrentOverlay(prv::Overlay *overlay) {
-            this->m_overlay = overlay;
+            m_overlay = overlay;
         }
 
         virtual void drawNode() { }
@@ -54,20 +54,20 @@ namespace hex::dp {
         };
 
         void resetOutputData() {
-            for (auto &attribute : this->m_attributes)
+            for (auto &attribute : m_attributes)
                 attribute.clearOutputData();
         }
 
         void resetProcessedInputs() {
-            this->m_processedInputs.clear();
+            m_processedInputs.clear();
         }
 
         void setPosition(ImVec2 pos) {
-            this->m_position = pos;
+            m_position = pos;
         }
 
         [[nodiscard]] ImVec2 getPosition() const {
-            return this->m_position;
+            return m_position;
         }
 
         static void setIdCounter(int id);
@@ -107,13 +107,13 @@ namespace hex::dp {
         }
 
         void markInputProcessed(u32 index) {
-            const auto &[iter, inserted] = this->m_processedInputs.insert(index);
+            const auto &[iter, inserted] = m_processedInputs.insert(index);
             if (!inserted)
                 throwNodeError("Recursion detected!");
         }
 
         void unmarkInputProcessed(u32 index) {
-            this->m_processedInputs.erase(index);
+            m_processedInputs.erase(index);
         }
 
     protected:
@@ -124,9 +124,9 @@ namespace hex::dp {
         void setOverlayData(u64 address, const std::vector<u8> &data);
 
         void setAttributes(std::vector<Attribute> attributes) {
-            this->m_attributes = std::move(attributes);
+            m_attributes = std::move(attributes);
 
-            for (auto &attr : this->m_attributes)
+            for (auto &attr : m_attributes)
                 attr.setParentNode(this);
         }
     };

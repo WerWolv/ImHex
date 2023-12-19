@@ -151,7 +151,7 @@ namespace hex::plugin::builtin {
                         }
                         if (ImGui::IsMouseReleased(1) && ImGui::IsItemHovered()) {
                             ImGui::OpenPopup("PatchContextMenu");
-                            this->m_selectedPatch = address;
+                            m_selectedPatch = address;
                         }
 
                         ImGui::TableNextColumn();
@@ -175,8 +175,8 @@ namespace hex::plugin::builtin {
     void ViewPatches::drawAlwaysVisibleContent() {
         if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
             const auto &operations = provider->getUndoStack().getAppliedOperations();
-            if (this->m_numOperations.get(provider) != operations.size()) {
-                this->m_numOperations.get(provider) = operations.size();
+            if (m_numOperations.get(provider) != operations.size()) {
+                m_numOperations.get(provider) = operations.size();
                 EventHighlightingChanged::post();
             }
         }
