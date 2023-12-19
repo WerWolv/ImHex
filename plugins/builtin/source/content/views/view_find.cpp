@@ -6,6 +6,7 @@
 #include <hex/providers/buffered_reader.hpp>
 
 #include <array>
+#include <ranges>
 #include <regex>
 #include <string>
 #include <utility>
@@ -23,7 +24,7 @@ namespace hex::plugin::builtin {
             if (m_searchTask.isRunning())
                 return { };
 
-            if (!m_occurrenceTree->overlapping({ address, address + size }).empty())
+            if (!m_occurrenceTree->overlapping({ address, address }).empty())
                 return HighlightColor();
             else
                 return std::nullopt;
@@ -258,23 +259,74 @@ namespace hex::plugin::builtin {
         reader.seek(searchRegion.getStartAddress());
         reader.setEndAddress(searchRegion.getEndAddress());
 
-        auto bytes = hex::decodeByteString(settings.sequence);
-
-        if (bytes.empty())
+        auto input = hex::decodeByteString(settings.sequence);
+        if (input.empty())
             return { };
+
+        std::vector<u8> bytes;
+        Occurrence::DecodeType decodeType = Occurrence::DecodeType::Binary;
+        std::endian endian;
+        switch (settings.type) {
+            default:
+            case SearchSettings::StringType::ASCII:
+                bytes = input;
+                decodeType = Occurrence::DecodeType::ASCII;
+                endian = std::endian::native;
+                break;
+            case SearchSettings::StringType::UTF16LE: {
+                auto wString = hex::utf8ToUtf16({ input.begin(), input.end() });
+
+                bytes.resize(wString.size() * 2);
+                std::memcpy(bytes.data(), wString.data(), bytes.size());
+                decodeType = Occurrence::DecodeType::UTF16;
+                endian = std::endian::little;
+
+                break;
+            }
+            case SearchSettings::StringType::UTF16BE: {
+                auto wString = hex::utf8ToUtf16({ input.begin(), input.end() });
+
+                bytes.resize(wString.size() * 2);
+                std::memcpy(bytes.data(), wString.data(), bytes.size());
+                decodeType = Occurrence::DecodeType::UTF16;
+                endian = std::endian::big;
+
+                for (size_t i = 0; i < bytes.size(); i += 2)
+                    std::swap(bytes[i], bytes[i + 1]);
+                break;
+            }
+        }
 
         auto occurrence = reader.begin();
         u64 progress = 0;
+
+        auto searchPredicate = [&] -> bool(*)(u8, u8) {
+            if (!settings.ignoreCase)
+                return [](u8 left, u8 right) -> bool {
+                    return left == right;
+                };
+            else
+                return [](u8 left, u8 right) -> bool {
+                    if (std::isupper(left))
+                        left = std::tolower(left);
+                    if (std::isupper(right))
+                        right = std::tolower(right);
+
+                    return left == right;
+                };
+        }();
+
+
         while (true) {
             task.update(progress);
 
-            occurrence = std::search(reader.begin(), reader.end(), std::boyer_moore_horspool_searcher(bytes.begin(), bytes.end()));
+            occurrence = std::search(reader.begin(), reader.end(), std::default_searcher(bytes.begin(), bytes.end(), searchPredicate));
             if (occurrence == reader.end())
                 break;
 
             auto address = occurrence.getAddress();
             reader.seek(address + 1);
-            results.push_back(Occurrence{ Region { address, bytes.size() }, Occurrence::DecodeType::Binary, std::endian::native, false });
+            results.push_back(Occurrence{ Region { address, bytes.size() }, decodeType, endian, false });
             progress = address - searchRegion.getStartAddress();
         }
 
@@ -497,6 +549,8 @@ namespace hex::plugin::builtin {
 
             case Value:
             case Strings:
+            case Sequence:
+            case Regex:
             {
                 switch (occurrence.decodeType) {
                     using enum Occurrence::DecodeType;
@@ -523,8 +577,6 @@ namespace hex::plugin::builtin {
                 }
             }
                 break;
-            case Sequence:
-            case Regex:
             case BinaryPattern:
                 result = hex::encodeByteString(bytes);
                 break;
@@ -660,6 +712,18 @@ namespace hex::plugin::builtin {
                     mode = SearchSettings::Mode::Sequence;
 
                     ImGuiExt::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_KEY, settings.sequence);
+
+                    if (ImGui::BeginCombo("hex.builtin.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
+                        for (size_t i = 0; i < StringTypes.size() - 2; i++) {
+                            auto type = static_cast<SearchSettings::StringType>(i);
+
+                            if (ImGui::Selectable(StringTypes[i].c_str(), type == settings.type))
+                                settings.type = type;
+                        }
+                        ImGui::EndCombo();
+                    }
+
+                    ImGui::Checkbox("hex.builtin.view.find.sequences.ignore_case"_lang, &settings.ignoreCase);
 
                     m_settingsValid = !settings.sequence.empty() && !hex::decodeByteString(settings.sequence).empty();
 

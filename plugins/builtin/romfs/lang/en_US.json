@@ -895,6 +895,7 @@
         "hex.builtin.view.find.search.reset": "Reset",
         "hex.builtin.view.find.searching": "Searching...",
         "hex.builtin.view.find.sequences": "Sequences",
+        "hex.builtin.view.find.sequences.ignore_case": "Ignore case",
         "hex.builtin.view.find.shortcut.select_all": "Select All Occurrences",
         "hex.builtin.view.find.strings": "Strings",
         "hex.builtin.view.find.strings.chars": "Characters",
