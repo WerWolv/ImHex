@@ -5,6 +5,7 @@
 
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/helpers/utils.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin::ui {
 
@@ -197,8 +198,10 @@ namespace hex::plugin::builtin::ui {
             }
         }
         else {
-            ImGui::SetKeyboardFocusHere();
-            ImGui::SetNextFrameWantCaptureKeyboard(true);
+            if (m_enteredEditingMode) {
+                ImGui::SetKeyboardFocusHere();
+                ImGui::SetNextFrameWantCaptureKeyboard(true);
+            }
 
             bool shouldExitEditingMode = true;
             if (cellType == m_editingCellType && cellType == CellType::Hex) {
@@ -225,7 +228,7 @@ namespace hex::plugin::builtin::ui {
                     size_t writtenBytes = 0;
                     for (size_t i = 0; i < m_editingBytes.size(); i += 1) {
                         if (m_editingBytes[i] != oldData[i]) {
-                            m_provider->write(*m_editingAddress, &m_editingBytes[i], 1);
+                            m_provider->write(*m_editingAddress + i, &m_editingBytes[i], 1);
                             writtenBytes += 1;
                         }
                     }
@@ -250,7 +253,7 @@ namespace hex::plugin::builtin::ui {
                 m_shouldUpdateEditingValue = true;
             }
 
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !hovered && !m_enteredEditingMode) {
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !hovered && !m_enteredEditingMode && !ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup)) {
                 m_editingAddress = std::nullopt;
                 m_shouldModifyValue = false;
             }
@@ -472,8 +475,12 @@ namespace hex::plugin::builtin::ui {
                                 this->handleSelection(byteAddress, bytesPerCell, &bytes[x * bytesPerCell], cellHovered);
 
                                 // Get byte foreground color
-                                if (foregroundColor.has_value())
+
+                                auto popForeground = SCOPE_GUARD { ImGui::PopStyleColor(); };
+                                if (foregroundColor.has_value() && !m_editingAddress.has_value())
                                     ImGui::PushStyleColor(ImGuiCol_Text, *foregroundColor);
+                                else
+                                    popForeground.release();
 
                                 // Draw cell content
                                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -484,9 +491,6 @@ namespace hex::plugin::builtin::ui {
                                     ImGuiExt::TextFormatted("{}", std::string(maxCharsPerCell, '?'));
                                 ImGui::PopItemWidth();
                                 ImGui::PopStyleVar();
-
-                                if (foregroundColor.has_value())
-                                    ImGui::PopStyleColor();
                             }
                         }
                         ImGui::PopStyleVar();

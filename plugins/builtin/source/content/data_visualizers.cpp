@@ -235,15 +235,15 @@ namespace hex::plugin::builtin {
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
             hex::unused(address, data, size, upperCase);
 
+            m_currColor = { float(data[0]) / 0xFF, float(data[1]) / 0xFF, float(data[2]) / 0xFF, float(data[3]) / 0xFF };
             if (startedEditing) {
-                m_currColor = { float(data[0]) / 0xFF, float(data[1]) / 0xFF, float(data[2]) / 0xFF, float(data[3]) / 0xFF };
                 ImGui::OpenPopup("##color_popup");
             }
 
             ImGui::ColorButton("##color", ImColor(m_currColor[0], m_currColor[1], m_currColor[2], m_currColor[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
 
             if (ImGui::BeginPopup("##color_popup")) {
-                if (ImGui::ColorPicker4("##picker", m_currColor.data(), ImGuiColorEditFlags_AlphaBar)) {
+                if (ImGui::ColorPicker4("##picker", m_currColor.data(), ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_InputRGB)) {
                     for (u8 i = 0; i < 4; i++)
                         data[i] = m_currColor[i] * 0xFF;
                 }
