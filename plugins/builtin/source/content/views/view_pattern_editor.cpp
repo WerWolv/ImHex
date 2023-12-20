@@ -857,14 +857,13 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             continue;
 
-                        try {
-                            auto &preprocessor = runtime.getInternals().preprocessor;
-                            auto ret = preprocessor->preprocess(runtime, file.readString());
-                            if (!ret.has_value()) {
-                                log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), preprocessor->getError()->what());
-                            }
-                        } catch (pl::core::err::PreprocessorError::Exception &e) {
-                            log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), e.what());
+                        auto &preprocessor = runtime.getInternals().preprocessor;
+
+                        auto source = runtime.addVirtualSource(file.readString(), wolv::util::toUTF8String(file.getPath()));
+
+                        auto result = preprocessor->preprocess(&runtime, source);
+                        if (result.hasErrs()) {
+                            log::warn("Failed to preprocess file {} during MIME analysis", entry.path().string());
                         }
 
                         if (foundCorrectType)
@@ -960,7 +959,7 @@ namespace hex::plugin::builtin {
         m_runningParsers += 1;
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_parserRuntime, nullptr);
-        auto ast = m_parserRuntime->parseString(code);
+        auto ast = m_parserRuntime->parseString(code, pl::api::Source::DefaultSource);
 
         auto &patternVariables = m_patternVariables.get(provider);
 
@@ -1088,7 +1087,7 @@ namespace hex::plugin::builtin {
             };
 
 
-            m_lastEvaluationResult = runtime.executeString(code, envVars, inVariables);
+            m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
             if (!m_lastEvaluationResult) {
                 *m_lastEvaluationError = runtime.getError();
             }
