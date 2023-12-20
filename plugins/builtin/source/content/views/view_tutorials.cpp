@@ -53,6 +53,7 @@ namespace hex::plugin::builtin {
                 ImGui::BeginDisabled(currTutorial != tutorials.end());
                 if (ImGuiExt::DimmedButton("hex.builtin.view.tutorials.start"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                     TutorialManager::startTutorial(m_selectedTutorial->getUnlocalizedName());
+                    this->getWindowOpenState() = false;
                 }
                 ImGui::EndDisabled();
             }
