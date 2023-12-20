@@ -187,6 +187,8 @@ namespace hex {
                             !m_pressedKeys.empty() ||
                             frameCount < 100;
 
+                    m_hadEvent = false;
+
                     // Calculate the time until the next frame
                     const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - m_lastStartFrameTime));
 
@@ -196,16 +198,13 @@ namespace hex {
                     }
 
                     // If the frame rate is locked, wait for events with a timeout
-                    if (frameRateUnlocked || m_frameRateTemporarilyUnlocked) {
-                        if (!m_frameRateTemporarilyUnlocked) {
-                            m_frameRateTemporarilyUnlocked = true;
-                            m_frameRateUnlockTime = m_lastStartFrameTime;
-                        }
-                    } else {
-                        glfwWaitEventsTimeout(timeout);
+                    if (frameRateUnlocked && !m_frameRateTemporarilyUnlocked) {
+                        m_frameRateTemporarilyUnlocked = true;
+                        m_frameRateUnlockTime = m_lastStartFrameTime;
                     }
 
-                    m_hadEvent = false;
+                    if (!m_frameRateTemporarilyUnlocked)
+                        glfwWaitEventsTimeout(timeout);
                 }
             }
 
@@ -220,11 +219,13 @@ namespace hex {
             } else if (targetFPS > 200) {
                 glfwSwapInterval(0);
             } else {
-                glfwSwapInterval(0);
-                const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
-                const auto targetFrameTime = 1.0 / targetFPS;
-                if (frameTime < targetFrameTime) {
-                    glfwWaitEventsTimeout(targetFrameTime - frameTime);
+                if (m_frameRateTemporarilyUnlocked) {
+                    glfwSwapInterval(0);
+                    const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
+                    const auto targetFrameTime = 1.0 / targetFPS;
+                    if (frameTime < targetFrameTime) {
+                        glfwWaitEventsTimeout(targetFrameTime - frameTime);
+                    }
                 }
             }
 
