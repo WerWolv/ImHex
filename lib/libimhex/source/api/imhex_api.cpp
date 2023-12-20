@@ -381,7 +381,6 @@ namespace hex {
 
             // Default to true means we forward to ourselves by default
             static bool s_isMainInstance = true;
-
             void setMainInstanceStatus(bool status) {
                 s_isMainInstance = status;
             }
@@ -435,6 +434,12 @@ namespace hex {
 
                 getInitArguments()[key] = value;
             }
+
+            static double s_lastFrameTime;
+            void setLastFrameTime(double time) {
+                s_lastFrameTime = time;
+            }
+
 
         }
 
@@ -686,6 +691,11 @@ namespace hex {
         void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function) {
             RequestAddInitTask::post(name, async, function);
         }
+
+        double getLastFrameTime() {
+            return impl::s_lastFrameTime;
+        }
+
 
     }
 

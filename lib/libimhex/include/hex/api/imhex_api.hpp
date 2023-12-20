@@ -366,6 +366,7 @@ namespace hex {
 
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
+                void setLastFrameTime(double time);
             }
 
             struct ProgramArguments {
@@ -557,6 +558,8 @@ namespace hex {
             bool updateImHex(UpdateType updateType);
 
             void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function);
+
+            double getLastFrameTime();
         }
 
         /**

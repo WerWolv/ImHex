@@ -82,6 +82,9 @@ namespace hex::init {
     static ImColor getHighlightColor(u32 index) {
         static auto highlightConfig = nlohmann::json::parse(romfs::get("splash_colors.json").string());
         static std::list<nlohmann::json> selectedConfigs;
+        static nlohmann::json selectedConfig;
+
+        static std::mt19937 random(std::random_device{}());
 
         if (selectedConfigs.empty()) {
             const auto now = []{
@@ -110,15 +113,14 @@ namespace hex::init {
             // Remove the default color theme if there's another one available
             if (selectedConfigs.size() != 1)
                 selectedConfigs.erase(selectedConfigs.begin());
+
+            selectedConfig = *std::next(selectedConfigs.begin(), random() % selectedConfigs.size());
+
+            log::debug("Using '{}' highlight color theme", selectedConfig["name"].get<std::string>());
         }
-
-        std::mt19937 random(std::random_device{}());
-
-        static const auto &selectedConfig = *std::next(selectedConfigs.begin(), random() % selectedConfigs.size());
 
         const auto colorString = selectedConfig["colors"][index % selectedConfig["colors"].size()].get<std::string>();
 
-        log::debug("Using '{}' highlight color theme", selectedConfig["name"].get<std::string>());
         if (colorString == "random") {
             float r, g, b;
             ImGui::ColorConvertHSVtoRGB(

@@ -211,6 +211,8 @@ namespace hex {
             this->fullFrame();
             frameCount += 1;
 
+            ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - m_lastStartFrameTime);
+
             // Limit frame rate
             // If the target FPS are below 15, use the monitor refresh rate, if it's above 200, don't limit the frame rate
             const auto targetFPS = ImHexApi::System::getTargetFPS();
