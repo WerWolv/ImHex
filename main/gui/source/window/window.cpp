@@ -92,7 +92,9 @@ namespace hex {
         RequestOpenPopup::unsubscribe(this);
 
         WorkspaceManager::exportToFile();
-        ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", WorkspaceManager::getCurrentWorkspace()->first);
+
+        if (auto workspace = WorkspaceManager::getCurrentWorkspace(); workspace != WorkspaceManager::getWorkspaces().end())
+            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
 
         this->exitImGui();
         this->exitGLFW();
@@ -1165,6 +1167,13 @@ namespace hex {
         IMGUI_CHECKVERSION();
 
         auto fonts = ImHexApi::Fonts::getFontAtlas();
+
+        if (fonts == nullptr) {
+            fonts = IM_NEW(ImFontAtlas)();
+
+            fonts->AddFontDefault();
+            fonts->Build();
+        }
 
         // Initialize ImGui and all other ImGui extensions
         GImGui   = ImGui::CreateContext(fonts);
