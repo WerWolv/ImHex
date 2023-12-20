@@ -29,9 +29,9 @@ namespace hex::plugin::builtin {
                     Bottom | Right
                 )
                 .addHighlight("hex.builtin.tutorial.introduction.step2.highlight",
-                    {
-                    "Welcome Screen/Start##SubWindow_685A2CE9",
-                        Lang("hex.builtin.welcome.start.create_file")
+                {
+                    "Welcome Screen/Start##SubWindow_69AA6996",
+                    Lang("hex.builtin.welcome.start.create_file")
                 })
                 .onAppear([&step] {
                     EventProviderOpened::subscribe(&step, [&step](prv::Provider *provider) {
