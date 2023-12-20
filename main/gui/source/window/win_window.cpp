@@ -316,20 +316,6 @@ namespace hex {
             g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)commonWindowProc);
         }
 
-        // Add a custom exception handler to detect heap corruptions
-        {
-            ::AddVectoredExceptionHandler(TRUE, [](PEXCEPTION_POINTERS exception) -> LONG {
-                if ((exception->ExceptionRecord->ExceptionCode & 0xF000'0000) == 0xC000'0000) {
-                    log::fatal("Exception raised: 0x{:08X}", exception->ExceptionRecord->ExceptionCode);
-                    if (exception->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION) {
-                        log::fatal("Heap corruption detected!");
-                    }
-                }
-
-                return EXCEPTION_CONTINUE_SEARCH;
-            });
-        }
-
         // Set up a taskbar progress handler
         {
             if (SUCCEEDED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
