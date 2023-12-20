@@ -85,15 +85,13 @@ namespace hex::crash {
         // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
         #if defined(DEBUG)
 
-            if (signalNumber == 0) {
-                #if defined(OS_WINDOWS)
-                    __debugbreak();
-                #else
-                    raise(SIGTRAP);
-                #endif
-            } else {
-                std::exit(signalNumber);
-            }
+            #if defined(OS_WINDOWS)
+                __debugbreak();
+            #else
+                raise(SIGTRAP);
+            #endif
+
+            std::exit(signalNumber);
 
         #else
 
