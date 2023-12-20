@@ -29,13 +29,13 @@ namespace hex::log {
 
         std::vector<LogEntry>& getLogEntries();
 
-        [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level);
+        [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName);
 
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto && ... args) {
             std::scoped_lock lock(impl::g_loggerMutex);
 
             auto dest = impl::getDestination();
-            printPrefix(dest, ts, level);
+            printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
 
             auto message = fmt::format(fmt::runtime(fmt), args...);
             fmt::print(dest, "{}\n", message);
