@@ -88,13 +88,6 @@ namespace hex::plugin::builtin::ui {
             ImGui::TableNextColumn();
         }
 
-        void drawColorColumn(const pl::ptrn::Pattern& pattern) {
-            if (pattern.getVisibility() == pl::ptrn::Visibility::Visible)
-                ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
-
-            ImGui::TableNextColumn();
-        }
-
         void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             if (pattern.isPatternLocal()) {
                 ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
@@ -224,9 +217,6 @@ namespace hex::plugin::builtin::ui {
     }
 
     void PatternDrawer::drawFavoriteColumn(const pl::ptrn::Pattern& pattern) {
-        if (m_rowColoring)
-            ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, (pattern.getColor() & 0x00'FF'FF'FF) | 0x30'00'00'00);
-
         if (!m_showFavoriteStars) {
             ImGui::TableNextColumn();
             return;
@@ -246,6 +236,17 @@ namespace hex::plugin::builtin::ui {
         }
 
         ImGui::PopStyleVar();
+
+        ImGui::TableNextColumn();
+    }
+
+    void PatternDrawer::drawColorColumn(const pl::ptrn::Pattern& pattern) {
+        if (pattern.getVisibility() == pl::ptrn::Visibility::Visible) {
+            ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+
+            if (m_rowColoring)
+                ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, (pattern.getColor() & 0x00'FF'FF'FF) | 0x30'00'00'00);
+        }
 
         ImGui::TableNextColumn();
     }
