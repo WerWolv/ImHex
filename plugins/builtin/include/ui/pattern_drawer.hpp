@@ -69,6 +69,7 @@ namespace hex::plugin::builtin::ui {
         void drawValueColumn(pl::ptrn::Pattern& pattern);
         void drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset);
         void drawFavoriteColumn(const pl::ptrn::Pattern& pattern);
+        void drawColorColumn(const pl::ptrn::Pattern& pattern);
 
         bool beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) const;
         bool createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf = false);
