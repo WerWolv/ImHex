@@ -17,8 +17,8 @@ namespace hex::plugin::builtin {
     }
 
     void ViewConstants::reloadConstants() {
-        this->m_constants.clear();
-        this->m_filterIndices.clear();
+        m_constants.clear();
+        m_filterIndices.clear();
 
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Constants)) {
             if (!wolv::io::fs::exists(path)) continue;
@@ -52,8 +52,8 @@ namespace hex::plugin::builtin {
                         else
                             throw std::runtime_error("Invalid type");
 
-                        this->m_filterIndices.push_back(this->m_constants.size());
-                        this->m_constants.push_back(constant);
+                        m_filterIndices.push_back(m_constants.size());
+                        m_constants.push_back(constant);
                     }
                 } catch (...) {
                     log::error("Failed to parse constants file {}", wolv::util::toUTF8String(file.path()));
@@ -65,17 +65,17 @@ namespace hex::plugin::builtin {
     void ViewConstants::drawContent() {
         ImGui::PushItemWidth(-1);
 
-        if (ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, this->m_filter)) {
-            this->m_filterIndices.clear();
+        if (ImGuiExt::InputTextIcon("##search", ICON_VS_FILTER, m_filter)) {
+            m_filterIndices.clear();
 
             // Filter the constants according to the entered value
-            for (u64 i = 0; i < this->m_constants.size(); i++) {
-                auto &constant = this->m_constants[i];
-                if (hex::containsIgnoreCase(constant.name, this->m_filter) ||
-                    hex::containsIgnoreCase(constant.category, this->m_filter) ||
-                    hex::containsIgnoreCase(constant.description, this->m_filter) ||
-                    hex::containsIgnoreCase(constant.value, this->m_filter))
-                    this->m_filterIndices.push_back(i);
+            for (u64 i = 0; i < m_constants.size(); i++) {
+                auto &constant = m_constants[i];
+                if (hex::containsIgnoreCase(constant.name, m_filter) ||
+                    hex::containsIgnoreCase(constant.category, m_filter) ||
+                    hex::containsIgnoreCase(constant.description, m_filter) ||
+                    hex::containsIgnoreCase(constant.value, m_filter))
+                    m_filterIndices.push_back(i);
             }
         }
 
@@ -92,7 +92,7 @@ namespace hex::plugin::builtin {
 
             // Handle table sorting
             if (sortSpecs->SpecsDirty) {
-                std::sort(this->m_constants.begin(), this->m_constants.end(), [&sortSpecs](const Constant &left, const Constant &right) -> bool {
+                std::sort(m_constants.begin(), m_constants.end(), [&sortSpecs](const Constant &left, const Constant &right) -> bool {
                     if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("category")) {
                         if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
                             return left.category > right.category;
@@ -124,12 +124,12 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             ImGuiListClipper clipper;
-            clipper.Begin(this->m_filterIndices.size());
+            clipper.Begin(m_filterIndices.size());
 
             // Draw the constants table
             while (clipper.Step()) {
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                    auto &constant = this->m_constants[this->m_filterIndices[i]];
+                    auto &constant = m_constants[m_filterIndices[i]];
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(constant.category.c_str());

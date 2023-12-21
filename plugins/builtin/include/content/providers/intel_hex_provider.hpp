@@ -11,7 +11,7 @@ namespace hex::plugin::builtin {
         IntelHexProvider() = default;
         ~IntelHexProvider() override = default;
 
-        [[nodiscard]] bool isAvailable() const override { return this->m_dataValid; }
+        [[nodiscard]] bool isAvailable() const override { return m_dataValid; }
         [[nodiscard]] bool isReadable() const override { return true; }
         [[nodiscard]] bool isWritable() const override { return false; }
         [[nodiscard]] bool isResizable() const override { return false; }

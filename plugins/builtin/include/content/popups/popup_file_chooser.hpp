@@ -31,10 +31,10 @@ namespace hex::plugin::builtin {
                 if (adjustedPath.empty())
                     adjustedPath = path.filename();
 
-                this->m_files.push_back({ path, adjustedPath });
+                m_files.push_back({ path, adjustedPath });
             }
 
-            std::sort(this->m_files.begin(), this->m_files.end(), [](const auto &a, const auto &b) {
+            std::sort(m_files.begin(), m_files.end(), [](const auto &a, const auto &b) {
                 return a.first < b.first;
             });
         }
@@ -44,19 +44,19 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginListBox("##files", scaled(ImVec2(500, 400)))) {
                 u32 index = 0;
-                for (auto &[path, pathName] : this->m_files) {
+                for (auto &[path, pathName] : m_files) {
                     ImGui::PushID(index);
 
-                    bool selected = this->m_indices.contains(index);
+                    bool selected = m_indices.contains(index);
                     if (ImGui::Selectable(wolv::util::toUTF8String(pathName).c_str(), selected, ImGuiSelectableFlags_DontClosePopups)) {
-                        if (!this->m_multiple) {
-                            this->m_indices.clear();
-                            this->m_indices.insert(index);
+                        if (!m_multiple) {
+                            m_indices.clear();
+                            m_indices.insert(index);
                         } else {
                             if (selected) {
-                                this->m_indices.erase(index);
+                                m_indices.erase(index);
                             } else {
-                                this->m_indices.insert(index);
+                                m_indices.insert(index);
                             }
                         }
                     }
@@ -74,18 +74,18 @@ namespace hex::plugin::builtin {
             }
 
             if (ImGui::Button("hex.builtin.common.open"_lang) || doubleClicked) {
-                for (const auto &index : this->m_indices)
-                    this->m_openCallback(this->m_files[index].first);
+                for (const auto &index : m_indices)
+                    m_openCallback(m_files[index].first);
                 Popup::close();
             }
 
             ImGui::SameLine();
 
             if (ImGui::Button("hex.builtin.common.browse"_lang)) {
-                fs::openFileBrowser(fs::DialogMode::Open, this->m_validExtensions, [this](const auto &path) {
-                    this->m_openCallback(path);
+                fs::openFileBrowser(fs::DialogMode::Open, m_validExtensions, [this](const auto &path) {
+                    m_openCallback(path);
                     Popup::close();
-                }, {}, this->m_multiple);
+                }, {}, m_multiple);
             }
 
             if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))

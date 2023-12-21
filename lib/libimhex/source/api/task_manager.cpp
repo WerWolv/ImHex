@@ -55,25 +55,25 @@ namespace hex {
         #endif
     }
 
-    Task::Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
+    Task::Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
     : m_unlocalizedName(std::move(unlocalizedName)), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
 
     Task::Task(hex::Task &&other) noexcept {
         {
-            std::scoped_lock thisLock(this->m_mutex);
+            std::scoped_lock thisLock(m_mutex);
             std::scoped_lock otherLock(other.m_mutex);
 
-            this->m_function = std::move(other.m_function);
-            this->m_unlocalizedName = std::move(other.m_unlocalizedName);
+            m_function = std::move(other.m_function);
+            m_unlocalizedName = std::move(other.m_unlocalizedName);
         }
 
-        this->m_maxValue    = u64(other.m_maxValue);
-        this->m_currValue   = u64(other.m_currValue);
+        m_maxValue    = u64(other.m_maxValue);
+        m_currValue   = u64(other.m_currValue);
 
-        this->m_finished        = bool(other.m_finished);
-        this->m_hadException    = bool(other.m_hadException);
-        this->m_interrupted     = bool(other.m_interrupted);
-        this->m_shouldInterrupt = bool(other.m_shouldInterrupt);
+        m_finished        = bool(other.m_finished);
+        m_hadException    = bool(other.m_hadException);
+        m_interrupted     = bool(other.m_interrupted);
+        m_shouldInterrupt = bool(other.m_shouldInterrupt);
     }
 
     Task::~Task() {
@@ -83,92 +83,92 @@ namespace hex {
 
     void Task::update(u64 value) {
         // Update the current progress value of the task
-        this->m_currValue.store(value, std::memory_order_relaxed);
+        m_currValue.store(value, std::memory_order_relaxed);
 
         // Check if the task has been interrupted by the main thread and if yes,
         // throw an exception that is generally not caught by the task
-        if (this->m_shouldInterrupt.load(std::memory_order_relaxed)) [[unlikely]]
+        if (m_shouldInterrupt.load(std::memory_order_relaxed)) [[unlikely]]
             throw TaskInterruptor();
     }
 
     void Task::setMaxValue(u64 value) {
-        this->m_maxValue = value;
+        m_maxValue = value;
     }
 
 
     void Task::interrupt() {
-        this->m_shouldInterrupt = true;
+        m_shouldInterrupt = true;
 
         // Call the interrupt callback on the current thread if one is set
-        if (this->m_interruptCallback)
-            this->m_interruptCallback();
+        if (m_interruptCallback)
+            m_interruptCallback();
     }
 
     void Task::setInterruptCallback(std::function<void()> callback) {
-        this->m_interruptCallback = std::move(callback);
+        m_interruptCallback = std::move(callback);
     }
 
     bool Task::isBackgroundTask() const {
-        return this->m_background;
+        return m_background;
     }
 
     bool Task::isFinished() const {
-        return this->m_finished;
+        return m_finished;
     }
 
     bool Task::hadException() const {
-        return this->m_hadException;
+        return m_hadException;
     }
 
     bool Task::shouldInterrupt() const {
-        return this->m_shouldInterrupt;
+        return m_shouldInterrupt;
     }
 
     bool Task::wasInterrupted() const {
-        return this->m_interrupted;
+        return m_interrupted;
     }
 
     void Task::clearException() {
-        this->m_hadException = false;
+        m_hadException = false;
     }
 
     std::string Task::getExceptionMessage() const {
-        std::scoped_lock lock(this->m_mutex);
+        std::scoped_lock lock(m_mutex);
 
-        return this->m_exceptionMessage;
+        return m_exceptionMessage;
     }
 
-    const std::string &Task::getUnlocalizedName() {
-        return this->m_unlocalizedName;
+    const UnlocalizedString &Task::getUnlocalizedName() {
+        return m_unlocalizedName;
     }
 
     u64 Task::getValue() const {
-        return this->m_currValue;
+        return m_currValue;
     }
 
     u64 Task::getMaxValue() const {
-        return this->m_maxValue;
+        return m_maxValue;
     }
 
     void Task::finish() {
-        this->m_finished = true;
+        m_finished = true;
     }
 
     void Task::interruption() {
-        this->m_interrupted = true;
+        m_interrupted = true;
     }
 
     void Task::exception(const char *message) {
-        std::scoped_lock lock(this->m_mutex);
+        std::scoped_lock lock(m_mutex);
 
         // Store information about the caught exception
-        this->m_exceptionMessage = message;
-        this->m_hadException = true;
+        m_exceptionMessage = message;
+        m_hadException = true;
     }
 
 
     bool TaskHolder::isRunning() const {
-        auto task = this->m_task.lock();
+        auto task = m_task.lock();
         if (!task)
             return false;
 
@@ -176,7 +176,7 @@ namespace hex {
     }
 
     bool TaskHolder::hadException() const {
-        auto task = this->m_task.lock();
+        auto task = m_task.lock();
         if (!task)
             return false;
 
@@ -184,7 +184,7 @@ namespace hex {
     }
 
     bool TaskHolder::shouldInterrupt() const {
-        auto task = this->m_task.lock();
+        auto task = m_task.lock();
         if (!task)
             return false;
 
@@ -192,7 +192,7 @@ namespace hex {
     }
 
     bool TaskHolder::wasInterrupted() const {
-        auto task = this->m_task.lock();
+        auto task = m_task.lock();
         if (!task)
             return false;
 
@@ -200,7 +200,7 @@ namespace hex {
     }
 
     void TaskHolder::interrupt() const {
-        auto task = this->m_task.lock();
+        auto task = m_task.lock();
         if (!task)
             return;
 
@@ -208,7 +208,7 @@ namespace hex {
     }
 
     u32 TaskHolder::getProgress() const {
-        auto task = this->m_task.lock();
+        auto task = m_task.lock();
         if (!task)
             return false;
 
@@ -281,17 +281,17 @@ namespace hex {
                 // Execute the task
                 task->m_function(*task);
 
-                log::debug("Task '{}' finished", task->m_unlocalizedName);
+                log::debug("Task '{}' finished", task->m_unlocalizedName.get());
             } catch (const Task::TaskInterruptor &) {
                 // Handle the task being interrupted by user request
                 task->interruption();
             } catch (const std::exception &e) {
-                log::error("Exception in task '{}': {}", task->m_unlocalizedName, e.what());
+                log::error("Exception in task '{}': {}", task->m_unlocalizedName.get(), e.what());
 
                 // Handle the task throwing an uncaught exception
                 task->exception(e.what());
             } catch (...) {
-                log::error("Exception in task '{}'", task->m_unlocalizedName);
+                log::error("Exception in task '{}'", task->m_unlocalizedName.get());
 
                 // Handle the task throwing an uncaught exception of unknown type
                 task->exception("Unknown Exception");

@@ -14,19 +14,19 @@ namespace hex::plugin::builtin::undo {
         void undo(prv::Provider *provider) override {
             hex::unused(provider);
 
-            ImHexApi::Bookmarks::remove(this->m_entry.id);
+            ImHexApi::Bookmarks::remove(m_entry.id);
         }
 
         void redo(prv::Provider *provider) override {
             hex::unused(provider);
 
-            auto &[region, name, comment, color, locked, id] = this->m_entry;
+            auto &[region, name, comment, color, locked, id] = m_entry;
 
             id = ImHexApi::Bookmarks::add(region, name, comment, color);
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("Bookmark {} created", this->m_entry.name);
+            return hex::format("Bookmark {} created", m_entry.name);
         }
 
         std::unique_ptr<Operation> clone() const override {
@@ -34,7 +34,7 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] Region getRegion() const override {
-            return this->m_entry.region;
+            return m_entry.region;
         }
 
         bool shouldHighlight() const override { return false; }

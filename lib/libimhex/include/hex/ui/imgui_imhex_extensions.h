@@ -90,25 +90,25 @@ namespace ImGuiExt {
         Texture& operator=(Texture&& other) noexcept;
 
         [[nodiscard]] constexpr bool isValid() const noexcept {
-            return this->m_textureId != nullptr;
+            return m_textureId != nullptr;
         }
 
         [[nodiscard]] operator ImTextureID() const noexcept {
-            return this->m_textureId;
+            return m_textureId;
         }
 
         [[nodiscard]] operator intptr_t() const noexcept {
-            return reinterpret_cast<intptr_t>(this->m_textureId);
+            return reinterpret_cast<intptr_t>(m_textureId);
         }
 
         [[nodiscard]] auto getSize() const noexcept {
-            return ImVec2(this->m_width, this->m_height);
+            return ImVec2(m_width, m_height);
         }
 
         [[nodiscard]] constexpr auto getAspectRatio() const noexcept {
-            if (this->m_height == 0) return 1.0F;
+            if (m_height == 0) return 1.0F;
 
-            return float(this->m_width) / float(this->m_height);
+            return float(m_width) / float(m_height);
         }
 
     private:

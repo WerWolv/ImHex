@@ -9,5 +9,12 @@ namespace hex::impl {
         return openPopups;
     }
 
+    std::mutex& PopupBase::getMutex() {
+        static std::mutex mutex;
+
+        return mutex;
+    }
+
+
 
 }

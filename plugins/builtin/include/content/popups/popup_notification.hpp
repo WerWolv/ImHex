@@ -15,16 +15,16 @@ namespace hex::plugin::builtin {
         template<typename T>
         class PopupNotification : public Popup<T> {
         public:
-            PopupNotification(std::string unlocalizedName, std::string message, std::function<void()> function)
+            PopupNotification(UnlocalizedString unlocalizedName, std::string message, std::function<void()> function)
                 : hex::Popup<T>(std::move(unlocalizedName), false),
                   m_message(std::move(message)), m_function(std::move(function)) { }
 
             void drawContent() override {
-                ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
+                ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
                 ImGui::NewLine();
                 ImGui::Separator();
                 if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
-                    this->m_function();
+                    m_function();
 
                 ImGui::SetWindowPos((ImHexApi::System::getMainWindowSize() - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
 

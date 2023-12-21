@@ -20,16 +20,16 @@ namespace hex::plugin::builtin {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             for (u8 i = 0; i < 2; i++) {
-                this->m_columns[i].provider = -1;
-                this->m_columns[i].hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+                m_columns[i].provider = -1;
+                m_columns[i].hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
             }
 
-            this->m_diffs.clear();
+            m_diffs.clear();
         });
 
         // Set the background highlight callbacks for the two hex editor columns
-        this->m_columns[0].hexEditor.setBackgroundHighlightCallback(this->createCompareFunction(1));
-        this->m_columns[1].hexEditor.setBackgroundHighlightCallback(this->createCompareFunction(0));
+        m_columns[0].hexEditor.setBackgroundHighlightCallback(this->createCompareFunction(1));
+        m_columns[1].hexEditor.setBackgroundHighlightCallback(this->createCompareFunction(0));
     }
 
     ViewDiff::~ViewDiff() {
@@ -102,7 +102,7 @@ namespace hex::plugin::builtin {
 
         return [this, otherIndex](u64 address, const u8 *data, size_t) -> std::optional<color_t> {
             const auto &providers = ImHexApi::Provider::getProviders();
-            auto otherId = this->m_columns[otherIndex].provider;
+            auto otherId = m_columns[otherIndex].provider;
 
             // Check if the other provider is valid
             if (otherId < 0 || size_t(otherId) >= providers.size())
@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::min(providerA->getActualSize(), providerB->getActualSize());
-        this->m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &task) {
+        m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &task) {
             std::vector<Diff> differences;
 
             // Set up readers for both providers
@@ -177,13 +177,13 @@ namespace hex::plugin::builtin {
             }
 
             // Move the calculated differences over so they can be displayed
-            this->m_diffs = std::move(differences);
-            this->m_analyzed = true;
+            m_diffs = std::move(differences);
+            m_analyzed = true;
         });
     }
 
     void ViewDiff::drawContent() {
-        auto &[a, b] = this->m_columns;
+        auto &[a, b] = m_columns;
 
         a.hexEditor.enableSyncScrolling(false);
         b.hexEditor.enableSyncScrolling(false);
@@ -206,7 +206,7 @@ namespace hex::plugin::builtin {
         }
 
         // Analyze the providers if they are valid and the user selected a new provider
-        if (!this->m_analyzed && a.provider != -1 && b.provider != -1 && !this->m_diffTask.isRunning()) {
+        if (!m_analyzed && a.provider != -1 && b.provider != -1 && !m_diffTask.isRunning()) {
             const auto &providers = ImHexApi::Provider::getProviders();
             auto providerA = providers[a.provider];
             auto providerB = providers[b.provider];
@@ -222,15 +222,15 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
             ImGui::TableHeadersRow();
 
-            ImGui::BeginDisabled(this->m_diffTask.isRunning());
+            ImGui::BeginDisabled(m_diffTask.isRunning());
             {
                 // Draw first provider selector
                 ImGui::TableNextColumn();
-                if (drawProviderSelector(a)) this->m_analyzed = false;
+                if (drawProviderSelector(a)) m_analyzed = false;
 
                 // Draw second provider selector
                 ImGui::TableNextColumn();
-                if (drawProviderSelector(b)) this->m_analyzed = false;
+                if (drawProviderSelector(b)) m_analyzed = false;
             }
             ImGui::EndDisabled();
 
@@ -268,21 +268,21 @@ namespace hex::plugin::builtin {
             ImGui::TableHeadersRow();
 
             // Draw the differences if the providers have been analyzed
-            if (this->m_analyzed) {
+            if (m_analyzed) {
                 ImGuiListClipper clipper;
-                clipper.Begin(int(this->m_diffs.size()));
+                clipper.Begin(int(m_diffs.size()));
 
                 while (clipper.Step())
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         ImGui::TableNextRow();
 
                         // Prevent the list from trying to access non-existing diffs
-                        if (size_t(i) >= this->m_diffs.size())
+                        if (size_t(i) >= m_diffs.size())
                             break;
 
                         ImGui::PushID(i);
 
-                        const auto &diff = this->m_diffs[i];
+                        const auto &diff = m_diffs[i];
 
                         // Draw a clickable row for each difference that will select the difference in both hex editors
 

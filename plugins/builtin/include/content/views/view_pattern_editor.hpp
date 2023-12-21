@@ -52,20 +52,20 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.pattern_editor.accept_pattern.desc"_lang));
 
                 std::vector<std::string> entries;
-                entries.resize(this->m_view->m_possiblePatternFiles.get(provider).size());
+                entries.resize(m_view->m_possiblePatternFiles.get(provider).size());
 
                 for (u32 i = 0; i < entries.size(); i++) {
-                    entries[i] = wolv::util::toUTF8String(this->m_view->m_possiblePatternFiles.get(provider)[i].filename());
+                    entries[i] = wolv::util::toUTF8String(m_view->m_possiblePatternFiles.get(provider)[i].filename());
                 }
 
                 if (ImGui::BeginListBox("##patterns_accept", ImVec2(-FLT_MIN, 0))) {
                     u32 index = 0;
-                    for (auto &path : this->m_view->m_possiblePatternFiles.get(provider)) {
-                        if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == this->m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
-                            this->m_selectedPatternFile = index;
+                    for (auto &path : m_view->m_possiblePatternFiles.get(provider)) {
+                        if (ImGui::Selectable(wolv::util::toUTF8String(path.filename()).c_str(), index == m_selectedPatternFile, ImGuiSelectableFlags_DontClosePopups))
+                            m_selectedPatternFile = index;
 
                         if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
-                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles.get(provider)[this->m_selectedPatternFile], provider);
+                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile], provider);
 
                         ImGuiExt::InfoTooltip(wolv::util::toUTF8String(path).c_str());
 
@@ -84,7 +84,7 @@ namespace hex::plugin::builtin {
 
                 ImGuiExt::ConfirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
                         [this, provider] {
-                            this->m_view->loadPatternFile(this->m_view->m_possiblePatternFiles.get(provider)[this->m_selectedPatternFile], provider);
+                            m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile], provider);
                             this->close();
                         },
                         [this] {

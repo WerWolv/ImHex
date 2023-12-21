@@ -40,7 +40,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewLogs::drawContent() {
-        ImGui::Combo("hex.builtin.view.logs.log_level"_lang, &this->m_logLevel, "DEBUG\0INFO\0WARNING\0ERROR\0FATAL\0");
+        ImGui::Combo("hex.builtin.view.logs.log_level"_lang, &m_logLevel, "DEBUG\0INFO\0WARNING\0ERROR\0FATAL\0");
 
         if (ImGui::BeginTable("##logs", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY)) {
             ImGui::TableSetupColumn("hex.builtin.view.logs.component"_lang, ImGuiTableColumnFlags_WidthFixed, 100_scaled);
@@ -58,7 +58,7 @@ namespace hex::plugin::builtin {
                 for (size_t i = clipper.DisplayStart; i < std::min<size_t>(clipper.DisplayEnd + end, logs.size()); i++) {
                     const auto &log = logs[logs.size() - 1 - i];
 
-                    if (!shouldDisplay(log.level, this->m_logLevel)) {
+                    if (!shouldDisplay(log.level, m_logLevel)) {
                         end++;
                         clipper.ItemsCount--;
                         continue;

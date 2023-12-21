@@ -45,15 +45,15 @@ namespace hex {
         class EventId {
         public:
             explicit constexpr EventId(const char *eventName) {
-                this->m_hash = 0x811C'9DC5;
+                m_hash = 0x811C'9DC5;
                 for (auto c : std::string_view(eventName)) {
-                    this->m_hash = (this->m_hash >> 5) | (this->m_hash << 27);
-                    this->m_hash ^= c;
+                    m_hash = (m_hash >> 5) | (m_hash << 27);
+                    m_hash ^= c;
                 }
             }
 
             constexpr bool operator==(const EventId &other) const {
-                return this->m_hash == other.m_hash;
+                return m_hash == other.m_hash;
             }
 
         private:
@@ -71,7 +71,7 @@ namespace hex {
             explicit Event(Callback func) noexcept : m_func(std::move(func)) { }
 
             void operator()(Params... params) const noexcept {
-                this->m_func(params...);
+                m_func(params...);
             }
 
         private:

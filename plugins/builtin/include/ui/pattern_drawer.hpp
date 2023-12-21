@@ -17,12 +17,12 @@ namespace hex::plugin::builtin::ui {
     class PatternDrawer : public pl::PatternVisitor {
     public:
         PatternDrawer() {
-            this->m_formatters = pl::gen::fmt::createFormatters();
+            m_formatters = pl::gen::fmt::createFormatters();
         }
 
         virtual ~PatternDrawer() = default;
 
-        void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
+        void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
 
         enum class TreeStyle {
             Default         = 0,
@@ -30,9 +30,9 @@ namespace hex::plugin::builtin::ui {
             Flattened       = 2
         };
 
-        void setTreeStyle(TreeStyle style) { this->m_treeStyle = style; }
-        void setSelectionCallback(std::function<void(Region)> callback) { this->m_selectionCallback = std::move(callback); }
-        void enableRowColoring(bool enabled) { this->m_rowColoring = enabled; }
+        void setTreeStyle(TreeStyle style) { m_treeStyle = style; }
+        void setSelectionCallback(std::function<void(Region)> callback) { m_selectionCallback = std::move(callback); }
+        void enableRowColoring(bool enabled) { m_rowColoring = enabled; }
         void reset();
 
     private:
@@ -87,7 +87,7 @@ namespace hex::plugin::builtin::ui {
             std::optional<pl::core::Token::Literal> value;
         };
 
-        std::optional<Filter> parseRValueFilter(const std::string &filter) const;
+        std::optional<Filter> parseRValueFilter(pl::PatternLanguage *runtime, const std::string &filter) const;
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;

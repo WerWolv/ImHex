@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
 
         // Add the settings menu item to the Extras menu
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.extras" }, 3000);
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name"_lang }, 4000, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, 4000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
     }
@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
                                         ContentRegistry::Settings::write(category.unlocalizedName, setting.unlocalizedName, newValue);
 
                                         // Print a debug message
-                                        log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName, setting.unlocalizedName, nlohmann::to_string(newValue));
+                                        log::debug("Setting [{} / {}]: Value was changed to {}", category.unlocalizedName.get(), setting.unlocalizedName.get(), nlohmann::to_string(newValue));
 
                                         // Signal that the setting was changed
                                         EventSettingsChanged::post();
@@ -88,8 +88,8 @@ namespace hex::plugin::builtin {
 
                                         // Request a restart if the setting requires it
                                         if (widget->doesRequireRestart()) {
-                                            this->m_restartRequested = true;
-                                            this->m_triggerPopup = true;
+                                            m_restartRequested = true;
+                                            m_triggerPopup = true;
                                         }
                                     }
                                 }
@@ -109,12 +109,12 @@ namespace hex::plugin::builtin {
 
     void ViewSettings::drawAlwaysVisibleContent() {
         // If a restart is required, ask the user if they want to restart
-        if (!this->getWindowOpenState() && this->m_triggerPopup) {
-            this->m_triggerPopup = false;
+        if (!this->getWindowOpenState() && m_triggerPopup) {
+            m_triggerPopup = false;
             PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
                 ImHexApi::System::restartImHex,
                 [this]{
-                    this->m_restartRequested = false;
+                    m_restartRequested = false;
                 }
             );
         }

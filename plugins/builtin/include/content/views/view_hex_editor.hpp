@@ -23,42 +23,42 @@ namespace hex::plugin::builtin {
         };
 
         [[nodiscard]] bool isAnyPopupOpen() const {
-            return this->m_currPopup != nullptr;
+            return m_currPopup != nullptr;
         }
 
         template<std::derived_from<Popup> T>
         [[nodiscard]] bool isPopupOpen() const {
-            return dynamic_cast<T*>(this->m_currPopup.get()) != nullptr;
+            return dynamic_cast<T*>(m_currPopup.get()) != nullptr;
         }
 
         template<std::derived_from<Popup> T, typename ... Args>
         void openPopup(Args && ...args) {
-            this->m_currPopup = std::make_unique<T>(std::forward<Args>(args)...);
-            this->m_shouldOpenPopup = true;
+            m_currPopup = std::make_unique<T>(std::forward<Args>(args)...);
+            m_shouldOpenPopup = true;
         }
 
         void closePopup() {
-            this->m_currPopup.reset();
+            m_currPopup.reset();
         }
 
         bool isSelectionValid() const {
-            return this->m_hexEditor.isSelectionValid();
+            return m_hexEditor.isSelectionValid();
         }
 
         Region getSelection() const {
-            return this->m_hexEditor.getSelection();
+            return m_hexEditor.getSelection();
         }
 
         void setSelection(const Region &region) {
-            this->m_hexEditor.setSelection(region);
+            m_hexEditor.setSelection(region);
         }
 
         void setSelection(u128 start, u128 end) {
-            this->m_hexEditor.setSelection(start, end);
+            m_hexEditor.setSelection(start, end);
         }
 
         void jumpToSelection() {
-            this->m_hexEditor.jumpToSelection();
+            m_hexEditor.jumpToSelection();
         }
 
     private:

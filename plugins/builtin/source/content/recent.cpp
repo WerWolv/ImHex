@@ -37,13 +37,13 @@ namespace hex::plugin::builtin::recent {
                 std::fs::path path;
             };
         public:
-            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups"_lang, true, true) {
+            PopupAutoBackups() : Popup("hex.builtin.welcome.start.recent.auto_backups", true, true) {
                 for (const auto &backupPath : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
                     for (const auto &entry : std::fs::directory_iterator(backupPath)) {
                         if (entry.is_regular_file() && entry.path().extension() == ".hexproj") {
                             wolv::io::File backupFile(entry.path(), wolv::io::File::Mode::Read);
 
-                            this->m_backups.emplace_back(
+                            m_backups.emplace_back(
                                 hex::format("hex.builtin.welcome.start.recent.auto_backups.backup"_lang, fmt::gmtime(backupFile.getFileInfo()->st_ctime)),
                                 entry.path()
                             );
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin::recent {
 
             void drawContent() override {
                 if (ImGui::BeginTable("AutoBackups", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5))) {
-                    for (const auto &backup : this->m_backups | std::views::reverse | std::views::take(10)) {
+                    for (const auto &backup : m_backups | std::views::reverse | std::views::take(10)) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         if (ImGui::Selectable(backup.displayName.c_str())) {

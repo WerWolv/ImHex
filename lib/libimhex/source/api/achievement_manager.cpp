@@ -87,7 +87,7 @@ namespace hex {
         return startNodes;
     }
 
-    void AchievementManager::unlockAchievement(const std::string &unlocalizedCategory, const std::string &unlocalizedName)  {
+    void AchievementManager::unlockAchievement(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName)  {
         auto &categories = getAchievements();
 
         auto categoryIter = categories.find(unlocalizedCategory);

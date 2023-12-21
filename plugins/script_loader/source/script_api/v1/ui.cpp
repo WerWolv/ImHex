@@ -22,7 +22,7 @@ public:
               m_message(std::move(message)) { }
 
     void drawContent() override {
-        ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
+        ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
         ImGui::NewLine();
         ImGui::Separator();
 
@@ -65,23 +65,23 @@ public:
               m_message(std::move(message)), m_maxSize(maxSize) { }
 
     void drawContent() override {
-        ImGuiExt::TextFormattedWrapped("{}", this->m_message.c_str());
+        ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
         ImGui::NewLine();
 
         ImGui::SetItemDefaultFocus();
         ImGui::SetNextItemWidth(-1);
-        bool submitted = ImGui::InputText("##input", this->m_input, ImGuiInputTextFlags_EnterReturnsTrue);
-        if (this->m_input.size() > this->m_maxSize)
-            this->m_input.resize(this->m_maxSize);
+        bool submitted = ImGui::InputText("##input", m_input, ImGuiInputTextFlags_EnterReturnsTrue);
+        if (m_input.size() > m_maxSize)
+            m_input.resize(m_maxSize);
 
         ImGui::NewLine();
         ImGui::Separator();
 
         auto width = ImGui::GetWindowWidth();
         ImGui::SetCursorPosX(width / 9);
-        ImGui::BeginDisabled(this->m_input.empty());
+        ImGui::BeginDisabled(m_input.empty());
         if (ImGui::Button("hex.builtin.common.okay"_lang, ImVec2(width / 3, 0)) || submitted) {
-            s_inputTextBoxResult = this->m_input;
+            s_inputTextBoxResult = m_input;
             this->close();
         }
         ImGui::EndDisabled();

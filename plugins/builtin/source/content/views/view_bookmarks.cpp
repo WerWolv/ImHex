@@ -28,8 +28,8 @@ namespace hex::plugin::builtin {
             if (color == 0x00)
                 color = ImGui::GetColorU32(ImGuiCol_Header);
 
-            this->m_currBookmarkId += 1;
-            u64 bookmarkId = this->m_currBookmarkId;
+            m_currBookmarkId += 1;
+            u64 bookmarkId = m_currBookmarkId;
             if (id != nullptr)
                 *id = bookmarkId;
 
@@ -42,16 +42,16 @@ namespace hex::plugin::builtin {
                 bookmarkId
             };
 
-            this->m_bookmarks->emplace_back(std::move(bookmark), TextEditor());
+            m_bookmarks->emplace_back(std::move(bookmark), TextEditor());
 
             ImHexApi::Provider::markDirty();
 
-            EventBookmarkCreated::post(this->m_bookmarks->back().entry);
+            EventBookmarkCreated::post(m_bookmarks->back().entry);
             EventHighlightingChanged::post();
         });
 
         RequestRemoveBookmark::subscribe([this](u64 id) {
-            std::erase_if(this->m_bookmarks.get(), [id](const auto &bookmark) {
+            std::erase_if(m_bookmarks.get(), [id](const auto &bookmark) {
                 return bookmark.entry.id == id;
             });
         });
@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
             hex::unused(data);
 
             // Check all bookmarks for potential overlaps with the current address
-            for (const auto &bookmark : *this->m_bookmarks) {
+            for (const auto &bookmark : *m_bookmarks) {
                 if (Region { address, size }.isWithin(bookmark.entry.region))
                     return bookmark.entry.color;
             }
@@ -74,7 +74,7 @@ namespace hex::plugin::builtin {
             hex::unused(data);
 
             // Loop over all bookmarks
-            for (const auto &[bookmark, editor] : *this->m_bookmarks) {
+            for (const auto &[bookmark, editor] : *m_bookmarks) {
                 // Make sure the bookmark overlaps the currently hovered address
                 if (!Region { address, size }.isWithin(bookmark.region))
                     continue;
@@ -147,7 +147,7 @@ namespace hex::plugin::builtin {
                     return true;
 
                 auto data = nlohmann::json::parse(fileContent.begin(), fileContent.end());
-                this->m_bookmarks.get(provider).clear();
+                m_bookmarks.get(provider).clear();
                 return this->importBookmarks(provider, data);
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
@@ -163,7 +163,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Reports::addReportProvider([this](prv::Provider *provider) -> std::string {
             std::string result;
 
-            const auto &bookmarks = this->m_bookmarks.get(provider);
+            const auto &bookmarks = m_bookmarks.get(provider);
             if (bookmarks.empty())
                 return "";
 
@@ -243,27 +243,27 @@ namespace hex::plugin::builtin {
 
         // Draw filter input
         ImGui::PushItemWidth(-1);
-        ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, this->m_currFilter);
+        ImGuiExt::InputTextIcon("##filter", ICON_VS_FILTER, m_currFilter);
         ImGui::PopItemWidth();
 
         ImGui::NewLine();
 
         if (ImGui::BeginChild("##bookmarks")) {
-            if (this->m_bookmarks->empty()) {
+            if (m_bookmarks->empty()) {
                 ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
             }
 
             int id = 1;
-            auto bookmarkToRemove = this->m_bookmarks->end();
+            auto bookmarkToRemove = m_bookmarks->end();
 
             // Draw all bookmarks
-            for (auto it = this->m_bookmarks->begin(); it != this->m_bookmarks->end(); ++it) {
+            for (auto it = m_bookmarks->begin(); it != m_bookmarks->end(); ++it) {
                 auto &[bookmark, editor] = *it;
                 auto &[region, name, comment, color, locked, bookmarkId] = bookmark;
 
                 // Apply filter
-                if (!this->m_currFilter.empty()) {
-                    if (!name.contains(this->m_currFilter) && !comment.contains(this->m_currFilter))
+                if (!m_currFilter.empty()) {
+                    if (!name.contains(m_currFilter) && !comment.contains(m_currFilter))
                         continue;
                 }
 
@@ -288,18 +288,18 @@ namespace hex::plugin::builtin {
                     // Handle dragging bookmarks up and down when they're collapsed
 
                     // Set the currently held bookmark as the one being dragged
-                    if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == this->m_bookmarks->end())
-                        this->m_dragStartIterator = it;
+                    if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && m_dragStartIterator == m_bookmarks->end())
+                        m_dragStartIterator = it;
 
                     // When the mouse moved away from the current bookmark, swap the dragged bookmark with the current one
-                    if (ImGui::IsItemHovered() && this->m_dragStartIterator != this->m_bookmarks->end()) {
-                        std::iter_swap(it, this->m_dragStartIterator);
-                        this->m_dragStartIterator = it;
+                    if (ImGui::IsItemHovered() && m_dragStartIterator != m_bookmarks->end()) {
+                        std::iter_swap(it, m_dragStartIterator);
+                        m_dragStartIterator = it;
                     }
 
                     // When the mouse is released, reset the dragged bookmark
                     if (!ImGui::IsMouseDown(0))
-                        this->m_dragStartIterator = this->m_bookmarks->end();
+                        m_dragStartIterator = m_bookmarks->end();
                 } else {
                     const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() + 2 * ImGui::GetStyle().FramePadding.y;
                     if (ImGui::BeginTable("##bookmark_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
@@ -436,8 +436,8 @@ namespace hex::plugin::builtin {
             }
 
             // Remove the bookmark that was marked for removal
-            if (bookmarkToRemove != this->m_bookmarks->end()) {
-                this->m_bookmarks->erase(bookmarkToRemove);
+            if (bookmarkToRemove != m_bookmarks->end()) {
+                m_bookmarks->erase(bookmarkToRemove);
                 EventHighlightingChanged::post();
             }
         }
@@ -458,22 +458,22 @@ namespace hex::plugin::builtin {
 
             TextEditor editor;
             editor.SetText(bookmark["comment"]);
-            this->m_bookmarks.get(provider).push_back({
+            m_bookmarks.get(provider).push_back({
                 {
                     .region     = { region["address"], region["size"] },
                     .name       = bookmark["name"],
                     .comment    = bookmark["comment"],
                     .color      = bookmark["color"],
                     .locked     = bookmark["locked"],
-                    .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : *this->m_currBookmarkId
+                    .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : *m_currBookmarkId
                 },
                 editor
             });
 
             if (bookmark.contains("id"))
-                this->m_currBookmarkId = std::max<u64>(this->m_currBookmarkId, bookmark["id"].get<i64>() + 1);
+                m_currBookmarkId = std::max<u64>(m_currBookmarkId, bookmark["id"].get<i64>() + 1);
             else
-                this->m_currBookmarkId += 1;
+                m_currBookmarkId += 1;
         }
 
         return true;
@@ -482,7 +482,7 @@ namespace hex::plugin::builtin {
     bool ViewBookmarks::exportBookmarks(prv::Provider *provider, nlohmann::json &json) {
         json["bookmarks"] = nlohmann::json::array();
         size_t index = 0;
-        for (const auto &[bookmark, editor]  : this->m_bookmarks.get(provider)) {
+        for (const auto &[bookmark, editor]  : m_bookmarks.get(provider)) {
             json["bookmarks"][index] = {
                     { "name",       bookmark.name },
                     { "comment",    editor.GetText() },
@@ -536,7 +536,7 @@ namespace hex::plugin::builtin {
                 wolv::io::File(path, wolv::io::File::Mode::Create).writeString(json.dump(4));
             });
         }, [this]{
-            return ImHexApi::Provider::isValid() && !this->m_bookmarks->empty();
+            return ImHexApi::Provider::isValid() && !m_bookmarks->empty();
         });
     }
 

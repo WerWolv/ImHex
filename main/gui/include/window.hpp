@@ -38,7 +38,7 @@ namespace hex {
         void frame();
         void frameEnd();
 
-        void processEvent() { this->m_hadEvent = true; }
+        void processEvent() { m_hadEvent = true; }
 
         void initGLFW();
         void initImGui();

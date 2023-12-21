@@ -44,24 +44,24 @@ namespace hex {
 
     template<typename T>
     HttpRequest::Result<T> HttpRequest::executeImpl(std::vector<u8> &data) {
-        strcpy(this->m_attr.requestMethod, this->m_method.c_str());
-        this->m_attr.attributes = EMSCRIPTEN_FETCH_SYNCHRONOUS | EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
+        strcpy(m_attr.requestMethod, m_method.c_str());
+        m_attr.attributes = EMSCRIPTEN_FETCH_SYNCHRONOUS | EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;
 
-        if (!this->m_body.empty()) {
-            this->m_attr.requestData = this->m_body.c_str();
-            this->m_attr.requestDataSize = this->m_body.size();
+        if (!m_body.empty()) {
+            m_attr.requestData = m_body.c_str();
+            m_attr.requestDataSize = m_body.size();
         }
 
         std::vector<const char*> headers;
-        for (auto it = this->m_headers.begin(); it != this->m_headers.end(); it++) {
+        for (auto it = m_headers.begin(); it != m_headers.end(); it++) {
             headers.push_back(it->first.c_str());
             headers.push_back(it->second.c_str());
         }
         headers.push_back(nullptr);
-        this->m_attr.requestHeaders = headers.data();
+        m_attr.requestHeaders = headers.data();
 
         // Send request
-        emscripten_fetch_t* fetch = emscripten_fetch(&this->m_attr, this->m_url.c_str());
+        emscripten_fetch_t* fetch = emscripten_fetch(&m_attr, m_url.c_str());
 
         data.resize(fetch->numBytes);
         std::copy(fetch->data, fetch->data + fetch->numBytes, data.begin());

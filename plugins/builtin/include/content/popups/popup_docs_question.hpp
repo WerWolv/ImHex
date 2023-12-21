@@ -24,23 +24,23 @@ namespace hex::plugin::builtin {
 
         void drawContent() override {
             ImGui::PushItemWidth(600_scaled);
-            ImGui::BeginDisabled(this->m_requestTask.isRunning());
-            if (ImGui::InputText("##input", this->m_inputBuffer, ImGuiInputTextFlags_EnterReturnsTrue)) {
+            ImGui::BeginDisabled(m_requestTask.isRunning());
+            if (ImGui::InputText("##input", m_inputBuffer, ImGuiInputTextFlags_EnterReturnsTrue)) {
                 this->executeQuery();
             }
             ImGui::EndDisabled();
             ImGui::PopItemWidth();
 
             if (ImGui::BeginChild("##answer", scaled(ImVec2(600, 350)), true, ImGuiWindowFlags_AlwaysVerticalScrollbar)) {
-                if (!this->m_requestTask.isRunning()) {
-                    if (this->m_answer.empty()) {
-                        if (this->m_noAnswer)
+                if (!m_requestTask.isRunning()) {
+                    if (m_answer.empty()) {
+                        if (m_noAnswer)
                             ImGuiExt::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.no_answer"_lang);
                         else
                             ImGuiExt::TextFormattedCentered("{}", "hex.builtin.popup.docs_question.prompt"_lang);
                     } else {
                         int id = 1;
-                        for (auto &[type, text] : this->m_answer) {
+                        for (auto &[type, text] : m_answer) {
                             ImGui::PushID(id);
                             switch (type) {
                                 case TextBlockType::Text:
@@ -79,10 +79,10 @@ namespace hex::plugin::builtin {
 
     private:
         void executeQuery() {
-            this->m_requestTask = TaskManager::createBackgroundTask("Query Docs", [this, input = this->m_inputBuffer](Task &) {
-                this->m_noAnswer = false;
+            m_requestTask = TaskManager::createBackgroundTask("Query Docs", [this, input = m_inputBuffer](Task &) {
+                m_noAnswer = false;
                 for (auto space : { "xj7sbzGbHH260vbpZOu1", "WZzDdGjxmgMSIE3xly6o" }) {
-                    this->m_answer.clear();
+                    m_answer.clear();
 
                     auto request = HttpRequest("POST", hex::format("https://api.gitbook.com/v1/spaces/{}/search/ask", space));
 
@@ -115,19 +115,19 @@ namespace hex::plugin::builtin {
 
                             if (block.starts_with("rust\n")) {
                                 block = block.substr(5);
-                                this->m_answer.emplace_back(TextBlockType::Code, block);
+                                m_answer.emplace_back(TextBlockType::Code, block);
                             } else if (block.starts_with("cpp\n")) {
                                 block = block.substr(4);
-                                this->m_answer.emplace_back(TextBlockType::Code, block);
+                                m_answer.emplace_back(TextBlockType::Code, block);
                             } else {
-                                this->m_answer.emplace_back(TextBlockType::Text, block);
+                                m_answer.emplace_back(TextBlockType::Text, block);
                             }
                         }
                     } catch(...) {
                         continue;
                     }
 
-                    this->m_noAnswer = this->m_answer.empty();
+                    m_noAnswer = m_answer.empty();
                 }
             });
         }

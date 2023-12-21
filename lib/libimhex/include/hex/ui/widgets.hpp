@@ -21,34 +21,34 @@ namespace hex::ui {
         }
 
         const std::vector<const T*> &draw(const auto &entries) {
-            if (this->m_filteredEntries.empty() && this->m_searchBuffer.empty()) {
+            if (m_filteredEntries.empty() && m_searchBuffer.empty()) {
                 for (auto &entry : entries)
-                    this->m_filteredEntries.push_back(&entry);
+                    m_filteredEntries.push_back(&entry);
             }
 
-            if (ImGui::InputText("##search", this->m_searchBuffer)) {
-                this->m_pendingUpdate = true;
+            if (ImGui::InputText("##search", m_searchBuffer)) {
+                m_pendingUpdate = true;
             }
 
-            if (this->m_pendingUpdate && !this->m_updateTask.isRunning()) {
-                this->m_pendingUpdate = false;
-                this->m_filteredEntries.clear();
-                this->m_filteredEntries.reserve(entries.size());
+            if (m_pendingUpdate && !m_updateTask.isRunning()) {
+                m_pendingUpdate = false;
+                m_filteredEntries.clear();
+                m_filteredEntries.reserve(entries.size());
 
-                this->m_updateTask = TaskManager::createBackgroundTask("Searching", [this, &entries, searchBuffer = this->m_searchBuffer](Task&) {
+                m_updateTask = TaskManager::createBackgroundTask("Searching", [this, &entries, searchBuffer = m_searchBuffer](Task&) {
                     for (auto &entry : entries) {
-                        if (searchBuffer.empty() || this->m_comparator(searchBuffer, entry))
-                            this->m_filteredEntries.push_back(&entry);
+                        if (searchBuffer.empty() || m_comparator(searchBuffer, entry))
+                            m_filteredEntries.push_back(&entry);
                     }
                 });
 
             }
 
-            return this->m_filteredEntries;
+            return m_filteredEntries;
         }
 
         void reset() {
-            this->m_filteredEntries.clear();
+            m_filteredEntries.clear();
         }
     private:
         std::atomic<bool> m_pendingUpdate = false;

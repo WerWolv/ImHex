@@ -51,7 +51,7 @@ namespace hex::plugin::builtin {
 
         void reloadCustomNodes();
 
-        std::vector<Workspace*> &getWorkspaceStack() { return *this->m_workspaceStack; }
+        std::vector<Workspace*> &getWorkspaceStack() { return *m_workspaceStack; }
 
     private:
         void drawContextMenus(ViewDataProcessor::Workspace &workspace);

@@ -66,11 +66,11 @@ namespace hex {
     }
 
 
-    TutorialManager::Tutorial& TutorialManager::createTutorial(const std::string& unlocalizedName, const std::string& unlocalizedDescription) {
+    TutorialManager::Tutorial& TutorialManager::createTutorial(const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription) {
         return s_tutorials.try_emplace(unlocalizedName, Tutorial(unlocalizedName, unlocalizedDescription)).first->second;
     }
 
-    void TutorialManager::startTutorial(const std::string& unlocalizedName) {
+    void TutorialManager::startTutorial(const UnlocalizedString &unlocalizedName) {
         s_currentTutorial = s_tutorials.find(unlocalizedName);
         if (s_currentTutorial == s_tutorials.end())
             return;
@@ -217,16 +217,16 @@ namespace hex {
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::addStep() {
-        auto &newStep = this->m_steps.emplace_back(this);
-        this->m_currentStep = this->m_steps.end();
-        this->m_latestStep  = this->m_currentStep;
+        auto &newStep = m_steps.emplace_back(this);
+        m_currentStep = m_steps.end();
+        m_latestStep  = m_currentStep;
 
         return newStep;
     }
 
     void TutorialManager::Tutorial::start() {
-        this->m_currentStep = m_steps.begin();
-        this->m_latestStep  = this->m_currentStep;
+        m_currentStep = m_steps.begin();
+        m_latestStep  = m_currentStep;
         if (m_currentStep == m_steps.end())
             return;
 
@@ -234,10 +234,10 @@ namespace hex {
     }
 
     void TutorialManager::Tutorial::Step::addHighlights() const {
-        if (this->m_onAppear)
-            this->m_onAppear();
+        if (m_onAppear)
+            m_onAppear();
 
-        for (const auto &[text, ids] : this->m_highlights) {
+        for (const auto &[text, ids] : m_highlights) {
             IDStack idStack;
 
             for (const auto &id : ids) {
@@ -251,12 +251,12 @@ namespace hex {
                 }, id);
             }
 
-            s_highlights.emplace(idStack.get(), text.c_str());
+            s_highlights.emplace(idStack.get(), text);
         }
     }
 
     void TutorialManager::Tutorial::Step::removeHighlights() const {
-        for (const auto &[text, ids] : this->m_highlights) {
+        for (const auto &[text, ids] : m_highlights) {
             IDStack idStack;
 
             for (const auto &id : ids) {
@@ -288,8 +288,8 @@ namespace hex {
     }
 
 
-    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(const std::string& unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
-        this->m_highlights.emplace_back(
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(const UnlocalizedString &unlocalizedText, std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
+        m_highlights.emplace_back(
             unlocalizedText,
             ids
         );
@@ -298,13 +298,13 @@ namespace hex {
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::addHighlight(std::initializer_list<std::variant<Lang, std::string, int>>&& ids) {
-        return this->addHighlight("", std::move(ids));
+        return this->addHighlight("", std::forward<decltype(ids)>(ids));
     }
 
 
 
-    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::setMessage(const std::string& unlocalizedTitle, const std::string& unlocalizedMessage, Position position) {
-        this->m_message = Message {
+    TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::setMessage(const UnlocalizedString &unlocalizedTitle, const UnlocalizedString &unlocalizedMessage, Position position) {
+        m_message = Message {
             position,
             unlocalizedTitle,
             unlocalizedMessage,
@@ -315,10 +315,10 @@ namespace hex {
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::allowSkip() {
-        if (this->m_message.has_value()) {
-            this->m_message->allowSkip = true;
+        if (m_message.has_value()) {
+            m_message->allowSkip = true;
         } else {
-            this->m_message = Message {
+            m_message = Message {
                 Position::Bottom | Position::Right,
                 "",
                 "",
@@ -330,13 +330,13 @@ namespace hex {
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::onAppear(std::function<void()> callback) {
-        this->m_onAppear = std::move(callback);
+        m_onAppear = std::move(callback);
 
         return *this;
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::Step::onComplete(std::function<void()> callback) {
-        this->m_onComplete = std::move(callback);
+        m_onComplete = std::move(callback);
 
         return *this;
     }
@@ -345,9 +345,9 @@ namespace hex {
 
 
     bool TutorialManager::Tutorial::Step::isCurrent() const {
-        const auto &currentStep = this->m_parent->m_currentStep;
+        const auto &currentStep = m_parent->m_currentStep;
 
-        if (currentStep == this->m_parent->m_steps.end())
+        if (currentStep == m_parent->m_steps.end())
             return false;
 
         return &*currentStep == this;
@@ -357,9 +357,9 @@ namespace hex {
         if (this->isCurrent()) {
             this->advance();
 
-            if (this->m_onComplete) {
+            if (m_onComplete) {
                 TaskManager::doLater([this] {
-                    this->m_onComplete();
+                    m_onComplete();
                 });
             }
         }

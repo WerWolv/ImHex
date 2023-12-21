@@ -28,9 +28,9 @@ namespace hex::plugin::builtin {
 
                 // Loop over all the individual theme settings
                 for (auto &[colorName, colorId] : handler.colorMap) {
-                    if (this->m_startingColor.has_value()) {
-                        if (this->m_hoveredColorId == colorId && this->m_hoveredHandlerName == name) {
-                            handler.setFunction(colorId, this->m_startingColor.value());
+                    if (m_startingColor.has_value()) {
+                        if (m_hoveredColorId == colorId && m_hoveredHandlerName == name) {
+                            handler.setFunction(colorId, m_startingColor.value());
                         }
                     }
 
@@ -47,17 +47,17 @@ namespace hex::plugin::builtin {
                     if (ImGui::IsItemHovered()) {
                         anyColorHovered = true;
 
-                        if (!this->m_hoveredColorId.has_value()) {
-                            this->m_hoveredColorId      = colorId;
-                            this->m_startingColor       = color;
-                            this->m_hoveredHandlerName  = name;
+                        if (!m_hoveredColorId.has_value()) {
+                            m_hoveredColorId      = colorId;
+                            m_startingColor       = color;
+                            m_hoveredHandlerName  = name;
                         }
                     }
                 }
             }
 
-            if (this->m_hoveredHandlerName == name && this->m_startingColor.has_value() && this->m_hoveredColorId.has_value()) {
-                auto flashingColor = this->m_startingColor.value();
+            if (m_hoveredHandlerName == name && m_startingColor.has_value() && m_hoveredColorId.has_value()) {
+                auto flashingColor = m_startingColor.value();
 
                 const float flashProgress = std::min(1.0F, (1.0F + sinf(ImGui::GetTime() * 6)) / 2.0F);
                 flashingColor.Value.x = std::lerp(flashingColor.Value.x / 2, 1.0F, flashProgress);
@@ -65,12 +65,12 @@ namespace hex::plugin::builtin {
                 flashingColor.Value.z = flashingColor.Value.z / 2;
                 flashingColor.Value.w = 1.0F;
 
-                handler.setFunction(*this->m_hoveredColorId, flashingColor);
+                handler.setFunction(*m_hoveredColorId, flashingColor);
 
                 if (!anyColorHovered) {
-                    handler.setFunction(this->m_hoveredColorId.value(), this->m_startingColor.value());
-                    this->m_startingColor.reset();
-                    this->m_hoveredColorId.reset();
+                    handler.setFunction(m_hoveredColorId.value(), m_startingColor.value());
+                    m_startingColor.reset();
+                    m_hoveredColorId.reset();
                 }
             }
         }
@@ -110,13 +110,13 @@ namespace hex::plugin::builtin {
 
         // Draw export settings
         ImGuiExt::Header("hex.builtin.view.theme_manager.export"_lang);
-        ImGuiExt::InputTextIcon("hex.builtin.view.theme_manager.export.name"_lang, ICON_VS_SYMBOL_KEY, this->m_themeName);
+        ImGuiExt::InputTextIcon("hex.builtin.view.theme_manager.export.name"_lang, ICON_VS_SYMBOL_KEY, m_themeName);
 
         // Draw the export buttons
         if (ImGui::Button("hex.builtin.view.theme_manager.save_theme"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
             fs::openFileBrowser(fs::DialogMode::Save, { { "ImHex Theme", "json" } }, [this](const std::fs::path &path){
                 // Export the current theme as json
-                auto json = ThemeManager::exportCurrentTheme(this->m_themeName);
+                auto json = ThemeManager::exportCurrentTheme(m_themeName);
 
                 // Write the json to the file
                 wolv::io::File outputFile(path, wolv::io::File::Mode::Create);

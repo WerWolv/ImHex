@@ -11,7 +11,7 @@ namespace hex::plugin::builtin {
 
     ViewDisassembler::ViewDisassembler() : View::Window("hex.builtin.view.disassembler.name") {
         EventProviderDeleted::subscribe(this, [this](const auto*) {
-            this->m_disassembly.clear();
+            m_disassembly.clear();
         });
     }
 
@@ -22,23 +22,23 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDisassembler::disassemble() {
-        this->m_disassembly.clear();
+        m_disassembly.clear();
 
-        this->m_disassemblerTask = TaskManager::createTask("hex.builtin.view.disassembler.disassembling", this->m_codeRegion.getSize(), [this](auto &task) {
+        m_disassemblerTask = TaskManager::createTask("hex.builtin.view.disassembler.disassembling", m_codeRegion.getSize(), [this](auto &task) {
             csh capstoneHandle;
             cs_insn *instructions = nullptr;
 
-            cs_mode mode = this->m_mode;
+            cs_mode mode = m_mode;
 
             // Create a capstone disassembler instance
-            if (cs_open(Disassembler::toCapstoneArchitecture(this->m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
+            if (cs_open(Disassembler::toCapstoneArchitecture(m_architecture), mode, &capstoneHandle) == CS_ERR_OK) {
 
                 // Tell capstone to skip data bytes
                 cs_option(capstoneHandle, CS_OPT_SKIPDATA, CS_OPT_ON);
 
                 auto provider = ImHexApi::Provider::get();
                 std::vector<u8> buffer(2048, 0x00);
-                size_t size = this->m_codeRegion.getSize();
+                size_t size = m_codeRegion.getSize();
 
                 // Read the data in chunks and disassemble it
                 for (u64 address = 0; address < size; address += 2048) {
@@ -46,15 +46,15 @@ namespace hex::plugin::builtin {
 
                     // Read a chunk of data
                     size_t bufferSize = std::min(u64(2048), (size - address));
-                    provider->read(this->m_codeRegion.getStartAddress() + address, buffer.data(), bufferSize);
+                    provider->read(m_codeRegion.getStartAddress() + address, buffer.data(), bufferSize);
 
                     // Ask capstone to disassemble the data
-                    size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), bufferSize, this->m_baseAddress + address, 0, &instructions);
+                    size_t instructionCount = cs_disasm(capstoneHandle, buffer.data(), bufferSize, m_baseAddress + address, 0, &instructions);
                     if (instructionCount == 0)
                         break;
 
                     // Reserve enough space for the disassembly
-                    this->m_disassembly.reserve(this->m_disassembly.size() + instructionCount);
+                    m_disassembly.reserve(m_disassembly.size() + instructionCount);
 
                     // Convert the capstone instructions to our disassembly format
                     u64 usedBytes = 0;
@@ -62,7 +62,7 @@ namespace hex::plugin::builtin {
                         const auto &instr       = instructions[i];
                         Disassembly disassembly = { };
                         disassembly.address     = instr.address;
-                        disassembly.offset      = this->m_codeRegion.getStartAddress() + address + usedBytes;
+                        disassembly.offset      = m_codeRegion.getStartAddress() + address + usedBytes;
                         disassembly.size        = instr.size;
                         disassembly.mnemonic    = instr.mnemonic;
                         disassembly.operators   = instr.op_str;
@@ -71,7 +71,7 @@ namespace hex::plugin::builtin {
                             disassembly.bytes += hex::format("{0:02X} ", instr.bytes[j]);
                         disassembly.bytes.pop_back();
 
-                        this->m_disassembly.push_back(disassembly);
+                        m_disassembly.push_back(disassembly);
 
                         usedBytes += instr.size;
                     }
@@ -96,18 +96,18 @@ namespace hex::plugin::builtin {
             ImGuiExt::Header("hex.builtin.view.disassembler.position"_lang, true);
 
             // Draw base address input
-            ImGuiExt::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &this->m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGuiExt::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
 
             // Draw region selection picker
-            ui::regionSelectionPicker(&this->m_codeRegion, provider, &this->m_range);
+            ui::regionSelectionPicker(&m_codeRegion, provider, &m_range);
 
             // Draw settings
             {
                 ImGuiExt::Header("hex.builtin.common.settings"_lang);
 
                 // Draw architecture selector
-                if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&this->m_architecture), Disassembler::ArchitectureNames.data(), Disassembler::getArchitectureSupportedCount()))
-                    this->m_mode = cs_mode(0);
+                if (ImGui::Combo("hex.builtin.view.disassembler.arch"_lang, reinterpret_cast<int *>(&m_architecture), Disassembler::ArchitectureNames.data(), Disassembler::getArchitectureSupportedCount()))
+                    m_mode = cs_mode(0);
 
                 // Draw sub-settings for each architecture
                 if (ImGuiExt::BeginBox()) {
@@ -121,7 +121,7 @@ namespace hex::plugin::builtin {
                     ImGui::NewLine();
 
                     // Draw architecture specific settings
-                    switch (this->m_architecture) {
+                    switch (m_architecture) {
                         case Architecture::ARM:
                             {
                                 static int mode = CS_MODE_ARM;
@@ -136,7 +136,7 @@ namespace hex::plugin::builtin {
                                 ImGui::SameLine();
                                 ImGui::RadioButton("hex.builtin.view.disassembler.arm.armv8"_lang, &extraMode, CS_MODE_V8);
 
-                                this->m_mode = cs_mode(mode | extraMode);
+                                m_mode = cs_mode(mode | extraMode);
                             }
                             break;
                         case Architecture::MIPS:
@@ -155,7 +155,7 @@ namespace hex::plugin::builtin {
                                 static bool microMode;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.mips.micro"_lang, &microMode);
 
-                                this->m_mode = cs_mode(mode | (microMode ? CS_MODE_MICRO : cs_mode(0)));
+                                m_mode = cs_mode(mode | (microMode ? CS_MODE_MICRO : cs_mode(0)));
                             }
                             break;
                         case Architecture::X86:
@@ -167,7 +167,7 @@ namespace hex::plugin::builtin {
                                 ImGui::SameLine();
                                 ImGui::RadioButton("hex.builtin.view.disassembler.64bit"_lang, &mode, CS_MODE_64);
 
-                                this->m_mode = cs_mode(mode);
+                                m_mode = cs_mode(mode);
                             }
                             break;
                         case Architecture::PPC:
@@ -186,9 +186,9 @@ namespace hex::plugin::builtin {
                                     static bool booke = false;
                                     ImGui::Checkbox("hex.builtin.view.disassembler.ppc.booke"_lang, &booke);
 
-                                    this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)) | (spe ? CS_MODE_SPE : cs_mode(0)) | (booke ? CS_MODE_BOOKE : cs_mode(0)));
+                                    m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)) | (spe ? CS_MODE_SPE : cs_mode(0)) | (booke ? CS_MODE_BOOKE : cs_mode(0)));
                                 #else
-                                    this->m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)));
+                                    m_mode = cs_mode(mode | (qpx ? CS_MODE_QPX : cs_mode(0)));
                                 #endif
                             }
                             break;
@@ -197,7 +197,7 @@ namespace hex::plugin::builtin {
                                 static bool v9Mode = false;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.sparc.v9"_lang, &v9Mode);
 
-                                this->m_mode = cs_mode(v9Mode ? CS_MODE_V9 : cs_mode(0));
+                                m_mode = cs_mode(v9Mode ? CS_MODE_V9 : cs_mode(0));
                             }
                             break;
                         #if CS_API_MAJOR >= 5
@@ -211,7 +211,7 @@ namespace hex::plugin::builtin {
                                 static bool compressed = false;
                                 ImGui::Checkbox("hex.builtin.view.disassembler.riscv.compressed"_lang, &compressed);
 
-                                this->m_mode = cs_mode(mode | (compressed ? CS_MODE_RISCVC : cs_mode(0)));
+                                m_mode = cs_mode(mode | (compressed ? CS_MODE_RISCVC : cs_mode(0)));
                             }
                             break;
                         #endif
@@ -236,7 +236,7 @@ namespace hex::plugin::builtin {
                                     ImGui::EndCombo();
                                 }
 
-                                this->m_mode = cs_mode(modes[selectedMode].second);
+                                m_mode = cs_mode(modes[selectedMode].second);
                             }
                             break;
                         case Architecture::M680X:
@@ -264,7 +264,7 @@ namespace hex::plugin::builtin {
                                     ImGui::EndCombo();
                                 }
 
-                                this->m_mode = cs_mode(modes[selectedMode].second);
+                                m_mode = cs_mode(modes[selectedMode].second);
                             }
                             break;
                         #if CS_API_MAJOR >= 5
@@ -290,7 +290,7 @@ namespace hex::plugin::builtin {
                                     ImGui::EndCombo();
                                 }
 
-                                this->m_mode = cs_mode(modes[selectedMode].second);
+                                m_mode = cs_mode(modes[selectedMode].second);
                             }
                             break;
                         #endif
@@ -302,7 +302,7 @@ namespace hex::plugin::builtin {
                                 ImGui::SameLine();
                                 ImGui::RadioButton("hex.builtin.view.disassembler.bpf.extended"_lang, &mode, CS_MODE_BPF_EXTENDED);
 
-                                this->m_mode = cs_mode(mode);
+                                m_mode = cs_mode(mode);
                             }
                             break;
                         case Architecture::SH:
@@ -331,7 +331,7 @@ namespace hex::plugin::builtin {
                                 ImGui::SameLine();
                                 ImGui::Checkbox("hex.builtin.view.disassembler.sh.dsp"_lang, &dsp);
 
-                                this->m_mode = cs_mode(modes[selectionMode].second | (fpu ? CS_MODE_SHFPU : cs_mode(0)) | (dsp ? CS_MODE_SHDSP : cs_mode(0)));
+                                m_mode = cs_mode(modes[selectionMode].second | (fpu ? CS_MODE_SHFPU : cs_mode(0)) | (dsp ? CS_MODE_SHDSP : cs_mode(0)));
                             }
                             break;
                         case Architecture::TRICORE:
@@ -356,7 +356,7 @@ namespace hex::plugin::builtin {
                                     ImGui::EndCombo();
                                 }
 
-                                this->m_mode = cs_mode(modes[selectionMode].second);
+                                m_mode = cs_mode(modes[selectionMode].second);
                             }
                             break;
                         case Architecture::WASM:
@@ -366,7 +366,7 @@ namespace hex::plugin::builtin {
                         case Architecture::ARM64:
                         case Architecture::SYSZ:
                         case Architecture::XCORE:
-                            this->m_mode = cs_mode(0);
+                            m_mode = cs_mode(0);
                             break;
                     }
 
@@ -375,7 +375,7 @@ namespace hex::plugin::builtin {
             }
 
             // Draw disassemble button
-            ImGui::BeginDisabled(this->m_disassemblerTask.isRunning());
+            ImGui::BeginDisabled(m_disassemblerTask.isRunning());
             {
                 if (ImGui::Button("hex.builtin.view.disassembler.disassemble"_lang))
                     this->disassemble();
@@ -383,7 +383,7 @@ namespace hex::plugin::builtin {
             ImGui::EndDisabled();
 
             // Draw a spinner if the disassembler is running
-            if (this->m_disassemblerTask.isRunning()) {
+            if (m_disassemblerTask.isRunning()) {
                 ImGui::SameLine();
                 ImGuiExt::TextSpinner("hex.builtin.view.disassembler.disassembling"_lang);
             }
@@ -401,14 +401,14 @@ namespace hex::plugin::builtin {
                 ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.bytes"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.disassembler.disassembly.title"_lang);
 
-                if (!this->m_disassemblerTask.isRunning()) {
+                if (!m_disassemblerTask.isRunning()) {
                     ImGuiListClipper clipper;
-                    clipper.Begin(this->m_disassembly.size());
+                    clipper.Begin(m_disassembly.size());
 
                     ImGui::TableHeadersRow();
                     while (clipper.Step()) {
                         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                            const auto &instruction = this->m_disassembly[i];
+                            const auto &instruction = m_disassembly[i];
 
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();

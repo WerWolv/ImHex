@@ -16,32 +16,32 @@ namespace hex::plugin::builtin {
 
         class AchievementStartingOut : public Achievement {
         public:
-            explicit AchievementStartingOut(std::string unlocalizedName) : Achievement("hex.builtin.achievement.starting_out", std::move(unlocalizedName)) { }
+            explicit AchievementStartingOut(UnlocalizedString unlocalizedName) : Achievement("hex.builtin.achievement.starting_out", std::move(unlocalizedName)) { }
         };
 
         class AchievementHexEditor : public Achievement {
         public:
-            explicit AchievementHexEditor(std::string unlocalizedName) : Achievement("hex.builtin.achievement.hex_editor", std::move(unlocalizedName)) { }
+            explicit AchievementHexEditor(UnlocalizedString unlocalizedName) : Achievement("hex.builtin.achievement.hex_editor", std::move(unlocalizedName)) { }
         };
 
         class AchievementPatterns : public Achievement {
         public:
-            explicit AchievementPatterns(std::string unlocalizedName) : Achievement("hex.builtin.achievement.patterns", std::move(unlocalizedName)) { }
+            explicit AchievementPatterns(UnlocalizedString unlocalizedName) : Achievement("hex.builtin.achievement.patterns", std::move(unlocalizedName)) { }
         };
 
         class AchievementDataProcessor : public Achievement {
         public:
-            explicit AchievementDataProcessor(std::string unlocalizedName) : Achievement("hex.builtin.achievement.data_processor", std::move(unlocalizedName)) { }
+            explicit AchievementDataProcessor(UnlocalizedString unlocalizedName) : Achievement("hex.builtin.achievement.data_processor", std::move(unlocalizedName)) { }
         };
 
         class AchievementFind : public Achievement {
         public:
-            explicit AchievementFind(std::string unlocalizedName) : Achievement("hex.builtin.achievement.find", std::move(unlocalizedName)) { }
+            explicit AchievementFind(UnlocalizedString unlocalizedName) : Achievement("hex.builtin.achievement.find", std::move(unlocalizedName)) { }
         };
 
         class AchievementMisc : public Achievement {
         public:
-            explicit AchievementMisc(std::string unlocalizedName) : Achievement("hex.builtin.achievement.misc", std::move(unlocalizedName)) { }
+            explicit AchievementMisc(UnlocalizedString unlocalizedName) : Achievement("hex.builtin.achievement.misc", std::move(unlocalizedName)) { }
         };
 
         void registerGettingStartedAchievements() {

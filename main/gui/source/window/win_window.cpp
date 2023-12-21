@@ -296,7 +296,7 @@ namespace hex {
 
     void Window::setupNativeWindow() {
         // Setup borderless window
-        auto hwnd = glfwGetWin32Window(this->m_window);
+        auto hwnd = glfwGetWin32Window(m_window);
 
         bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
 
@@ -314,20 +314,6 @@ namespace hex {
             ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
         } else {
             g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)commonWindowProc);
-        }
-
-        // Add a custom exception handler to detect heap corruptions
-        {
-            ::AddVectoredExceptionHandler(TRUE, [](PEXCEPTION_POINTERS exception) -> LONG {
-                if ((exception->ExceptionRecord->ExceptionCode & 0xF000'0000) == 0xC000'0000) {
-                    log::fatal("Exception raised: 0x{:08X}", exception->ExceptionRecord->ExceptionCode);
-                    if (exception->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION) {
-                        log::fatal("Heap corruption detected!");
-                    }
-                }
-
-                return EXCEPTION_CONTINUE_SEARCH;
-            });
         }
 
         // Set up a taskbar progress handler
@@ -380,7 +366,7 @@ namespace hex {
         };
 
         EventThemeChanged::subscribe([this]{
-            auto hwnd = glfwGetWin32Window(this->m_window);
+            auto hwnd = glfwGetWin32Window(m_window);
 
             static auto user32Dll = WinUniquePtr<HMODULE>(LoadLibraryA("user32.dll"), FreeLibrary);
             if (user32Dll != nullptr) {

@@ -15,8 +15,8 @@
 namespace hex::plugin::builtin {
 
     bool MemoryFileProvider::open() {
-        if (this->m_data.empty()) {
-            this->m_data.resize(1);
+        if (m_data.empty()) {
+            m_data.resize(1);
             this->markDirty();
         }
 
@@ -28,18 +28,18 @@ namespace hex::plugin::builtin {
         if (actualSize == 0 || (offset + size) > actualSize || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, &this->m_data.front() + offset, size);
+        std::memcpy(buffer, &m_data.front() + offset, size);
     }
 
     void MemoryFileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(&this->m_data.front() + offset, buffer, size);
+        std::memcpy(&m_data.front() + offset, buffer, size);
     }
 
     void MemoryFileProvider::save() {
-        if (!this->m_name.empty())
+        if (!m_name.empty())
             return;
 
         fs::openFileBrowser(fs::DialogMode::Save, { }, [this](const std::fs::path &path) {
@@ -67,7 +67,7 @@ namespace hex::plugin::builtin {
     }
 
     void MemoryFileProvider::resizeRaw(u64 newSize) {
-        this->m_data.resize(newSize);
+        m_data.resize(newSize);
     }
 
     void MemoryFileProvider::insertRaw(u64 offset, u64 size) {
@@ -108,10 +108,10 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string MemoryFileProvider::getName() const {
-        if (this->m_name.empty())
+        if (m_name.empty())
             return Lang("hex.builtin.provider.mem_file.unsaved");
         else
-            return this->m_name;
+            return m_name;
     }
 
     std::vector<MemoryFileProvider::MenuEntry> MemoryFileProvider::getMenuEntries() {
@@ -132,22 +132,22 @@ namespace hex::plugin::builtin {
     void MemoryFileProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        this->m_data = settings["data"].get<std::vector<u8>>();
-        this->m_name = settings["name"].get<std::string>();
-        this->m_readOnly = settings["readOnly"].get<bool>();
+        m_data = settings["data"].get<std::vector<u8>>();
+        m_name = settings["name"].get<std::string>();
+        m_readOnly = settings["readOnly"].get<bool>();
     }
 
     [[nodiscard]] nlohmann::json MemoryFileProvider::storeSettings(nlohmann::json settings) const {
-        settings["data"] = this->m_data;
-        settings["name"] = this->m_name;
-        settings["readOnly"] = this->m_readOnly;
+        settings["data"] = m_data;
+        settings["name"] = m_name;
+        settings["readOnly"] = m_readOnly;
 
         return Provider::storeSettings(settings);
     }
 
     void MemoryFileProvider::renameFile() {
-        PopupTextInput::open("hex.builtin.provider.mem_file.rename"_lang, "hex.builtin.provider.mem_file.rename.desc"_lang, [this](const std::string &name) {
-            this->m_name = name;
+        PopupTextInput::open("hex.builtin.provider.mem_file.rename", "hex.builtin.provider.mem_file.rename.desc", [this](const std::string &name) {
+            m_name = name;
             RequestUpdateWindowTitle::post();
         });
     }

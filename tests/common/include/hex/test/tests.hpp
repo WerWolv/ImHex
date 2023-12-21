@@ -68,11 +68,11 @@ namespace hex::test {
         }
 
         [[nodiscard]] const auto &getName() const noexcept {
-            return this->m_name;
+            return m_name;
         }
 
         [[nodiscard]] bool shouldFail() const noexcept {
-            return this->m_shouldFail;
+            return m_shouldFail;
         }
 
     private:

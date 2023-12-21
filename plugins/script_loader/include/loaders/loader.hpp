@@ -20,16 +20,16 @@ namespace hex::script::loader {
         virtual bool loadAll() = 0;
 
         void addScript(std::string name, std::function<void()> entryPoint) {
-            this->m_scripts.emplace_back(std::move(name), std::move(entryPoint));
+            m_scripts.emplace_back(std::move(name), std::move(entryPoint));
         }
 
         const auto& getScripts() const {
-            return this->m_scripts;
+            return m_scripts;
         }
 
     protected:
         void clearScripts() {
-            this->m_scripts.clear();
+            m_scripts.clear();
         }
 
     private:

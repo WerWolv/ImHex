@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
     };
 
     struct StoreCategory {
-        std::string unlocalizedName;
+        UnlocalizedString unlocalizedName;
         std::string requestName;
         fs::ImHexPath path;
         std::vector<StoreEntry> entries;
@@ -76,7 +76,7 @@ namespace hex::plugin::builtin {
         void refresh();
         void parseResponse();
 
-        void addCategory(const std::string &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback = []{});
+        void addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback = []{});
 
         bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
         bool remove(fs::ImHexPath pathType, const std::string &fileName);

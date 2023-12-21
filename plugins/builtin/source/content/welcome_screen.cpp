@@ -55,31 +55,31 @@ namespace hex::plugin::builtin {
                     m_restoreCallback(restoreCallback),
                     m_deleteCallback(deleteCallback) {
 
-                this->m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
+                m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
             }
 
             void drawContent() override {
                 ImGui::TextUnformatted("hex.builtin.popup.safety_backup.desc"_lang);
-                if (!this->m_logFilePath.empty()) {
+                if (!m_logFilePath.empty()) {
                     ImGui::NewLine();
                     ImGui::TextUnformatted("hex.builtin.popup.safety_backup.log_file"_lang);
                     ImGui::SameLine(0, 2_scaled);
-                    if (ImGuiExt::Hyperlink(this->m_logFilePath.filename().string().c_str())) {
-                        fs::openFolderWithSelectionExternal(this->m_logFilePath);
+                    if (ImGuiExt::Hyperlink(m_logFilePath.filename().string().c_str())) {
+                        fs::openFolderWithSelectionExternal(m_logFilePath);
                     }
 
-                    ImGui::Checkbox("hex.builtin.popup.safety_backup.report_error"_lang, &this->m_reportError);
+                    ImGui::Checkbox("hex.builtin.popup.safety_backup.report_error"_lang, &m_reportError);
                     ImGui::NewLine();
                 }
 
                 auto width = ImGui::GetWindowWidth();
                 ImGui::SetCursorPosX(width / 9);
                 if (ImGui::Button("hex.builtin.popup.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
-                    this->m_restoreCallback();
-                    this->m_deleteCallback();
+                    m_restoreCallback();
+                    m_deleteCallback();
 
-                    if (this->m_reportError) {
-                        wolv::io::File logFile(this->m_logFilePath, wolv::io::File::Mode::Read);
+                    if (m_reportError) {
+                        wolv::io::File logFile(m_logFilePath, wolv::io::File::Mode::Read);
                         if (logFile.isValid()) {
                             // Read current log file data
                             auto data = logFile.readString();
@@ -94,21 +94,21 @@ namespace hex::plugin::builtin {
                                 }
                             }
 
-                            TaskManager::createBackgroundTask("Upload Crash report", [path = this->m_logFilePath, data](auto&){
+                            TaskManager::createBackgroundTask("Upload Crash report", [path = m_logFilePath, data](auto&){
                                 HttpRequest request("POST", ImHexApiURL + std::string("/crash_upload"));
                                 request.uploadFile(std::vector<u8>(data.begin(), data.end()), "file", path.filename()).wait();
                             });
                         }
                     }
 
-                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", this->m_reportError);
+                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", m_reportError);
 
                     this->close();
                 }
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(width / 9 * 5);
                 if (ImGui::Button("hex.builtin.popup.safety_backup.delete"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                    this->m_deleteCallback();
+                    m_deleteCallback();
 
                     this->close();
                 }

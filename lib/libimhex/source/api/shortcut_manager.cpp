@@ -15,11 +15,11 @@ namespace hex {
     }
 
 
-    void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const std::string &unlocalizedName, const std::function<void()> &callback) {
+    void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
         s_globalShortcuts.insert({ shortcut, { shortcut, unlocalizedName, callback } });
     }
 
-    void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const std::string &unlocalizedName, const std::function<void()> &callback) {
+    void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
         view->m_shortcuts.insert({ shortcut + CurrentView, { shortcut, unlocalizedName, callback } });
     }
 

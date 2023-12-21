@@ -29,26 +29,26 @@ namespace hex::plugin::builtin {
         void drawNode() override {
             ImGui::PushItemWidth(100_scaled);
             // Draw combo box to select the type of the input
-            if (ImGui::Combo("##type", &this->m_type, "Integer\0Float\0Buffer\0")) {
+            if (ImGui::Combo("##type", &m_type, "Integer\0Float\0Buffer\0")) {
                 this->setAttributes({
                     { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
                 });
             }
 
             // Draw text input to set the name of the input
-            if (ImGui::InputText("##name", this->m_name)) {
-                this->setUnlocalizedTitle(this->m_name);
+            if (ImGui::InputText("##name", m_name)) {
+                this->setUnlocalizedTitle(m_name);
             }
 
             ImGui::PopItemWidth();
         }
 
-        void setValue(auto value) { this->m_value = std::move(value); }
+        void setValue(auto value) { m_value = std::move(value); }
 
-        const std::string &getName() const { return this->m_name; }
+        const std::string &getName() const { return m_name; }
 
         dp::Attribute::Type getType() const {
-            switch (this->m_type) {
+            switch (m_type) {
                 default:
                 case 0: return dp::Attribute::Type::Integer;
                 case 1: return dp::Attribute::Type::Float;
@@ -61,21 +61,21 @@ namespace hex::plugin::builtin {
                     [this](i128 value) { this->setIntegerOnOutput(0, value); },
                     [this](long double value) { this->setFloatOnOutput(0, value); },
                     [this](const std::vector<u8> &value) { this->setBufferOnOutput(0, value); }
-            }, this->m_value);
+            }, m_value);
         }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["name"] = this->m_name;
-            j["type"] = this->m_type;
+            j["name"] = m_name;
+            j["type"] = m_type;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_name = j.at("name").get<std::string>();
-            this->m_type = j.at("type");
+            m_name = j.at("name").get<std::string>();
+            m_type = j.at("type");
 
-            this->setUnlocalizedTitle(this->m_name);
+            this->setUnlocalizedTitle(m_name);
             this->setAttributes({
                 { dp::Attribute(dp::Attribute::IOType::Out, this->getType(), "hex.builtin.nodes.common.input") }
             });
@@ -100,23 +100,23 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(100_scaled);
 
             // Draw combo box to select the type of the output
-            if (ImGui::Combo("##type", &this->m_type, "Integer\0Float\0Buffer\0")) {
+            if (ImGui::Combo("##type", &m_type, "Integer\0Float\0Buffer\0")) {
                 this->setAttributes({
                     { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
                 });
             }
 
             // Draw text input to set the name of the output
-            if (ImGui::InputText("##name", this->m_name)) {
-                this->setUnlocalizedTitle(this->m_name);
+            if (ImGui::InputText("##name", m_name)) {
+                this->setUnlocalizedTitle(m_name);
             }
 
             ImGui::PopItemWidth();
         }
 
-        const std::string &getName() const { return this->m_name; }
+        const std::string &getName() const { return m_name; }
         dp::Attribute::Type getType() const {
-            switch (this->m_type) {
+            switch (m_type) {
                 case 0: return dp::Attribute::Type::Integer;
                 case 1: return dp::Attribute::Type::Float;
                 case 2: return dp::Attribute::Type::Buffer;
@@ -126,26 +126,26 @@ namespace hex::plugin::builtin {
 
         void process() override {
             switch (this->getType()) {
-                case dp::Attribute::Type::Integer: this->m_value = this->getIntegerOnInput(0); break;
-                case dp::Attribute::Type::Float:   this->m_value = this->getFloatOnInput(0); break;
-                case dp::Attribute::Type::Buffer:  this->m_value = this->getBufferOnInput(0); break;
+                case dp::Attribute::Type::Integer: m_value = this->getIntegerOnInput(0); break;
+                case dp::Attribute::Type::Float:   m_value = this->getFloatOnInput(0); break;
+                case dp::Attribute::Type::Buffer:  m_value = this->getBufferOnInput(0); break;
             }
         }
 
-        const auto& getValue() const { return this->m_value; }
+        const auto& getValue() const { return m_value; }
 
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["name"] = this->m_name;
-            j["type"] = this->m_type;
+            j["name"] = m_name;
+            j["type"] = m_type;
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_name = j.at("name").get<std::string>();
-            this->m_type = j.at("type");
+            m_name = j.at("name").get<std::string>();
+            m_type = j.at("type");
 
-            this->setUnlocalizedTitle(this->m_name);
+            this->setUnlocalizedTitle(m_name);
             this->setAttributes({
                 { dp::Attribute(dp::Attribute::IOType::In, this->getType(), "hex.builtin.nodes.common.output") }
             });
@@ -168,8 +168,8 @@ namespace hex::plugin::builtin {
 
         void drawNode() override {
             // Update attributes if we have to
-            if (this->m_requiresAttributeUpdate) {
-                this->m_requiresAttributeUpdate = false;
+            if (m_requiresAttributeUpdate) {
+                m_requiresAttributeUpdate = false;
 
                 // Find all input and output nodes that are used by the workspace of this node
                 // and set the attributes of this node to the attributes of the input and output nodes
@@ -179,9 +179,9 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(200_scaled);
 
             bool editing = false;
-            if (this->m_editable) {
+            if (m_editable) {
                 // Draw name input field
-                ImGuiExt::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, this->m_name);
+                ImGuiExt::InputTextIcon("##name", ICON_VS_SYMBOL_KEY, m_name);
 
                 // Prevent editing mode from deactivating when the input field is focused
                 editing = ImGui::IsItemActive();
@@ -191,12 +191,12 @@ namespace hex::plugin::builtin {
                     AchievementManager::unlockAchievement("hex.builtin.achievement.data_processor", "hex.builtin.achievement.data_processor.custom_node.name");
 
                     // Open the custom node's workspace
-                    this->m_dataProcessor->getWorkspaceStack().push_back(&this->m_workspace);
+                    m_dataProcessor->getWorkspaceStack().push_back(&m_workspace);
 
-                    this->m_requiresAttributeUpdate = true;
+                    m_requiresAttributeUpdate = true;
                 }
             } else {
-                this->setUnlocalizedTitle(this->m_name);
+                this->setUnlocalizedTitle(m_name);
 
                 if (this->getAttributes().empty()) {
                     ImGui::TextUnformatted("hex.builtin.nodes.custom.custom.edit_hint"_lang);
@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
             }
 
             // Enable editing mode when the shift button is pressed
-            this->m_editable = ImGui::GetIO().KeyShift || editing;
+            m_editable = ImGui::GetIO().KeyShift || editing;
 
             ImGui::PopItemWidth();
         }
@@ -220,7 +220,7 @@ namespace hex::plugin::builtin {
             };
 
             auto prevContext = ImNodes::GetCurrentContext();
-            ImNodes::SetCurrentContext(this->m_workspace.context.get());
+            ImNodes::SetCurrentContext(m_workspace.context.get());
             ON_SCOPE_EXIT { ImNodes::SetCurrentContext(prevContext); };
 
             // Forward inputs to input nodes values
@@ -251,11 +251,11 @@ namespace hex::plugin::builtin {
             }
 
             // Process all nodes in our workspace
-            for (auto &endNode : this->m_workspace.endNodes) {
+            for (auto &endNode : m_workspace.endNodes) {
                 endNode->resetOutputData();
 
                 // Reset processed inputs of all nodes
-                for (auto &node : this->m_workspace.nodes)
+                for (auto &node : m_workspace.nodes)
                     node->resetProcessedInputs();
 
                 endNode->process();
@@ -294,14 +294,14 @@ namespace hex::plugin::builtin {
         void store(nlohmann::json &j) const override {
             j = nlohmann::json::object();
 
-            j["nodes"] = this->m_dataProcessor->saveNodes(this->m_workspace);
+            j["nodes"] = m_dataProcessor->saveNodes(m_workspace);
         }
 
         void load(const nlohmann::json &j) override {
-            this->m_dataProcessor->loadNodes(this->m_workspace, j.at("nodes"));
+            m_dataProcessor->loadNodes(m_workspace, j.at("nodes"));
 
-            this->m_name = Lang(this->getUnlocalizedTitle()).get();
-            this->m_requiresAttributeUpdate = true;
+            m_name = Lang(this->getUnlocalizedTitle()).get();
+            m_requiresAttributeUpdate = true;
         }
 
     private:
@@ -309,7 +309,7 @@ namespace hex::plugin::builtin {
             std::vector<dp::Attribute> result;
 
             // Search through all nodes in the workspace and add all input and output nodes to the result
-            for (auto &node : this->m_workspace.nodes) {
+            for (auto &node : m_workspace.nodes) {
                 if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr)
                     result.emplace_back(dp::Attribute::IOType::In, inputNode->getType(), inputNode->getName());
                 else if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr)
@@ -320,7 +320,7 @@ namespace hex::plugin::builtin {
         }
 
         NodeCustomInput* findInput(const std::string &name) const {
-            for (auto &node : this->m_workspace.nodes) {
+            for (auto &node : m_workspace.nodes) {
                 if (auto *inputNode = dynamic_cast<NodeCustomInput*>(node.get()); inputNode != nullptr && inputNode->getName() == name)
                     return inputNode;
             }
@@ -329,7 +329,7 @@ namespace hex::plugin::builtin {
         }
 
         NodeCustomOutput* findOutput(const std::string &name) const {
-            for (auto &node : this->m_workspace.nodes) {
+            for (auto &node : m_workspace.nodes) {
                 if (auto *outputNode = dynamic_cast<NodeCustomOutput*>(node.get()); outputNode != nullptr && outputNode->getName() == name)
                     return outputNode;
             }
@@ -358,25 +358,25 @@ namespace hex::plugin::builtin {
             .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
                 std::string save = tar.readString(basePath);
 
-                ViewDataProcessor::loadNodes(this->m_mainWorkspace.get(provider), nlohmann::json::parse(save));
-                this->m_updateNodePositions = true;
+                ViewDataProcessor::loadNodes(m_mainWorkspace.get(provider), nlohmann::json::parse(save));
+                m_updateNodePositions = true;
 
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
-                tar.writeString(basePath, ViewDataProcessor::saveNodes(this->m_mainWorkspace.get(provider)).dump(4));
+                tar.writeString(basePath, ViewDataProcessor::saveNodes(m_mainWorkspace.get(provider)).dump(4));
 
                 return true;
             }
         });
 
         EventProviderCreated::subscribe(this, [this](auto *provider) {
-            this->m_mainWorkspace.get(provider) = { };
-            this->m_workspaceStack.get(provider).push_back(&this->m_mainWorkspace.get(provider));
+            m_mainWorkspace.get(provider) = { };
+            m_workspaceStack.get(provider).push_back(&m_mainWorkspace.get(provider));
         });
 
         EventProviderChanged::subscribe(this, [this](const auto *, const auto *) {
-            for (auto *workspace : *this->m_workspaceStack) {
+            for (auto *workspace : *m_workspaceStack) {
                 for (auto &node : workspace->nodes) {
                     node->setCurrentOverlay(nullptr);
                 }
@@ -384,11 +384,11 @@ namespace hex::plugin::builtin {
                 workspace->dataOverlays.clear();
             }
 
-            this->m_updateNodePositions = true;
+            m_updateNodePositions = true;
         });
 
         EventDataChanged::subscribe(this, [this] {
-            ViewDataProcessor::processNodes(*this->m_workspaceStack->back());
+            ViewDataProcessor::processNodes(*m_workspaceStack->back());
         });
 
         /* Import Nodes */
@@ -397,8 +397,8 @@ namespace hex::plugin::builtin {
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
                                     if (file.isValid()) {
-                                        ViewDataProcessor::loadNodes(*this->m_mainWorkspace, nlohmann::json::parse(file.readString()));
-                                        this->m_updateNodePositions = true;
+                                        ViewDataProcessor::loadNodes(*m_mainWorkspace, nlohmann::json::parse(file.readString()));
+                                        m_updateNodePositions = true;
                                     }
                                 });
         }, ImHexApi::Provider::isValid);
@@ -409,18 +409,18 @@ namespace hex::plugin::builtin {
                                 [&, this](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Create);
                                     if (file.isValid())
-                                        file.writeString(ViewDataProcessor::saveNodes(*this->m_mainWorkspace).dump(4));
+                                        file.writeString(ViewDataProcessor::saveNodes(*m_mainWorkspace).dump(4));
                                 });
         }, [this]{
-            return !this->m_workspaceStack->empty() && !this->m_workspaceStack->back()->nodes.empty() && ImHexApi::Provider::isValid();
+            return !m_workspaceStack->empty() && !m_workspaceStack->back()->nodes.empty() && ImHexApi::Provider::isValid();
         });
 
         ContentRegistry::FileHandler::add({ ".hexnode" }, [this](const auto &path) {
             wolv::io::File file(path, wolv::io::File::Mode::Read);
             if (!file.isValid()) return false;
 
-            ViewDataProcessor::loadNodes(*this->m_mainWorkspace, file.readString());
-            this->m_updateNodePositions = true;
+            ViewDataProcessor::loadNodes(*m_mainWorkspace, file.readString());
+            m_updateNodePositions = true;
 
             return true;
         });
@@ -563,7 +563,7 @@ namespace hex::plugin::builtin {
 
     void ViewDataProcessor::reloadCustomNodes() {
         // Delete all custom nodes
-        this->m_customNodes.clear();
+        m_customNodes.clear();
 
         // Loop over all custom node folders
         for (const auto &basePath : fs::getDefaultPaths(fs::ImHexPath::Nodes)) {
@@ -579,7 +579,7 @@ namespace hex::plugin::builtin {
                     nlohmann::json nodeJson = nlohmann::json::parse(file.readString());
 
                     // Add the loaded node to the list of custom nodes
-                    this->m_customNodes.push_back(CustomNode { Lang(nodeJson.at("name")), nodeJson });
+                    m_customNodes.push_back(CustomNode { Lang(nodeJson.at("name").get<std::string>()), nodeJson });
                 } catch (nlohmann::json::exception &e) {
                     log::warn("Failed to load custom node '{}': {}", entry.path().string(), e.what());
                 }
@@ -595,13 +595,13 @@ namespace hex::plugin::builtin {
             ImNodes::ClearLinkSelection();
 
             // Save the current mouse position
-            this->m_rightClickedCoords = ImGui::GetMousePos();
+            m_rightClickedCoords = ImGui::GetMousePos();
 
             // Show a different context menu depending on if a node, a link
             // or the background was right-clicked
-            if (ImNodes::IsNodeHovered(&this->m_rightClickedId))
+            if (ImNodes::IsNodeHovered(&m_rightClickedId))
                 ImGui::OpenPopup("Node Menu");
-            else if (ImNodes::IsLinkHovered(&this->m_rightClickedId))
+            else if (ImNodes::IsLinkHovered(&m_rightClickedId))
                 ImGui::OpenPopup("Link Menu");
             else {
                 ImGui::OpenPopup("Context Menu");
@@ -665,7 +665,7 @@ namespace hex::plugin::builtin {
                 ImGui::Separator();
 
                 // Draw entries for each custom node
-                for (auto &customNode : this->m_customNodes) {
+                for (auto &customNode : m_customNodes) {
                     if (ImGui::MenuItem(customNode.name.c_str())) {
                         node = loadNode(customNode.data);
                     }
@@ -694,7 +694,7 @@ namespace hex::plugin::builtin {
                     workspace.endNodes.push_back(node.get());
 
                 // Set the position of the node to the position where the user right-clicked
-                ImNodes::SetNodeScreenSpacePos(node->getId(), this->m_rightClickedCoords);
+                ImNodes::SetNodeScreenSpacePos(node->getId(), m_rightClickedCoords);
                 workspace.nodes.push_back(std::move(node));
 
                 ImHexApi::Provider::markDirty();
@@ -710,7 +710,7 @@ namespace hex::plugin::builtin {
                 // Find the node that was right-clicked
                 auto it = std::find_if(workspace.nodes.begin(), workspace.nodes.end(),
                                        [this](const auto &node) {
-                                           return node->getId() == this->m_rightClickedId;
+                                           return node->getId() == m_rightClickedId;
                                        });
 
                 // Check if the node was found
@@ -728,7 +728,7 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.remove_node"_lang))
-                this->eraseNodes(workspace, { this->m_rightClickedId });
+                this->eraseNodes(workspace, { m_rightClickedId });
 
             ImGui::EndPopup();
         }
@@ -736,7 +736,7 @@ namespace hex::plugin::builtin {
         // Draw link right click menu
         if (ImGui::BeginPopup("Link Menu")) {
             if (ImGui::MenuItem("hex.builtin.view.data_processor.menu.remove_link"_lang))
-                this->eraseLink(workspace, this->m_rightClickedId);
+                this->eraseLink(workspace, m_rightClickedId);
 
             ImGui::EndPopup();
         }
@@ -745,7 +745,7 @@ namespace hex::plugin::builtin {
     void ViewDataProcessor::drawNode(dp::Node &node) const {
         // If a node position update is pending, update the node position
         int nodeId = node.getId();
-        if (this->m_updateNodePositions) {
+        if (m_updateNodePositions) {
             ImNodes::SetNodeGridSpacePos(nodeId, node.getPosition());
         } else {
             if (ImNodes::ObjectPoolFind(ImNodes::EditorContextGet().Nodes, nodeId) >= 0)
@@ -839,7 +839,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewDataProcessor::drawContent() {
-        auto &workspace = *this->m_workspaceStack->back();
+        auto &workspace = *m_workspaceStack->back();
 
         bool popWorkspace = false;
         // Set the ImNodes context to the current workspace context
@@ -879,7 +879,7 @@ namespace hex::plugin::builtin {
                     ImNodes::PopColorStyle();
             }
 
-            this->m_updateNodePositions = false;
+            m_updateNodePositions = false;
 
             // Handle removing links that are connected to attributes that don't exist anymore
             {
@@ -908,7 +908,7 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextFormattedCentered("{}", "hex.builtin.view.data_processor.help_text"_lang);
 
             // Draw a close button if there is more than one workspace on the stack
-            if (this->m_workspaceStack->size() > 1) {
+            if (m_workspaceStack->size() > 1) {
                 ImGui::SetCursorPos(ImVec2(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 1.5F, ImGui::GetTextLineHeightWithSpacing() * 0.2F));
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0F, 4.0F));
                 if (ImGuiExt::DimmedIconButton(ICON_VS_CLOSE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarRed))) {
@@ -923,12 +923,12 @@ namespace hex::plugin::builtin {
 
         // Draw the control bar at the bottom
         {
-            if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || this->m_continuousEvaluation)
+            if (ImGuiExt::IconButton(ICON_VS_DEBUG_START, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen)) || m_continuousEvaluation)
                 this->processNodes(workspace);
 
             ImGui::SameLine();
 
-            ImGui::Checkbox("Continuous evaluation", &this->m_continuousEvaluation);
+            ImGui::Checkbox("Continuous evaluation", &m_continuousEvaluation);
         }
 
 
@@ -1016,8 +1016,8 @@ namespace hex::plugin::builtin {
 
         // Remove the top-most workspace from the stack if requested
         if (popWorkspace) {
-            this->m_workspaceStack->pop_back();
-            this->m_updateNodePositions = true;
+            m_workspaceStack->pop_back();
+            m_updateNodePositions = true;
         }
     }
 
@@ -1077,7 +1077,7 @@ namespace hex::plugin::builtin {
 
             std::unique_ptr<dp::Node> newNode;
             for (auto &entry : nodeEntries) {
-                if (data.contains("name") && entry.name == data["type"].get<std::string>())
+                if (data.contains("name") && entry.unlocalizedName == data["type"].get<std::string>())
                     newNode = entry.creatorFunction();
             }
 
@@ -1192,7 +1192,7 @@ namespace hex::plugin::builtin {
             dp::Attribute::setIdCounter(maxAttrId + 1);
             dp::Link::setIdCounter(maxLinkId + 1);
 
-            this->m_updateNodePositions = true;
+            m_updateNodePositions = true;
         } catch (nlohmann::json::exception &e) {
             PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
         }

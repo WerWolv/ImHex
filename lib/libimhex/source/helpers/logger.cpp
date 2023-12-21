@@ -62,7 +62,7 @@ namespace hex::log::impl {
         return logEntries;
     }
 
-    void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level) {
+    void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName) {
         const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
         fmt::print(dest, "[{0:%H:%M:%S}] ", now);
@@ -72,10 +72,10 @@ namespace hex::log::impl {
         else
             fmt::print(dest, ts, "{0} ", level);
 
-        fmt::print(dest, "[{0}] ", IMHEX_PROJECT_NAME);
+        fmt::print(dest, "[{0}] ", projectName);
 
-        constexpr static auto ProjectNameLength = std::char_traits<char>::length(IMHEX_PROJECT_NAME);
-        fmt::print(dest, "{}", std::string(ProjectNameLength > 10 ? 0 : 10 - ProjectNameLength, ' '));
+        auto projectNameLength = std::string_view(projectName).length();
+        fmt::print(dest, "{}", std::string(projectNameLength > 10 ? 0 : 10 - projectNameLength, ' '));
     }
 
     void assertionHandler(bool expr, const char* exprString, const char* file, int line) {

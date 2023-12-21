@@ -45,6 +45,7 @@ set(LIBIMHEX_SOURCES
         source/ui/imgui_imhex_extensions.cpp
         source/ui/view.cpp
         source/ui/popup.cpp
+        source/ui/toast.cpp
 
         source/subcommands/subcommands.cpp
 )

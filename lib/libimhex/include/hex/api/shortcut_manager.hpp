@@ -1,13 +1,15 @@
 #pragma once
 
 #include <hex.hpp>
-#include <GLFW/glfw3.h>
+#include <hex/api/localization_manager.hpp>
 
 #include <functional>
 #include <memory>
 #include <optional>
 #include <set>
 #include <string>
+
+#include <GLFW/glfw3.h>
 
 struct ImGuiWindow;
 
@@ -138,7 +140,7 @@ namespace hex {
 
         auto operator<=>(const Key &) const = default;
 
-        [[nodiscard]] constexpr u32 getKeyCode() const { return this->m_key; }
+        [[nodiscard]] constexpr u32 getKeyCode() const { return m_key; }
     private:
         u32 m_key = 0;
     };
@@ -179,17 +181,17 @@ namespace hex {
         }
 
         Shortcut &operator+=(const Key &other) {
-            this->m_keys.insert(other);
+            m_keys.insert(other);
 
             return *this;
         }
 
         bool operator<(const Shortcut &other) const {
-            return this->m_keys < other.m_keys;
+            return m_keys < other.m_keys;
         }
 
         bool operator==(const Shortcut &other) const {
-            auto thisKeys = this->m_keys;
+            auto thisKeys = m_keys;
             auto otherKeys = other.m_keys;
 
             thisKeys.erase(CurrentView);
@@ -201,7 +203,7 @@ namespace hex {
         }
 
         bool isLocal() const {
-            return this->m_keys.contains(CurrentView);
+            return m_keys.contains(CurrentView);
         }
 
         std::string toString() const {
@@ -221,7 +223,7 @@ namespace hex {
 
             constexpr static auto Concatination = " + ";
 
-            auto keys = this->m_keys;
+            auto keys = m_keys;
             if (keys.erase(CTRL) > 0) {
                 result += CTRL_NAME;
                 result += Concatination;
@@ -367,7 +369,7 @@ namespace hex {
             return result;
         }
 
-        const std::set<Key>& getKeys() const { return this->m_keys; }
+        const std::set<Key>& getKeys() const { return m_keys; }
 
     private:
         friend Shortcut operator+(const Key &lhs, const Key &rhs);
@@ -391,7 +393,7 @@ namespace hex {
         using Callback = std::function<void()>;
         struct ShortcutEntry {
             Shortcut shortcut;
-            std::string unlocalizedName;
+            UnlocalizedString unlocalizedName;
             Callback callback;
         };
 
@@ -401,7 +403,7 @@ namespace hex {
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
-        static void addGlobalShortcut(const Shortcut &shortcut, const std::string &unlocalizedName, const Callback &callback);
+        static void addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
 
         /**
          * @brief Add a view-specific shortcut. View-specific shortcuts can only be triggered when the specified view is focused.
@@ -410,7 +412,7 @@ namespace hex {
          * @param unlocalizedName The unlocalized name of the shortcut
          * @param callback The callback to call when the shortcut is triggered.
          */
-        static void addShortcut(View *view, const Shortcut &shortcut, const std::string &unlocalizedName, const Callback &callback);
+        static void addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const Callback &callback);
 
 
         /**

@@ -10,6 +10,7 @@
 #include <fonts/codicons_font.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
 #include <content/popups/popup_notification.hpp>
@@ -73,6 +74,31 @@ namespace hex::plugin::builtin {
                 }
 
                 ImGuiExt::TextFormatted("FPS {0:3}.{1:02}", u32(framerate), u32(framerate * 100) % 100);
+
+                if (ImGui::IsItemHovered()) {
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
+                    if (ImGui::BeginTooltip()) {
+                        if (ImPlot::BeginPlot("##frame_time_graph", scaled({ 200, 100 }), ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
+                            ImPlot::SetupAxes("", "", ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_LockMin | ImPlotAxisFlags_AutoFit);
+                            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 0.01, ImPlotCond_Always);
+                            ImPlot::SetupAxisFormat(ImAxis_Y1, [](double value, char* buff, int size, void*) -> int {
+                                return snprintf(buff, size, "%dms", int(value * 1000.0));
+                            }, nullptr);
+                            ImPlot::SetupAxisTicks(ImAxis_Y1, 0, 0.01, 3);
+
+                            static std::vector<double> values(100);
+
+                            values.push_back(ImHexApi::System::getLastFrameTime());
+                            if (values.size() > 100)
+                                values.erase(values.begin());
+
+                            ImPlot::PlotLine("FPS", values.data(), values.size());
+                            ImPlot::EndPlot();
+                        }
+                        ImGui::EndTooltip();
+                    }
+                    ImGui::PopStyleVar();
+                }
             });
         #endif
 
@@ -182,10 +208,16 @@ namespace hex::plugin::builtin {
         });
 
         EventFrameBegin::subscribe([] {
-            if (ImGui::BeginPopup("ProviderMenu") && rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty()) {
-                 drawProviderContextMenu(rightClickedProvider);
-                 ImGui::EndPopup();
-             }
+            if (rightClickedProvider != nullptr && !rightClickedProvider->getMenuEntries().empty()) {
+                if (ImGui::BeginPopup("ProviderMenu")) {
+                    drawProviderContextMenu(rightClickedProvider);
+                    ImGui::EndPopup();
+                }
+            }
+        });
+
+        EventProviderChanged::subscribe([](auto, auto){
+            rightClickedProvider = nullptr;
         });
 
         ContentRegistry::Interface::addToolbarItem([] {
