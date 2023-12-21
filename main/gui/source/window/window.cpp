@@ -554,9 +554,11 @@ namespace hex {
                 }
 
                 if (auto provider = ImHexApi::Provider::get(); provider != nullptr) {
+                    ImGui::BeginDisabled(TaskManager::getRunningTaskCount() > 0);
                     if (ImGui::CloseButton(ImGui::GetID("ProviderCloseButton"), ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetContentRegionAvail().x - 17_scaled, 3_scaled))) {
                         ImHexApi::Provider::remove(provider);
                     }
+                    ImGui::EndDisabled();
                 }
 
                 ImGui::EndMenuBar();
