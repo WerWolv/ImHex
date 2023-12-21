@@ -150,7 +150,7 @@ namespace hex::plugin::builtin::ui {
 
     }
 
-    std::optional<PatternDrawer::Filter> PatternDrawer::parseRValueFilter(pl::PatternLanguage *runtime, const std::string &filter) const {
+    std::optional<PatternDrawer::Filter> PatternDrawer::parseRValueFilter(const std::string &filter) const {
         Filter result;
 
         if (filter.empty()) {
@@ -162,16 +162,22 @@ namespace hex::plugin::builtin::ui {
             char c = filter[i];
 
             if (i < filter.size() - 1 && c == '=' && filter[i + 1] == '=') {
-                auto tokens = runtime->lexString(filter.substr(i + 2), pl::api::Source::DefaultSource);
-                if (!tokens.has_value())
+                try {
+                    pl::core::Lexer lexer;
+
+                    auto source = filter.substr(i + 2);
+                    auto tokens = lexer.lex(filter.substr(i + 2), filter.substr(i + 2));
+
+                    if (!tokens.has_value() || tokens->size() != 2)
+                        return std::nullopt;
+
+                    auto literal = std::get_if<pl::core::Token::Literal>(&tokens->front().value);
+                    if (literal == nullptr)
+                        return std::nullopt;
+                    result.value = *literal;
+                } catch (pl::core::err::LexerError &) {
                     return std::nullopt;
-
-                auto literal = std::get_if<pl::core::Token::Literal>(&tokens->front().value);
-                if (literal == nullptr)
-                    return std::nullopt;
-
-                result.value = *literal;
-
+                }
                 break;
             } else if (c == '.')
                 result.path.emplace_back();
@@ -1102,7 +1108,7 @@ namespace hex::plugin::builtin::ui {
 
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - ImGui::GetTextLineHeightWithSpacing() * 9.5);
         if (ImGuiExt::InputTextIcon("##Search", ICON_VS_FILTER, m_filterText)) {
-            m_filter = parseRValueFilter(runtime, m_filterText).value_or(Filter{ });
+            m_filter = parseRValueFilter(m_filterText).value_or(Filter{ });
         }
         ImGui::PopItemWidth();
 
