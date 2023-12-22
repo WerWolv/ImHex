@@ -320,7 +320,7 @@ namespace hex::plugin::builtin::ui {
             {
                 const auto window = ImGui::GetCurrentWindowRead();
                 const auto axis = ImGuiAxis_Y;
-                i64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+                ImS64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
 
                 const auto outerRect = window->Rect();
                 const auto innerRect = window->InnerRect;
@@ -338,7 +338,7 @@ namespace hex::plugin::builtin::ui {
                     roundingCorners);
 
                 if (ImGui::IsWindowHovered()) {
-                    m_scrollPosition += i64(ImGui::GetIO().MouseWheel * -5);
+                    m_scrollPosition += ImS64(ImGui::GetIO().MouseWheel * -5);
                 }
 
                 if (m_scrollPosition < 0)
@@ -403,7 +403,7 @@ namespace hex::plugin::builtin::ui {
                         return currRegionValid;
                     };
 
-                    i64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+                    ImS64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
                     if (numRows == 0) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -413,7 +413,7 @@ namespace hex::plugin::builtin::ui {
                     m_visibleRowCount = ImGui::GetWindowSize().y / CharacterSize.y;
 
                     // Loop over rows
-                    for (i64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows; y++) {
+                    for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows; y++) {
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -648,12 +648,12 @@ namespace hex::plugin::builtin::ui {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
                             if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left) && *m_selectionStart != *m_selectionEnd)) {
                                 if (y == (m_scrollPosition + 3)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (i64(m_scrollPosition + 3) * m_bytesPerRow)) {
+                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (ImS64(m_scrollPosition + 3) * m_bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition -= 3;
                                     }
                                 } else if (y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (i64((m_scrollPosition + m_visibleRowCount) - 2) * m_bytesPerRow)) {
+                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (ImS64((m_scrollPosition + m_visibleRowCount) - 2) * m_bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
                                         m_scrollPosition += 3;
                                     }
