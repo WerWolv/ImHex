@@ -315,77 +315,105 @@ namespace hex::plugin::builtin::ui {
             ImGuiExt::TextFormattedCentered("{}", "hex.builtin.hex_editor.no_bytes"_lang);
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
-        if (ImGui::BeginTable("##hex", byteColumnCount, ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
-            View::discardNavigationRequests();
-            ImGui::TableSetupScrollFreeze(0, 2);
-
-            // Row address column
-            ImGui::TableSetupColumn("hex.builtin.common.address"_lang);
-            ImGui::TableSetupColumn("");
-
-            // Byte columns
-            for (u16 i = 0; i < columnCount; i++) {
-                if (isColumnSeparatorColumn(i, columnCount))
-                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
-
-                ImGui::TableSetupColumn(hex::format(m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + (6 + m_byteCellPadding) * 1_scaled);
-            }
-
-            // ASCII column
-            ImGui::TableSetupColumn("");
-
-            if (m_showAscii) {
-                ImGui::TableSetupColumn("hex.builtin.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + m_characterCellPadding * 1_scaled) * m_bytesPerRow);
-            }
-            else
-                ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
-
-            ImGui::TableSetupColumn("");
-            // Custom encoding column
+        if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+            // Draw scrollbar
             {
-                if (m_currCustomEncoding.has_value() && m_showCustomEncoding) {
-                    ImGui::TableSetupColumn(m_currCustomEncoding->getName().c_str(), ImGuiTableColumnFlags_WidthStretch);
-                } else {
-                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
+                const auto window = ImGui::GetCurrentWindowRead();
+                const auto axis = ImGuiAxis_Y;
+                i64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+
+                const auto outerRect = window->Rect();
+                const auto innerRect = window->InnerRect;
+                const auto borderSize = window->WindowBorderSize;
+                const auto scrollbarWidth = ImGui::GetStyle().ScrollbarSize;
+                const ImRect bb = ImRect(ImMax(outerRect.Min.x, outerRect.Max.x - borderSize - scrollbarWidth), innerRect.Min.y, outerRect.Max.x, innerRect.Max.y);
+                const ImDrawFlags roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
+                ImGui::ScrollbarEx(
+                    bb,
+                    ImGui::GetWindowScrollbarID(window, axis),
+                    axis,
+                    &m_scrollPosition,
+                    (std::ceil(innerRect.Max.y - innerRect.Min.y) / CharacterSize.y) - (m_visibleRowCount - 1),
+                    std::nextafterf(numRows, std::numeric_limits<float>::max()),
+                    roundingCorners);
+
+                if (ImGui::IsWindowHovered()) {
+                    m_scrollPosition += i64(ImGui::GetIO().MouseWheel * -5);
                 }
+
+                if (m_scrollPosition < 0)
+                    m_scrollPosition = 0;
+                if (m_scrollPosition > (numRows - 1))
+                    m_scrollPosition = numRows - 1;
             }
 
-            ImGui::TableNextRow();
-            for (i32 i = 0; i < ImGui::TableGetColumnCount(); i++) {
+            ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
+            if (ImGui::BeginTable("##hex", byteColumnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
+                View::discardNavigationRequests();
+                ImGui::TableSetupScrollFreeze(0, 2);
+
+                // Row address column
+                ImGui::TableSetupColumn("hex.builtin.common.address"_lang);
+                ImGui::TableSetupColumn("");
+
+                // Byte columns
+                for (u16 i = 0; i < columnCount; i++) {
+                    if (isColumnSeparatorColumn(i, columnCount))
+                        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, SeparatorColumWidth);
+
+                    ImGui::TableSetupColumn(hex::format(m_upperCaseHex ? "{:0{}X}" : "{:0{}x}", i * bytesPerCell, m_currDataVisualizer->getMaxCharsPerCell()).c_str(), ImGuiTableColumnFlags_WidthFixed, CharacterSize.x * m_currDataVisualizer->getMaxCharsPerCell() + (6 + m_byteCellPadding) * 1_scaled);
+                }
+
+                // ASCII column
+                ImGui::TableSetupColumn("");
+
+                if (m_showAscii) {
+                    ImGui::TableSetupColumn("hex.builtin.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + m_characterCellPadding * 1_scaled) * m_bytesPerRow);
+                }
+                else
+                    ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
+
+                ImGui::TableSetupColumn("");
+                // Custom encoding column
+                {
+                    if (m_currCustomEncoding.has_value() && m_showCustomEncoding) {
+                        ImGui::TableSetupColumn(m_currCustomEncoding->getName().c_str(), ImGuiTableColumnFlags_WidthStretch);
+                    } else {
+                        ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
+                    }
+                }
+
+                ImGui::TableNextRow();
+                for (i32 i = 0; i < ImGui::TableGetColumnCount(); i++) {
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(ImGui::TableGetColumnName(i));
+                    ImGui::Dummy(ImVec2(0, CharacterSize.y / 2));
+                }
+
+                ImGui::TableNextRow();
                 ImGui::TableNextColumn();
-                ImGui::TextUnformatted(ImGui::TableGetColumnName(i));
-                ImGui::Dummy(ImVec2(0, CharacterSize.y / 2));
-            }
 
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
+                if (m_provider != nullptr && m_provider->isReadable()) {
+                    const auto isCurrRegionValid = [this](u64 address) {
+                        auto &[currRegion, currRegionValid] = m_currValidRegion;
+                        if (!Region{ address, 1 }.isWithin(currRegion)) {
+                            m_currValidRegion = m_provider->getRegionValidity(address);
+                        }
 
-            if (m_provider != nullptr && m_provider->isReadable()) {
-                const auto isCurrRegionValid = [this](u64 address) {
-                    auto &[currRegion, currRegionValid] = m_currValidRegion;
-                    if (!Region{ address, 1 }.isWithin(currRegion)) {
-                        m_currValidRegion = m_provider->getRegionValidity(address);
+                        return currRegionValid;
+                    };
+
+                    i64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+                    if (numRows == 0) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+                        ImGuiExt::TextFormatted("        ");
                     }
 
-                    return currRegionValid;
-                };
-
-                ImGuiListClipper clipper;
-
-                u64 numRows = std::ceil(m_provider->getSize() / static_cast<long double>(m_bytesPerRow));
-                if (numRows == 0) {
-                    ImGui::TableNextRow();
-                    ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("        ");
-                }
-
-                clipper.Begin(numRows + size.y / CharacterSize.y - 3, CharacterSize.y);
-                while (clipper.Step()) {
-                    m_visibleRowCount = clipper.DisplayEnd - clipper.DisplayStart;
+                    m_visibleRowCount = ImGui::GetWindowSize().y / CharacterSize.y;
 
                     // Loop over rows
-                    for (u64 y = u64(clipper.DisplayStart); y < std::min(numRows, u64(clipper.DisplayEnd)); y++) {
+                    for (i64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows; y++) {
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
@@ -459,7 +487,7 @@ namespace hex::plugin::builtin::ui {
                                         cellSize.x += SeparatorColumWidth + 1;
                                 }
 
-                                if (y == u64(clipper.DisplayStart))
+                                if (y == m_scrollPosition)
                                     cellSize.y -= (ImGui::GetStyle().CellPadding.y);
 
                                 backgroundColor = applySelectionColor(byteAddress, backgroundColor);
@@ -555,7 +583,7 @@ namespace hex::plugin::builtin::ui {
                                 m_encodingLineStartAddresses.push_back(0);
                             }
 
-                            if (y < m_encodingLineStartAddresses.size()) {
+                            if (size_t(y) < m_encodingLineStartAddresses.size()) {
                                 std::vector<std::pair<u64, CustomEncodingData>> encodingData;
 
                                 if (m_encodingLineStartAddresses[y] >= m_bytesPerRow) {
@@ -619,17 +647,15 @@ namespace hex::plugin::builtin::ui {
                         if (m_shouldScrollToSelection && isSelectionValid()) {
                             // Make sure simply clicking on a byte at the edge of the screen won't cause scrolling
                             if ((ImGui::IsMouseDragging(ImGuiMouseButton_Left) && *m_selectionStart != *m_selectionEnd)) {
-                                auto fractionPerLine = 1.0 / (m_visibleRowCount + 1);
-
-                                if (y == (u64(clipper.DisplayStart) + 3)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (i64(clipper.DisplayStart + 3) * m_bytesPerRow)) {
+                                if (y == (m_scrollPosition + 3)) {
+                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) <= (i64(m_scrollPosition + 3) * m_bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
-                                        ImGui::SetScrollHereY(fractionPerLine * 5);
+                                        m_scrollPosition -= 3;
                                     }
-                                } else if (y == (u64(clipper.DisplayEnd) - 1)) {
-                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (i64(clipper.DisplayEnd - 2) * m_bytesPerRow)) {
+                                } else if (y == ((m_scrollPosition + m_visibleRowCount) - 1)) {
+                                    if (i128(m_selectionEnd.value() - m_provider->getBaseAddress() - m_provider->getCurrentPageAddress()) >= (i64((m_scrollPosition + m_visibleRowCount) - 2) * m_bytesPerRow)) {
                                         m_shouldScrollToSelection = false;
-                                        ImGui::SetScrollHereY(fractionPerLine * (m_visibleRowCount));
+                                        m_scrollPosition += 3;
                                     }
                                 }
                             }
@@ -642,48 +668,41 @@ namespace hex::plugin::builtin::ui {
                                 auto newSelection = getSelection();
                                 newSelection.address -= pageAddress;
 
-                                if ((newSelection.getStartAddress()) < u64(clipper.DisplayStart * m_bytesPerRow))
+                                if ((newSelection.getStartAddress()) < u64(m_scrollPosition * m_bytesPerRow))
                                     this->jumpToSelection(false);
-                                if ((newSelection.getEndAddress()) > u64(clipper.DisplayEnd * m_bytesPerRow))
+                                if ((newSelection.getEndAddress()) > u64((m_scrollPosition + m_visibleRowCount) * m_bytesPerRow))
                                     this->jumpToSelection(false);
                             }
                         }
                     }
-                }
 
-                // Handle jumping to selection
-                if (m_shouldJumpToSelection) {
-                    m_shouldJumpToSelection = false;
+                    // Handle jumping to selection
+                    if (m_shouldJumpToSelection) {
+                        m_shouldJumpToSelection = false;
 
-                    auto newSelection = getSelection();
-                    m_provider->setCurrentPage(m_provider->getPageOfAddress(newSelection.address).value_or(0));
+                        auto newSelection = getSelection();
+                        m_provider->setCurrentPage(m_provider->getPageOfAddress(newSelection.address).value_or(0));
 
-                    const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
-                    auto scrollPos = (static_cast<long double>(newSelection.getStartAddress() - pageAddress) / m_bytesPerRow) * CharacterSize.y;
-                    bool scrollUpwards = scrollPos < ImGui::GetScrollY();
-                    auto scrollFraction = scrollUpwards ? 0.0F : (1.0F - ((1.0F / m_visibleRowCount) * 2));
+                        const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
 
-                    if (m_centerOnJump) {
-                        scrollFraction = 0.5F;
+                        if (m_centerOnJump) {
+                            m_scrollPosition = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
+                            m_scrollPosition -= (m_visibleRowCount / 2);
+
+                        } else {
+                            m_scrollPosition = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
+                        }
                         m_centerOnJump = false;
+
                     }
 
-                    ImGui::SetScrollFromPosY(ImGui::GetCursorStartPos().y + scrollPos, scrollFraction);
                 }
 
-                if (!m_syncScrolling) {
-                    if (m_shouldUpdateScrollPosition) {
-                        m_shouldUpdateScrollPosition = false;
-                        ImGui::SetScrollY(m_scrollPosition);
-                    } else {
-                        m_scrollPosition = ImGui::GetScrollY();
-                    }
-                }
+                ImGui::EndTable();
+                ImGui::PopStyleVar();
             }
-
-            ImGui::EndTable();
+            ImGui::EndChild();
         }
-        ImGui::PopStyleVar();
 
         m_shouldScrollToSelection = false;
     }

@@ -230,7 +230,7 @@ namespace hex::plugin::builtin::ui {
         std::optional<u64> m_selectionStart;
         std::optional<u64> m_selectionEnd;
         std::optional<u64> m_cursorPosition;
-        float m_scrollPosition = 0;
+        i64 m_scrollPosition = 0;
 
         u16 m_bytesPerRow = 16;
         std::endian m_dataVisualizerEndianness = std::endian::little;
