@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-# Add your source files here #
+
 if (WIN32)
 
     include(ImHexPlugin)

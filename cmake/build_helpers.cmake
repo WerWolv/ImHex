@@ -395,6 +395,35 @@ function(verifyCompiler)
     endif()
 endfunction()
 
+macro(detectBundledPlugins)
+    file(GLOB PLUGINS_DIRS "plugins/*")
+
+    if (NOT DEFINED IMHEX_INCLUDE_PLUGINS)
+        foreach(PLUGIN_DIR ${PLUGINS_DIRS})
+            if (EXISTS "${PLUGIN_DIR}/CMakeLists.txt")
+                get_filename_component(PLUGIN_NAME ${PLUGIN_DIR} NAME)
+                if (NOT (${PLUGIN_NAME} IN_LIST IMHEX_EXCLUDE_PLUGINS))
+                    list(APPEND PLUGINS ${PLUGIN_NAME})
+                endif ()
+            endif()
+        endforeach()
+    else()
+        set(PLUGINS ${IMHEX_INCLUDE_PLUGINS})
+    endif()
+
+    foreach(PLUGIN_NAME ${PLUGINS})
+        message(STATUS "Enabled bundled plugin '${PLUGIN_NAME}'")
+    endforeach()
+
+    if (NOT PLUGINS)
+        message(FATAL_ERROR "No bundled plugins enabled")
+    endif()
+
+    if (NOT ("builtin" IN_LIST PLUGINS))
+        message(FATAL_ERROR "The 'builtin' plugin is required for ImHex to work!")
+    endif ()
+endmacro()
+
 macro(setVariableInParent variable value)
     get_directory_property(hasParent PARENT_DIRECTORY)
 
