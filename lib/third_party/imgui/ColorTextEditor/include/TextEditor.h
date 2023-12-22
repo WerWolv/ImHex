@@ -304,6 +304,11 @@ public:
         mFindWord = "";
     }
 
+    void SetFindWindowPos(const ImVec2 &pos) { mFindWindowPos = pos; }
+    void SetFindWindowSize(const ImVec2 &size) { mFindWindowSize = size; }
+    ImVec2 GetFindWindowPos() const { return mFindWindowPos; }
+    ImVec2 GetFindWindowSize() const { return mFindWindowSize; }
+
 	ImVec2 &GetCharAdvance() { return mCharAdvance; }
 
     unsigned GetSelectionLength() const { return mSelectionLength; }
@@ -443,6 +448,8 @@ private:
     bool mOptionsChanged;
     unsigned mSelectionLength;
 	Matches mMatches;
+    ImVec2 mFindWindowPos;
+    ImVec2 mFindWindowSize;
     bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;

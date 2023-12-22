@@ -280,6 +280,7 @@ namespace hex::plugin::builtin {
                 windowPosForPopup.y += popupSize.y;
                 // move to the right so as not to overlap the scrollbar
                 windowPosForPopup.x += windowSize.x - popupSize.x;
+                m_textEditor.SetFindWindowPos(windowPosForPopup);
                 ImGui::SetNextWindowPos(windowPosForPopup);
                 ImGui::OpenPopup("##pattern_editor_find_replace");
                 m_textEditor.resetMatches();
@@ -754,8 +755,9 @@ namespace hex::plugin::builtin {
                         requestFocusFind = true;
                         updateCount = true;
                     }
-
-                }
+                    m_textEditor.SetFindWindowSize(ImGui::GetWindowSize());
+                } else
+                    m_textEditor.SetFindWindowSize(ImGui::GetWindowSize());
 
                 if ((ImGui::IsKeyPressed(ImGuiKey_F3, false)) || downArrowFind || upArrowFind || enterPressedFind) {
 

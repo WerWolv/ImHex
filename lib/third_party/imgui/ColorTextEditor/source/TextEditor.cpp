@@ -809,6 +809,18 @@ void TextEditor::Render() {
     auto globalLineMax = (int)mLines.size();
     auto lineMax       = std::max(0, std::min((int)mLines.size() - 1, lineNo + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
 
+    ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
+    ImGuiContext& g = *GImGui;
+    auto popupStack = g.OpenPopupStack;
+    if (popupStack.Size > 0) {
+        for (int n = 0; n < popupStack.Size; n++){
+            auto window = popupStack[n].Window;
+            if (window->Size.x == mFindWindowSize.x && window->Size.y == mFindWindowSize.y &&
+                window->Pos.x  == mFindWindowPos.x  && window->Pos.y  == mFindWindowPos.y)
+                cursorScreenPos.y += mFindWindowSize.y;
+        }
+    }
+
     // Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
     char buf[16];
 
