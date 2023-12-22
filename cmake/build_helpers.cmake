@@ -256,8 +256,8 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        set (CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
-        set (CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
+        set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
+        set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         if(WIN32) # Forwarder is only needed on Windows
@@ -679,10 +679,9 @@ function(generatePDBs)
                 WORKING_DIRECTORY ${cv2pdb_SOURCE_DIR}
                 COMMAND
                 (
-                    ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PDB}> ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.bak &&
                     ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
-                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.bak &&
-                    ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.bak
+                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
+                    $<TARGET_FILE:${PDB}>
                 ) || (exit 0)
                 DEPENDS $<TARGET_FILE:${PDB}>
                 COMMAND_EXPAND_LISTS)
@@ -694,10 +693,33 @@ function(generatePDBs)
 endfunction()
 
 function(generateSDKDirectory)
-    set(SDK_PATH "./sdk")
+    if (WIN32)
+        set(SDK_PATH "./sdk")
+    elseif (APPLE)
+        set(SDK_PATH "imhex.app/Contents/Resources/sdk")
+    else()
+        set(SDK_PATH "share/imhex/sdk")
+    endif()
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex/include DESTINATION "${SDK_PATH}")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party")
+    if (NOT USE_SYSTEM_FMT)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
+    if (NOT USE_SYSTEM_NLOHMANN_JSON)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
+
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
+    install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
+    install(FILES ${CMAKE_SOURCE_DIR}/cmake/sdk/CMakeLists.txt DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
     install(TARGETS libimhex RUNTIME DESTINATION "${SDK_PATH}/lib")
+    install(TARGETS libimhex LIBRARY DESTINATION "${SDK_PATH}/lib")
+endfunction()
+
+function(addIncludesFromLibrary target library)
+    get_target_property(library_include_dirs ${library} INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(${target} PRIVATE ${library_include_dirs})
 endfunction()

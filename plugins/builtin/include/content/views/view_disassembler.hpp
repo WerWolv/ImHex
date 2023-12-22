@@ -5,7 +5,7 @@
 #include <hex/ui/view.hpp>
 #include <ui/widgets.hpp>
 
-#include <hex/helpers/disassembler.hpp>
+#include <content/helpers/disassembler.hpp>
 
 #include <string>
 #include <vector>

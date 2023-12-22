@@ -24,7 +24,8 @@ macro(add_imhex_plugin)
 
     # Add include directories and link libraries
     target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
-    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${FMT_LIBRARIES} ${IMHEX_PLUGIN_LIBRARIES})
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${IMHEX_PLUGIN_LIBRARIES} fmt::fmt imgui_all_includes libwolv)
+    addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
 
     # Add IMHEX_PROJECT_NAME and IMHEX_VERSION define
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_PROJECT_NAME="${IMHEX_PLUGIN_NAME}")
@@ -53,7 +54,9 @@ macro(add_imhex_plugin)
     target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE ${LIBROMFS_LIBRARY})
 
     # Add the new plugin to the main dependency list so it gets built by default
-    add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
+    if (TARGET imhex_all)
+        add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
+    endif()
 endmacro()
 
 macro(add_romfs_resource input output)

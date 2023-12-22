@@ -4,14 +4,11 @@
 #include <hex/api/localization_manager.hpp>
 
 #include <cstdio>
-#include <thread>
 #include <functional>
 #include <mutex>
 #include <memory>
 #include <list>
 #include <condition_variable>
-
-#include <jthread.hpp>
 
 namespace hex {
 
@@ -166,8 +163,6 @@ namespace hex {
         static void runDeferredCalls();
 
     private:
-        static void runner(const std::stop_token &stopToken);
-
         static TaskHolder createTask(std::string name, u64 maxValue, bool background, std::function<void(Task &)> function);
     };
 

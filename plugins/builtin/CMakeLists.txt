@@ -129,6 +129,17 @@ add_imhex_plugin(
 
     INCLUDES
         include
+        ${CAPSTONE_INCLUDE_DIRS}
+        ${YARA_INCLUDE_DIRS}
+        ${MINIAUDIO_INCLUDE_DIRS}
+
+    LIBRARIES
+        ${CAPSTONE_LIBRARIES}
+        ${YARA_LIBRARIES}
+        ${MINIAUDIO_LIBRARIES}
+        ${JTHREAD_LIBRARIES}
+        ${GLFW_LIBRARIES}
+        plcli libpl-gen
 )
 
 if (WIN32)

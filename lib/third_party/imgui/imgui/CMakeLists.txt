@@ -21,6 +21,7 @@ target_include_directories(imgui_imgui PUBLIC
 
 add_library(imgui_includes INTERFACE)
 target_include_directories(imgui_includes INTERFACE include)
+target_include_directories(imgui_all_includes INTERFACE include include/misc/freetype)
 
 target_compile_options(imgui_imgui PRIVATE -Wno-unknown-warning-option)
 set_property(TARGET imgui_imgui PROPERTY POSITION_INDEPENDENT_CODE ON)

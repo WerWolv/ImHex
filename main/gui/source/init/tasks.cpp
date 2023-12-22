@@ -125,7 +125,6 @@ namespace hex::init {
         ContentRegistry::HexEditor::impl::getVisualizers().clear();
 
         ContentRegistry::BackgroundServices::impl::stopServices();
-        ContentRegistry::BackgroundServices::impl::getServices().clear();
 
         ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints().clear();
 
