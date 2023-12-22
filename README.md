@@ -55,7 +55,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 ![Bookmarks, disassembler and data processor](https://user-images.githubusercontent.com/10835354/139717323-1f8c9d52-f7eb-4f43-9f11-097ac728ed6c.png)
 
 <details>
-  <summary>More Screenshots</summary>
+<summary><strong>More Screenshots</strong></summary>
 
 ![Data Processor decrypting some data and displaying it as an image](https://private-user-images.githubusercontent.com/10835354/290514353-d7f53f91-09e9-46c4-a720-e979c1c4e820.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDMyNDk0NTksIm5iZiI6MTcwMzI0OTE1OSwicGF0aCI6Ii8xMDgzNTM1NC8yOTA1MTQzNTMtZDdmNTNmOTEtMDllOS00NmM0LWE3MjAtZTk3OWMxYzRlODIwLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFJV05KWUFYNENTVkVINTNBJTJGMjAyMzEyMjIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMxMjIyVDEyNDU1OVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWE4OGIxNjg0NDcyMWVkYTMzOTAzMTAxMmJlNjE2ZjVkMTVmNzhlMDU1ZWNhODQyZjNjYTgzMzgzYjYyODVlNzQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.Y4VAVgSPBZI3Q1gDehPuoC98pQXVe-z9FUWhvDAV-1g)
 ![STL Parser written in the Pattern Language visualizing a 3D model](https://private-user-images.githubusercontent.com/10835354/290517253-426d83c5-f6b7-4b69-aa87-05e48ab73e24.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDMyNDk0NTksIm5iZiI6MTcwMzI0OTE1OSwicGF0aCI6Ii8xMDgzNTM1NC8yOTA1MTcyNTMtNDI2ZDgzYzUtZjZiNy00YjY5LWFhODctMDVlNDhhYjczZTI0LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFJV05KWUFYNENTVkVINTNBJTJGMjAyMzEyMjIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMxMjIyVDEyNDU1OVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWJlMmJmZDYzOTgyZGYxOWQ5MmJhMTMyMzA2YWE3YmU0ODJlY2MwYmQxM2RlODc1MTgwYTQ5ZGYxMWNkY2JlNjAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.lsJSbAnAWZNXm_bteUWZUM96Nd4qKhk3H3WZtjsFQB4)
@@ -66,7 +66,7 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 ## Features
 
 <details>
-  <summary>Featureful hex view</summary>
+  <summary><strong>Featureful hex view</strong></summary>
 
   - Byte patching
   - Patch management
@@ -93,9 +93,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - Built-in support for UTF-8, UTF-16, ShiftJIS, most Windows encodings and many more
   - Paged data view
 </details>
-
 <details>
-  <summary>Custom C++-like pattern language for parsing highlighting a file's content</summary>
+  <summary><strong>Custom C++-like pattern language for parsing highlighting a file's content</strong></summary>
   
   - Automatic loading based on MIME types and magic values
   - Arrays, pointers, structs, unions, enums, bitfields, namespaces, little and big endian support, conditionals and much more!
@@ -107,26 +106,23 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - Coordinates
     - Time stamps
 </details>
-
 <details>
-  <summary>Theming support</summary>
+  <summary><strong>Theming support</strong></summary>
 
   - Doesn't burn out your retinas when used in late-night sessions
     - Dark mode by default, but a light mode is available as well
   - Customizable colors and styles for all UI elements through shareable theme files
   - Support for custom fonts
 </details>
-
 <details>
-  <summary>Importing and Exporting data</summary>
+  <summary><strong>Importing and Exporting data</strong></summary>
   
   - Base64 files
   - IPS and IPS32 patches
   - Markdown reports
 </details>
-
 <details>
-  <summary>Data Inspector</summary>
+  <summary><strong>Data Inspector</strong></summary>
 
   - Interpreting data as many different types with endianess, decimal, hexadecimal and octal support and bit inversion
     - Unsigned and signed integers (8, 16, 24, 32, 48, 64 bit)
@@ -140,17 +136,15 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Adding new data types through the pattern language
   - Support for hiding rows that aren't used
 </details>
-
 <details>
-  <summary>Node-based data pre-processor</summary>
+  <summary><strong>Node-based data pre-processor</strong></summary>
 
   - Modify, decrypt and decode data before it's being displayed in the hex editor
   - Modify data without touching the underlying source
   - Support for adding custom nodes
 </details>
-
 <details>
-  <summary>Loading data from many different data sources</summary>
+  <summary><strong>Loading data from many different data sources</strong></summary>
 
   - Local Files
     - Support for huge files with fast and efficient loading
@@ -162,9 +156,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Process Memory
     - Inspect the entire address space of a running process
 </details>
-
 <details>
-  <summary>Data searching</summary>
+  <summary><strong>Data searching</strong></summary>
   
   - Support for searching the entire file or only a selection
   - String extraction
@@ -183,9 +176,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - Option to specify size and endianess
     - Option to ignore unaligned values
 </details>
-
 <details>
-  <summary>Data hashing support</summary>
+  <summary><strong>Data hashing support</strong></summary>
 
   - Many different algorithms available
     - CRC8, CRC16 and CRC32 with custom initial values and polynomials
@@ -195,17 +187,15 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Hashing of specific regions of the loaded data
   - Hashing of arbitrary strings
 </details>
-
 <details>
-  <summary>Diffing support</summary>
+  <summary><strong>Diffing support</strong></summary>
 
   - Compare data of different data sources
   - Difference highlighting
   - Table view of differences
 </details>
-
 <details>
-  <summary>Integrated disassembler</summary>
+  <summary><strong>Integrated disassembler</strong></summary>
   
   - Support for all architectures supported by Capstone
     - ARM32 (ARM, Thumb, Cortex-M, AArch32)
@@ -225,9 +215,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - MOS65XX
     - Berkeley Packet Filter
 </details>
-
 <details>
-  <summary>Bookmarks</summary>
+  <summary><strong>Bookmarks</strong></summary>
 
   - Support for bookmarks with custom names and colors
   - Highlighting of bookmarked region in the hex editor
@@ -235,9 +224,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Open content of bookmark in a new tab
   - Add comments to bookmarks
 </details>
-
 <details>
-  <summary>Featureful data analyzer and visualizer</summary>
+  <summary><strong>Featureful data analyzer and visualizer</strong></summary>
 
   - File magic-based file parser and MIME type database
   - Byte type distribution graph
@@ -246,18 +234,16 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - Encrypted / Compressed file detection
   - Digram and Layered distribution graphs
 </details>
-
 <details>
-  <summary>YARA Rule support</summary>
+  <summary><strong>YARA Rule support</strong></summary>
 
   - Scan a file for vulnerabilities with official yara rules
   - Highlight matches in the hex editor
   - Jump to matches
   - Apply multiple rules at once
 </details>
-
 <details>
-  <summary>Helpful tools</summary>
+  <summary><strong>Helpful tools</strong></summary>
 
   - Itanium, MSVC, Rust and D-Lang demangler based on LLVM
   - ASCII table
@@ -278,9 +264,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
   - TCP Client/Server
   - Euclidean algorithm calculator
 </details>
-
 <details>
-  <summary>Built-in Content updater</summary>
+  <summary><strong>Built-in Content updater</strong></summary>
 
   - Download all files found in the database directly from within ImHex
     - Pattern files for decoding various file formats
@@ -291,17 +276,15 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
     - Custom themes
     - Yara rules
 </details>
-
 <details>
-  <summary>Modern Interface</summary>
+  <summary><strong>Modern Interface</strong></summary>
 
   - Support for multiple workspaces
   - Support for custom layouts
   - Detachable windows
 </details>
-
 <details>
-  <summary>Easy to get started</summary>
+  <summary><strong>Easy to get started</strong></summary>
 
   - Support for many different languages
   - Simplified mode for beginners
