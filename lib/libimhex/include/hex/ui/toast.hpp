@@ -5,6 +5,7 @@
 
 #include <list>
 #include <memory>
+#include <mutex>
 
 namespace hex {
 

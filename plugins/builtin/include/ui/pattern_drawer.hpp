@@ -88,7 +88,7 @@ namespace hex::plugin::builtin::ui {
             std::optional<pl::core::Token::Literal> value;
         };
 
-        std::optional<Filter> parseRValueFilter(pl::PatternLanguage *runtime, const std::string &filter) const;
+        std::optional<Filter> parseRValueFilter(const std::string &filter) const;
 
     private:
         std::map<const pl::ptrn::Pattern*, u64> m_displayEnd;
