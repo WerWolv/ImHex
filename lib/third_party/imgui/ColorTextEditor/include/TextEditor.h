@@ -260,22 +260,52 @@ public:
 	void Paste();
 	void Delete();
 	bool FindNext(bool wrapAround);
-    bool FindPrevious(bool wrapAround);
+    int FindMatch(bool isNex);
     bool Replace(bool right);
     bool ReplaceAll();
 	std::string &GetFindWord()  { return mFindWord; }
-	void SetFindWord(const std::string &aFindWord) { mFindWord = aFindWord; }
+	void SetFindWord(const std::string &aFindWord) {
+        if (aFindWord != mFindWord) {
+            FindAllMatches(aFindWord);
+            mFindWord = aFindWord;
+        }
+    }
 	std::string &GetReplaceWord()  { return mReplaceWord; }
 	void SetReplaceWord(const std::string &aReplaceWord) { mReplaceWord = aReplaceWord; }
-    void SelectFound(Coordinates found);
-    bool CheckReversedSearch(Coordinates targetPos, Coordinates startPos, bool wrapped);
-    void CountOccurrences(unsigned &position, unsigned &count);
+	void SelectFound(int found);
+    void FindAllMatches(std::string findWord);
+    int FindPosition( Coordinates pos, bool isNext);
     bool GetMatchCase() const { return mMatchCase; }
-    void SetMatchCase(bool matchCase)  { mMatchCase = matchCase; }
+    void SetMatchCase(bool matchCase)  {
+        if (matchCase != mMatchCase) {
+            mMatchCase = matchCase;
+            mOptionsChanged = true;
+            FindAllMatches(mFindWord);
+        }
+    }
     bool GetWholeWord()  const { return mWholeWord; }
-    void SetWholeWord(bool wholeWord)  { mWholeWord = wholeWord; }
+    void SetWholeWord(bool wholeWord)  {
+        if (wholeWord != mWholeWord) {
+            mWholeWord = wholeWord;
+            mOptionsChanged = true;
+            FindAllMatches(mFindWord);
+        }
+    }
     bool GetFindRegEx()  const { return mFindRegEx; }
-    void SetFindRegEx(bool findRegEx)  { mFindRegEx = findRegEx; }
+    void SetFindRegEx(bool findRegEx)  {
+        if (findRegEx != mFindRegEx) {
+            mFindRegEx = findRegEx;
+            mOptionsChanged = true;
+            FindAllMatches(mFindWord);
+        }
+    }
+    void resetMatches() {
+        mMatches.clear();
+        mFindWord = "";
+    }
+
+	ImVec2 &GetCharAdvance() { return mCharAdvance; }
+
     unsigned GetSelectionLength() const { return mSelectionLength; }
     void SetSelectionLength(unsigned aLength) { mSelectionLength = aLength; }
 	bool CanUndo() const;
@@ -297,6 +327,12 @@ private:
 		Coordinates mCursorPosition;
 	};
 
+	typedef std::vector<EditorState> Matches;
+
+public:
+	TextEditor::Matches &GetMatches() { return mMatches;}
+
+private:
 	class UndoRecord
 	{
 	public:
@@ -353,6 +389,8 @@ private:
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
+	unsigned long long GetLineByteCount(int aLine) const;
+	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
 	bool IsOnWordBoundary(const Coordinates& aAt) const;
 	void RemoveLine(int aStart, int aEnd);
@@ -402,7 +440,9 @@ private:
     bool mMatchCase;
     bool mWholeWord;
     bool mFindRegEx;
+    bool mOptionsChanged;
     unsigned mSelectionLength;
+	Matches mMatches;
     bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;

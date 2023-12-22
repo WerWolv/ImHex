@@ -1086,7 +1086,7 @@
         "hex.builtin.view.pattern_editor.menu.replace_all": "Replace All",
         "hex.builtin.view.pattern_editor.name": "Pattern editor",
         "hex.builtin.view.pattern_editor.no_in_out_vars": "Define some global variables with the 'in' or 'out' specifier for them to appear here.",
-        "hex.builtin.view.pattern_editor.no_results": "no results found",
+        "hex.builtin.view.pattern_editor.no_results": "no results",
         "hex.builtin.view.pattern_editor.of": "of",
         "hex.builtin.view.pattern_editor.open_pattern": "Open pattern",
         "hex.builtin.view.pattern_editor.replace_hint": "Replace",
