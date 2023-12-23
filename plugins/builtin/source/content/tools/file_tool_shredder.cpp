@@ -7,7 +7,7 @@
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <content/popups/popup_notification.hpp>
+#include <popups/popup_notification.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
@@ -54,7 +54,7 @@ namespace hex::plugin::builtin {
                         wolv::io::File file(selectedFile, wolv::io::File::Mode::Write);
 
                         if (!file.isValid()) {
-                            PopupError::open("hex.builtin.tools.file_tools.shredder.error.open"_lang);
+                            ui::PopupError::open("hex.builtin.tools.file_tools.shredder.error.open"_lang);
                             return;
                         }
 
@@ -128,7 +128,7 @@ namespace hex::plugin::builtin {
 
                         file.remove();
 
-                        PopupInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
+                        ui::PopupInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
                     });
                 }
             }

@@ -19,8 +19,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
 
-#include <content/popups/popup_file_chooser.hpp>
-#include <content/popups/popup_question.hpp>
+#include <popups/popup_file_chooser.hpp>
+#include <popups/popup_question.hpp>
 
 #include <nlohmann/json.hpp>
 #include <chrono>
@@ -360,7 +360,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
-            PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
+            ui::PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
                 [this] {
                     m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
                 }, [this] {
@@ -567,8 +567,8 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
-            ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("hex.ui.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
             ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
 
             ImGui::TableHeadersRow();
@@ -903,32 +903,32 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.type"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.type"_lang);
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted(" {}", pattern->getTypeName());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.address"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.address"_lang);
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted(" 0x{:08X}", pattern->getOffset());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.size"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.size"_lang);
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted(" {}", hex::toByteString(pattern->getSize()));
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.endian"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.endian"_lang);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
+                    ImGuiExt::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.ui.common.little"_lang : "hex.ui.common.big"_lang);
 
                     if (const auto &comment = pattern->getComment(); !comment.empty()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{} ", "hex.builtin.common.comment"_lang);
+                        ImGuiExt::TextFormatted("{} ", "hex.ui.common.comment"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TextWrapped(" \"%s\"", comment.c_str());
                     }
@@ -1208,7 +1208,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+                                                    ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
                                                                                [this, provider](const std::fs::path &path) {
                                                                                    this->loadPatternFile(path, provider);
                                                                                    AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");

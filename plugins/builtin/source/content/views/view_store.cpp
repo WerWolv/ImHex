@@ -5,7 +5,7 @@
 
 #include <hex/api/content_registry.hpp>
 
-#include <content/popups/popup_notification.hpp>
+#include <popups/popup_notification.hpp>
 
 #include <imgui.h>
 
@@ -310,7 +310,7 @@ namespace hex::plugin::builtin {
         }
 
         if (!downloading) {
-            PopupError::open("hex.builtin.view.store.download_error"_lang);
+            ui::PopupError::open("hex.builtin.view.store.download_error"_lang);
             return false;
         }
 

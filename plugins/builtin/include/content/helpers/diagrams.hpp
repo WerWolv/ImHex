@@ -11,8 +11,11 @@
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
+#include <hex/helpers/utils.hpp>
+
 #include <imgui_internal.h>
 
+#include <atomic>
 #include <random>
 
 namespace hex {
@@ -299,7 +302,7 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags, bool updateHandle = false) {
 
             if (!m_processing && ImPlot::BeginPlot("##ChunkBasedAnalysis", size, flags)) {
-                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.view.information.entropy"_lang,
+                ImPlot::SetupAxes("hex.ui.common.address"_lang, "hex.builtin.view.information.entropy"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxisFormat(ImAxis_X1, impl::IntegerAxisFormatter, (void*)("0x%04llX"));
@@ -595,7 +598,7 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags) {
 
             if (!m_processing && ImPlot::BeginPlot("##distribution", size, flags)) {
-                ImPlot::SetupAxes("hex.builtin.common.value"_lang, "hex.builtin.common.count"_lang,
+                ImPlot::SetupAxes("hex.ui.common.value"_lang, "hex.ui.common.count"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
@@ -690,7 +693,7 @@ namespace hex {
         void draw(ImVec2 size, ImPlotFlags flags, bool updateHandle = false) {
             // Draw the result of the analysis
             if (!m_processing && ImPlot::BeginPlot("##byte_types", size, flags)) {
-                ImPlot::SetupAxes("hex.builtin.common.address"_lang, "hex.builtin.common.percentage"_lang,
+                ImPlot::SetupAxes("hex.ui.common.address"_lang, "hex.ui.common.percentage"_lang,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch,
                                   ImPlotAxisFlags_Lock | ImPlotAxisFlags_NoHighlight | ImPlotAxisFlags_NoSideSwitch);
                 ImPlot::SetupAxesLimits(

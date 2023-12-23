@@ -4,8 +4,8 @@
 
 #include <hex/helpers/crypto.hpp>
 
-#include <content/popups/popup_notification.hpp>
-#include <content/popups/popup_text_input.hpp>
+#include <popups/popup_notification.hpp>
+#include <popups/popup_text_input.hpp>
 
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
@@ -276,11 +276,11 @@ namespace hex::plugin::builtin {
                                             if (password.empty())
                                                 achievement.setUnlocked(true);
                                             else
-                                                PopupTextInput::open("Enter Password", "Enter the password to unlock this achievement", [password, &achievement](const std::string &input) {
+                                                ui::PopupTextInput::open("Enter Password", "Enter the password to unlock this achievement", [password, &achievement](const std::string &input) {
                                                     if (input == password)
                                                         achievement.setUnlocked(true);
                                                     else
-                                                        PopupInfo::open("The password you entered was incorrect.");
+                                                        ui::PopupInfo::open("The password you entered was incorrect.");
                                                 });
                                         });
 
@@ -301,7 +301,7 @@ namespace hex::plugin::builtin {
                         return false;
                     }
 
-                    PopupInfo::open(challengeDescription);
+                    ui::PopupInfo::open(challengeDescription);
 
 
                     return true;

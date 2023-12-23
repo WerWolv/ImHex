@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
     class PopupTelemetryRequest : public Popup<PopupTelemetryRequest> {
     public:
         PopupTelemetryRequest()
-                : hex::Popup<PopupTelemetryRequest>("hex.builtin.common.question", false) {
+                : hex::Popup<PopupTelemetryRequest>("hex.ui.common.question", false) {
             // Check if there is a telemetry uuid
             m_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
             if(m_uuid.empty()) {
@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
             const auto buttonPos = [&](u8 index) { return ImGui::GetStyle().FramePadding.x + (buttonSize.x + ImGui::GetStyle().FramePadding.x * 3) * index; };
 
             ImGui::SetCursorPosX(buttonPos(0));
-            if (ImGui::Button("hex.builtin.common.allow"_lang, buttonSize)) {
+            if (ImGui::Button("hex.ui.common.allow"_lang, buttonSize)) {
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
                 this->close();
@@ -91,7 +91,7 @@ namespace hex::plugin::builtin {
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(buttonPos(2));
-            if (ImGui::Button("hex.builtin.common.deny"_lang, buttonSize)) {
+            if (ImGui::Button("hex.ui.common.deny"_lang, buttonSize)) {
                 this->close();
             }
 

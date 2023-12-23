@@ -22,6 +22,24 @@
  * Name, Author and Description will be displayed in the in the plugin list on the Welcome screen.
  */
 #define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
+#define IMHEX_LIBRARY_SETUP() IMHEX_LIBRARY_SETUP_IMPL()
+
+#define IMHEX_LIBRARY_SETUP_IMPL()                                                                              \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                    \
+    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {   \
+        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                    \
+            nullptr,                                                                                            \
+            initializeLibrary,                                                                                  \
+            nullptr,                                                                                            \
+            nullptr,                                                                                            \
+            nullptr,                                                                                            \
+            nullptr,                                                                                            \
+            nullptr,                                                                                            \
+            nullptr,                                                                                            \
+            nullptr                                                                                             \
+        });                                                                                                     \
+    }                                                                                                           \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary()
 
 #define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                      \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                 \
@@ -36,6 +54,7 @@
     extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {   \
         hex::PluginManager::addPlugin(hex::PluginFunctions {                                                    \
             initializePlugin,                                                                                   \
+            nullptr,                                                                                            \
             getPluginName,                                                                                      \
             getPluginAuthor,                                                                                    \
             getPluginDescription,                                                                               \

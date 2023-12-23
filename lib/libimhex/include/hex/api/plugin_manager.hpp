@@ -5,6 +5,7 @@
 #include <string>
 
 #include <wolv/io/fs.hpp>
+#include <hex/helpers/logger.hpp>
 
 struct ImGuiContext;
 
@@ -18,6 +19,7 @@ namespace hex {
 
     struct PluginFunctions {
         using InitializePluginFunc     = void (*)();
+        using InitializeLibraryFunc    = void (*)();
         using GetPluginNameFunc        = const char *(*)();
         using GetPluginAuthorFunc      = const char *(*)();
         using GetPluginDescriptionFunc = const char *(*)();
@@ -27,6 +29,7 @@ namespace hex {
         using GetSubCommandsFunc       = void* (*)();
 
         InitializePluginFunc        initializePluginFunction        = nullptr;
+        InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
         GetPluginNameFunc           getPluginNameFunction           = nullptr;
         GetPluginAuthorFunc         getPluginAuthorFunction         = nullptr;
         GetPluginDescriptionFunc    getPluginDescriptionFunction    = nullptr;
@@ -38,8 +41,8 @@ namespace hex {
 
     class Plugin {
     public:
-        explicit Plugin(const std::fs::path &path);
-        explicit Plugin(PluginFunctions functions);
+        explicit Plugin(const std::fs::path &path, bool libraryPlugin);
+        explicit Plugin(PluginFunctions functions, bool libraryPlugin);
 
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;
@@ -59,9 +62,12 @@ namespace hex {
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
 
+        [[nodiscard]] bool isLibraryPlugin() const { return m_libraryPlugin; }
+
     private:
         uintptr_t m_handle = 0;
         std::fs::path m_path;
+        bool m_libraryPlugin;
 
         mutable bool m_initialized = false;
 

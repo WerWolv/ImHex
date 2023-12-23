@@ -15,7 +15,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <content/recent.hpp>
-#include <content/popups/popup_notification.hpp>
+#include <popups/popup_notification.hpp>
 #include <fonts/codicons_font.h>
 
 namespace hex::plugin::builtin::recent {
@@ -131,7 +131,7 @@ namespace hex::plugin::builtin::recent {
                     if (!recentFile.isValid())
                         continue;
 
-                    std::string displayName = hex::format("[{}] {}", "hex.builtin.common.project"_lang, wolv::util::toUTF8String(projectFileName));
+                    std::string displayName = hex::format("[{}] {}", "hex.ui.common.project"_lang, wolv::util::toUTF8String(projectFileName));
 
                     nlohmann::json recentEntry {
                         {"type", "project"},
@@ -224,7 +224,7 @@ namespace hex::plugin::builtin::recent {
             provider->loadSettings(recentEntry.data);
 
             if (!provider->open() || !provider->isAvailable()) {
-                PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                ui::PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 return;
             }
@@ -269,21 +269,21 @@ namespace hex::plugin::builtin::recent {
                             if (ImGui::BeginTable("##RecentEntryTooltip", 2, ImGuiTableFlags_RowBg)) {
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextUnformatted("hex.builtin.common.name"_lang);
+                                ImGui::TextUnformatted("hex.ui.common.name"_lang);
                                 ImGui::TableNextColumn();
                                 ImGui::TextUnformatted(recentEntry.displayName.c_str());
 
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGui::TextUnformatted("hex.builtin.common.type"_lang);
+                                ImGui::TextUnformatted("hex.ui.common.type"_lang);
                                 ImGui::TableNextColumn();
 
                                 if (isProject) {
-                                    ImGui::TextUnformatted("hex.builtin.common.project"_lang);
+                                    ImGui::TextUnformatted("hex.ui.common.project"_lang);
 
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextUnformatted("hex.builtin.common.path"_lang);
+                                    ImGui::TextUnformatted("hex.ui.common.path"_lang);
                                     ImGui::TableNextColumn();
                                     ImGui::TextUnformatted(recentEntry.data["path"].get<std::string>().c_str());
                                 } else {
@@ -303,7 +303,7 @@ namespace hex::plugin::builtin::recent {
                     }
 
                     if (ImGui::BeginPopup(popupID.c_str())) {
-                        if (ImGui::MenuItem("hex.builtin.common.remove"_lang)) {
+                        if (ImGui::MenuItem("hex.ui.common.remove"_lang)) {
                             shouldRemove = true;
                         }
                         ImGui::EndPopup();

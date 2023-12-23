@@ -104,7 +104,7 @@ namespace hex::plugin::builtin {
                                 // Draw region
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
+                                ImGuiExt::TextFormatted("{}: ", "hex.ui.common.region"_lang.get());
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
@@ -354,7 +354,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
                         ImGui::TableNextColumn();
 
-                        ImGui::TextUnformatted("hex.builtin.common.address"_lang);
+                        ImGui::TextUnformatted("hex.ui.common.address"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TableNextColumn();
 
@@ -405,7 +405,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         // Draw size of the bookmark
-                        ImGui::TextUnformatted("hex.builtin.common.size"_lang);
+                        ImGui::TextUnformatted("hex.ui.common.size"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted(hex::toByteString(region.size));

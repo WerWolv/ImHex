@@ -1,5 +1,5 @@
 #include "content/views/view_data_processor.hpp"
-#include "content/popups/popup_notification.hpp"
+#include <popups/popup_notification.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
@@ -852,7 +852,7 @@ namespace hex::plugin::builtin {
             int nodeId;
             if (ImNodes::IsNodeHovered(&nodeId) && workspace.currNodeError.has_value() && workspace.currNodeError->node->getId() == nodeId) {
                 ImGui::BeginTooltip();
-                ImGui::TextUnformatted("hex.builtin.common.error"_lang);
+                ImGui::TextUnformatted("hex.ui.common.error"_lang);
                 ImGui::Separator();
                 ImGui::TextUnformatted(workspace.currNodeError->message.c_str());
                 ImGui::EndTooltip();
@@ -1194,7 +1194,7 @@ namespace hex::plugin::builtin {
 
             m_updateNodePositions = true;
         } catch (nlohmann::json::exception &e) {
-            PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
+            ui::PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
         }
     }
 

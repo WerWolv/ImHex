@@ -1,0 +1,21 @@
+{
+    "code": "en-US",
+    "language": "English",
+    "country": "United States",
+    "fallback": true,
+    "translations": {
+        "hex.visualizers.pl_visualizer.3d.light_position": "Light Position",
+        "hex.visualizers.pl_visualizer.3d.ambient_brightness": "Ambient Brightness",
+        "hex.visualizers.pl_visualizer.3d.diffuse_brightness": "Diffuse Brightness",
+        "hex.visualizers.pl_visualizer.3d.specular_brightness": "Specular Brightness",
+        "hex.visualizers.pl_visualizer.3d.object_reflectiveness": "Object Reflectiveness",
+        "hex.visualizers.pl_visualizer.3d.light_color": "Light Color",
+        "hex.visualizers.pl_visualizer.3d.more_settings": "More Settings",
+        "hex.visualizers.pl_visualizer.3d.texture_file": "Texture File Path",
+        "hex.visualizers.pl_visualizer.coordinates.latitude": "Latitude",
+        "hex.visualizers.pl_visualizer.coordinates.longitude": "Longitude",
+        "hex.visualizers.pl_visualizer.coordinates.query": "Find address",
+        "hex.visualizers.pl_visualizer.coordinates.querying": "Querying address...",
+        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "No address found"
+    }
+}

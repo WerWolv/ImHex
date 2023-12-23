@@ -22,7 +22,7 @@ namespace hex::plugin::builtin {
                 ImGui::ProgressBar(m_task.getProgress() / 100.0F);
 
             ImGui::NewLine();
-            if (ImGui::ButtonEx("hex.builtin.common.cancel"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
+            if (ImGui::ButtonEx("hex.ui.common.cancel"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 m_task.interrupt();
 
             if (!m_task.isRunning()) {

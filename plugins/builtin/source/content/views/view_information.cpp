@@ -14,7 +14,7 @@
 
 #include <implot.h>
 
-#include <content/popups/popup_notification.hpp>
+#include <popups/popup_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    PopupInfo::open("hex.builtin.view.information.magic_db_added"_lang);
+                    ui::PopupInfo::open("hex.builtin.view.information.magic_db_added"_lang);
                     return true;
                 }
             }
@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                 ImGui::BeginDisabled(m_analyzerTask.isRunning());
-                ImGuiExt::BeginSubWindow("hex.builtin.common.settings"_lang);
+                ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang);
                 {
                     if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedSame, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                         ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);

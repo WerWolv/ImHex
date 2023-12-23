@@ -262,9 +262,9 @@ namespace hex::plugin::builtin {
         // Draw the differences table
         if (ImGui::BeginTable("##differences", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Resizable, ImVec2(0, 200_scaled))) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.common.begin"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.end"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.type"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.begin"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.end"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.type"_lang);
             ImGui::TableHeadersRow();
 
             // Draw the differences if the providers have been analyzed

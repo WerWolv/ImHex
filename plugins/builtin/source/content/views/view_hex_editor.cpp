@@ -13,7 +13,7 @@
 #include <wolv/math_eval/math_evaluator.hpp>
 
 #include <content/providers/view_provider.hpp>
-#include <content/popups/popup_file_chooser.hpp>
+#include <popups/popup_file_chooser.hpp>
 
 #include <imgui_internal.h>
 #include <content/popups/popup_blocking_task.hpp>
@@ -214,7 +214,7 @@ namespace hex::plugin::builtin {
             }
 
             if (!m_searchTask.isRunning() && !searchSequence.empty() && m_shouldSearch) {
-                m_searchTask = TaskManager::createTask("hex.builtin.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
+                m_searchTask = TaskManager::createTask("hex.ui.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
                     for (u8 retry = 0; retry < 2; retry++) {
                         auto region = this->findSequence(searchSequence, m_backwards);
 
@@ -349,7 +349,7 @@ namespace hex::plugin::builtin {
                 editor->closePopup();
             }
 
-            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
                 [&, this]{
                     setBaseAddress(m_baseAddress);
                     editor->closePopup();
@@ -383,7 +383,7 @@ namespace hex::plugin::builtin {
                 editor->closePopup();
             }
 
-            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
                 [&, this]{
                     setPageSize(m_pageSize);
                     editor->closePopup();
@@ -421,7 +421,7 @@ namespace hex::plugin::builtin {
                 editor->closePopup();
             }
 
-            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
                 [&, this]{
                     this->resize(m_size);
                     editor->closePopup();
@@ -448,10 +448,10 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.insert"_lang);
 
-            ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &m_address);
-            ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &m_size);
+            ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
+            ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
 
-            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
                 [&, this]{
                     insert(m_address, m_size);
                     editor->closePopup();
@@ -479,10 +479,10 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.remove"_lang);
 
-            ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &m_address);
-            ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &m_size);
+            ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
+            ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
 
-            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
                 [&, this]{
                     remove(m_address, m_size);
                     editor->closePopup();
@@ -510,14 +510,14 @@ namespace hex::plugin::builtin {
         void draw(ViewHexEditor *editor) override {
             ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.edit.fill"_lang);
 
-            ImGuiExt::InputHexadecimal("hex.builtin.common.address"_lang, &m_address);
-            ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &m_size);
+            ImGuiExt::InputHexadecimal("hex.ui.common.address"_lang, &m_address);
+            ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size);
 
             ImGui::Separator();
 
-            ImGuiExt::InputTextIcon("hex.builtin.common.bytes"_lang, ICON_VS_SYMBOL_NAMESPACE, m_input);
+            ImGuiExt::InputTextIcon("hex.ui.common.bytes"_lang, ICON_VS_SYMBOL_NAMESPACE, m_input);
 
-            ImGuiExt::ConfirmButtons("hex.builtin.common.set"_lang, "hex.builtin.common.cancel"_lang,
+            ImGuiExt::ConfirmButtons("hex.ui.common.set"_lang, "hex.ui.common.cancel"_lang,
             [&, this] {
                 fill(m_address, m_size, m_input);
                 editor->closePopup();
@@ -640,6 +640,9 @@ namespace hex::plugin::builtin {
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
         EventHighlightingChanged::unsubscribe(this);
+        EventSettingsChanged::unsubscribe(this);
+
+        ContentRegistry::Settings::write("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
     }
 
     void ViewHexEditor::drawPopup() {
@@ -1037,6 +1040,14 @@ namespace hex::plugin::builtin {
                 return true;
             }
         });
+
+        m_hexEditor.setBytesPerRow(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow()));
+        EventSettingsChanged::subscribe(this, [this] {
+            m_hexEditor.setSelectionColor(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080));
+            m_hexEditor.enableSyncScrolling(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", false));
+            m_hexEditor.setByteCellPadding(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0));
+            m_hexEditor.setCharacterCellPadding(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", 0));
+        });
     }
 
     void ViewHexEditor::registerMenuItems() {
@@ -1079,7 +1090,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
+                                                    ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
                                                         TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);
@@ -1280,13 +1291,13 @@ namespace hex::plugin::builtin {
                                                         return (value >= provider->getBaseAddress()) && (value < (provider->getBaseAddress() + provider->getActualSize()));
                                                     };
 
-                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", littleEndianValue).c_str(), "hex.builtin.common.little_endian"_lang, false, canJumpTo(littleEndianValue))) {
+                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", littleEndianValue).c_str(), "hex.ui.common.little_endian"_lang, false, canJumpTo(littleEndianValue))) {
                                                         if (value < provider->getBaseAddress() + provider->getActualSize()) {
                                                             ImHexApi::HexEditor::setSelection(littleEndianValue, 1);
                                                         }
                                                     }
 
-                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", bigEndianValue).c_str(), "hex.builtin.common.big_endian"_lang, false, canJumpTo(bigEndianValue))) {
+                                                    if (ImGui::MenuItem(hex::format("0x{:08X}", bigEndianValue).c_str(), "hex.ui.common.big_endian"_lang, false, canJumpTo(bigEndianValue))) {
                                                         if (value < provider->getBaseAddress() + provider->getActualSize()) {
                                                             ImHexApi::HexEditor::setSelection(bigEndianValue, 1);
                                                         }

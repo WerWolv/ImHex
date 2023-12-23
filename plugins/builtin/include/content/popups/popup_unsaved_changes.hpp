@@ -12,7 +12,7 @@ namespace hex::plugin::builtin {
     class PopupUnsavedChanges : public Popup<PopupUnsavedChanges> {
     public:
         PopupUnsavedChanges(std::string message, std::function<void()> yesFunction, std::function<void()> noFunction)
-                : hex::Popup<PopupUnsavedChanges>("hex.builtin.common.question", false),
+                : hex::Popup<PopupUnsavedChanges>("hex.ui.common.question", false),
                   m_message(std::move(message)),
                   m_yesFunction(std::move(yesFunction)), m_noFunction(std::move(noFunction)) { }
 
@@ -34,13 +34,13 @@ namespace hex::plugin::builtin {
 
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.builtin.common.yes"_lang, ImVec2(width / 3, 0))) {
+            if (ImGui::Button("hex.ui.common.yes"_lang, ImVec2(width / 3, 0))) {
                 m_yesFunction();
                 this->close();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            if (ImGui::Button("hex.ui.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 m_noFunction();
                 this->close();
             }

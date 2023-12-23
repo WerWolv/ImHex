@@ -1,0 +1,15 @@
+{
+    "code": "de-DE",
+    "language": "German",
+    "country": "Germany",
+    "fallback": false,
+    "translations": {
+        "hex.visualizers.pl_visualizer.3d.rotation": "Rotation",
+        "hex.visualizers.pl_visualizer.3d.scale": "Skala",
+        "hex.visualizers.pl_visualizer.coordinates.latitude": "Breitengrade",
+        "hex.visualizers.pl_visualizer.coordinates.longitude": "Längengrad",
+        "hex.visualizers.pl_visualizer.coordinates.query": "Adresse finden",
+        "hex.visualizers.pl_visualizer.coordinates.querying": "Adresse abfragen...",
+        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "Keine Adresse gefunden"
+    }
+}

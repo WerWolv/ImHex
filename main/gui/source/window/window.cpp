@@ -595,7 +595,7 @@ namespace hex {
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(wolv::util::toUTF8String(filePath).c_str());
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(wolv::io::fs::exists(filePath) ? ICON_VS_CHECK : ICON_VS_CLOSE);
+                        ImGui::TextUnformatted(wolv::io::fs::exists(filePath) ? "Yes" : "No");
                     }
                     ImGui::EndTable();
                 }

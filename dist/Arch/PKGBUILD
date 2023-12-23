@@ -19,7 +19,7 @@ package() {
     install -Dm755 "$srcdir/usr/bin/imhex" "$pkgdir/usr/bin/imhex"
     install -Dm644 "$srcdir/usr/lib/libimhex.so.$pkgver" "$pkgdir/usr/lib/libimhex.so.$pkgver"
 
-    for plugin in "$srcdir/usr/lib/imhex/plugins/"*.hexplug; do
+    for plugin in "$srcdir/usr/lib/imhex/plugins/"*.hexplug*; do
         install -Dm644 "$plugin" "$pkgdir/usr/lib/imhex/plugins/${plugin##*/}"
     done
 

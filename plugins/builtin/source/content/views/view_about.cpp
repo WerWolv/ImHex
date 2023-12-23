@@ -351,29 +351,23 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableHeadersRow();
 
-                ImGuiListClipper clipper;
-                clipper.Begin(plugins.size());
+                for (const auto &plugin : plugins) {
+                    if (plugin.isLibraryPlugin())
+                        continue;
 
-                while (clipper.Step()) {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        const auto &plugin = plugins[i];
-
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormattedColored(
-                            plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight) : ImGui::GetStyleColorVec4(ImGuiCol_Text),
-                            "{}", plugin.getPluginName().c_str()
-                        );
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
-                    }
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormattedColored(
+                        plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight) : ImGui::GetStyleColorVec4(ImGuiCol_Text),
+                        "{}", plugin.getPluginName().c_str()
+                    );
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
                 }
-
-                clipper.End();
 
                 ImGui::EndTable();
             }
@@ -480,7 +474,7 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 // Draw a spinner while the release notes are loading
-                ImGuiExt::TextSpinner("hex.builtin.common.loading"_lang);
+                ImGuiExt::TextSpinner("hex.ui.common.loading"_lang);
             }
         }
 
@@ -597,7 +591,7 @@ namespace hex::plugin::builtin {
 
                     } catch (std::exception &e) {
                         commits.emplace_back(
-                            "hex.builtin.common.error"_lang,
+                            "hex.ui.common.error"_lang,
                             e.what(),
                             "",
                             "",
@@ -607,7 +601,7 @@ namespace hex::plugin::builtin {
                 } else {
                     // An error occurred, display it
                     commits.emplace_back(
-                        "hex.builtin.common.error"_lang,
+                        "hex.ui.common.error"_lang,
                         "HTTP " + std::to_string(response.getStatusCode()),
                         "",
                         "",
@@ -616,7 +610,7 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 // Draw a spinner while the commits are loading
-                ImGuiExt::TextSpinner("hex.builtin.common.loading"_lang);
+                ImGuiExt::TextSpinner("hex.ui.common.loading"_lang);
             }
         }
 

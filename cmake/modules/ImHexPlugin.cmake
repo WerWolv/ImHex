@@ -1,6 +1,6 @@
 macro(add_imhex_plugin)
     # Parse arguments
-    set(options "")
+    set(options LIBRARY_PLUGIN)
     set(oneValueArgs NAME)
     set(multiValueArgs SOURCES INCLUDES LIBRARIES)
     cmake_parse_arguments(IMHEX_PLUGIN "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -12,8 +12,15 @@ macro(add_imhex_plugin)
 
         configure_file(${CMAKE_SOURCE_DIR}/dist/web/plugin-bundle.cpp.in ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp @ONLY)
         target_sources(main PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/plugin-bundle.cpp)
+        set(IMHEX_PLUGIN_SUFFIX ".hexplug")
     else()
-        set(IMHEX_PLUGIN_LIBRARY_TYPE MODULE)
+        if (IMHEX_PLUGIN_LIBRARY_PLUGIN)
+            set(IMHEX_PLUGIN_LIBRARY_TYPE SHARED)
+            set(IMHEX_PLUGIN_SUFFIX ".hexpluglib")
+        else()
+            set(IMHEX_PLUGIN_LIBRARY_TYPE MODULE)
+            set(IMHEX_PLUGIN_SUFFIX ".hexplug")
+        endif()
     endif()
 
     # Define new project for plugin
@@ -24,7 +31,7 @@ macro(add_imhex_plugin)
 
     # Add include directories and link libraries
     target_include_directories(${IMHEX_PLUGIN_NAME} PUBLIC ${IMHEX_PLUGIN_INCLUDES})
-    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${IMHEX_PLUGIN_LIBRARIES} fmt::fmt imgui_all_includes libwolv)
+    target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE libimhex ${IMHEX_PLUGIN_LIBRARIES} ${FMT_LIBRARIES} imgui_all_includes libwolv)
     addIncludesFromLibrary(${IMHEX_PLUGIN_NAME} libpl)
 
     # Add IMHEX_PROJECT_NAME and IMHEX_VERSION define
@@ -43,7 +50,7 @@ macro(add_imhex_plugin)
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
             CXX_STANDARD 23
             PREFIX ""
-            SUFFIX ".hexplug"
+            SUFFIX ${IMHEX_PLUGIN_SUFFIX}
     )
 
     # Setup a romfs for the plugin
