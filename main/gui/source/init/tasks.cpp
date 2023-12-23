@@ -182,7 +182,7 @@ namespace hex::init {
             return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
         };
 
-        // Load the builtin plugin first, so it can initialize everything that's necessary for ImHex to work
+        // Load library plugins first since plugins might depend on them
         for (const auto &plugin : plugins) {
             if (!plugin.isLibraryPlugin()) continue;
 
