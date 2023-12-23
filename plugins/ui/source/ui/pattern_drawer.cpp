@@ -90,9 +90,9 @@ namespace hex::ui {
 
         void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             if (pattern.isPatternLocal()) {
-                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
                 ImGui::TableNextColumn();
-                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
                 ImGui::TableNextColumn();
             } else {
                 ImGuiExt::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
@@ -110,7 +110,7 @@ namespace hex::ui {
             }
             
             if (pattern.isPatternLocal()) {
-                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
             } else {
                 ImGuiExt::TextFormatted("0x{0:08X}", pattern.getOffset());
             }
@@ -118,7 +118,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
 
             if (pattern.isPatternLocal()) {
-                ImGuiExt::TextFormatted("[{}]", "hex.builtin.pattern_drawer.local"_lang);
+                ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
             } else {
                 ImGuiExt::TextFormatted("0x{0:08X}", pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
             }
@@ -273,10 +273,10 @@ namespace hex::ui {
                     m_lastVisualizerError = e.what();
                 }
             } else {
-                ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.invalid_parameter_count"_lang);
+                ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.invalid_parameter_count"_lang);
             }
         } else {
-            ImGui::TextUnformatted("hex.builtin.pattern_drawer.visualizer.unknown"_lang);
+            ImGui::TextUnformatted("hex.ui.pattern_drawer.visualizer.unknown"_lang);
         }
 
         if (!m_lastVisualizerError.empty())
@@ -911,7 +911,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::TableNextColumn();
 
-                ImGui::Selectable(hex::format("... ({})", "hex.builtin.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                ImGui::Selectable(hex::format("... ({})", "hex.ui.pattern_drawer.double_click"_lang).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                     displayEnd += DisplayEndStep;
                 break;
@@ -1032,13 +1032,13 @@ namespace hex::ui {
     
         ImGui::TableSetupScrollFreeze(0, 1);
         ImGui::TableSetupColumn("##favorite",                               ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize | ImGuiTableColumnFlags_NoReorder | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentDisable, ImGui::GetTextLineHeight(), ImGui::GetID("favorite"));
-        ImGui::TableSetupColumn("hex.builtin.pattern_drawer.var_name"_lang, ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
-        ImGui::TableSetupColumn("hex.builtin.pattern_drawer.color"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
-        ImGui::TableSetupColumn("hex.builtin.pattern_drawer.start"_lang,    ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
-        ImGui::TableSetupColumn("hex.builtin.pattern_drawer.end"_lang,      ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("end"));
-        ImGui::TableSetupColumn("hex.builtin.pattern_drawer.size"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
-        ImGui::TableSetupColumn("hex.builtin.pattern_drawer.type"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
-        ImGui::TableSetupColumn("hex.builtin.pattern_drawer.value"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.var_name"_lang, ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_NoHide | ImGuiTableColumnFlags_IndentEnable, 0, ImGui::GetID("name"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.color"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("color"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.start"_lang,    ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("start"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.end"_lang,      ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultSort, 0, ImGui::GetID("end"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
 
         auto sortSpecs = ImGui::TableGetSortSpecs();
 
@@ -1115,15 +1115,15 @@ namespace hex::ui {
         ImGui::SameLine();
 
         ImGuiExt::DimmedIconToggle(ICON_VS_BOOK, &m_showSpecName);
-        ImGuiExt::InfoTooltip("hex.builtin.pattern_drawer.spec_name"_lang);
+        ImGuiExt::InfoTooltip("hex.ui.pattern_drawer.spec_name"_lang);
 
         ImGui::SameLine();
 
-        treeStyleButton(ICON_VS_SYMBOL_KEYWORD, TreeStyle::Default,         "hex.builtin.pattern_drawer.tree_style.tree"_lang);
+        treeStyleButton(ICON_VS_SYMBOL_KEYWORD, TreeStyle::Default,         "hex.ui.pattern_drawer.tree_style.tree"_lang);
         ImGui::SameLine(0, 0);
-        treeStyleButton(ICON_VS_LIST_TREE,      TreeStyle::AutoExpanded,    "hex.builtin.pattern_drawer.tree_style.auto_expanded"_lang);
+        treeStyleButton(ICON_VS_LIST_TREE,      TreeStyle::AutoExpanded,    "hex.ui.pattern_drawer.tree_style.auto_expanded"_lang);
         ImGui::SameLine(0, 0);
-        treeStyleButton(ICON_VS_LIST_FLAT,      TreeStyle::Flattened,       "hex.builtin.pattern_drawer.tree_style.flattened"_lang);
+        treeStyleButton(ICON_VS_LIST_FLAT,      TreeStyle::Flattened,       "hex.ui.pattern_drawer.tree_style.flattened"_lang);
 
         ImGui::SameLine(0, 15_scaled);
 
@@ -1135,7 +1135,7 @@ namespace hex::ui {
         }
         ImGui::EndDisabled();
 
-        ImGuiExt::InfoTooltip("hex.builtin.pattern_drawer.export"_lang);
+        ImGuiExt::InfoTooltip("hex.ui.pattern_drawer.export"_lang);
 
         ImGui::SetNextWindowPos(ImGui::GetWindowPos() + ImVec2(startPos.x, ImGui::GetCursorPosY()));
         if (ImGui::BeginPopup("ExportPatterns")) {
@@ -1165,7 +1165,7 @@ namespace hex::ui {
             m_favoritesUpdated = true;
 
             if (!patterns.empty() && !m_favoritesUpdateTask.isRunning()) {
-                m_favoritesUpdateTask = TaskManager::createTask("hex.builtin.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
+                m_favoritesUpdateTask = TaskManager::createTask("hex.ui.pattern_drawer.updating"_lang, TaskManager::NoProgress, [this, patterns](auto &task) {
                     size_t updatedFavorites = 0;
 
                     for (auto &pattern : patterns) {
@@ -1227,7 +1227,7 @@ namespace hex::ui {
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::PushID(id);
-                    if (ImGui::TreeNodeEx("hex.builtin.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
+                    if (ImGui::TreeNodeEx("hex.ui.pattern_drawer.favorites"_lang, ImGuiTreeNodeFlags_SpanFullWidth)) {
                         for (auto &[path, pattern] : m_favorites) {
                             if (pattern == nullptr)
                                 continue;
@@ -1290,7 +1290,7 @@ namespace hex::ui {
         }
 
         if (m_favoritesUpdateTask.isRunning()) {
-            ImGuiExt::TextOverlay("hex.builtin.pattern_drawer.updating"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2);
+            ImGuiExt::TextOverlay("hex.ui.pattern_drawer.updating"_lang, ImGui::GetWindowPos() + ImGui::GetWindowSize() / 2);
         }
     }
 

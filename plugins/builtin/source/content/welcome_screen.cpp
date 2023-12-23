@@ -126,13 +126,13 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 static bool dontShowAgain = false;
-                if (ImGui::Checkbox("hex.builtin.common.dont_show_again"_lang, &dontShowAgain)) {
+                if (ImGui::Checkbox("hex.ui.common.dont_show_again"_lang, &dontShowAgain)) {
                     ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
                 }
 
-                ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.builtin.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
+                ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.ui.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
 
-                if (ImGui::Button("hex.builtin.common.close"_lang) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                if (ImGui::Button("hex.ui.common.close"_lang) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                     Popup::close();
             }
         };

@@ -14,7 +14,7 @@ namespace hex::ui {
     class PopupFileChooser : public Popup<PopupFileChooser> {
     public:
         PopupFileChooser(const std::vector<std::fs::path> &basePaths, const std::vector<std::fs::path> &files, const std::vector<hex::fs::ItemFilter> &validExtensions, bool multiple, const std::function<void(std::fs::path)> &callback)
-                : hex::Popup<PopupFileChooser>("hex.builtin.common.choose_file"),
+                : hex::Popup<PopupFileChooser>("hex.ui.common.choose_file"),
                   m_indices({ }),
                   m_openCallback(callback),
                   m_validExtensions(validExtensions), m_multiple(multiple) {
@@ -73,7 +73,7 @@ namespace hex::ui {
                 ImGui::EndListBox();
             }
 
-            if (ImGui::Button("hex.builtin.common.open"_lang) || doubleClicked) {
+            if (ImGui::Button("hex.ui.common.open"_lang) || doubleClicked) {
                 for (const auto &index : m_indices)
                     m_openCallback(m_files[index].first);
                 Popup::close();
@@ -81,7 +81,7 @@ namespace hex::ui {
 
             ImGui::SameLine();
 
-            if (ImGui::Button("hex.builtin.common.browse"_lang)) {
+            if (ImGui::Button("hex.ui.common.browse"_lang)) {
                 fs::openFileBrowser(fs::DialogMode::Open, m_validExtensions, [this](const auto &path) {
                     m_openCallback(path);
                     Popup::close();

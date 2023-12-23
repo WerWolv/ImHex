@@ -197,7 +197,7 @@ namespace hex::plugin::builtin {
                 auto format = [this] -> std::string {
                     auto value = m_value * 30;
                     if (value == 0)
-                        return "hex.builtin.common.off"_lang;
+                        return "hex.ui.common.off"_lang;
                     else if (value < 60)
                         return hex::format("hex.builtin.setting.general.auto_backup_time.format.simple"_lang, value);
                     else

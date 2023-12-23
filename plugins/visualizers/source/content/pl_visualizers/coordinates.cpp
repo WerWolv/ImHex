@@ -43,12 +43,12 @@ namespace hex::plugin::visualizers {
         // Draw Longitude / Latitude text below image
         ImGui::PushTextWrapPos(startPos.x + mapSize.x);
         ImGuiExt::TextFormattedWrapped("{}: {:.0f}° {:.0f}' {:.4f}\" {}  |  {}: {:.0f}° {:.0f}' {:.4f}\" {}",
-                             "hex.builtin.pl_visualizer.coordinates.latitude"_lang,
+                             "hex.visualizers.pl_visualizer.coordinates.latitude"_lang,
                              std::floor(std::abs(latitude)),
                              std::floor(std::abs(latitude - std::floor(latitude)) * 60),
                              (std::abs(latitude - std::floor(latitude)) * 60 - std::floor(std::abs(latitude - std::floor(latitude)) * 60)) * 60,
                              latitude >= 0 ? "N" : "S",
-                             "hex.builtin.pl_visualizer.coordinates.longitude"_lang,
+                             "hex.visualizers.pl_visualizer.coordinates.longitude"_lang,
                              std::floor(std::abs(longitude)),
                              std::floor(std::abs(longitude - std::floor(longitude)) * 60),
                              (std::abs(longitude - std::floor(longitude)) * 60 - std::floor(std::abs(longitude - std::floor(longitude)) * 60)) * 60,
@@ -57,10 +57,10 @@ namespace hex::plugin::visualizers {
         ImGui::PopTextWrapPos();
 
         if (addressTask.isRunning()) {
-            ImGuiExt::TextSpinner("hex.builtin.pl_visualizer.coordinates.querying"_lang);
+            ImGuiExt::TextSpinner("hex.visualizers.pl_visualizer.coordinates.querying"_lang);
         } else if (address.empty()) {
-            if (ImGuiExt::DimmedButton("hex.builtin.pl_visualizer.coordinates.query"_lang)) {
-                addressTask = TaskManager::createBackgroundTask("hex.builtin.pl_visualizer.coordinates.querying"_lang, [lat = latitude, lon = longitude](auto &) {
+            if (ImGuiExt::DimmedButton("hex.visualizers.pl_visualizer.coordinates.query"_lang)) {
+                addressTask = TaskManager::createBackgroundTask("hex.visualizers.pl_visualizer.coordinates.querying"_lang, [lat = latitude, lon = longitude](auto &) {
                     constexpr static auto ApiURL = "https://geocode.maps.co/reverse?lat={}&lon={}&format=jsonv2";
 
                     HttpRequest request("GET", hex::format(ApiURL, lat, lon));
@@ -90,7 +90,7 @@ namespace hex::plugin::visualizers {
                                                   jsonAddr["country"].get<std::string>());
                         }
                     } catch (std::exception &) {
-                        address = std::string("hex.builtin.pl_visualizer.coordinates.querying_no_address"_lang);
+                        address = std::string("hex.visualizers.pl_visualizer.coordinates.querying_no_address"_lang);
                     }
                 });
             }

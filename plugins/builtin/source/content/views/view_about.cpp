@@ -474,7 +474,7 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 // Draw a spinner while the release notes are loading
-                ImGuiExt::TextSpinner("hex.builtin.common.loading"_lang);
+                ImGuiExt::TextSpinner("hex.ui.common.loading"_lang);
             }
         }
 
@@ -591,7 +591,7 @@ namespace hex::plugin::builtin {
 
                     } catch (std::exception &e) {
                         commits.emplace_back(
-                            "hex.builtin.common.error"_lang,
+                            "hex.ui.common.error"_lang,
                             e.what(),
                             "",
                             "",
@@ -601,7 +601,7 @@ namespace hex::plugin::builtin {
                 } else {
                     // An error occurred, display it
                     commits.emplace_back(
-                        "hex.builtin.common.error"_lang,
+                        "hex.ui.common.error"_lang,
                         "HTTP " + std::to_string(response.getStatusCode()),
                         "",
                         "",
@@ -610,7 +610,7 @@ namespace hex::plugin::builtin {
                 }
             } else {
                 // Draw a spinner while the commits are loading
-                ImGuiExt::TextSpinner("hex.builtin.common.loading"_lang);
+                ImGuiExt::TextSpinner("hex.ui.common.loading"_lang);
             }
         }
 

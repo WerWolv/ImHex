@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
 
         void importIPSPatch() {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
+                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
                     auto patch = Patches::fromIPSPatch(patchData);
                     if (!patch.has_value()) {
@@ -132,7 +132,7 @@ namespace hex::plugin::builtin {
 
         void importIPS32Patch() {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
+                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
                     auto patch = Patches::fromIPS32Patch(patchData);
                     if (!patch.has_value()) {
@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
 
         void importModifiedFile() {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &task) {
+                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &task) {
                     auto provider = ImHexApi::Provider::get();
                     auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
 
@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
 
         void exportBase64() {
             fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
-                TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [path](auto &) {
+                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &) {
                     wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                     if (!outputFile.isValid()) {
                         TaskManager::doLater([] {
@@ -251,7 +251,7 @@ namespace hex::plugin::builtin {
         }
 
         void exportReport() {
-            TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [](auto &) {
+            TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [](auto &) {
                 std::string data;
 
                 for (const auto &provider : ImHexApi::Provider::getProviders()) {
@@ -295,7 +295,7 @@ namespace hex::plugin::builtin {
                 patches->get().at(0x00454F45) = value;
             }
 
-            TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {
+            TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [patches](auto &) {
                 auto data = patches->toIPSPatch();
 
                 TaskManager::doLater([data] {
@@ -334,7 +334,7 @@ namespace hex::plugin::builtin {
                 patches->get().at(0x45454F45) = value;
             }
 
-            TaskManager::createTask("hex.builtin.common.processing", TaskManager::NoProgress, [patches](auto &) {
+            TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [patches](auto &) {
                 auto data = patches->toIPS32Patch();
 
                 TaskManager::doLater([data] {

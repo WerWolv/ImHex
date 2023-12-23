@@ -37,7 +37,7 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             ImGui::BeginDisabled(!settingsValid);
-            if (ImGui::Button("hex.builtin.common.open"_lang)) {
+            if (ImGui::Button("hex.ui.common.open"_lang)) {
                 if (provider->open()) {
                     EventProviderOpened::post(provider);
 
@@ -60,7 +60,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
+            if (ImGui::Button("hex.ui.common.cancel"_lang)) {
                 ImGui::CloseCurrentPopup();
                 this->getWindowOpenState() = false;
                 TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });

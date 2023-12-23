@@ -27,13 +27,13 @@ namespace hex::plugin::yara {
 
     using namespace wolv::literals;
 
-    ViewYara::ViewYara() : View::Window("hex.builtin.view.yara.name") {
+    ViewYara::ViewYara() : View::Window("hex.yara_rules.view.yara.name") {
         yr_initialize();
 
         ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    ui::PopupInfo::open("hex.builtin.view.yara.rule_added"_lang);
+                    ui::PopupInfo::open("hex.yara_rules.view.yara.rule_added"_lang);
                     return true;
                 }
             }
@@ -99,7 +99,7 @@ namespace hex::plugin::yara {
     }
 
     void ViewYara::drawContent() {
-        ImGuiExt::Header("hex.builtin.view.yara.header.rules"_lang, true);
+        ImGuiExt::Header("hex.yara_rules.view.yara.header.rules"_lang, true);
 
         if (ImGui::BeginListBox("##rules", ImVec2(-FLT_MIN, ImGui::GetTextLineHeightWithSpacing() * 5))) {
             for (u32 i = 0; i < m_rules->size(); i++) {
@@ -139,15 +139,15 @@ namespace hex::plugin::yara {
         }
 
         ImGui::NewLine();
-        if (ImGui::Button("hex.builtin.view.yara.match"_lang)) this->applyRules();
+        if (ImGui::Button("hex.yara_rules.view.yara.match"_lang)) this->applyRules();
         ImGui::SameLine();
 
         if (m_matcherTask.isRunning()) {
             ImGui::SameLine();
-            ImGuiExt::TextSpinner("hex.builtin.view.yara.matching"_lang);
+            ImGuiExt::TextSpinner("hex.yara_rules.view.yara.matching"_lang);
         }
 
-        ImGuiExt::Header("hex.builtin.view.yara.header.matches"_lang);
+        ImGuiExt::Header("hex.yara_rules.view.yara.header.matches"_lang);
 
         auto matchesTableSize = ImGui::GetContentRegionAvail();
         matchesTableSize.y *= 3.75 / 5.0;
@@ -155,10 +155,10 @@ namespace hex::plugin::yara {
 
         if (ImGui::BeginTable("matches", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, matchesTableSize)) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.view.yara.matches.identifier"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("identifier"));
-            ImGui::TableSetupColumn("hex.builtin.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
-            ImGui::TableSetupColumn("hex.builtin.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
-            ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
+            ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.identifier"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("identifier"));
+            ImGui::TableSetupColumn("hex.yara_rules.view.yara.matches.variable"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("variable"));
+            ImGui::TableSetupColumn("hex.ui.common.address"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("address"));
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
 
             ImGui::TableHeadersRow();
 
@@ -214,7 +214,7 @@ namespace hex::plugin::yara {
                             ImGuiExt::TextFormatted("0x{0:X}", size);
                         } else {
                             ImGui::TableNextColumn();
-                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.builtin.view.yara.whole_data"_lang);
+                            ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{}", "hex.yara_rules.view.yara.whole_data"_lang);
                             ImGui::TableNextColumn();
                             ImGui::TextUnformatted("");
                         }
@@ -257,7 +257,7 @@ namespace hex::plugin::yara {
     void ViewYara::applyRules() {
         this->clearResult();
 
-        m_matcherTask = TaskManager::createTask("hex.builtin.view.yara.matching", 0, [this](auto &task) {
+        m_matcherTask = TaskManager::createTask("hex.yara_rules.view.yara.matching", 0, [this](auto &task) {
             if (!ImHexApi::Provider::isValid()) return;
 
             struct ResultContext {
@@ -310,7 +310,7 @@ namespace hex::plugin::yara {
                     TaskManager::doLater([this, errorMessage = wolv::util::trim(errorMessage)] {
                         this->clearResult();
 
-                        m_consoleMessages.push_back(hex::format("hex.builtin.view.yara.error"_lang, errorMessage));
+                        m_consoleMessages.push_back(hex::format("hex.yara_rules.view.yara.error"_lang, errorMessage));
                     });
 
                     return;

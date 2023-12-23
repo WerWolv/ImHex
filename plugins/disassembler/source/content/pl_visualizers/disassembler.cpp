@@ -46,9 +46,9 @@ namespace hex::plugin::disasm {
 
         if (ImGui::BeginTable("##disassembly", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, scaled(ImVec2(0, 300)))) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.common.address"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.bytes"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.instruction"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.address"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.bytes"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.instruction"_lang);
             ImGui::TableHeadersRow();
 
             for (auto &entry : disassembly) {

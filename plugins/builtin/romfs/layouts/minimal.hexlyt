@@ -55,7 +55,7 @@ Pos=-1889,-120
 Size=510,420
 Collapsed=0
 
-[Window][###hex.builtin.view.yara.name]
+[Window][###hex.yara_rules.view.yara.name]
 Pos=720,38
 Size=560,660
 Collapsed=0
@@ -127,7 +127,7 @@ Pos=419,-124
 Size=652,660
 Collapsed=0
 
-[Window][###hex.builtin.view.disassembler.name]
+[Window][###hex.disassembler.view.disassembler.name]
 Pos=1004,-204
 Size=1336,1320
 Collapsed=0
@@ -151,7 +151,7 @@ hex.builtin.view.constants.name=0
 hex.builtin.view.data_inspector.name=0
 hex.builtin.view.data_processor.name=0
 hex.builtin.view.diff.name=0
-hex.builtin.view.disassembler.name=0
+hex.disassembler.view.disassembler.name=0
 hex.builtin.view.find.name=0
 hex.builtin.view.hashes.name=0
 hex.builtin.view.help.about.name=0
@@ -167,7 +167,7 @@ hex.builtin.view.settings.name=0
 hex.builtin.view.store.name=0
 hex.builtin.view.theme_manager.name=0
 hex.builtin.view.tools.name=0
-hex.builtin.view.yara.name=0
+hex.yara_rules.view.yara.name=0
 hex.windows.view.tty_console.name=0
 hex.builtin.tools.demangler=0
 hex.builtin.tools.ascii_table=0

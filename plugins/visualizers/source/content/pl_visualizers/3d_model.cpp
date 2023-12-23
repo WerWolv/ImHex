@@ -515,15 +515,15 @@ namespace hex::plugin::visualizers {
                 }
 
                 if (ImGui::BeginPopup("LightSettings")) {
-                    if (ImGui::DragFloat3("hex.builtin.pl_visualizer.3d.light_position"_lang, s_lightPosition.data(), 0.05F)) {
+                    if (ImGui::DragFloat3("hex.visualizers.pl_visualizer.3d.light_position"_lang, s_lightPosition.data(), 0.05F)) {
                         s_shouldUpdateLightSource = true;
                     }
 
-                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.ambient_brightness"_lang,   &s_lightBrightness.data()[0], 0, 2);
-                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.diffuse_brightness"_lang,   &s_lightBrightness.data()[1], 0, 2);
-                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.specular_brightness"_lang,  &s_lightBrightness.data()[2], 0, 2);
-                    ImGui::SliderFloat("hex.builtin.pl_visualizer.3d.object_reflectiveness"_lang, &s_lightBrightness.data()[3], 0, 64);
-                    if (ImGui::ColorEdit3("hex.builtin.pl_visualizer.3d.light_color"_lang, s_lightColor.data()))
+                    ImGui::SliderFloat("hex.visualizers.pl_visualizer.3d.ambient_brightness"_lang,   &s_lightBrightness.data()[0], 0, 2);
+                    ImGui::SliderFloat("hex.visualizers.pl_visualizer.3d.diffuse_brightness"_lang,   &s_lightBrightness.data()[1], 0, 2);
+                    ImGui::SliderFloat("hex.visualizers.pl_visualizer.3d.specular_brightness"_lang,  &s_lightBrightness.data()[2], 0, 2);
+                    ImGui::SliderFloat("hex.visualizers.pl_visualizer.3d.object_reflectiveness"_lang, &s_lightBrightness.data()[3], 0, 64);
+                    if (ImGui::ColorEdit3("hex.visualizers.pl_visualizer.3d.light_color"_lang, s_lightColor.data()))
                         s_shouldUpdateLightSource = true;
 
                     ImGui::EndPopup();
@@ -562,15 +562,15 @@ namespace hex::plugin::visualizers {
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::SameLine();
 
-            if (ImGuiExt::DimmedButton("hex.builtin.common.reset"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
+            if (ImGuiExt::DimmedButton("hex.ui.common.reset"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                 s_translation      = { {  0.0F, 0.0F, -3.0F } };
                 s_rotation         = { {  0.0F, 0.0F,  0.0F } };
                 s_scaling            = 1.0F;
             }
 
             // Draw more settings
-            if (ImGui::CollapsingHeader("hex.builtin.pl_visualizer.3d.more_settings"_lang)) {
-                if (ImGuiExt::InputFilePicker("hex.builtin.pl_visualizer.3d.texture_file"_lang, s_texturePath, {}))
+            if (ImGui::CollapsingHeader("hex.visualizers.pl_visualizer.3d.more_settings"_lang)) {
+                if (ImGuiExt::InputFilePicker("hex.visualizers.pl_visualizer.3d.texture_file"_lang, s_texturePath, {}))
                     s_shouldUpdateTexture = true;
             }
         }

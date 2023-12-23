@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                 ImGui::BeginDisabled(m_analyzerTask.isRunning());
-                ImGuiExt::BeginSubWindow("hex.builtin.common.settings"_lang);
+                ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang);
                 {
                     if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedSame, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                         ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);

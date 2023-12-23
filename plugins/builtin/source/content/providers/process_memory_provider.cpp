@@ -252,9 +252,9 @@ namespace hex::plugin::builtin {
         #endif
 
         if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, availableY))) {
-            ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.name"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.region"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.name"_lang);
             ImGui::TableSetupScrollFreeze(0, 1);
 
             ImGui::TableHeadersRow();

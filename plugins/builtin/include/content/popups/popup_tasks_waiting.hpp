@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
             ImGuiExt::TextSpinner("");
             ImGui::NewLine();
             ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 150_scaled) / 2);
-            if (ImGui::ButtonEx("hex.builtin.common.cancel"_lang, ImVec2(150, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
+            if (ImGui::ButtonEx("hex.ui.common.cancel"_lang, ImVec2(150, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
                 ImGui::CloseCurrentPopup();
 
             if (TaskManager::getRunningTaskCount() == 0 && TaskManager::getRunningBackgroundTaskCount() == 0) {

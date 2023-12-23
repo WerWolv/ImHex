@@ -182,6 +182,16 @@ namespace hex::init {
             return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
         };
 
+        // Load the builtin plugin first, so it can initialize everything that's necessary for ImHex to work
+        for (const auto &plugin : plugins) {
+            if (!plugin.isLibraryPlugin()) continue;
+
+            // Initialize the plugin
+            if (!plugin.initializePlugin()) {
+                log::error("Failed to initialize library plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
+            }
+        }
+
         u32 builtinPlugins = 0;
         u32 loadErrors     = 0;
 

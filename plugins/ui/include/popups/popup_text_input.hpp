@@ -37,13 +37,13 @@ namespace hex::ui {
 
             auto width = ImGui::GetWindowWidth();
             ImGui::SetCursorPosX(width / 9);
-            if (ImGui::Button("hex.builtin.common.okay"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter))) {
+            if (ImGui::Button("hex.ui.common.okay"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter))) {
                 m_function(m_input);
                 this->close();
             }
             ImGui::SameLine();
             ImGui::SetCursorPosX(width / 9 * 5);
-            if (ImGui::Button("hex.builtin.common.cancel"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+            if (ImGui::Button("hex.ui.common.cancel"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
                 this->close();
             }
 

@@ -6,7 +6,7 @@ add_imhex_plugin(
     NAME
         ui
     SOURCES
-        source/plugin_ui.cpp
+        source/library_ui.cpp
 
         source/ui/hex_editor.cpp
         source/ui/pattern_drawer.cpp

@@ -852,7 +852,7 @@ namespace hex::plugin::builtin {
             int nodeId;
             if (ImNodes::IsNodeHovered(&nodeId) && workspace.currNodeError.has_value() && workspace.currNodeError->node->getId() == nodeId) {
                 ImGui::BeginTooltip();
-                ImGui::TextUnformatted("hex.builtin.common.error"_lang);
+                ImGui::TextUnformatted("hex.ui.common.error"_lang);
                 ImGui::Separator();
                 ImGui::TextUnformatted(workspace.currNodeError->message.c_str());
                 ImGui::EndTooltip();

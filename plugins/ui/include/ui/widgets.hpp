@@ -17,13 +17,13 @@ namespace hex::ui {
 
     inline void regionSelectionPicker(Region *region, prv::Provider *provider, RegionType *type, bool showHeader = true, bool firstEntry = false) {
         if (showHeader)
-            ImGuiExt::Header("hex.builtin.common.range"_lang, firstEntry);
+            ImGuiExt::Header("hex.ui.common.range"_lang, firstEntry);
 
-        if (ImGui::RadioButton("hex.builtin.common.range.entire_data"_lang, *type == RegionType::EntireData))
+        if (ImGui::RadioButton("hex.ui.common.range.entire_data"_lang, *type == RegionType::EntireData))
             *type = RegionType::EntireData;
-        if (ImGui::RadioButton("hex.builtin.common.range.selection"_lang, *type == RegionType::Selection))
+        if (ImGui::RadioButton("hex.ui.common.range.selection"_lang, *type == RegionType::Selection))
             *type = RegionType::Selection;
-        if (ImGui::RadioButton("hex.builtin.common.region"_lang, *type == RegionType::Region))
+        if (ImGui::RadioButton("hex.ui.common.region"_lang, *type == RegionType::Region))
             *type = RegionType::Region;
 
         switch (*type) {

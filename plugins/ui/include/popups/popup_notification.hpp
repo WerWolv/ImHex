@@ -23,7 +23,7 @@ namespace hex::ui {
                 ImGuiExt::TextFormattedWrapped("{}", m_message.c_str());
                 ImGui::NewLine();
                 ImGui::Separator();
-                if (ImGui::Button("hex.builtin.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
+                if (ImGui::Button("hex.ui.common.okay"_lang) || ImGui::IsKeyDown(ImGuiKey_Escape))
                     m_function();
 
                 ImGui::SetWindowPos((ImHexApi::System::getMainWindowSize() - ImGui::GetWindowSize()) / 2, ImGuiCond_Appearing);
@@ -54,7 +54,7 @@ namespace hex::ui {
     class PopupInfo : public impl::PopupNotification<PopupInfo> {
     public:
         explicit PopupInfo(std::string message)
-        : PopupNotification("hex.builtin.common.info", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.info", std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -62,7 +62,7 @@ namespace hex::ui {
     class PopupWarning : public impl::PopupNotification<PopupWarning> {
     public:
         explicit PopupWarning(std::string message)
-        : PopupNotification("hex.builtin.common.warning", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.warning", std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -70,7 +70,7 @@ namespace hex::ui {
     class PopupError : public impl::PopupNotification<PopupError> {
     public:
         explicit PopupError(std::string message)
-        : PopupNotification("hex.builtin.common.error", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.error", std::move(message), [this] {
             Popup::close();
         }) { }
     };
@@ -78,7 +78,7 @@ namespace hex::ui {
     class PopupFatal : public impl::PopupNotification<PopupFatal> {
     public:
         explicit PopupFatal(std::string message)
-        : PopupNotification("hex.builtin.common.fatal", std::move(message), [this] {
+        : PopupNotification("hex.ui.common.fatal", std::move(message), [this] {
             ImHexApi::System::closeImHex();
             Popup::close();
         }) { }

@@ -36,6 +36,7 @@ namespace hex {
         log::info("Loaded plugin '{}'", wolv::util::toUTF8String(path.filename()));
 
         m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
+        m_functions.initializeLibraryFunction    = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializeLibrary");
         m_functions.getPluginNameFunction        = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
         m_functions.getPluginAuthorFunction      = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
         m_functions.getPluginDescriptionFunction = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
@@ -76,6 +77,12 @@ namespace hex {
 
     bool Plugin::initializePlugin() const {
         const auto pluginName = wolv::util::toUTF8String(m_path.filename());
+
+        if (m_functions.initializeLibraryFunction != nullptr) {
+            m_functions.initializeLibraryFunction();
+            log::info("Library plugin '{}' initialized successfully", pluginName);
+            return true;
+        }
 
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != ImHexApi::System::getImHexVersion()) {

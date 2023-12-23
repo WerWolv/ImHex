@@ -62,7 +62,7 @@ namespace hex::plugin::builtin {
 
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}: ", "hex.builtin.common.region"_lang);
+                                ImGuiExt::TextFormatted("{}: ", "hex.ui.common.region"_lang);
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ]", region.getStartAddress(), region.getEndAddress());
 
@@ -663,11 +663,11 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTabBar("SearchMethods")) {
                 const std::array<std::string, 5> StringTypes = {
-                        "hex.builtin.common.encoding.ascii"_lang,
-                        "hex.builtin.common.encoding.utf16le"_lang,
-                        "hex.builtin.common.encoding.utf16be"_lang,
-                        hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16le"_lang),
-                        hex::format("{} + {}", "hex.builtin.common.encoding.ascii"_lang, "hex.builtin.common.encoding.utf16be"_lang)
+                        "hex.ui.common.encoding.ascii"_lang,
+                        "hex.ui.common.encoding.utf16le"_lang,
+                        "hex.ui.common.encoding.utf16be"_lang,
+                        hex::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16le"_lang),
+                        hex::format("{} + {}", "hex.ui.common.encoding.ascii"_lang, "hex.ui.common.encoding.utf16be"_lang)
                 };
 
                 auto &mode = m_searchSettings.mode;
@@ -679,7 +679,7 @@ namespace hex::plugin::builtin {
                     if (settings.minLength < 1)
                         settings.minLength = 1;
 
-                    if (ImGui::BeginCombo("hex.builtin.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
+                    if (ImGui::BeginCombo("hex.ui.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
                         for (size_t i = 0; i < StringTypes.size(); i++) {
                             auto type = static_cast<SearchSettings::StringType>(i);
 
@@ -711,9 +711,9 @@ namespace hex::plugin::builtin {
 
                     mode = SearchSettings::Mode::Sequence;
 
-                    ImGuiExt::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_KEY, settings.sequence);
+                    ImGuiExt::InputTextIcon("hex.ui.common.value"_lang, ICON_VS_SYMBOL_KEY, settings.sequence);
 
-                    if (ImGui::BeginCombo("hex.builtin.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
+                    if (ImGui::BeginCombo("hex.ui.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
                         for (size_t i = 0; i < StringTypes.size() - 2; i++) {
                             auto type = static_cast<SearchSettings::StringType>(i);
 
@@ -738,7 +738,7 @@ namespace hex::plugin::builtin {
                     if (settings.minLength < 1)
                         settings.minLength = 1;
 
-                    if (ImGui::BeginCombo("hex.builtin.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
+                    if (ImGui::BeginCombo("hex.ui.common.type"_lang, StringTypes[std::to_underlying(settings.type)].c_str())) {
                         for (size_t i = 0; i < StringTypes.size(); i++) {
                             auto type = static_cast<SearchSettings::StringType>(i);
 
@@ -794,7 +794,7 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::InputTextIcon("hex.builtin.view.find.value.min"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) edited = true;
                         if (ImGuiExt::InputTextIcon("hex.builtin.view.find.value.max"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMax)) edited = true;
                     } else {
-                        if (ImGuiExt::InputTextIcon("hex.builtin.common.value"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) {
+                        if (ImGuiExt::InputTextIcon("hex.ui.common.value"_lang, ICON_VS_SYMBOL_NUMERIC, settings.inputMin)) {
                             edited = true;
                             settings.inputMax = settings.inputMin;
                         }
@@ -810,19 +810,19 @@ namespace hex::plugin::builtin {
                     ImGui::NewLine();
 
                     const std::array<std::string, 10> InputTypes = {
-                            "hex.builtin.common.type.u8"_lang,
-                            "hex.builtin.common.type.u16"_lang,
-                            "hex.builtin.common.type.u32"_lang,
-                            "hex.builtin.common.type.u64"_lang,
-                            "hex.builtin.common.type.i8"_lang,
-                            "hex.builtin.common.type.i16"_lang,
-                            "hex.builtin.common.type.i32"_lang,
-                            "hex.builtin.common.type.i64"_lang,
-                            "hex.builtin.common.type.f32"_lang,
-                            "hex.builtin.common.type.f64"_lang
+                            "hex.ui.common.type.u8"_lang,
+                            "hex.ui.common.type.u16"_lang,
+                            "hex.ui.common.type.u32"_lang,
+                            "hex.ui.common.type.u64"_lang,
+                            "hex.ui.common.type.i8"_lang,
+                            "hex.ui.common.type.i16"_lang,
+                            "hex.ui.common.type.i32"_lang,
+                            "hex.ui.common.type.i64"_lang,
+                            "hex.ui.common.type.f32"_lang,
+                            "hex.ui.common.type.f64"_lang
                     };
 
-                    if (ImGui::BeginCombo("hex.builtin.common.type"_lang, InputTypes[std::to_underlying(settings.type)].c_str())) {
+                    if (ImGui::BeginCombo("hex.ui.common.type"_lang, InputTypes[std::to_underlying(settings.type)].c_str())) {
                         for (size_t i = 0; i < InputTypes.size(); i++) {
                             auto type = static_cast<SearchSettings::Value::Type>(i);
 
@@ -843,8 +843,8 @@ namespace hex::plugin::builtin {
                             }
                         }();
 
-                        std::array options = { "hex.builtin.common.little"_lang, "hex.builtin.common.big"_lang };
-                        if (ImGui::SliderInt("hex.builtin.common.endian"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
+                        std::array options = { "hex.ui.common.little"_lang, "hex.ui.common.big"_lang };
+                        if (ImGui::SliderInt("hex.ui.common.endian"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
                             edited = true;
                             switch (selection) {
                                 default:
@@ -932,9 +932,9 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##entries", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Sortable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImMax(ImGui::GetContentRegionAvail(), ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 5)))) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.common.offset"_lang, 0, -1, ImGui::GetID("offset"));
-            ImGui::TableSetupColumn("hex.builtin.common.size"_lang, 0, -1, ImGui::GetID("size"));
-            ImGui::TableSetupColumn("hex.builtin.common.value"_lang, 0, -1, ImGui::GetID("value"));
+            ImGui::TableSetupColumn("hex.ui.common.offset"_lang, 0, -1, ImGui::GetID("offset"));
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang, 0, -1, ImGui::GetID("size"));
+            ImGui::TableSetupColumn("hex.ui.common.value"_lang, 0, -1, ImGui::GetID("value"));
 
             auto sortSpecs = ImGui::TableGetSortSpecs();
 

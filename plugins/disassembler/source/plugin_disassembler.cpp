@@ -18,7 +18,6 @@ namespace hex::plugin::disasm {
 
 }
 
-
 namespace {
 
     void registerViews() {
@@ -32,6 +31,7 @@ namespace {
     }
 
 }
+
 
 IMHEX_PLUGIN_SETUP("Disassembler", "WerWolv", "Disassembler support") {
     hex::log::debug("Using romfs: '{}'", romfs::name());

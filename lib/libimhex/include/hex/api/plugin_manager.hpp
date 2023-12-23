@@ -19,6 +19,7 @@ namespace hex {
 
     struct PluginFunctions {
         using InitializePluginFunc     = void (*)();
+        using InitializeLibraryFunc    = void (*)();
         using GetPluginNameFunc        = const char *(*)();
         using GetPluginAuthorFunc      = const char *(*)();
         using GetPluginDescriptionFunc = const char *(*)();
@@ -28,6 +29,7 @@ namespace hex {
         using GetSubCommandsFunc       = void* (*)();
 
         InitializePluginFunc        initializePluginFunction        = nullptr;
+        InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
         GetPluginNameFunc           getPluginNameFunction           = nullptr;
         GetPluginAuthorFunc         getPluginAuthorFunction         = nullptr;
         GetPluginDescriptionFunc    getPluginDescriptionFunction    = nullptr;
