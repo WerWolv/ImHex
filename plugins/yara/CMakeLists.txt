@@ -13,7 +13,7 @@ endif()
 
 add_imhex_plugin(
     NAME
-        yara
+        yara_rules
     SOURCES
         source/plugin_yara.cpp
 
