@@ -188,6 +188,7 @@ namespace hex::init {
         // Load the builtin plugin first, so it can initialize everything that's necessary for ImHex to work
         for (const auto &plugin : plugins) {
             if (!plugin.isBuiltinPlugin()) continue;
+            if (plugin.isLibraryPlugin()) continue;
 
             if (!shouldLoadPlugin(plugin)) {
                 log::debug("Skipping built-in plugin {}", plugin.getPath().string());
