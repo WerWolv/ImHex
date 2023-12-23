@@ -184,6 +184,17 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
       - Many default polynomials available
     - MD5
     - SHA-1, SHA-224, SHA-256, SHA-384, SHA-512
+    - Adler32
+    - AP
+    - BKDR
+    - Bernstein, Bernstein1
+    - DEK, DJB, ELF, FNV1, FNV1a, JS, PJW, RS, SDBM
+    - OneAtTime, Rotating, ShiftAndXor, SuperFast
+    - Murmur2_32, MurmurHash3_x86_32, MurmurHash3_x86_128, MurmurHash3_x64_128
+    - SipHash64, SipHash128
+    - XXHash32, XXHash64
+    - Tiger, Tiger2
+    - Blake2B, Blake2S
   - Hashing of specific regions of the loaded data
   - Hashing of arbitrary strings
 </details>
