@@ -16,23 +16,24 @@
 
 namespace hex {
 
-    Plugin::Plugin(const std::fs::path &path) : m_path(path) {
-
+    Plugin::Plugin(const std::fs::path &path, bool libraryPlugin) : m_path(path), m_libraryPlugin(libraryPlugin) {
         #if defined(OS_WINDOWS)
             m_handle = uintptr_t(LoadLibraryW(path.c_str()));
 
             if (m_handle == uintptr_t(INVALID_HANDLE_VALUE) || m_handle == 0) {
-                log::error("LoadLibraryW failed: {}!", std::system_category().message(::GetLastError()));
+                log::error("Loading plugin '{}' failed: {} {}!", wolv::util::toUTF8String(path.filename()), ::GetLastError(), std::system_category().message(::GetLastError()));
                 return;
             }
         #else
             m_handle = uintptr_t(dlopen(wolv::util::toUTF8String(path).c_str(), RTLD_LAZY));
 
             if (m_handle == 0) {
-                log::error("dlopen failed: {}!", dlerror());
+                log::error("Loading plugin '{}' failed: {}!", wolv::util::toUTF8String(path.filename()), dlerror());
                 return;
             }
         #endif
+
+        log::info("Loaded plugin '{}'", wolv::util::toUTF8String(path.filename()));
 
         m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
         m_functions.getPluginNameFunction        = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
@@ -44,15 +45,18 @@ namespace hex {
         m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
     }
 
-    Plugin::Plugin(hex::PluginFunctions functions) {
-        m_handle = 0;
-        m_functions = functions;
+    Plugin::Plugin(hex::PluginFunctions functions, bool libraryPlugin) {
+        m_handle        = 0;
+        m_functions     = functions;
+        m_libraryPlugin = libraryPlugin;
     }
 
 
     Plugin::Plugin(Plugin &&other) noexcept {
         m_handle = other.m_handle;
         other.m_handle = 0;
+
+        m_libraryPlugin = other.m_libraryPlugin;
 
         m_path   = std::move(other.m_path);
 
@@ -107,8 +111,12 @@ namespace hex {
     std::string Plugin::getPluginName() const {
         if (m_functions.getPluginNameFunction != nullptr)
             return m_functions.getPluginNameFunction();
-        else
-            return hex::format("Unknown Plugin @ 0x{0:016X}", m_handle);
+        else {
+            if (this->isLibraryPlugin())
+                return "Library Plugin";
+            else
+                return hex::format("Unknown Plugin @ 0x{0:016X}", m_handle);
+        }
     }
 
     std::string Plugin::getPluginAuthor() const {
@@ -131,6 +139,7 @@ namespace hex {
         else
             return "";
     }
+
 
     void Plugin::setImGuiContext(ImGuiContext *ctx) const {
         if (m_functions.setImGuiContextFunction != nullptr)
@@ -175,9 +184,16 @@ namespace hex {
 
         getPluginPaths().push_back(pluginFolder);
 
+        // Load library plugins first
+        for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
+            if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexpluglib")
+                getPlugins().emplace_back(pluginPath.path(), true);
+        }
+
+        // Load regular plugins afterwards
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-                getPlugins().emplace_back(pluginPath.path());
+                getPlugins().emplace_back(pluginPath.path(), false);
         }
 
         if (getPlugins().empty())
@@ -200,7 +216,7 @@ namespace hex {
     }
 
     void PluginManager::addPlugin(hex::PluginFunctions functions) {
-        getPlugins().emplace_back(functions);
+        getPlugins().emplace_back(functions, false);
     }
 
     std::vector<Plugin> &PluginManager::getPlugins() {

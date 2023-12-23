@@ -7,7 +7,7 @@
 #include <fonts/codicons_font.h>
 #include <hex/helpers/utils.hpp>
 
-namespace hex::plugin::builtin::ui {
+namespace hex::ui {
 
     namespace impl {
 

@@ -6,7 +6,7 @@
 namespace pl::ptrn { class Pattern; }
 namespace hex::prv { class Provider; }
 
-namespace hex::plugin::builtin::ui {
+namespace hex::ui {
 
 
     enum class RegionType : int {

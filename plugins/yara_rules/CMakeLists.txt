@@ -22,6 +22,7 @@ add_imhex_plugin(
         include
         ${YARA_INCLUDE_DIRS}
     LIBRARIES
+        ui
         ${JTHREAD_LIBRARIES}
         ${YARA_LIBRARIES}
 )

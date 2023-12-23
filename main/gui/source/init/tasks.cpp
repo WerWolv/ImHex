@@ -209,6 +209,7 @@ namespace hex::init {
         // Load all other plugins
         for (const auto &plugin : plugins) {
             if (plugin.isBuiltinPlugin()) continue;
+            if (plugin.isLibraryPlugin()) continue;
 
             if (!shouldLoadPlugin(plugin)) {
                 log::debug("Skipping plugin {}", plugin.getPath().string());

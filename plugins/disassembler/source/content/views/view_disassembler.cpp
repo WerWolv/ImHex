@@ -99,7 +99,7 @@ namespace hex::plugin::disasm {
             ImGuiExt::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
 
             // Draw region selection picker
-            //ui::regionSelectionPicker(&m_codeRegion, provider, &m_range);
+            ui::regionSelectionPicker(&m_codeRegion, provider, &m_range);
 
             // Draw settings
             {

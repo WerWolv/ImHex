@@ -29,4 +29,5 @@ add_imhex_plugin(
         include
     LIBRARIES
         ${CAPSTONE_LIBRARIES}
+        ui
 )

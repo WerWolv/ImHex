@@ -112,16 +112,13 @@ add_imhex_plugin(
         source/content/views/view_tutorials.cpp
 
         source/content/helpers/notification.cpp
-
-        source/ui/hex_editor.cpp
-        source/ui/pattern_drawer.cpp
-
     INCLUDES
         include
 
     LIBRARIES
+        ui
         ${JTHREAD_LIBRARIES}
-        plcli libpl-gen
+        plcli
 )
 
 if (WIN32)

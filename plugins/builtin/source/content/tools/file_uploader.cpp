@@ -81,11 +81,11 @@ namespace hex::plugin::builtin {
                         json.at("data").at("file").at("metadata").at("size").at("readable")
                     });
                 } catch (...) {
-                    PopupError::open("hex.builtin.tools.file_uploader.invalid_response"_lang);
+                    ui::PopupError::open("hex.builtin.tools.file_uploader.invalid_response"_lang);
                 }
             } else if (response.getStatusCode() == 0) {
                 // Canceled by user, no action needed
-            } else PopupError::open(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
+            } else ui::PopupError::open(hex::format("hex.builtin.tools.file_uploader.error"_lang, response.getStatusCode()));
 
             uploadProcess = {};
             currFile.clear();

@@ -9,7 +9,7 @@
 #include "content/providers/memory_file_provider.hpp"
 #include "content/providers/view_provider.hpp"
 #include <content/providers/process_memory_provider.hpp>
-#include "content/popups/popup_notification.hpp"
+#include <popups/popup_notification.hpp>
 #include "content/helpers/notification.hpp"
 
 #include <hex/api/project_file_manager.hpp>

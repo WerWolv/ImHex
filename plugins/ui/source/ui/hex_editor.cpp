@@ -7,7 +7,7 @@
 #include <hex/helpers/utils.hpp>
 #include <wolv/utils/guards.hpp>
 
-namespace hex::plugin::builtin::ui {
+namespace hex::ui {
 
     /* Data Visualizer */
 

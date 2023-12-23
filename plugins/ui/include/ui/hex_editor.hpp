@@ -9,7 +9,7 @@
 #include <imgui.h>
 #include <hex/ui/view.hpp>
 
-namespace hex::plugin::builtin::ui {
+namespace hex::ui {
 
     class HexEditor {
     public:

@@ -9,7 +9,7 @@
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <content/popups/popup_notification.hpp>
+#include <popups/popup_notification.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -113,7 +113,7 @@ namespace hex::plugin::builtin {
                         wolv::io::File output(outputPath, wolv::io::File::Mode::Create);
 
                         if (!output.isValid()) {
-                            PopupError::open("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
+                            ui::PopupError::open("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
                             return;
                         }
 
@@ -126,7 +126,7 @@ namespace hex::plugin::builtin {
 
                             wolv::io::File input(file, wolv::io::File::Mode::Read);
                             if (!input.isValid()) {
-                                PopupError::open(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
+                                ui::PopupError::open(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
                                 return;
                             }
 
@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
                         selectedIndex = 0;
                         outputPath.clear();
 
-                        PopupInfo::open("hex.builtin.tools.file_tools.combiner.success"_lang);
+                        ui::PopupInfo::open("hex.builtin.tools.file_tools.combiner.success"_lang);
                     });
                 }
             }

@@ -351,29 +351,23 @@ namespace hex::plugin::builtin {
 
                 ImGui::TableHeadersRow();
 
-                ImGuiListClipper clipper;
-                clipper.Begin(plugins.size());
+                for (const auto &plugin : plugins) {
+                    if (plugin.isLibraryPlugin())
+                        continue;
 
-                while (clipper.Step()) {
-                    for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        const auto &plugin = plugins[i];
-
-                        ImGui::TableNextRow();
-                        ImGui::TableNextColumn();
-                        ImGuiExt::TextFormattedColored(
-                            plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight) : ImGui::GetStyleColorVec4(ImGuiCol_Text),
-                            "{}", plugin.getPluginName().c_str()
-                        );
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
-                    }
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGuiExt::TextFormattedColored(
+                        plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight) : ImGui::GetStyleColorVec4(ImGuiCol_Text),
+                        "{}", plugin.getPluginName().c_str()
+                    );
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
+                    ImGui::TableNextColumn();
+                    ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
                 }
-
-                clipper.End();
 
                 ImGui::EndTable();
             }

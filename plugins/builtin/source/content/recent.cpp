@@ -15,7 +15,7 @@
 #include <wolv/utils/string.hpp>
 
 #include <content/recent.hpp>
-#include <content/popups/popup_notification.hpp>
+#include <popups/popup_notification.hpp>
 #include <fonts/codicons_font.h>
 
 namespace hex::plugin::builtin::recent {
@@ -224,7 +224,7 @@ namespace hex::plugin::builtin::recent {
             provider->loadSettings(recentEntry.data);
 
             if (!provider->open() || !provider->isAvailable()) {
-                PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                ui::PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                 return;
             }

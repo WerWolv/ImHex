@@ -5,7 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <content/popups/popup_question.hpp>
+#include <popups/popup_question.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -111,7 +111,7 @@ namespace hex::plugin::builtin {
         // If a restart is required, ask the user if they want to restart
         if (!this->getWindowOpenState() && m_triggerPopup) {
             m_triggerPopup = false;
-            PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
+            ui::PopupQuestion::open("hex.builtin.view.settings.restart_question"_lang,
                 ImHexApi::System::restartImHex,
                 [this]{
                     m_restartRequested = false;

@@ -8,7 +8,7 @@
 #include <functional>
 #include <string>
 
-namespace hex::plugin::builtin {
+namespace hex::ui {
 
     namespace impl {
 

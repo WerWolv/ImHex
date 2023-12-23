@@ -12,7 +12,7 @@
 
 struct ImGuiTableSortSpecs;
 
-namespace hex::plugin::builtin::ui {
+namespace hex::ui {
 
     class PatternDrawer : public pl::PatternVisitor {
     public:

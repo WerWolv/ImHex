@@ -7,7 +7,7 @@
 #include <functional>
 #include <string>
 
-namespace hex::plugin::builtin {
+namespace hex::ui {
 
     class PopupQuestion : public Popup<PopupQuestion> {
     public:

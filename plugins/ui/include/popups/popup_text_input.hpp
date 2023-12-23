@@ -10,7 +10,7 @@
 
 #include <fonts/codicons_font.h>
 
-namespace hex::plugin::builtin {
+namespace hex::ui {
 
     class PopupTextInput : public Popup<PopupTextInput> {
     public:

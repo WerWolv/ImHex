@@ -34,7 +34,7 @@
 
 #include <wolv/io/file.hpp>
 
-namespace hex::plugin::builtin::ui {
+namespace hex::ui {
 
     namespace {
 

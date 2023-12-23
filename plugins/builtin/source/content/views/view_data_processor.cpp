@@ -1,5 +1,5 @@
 #include "content/views/view_data_processor.hpp"
-#include "content/popups/popup_notification.hpp"
+#include <popups/popup_notification.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
@@ -1194,7 +1194,7 @@ namespace hex::plugin::builtin {
 
             m_updateNodePositions = true;
         } catch (nlohmann::json::exception &e) {
-            PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
+            ui::PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
         }
     }
 

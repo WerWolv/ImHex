@@ -29,7 +29,7 @@
 
 #include <string>
 #include <random>
-#include <content/popups/popup_question.hpp>
+#include <popups/popup_question.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
@@ -508,7 +508,7 @@ namespace hex::plugin::builtin {
             }
 
             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
-                PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
+                ui::PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
                     []{
                         TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
                     },

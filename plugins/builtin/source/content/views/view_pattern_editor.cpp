@@ -19,8 +19,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
 
-#include <content/popups/popup_file_chooser.hpp>
-#include <content/popups/popup_question.hpp>
+#include <popups/popup_file_chooser.hpp>
+#include <popups/popup_question.hpp>
 
 #include <nlohmann/json.hpp>
 #include <chrono>
@@ -360,7 +360,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
-            PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
+            ui::PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
                 [this] {
                     m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
                 }, [this] {
@@ -1208,7 +1208,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+                                                    ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
                                                                                [this, provider](const std::fs::path &path) {
                                                                                    this->loadPatternFile(path, provider);
                                                                                    AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");

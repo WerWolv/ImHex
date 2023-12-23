@@ -13,7 +13,7 @@
 #include <wolv/math_eval/math_evaluator.hpp>
 
 #include <content/providers/view_provider.hpp>
-#include <content/popups/popup_file_chooser.hpp>
+#include <popups/popup_file_chooser.hpp>
 
 #include <imgui_internal.h>
 #include <content/popups/popup_blocking_task.hpp>
@@ -1079,7 +1079,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
+                                                    ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ {"Thingy Table File", "tbl"} }, false,
                                                     [this](const auto &path) {
                                                         TaskManager::createTask("Loading encoding file", 0, [this, path](auto&) {
                                                             auto encoding = EncodingFile(EncodingFile::Type::Thingy, path);

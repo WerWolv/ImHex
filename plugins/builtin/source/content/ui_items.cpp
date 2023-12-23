@@ -13,7 +13,7 @@
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <content/popups/popup_notification.hpp>
+#include <popups/popup_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
         // Task exception popup
         for (const auto &task : TaskManager::getRunningTasks()) {
             if (task->hadException()) {
-                PopupError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
+                ui::PopupError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
                 task->clearException();
                 break;
             }

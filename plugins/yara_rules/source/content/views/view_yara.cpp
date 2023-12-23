@@ -6,8 +6,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
-//#include <content/popups/popup_notification.hpp>
-//#include <content/popups/popup_file_chooser.hpp>
+#include <popups/popup_notification.hpp>
+#include <popups/popup_file_chooser.hpp>
 
 // <yara/types.h>'s RE type has a zero-sized array, which is not allowed in ISO C++.
 #pragma GCC diagnostic push
@@ -33,7 +33,7 @@ namespace hex::plugin::yara {
         ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    //PopupInfo::open("hex.builtin.view.yara.rule_added"_lang);
+                    ui::PopupInfo::open("hex.builtin.view.yara.rule_added"_lang);
                     return true;
                 }
             }

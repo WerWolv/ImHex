@@ -9,7 +9,7 @@
 #include <functional>
 #include <string>
 
-namespace hex::plugin::builtin {
+namespace hex::ui {
 
     class PopupFileChooser : public Popup<PopupFileChooser> {
     public:
