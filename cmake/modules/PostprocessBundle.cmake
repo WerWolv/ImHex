@@ -35,26 +35,27 @@ message(STATUS "Fixing up application bundle: ${BUNDLE_PATH}")
 
 
 # Make sure to fix up any included ImHex plugin.
-file(GLOB_RECURSE extra_libs "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug*")
+file(GLOB_RECURSE plugins "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug")
+file(GLOB_RECURSE plugin_libs "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexpluglib")
 
 
 # BundleUtilities doesn't support DYLD_FALLBACK_LIBRARY_PATH behavior, which
 # makes it sometimes break on libraries that do weird things with @rpath. Specify
 # equivalent search directories until https://gitlab.kitware.com/cmake/cmake/issues/16625
 # is fixed and in our minimum CMake version.
-set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib" ${EXTRA_BUNDLE_LIBRARY_PATHS})
+set(extra_dirs "/usr/local/lib" "/lib" "/usr/lib" ${EXTRA_BUNDLE_LIBRARY_PATHS} "${BUNDLE_PATH}/Contents/MacOS/plugins")
 message(STATUS "Fixing up application bundle: ${extra_dirs}")
 
 # BundleUtilities is overly verbose, so disable most of its messages
-function(message)
-	if(NOT ARGV MATCHES "^STATUS;")
-		_message(${ARGV})
-	endif()
-endfunction()
+#function(message)
+#	if(NOT ARGV MATCHES "^STATUS;")
+#		_message(${ARGV})
+#	endif()
+#endfunction()
 
 include(BundleUtilities)
 set(BU_CHMOD_BUNDLE_ITEMS ON)
-fixup_bundle("${BUNDLE_PATH}" "${extra_libs}" "${extra_dirs}")
+fixup_bundle("${BUNDLE_PATH}" "${plugins};${plugin_libs}" "${extra_dirs}")
 
 if (CODE_SIGN_CERTIFICATE_ID)
 	# Hack around Apple Silicon signing bugs by copying the real app, signing it and moving it back.
