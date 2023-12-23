@@ -33,3 +33,6 @@
 	path = lib/external/libwolv
 	url = https://github.com/WerWolv/libwolv
 
+[submodule "lib/third_party/HashLibPlus"]
+	path = lib/third_party/HashLibPlus
+	url = https://github.com/WerWolv/HashLibPlus

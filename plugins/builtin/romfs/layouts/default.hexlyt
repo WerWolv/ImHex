@@ -32,7 +32,7 @@ Size=863,1427
 Collapsed=0
 DockId=0x00000004,0
 
-[Window][###hex.builtin.view.hashes.name]
+[Window][###hex.hashes.view.hashes.name]
 Pos=1697,76
 Size=863,1427
 Collapsed=0
@@ -152,7 +152,7 @@ hex.builtin.view.data_processor.name=0
 hex.builtin.view.diff.name=0
 hex.disassembler.view.disassembler.name=0
 hex.builtin.view.find.name=0
-hex.builtin.view.hashes.name=0
+hex.hashes.view.hashes.name=0
 hex.builtin.view.help.about.name=0
 hex.builtin.view.hex_editor.name=1
 hex.builtin.view.information.name=0

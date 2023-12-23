@@ -1,7 +1,6 @@
 #include "content/views/view_hex_editor.hpp"
 #include "content/views/view_pattern_editor.hpp"
 #include "content/views/view_pattern_data.hpp"
-#include "content/views/view_hashes.hpp"
 #include "content/views/view_information.hpp"
 #include "content/views/view_about.hpp"
 #include "content/views/view_tools.hpp"
@@ -29,7 +28,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewPatternEditor>();
         ContentRegistry::Views::add<ViewPatternData>();
         ContentRegistry::Views::add<ViewDataInspector>();
-        ContentRegistry::Views::add<ViewHashes>();
         ContentRegistry::Views::add<ViewInformation>();
         ContentRegistry::Views::add<ViewBookmarks>();
         ContentRegistry::Views::add<ViewPatches>();

@@ -1,5 +1,7 @@
 #include <hex/helpers/utils.hpp>
 
+#include <hex/providers/memory_provider.hpp>
+
 #include <imgui.h>
 
 #include <pl/pattern_language.hpp>
@@ -7,31 +9,28 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <ui/hex_editor.hpp>
-#include <content/providers/memory_file_provider.hpp>
 
 namespace hex::plugin::builtin {
 
     void drawHexVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static ui::HexEditor editor;
-        static std::unique_ptr<MemoryFileProvider> dataProvider;
+        static prv::MemoryProvider dataProvider;
 
         if (shouldReset) {
             auto pattern = arguments[0].toPattern();
             std::vector<u8> data;
 
-            dataProvider = std::make_unique<MemoryFileProvider>();
             try {
                 data = pattern->getBytes();
             } catch (const std::exception &) {
-                dataProvider->resize(0);
+                dataProvider.resize(0);
                 throw;
             }
 
-            dataProvider->resize(data.size());
-            dataProvider->writeRaw(0x00, data.data(), data.size());
-            dataProvider->setReadOnly(true);
+            dataProvider.resize(data.size());
+            dataProvider.writeRaw(0x00, data.data(), data.size());
 
-            editor.setProvider(dataProvider.get());
+            editor.setProvider(&dataProvider);
         }
 
         if (ImGui::BeginChild("##editor", scaled(ImVec2(600, 400)), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {

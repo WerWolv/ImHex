@@ -16,6 +16,8 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 
+#include <hex/providers/memory_provider.hpp>
+
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
 
@@ -588,11 +590,7 @@ namespace hex::plugin::builtin {
                     ImGuiExt::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
                     ImGui::TableNextColumn();
                     if (ImGuiExt::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        auto dataProvider = std::make_shared<MemoryFileProvider>();
-                        dataProvider->resize(section.data.size());
-                        dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
-                        dataProvider->setReadOnly(true);
-
+                        auto dataProvider = std::make_shared<prv::MemoryProvider>(section.data);
                         auto hexEditor = auto(m_sectionHexEditor);
 
                         hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {

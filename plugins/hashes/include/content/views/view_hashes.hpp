@@ -4,7 +4,7 @@
 
 #include <hex/ui/view.hpp>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::hashes {
 
     class ViewHashes : public View::Window {
     public:

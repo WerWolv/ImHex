@@ -178,11 +178,6 @@ namespace hex::plugin::builtin {
                     .setDescription("hex.builtin.achievement.misc.download_from_store.desc")
                     .setIcon(romfs::get("assets/achievements/package.png").span())
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
-
-            AchievementManager::addAchievement<AchievementMisc>("hex.builtin.achievement.misc.create_hash.name")
-                    .setDescription("hex.builtin.achievement.misc.create_hash.desc")
-                    .setIcon(romfs::get("assets/achievements/fortune-cookie.png").span())
-                    .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
         }
 
 

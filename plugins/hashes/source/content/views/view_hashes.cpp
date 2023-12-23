@@ -1,16 +1,15 @@
 #include "content/views/view_hashes.hpp"
 
-#include "content/providers/memory_file_provider.hpp"
-
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/providers/memory_provider.hpp>
 
 #include <hex/ui/popup.hpp>
 #include <hex/helpers/crypto.hpp>
 
 #include <vector>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::hashes {
 
     class PopupTextHash : public Popup<PopupTextHash> {
     public:
@@ -23,12 +22,10 @@ namespace hex::plugin::builtin {
 
             ImGui::PushItemWidth(-1);
             if (ImGui::InputTextMultiline("##input", m_input)) {
-                auto provider = std::make_unique<MemoryFileProvider>();
-                provider->resize(m_input.size());
-                provider->writeRaw(0x00, m_input.data(), m_input.size());
+                prv::MemoryProvider provider({ m_input.begin(), m_input.end() });
 
                 m_hash.reset();
-                auto bytes = m_hash.get(Region { 0x00, provider->getActualSize() }, provider.get());
+                auto bytes = m_hash.get(Region { 0x00, provider.getActualSize() }, &provider);
 
                 m_result = crypt::encode16(bytes);
             }
@@ -57,7 +54,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Hashes::Hash::Function m_hash;
     };
 
-    ViewHashes::ViewHashes() : View::Window("hex.builtin.view.hashes.name") {
+    ViewHashes::ViewHashes() : View::Window("hex.hashes.view.hashes.name") {
         EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
             for (auto &function : m_hashFunctions.get(providerRegion.getProvider()))
                 function.reset();
@@ -77,7 +74,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::TextUnformatted("hex.builtin.view.hashes.name"_lang);
+                        ImGui::TextUnformatted("hex.hashes.view.hashes.name"_lang);
                         ImGui::Separator();
 
                         ImGui::Indent();
@@ -144,7 +141,7 @@ namespace hex::plugin::builtin {
             m_selectedHash = hashes.front().get();
         }
 
-        if (ImGui::BeginCombo("hex.builtin.view.hashes.function"_lang, m_selectedHash != nullptr ? Lang(m_selectedHash->getUnlocalizedName()) : "")) {
+        if (ImGui::BeginCombo("hex.hashes.view.hashes.function"_lang, m_selectedHash != nullptr ? Lang(m_selectedHash->getUnlocalizedName()) : "")) {
 
             for (const auto &hash : hashes) {
                 if (ImGui::Selectable(Lang(hash->getUnlocalizedName()), m_selectedHash == hash.get())) {
@@ -157,7 +154,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_newHashName.empty() && m_selectedHash != nullptr)
-            m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.builtin.view.hashes.hash"_lang));
+            m_newHashName = hex::format("{} {}", Lang(m_selectedHash->getUnlocalizedName()), static_cast<const char *>("hex.hashes.view.hashes.hash"_lang));
 
         if (ImGui::BeginChild("##settings", ImVec2(ImGui::GetContentRegionAvail().x, 200_scaled), true)) {
             if (m_selectedHash != nullptr) {
@@ -166,7 +163,7 @@ namespace hex::plugin::builtin {
 
                 // Check if no elements have been added
                 if (startPos == ImGui::GetCursorPosY()) {
-                    ImGuiExt::TextFormattedCentered("hex.builtin.view.hashes.no_settings"_lang);
+                    ImGuiExt::TextFormattedCentered("hex.hashes.view.hashes.no_settings"_lang);
                 }
             }
         }
@@ -180,18 +177,18 @@ namespace hex::plugin::builtin {
         if (ImGuiExt::IconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
             if (m_selectedHash != nullptr) {
                 m_hashFunctions->push_back(m_selectedHash->create(m_newHashName));
-                AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.create_hash.name");
+                AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.hashes.achievement.misc.create_hash.name");
             }
         }
         ImGui::EndDisabled();
 
         ImGui::SameLine();
-        ImGuiExt::HelpHover("hex.builtin.view.hashes.hover_info"_lang);
+        ImGuiExt::HelpHover("hex.hashes.view.hashes.hover_info"_lang);
 
         if (ImGui::BeginTable("##hashes", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Borders | ImGuiTableFlags_ScrollY)) {
-            ImGui::TableSetupColumn("hex.builtin.view.hashes.table.name"_lang);
-            ImGui::TableSetupColumn("hex.builtin.view.hashes.table.type"_lang);
-            ImGui::TableSetupColumn("hex.builtin.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("hex.hashes.view.hashes.table.name"_lang);
+            ImGui::TableSetupColumn("hex.hashes.view.hashes.table.type"_lang);
+            ImGui::TableSetupColumn("hex.hashes.view.hashes.table.result"_lang, ImGuiTableColumnFlags_WidthStretch);
             ImGui::TableSetupColumn("##buttons", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
 
             ImGui::TableHeadersRow();

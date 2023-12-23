@@ -32,7 +32,6 @@ add_imhex_plugin(
         source/content/welcome_screen.cpp
         source/content/data_visualizers.cpp
         source/content/events.cpp
-        source/content/hashes.cpp
         source/content/global_actions.cpp
         source/content/themes.cpp
         source/content/recent.cpp
@@ -90,7 +89,6 @@ add_imhex_plugin(
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
         source/content/views/view_pattern_data.cpp
-        source/content/views/view_hashes.cpp
         source/content/views/view_information.cpp
         source/content/views/view_about.cpp
         source/content/views/view_tools.cpp
