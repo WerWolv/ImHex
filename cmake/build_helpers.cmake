@@ -147,8 +147,6 @@ macro(createPackage)
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
         if (TARGET ${plugin})
-            get_target_property(IS_RUST_PROJECT ${plugin} RUST_PROJECT)
-
             set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
             set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
 
