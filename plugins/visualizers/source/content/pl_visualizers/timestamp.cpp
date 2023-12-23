@@ -1,6 +1,6 @@
 #include <hex/helpers/utils.hpp>
 
-#include <content/pl_visualizers/visualizer_helpers.hpp>
+#include <content/visualizer_helpers.hpp>
 
 #include <numbers>
 
@@ -12,7 +12,7 @@
 #include <chrono>
 #include <fmt/chrono.h>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::visualizers {
 
     void drawTimestampVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool, std::span<const pl::core::Token::Literal> arguments) {
         time_t timestamp = arguments[0].toUnsigned();

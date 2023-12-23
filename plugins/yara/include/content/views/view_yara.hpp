@@ -6,7 +6,7 @@
 
 #include <hex/api/task_manager.hpp>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::yara {
 
     class ViewYara : public View::Window {
     public:

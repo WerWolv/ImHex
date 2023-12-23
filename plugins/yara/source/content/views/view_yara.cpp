@@ -6,8 +6,8 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
-#include <content/popups/popup_notification.hpp>
-#include <content/popups/popup_file_chooser.hpp>
+//#include <content/popups/popup_notification.hpp>
+//#include <content/popups/popup_file_chooser.hpp>
 
 // <yara/types.h>'s RE type has a zero-sized array, which is not allowed in ISO C++.
 #pragma GCC diagnostic push
@@ -23,7 +23,7 @@
 #include <wolv/utils/guards.hpp>
 #include <wolv/literals.hpp>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::yara {
 
     using namespace wolv::literals;
 
@@ -33,7 +33,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Yara)) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    PopupInfo::open("hex.builtin.view.yara.rule_added"_lang);
+                    //PopupInfo::open("hex.builtin.view.yara.rule_added"_lang);
                     return true;
                 }
             }
@@ -124,10 +124,10 @@ namespace hex::plugin::builtin {
                 }
             }
 
-            PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
+            /*PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
                 [&](const auto &path) {
                     m_rules->push_back({ path.filename(), path });
-                });
+                });*/
         }
 
         ImGui::SameLine();

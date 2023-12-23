@@ -1,13 +1,15 @@
 #include <hex/helpers/utils.hpp>
 
-#include <content/pl_visualizers/visualizer_helpers.hpp>
+#include <content/visualizer_helpers.hpp>
 
 #include <implot.h>
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
-namespace hex::plugin::builtin {
+#include <content/visualizer_helpers.hpp>
+
+namespace hex::plugin::visualizers {
 
     void drawImageVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static ImGuiExt::Texture texture;

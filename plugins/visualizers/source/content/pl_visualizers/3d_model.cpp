@@ -1,6 +1,6 @@
 #include <hex/helpers/utils.hpp>
 
-#include <content/pl_visualizers/visualizer_helpers.hpp>
+#include <content/visualizer_helpers.hpp>
 
 #include <fonts/codicons_font.h>
 #include <fonts/blendericons_font.h>
@@ -19,7 +19,7 @@
 
 #include <romfs/romfs.hpp>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::visualizers {
 
     namespace {
 

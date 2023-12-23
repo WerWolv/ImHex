@@ -1,6 +1,6 @@
 #include <hex/helpers/utils.hpp>
 
-#include <content/pl_visualizers/visualizer_helpers.hpp>
+#include <content/visualizer_helpers.hpp>
 
 #include <imgui.h>
 #include <hex/api/task_manager.hpp>
@@ -11,7 +11,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <romfs/romfs.hpp>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::visualizers {
 
     void drawCoordinateVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static ImVec2 coordinate;

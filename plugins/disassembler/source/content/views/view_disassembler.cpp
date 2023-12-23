@@ -7,7 +7,7 @@
 
 using namespace std::literals::string_literals;
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::disasm {
 
     ViewDisassembler::ViewDisassembler() : View::Window("hex.builtin.view.disassembler.name") {
         EventProviderDeleted::subscribe(this, [this](const auto*) {
@@ -99,7 +99,7 @@ namespace hex::plugin::builtin {
             ImGuiExt::InputHexadecimal("hex.builtin.view.disassembler.base"_lang, &m_baseAddress, ImGuiInputTextFlags_CharsHexadecimal);
 
             // Draw region selection picker
-            ui::regionSelectionPicker(&m_codeRegion, provider, &m_range);
+            //ui::regionSelectionPicker(&m_codeRegion, provider, &m_range);
 
             // Draw settings
             {

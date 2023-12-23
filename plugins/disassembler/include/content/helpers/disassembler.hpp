@@ -4,7 +4,7 @@
 
 #include <capstone/capstone.h>
 
-namespace hex {
+namespace hex::plugin::disasm {
 
     enum class Architecture : i32
     {

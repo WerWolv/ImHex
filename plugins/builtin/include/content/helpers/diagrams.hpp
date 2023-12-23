@@ -11,8 +11,11 @@
 #include <hex/providers/provider.hpp>
 #include <hex/providers/buffered_reader.hpp>
 
+#include <hex/helpers/utils.hpp>
+
 #include <imgui_internal.h>
 
+#include <atomic>
 #include <random>
 
 namespace hex {

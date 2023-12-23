@@ -1,6 +1,6 @@
 #include <hex/helpers/utils.hpp>
 
-#include <content/pl_visualizers/visualizer_helpers.hpp>
+#include <content/visualizer_helpers.hpp>
 
 #include <implot.h>
 #include <imgui.h>
@@ -10,7 +10,7 @@
 
 #include <hex/ui/imgui_imhex_extensions.h>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::visualizers {
 
     void drawSoundVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         auto wavePattern = arguments[0].toPattern();

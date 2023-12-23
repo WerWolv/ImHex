@@ -8,7 +8,7 @@
 
 #include <fonts/codicons_font.h>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::visualizers {
 
     namespace {
 

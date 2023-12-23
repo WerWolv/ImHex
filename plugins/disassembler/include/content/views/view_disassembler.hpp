@@ -3,14 +3,14 @@
 #include <hex/api/task_manager.hpp>
 
 #include <hex/ui/view.hpp>
-#include <ui/widgets.hpp>
+//#include <ui/widgets.hpp>
 
 #include <content/helpers/disassembler.hpp>
 
 #include <string>
 #include <vector>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::disasm {
 
     struct Disassembly {
         u64 address;
@@ -32,7 +32,7 @@ namespace hex::plugin::builtin {
         TaskHolder m_disassemblerTask;
 
         u64 m_baseAddress   = 0;
-        ui::RegionType m_range = ui::RegionType::EntireData;
+        //ui::RegionType m_range = ui::RegionType::EntireData;
         Region m_codeRegion = { 0, 0 };
 
         Architecture m_architecture = Architecture::ARM;

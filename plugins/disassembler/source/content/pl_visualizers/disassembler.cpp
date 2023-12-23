@@ -1,6 +1,7 @@
 #include <hex/helpers/utils.hpp>
 
-#include <content/pl_visualizers/visualizer_helpers.hpp>
+#include <pl/pattern_language.hpp>
+#include <pl/patterns/pattern.hpp>
 
 #include <imgui.h>
 
@@ -9,7 +10,7 @@
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <hex/api/localization_manager.hpp>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::disasm {
 
     void drawDisassemblyVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         struct Disassembly {

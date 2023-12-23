@@ -21,8 +21,6 @@ add_imhex_plugin(
         source/content/data_inspector.cpp
         source/content/pl_builtin_functions.cpp
         source/content/pl_pragmas.cpp
-        source/content/pl_visualizers.cpp
-        source/content/pl_inline_visualizers.cpp
         source/content/settings_entries.cpp
         source/content/tools_entries.cpp
         source/content/data_processor_nodes.cpp
@@ -46,6 +44,7 @@ add_imhex_plugin(
         source/content/init_tasks.cpp
         source/content/fonts.cpp
         source/content/workspaces.cpp
+        source/content/pl_visualizers.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp
@@ -82,19 +81,11 @@ add_imhex_plugin(
         source/content/tools/tcp_client_server.cpp
         source/content/tools/wiki_explainer.cpp
 
+        source/content/pl_visualizers/hex_viewer.cpp
+        source/content/pl_visualizers/chunk_entropy.cpp
+
         source/content/tutorials/tutorials.cpp
         source/content/tutorials/introduction.cpp
-
-        source/content/pl_visualizers/line_plot.cpp
-        source/content/pl_visualizers/scatter_plot.cpp
-        source/content/pl_visualizers/image.cpp
-        source/content/pl_visualizers/disassembler.cpp
-        source/content/pl_visualizers/3d_model.cpp
-        source/content/pl_visualizers/sound.cpp
-        source/content/pl_visualizers/chunk_entropy.cpp
-        source/content/pl_visualizers/hex_viewer.cpp
-        source/content/pl_visualizers/coordinates.cpp
-        source/content/pl_visualizers/timestamp.cpp
 
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
@@ -104,7 +95,6 @@ add_imhex_plugin(
         source/content/views/view_about.cpp
         source/content/views/view_tools.cpp
         source/content/views/view_data_inspector.cpp
-        source/content/views/view_disassembler.cpp
         source/content/views/view_bookmarks.cpp
         source/content/views/view_patches.cpp
         source/content/views/view_command_palette.cpp
@@ -120,7 +110,6 @@ add_imhex_plugin(
         source/content/views/view_achievements.cpp
         source/content/views/view_highlight_rules.cpp
         source/content/views/view_tutorials.cpp
-        source/content/views/view_yara.cpp
 
         source/content/helpers/notification.cpp
 
@@ -129,14 +118,8 @@ add_imhex_plugin(
 
     INCLUDES
         include
-        ${CAPSTONE_INCLUDE_DIRS}
-        ${YARA_INCLUDE_DIRS}
-        ${MINIAUDIO_INCLUDE_DIRS}
 
     LIBRARIES
-        ${CAPSTONE_LIBRARIES}
-        ${YARA_LIBRARIES}
-        ${MINIAUDIO_LIBRARIES}
         ${JTHREAD_LIBRARIES}
         ${GLFW_LIBRARIES}
         plcli libpl-gen

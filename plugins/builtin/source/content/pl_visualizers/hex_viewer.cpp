@@ -1,8 +1,9 @@
 #include <hex/helpers/utils.hpp>
 
-#include <content/pl_visualizers/visualizer_helpers.hpp>
-
 #include <imgui.h>
+
+#include <pl/pattern_language.hpp>
+#include <pl/patterns/pattern.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
 #include <ui/hex_editor.hpp>
