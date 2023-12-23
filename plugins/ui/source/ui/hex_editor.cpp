@@ -325,7 +325,7 @@ namespace hex::ui {
                         bb,
                         ImGui::GetWindowScrollbarID(window, axis),
                         axis,
-                        &m_scrollPosition,
+                        &m_scrollPosition.get(),
                         (std::ceil(innerRect.Max.y - innerRect.Min.y) / CharacterSize.y) - (m_visibleRowCount - 1),
                         std::nextafterf(numRows, std::numeric_limits<float>::max()),
                         roundingCorners);

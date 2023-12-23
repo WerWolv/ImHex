@@ -987,21 +987,15 @@ namespace hex::plugin::builtin {
                 if (selection != Region::Invalid()) {
                     m_selectionStart.get(oldProvider)  = selection.getStartAddress();
                     m_selectionEnd.get(oldProvider)    = selection.getEndAddress();
-                    m_scrollPosition.get(oldProvider)  = m_hexEditor.getScrollPosition();
                 }
             }
 
-            m_hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
-            m_hexEditor.setScrollPosition(0);
-
             if (newProvider != nullptr) {
                 m_hexEditor.setSelectionUnchecked(m_selectionStart.get(newProvider), m_selectionEnd.get(newProvider));
-                m_hexEditor.setScrollPosition(m_scrollPosition.get(newProvider));
             } else {
                 ImHexApi::HexEditor::clearSelection();
             }
 
-            m_hexEditor.forceUpdateScrollPosition();
             if (isSelectionValid()) {
                 EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion{ this->getSelection(), newProvider });
             }

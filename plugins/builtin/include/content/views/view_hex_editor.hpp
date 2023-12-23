@@ -74,7 +74,6 @@ namespace hex::plugin::builtin {
         std::unique_ptr<Popup> m_currPopup;
 
         PerProvider<std::optional<u64>> m_selectionStart, m_selectionEnd;
-        PerProvider<float> m_scrollPosition;
 
         PerProvider<std::map<u64, color_t>> m_foregroundHighlights, m_backgroundHighlights;
     };

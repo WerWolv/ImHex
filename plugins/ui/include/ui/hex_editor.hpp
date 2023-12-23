@@ -11,6 +11,65 @@
 
 namespace hex::ui {
 
+    class ScrollPosition {
+    public:
+        ScrollPosition() = default;
+
+        // We explicitly don't assign any data during copy and move operations so that each instance of the
+        // Hex Editor will get its own independent scroll position
+        ScrollPosition(const ScrollPosition&) { }
+        ScrollPosition(ScrollPosition&&) noexcept { }
+        ScrollPosition& operator=(const ScrollPosition&) { return *this; }
+        ScrollPosition& operator=(ScrollPosition&&) noexcept { return *this; }
+
+
+        void setSynced(bool synced) {
+            m_synced = synced;
+        }
+
+        void setProvider(prv::Provider *provider) {
+            m_provider = provider;
+        }
+
+        ImS64& get() {
+            if (m_synced)
+                return m_syncedPosition;
+            else
+                return m_unsyncedPosition.get(m_provider);
+        }
+
+        const ImS64& get() const {
+            if (m_synced)
+                return m_syncedPosition;
+            else
+                return m_unsyncedPosition.get(m_provider);
+        }
+
+        operator ImS64&() {
+            return this->get();
+        }
+
+        operator const ImS64&() const {
+            return this->get();
+        }
+
+        ScrollPosition& operator=(ImS64 value) {
+            this->get() = value;
+            return *this;
+        }
+
+        auto operator<=>(const ScrollPosition &other) const {
+            return this->get() <=> other.get();
+        }
+
+    private:
+        bool m_synced = false;
+        prv::Provider *m_provider = nullptr;
+
+        ImS64 m_syncedPosition = 0;
+        PerProvider<ImS64> m_unsyncedPosition;
+    };
+
     class HexEditor {
     public:
         explicit HexEditor(prv::Provider *provider = nullptr);
@@ -20,6 +79,7 @@ namespace hex::ui {
         void setProvider(prv::Provider *provider) {
             m_provider = provider;
             m_currValidRegion = { Region::Invalid(), false };
+            m_scrollPosition.setProvider(provider);
         }
         void setUnknownDataCharacter(char character) { m_unknownDataCharacter = character; }
     private:
@@ -161,7 +221,7 @@ namespace hex::ui {
         }
 
         void enableSyncScrolling(bool syncScrolling) {
-            m_syncScrolling = syncScrolling;
+            m_scrollPosition.setSynced(syncScrolling);
         }
 
         void setByteCellPadding(u32 byteCellPadding) {
@@ -202,12 +262,12 @@ namespace hex::ui {
             m_tooltipCallback = callback;
         }
 
-        [[nodiscard]] float getScrollPosition() const {
-            return m_scrollPosition;
+        [[nodiscard]] i64 getScrollPosition() const {
+            return m_scrollPosition.get();
         }
 
-        void setScrollPosition(float scrollPosition) {
-            m_scrollPosition = scrollPosition;
+        void setScrollPosition(i64 scrollPosition) {
+            m_scrollPosition.get() = scrollPosition;
         }
 
         void setEditingAddress(u64 address) {
@@ -230,7 +290,7 @@ namespace hex::ui {
         std::optional<u64> m_selectionStart;
         std::optional<u64> m_selectionEnd;
         std::optional<u64> m_cursorPosition;
-        ImS64 m_scrollPosition = 0;
+        ScrollPosition m_scrollPosition;
 
         u16 m_bytesPerRow = 16;
         std::endian m_dataVisualizerEndianness = std::endian::little;
@@ -260,7 +320,6 @@ namespace hex::ui {
         bool m_showAscii = true;
         bool m_showCustomEncoding = true;
         bool m_showHumanReadableUnits = true;
-        bool m_syncScrolling = false;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
         bool m_footerCollapsed = true;
 
