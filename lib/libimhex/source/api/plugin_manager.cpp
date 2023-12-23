@@ -58,11 +58,23 @@ namespace hex {
         other.m_handle = 0;
 
         m_libraryPlugin = other.m_libraryPlugin;
-
-        m_path   = std::move(other.m_path);
+        m_path = std::move(other.m_path);
 
         m_functions = other.m_functions;
         other.m_functions = {};
+    }
+
+    Plugin& Plugin::operator=(Plugin &&other) noexcept {
+        m_handle = other.m_handle;
+        other.m_handle = 0;
+
+        m_libraryPlugin = other.m_libraryPlugin;
+        m_path = std::move(other.m_path);
+
+        m_functions = other.m_functions;
+        other.m_functions = {};
+
+        return *this;
     }
 
     Plugin::~Plugin() {
@@ -164,6 +176,10 @@ namespace hex {
         return m_path;
     }
 
+    bool Plugin::isValid() const {
+        return m_handle != 0;
+    }
+
     bool Plugin::isLoaded() const {
         return m_initialized;
     }
@@ -202,6 +218,10 @@ namespace hex {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
                 getPlugins().emplace_back(pluginPath.path(), false);
         }
+
+        std::erase_if(getPlugins(), [](const Plugin &plugin) {
+            return !plugin.isValid();
+        });
 
         if (getPlugins().empty())
             return false;

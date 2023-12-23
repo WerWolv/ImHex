@@ -48,6 +48,9 @@ namespace hex {
         Plugin(Plugin &&other) noexcept;
         ~Plugin();
 
+        Plugin& operator=(const Plugin &) = delete;
+        Plugin& operator=(Plugin &&other) noexcept;
+
         [[nodiscard]] bool initializePlugin() const;
         [[nodiscard]] std::string getPluginName() const;
         [[nodiscard]] std::string getPluginAuthor() const;
@@ -58,6 +61,7 @@ namespace hex {
 
         [[nodiscard]] const std::fs::path &getPath() const;
 
+        [[nodiscard]] bool isValid() const;
         [[nodiscard]] bool isLoaded() const;
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
