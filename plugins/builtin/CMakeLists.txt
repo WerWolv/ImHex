@@ -121,7 +121,6 @@ add_imhex_plugin(
 
     LIBRARIES
         ${JTHREAD_LIBRARIES}
-        ${GLFW_LIBRARIES}
         plcli libpl-gen
 )
 

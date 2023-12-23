@@ -34,5 +34,4 @@ add_imhex_plugin(
         LIBRARIES
         ${JTHREAD_LIBRARIES}
         ${MINIAUDIO_LIBRARIES}
-
 )
