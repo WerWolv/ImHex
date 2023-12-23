@@ -319,14 +319,17 @@ namespace hex::ui {
                 const auto scrollbarWidth = ImGui::GetStyle().ScrollbarSize;
                 const ImRect bb = ImRect(ImMax(outerRect.Min.x, outerRect.Max.x - borderSize - scrollbarWidth), innerRect.Min.y, outerRect.Max.x, innerRect.Max.y);
                 const ImDrawFlags roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
-                ImGui::ScrollbarEx(
-                    bb,
-                    ImGui::GetWindowScrollbarID(window, axis),
-                    axis,
-                    &m_scrollPosition,
-                    (std::ceil(innerRect.Max.y - innerRect.Min.y) / CharacterSize.y) - (m_visibleRowCount - 1),
-                    std::nextafterf(numRows, std::numeric_limits<float>::max()),
-                    roundingCorners);
+
+                if (numRows > 0) {
+                    ImGui::ScrollbarEx(
+                        bb,
+                        ImGui::GetWindowScrollbarID(window, axis),
+                        axis,
+                        &m_scrollPosition,
+                        (std::ceil(innerRect.Max.y - innerRect.Min.y) / CharacterSize.y) - (m_visibleRowCount - 1),
+                        std::nextafterf(numRows, std::numeric_limits<float>::max()),
+                        roundingCorners);
+                }
 
                 if (ImGui::IsWindowHovered()) {
                     m_scrollPosition += ImS64(ImGui::GetIO().MouseWheel * -5);
@@ -395,16 +398,18 @@ namespace hex::ui {
                     };
 
                     ImS64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+
                     if (numRows == 0) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("        ");
                     }
 
+
                     m_visibleRowCount = ImGui::GetWindowSize().y / CharacterSize.y;
 
                     // Loop over rows
-                    for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows; y++) {
+                    for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
                         // Draw address column
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
