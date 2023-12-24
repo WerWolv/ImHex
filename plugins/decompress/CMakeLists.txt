@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 include(ImHexPlugin)
 
 # Homebrew only ships a libarchive keg, include directories have to be set manually
-find_package(LibArchive REQUIRED)
+find_package(LibArchive)
 if (NOT DEFINED LibArchive_INCLUDE_DIR OR LibArchive_INCLUDE_DIR STREQUAL "")
     if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
         execute_process(
