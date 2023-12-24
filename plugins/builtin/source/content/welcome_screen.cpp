@@ -396,6 +396,7 @@ namespace hex::plugin::builtin {
          * @brief Draw some default background if there are no views available in the current layout
          */
         void drawNoViewsBackground() {
+            ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 static std::array<char, 256> title;
                 ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
@@ -434,6 +435,7 @@ namespace hex::plugin::builtin {
                 ImGui::End();
             }
             ImGui::End();
+            ImGui::PopStyleColor();
         }
     }
 
