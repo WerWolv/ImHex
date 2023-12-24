@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
 
-find_package(LibArchive 3.6 REQUIRED)
+find_package(LibArchive REQUIRED)
 
 add_imhex_plugin(
     NAME
