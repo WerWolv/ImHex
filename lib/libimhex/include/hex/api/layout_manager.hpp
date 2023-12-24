@@ -71,6 +71,11 @@ namespace hex {
          */
         static void lockLayout(bool locked);
 
+        /**
+         * @brief Closes all views
+         */
+        static void closeAllViews();
+
     private:
         LayoutManager() = default;
     };
