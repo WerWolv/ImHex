@@ -4,16 +4,18 @@ include(ImHexPlugin)
 
 # Homebrew only ships a libarchive keg, include directories have to be set manually
 find_package(LibArchive REQUIRED)
-if (APPLE AND LibArchive_INCLUDE_DIR STREQUAL "")
-    execute_process(
-            COMMAND (${BREW_EXECUTABLE} --prefix libarchive) || exit 0
-            OUTPUT_VARIABLE LIBARCHIVE_PREFIX
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            COMMAND_ERROR_IS_FATAL ANY
-    )
+if (NOT DEFINED LibArchive_INCLUDE_DIR OR LibArchive_INCLUDE_DIR STREQUAL "")
+    if (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        execute_process(
+                COMMAND (${BREW_EXECUTABLE} --prefix libarchive) || exit 0
+                OUTPUT_VARIABLE LIBARCHIVE_PREFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                COMMAND_ERROR_IS_FATAL ANY
+        )
 
-    if (NOT LIBARCHIVE_PREFIX STREQUAL "")
-        set(LibArchive_INCLUDE_DIR "${LIBARCHIVE_PREFIX}/include")
+        if (NOT LIBARCHIVE_PREFIX STREQUAL "")
+            set(LibArchive_INCLUDE_DIR "${LIBARCHIVE_PREFIX}/include")
+        endif()
     endif()
 endif()
 
