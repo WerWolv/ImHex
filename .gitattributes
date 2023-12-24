@@ -1,1 +1,4 @@
 lib/external/** linguist-vendored
+
+dist/*.sh eol=lf
+dist/**/*Dockerfile eol=lf

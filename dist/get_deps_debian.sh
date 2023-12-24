@@ -22,4 +22,5 @@ apt install -y \
   libdbus-1-dev         \
   libcurl4-gnutls-dev   \
   libgtk-3-dev          \
-  ninja-build
+  ninja-build           \
+  libarchive-dev

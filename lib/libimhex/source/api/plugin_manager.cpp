@@ -174,7 +174,7 @@ namespace hex {
     }
 
     bool Plugin::isValid() const {
-        return m_handle != 0;
+        return m_handle != 0 || m_functions.initializeLibraryFunction != nullptr || m_functions.initializePluginFunction != nullptr;
     }
 
     bool Plugin::isLoaded() const {
