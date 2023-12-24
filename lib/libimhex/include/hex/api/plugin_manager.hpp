@@ -41,8 +41,8 @@ namespace hex {
 
     class Plugin {
     public:
-        explicit Plugin(const std::fs::path &path, bool libraryPlugin);
-        explicit Plugin(PluginFunctions functions, bool libraryPlugin);
+        explicit Plugin(const std::fs::path &path);
+        explicit Plugin(PluginFunctions functions);
 
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;
@@ -66,12 +66,11 @@ namespace hex {
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
 
-        [[nodiscard]] bool isLibraryPlugin() const { return m_libraryPlugin; }
+        [[nodiscard]] bool isLibraryPlugin() const;
 
     private:
         uintptr_t m_handle = 0;
         std::fs::path m_path;
-        bool m_libraryPlugin;
 
         mutable bool m_initialized = false;
 
