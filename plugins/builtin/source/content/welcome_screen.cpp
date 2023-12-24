@@ -354,6 +354,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetNextWindowScroll({ 0.0F, -1.0F });
                         ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
                         ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
+                        ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
                         if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                             ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
                             if (s_simplifiedWelcomeScreen)
@@ -405,6 +406,7 @@ namespace hex::plugin::builtin {
                     ImGui::SetNextWindowScroll({ 0.0F, -1.0F });
                     ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
                     ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
+                    ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
                     if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                         auto imageSize = scaled(ImVec2(350, 350));
                         auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
