@@ -78,19 +78,26 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
                     if (ImGui::BeginTooltip()) {
+
+                        static u32 frameCount = 0;
+                        static double largestFrameTime = 0;
                         if (ImPlot::BeginPlot("##frame_time_graph", scaled({ 200, 100 }), ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
                             ImPlot::SetupAxes("", "", ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_LockMin | ImPlotAxisFlags_AutoFit);
-                            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 0.01, ImPlotCond_Always);
+                            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, largestFrameTime * 1.25F, ImPlotCond_Always);
                             ImPlot::SetupAxisFormat(ImAxis_Y1, [](double value, char* buff, int size, void*) -> int {
                                 return snprintf(buff, size, "%dms", int(value * 1000.0));
                             }, nullptr);
-                            ImPlot::SetupAxisTicks(ImAxis_Y1, 0, 0.01, 3);
+                            ImPlot::SetupAxisTicks(ImAxis_Y1, 0, largestFrameTime * 1.25F, 3);
 
                             static std::vector<double> values(100);
 
                             values.push_back(ImHexApi::System::getLastFrameTime());
                             if (values.size() > 100)
                                 values.erase(values.begin());
+
+                            if (frameCount % 100 == 0)
+                                largestFrameTime = *std::ranges::max_element(values);
+                            frameCount += 1;
 
                             ImPlot::PlotLine("FPS", values.data(), values.size());
                             ImPlot::EndPlot();
