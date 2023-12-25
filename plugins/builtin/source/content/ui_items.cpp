@@ -1,6 +1,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
@@ -13,7 +14,7 @@
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -43,10 +44,10 @@ namespace hex::plugin::builtin {
     }
 
     static void drawGlobalPopups() {
-        // Task exception popup
+        // Task exception toast
         for (const auto &task : TaskManager::getRunningTasks()) {
             if (task->hadException()) {
-                ui::PopupError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
                 task->clearException();
                 break;
             }

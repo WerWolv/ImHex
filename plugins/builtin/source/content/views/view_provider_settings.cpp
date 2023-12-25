@@ -1,7 +1,9 @@
 #include "content/views/view_provider_settings.hpp"
 
-#include <popups/popup_notification.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/api/task_manager.hpp>
+
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -49,9 +51,9 @@ namespace hex::plugin::builtin {
                     ImGui::CloseCurrentPopup();
                     auto errorMessage = provider->getErrorMessage();
                     if (errorMessage.empty()) {
-                        ui::PopupError::open("hex.builtin.view.provider_settings.load_error"_lang);
+                        ui::ToastError::open("hex.builtin.view.provider_settings.load_error"_lang);
                     } else {
-                        ui::PopupError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                        ui::ToastError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
                     }
                     TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                 }

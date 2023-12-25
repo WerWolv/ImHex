@@ -14,6 +14,7 @@
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
 
+#include <toasts/toast_notification.hpp>
 #include <popups/popup_notification.hpp>
 #include <popups/popup_question.hpp>
 #include <content/popups/popup_tasks_waiting.hpp>
@@ -26,7 +27,7 @@ namespace hex::plugin::builtin {
         if (auto *fileProvider = dynamic_cast<FileProvider*>(provider); fileProvider != nullptr) {
             fileProvider->setPath(path);
             if (!provider->open() || !provider->isAvailable()) {
-                ui::PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                 TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
             } else {
                 EventProviderOpened::post(fileProvider);
@@ -104,7 +105,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { }, [](const auto &path) {
                     if (path.extension() == ".hexproj") {
                         if (!ProjectFile::load(path)) {
-                            ui::PopupError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                            ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     } else {
                         FileProvider* newProvider = static_cast<FileProvider*>(
@@ -128,7 +129,7 @@ namespace hex::plugin::builtin {
                 fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                     [](const auto &path) {
                         if (!ProjectFile::load(path)) {
-                            ui::PopupError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                            ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     });
             }
@@ -149,7 +150,7 @@ namespace hex::plugin::builtin {
                     return;
                 }
                 if (!provider->open()) {
-                    ui::PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                    ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
@@ -158,7 +159,7 @@ namespace hex::plugin::builtin {
             }
             else if (!provider->hasLoadInterface()) {
                 if (!provider->open() || !provider->isAvailable()) {
-                    ui::PopupError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
+                    ui::ToastError::open(hex::format("hex.builtin.provider.error.open"_lang, provider->getErrorMessage()));
                     TaskManager::doLater([provider] { ImHexApi::Provider::remove(provider); });
                     return;
                 }
@@ -169,18 +170,6 @@ namespace hex::plugin::builtin {
 
         EventRegionSelected::subscribe([](const ImHexApi::HexEditor::ProviderRegion &region) {
            ImHexApi::HexEditor::impl::setCurrentSelection(region);
-        });
-
-        RequestOpenInfoPopup::subscribe([](const std::string &message) {
-            ui::PopupInfo::open(message);
-        });
-
-        RequestOpenErrorPopup::subscribe([](const std::string &message) {
-            ui::PopupError::open(message);
-        });
-
-        RequestOpenFatalPopup::subscribe([](const std::string &message) {
-            ui::PopupFatal::open(message);
         });
 
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){

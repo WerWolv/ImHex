@@ -8,6 +8,8 @@
 
 #include <hex/helpers/utils.hpp>
 
+#include <popups/popup_notification.hpp>
+
 using namespace hex;
 
 #define VERSION V1
@@ -114,7 +116,7 @@ private:
 };
 
 SCRIPT_API(void showMessageBox, const char *message) {
-    hex::RequestOpenInfoPopup::post(message);
+    ui::PopupInfo::open(message);
 }
 
 SCRIPT_API(void showInputTextBox, const char *title, const char *message, char *buffer, u32 bufferSize) {

@@ -12,6 +12,9 @@ add_imhex_plugin(
 
     INCLUDES
         include
+
+    LIBRARIES
+        ui
 )
 
 if (CoreClrEmbed_FOUND)

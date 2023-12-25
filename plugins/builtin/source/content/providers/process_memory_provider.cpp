@@ -16,6 +16,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/ui/view.hpp>
 
+#include <toasts/toast_notification.hpp>
+
 #include <wolv/io/fs.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
@@ -294,7 +296,7 @@ namespace hex::plugin::builtin {
                             if (loadLibraryW != nullptr) {
                                 if (auto threadHandle = CreateRemoteThread(m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
                                     WaitForSingleObject(threadHandle, INFINITE);
-                                    RequestOpenErrorPopup::post(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                    ui::ToastInfo::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
                                     this->reloadProcessModules();
                                     CloseHandle(threadHandle);
                                     return;
@@ -303,7 +305,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    RequestOpenErrorPopup::post(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                    ui::ToastError::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
                 });
             }
         #endif

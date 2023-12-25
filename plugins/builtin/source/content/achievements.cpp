@@ -4,6 +4,7 @@
 
 #include <hex/helpers/crypto.hpp>
 
+#include <toasts/toast_notification.hpp>
 #include <popups/popup_notification.hpp>
 #include <popups/popup_text_input.hpp>
 
@@ -275,7 +276,7 @@ namespace hex::plugin::builtin {
                                                     if (input == password)
                                                         achievement.setUnlocked(true);
                                                     else
-                                                        ui::PopupInfo::open("The password you entered was incorrect.");
+                                                        ui::ToastWarning::open("The password you entered was incorrect.");
                                                 });
                                         });
 

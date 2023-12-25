@@ -16,6 +16,7 @@ if (WIN32)
         INCLUDES
             include
         LIBRARIES
+            ui
             ${JTHREAD_LIBRARIES}
     )
 

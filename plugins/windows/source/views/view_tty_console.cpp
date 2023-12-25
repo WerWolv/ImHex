@@ -5,6 +5,8 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <toasts/toast_notification.hpp>
+
 #include <wolv/utils/guards.hpp>
 
 #include <windows.h>
@@ -85,7 +87,7 @@ namespace hex::plugin::windows {
         if (m_portHandle == INVALID_HANDLE_VALUE) {
             if (ImGui::Button("hex.windows.view.tty_console.connect"_lang))
                 if (!this->connect())
-                    RequestOpenErrorPopup::post("hex.windows.view.tty_console.connect_error"_lang);
+                    ui::ToastError::open("hex.windows.view.tty_console.connect_error"_lang);
         } else {
             if (ImGui::Button("hex.windows.view.tty_console.disconnect"_lang))
                 this->disconnect();
@@ -184,7 +186,7 @@ namespace hex::plugin::windows {
 
     bool ViewTTYConsole::connect() {
         if (m_comPorts.empty() || static_cast<size_t>(m_selectedPort) >= m_comPorts.size()) {
-            RequestOpenErrorPopup::post("hex.windows.view.tty_console.no_available_port"_lang);
+            ui::ToastError::open("hex.windows.view.tty_console.no_available_port"_lang);
             return true;    // If false, connect_error error popup will override this error popup
         }
         m_portHandle = ::CreateFile((R"(\\.\)" + m_comPorts[m_selectedPort].first).c_str(),

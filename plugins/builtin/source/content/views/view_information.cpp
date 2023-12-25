@@ -14,7 +14,7 @@
 
 #include <implot.h>
 
-#include <popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    ui::PopupInfo::open("hex.builtin.view.information.magic_db_added"_lang);
+                    ui::ToastInfo::open("hex.builtin.view.information.magic_db_added"_lang);
                     return true;
                 }
             }

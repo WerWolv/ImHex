@@ -14,7 +14,7 @@
 #include <hex/helpers/debugging.hpp>
 
 #include <content/global_actions.hpp>
-#include <popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 #include <popups/popup_text_input.hpp>
 #include <hex/api/workspace_manager.hpp>
 
@@ -50,19 +50,19 @@ namespace hex::plugin::builtin {
             TaskManager::doLater([error]{
                 switch (error) {
                     case IPSError::InvalidPatchHeader:
-                        ui::PopupError::open("hex.builtin.menu.file.export.ips.popup.invalid_patch_header_error"_lang);
+                        ui::ToastError::open("hex.builtin.menu.file.export.ips.popup.invalid_patch_header_error"_lang);
                         break;
                     case IPSError::AddressOutOfRange:
-                        ui::PopupError::open("hex.builtin.menu.file.export.ips.popup.address_out_of_range_error"_lang);
+                        ui::ToastError::open("hex.builtin.menu.file.export.ips.popup.address_out_of_range_error"_lang);
                         break;
                     case IPSError::PatchTooLarge:
-                        ui::PopupError::open("hex.builtin.menu.file.export.ips.popup.patch_too_large_error"_lang);
+                        ui::ToastError::open("hex.builtin.menu.file.export.ips.popup.patch_too_large_error"_lang);
                         break;
                     case IPSError::InvalidPatchFormat:
-                        ui::PopupError::open("hex.builtin.menu.file.export.ips.popup.invalid_patch_format_error"_lang);
+                        ui::ToastError::open("hex.builtin.menu.file.export.ips.popup.invalid_patch_format_error"_lang);
                         break;
                     case IPSError::MissingEOF:
-                        ui::PopupError::open("hex.builtin.menu.file.export.ips.popup.missing_eof_error"_lang);
+                        ui::ToastError::open("hex.builtin.menu.file.export.ips.popup.missing_eof_error"_lang);
                         break;
                 }
             });
@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 wolv::io::File inputFile(path, wolv::io::File::Mode::Read);
                 if (!inputFile.isValid()) {
-                    ui::PopupError::open("hex.builtin.menu.file.import.base64.popup.open_error"_lang);
+                    ui::ToastError::open("hex.builtin.menu.file.import.base64.popup.open_error"_lang);
                     return;
                 }
 
@@ -87,19 +87,19 @@ namespace hex::plugin::builtin {
                     auto data = crypt::decode64(base64);
 
                     if (data.empty())
-                        ui::PopupError::open("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
+                        ui::ToastError::open("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
                     else {
                         fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const std::fs::path &path) {
                             wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
 
                             if (!outputFile.isValid())
-                                ui::PopupError::open("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
+                                ui::ToastError::open("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
 
                             outputFile.writeVector(data);
                         });
                     }
                 } else {
-                    ui::PopupError::open("hex.builtin.popup.file_open_error"_lang);
+                    ui::ToastError::open("hex.builtin.popup.file_open_error"_lang);
                 }
             });
         }
@@ -163,7 +163,7 @@ namespace hex::plugin::builtin {
                     auto patchData = wolv::io::File(path, wolv::io::File::Mode::Read).readVector();
 
                     if (patchData.size() != provider->getActualSize()) {
-                        ui::PopupError::open("hex.builtin.menu.file.import.modified_file.popup.invalid_size"_lang);
+                        ui::ToastError::open("hex.builtin.menu.file.import.modified_file.popup.invalid_size"_lang);
                         return;
                     }
 
@@ -203,7 +203,7 @@ namespace hex::plugin::builtin {
                     wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                     if (!outputFile.isValid()) {
                         TaskManager::doLater([] {
-                            ui::PopupError::open("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
+                            ui::ToastError::open("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
                         });
                         return;
                     }
@@ -238,7 +238,7 @@ namespace hex::plugin::builtin {
                             wolv::io::File file(path, wolv::io::File::Mode::Create);
                             if (!file.isValid()) {
                                 TaskManager::doLater([] {
-                                    ui::PopupError::open("hex.builtin.menu.file.export.as_language.popup.export_error"_lang);
+                                    ui::ToastError::open("hex.builtin.menu.file.export.as_language.popup.export_error"_lang);
                                 });
                                 return;
                             }
@@ -269,7 +269,7 @@ namespace hex::plugin::builtin {
                     fs::openFileBrowser(fs::DialogMode::Save, { { "Markdown File", "md" }}, [&data](const auto &path) {
                         auto file = wolv::io::File(path, wolv::io::File::Mode::Create);
                         if (!file.isValid()) {
-                            ui::PopupError::open("hex.builtin.menu.file.export.report.popup.export_error"_lang);
+                            ui::ToastError::open("hex.builtin.menu.file.export.report.popup.export_error"_lang);
                             return;
                         }
 
@@ -302,7 +302,7 @@ namespace hex::plugin::builtin {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
                         auto file = wolv::io::File(path, wolv::io::File::Mode::Create);
                         if (!file.isValid()) {
-                            ui::PopupError::open("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
+                            ui::ToastError::open("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
                             return;
                         }
 
@@ -341,7 +341,7 @@ namespace hex::plugin::builtin {
                     fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const auto &path) {
                         auto file = wolv::io::File(path, wolv::io::File::Mode::Create);
                         if (!file.isValid()) {
-                            ui::PopupError::open("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
+                            ui::ToastError::open("hex.builtin.menu.file.export.ips.popup.export_error"_lang);
                             return;
                         }
 

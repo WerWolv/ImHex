@@ -672,7 +672,6 @@ namespace hex {
 
         // Draw popup stack
         {
-            static bool popupDisplaying = false;
             static bool positionSet = false;
             static bool sizeSet = false;
             static double popupDelay = -2.0;
@@ -724,7 +723,6 @@ namespace hex {
                 const auto createPopup = [&](bool displaying) {
                     if (displaying) {
                         currPopup->drawContent();
-                        popupDisplaying = true;
 
                         if (ImGui::GetWindowSize().x > ImGui::GetStyle().FramePadding.x * 10)
                             sizeSet = true;
@@ -742,8 +740,6 @@ namespace hex {
                         }
 
                         ImGui::EndPopup();
-                    } else {
-                        popupDisplaying = false;
                     }
                 };
 
@@ -752,7 +748,7 @@ namespace hex {
                 else
                     createPopup(ImGui::BeginPopup(name, flags));
 
-                if (!popupDisplaying || currPopup->shouldClose()) {
+                if (currPopup->shouldClose()) {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 
@@ -763,41 +759,38 @@ namespace hex {
 
         // Draw Toasts
         {
-            static std::unique_ptr<impl::ToastBase> currToast;
-            if (currToast == nullptr) {
-                if (auto &queuedToasts = impl::ToastBase::getQueuedToasts(); !queuedToasts.empty()) {
-                    currToast = std::move(queuedToasts.front());
-                    queuedToasts.pop_front();
-
-                    currToast->setAppearTime(ImGui::GetTime());
-                }
-            } else {
+            u32 index = 0;
+            for (const auto &toast : impl::ToastBase::getQueuedToasts() | std::views::take(4)) {
+                const auto toastHeight = 60_scaled;
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5_scaled);
-                ImGui::SetNextWindowSize(scaled({ 280, 60 }));
-                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }), ImGuiCond_Always, ImVec2(1, 1));
-                if (ImGui::Begin("##Toast", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs)) {
+                ImGui::SetNextWindowSize(ImVec2(280_scaled, toastHeight));
+                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, (10 + toastHeight) * index }), ImGuiCond_Always, ImVec2(1, 1));
+                if (ImGui::Begin(hex::format("##Toast_{}", index).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
                     auto drawList = ImGui::GetWindowDrawList();
 
                     const auto min = ImGui::GetWindowPos();
                     const auto max = min + ImGui::GetWindowSize();
 
                     drawList->PushClipRect(min, min + scaled({ 5, 60 }));
-                    drawList->AddRectFilled(min, max, currToast->getColor(), 5_scaled);
+                    drawList->AddRectFilled(min, max, toast->getColor(), 5_scaled);
                     drawList->PopClipRect();
 
                     ImGui::Indent();
-                    currToast->draw();
+                    toast->draw();
                     ImGui::Unindent();
+
+                    if (ImGui::IsWindowHovered() || toast->getAppearTime() <= 0)
+                        toast->setAppearTime(ImGui::GetTime());
                 }
                 ImGui::End();
                 ImGui::PopStyleVar();
 
-                if ((currToast->getAppearTime() + impl::ToastBase::VisibilityTime) < ImGui::GetTime()) {
-                    currToast.reset();
-                }
+                index += 1;
             }
 
-
+            std::erase_if(impl::ToastBase::getQueuedToasts(), [](const auto &toast){
+                return toast->getAppearTime() > 0 && (toast->getAppearTime() + impl::ToastBase::VisibilityTime) < ImGui::GetTime();
+            });
         }
 
         // Run all deferred calls
