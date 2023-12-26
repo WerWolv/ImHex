@@ -190,11 +190,6 @@ namespace hex::ui {
             }
         }
         else {
-            if (m_enteredEditingMode) {
-                ImGui::SetKeyboardFocusHere();
-                ImGui::SetNextFrameWantCaptureKeyboard(true);
-            }
-
             bool shouldExitEditingMode = true;
             if (cellType == m_editingCellType && cellType == CellType::Hex) {
                 std::vector<u8> buffer = m_editingBytes;
@@ -210,6 +205,11 @@ namespace hex::ui {
                 m_editingBytes = buffer;
             } else if (cellType == m_editingCellType && cellType == CellType::ASCII) {
                 shouldExitEditingMode = asciiVisualizer.drawEditing(*m_editingAddress, m_editingBytes.data(), m_editingBytes.size(), m_upperCaseHex, m_enteredEditingMode);
+            }
+
+            if (ImGui::IsWindowFocused()) {
+                ImGui::SetKeyboardFocusHere(-1);
+                ImGui::SetNextFrameWantCaptureKeyboard(true);
             }
 
             if (shouldExitEditingMode || m_shouldModifyValue) {
