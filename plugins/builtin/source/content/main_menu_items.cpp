@@ -73,37 +73,6 @@ namespace hex::plugin::builtin {
     // Import
     namespace {
 
-        void importBase64() {
-            fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
-                wolv::io::File inputFile(path, wolv::io::File::Mode::Read);
-                if (!inputFile.isValid()) {
-                    ui::ToastError::open("hex.builtin.menu.file.import.base64.popup.open_error"_lang);
-                    return;
-                }
-
-                auto base64 = inputFile.readVector();
-
-                if (!base64.empty()) {
-                    auto data = crypt::decode64(base64);
-
-                    if (data.empty())
-                        ui::ToastError::open("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
-                    else {
-                        fs::openFileBrowser(fs::DialogMode::Save, {}, [&data](const std::fs::path &path) {
-                            wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
-
-                            if (!outputFile.isValid())
-                                ui::ToastError::open("hex.builtin.menu.file.import.base64.popup.import_error"_lang);
-
-                            outputFile.writeVector(data);
-                        });
-                    }
-                } else {
-                    ui::ToastError::open("hex.builtin.popup.file_open_error"_lang);
-                }
-            });
-        }
-
         void importIPSPatch() {
             fs::openFileBrowser(fs::DialogMode::Open, {}, [](const auto &path) {
                 TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &task) {
@@ -422,14 +391,6 @@ namespace hex::plugin::builtin {
 
         /* Import */
         {
-            /* Base 64 */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.base64" }, 2050,
-                                                    Shortcut::None,
-                                                    importBase64,
-                                                    noRunningTaskAndWritableProvider);
-
-            ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 2100);
-
             /* IPS */
             ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.ips"}, 2150,
                                                     Shortcut::None,
