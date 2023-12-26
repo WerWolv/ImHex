@@ -501,7 +501,7 @@ namespace hex::ui {
                                 // Get byte foreground color
 
                                 auto popForeground = SCOPE_GUARD { ImGui::PopStyleColor(); };
-                                if (foregroundColor.has_value() && !m_editingAddress.has_value())
+                                if (foregroundColor.has_value() && m_editingAddress != byteAddress)
                                     ImGui::PushStyleColor(ImGuiCol_Text, *foregroundColor);
                                 else
                                     popForeground.release();
