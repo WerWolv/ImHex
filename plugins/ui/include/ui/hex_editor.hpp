@@ -314,7 +314,7 @@ namespace hex::ui {
         bool m_shouldUpdateEditingValue = false;
         std::vector<u8> m_editingBytes;
 
-        color_t m_selectionColor = 0x00;
+        color_t m_selectionColor = 0x60C08080;
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
