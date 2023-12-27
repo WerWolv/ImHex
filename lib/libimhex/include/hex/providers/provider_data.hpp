@@ -106,6 +106,7 @@ namespace hex {
             EventProviderOpened::unsubscribe(this);
             EventProviderDeleted::unsubscribe(this);
             EventImHexClosing::unsubscribe(this);
+            MovePerProviderData::unsubscribe(this);
         }
 
     private:
