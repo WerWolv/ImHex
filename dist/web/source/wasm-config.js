@@ -73,4 +73,10 @@ function js_resizeCanvas() {
     canvas.height = Math.min(document.documentElement.clientHeight, window.innerHeight || 0);
 
     canvas.classList.add("canvas_full_screen")
+
+    if (GLFW.active && GLFW.active.windowPosFunc) {
+        getWasmTableEntry(GLFW.active.windowPosFunc)(GLFW.active.id, GLFW.active.x, GLFW.active.y);
+    }
+
+    GLFW.onWindowSizeChanged();
 }
