@@ -170,7 +170,6 @@ namespace hex {
     }
 
     void Window::loop() {
-        u64 frameCount = 0;
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
 
@@ -203,7 +202,6 @@ namespace hex {
             }
 
             this->fullFrame();
-            frameCount += 1;
 
             ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - m_lastStartFrameTime);
 

@@ -640,7 +640,7 @@ namespace hex::plugin::builtin {
                     }
                     ImGui::SameLine();
                     if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        fs::openFileBrowser(fs::DialogMode::Save, {}, [this, id, &runtime](const auto &path) {
+                        fs::openFileBrowser(fs::DialogMode::Save, {}, [id, &runtime](const auto &path) {
                             wolv::io::File file(path, wolv::io::File::Mode::Create);
                             if (!file.isValid()) {
                                 ui::ToastError::open("hex.builtin.popup.error.create"_lang);
@@ -752,7 +752,7 @@ namespace hex::plugin::builtin {
                     const auto message = [this]{
                         auto message = (*m_lastEvaluationError)->message;
                         auto lines = wolv::util::splitString(message, "\n");
-                        
+
                         std::ranges::transform(lines, lines.begin(), [](auto line) {
                             if (line.size() >= 128)
                                 line = wolv::util::trim(line);
