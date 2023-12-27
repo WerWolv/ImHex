@@ -173,8 +173,13 @@ namespace hex::plugin::builtin {
         if (m_apiRequest.valid()) {
             if (m_apiRequest.wait_for(0s) != std::future_status::ready)
                 reloading = true;
-            else
-                this->parseResponse();
+            else {
+                try {
+                    this->parseResponse();
+                } catch (nlohmann::json::exception &e) {
+                    log::error("Failed to parse store response: {}", e.what());
+                }
+            }
         }
 
         ImGui::BeginDisabled(reloading);
