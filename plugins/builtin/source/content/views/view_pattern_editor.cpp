@@ -749,8 +749,22 @@ namespace hex::plugin::builtin {
         if (!m_lastEvaluationProcessed) {
             if (!m_lastEvaluationResult) {
                 if (m_lastEvaluationError->has_value()) {
+                    const auto message = [this]{
+                        auto message = (*m_lastEvaluationError)->message;
+                        auto lines = wolv::util::splitString(message, "\n");
+                        
+                        std::ranges::transform(lines, lines.begin(), [](auto line) {
+                            if (line.size() >= 128)
+                                line = wolv::util::trim(line);
+
+                            return hex::limitStringLength(line, 128);
+                        });
+
+                        return wolv::util::combineStrings(lines, "\n");
+                    }();
+
                     TextEditor::ErrorMarkers errorMarkers = {
-                            { (*m_lastEvaluationError)->line, (*m_lastEvaluationError)->message }
+                            { (*m_lastEvaluationError)->line, message }
                     };
                     m_textEditor.SetErrorMarkers(errorMarkers);
                 }
