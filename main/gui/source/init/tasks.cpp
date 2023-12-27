@@ -318,6 +318,7 @@ namespace hex::init {
     bool storeSettings() {
         try {
             ContentRegistry::Settings::impl::store();
+            AchievementManager::storeProgress();
         } catch (std::exception &e) {
             log::error("Failed to store configuration! {}", e.what());
             return false;
