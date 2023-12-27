@@ -177,7 +177,7 @@ namespace hex {
 
             static i32 lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = 2;
+                lockTimeout = ImHexApi::System::getTargetFPS() / 2;
             } else if (lockTimeout > 0) {
                 lockTimeout -= 1;
             }
