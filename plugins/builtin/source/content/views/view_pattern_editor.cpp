@@ -23,6 +23,7 @@
 
 #include <popups/popup_file_chooser.hpp>
 #include <popups/popup_question.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <nlohmann/json.hpp>
 #include <chrono>
@@ -571,7 +572,7 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupScrollFreeze(0, 1);
             ImGui::TableSetupColumn("hex.ui.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
             ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
-            ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
+            ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
 
             ImGui::TableHeadersRow();
 
@@ -589,7 +590,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
                     ImGui::TableNextColumn();
-                    if (ImGuiExt::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                         auto dataProvider = std::make_shared<prv::MemoryProvider>(section.data);
                         auto hexEditor = auto(m_sectionHexEditor);
 
@@ -635,6 +636,18 @@ namespace hex::plugin::builtin {
                             if (*m_executionDone)
                                 patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
+                    }
+                    ImGui::SameLine();
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        fs::openFileBrowser(fs::DialogMode::Save, {}, [this, id, &runtime](const auto &path) {
+                            wolv::io::File file(path, wolv::io::File::Mode::Create);
+                            if (!file.isValid()) {
+                                ui::ToastError::open("hex.builtin.popup.error.create"_lang);
+                                return;
+                            }
+
+                            file.writeVector(runtime.getSection(id));
+                        });
                     }
 
                     ImGui::PopID();
