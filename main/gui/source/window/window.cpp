@@ -174,38 +174,30 @@ namespace hex {
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
 
+            bool shouldLongSleep = !m_unlockFrameRate;
+
+            static i32 lockTimeout = 0;
+            if (!shouldLongSleep) {
+                lockTimeout = 2;
+            } else if (lockTimeout > 0) {
+                lockTimeout -= 1;
+            }
+
+            if (shouldLongSleep && lockTimeout > 0)
+                shouldLongSleep = false;
+
+            m_unlockFrameRate = false;
+
             if (!glfwGetWindowAttrib(m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(m_window, GLFW_ICONIFIED)) {
                 // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
             } else {
                 // If no events have been received in a while, lower the frame rate
                 {
-                    // If the mouse is down, the mouse is moving or a popup is open, we don't want to lower the frame rate
-                    bool frameRateUnlocked =
-                            ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ||
-                            TaskManager::getRunningTaskCount() > 0 ||
-                            m_buttonDown ||
-                            m_hadEvent ||
-                            !m_pressedKeys.empty() ||
-                            frameCount < 100;
-
-                    m_hadEvent = false;
-
                     // Calculate the time until the next frame
                     const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - m_lastStartFrameTime));
 
-                    // If the frame rate has been unlocked for 5 seconds, lock it again
-                    if ((m_lastStartFrameTime - m_frameRateUnlockTime) > 5 && m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
-                        m_frameRateTemporarilyUnlocked = false;
-                    }
-
-                    // If the frame rate is locked, wait for events with a timeout
-                    if (frameRateUnlocked && !m_frameRateTemporarilyUnlocked) {
-                        m_frameRateTemporarilyUnlocked = true;
-                        m_frameRateUnlockTime = m_lastStartFrameTime;
-                    }
-
-                    if (!m_frameRateTemporarilyUnlocked)
+                    if (shouldLongSleep)
                         glfwWaitEventsTimeout(timeout);
                 }
             }
@@ -223,7 +215,7 @@ namespace hex {
             } else if (targetFPS > 200) {
                 glfwSwapInterval(0);
             } else {
-                if (m_frameRateTemporarilyUnlocked) {
+                if (!shouldLongSleep) {
                     glfwSwapInterval(0);
                     const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
                     const auto targetFrameTime = 1.0 / targetFPS;
@@ -889,22 +881,49 @@ namespace hex {
 
         this->endNativeWindowFrame();
 
-        // Render UI
+        // Finalize ImGui frame
         ImGui::Render();
 
-        int displayWidth, displayHeight;
-        glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
-        glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // Hash the draw data to determine if anything changed on the screen
+        // If not, there's no point in sending the draw data off to the GPU and swapping buffers
+        bool shouldRender = false;
+        {
+            u32 drawDataHash = 0;
+            static u32 previousDrawDataHash = 0;
 
-        GLFWwindow *backup_current_context = glfwGetCurrentContext();
+            for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
+                auto drawData = viewPort->DrawData;
+                for (int n = 0; n < drawData->CmdListsCount; n++) {
+                    const ImDrawList *cmd_list = drawData->CmdLists[n];
+                    drawDataHash = ImHashData(cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), drawDataHash);
+                }
+                for (int n = 0; n < drawData->CmdListsCount; n++) {
+                    const ImDrawList *cmd_list = drawData->CmdLists[n];
+                    drawDataHash = ImHashData(cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), drawDataHash);
+                }
+            }
+
+            shouldRender = drawDataHash != previousDrawDataHash;
+            previousDrawDataHash = drawDataHash;
+        }
+
+        if (shouldRender) {
+            int displayWidth, displayHeight;
+            glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+            glViewport(0, 0, displayWidth, displayHeight);
+            glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
+            glClear(GL_COLOR_BUFFER_BIT);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(m_window);
+
+            m_unlockFrameRate = true;
+        }
+
+        GLFWwindow *backupContext = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backup_current_context);
-
-        glfwSwapBuffers(m_window);
+        glfwMakeContextCurrent(backupContext);
 
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
@@ -1029,7 +1048,6 @@ namespace hex {
             win->frameBegin();
             win->frame();
             win->frameEnd();
-            win->processEvent();
         });
 
         // Register window resize callback
@@ -1043,28 +1061,6 @@ namespace hex {
             win->frameBegin();
             win->frame();
             win->frameEnd();
-            win->processEvent();
-        });
-
-        // Register mouse handling callback
-        glfwSetMouseButtonCallback(m_window, [](GLFWwindow *window, int button, int action, int mods) {
-            hex::unused(button, mods);
-
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-
-            if (action == GLFW_PRESS)
-                win->m_buttonDown = true;
-            else if (action == GLFW_RELEASE)
-                win->m_buttonDown = false;
-            win->processEvent();
-        });
-
-        // Register scrolling callback
-        glfwSetScrollCallback(m_window, [](GLFWwindow *window, double xOffset, double yOffset) {
-            hex::unused(xOffset, yOffset);
-
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->processEvent();
         });
 
         #if !defined(OS_WEB)
@@ -1072,13 +1068,6 @@ namespace hex {
             glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
                 hex::unused(mods);
 
-                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-
-                if (action == GLFW_RELEASE) {
-                    win->m_buttonDown = false;
-                } else {
-                    win->m_buttonDown = true;
-                }
 
                 // Handle A-Z keys using their ASCII value instead of the keycode
                 if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
@@ -1100,21 +1089,12 @@ namespace hex {
                         key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
                         key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
                     ) {
+                        auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
                         win->m_pressedKeys.push_back(key);
                     }
                 }
-
-                win->processEvent();
             });
         #endif
-
-        // Register cursor position callback
-        glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double x, double y) {
-            hex::unused(x, y);
-
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->processEvent();
-        });
 
         // Register window close callback
         glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {

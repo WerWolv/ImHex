@@ -38,8 +38,6 @@ namespace hex {
         void frame();
         void frameEnd();
 
-        void processEvent() { m_hadEvent = true; }
-
         void initGLFW();
         void initImGui();
         void exitGLFW();
@@ -60,11 +58,7 @@ namespace hex {
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
 
-        bool m_buttonDown = false;
-
-        bool m_hadEvent = false;
-        bool m_frameRateTemporarilyUnlocked = false;
-        double m_frameRateUnlockTime = 0;
+        bool m_unlockFrameRate = false;
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
     };
