@@ -89,16 +89,21 @@ namespace hex {
                 }
 
                 void store() {
+                    auto settingsData = getSettingsData();
+
                     // During a crash settings can be empty, causing them to be overwritten.
-                    if(getSettingsData().empty()) {
+                    if (settingsData.empty()) {
                         return;
                     }
 
                     for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
+                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Write);
 
                         if (file.isValid()) {
-                            file.writeString(getSettingsData().dump(4));
+                            auto result = settingsData.dump(4);
+
+                            file.setSize(0);
+                            file.writeString(result);
                             break;
                         }
                     }
