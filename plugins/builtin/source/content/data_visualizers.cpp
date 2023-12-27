@@ -3,7 +3,6 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/string.hpp>
@@ -30,9 +29,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:
@@ -73,9 +72,9 @@ namespace hex::plugin::builtin {
                             ImGui::Text(getFormatString(upperCase), c);
                         break;
                 }
-            }
-            else
+            } else {
                 ImGuiExt::TextFormatted("{: {}s}", CharCount);
+            }
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
@@ -83,9 +82,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<u8>(), data, ImGuiInputTextFlags_None);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:
@@ -116,9 +115,9 @@ namespace hex::plugin::builtin {
                     ImGui::Text(getFormatString(), static_cast<i64>(*reinterpret_cast<const T*>(data)));
                 else
                     ImGui::Text(getFormatString(), static_cast<u64>(*reinterpret_cast<const T*>(data)));
-            }
-            else
+            } else {
                 ImGuiExt::TextFormatted("{: {}s}", CharCount);
+            }
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
@@ -126,9 +125,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, FormatString.c_str(), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_None);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:
@@ -163,9 +162,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsScientific);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:

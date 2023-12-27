@@ -344,9 +344,10 @@ namespace hex::plugin::builtin::recent {
                     s_recentEntries.clear();
 
                     // Remove all recent files
-                    for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent))
+                    for (const auto &recentPath : fs::getDefaultPaths(fs::ImHexPath::Recent)) {
                         for (const auto &entry : std::fs::directory_iterator(recentPath))
                             std::fs::remove(entry.path());
+                    }
                 }
 
                 ImGui::EndMenu();

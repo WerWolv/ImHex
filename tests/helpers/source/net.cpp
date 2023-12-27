@@ -3,7 +3,6 @@
 #include <hex/api_urls.hpp>
 #include <hex/helpers/http_requests.hpp>
 #include <wolv/io/file.hpp>
-#include <hex/helpers/fs.hpp>
 
 using namespace std::literals::string_literals;
 

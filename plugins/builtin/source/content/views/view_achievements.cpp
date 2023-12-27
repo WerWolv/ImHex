@@ -53,14 +53,14 @@ namespace hex::plugin::builtin {
 
         // Determine achievement fill color based on unlock state
         const auto fillColor = [&] {
-            if (achievement.isUnlocked())
+            if (achievement.isUnlocked()) {
                 return ImGui::GetColorU32(ImGuiCol_FrameBg, 1.0F) | 0xFF000000;
-            else if (node->isUnlockable()) {
+            } else if (node->isUnlockable()) {
                 auto cycleProgress = sinf(float(ImGui::GetTime()) * 6.0F) * 0.5F + 0.5F;
                 return (u32(ImColor(ImLerp(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), ImGui::GetStyleColorVec4(ImGuiCol_Text), cycleProgress))) & 0x00FFFFFF) | 0x80000000;
-            }
-            else
+            } else {
                 return ImGui::GetColorU32(ImGuiCol_TextDisabled, 0.5F);
+            }
         }();
 
         // Draw achievement background

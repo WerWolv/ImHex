@@ -22,7 +22,7 @@ namespace hex::ui {
 
         virtual ~PatternDrawer() = default;
 
-        void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
+        void draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime = nullptr, float height = 0.0F);
 
         enum class TreeStyle {
             Default         = 0,

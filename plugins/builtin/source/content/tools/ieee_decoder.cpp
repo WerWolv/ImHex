@@ -262,9 +262,9 @@ namespace hex::plugin::builtin {
             // Zero or denormal.
             if (ieee754.exponentBits == 0) {
                 // Result doesn't fit in 128 bits.
-                if ((ieee754.exponentBias - 1) > 128)
+                if ((ieee754.exponentBias - 1) > 128) {
                     ieee754.exponentValue = std::pow(2.0L, static_cast<long double>(-ieee754.exponentBias + 1));
-                else {
+                } else {
                     if (ieee754.exponentBias == 0) {
                         // Exponent is zero.
                         if (ieee754.mantissaBits == 0)
@@ -272,17 +272,18 @@ namespace hex::plugin::builtin {
                         else
                             // Exponent is one.
                             ieee754.exponentValue = 2.0;
-                    }
-                    else
+                    } else {
                         ieee754.exponentValue = 1.0 / static_cast<long double>(u128(1) << (ieee754.exponentBias - 1));
+                    }
                 }
             }
                 // Normal.
             else {
                 // Result doesn't fit in 128 bits.
-                if (std::abs(ieee754.exponentBits - ieee754.exponentBias) > 128)
+                if (std::abs(ieee754.exponentBits - ieee754.exponentBias) > 128) {
                     ieee754.exponentValue = std::pow(2.0L, static_cast<long double>(ieee754.exponentBits - ieee754.exponentBias));
-                    //Result fits in 128 bits.
+                }
+                //Result fits in 128 bits.
                 else {
                     // Exponent is positive.
                     if (ieee754.exponentBits > ieee754.exponentBias)
@@ -356,9 +357,10 @@ namespace hex::plugin::builtin {
                 // And remove it from the string.
                 ieee754.signBits = 1;
                 decimalFloatingPointNumberString.erase(0, 1);
-            } else
+            } else {
                 // Important to switch from - to +.
                 ieee754.signBits = 0;
+            }
 
             InputType inputType = InputType::Regular;
             bool matchFound = false;
@@ -385,14 +387,13 @@ namespace hex::plugin::builtin {
                 ieee754statics.resultFloat = std::numeric_limits<long double>::infinity();
                 ieee754statics.resultFloat *= (ieee754.signBits == 1 ? -1 : 1);
 
-            } else if (inputType == InputType::NotANumber)
+            } else if (inputType == InputType::NotANumber) {
                 ieee754statics.resultFloat = std::numeric_limits<long double>::quiet_NaN();
-
-            else if (inputType == InputType::QuietNotANumber)
+            } else if (inputType == InputType::QuietNotANumber) {
                 ieee754statics.resultFloat = std::numeric_limits<long double>::quiet_NaN();
-
-            else if (inputType == InputType::SignalingNotANumber)
+            } else if (inputType == InputType::SignalingNotANumber) {
                 ieee754statics.resultFloat = std::numeric_limits<long double>::signaling_NaN();
+            }
 
 
             if (inputType != InputType::Invalid) {
@@ -514,15 +515,15 @@ namespace hex::plugin::builtin {
                     ImGui::Text("qNaN");
                 else
                     ImGui::Text("sNaN");
-
-            } else if (ieee754.numberType == NumberType::Infinity)
+            } else if (ieee754.numberType == NumberType::Infinity) {
                 ImGui::Text("Inf");
-            else if (ieee754.numberType == NumberType::Zero)
+            } else if (ieee754.numberType == NumberType::Zero) {
                 ImGui::Text("0");
-            else if (ieee754.numberType == NumberType::Denormal)
+            } else if (ieee754.numberType == NumberType::Denormal) {
                 ImGuiExt::TextFormatted("2^{0}", 1 - ieee754.exponentBias);
-            else
+            } else {
                 ImGuiExt::TextFormatted("2^{0}", ieee754.exponentBits - ieee754.exponentBias);
+            }
 
             ImGui::Unindent(20_scaled);
 
@@ -681,8 +682,9 @@ namespace hex::plugin::builtin {
                     decimalFloatingPointNumberString = "qnan";
                 else
                     decimalFloatingPointNumberString = "snan";
-            } else
+            } else {
                 decimalFloatingPointNumberString = fmt::format("{:.{}}", ieee754statics.resultFloat, ieee754.precision);
+            }
 
             auto style1 = ImGui::GetStyle();
             inputFieldWidth = std::fmax(inputFieldWidth, ImGui::CalcTextSize(decimalFloatingPointNumberString.c_str()).x + 2 * style1.FramePadding.x);

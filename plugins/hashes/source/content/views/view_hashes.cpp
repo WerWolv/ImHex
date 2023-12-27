@@ -108,7 +108,7 @@ namespace hex::plugin::hashes {
         ProjectFile::registerPerProviderHandler({
             .basePath = "hashes.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 auto fileContent = tar.readString(basePath);
                 if (fileContent.empty())
                     return true;
@@ -118,7 +118,7 @@ namespace hex::plugin::hashes {
 
                 return this->importHashes(provider, data);
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 nlohmann::json data;
 
                 bool result = this->exportHashes(provider, data);

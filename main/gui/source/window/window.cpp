@@ -372,9 +372,9 @@ namespace hex {
             ImGui::PopStyleVar();
 
             bool shouldDrawSidebar = [] {
-                if (const auto &items = ContentRegistry::Interface::impl::getSidebarItems(); items.empty())
+                if (const auto &items = ContentRegistry::Interface::impl::getSidebarItems(); items.empty()) {
                     return false;
-                else {
+                } else {
                     return std::any_of(items.begin(), items.end(), [](const auto &item) {
                         return item.enabledCallback();
                     });
@@ -894,12 +894,12 @@ namespace hex {
             for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
                 auto drawData = viewPort->DrawData;
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
-                    const ImDrawList *cmd_list = drawData->CmdLists[n];
-                    drawDataHash = ImHashData(cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert), drawDataHash);
+                    const ImDrawList *cmdList = drawData->CmdLists[n];
+                    drawDataHash = ImHashData(cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert), drawDataHash);
                 }
                 for (int n = 0; n < drawData->CmdListsCount; n++) {
-                    const ImDrawList *cmd_list = drawData->CmdLists[n];
-                    drawDataHash = ImHashData(cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx), drawDataHash);
+                    const ImDrawList *cmdList = drawData->CmdLists[n];
+                    drawDataHash = ImHashData(cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx), drawDataHash);
                 }
             }
 
@@ -1202,7 +1202,7 @@ namespace hex {
             handler.ReadOpenFn = [](ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) -> void* { return ctx; };
 
             handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line) {
-                Window* window = static_cast<Window*>(handler->UserData);
+                auto window = static_cast<Window*>(handler->UserData);
 
                 for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                     std::string format = view->getUnlocalizedName().get() + "=%d";

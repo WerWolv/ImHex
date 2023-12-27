@@ -564,7 +564,7 @@ namespace hex::plugin::builtin {
                     crashFileData.value("logFile", ""),
 
                     // Restore callback
-                    [=] {
+                    [crashFileData, backupFilePath, hasProject, hasBackupFile] {
                         if (hasBackupFile) {
                             ProjectFile::load(backupFilePath);
                             if (hasProject) {
@@ -595,8 +595,8 @@ namespace hex::plugin::builtin {
             auto tipsCategories = nlohmann::json::parse(tipsData.string());
 
             auto now = std::chrono::system_clock::now();
-            auto days_since_epoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
-            std::mt19937 random(days_since_epoch.count());
+            auto daysSinceEpoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
+            std::mt19937 random(daysSinceEpoch.count());
 
             auto chosenCategory = tipsCategories[random()%tipsCategories.size()].at("tips");
             auto chosenTip = chosenCategory[random()%chosenCategory.size()];

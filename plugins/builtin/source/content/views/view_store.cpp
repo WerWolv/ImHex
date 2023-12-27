@@ -359,8 +359,9 @@ namespace hex::plugin::builtin {
             }
 
             category.downloadCallback();
-        } else
+        } else {
             log::error("Download failed! HTTP Code {}", response.getStatusCode());
+        }
 
 
         m_download = {};

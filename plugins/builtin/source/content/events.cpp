@@ -108,7 +108,7 @@ namespace hex::plugin::builtin {
                             ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                         }
                     } else {
-                        FileProvider* newProvider = static_cast<FileProvider*>(
+                        auto newProvider = static_cast<FileProvider*>(
                             ImHexApi::Provider::createProvider("hex.builtin.provider.file", true)
                         );
 
@@ -116,9 +116,9 @@ namespace hex::plugin::builtin {
                             return;
 
                         newProvider->setPath(path);
-                        if (!newProvider->open())
+                        if (!newProvider->open()) {
                             hex::ImHexApi::Provider::remove(newProvider);
-                        else {
+                        } else {
                             EventProviderOpened::post(newProvider);
                             AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.open_file.name");
                         }

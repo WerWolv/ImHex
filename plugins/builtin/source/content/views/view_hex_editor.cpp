@@ -1013,7 +1013,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "custom_encoding.tbl",
             .required = false,
-            .load = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
+            .load = [this](prv::Provider *, const std::fs::path &basePath, const Tar &tar) {
                 if (!tar.contains(basePath))
                     return true;
 
@@ -1023,7 +1023,7 @@ namespace hex::plugin::builtin {
 
                 return true;
             },
-            .store = [this](prv::Provider *, const std::fs::path &basePath, Tar &tar) {
+            .store = [this](prv::Provider *, const std::fs::path &basePath, const Tar &tar) {
                 if (const auto &encoding = m_hexEditor.getCustomEncoding(); encoding.has_value()) {
                     auto content = encoding->getTableContent();
 

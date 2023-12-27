@@ -400,8 +400,9 @@ namespace hex::plugin::builtin {
             return m_selectedProcess->id;
         } else if (category == "process_name") {
             return m_selectedProcess->name;
-        } else
+        } else {
             return Provider::queryInformation(category, argument);
+        }
     }
 
 }

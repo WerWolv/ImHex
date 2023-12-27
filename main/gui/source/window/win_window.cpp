@@ -29,9 +29,9 @@ namespace hex {
     template<typename T>
     using WinUniquePtr = std::unique_ptr<std::remove_pointer_t<T>, BOOL(*)(T)>;
 
-    static LONG_PTR g_oldWndProc;
-    static float g_titleBarHeight;
-    static Microsoft::WRL::ComPtr<ITaskbarList4> g_taskbarList;
+    static LONG_PTR s_oldWndProc;
+    static float s_titleBarHeight;
+    static Microsoft::WRL::ComPtr<ITaskbarList4> s_taskbarList;
 
     void nativeErrorMessage(const std::string &message) {
         log::fatal(message);
@@ -83,7 +83,7 @@ namespace hex {
             }
             case WM_SETCURSOR: {
                 if (LOWORD(lParam) != HTCLIENT) {
-                    return CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
+                    return CallWindowProc((WNDPROC)s_oldWndProc, hwnd, uMsg, wParam, lParam);
                 } else {
                     switch (ImGui::GetMouseCursor()) {
                         case ImGuiMouseCursor_Arrow:
@@ -122,7 +122,7 @@ namespace hex {
                 break;
         }
 
-        return CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
+        return CallWindowProc((WNDPROC)s_oldWndProc, hwnd, uMsg, wParam, lParam);
     }
 
     // Custom window procedure for borderless window
@@ -140,7 +140,7 @@ namespace hex {
                 RECT &rect  = *reinterpret_cast<RECT *>(lParam);
                 RECT client = rect;
 
-                CallWindowProc((WNDPROC)g_oldWndProc, hwnd, uMsg, wParam, lParam);
+                CallWindowProc((WNDPROC)s_oldWndProc, hwnd, uMsg, wParam, lParam);
 
                 if (IsMaximized(hwnd)) {
                     WINDOWINFO windowInfo = { };
@@ -211,7 +211,7 @@ namespace hex {
                         return HTBOTTOMRIGHT;
                     case RegionClient:
                     default:
-                        if (cursor.y < (window.top + g_titleBarHeight * 2)) {
+                        if (cursor.y < (window.top + s_titleBarHeight * 2)) {
                             if (hoveredWindowName == "##MainMenuBar" || hoveredWindowName == "ImHexDockSpace") {
                                 if (!ImGui::IsAnyItemHovered()) {
                                     return HTCAPTION;
@@ -302,7 +302,7 @@ namespace hex {
 
         // Set up the correct window procedure based on the borderless window mode state
         if (borderlessWindowMode) {
-            g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)borderlessWindowProc);
+            s_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)borderlessWindowProc);
 
             MARGINS borderless = { 1, 1, 1, 1 };
             ::DwmExtendFrameIntoClientArea(hwnd, &borderless);
@@ -313,41 +313,41 @@ namespace hex {
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
             ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
         } else {
-            g_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)commonWindowProc);
+            s_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)commonWindowProc);
         }
 
         // Set up a taskbar progress handler
         {
             if (SUCCEEDED(CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED))) {
-                CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskbarList4, &g_taskbarList);
+                CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskbarList4, &s_taskbarList);
             }
 
             EventSetTaskBarIconState::subscribe([hwnd](u32 state, u32 type, u32 progress){
                 using enum ImHexApi::System::TaskProgressState;
                 switch (ImHexApi::System::TaskProgressState(state)) {
                     case Reset:
-                        g_taskbarList->SetProgressState(hwnd, TBPF_NOPROGRESS);
-                        g_taskbarList->SetProgressValue(hwnd, 0, 0);
+                        s_taskbarList->SetProgressState(hwnd, TBPF_NOPROGRESS);
+                        s_taskbarList->SetProgressValue(hwnd, 0, 0);
                         break;
                     case Flash:
                         FlashWindow(hwnd, true);
                         break;
                     case Progress:
-                        g_taskbarList->SetProgressState(hwnd, TBPF_INDETERMINATE);
-                        g_taskbarList->SetProgressValue(hwnd, progress, 100);
+                        s_taskbarList->SetProgressState(hwnd, TBPF_INDETERMINATE);
+                        s_taskbarList->SetProgressValue(hwnd, progress, 100);
                         break;
                 }
 
                 using enum ImHexApi::System::TaskProgressType;
                 switch (ImHexApi::System::TaskProgressType(type)) {
                     case Normal:
-                        g_taskbarList->SetProgressState(hwnd, TBPF_NORMAL);
+                        s_taskbarList->SetProgressState(hwnd, TBPF_NORMAL);
                         break;
                     case Warning:
-                        g_taskbarList->SetProgressState(hwnd, TBPF_PAUSED);
+                        s_taskbarList->SetProgressState(hwnd, TBPF_PAUSED);
                         break;
                     case Error:
-                        g_taskbarList->SetProgressState(hwnd, TBPF_ERROR);
+                        s_taskbarList->SetProgressState(hwnd, TBPF_ERROR);
                         break;
                 }
             });
@@ -388,7 +388,7 @@ namespace hex {
     }
 
     void Window::beginNativeWindowFrame() {
-        g_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+        s_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
     }
 
     void Window::endNativeWindowFrame() {

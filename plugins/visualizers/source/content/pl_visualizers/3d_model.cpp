@@ -579,18 +579,18 @@ namespace hex::plugin::visualizers {
 
     void draw3DVisualizer(pl::ptrn::Pattern &, pl::ptrn::IIterable &, bool shouldReset, std::span<const pl::core::Token::Literal> arguments) {
         static gl::LightSourceVectors sourceVectors(20);
-        static gl::VertexArray sourceVertexArray = gl::VertexArray();
+        static gl::VertexArray sourceVertexArray = {};
         static gl::LightSourceBuffers sourceBuffers(sourceVertexArray, sourceVectors);
 
-        static gl::VertexArray gridVertexArray = gl::VertexArray();
+        static gl::VertexArray gridVertexArray = {};
         static gl::GridVectors gridVectors(9);
         static gl::GridBuffers gridBuffers(gridVertexArray, gridVectors);
 
-        static gl::VertexArray axesVertexArray = gl::VertexArray();
+        static gl::VertexArray axesVertexArray = {};
         static gl::AxesVectors axesVectors;
         static gl::AxesBuffers axesBuffers(axesVertexArray, axesVectors);
 
-        static gl::VertexArray vertexArray = gl::VertexArray();
+        static gl::VertexArray vertexArray = {};
         static Buffers buffers;
         static LineBuffers lineBuffers;
 

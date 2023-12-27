@@ -68,12 +68,13 @@ namespace hex::plugin::builtin {
                     paletteIndex = TextEditor::PaletteIndex::Default;
                 } else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Identifier;
-                } else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
+                } else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Number;
-                else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd))
+                } else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::CharLiteral;
-                else if (TokenizeCStyleString(inBegin, inEnd, outBegin, outEnd))
+                } else if (TokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::String;
+                }
 
                 return paletteIndex != TextEditor::PaletteIndex::Max;
             };
@@ -625,9 +626,9 @@ namespace hex::plugin::builtin {
                             });
 
                             const auto &patterns = [&, this] -> const auto& {
-                                if (patternProvider->isReadable() && *m_executionDone)
+                                if (patternProvider->isReadable() && *m_executionDone) {
                                     return runtime.getPatterns(id);
-                                else {
+                                } else {
                                     static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
                                     return empty;
                                 }
@@ -1150,9 +1151,9 @@ namespace hex::plugin::builtin {
                 if (newProvider != nullptr) {
                     m_consoleEditor.SetTextLines(m_console.get(newProvider));
                     m_textEditor.SetText(wolv::util::trim(m_sourceCode.get(newProvider)));
-                }
-                else
+                } else {
                     m_textEditor.SetText("");
+                }
             } else {
                 m_hasUnevaluatedChanges = true;
             }
@@ -1252,16 +1253,18 @@ namespace hex::plugin::builtin {
             [&, this] {
                 if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
                     if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
-                        for (const auto &[type, size] : Types)
+                        for (const auto &[type, size] : Types) {
                             if (ImGui::MenuItem(type))
                                 appendVariable(type);
+                        }
                         ImGui::EndMenu();
                     }
 
                     if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
-                        for (const auto &[type, size] : Types)
+                        for (const auto &[type, size] : Types) {
                             if (ImGui::MenuItem(type))
                                 appendArray(type, size);
+                        }
                         ImGui::EndMenu();
                     }
 
@@ -1366,7 +1369,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "pattern_source_code.hexpat",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 std::string sourceCode = tar.readString(basePath);
 
                 if (!m_syncPatternSourceCode)
@@ -1377,7 +1380,7 @@ namespace hex::plugin::builtin {
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 std::string sourceCode;
 
                 if (provider == ImHexApi::Provider::get())

@@ -2,12 +2,9 @@
 
 #include <content/visualizer_helpers.hpp>
 
-#include <implot.h>
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-
-#include <content/visualizer_helpers.hpp>
 
 namespace hex::plugin::visualizers {
 

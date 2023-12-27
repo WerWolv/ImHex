@@ -2,7 +2,6 @@
 
 #include <imgui.h>
 
-#include <functional>
 #include <string>
 
 namespace hex {

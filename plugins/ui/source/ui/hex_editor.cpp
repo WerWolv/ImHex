@@ -24,9 +24,9 @@ namespace hex::ui {
                     ImGui::Text("%c", c);
                 else
                     ImGui::TextDisabled(".");
-            }
-            else
+            } else {
                 ImGui::TextDisabled(".");
+            }
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
@@ -62,9 +62,9 @@ namespace hex::ui {
                 ImGui::PopID();
 
                 return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape);
-            }
-            else
+            } else {
                 return false;
+            }
         }
     };
 
@@ -317,8 +317,8 @@ namespace hex::ui {
                 const auto innerRect = window->InnerRect;
                 const auto borderSize = window->WindowBorderSize;
                 const auto scrollbarWidth = ImGui::GetStyle().ScrollbarSize;
-                const ImRect bb = ImRect(ImMax(outerRect.Min.x, outerRect.Max.x - borderSize - scrollbarWidth), innerRect.Min.y, outerRect.Max.x, innerRect.Max.y);
-                const ImDrawFlags roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
+                const auto bb = ImRect(ImMax(outerRect.Min.x, outerRect.Max.x - borderSize - scrollbarWidth), innerRect.Min.y, outerRect.Max.x, innerRect.Max.y);
+                const auto roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
 
                 if (numRows > 0) {
                     ImGui::ScrollbarEx(
@@ -363,9 +363,9 @@ namespace hex::ui {
 
                 if (m_showAscii) {
                     ImGui::TableSetupColumn("hex.ui.common.encoding.ascii"_lang, ImGuiTableColumnFlags_WidthFixed, (CharacterSize.x + m_characterCellPadding * 1_scaled) * m_bytesPerRow);
-                }
-                else
+                } else {
                     ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
+                }
 
                 ImGui::TableSetupColumn("");
                 // Custom encoding column
@@ -773,9 +773,9 @@ namespace hex::ui {
                                                         ? hex::toByteString(selection.getSize())
                                                         : hex::format("{}", selection.getSize())
                                 );
-                            }
-                            else
+                            } else {
                                 value = std::string("hex.ui.hex_editor.selection.none"_lang);
+                            }
 
                             ImGuiExt::TextFormatted("{}:", "hex.ui.hex_editor.selection"_lang);
                             ImGui::SameLine();

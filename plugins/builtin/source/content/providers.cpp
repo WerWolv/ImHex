@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerHandler({
             .basePath = "providers",
             .required = true,
-            .load = [](const std::fs::path &basePath, Tar &tar) {
+            .load = [](const std::fs::path &basePath, const Tar &tar) {
                 auto json = nlohmann::json::parse(tar.readString(basePath / "providers.json"));
                 auto providerIds = json.at("providers").get<std::vector<int>>();
 
@@ -88,8 +88,9 @@ namespace hex::plugin::builtin {
                     if (loaded) {
                         if (!newProvider->open() || !newProvider->isAvailable() || !newProvider->isReadable()) {
                             providerWarnings[newProvider] = newProvider->getErrorMessage();
-                        } else
+                        } else {
                             EventProviderOpened::post(newProvider);
+                        }
                     }
                 }
 
@@ -110,15 +111,16 @@ namespace hex::plugin::builtin {
                  } else {
 
                     // Else, if are warnings, still display them
-                    if (warningMsg.empty()) return true;
-                    else {
+                    if (warningMsg.empty()) {
+                        return true;
+                    } else {
                         showWarning(
                             hex::format("hex.builtin.popup.error.project.load.some_providers_failed"_lang, warningMsg));
                     }
                     return success;
                 }
             },
-            .store = [](const std::fs::path &basePath, Tar &tar) {
+            .store = [](const std::fs::path &basePath, const Tar &tar) {
                 std::vector<int> providerIds;
                 for (const auto &provider : ImHexApi::Provider::getProviders()) {
                     auto id = provider->getID();

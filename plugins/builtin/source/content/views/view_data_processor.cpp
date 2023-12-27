@@ -213,9 +213,10 @@ namespace hex::plugin::builtin {
             // Find the index of an attribute by its id
             auto indexFromId = [this](u32 id) -> std::optional<u32> {
                 const auto &attributes = this->getAttributes();
-                for (u32 i = 0; i < attributes.size(); i++)
+                for (u32 i = 0; i < attributes.size(); i++) {
                     if (u32(attributes[i].getId()) == id)
                         return i;
+                }
                 return std::nullopt;
             };
 
@@ -355,7 +356,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "data_processor.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 std::string save = tar.readString(basePath);
 
                 ViewDataProcessor::loadNodes(m_mainWorkspace.get(provider), nlohmann::json::parse(save));
@@ -363,7 +364,7 @@ namespace hex::plugin::builtin {
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 tar.writeString(basePath, ViewDataProcessor::saveNodes(m_mainWorkspace.get(provider)).dump(4));
 
                 return true;
@@ -599,11 +600,11 @@ namespace hex::plugin::builtin {
 
             // Show a different context menu depending on if a node, a link
             // or the background was right-clicked
-            if (ImNodes::IsNodeHovered(&m_rightClickedId))
+            if (ImNodes::IsNodeHovered(&m_rightClickedId)) {
                 ImGui::OpenPopup("Node Menu");
-            else if (ImNodes::IsLinkHovered(&m_rightClickedId))
+            } else if (ImNodes::IsLinkHovered(&m_rightClickedId)) {
                 ImGui::OpenPopup("Link Menu");
-            else {
+            } else {
                 ImGui::OpenPopup("Context Menu");
                 this->reloadCustomNodes();
             }

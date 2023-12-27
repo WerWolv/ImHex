@@ -1,7 +1,6 @@
 #include <hex/test/tests.hpp>
 
 #include <wolv/io/file.hpp>
-#include <hex/helpers/fs.hpp>
 
 using namespace std::literals::string_literals;
 

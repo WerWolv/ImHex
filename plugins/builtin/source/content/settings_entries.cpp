@@ -543,9 +543,9 @@ namespace hex::plugin::builtin {
     static void loadThemeSettings() {
         auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
 
-        if (theme == ThemeManager::NativeTheme)
+        if (theme == ThemeManager::NativeTheme) {
             ImHexApi::System::enableSystemThemeDetection(true);
-        else {
+        } else {
             ImHexApi::System::enableSystemThemeDetection(false);
             ThemeManager::changeTheme(theme);
         }

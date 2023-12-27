@@ -292,9 +292,9 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
                         ImGui::TableNextColumn();
-                        if (m_averageEntropy < 0)
+                        if (m_averageEntropy < 0) {
                             ImGui::TextUnformatted("???");
-                        else {
+                        } else {
                             auto entropy = std::abs(m_averageEntropy);
                             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
                             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
@@ -333,9 +333,9 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
                         ImGui::TableNextColumn();
-                        if (m_plainTextCharacterPercentage < 0)
+                        if (m_plainTextCharacterPercentage < 0) {
                             ImGui::TextUnformatted("???");
-                        else {
+                        } else {
                             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
                             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
                             ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor::HSV(0.3F * (m_plainTextCharacterPercentage / 100.0F), 0.8F, 0.6F, 1.0F).Value);

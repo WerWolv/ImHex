@@ -90,9 +90,9 @@ namespace hex {
             theme["styles"][type] = {};
 
             for (const auto &[key, style] : handler.styleMap) {
-                if (std::holds_alternative<float*>(style.value))
+                if (std::holds_alternative<float*>(style.value)) {
                     theme["styles"][type][key] = *std::get<float*>(style.value);
-                else if (std::holds_alternative<ImVec2*>(style.value)) {
+                } else if (std::holds_alternative<ImVec2*>(style.value)) {
                     theme["styles"][type][key] = {
                             std::get<ImVec2*>(style.value)->x,
                             std::get<ImVec2*>(style.value)->y

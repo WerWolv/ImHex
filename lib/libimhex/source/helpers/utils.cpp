@@ -67,8 +67,9 @@ namespace hex {
         if (value < 0) {
             data[index] = '-';
             return { data + index };
-        } else
+        } else {
             return { data + index + 1 };
+        }
     }
 
     std::string toLower(std::string string) {
@@ -376,9 +377,9 @@ namespace hex {
         std::string result;
 
         for (u8 byte : bytes) {
-            if (std::isprint(byte) && byte != '\\')
+            if (std::isprint(byte) && byte != '\\') {
                 result += char(byte);
-            else {
+            } else {
                 switch (byte) {
                     case '\\':
                         result += "\\";
@@ -538,9 +539,9 @@ namespace hex {
         std::wstring utf16;
 
         for (auto unicode : unicodes) {
-            if (unicode <= 0xFFFF)
+            if (unicode <= 0xFFFF) {
                 utf16 += static_cast<wchar_t>(unicode);
-            else {
+            } else {
                 unicode -= 0x10000;
                 utf16 += static_cast<wchar_t>(((unicode >> 10) + 0xD800));
                 utf16 += static_cast<wchar_t>(((unicode & 0x3FF) + 0xDC00));

@@ -42,7 +42,7 @@ namespace hex {
     class Plugin {
     public:
         explicit Plugin(const std::fs::path &path);
-        explicit Plugin(PluginFunctions functions);
+        explicit Plugin(const PluginFunctions &functions);
 
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;

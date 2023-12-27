@@ -43,9 +43,9 @@ namespace hex::plugin::builtin {
                 return string[offset++];
             };
 
-            auto parseValue = [&](u8 byteCount) {
+            auto parseValue = [&](u8 count) {
                 u64 value = 0x00;
-                for (u8 i = 0; i < byteCount; i++) {
+                for (u8 i = 0; i < count; i++) {
                     u8 byte = (parseHexDigit(c()) << 4) | parseHexDigit(c());
                     value <<= 8;
                     value |= byte;

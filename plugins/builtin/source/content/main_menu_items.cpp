@@ -26,7 +26,7 @@ using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
 
-    static bool g_demoWindowOpen = false;
+    static bool s_demoWindowOpen = false;
 
     namespace {
 
@@ -275,9 +275,9 @@ namespace hex::plugin::builtin {
                             return;
                         }
 
-                        if (data.has_value())
+                        if (data.has_value()) {
                             file.writeVector(data.value());
-                        else {
+                        } else {
                             handleIPSError(data.error());
                         }
 
@@ -314,9 +314,9 @@ namespace hex::plugin::builtin {
                             return;
                         }
 
-                        if (data.has_value())
+                        if (data.has_value()) {
                             file.writeVector(data.value());
-                        else {
+                        } else {
                             handleIPSError(data.error());
                         }
 
@@ -490,7 +490,7 @@ namespace hex::plugin::builtin {
             #if defined(DEBUG)
                 ImGui::Separator();
 
-                ImGui::MenuItem("hex.builtin.menu.view.demo"_lang, "", &g_demoWindowOpen);
+                ImGui::MenuItem("hex.builtin.menu.view.demo"_lang, "", &s_demoWindowOpen);
                 ImGui::MenuItem("hex.builtin.menu.view.debug"_lang, "", &hex::dbg::impl::getDebugWindowState());
             #endif
         });
@@ -531,9 +531,9 @@ namespace hex::plugin::builtin {
                     if (shift) {
                         wolv::io::fs::remove(path);
                         LayoutManager::reload();
-                    }
-                    else
+                    } else {
                         LayoutManager::load(path);
+                    }
                 }
             }
         });
@@ -580,9 +580,9 @@ namespace hex::plugin::builtin {
         createHelpMenu();
 
         (void)EventFrameEnd::subscribe([] {
-            if (g_demoWindowOpen) {
-                ImGui::ShowDemoWindow(&g_demoWindowOpen);
-                ImPlot::ShowDemoWindow(&g_demoWindowOpen);
+            if (s_demoWindowOpen) {
+                ImGui::ShowDemoWindow(&s_demoWindowOpen);
+                ImPlot::ShowDemoWindow(&s_demoWindowOpen);
             }
         });
     }

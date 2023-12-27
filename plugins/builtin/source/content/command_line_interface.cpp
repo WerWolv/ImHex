@@ -266,9 +266,9 @@ namespace hex::plugin::builtin {
 
     void handlePatternLanguageCommand(const std::vector<std::string> &args) {
         std::vector<std::string> processedArgs = args;
-        if (processedArgs.empty())
+        if (processedArgs.empty()) {
             processedArgs.emplace_back("--help");
-        else {
+        } else {
             for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::PatternsInclude))
                 processedArgs.emplace_back(hex::format("--includes={}", wolv::util::toUTF8String(path)));
         }

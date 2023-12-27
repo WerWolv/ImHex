@@ -46,7 +46,7 @@ namespace hex {
         m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
     }
 
-    Plugin::Plugin(hex::PluginFunctions functions) {
+    Plugin::Plugin(const hex::PluginFunctions &functions) {
         m_handle        = 0;
         m_functions     = functions;
     }
@@ -125,9 +125,9 @@ namespace hex {
     }
 
     std::string Plugin::getPluginName() const {
-        if (m_functions.getPluginNameFunction != nullptr)
+        if (m_functions.getPluginNameFunction != nullptr) {
             return m_functions.getPluginNameFunction();
-        else {
+        } else {
             if (this->isLibraryPlugin())
                 return "Library Plugin";
             else
@@ -185,8 +185,9 @@ namespace hex {
         if (m_functions.getSubCommandsFunction != nullptr) {
             auto result = m_functions.getSubCommandsFunction();
             return *static_cast<std::vector<SubCommand>*>(result);
-        } else
+        } else {
             return { };
+        }
     }
 
     bool Plugin::isLibraryPlugin() const {

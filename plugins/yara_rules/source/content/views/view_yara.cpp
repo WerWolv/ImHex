@@ -3,7 +3,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 
-#include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 
 #include <toasts/toast_notification.hpp>
@@ -16,7 +15,6 @@
 #pragma GCC diagnostic pop
 
 #include <filesystem>
-#include <thread>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
@@ -44,7 +42,7 @@ namespace hex::plugin::yara {
         ProjectFile::registerPerProviderHandler({
             .basePath = "yara.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 auto fileContent = tar.readString(basePath);
                 if (fileContent.empty())
                     return true;
@@ -75,7 +73,7 @@ namespace hex::plugin::yara {
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 nlohmann::json data;
 
                 data["rules"] = nlohmann::json::array();
@@ -233,13 +231,14 @@ namespace hex::plugin::yara {
             ImGuiListClipper clipper;
 
             clipper.Begin(m_consoleMessages.size());
-            while (clipper.Step())
+            while (clipper.Step()) {
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                     const auto &message = m_consoleMessages[i];
 
                     if (ImGui::Selectable(message.c_str()))
                         ImGui::SetClipboardText(message.c_str());
                 }
+            }
         }
         ImGui::EndChild();
     }

@@ -264,7 +264,7 @@ namespace hex::plugin::builtin {
             return { };
 
         std::vector<u8> bytes;
-        Occurrence::DecodeType decodeType = Occurrence::DecodeType::Binary;
+        auto decodeType = Occurrence::DecodeType::Binary;
         std::endian endian;
         switch (settings.type) {
             default:
@@ -494,11 +494,11 @@ namespace hex::plugin::builtin {
     void ViewFind::runSearch() {
         Region searchRegion = m_searchSettings.region;
 
-        if (m_searchSettings.mode == SearchSettings::Mode::Strings)
+        if (m_searchSettings.mode == SearchSettings::Mode::Strings) {
             AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_strings.name");
-        else if (m_searchSettings.mode == SearchSettings::Mode::Sequence)
+        } else if (m_searchSettings.mode == SearchSettings::Mode::Sequence) {
             AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_specific_string.name");
-        else if (m_searchSettings.mode == SearchSettings::Mode::Value) {
+        } else if (m_searchSettings.mode == SearchSettings::Mode::Value) {
             if (m_searchSettings.value.inputMin == "250" && m_searchSettings.value.inputMax == "1000")
                 AchievementManager::unlockAchievement("hex.builtin.achievement.find", "hex.builtin.achievement.find.find_numeric.name");
         }

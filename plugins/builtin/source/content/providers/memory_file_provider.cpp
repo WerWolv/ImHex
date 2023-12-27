@@ -53,9 +53,9 @@ namespace hex::plugin::builtin {
             if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr) {
                 fileProvider->setPath(path);
 
-                if (!fileProvider->open())
+                if (!fileProvider->open()) {
                     ImHexApi::Provider::remove(newProvider);
-                else {
+                } else {
                     MovePerProviderData::post(this, fileProvider);
 
                     fileProvider->markDirty(false);

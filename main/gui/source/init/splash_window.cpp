@@ -95,9 +95,9 @@ namespace hex::init {
             }();
 
             for (const auto &colorConfig : highlightConfig) {
-                if (!colorConfig.contains("time"))
+                if (!colorConfig.contains("time")) {
                     selectedConfigs.push_back(colorConfig);
-                else {
+                } else {
                     const auto &time = colorConfig["time"];
                     const auto &start = time["start"];
                     const auto &end = time["end"];

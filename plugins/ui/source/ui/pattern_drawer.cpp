@@ -54,7 +54,7 @@ namespace hex::ui {
 
         template<typename T>
         auto highlightWhenSelected(u64 address, u64 size, const T &callback) {
-            constexpr bool HasReturn = !requires(T t) { { t() } -> std::same_as<void>; };
+            constexpr static bool HasReturn = !requires(T t) { { t() } -> std::same_as<void>; };
 
             auto selected = isPatternSelected(address, size);
 
@@ -103,7 +103,7 @@ namespace hex::ui {
         }
 
         void drawOffsetColumn(const pl::ptrn::Pattern& pattern) {
-            auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); 
+            auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern);
             if (bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr) {
                 drawOffsetColumnForBitfieldMember(*bitfieldMember);
                 return;
@@ -134,7 +134,7 @@ namespace hex::ui {
         }
 
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
-            if (auto *bitfieldMember = dynamic_cast<pl::ptrn::PatternBitfieldMember const*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
+            if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else
                 ImGuiExt::TextFormatted("0x{0:04X}", pattern.getSize());
@@ -179,9 +179,9 @@ namespace hex::ui {
                     return std::nullopt;
                 }
                 break;
-            } else if (c == '.')
+            } else if (c == '.') {
                 result.path.emplace_back();
-            else if (c == '[') {
+            } else if (c == '[') {
                 result.path.emplace_back();
                 result.path.back() += c;
             } else if (c == ' ') {
@@ -849,11 +849,11 @@ namespace hex::ui {
         if (matchesFilter(m_filter.path, m_currPatternPath, false)) {
             if (m_filter.value.has_value()) {
                 auto patternValue = pattern.getValue();
-                if (patternValue == m_filter.value)
+                if (patternValue == m_filter.value) {
                     pattern.accept(*this);
-                else if (!matchesFilter(m_filter.path, m_currPatternPath, true))
+                } else if (!matchesFilter(m_filter.path, m_currPatternPath, true)) {
                     pattern.accept(*this);
-                else if (patternValue.isPattern() && m_filter.value->isString()) {
+                } else if (patternValue.isPattern() && m_filter.value->isString()) {
                     if (patternValue.toString(true) == m_filter.value->toString(false))
                         pattern.accept(*this);
                 }
@@ -1060,10 +1060,11 @@ namespace hex::ui {
             return this->sortPatterns(sortSpecs, left, right);
         });
 
-        for (auto &pattern : sortedPatterns)
+        for (auto &pattern : sortedPatterns) {
             pattern->sort([this, &sortSpecs](const pl::ptrn::Pattern *left, const pl::ptrn::Pattern *right){
                 return this->sortPatterns(sortSpecs, left, right);
             });
+        }
 
         sortSpecs->SpecsDirty = false;
         
@@ -1082,7 +1083,7 @@ namespace hex::ui {
         }
     }
 
-    void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, pl::PatternLanguage *runtime, float height) {
+    void PatternDrawer::draw(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, const pl::PatternLanguage *runtime, float height) {
         std::scoped_lock lock(s_resetDrawMutex);
 
         const auto treeStyleButton = [this](auto icon, TreeStyle style, const char *tooltip) {
@@ -1141,10 +1142,10 @@ namespace hex::ui {
         if (ImGui::BeginPopup("ExportPatterns")) {
             for (const auto &formatter : m_formatters) {
                 const auto name = [&]{
-                    auto name = formatter->getName();
-                    std::transform(name.begin(), name.end(), name.begin(), [](char c){ return char(std::toupper(c)); });
+                    auto formatterName = formatter->getName();
+                    std::transform(formatterName.begin(), formatterName.end(), formatterName.begin(), [](char c){ return char(std::toupper(c)); });
 
-                    return name;
+                    return formatterName;
                 }();
 
                 const auto &extension = formatter->getFileExtension();
@@ -1170,17 +1171,17 @@ namespace hex::ui {
 
                     for (auto &pattern : patterns) {
                         std::vector<std::string> patternPath;
-                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &pattern) {
-                            if (pattern.hasAttribute("hex::favorite"))
-                                m_favorites.insert({ patternPath, pattern.clone() });
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
+                            if (currPattern.hasAttribute("hex::favorite"))
+                                m_favorites.insert({ patternPath, currPattern.clone() });
 
-                            if (const auto &args = pattern.getAttributeArguments("hex::group"); !args.empty()) {
+                            if (const auto &args = currPattern.getAttributeArguments("hex::group"); !args.empty()) {
                                 auto groupName = args.front().toString();
 
                                 if (!m_groups.contains(groupName))
                                     m_groups.insert({groupName, std::vector<std::unique_ptr<pl::ptrn::Pattern>>()});
 
-                                m_groups[groupName].push_back(pattern.clone());
+                                m_groups[groupName].push_back(currPattern.clone());
                             }
                         });
 
@@ -1189,14 +1190,14 @@ namespace hex::ui {
                         task.update();
 
                         patternPath.clear();
-                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &pattern) {
+                        traversePatternTree(*pattern, patternPath, [&, this](const pl::ptrn::Pattern &currPattern) {
                             for (auto &[path, favoritePattern] : m_favorites) {
                                 if (updatedFavorites == m_favorites.size())
                                     task.interrupt();
                                 task.update();
 
                                 if (this->matchesFilter(patternPath, path, true)) {
-                                    favoritePattern = pattern.clone();
+                                    favoritePattern = currPattern.clone();
                                     updatedFavorites += 1;
 
                                     break;
@@ -1309,9 +1310,10 @@ namespace hex::ui {
 
         for (auto &[path, pattern] : m_favorites)
             pattern = nullptr;
-        for (auto &[groupName, patterns]: m_groups)
+        for (auto &[groupName, patterns]: m_groups) {
             for (auto &pattern: patterns)
                 pattern = nullptr;
+        }
 
         m_groups.clear();
 

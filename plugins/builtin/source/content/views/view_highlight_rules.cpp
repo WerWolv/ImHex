@@ -115,7 +115,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "highlight_rules.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 const auto json = nlohmann::json::parse(tar.readString(basePath));
 
                 auto &rules = m_rules.get(provider);
@@ -138,7 +138,7 @@ namespace hex::plugin::builtin {
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 nlohmann::json result = nlohmann::json::array();
                 for (const auto &rule : m_rules.get(provider)) {
                     nlohmann::json content;

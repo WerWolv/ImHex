@@ -260,9 +260,9 @@ namespace hex::plugin::builtin {
                     this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), e.what()));
                 }
             }
-        }
-        else
+        } else {
             this->setPath(path);
+        }
     }
 
     nlohmann::json FileProvider::storeSettings(nlohmann::json settings) const {
@@ -290,9 +290,9 @@ namespace hex::plugin::builtin {
         auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
 
         if (auto memoryProvider = dynamic_cast<MemoryFileProvider*>(newProvider); memoryProvider != nullptr) {
-            if (!memoryProvider->open())
+            if (!memoryProvider->open()) {
                 ImHexApi::Provider::remove(newProvider);
-            else {
+            } else {
                 const auto size = this->getActualSize();
                 TaskManager::createTask("Loading into memory", size, [this, size, memoryProvider](Task &task) {
                     task.setInterruptCallback([memoryProvider]{

@@ -220,7 +220,7 @@ namespace hex::plugin::builtin {
             ProjectFile::registerHandler({
                 .basePath = "challenge",
                 .required = false,
-                .load = [](const std::fs::path &basePath, Tar &tar) {
+                .load = [](const std::fs::path &basePath, const Tar &tar) {
                     if (!tar.contains(basePath / "achievements.json") || !tar.contains(basePath / "description.txt"))
                         return true;
 
@@ -302,7 +302,7 @@ namespace hex::plugin::builtin {
 
                     return true;
                 },
-                .store = [](const std::fs::path &basePath, Tar &tar) {
+                .store = [](const std::fs::path &basePath, const Tar &tar) {
                     if (!challengeAchievement.empty())
                         tar.writeString(basePath / "achievements.json", challengeAchievement);
                     if (!challengeDescription.empty())

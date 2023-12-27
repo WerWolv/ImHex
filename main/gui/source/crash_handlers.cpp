@@ -8,7 +8,6 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/stacktrace.hpp>
 
-#include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <window.hpp>

@@ -302,7 +302,7 @@ namespace hex::plugin::builtin {
                 size_t currSize = std::min<u64>(size, m_sectorSize);
 
                 this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
-                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
+                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), static_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
                 LARGE_INTEGER seekPosition;
                 seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);
