@@ -35,15 +35,6 @@ namespace hex::prv {
         [[nodiscard]] std::string getName() const override { return ""; }
 
         [[nodiscard]] std::string getTypeName() const override { return "MemoryProvider"; }
-
-        std::pair<Region, bool> getRegionValidity(u64 address) const {
-            address -= this->getBaseAddress();
-
-            if (address < this->getActualSize())
-                return { Region { this->getBaseAddress() + address, this->getActualSize() - address }, true };
-            else
-                return { Region::Invalid(), false };
-        }
     private:
         void renameFile();
 

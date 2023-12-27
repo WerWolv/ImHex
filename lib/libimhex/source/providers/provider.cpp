@@ -230,8 +230,11 @@ namespace hex::prv {
     }
 
     std::pair<Region, bool> Provider::getRegionValidity(u64 address) const {
-        if ((address - this->getBaseAddress()) > this->getActualSize())
-            return { Region::Invalid(), false };
+        u64 absoluteAddress = address - this->getBaseAddress();
+
+        if (absoluteAddress < this->getActualSize())
+            return { Region { this->getBaseAddress() + absoluteAddress, this->getActualSize() - absoluteAddress }, true };
+
 
         bool insideValidRegion = false;
 
