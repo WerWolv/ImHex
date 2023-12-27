@@ -181,8 +181,6 @@ namespace ImGuiExt {
 
     bool Hyperlink(const char *label, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
         ImGuiWindow *window = GetCurrentWindow();
-        if (window->SkipItems)
-            return false;
 
         ImGuiContext &g         = *GImGui;
         const ImGuiID id        = window->GetID(label);
@@ -192,8 +190,7 @@ namespace ImGuiExt {
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         const ImRect bb(pos, pos + size);
-        if (!ItemAdd(bb, id))
-            return false;
+        ItemAdd(bb, id);
 
         if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
             flags |= ImGuiButtonFlags_Repeat;
