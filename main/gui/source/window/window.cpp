@@ -177,7 +177,7 @@ namespace hex {
 
             static i32 lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = ImHexApi::System::getTargetFPS() / 2;
+                lockTimeout = (1.0 / m_lastFrameTime);
             } else if (lockTimeout > 0) {
                 lockTimeout -= 1;
             }
@@ -1043,6 +1043,8 @@ namespace hex {
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+
             win->frameBegin();
             win->frame();
             win->frameEnd();
@@ -1056,9 +1058,18 @@ namespace hex {
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+
             win->frameBegin();
             win->frame();
             win->frameEnd();
+        });
+
+        glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
+            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
+
+            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
         });
 
         #if !defined(OS_WEB)
@@ -1088,6 +1099,7 @@ namespace hex {
                         key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
                     ) {
                         auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                        win->m_unlockFrameRate = true;
                         win->m_pressedKeys.push_back(key);
                     }
                 }
