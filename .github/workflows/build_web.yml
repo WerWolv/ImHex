@@ -29,7 +29,7 @@ jobs:
       uses: actions/cache@v3
       with:
         path: cache
-        key: build-web-cache
+        key: ${{ runner.os }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
     
     - name: 🐳 Inject /cache into docker
       uses: reproducible-containers/buildkit-cache-dance@v2.1.2
@@ -43,9 +43,7 @@ jobs:
 
     - name: 🔨 Fix permissions
       run: |
-        chmod -c -R +rX "out/" | while read line; do
-          echo "::warning title=Invalid file permissions automatically fixed::$line"
-        done
+        chmod -c -R +rX "out/"
 
     - name: ⬆️ Upload artifacts
       uses: actions/upload-pages-artifact@v2

@@ -282,7 +282,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
           gh extension install actions/gh-actions-cache
-          gh actions-cache delete "build-macos-arm64-cache" --confirm
+          gh actions-cache delete "build-macos-arm64-cache" --confirm || true
   
   # Ubuntu build
   ubuntu:
