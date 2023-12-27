@@ -126,7 +126,6 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %{_libdir}/libimhex.so*
 %{_libdir}/%{name}/
 %{_metainfodir}/net.werwolv.%{name}.metainfo.xml
-%{_datadir}/%{name}/sdk/
 
 
 %changelog
