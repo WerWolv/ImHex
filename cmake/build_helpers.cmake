@@ -180,12 +180,17 @@ macro(createPackage)
         # Install binaries directly in the prefix, usually C:\Program Files\ImHex.
         set(CMAKE_INSTALL_BINDIR ".")
 
+        set(PLUGIN_TARGET_FILES "")
+        foreach (plugin IN LISTS PLUGINS)
+            list(APPEND PLUGIN_TARGET_FILES "$<TARGET_FILE:${plugin}>")
+        endforeach ()
+
         # Grab all dynamically linked dependencies.
-        INSTALL(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
-        INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
+        install(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
+        install(CODE "set(PLUGIN_TARGET_FILES \"${PLUGIN_TARGET_FILES}\")")
         install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES
-            EXECUTABLES $<TARGET_FILE:builtin> $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
+            EXECUTABLES ${PLUGIN_TARGET_FILES} $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
             RESOLVED_DEPENDENCIES_VAR _r_deps
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
             CONFLICTING_DEPENDENCIES_PREFIX _c_deps
