@@ -68,7 +68,7 @@ namespace hex::plugin::builtin {
 
         void addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback = []{});
 
-        bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
+        bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url);
         bool remove(fs::ImHexPath pathType, const std::string &fileName);
 
     private:

@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
 
                             if (entry.hasUpdate) {
                                 if (ImGui::Button("hex.builtin.view.store.update"_lang, buttonSize)) {
-                                    entry.downloading = this->download(category.path, entry.fileName, entry.link, !entry.system);
+                                    entry.downloading = this->download(category.path, entry.fileName, entry.link);
                                 }
                             } else if (entry.system) {
                                 ImGui::BeginDisabled();
@@ -142,7 +142,7 @@ namespace hex::plugin::builtin {
                                 }
                             } else if (!entry.installed) {
                                 if (ImGui::Button("hex.builtin.view.store.download"_lang, buttonSize)) {
-                                    entry.downloading = this->download(category.path, entry.fileName, entry.link, false);
+                                    entry.downloading = this->download(category.path, entry.fileName, entry.link);
                                     AchievementManager::unlockAchievement("hex.builtin.achievement.misc", "hex.builtin.achievement.misc.download_from_store.name");
                                 }
                             } else {
@@ -202,7 +202,7 @@ namespace hex::plugin::builtin {
                 for (auto &category : m_categories) {
                     for (auto &entry : category.entries) {
                         if (entry.hasUpdate) {
-                            entry.downloading = this->download(category.path, entry.fileName, entry.link, true);
+                            entry.downloading = this->download(category.path, entry.fileName, entry.link);
                             if (!m_download.valid())
                                 continue;
 
@@ -293,7 +293,7 @@ namespace hex::plugin::builtin {
         this->drawStore();
     }
 
-    bool ViewStore::download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update) {
+    bool ViewStore::download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url) {
         bool downloading = false;
         for (const auto &folderPath : fs::getDefaultPaths(pathType)) {
             if (!fs::isPathWritable(folderPath))
