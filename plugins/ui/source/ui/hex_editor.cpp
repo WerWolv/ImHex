@@ -311,7 +311,7 @@ namespace hex::ui {
             {
                 const auto window = ImGui::GetCurrentWindowRead();
                 const auto axis = ImGuiAxis_Y;
-                ImS64 numRows = (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+                ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
 
                 const auto outerRect = window->Rect();
                 const auto innerRect = window->InnerRect;

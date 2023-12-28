@@ -262,7 +262,7 @@ namespace hex::ui {
             m_tooltipCallback = callback;
         }
 
-        [[nodiscard]] i64 getScrollPosition() const {
+        [[nodiscard]] i64 getScrollPosition() {
             return m_scrollPosition.get();
         }
 
