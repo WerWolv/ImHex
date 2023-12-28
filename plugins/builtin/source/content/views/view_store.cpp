@@ -308,15 +308,12 @@ namespace hex::plugin::builtin {
                 return false;
             }
 
-            log::info("{} file {}", update ? "Updating" : "Downloading", fullPath.string());
-            if (!update || wolv::io::fs::exists(fullPath)) {
-                downloading = true;
-                m_downloadPath = fullPath;
+            downloading = true;
+            m_downloadPath = fullPath;
 
-                m_httpRequest.setUrl(url);
-                m_download = m_httpRequest.downloadFile(fullPath);
-                break;
-            }
+            m_httpRequest.setUrl(url);
+            m_download = m_httpRequest.downloadFile(fullPath);
+            break;
         }
 
         if (!downloading) {
