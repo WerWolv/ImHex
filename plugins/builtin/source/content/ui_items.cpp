@@ -121,7 +121,7 @@ namespace hex::plugin::builtin {
                 if (frontTask == nullptr)
                     return;
 
-                const auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
+                const auto progress = frontTask->getMaxValue() == 0 ? -1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
 
                 ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, u32(progress * 100));
 
@@ -135,12 +135,12 @@ namespace hex::plugin::builtin {
                 const auto widgetEnd = ImGui::GetCursorPos();
 
                 ImGui::SetCursorPos(widgetStart);
-                ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
+                ImGui::InvisibleButton("RestTasks", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
                 ImGui::SetCursorPos(widgetEnd);
 
                 ImGuiExt::InfoTooltip(hex::format("[{:.1f}%] {}", progress * 100.0F, Lang(frontTask->getUnlocalizedName())).c_str());
 
-                if (ImGui::BeginPopupContextItem("FrontTask", ImGuiPopupFlags_MouseButtonLeft)) {
+                if (ImGui::BeginPopupContextItem("RestTasks", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
                         if (task->isBackgroundTask())
                             continue;
@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
-                        ImGuiExt::SmallProgressBar(task->getMaxValue() == 0 ? 1 : (float(task->getValue()) / float(task->getMaxValue())), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
+                        ImGuiExt::SmallProgressBar(task->getMaxValue() == 0 ? -1 : (float(task->getValue()) / float(task->getMaxValue())), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
                         ImGui::SameLine();
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));

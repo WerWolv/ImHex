@@ -720,10 +720,17 @@ namespace ImGuiExt {
             return;
 
         // Render
+        bool no_progress = fraction < 0;
         fraction = ImSaturate(fraction);
         RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
         bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
-        RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+
+        if (no_progress) {
+            auto time = (fmod(ImGui::GetTime() * 2, 1.8) - 0.4);
+            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), ImSaturate(time), ImSaturate(time + 0.2), style.FrameRounding);
+        } else {
+            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+        }
     }
 
     void TextUnformattedCentered(const char *text) {
