@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
             }
         };
 
-        for (const auto [extractFolder, alwaysExtract] : Paths) {
+        for (const auto &[extractFolder, alwaysExtract] : Paths) {
             for (const auto &romfsPath : romfs::list(extractFolder)) {
                 for (const auto &imhexPath : fs::getDataPaths()) {
                     const auto path = imhexPath / std::fs::relative(romfsPath, extractFolder);
