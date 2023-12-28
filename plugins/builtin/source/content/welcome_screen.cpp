@@ -229,16 +229,6 @@ namespace hex::plugin::builtin {
                     ImGui::Dummy({});
                     recent::draw();
 
-                    if (ImHexApi::System::getInitArguments().contains("update-available")) {
-                        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
-                        ImGui::TableNextColumn();
-                        ImGuiExt::UnderlinedText("hex.builtin.welcome.header.update"_lang);
-                        {
-                            if (ImGuiExt::DescriptionButton("hex.builtin.welcome.update.title"_lang, hex::format("hex.builtin.welcome.update.desc"_lang, ImHexApi::System::getInitArguments()["update-available"]).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                                ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
-                        }
-                    }
-
                     ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
                     ImGui::TableNextColumn();
 
@@ -250,6 +240,14 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::IconHyperlink(ICON_VS_COMMENT_DISCUSSION, "hex.builtin.welcome.help.discord"_lang)) hex::openWebpage("hex.builtin.welcome.help.discord.link"_lang);
                     }
                     ImGuiExt::EndSubWindow();
+
+                    if (ImHexApi::System::getInitArguments().contains("update-available")) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.update.title"_lang, hex::format("hex.builtin.welcome.update.desc"_lang, ImHexApi::System::getInitArguments()["update-available"]).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
+                            ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
+                    }
 
                     ImGui::EndTable();
                 }

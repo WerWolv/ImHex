@@ -17,6 +17,7 @@ md5sums=(SKIP)
 
 package() {
     install -Dm755 "$srcdir/usr/bin/imhex" "$pkgdir/usr/bin/imhex"
+    install -Dm755 "$srcdir/usr/bin/imhex-updater" "$pkgdir/usr/bin/imhex-updater"
     install -Dm644 "$srcdir/usr/lib/libimhex.so.$pkgver" "$pkgdir/usr/lib/libimhex.so.$pkgver"
 
     for plugin in "$srcdir/usr/lib/imhex/plugins/"*.hexplug*; do

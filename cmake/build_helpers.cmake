@@ -253,6 +253,7 @@ macro(createPackage)
 
         install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
         install(TARGETS main BUNDLE DESTINATION ".")
+        install(TARGETS updater BUNDLE DESTINATION ".")
         install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
 
         # Update library references to make the bundle portable
@@ -265,6 +266,7 @@ macro(createPackage)
         set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        install(TARGETS updater RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         if(WIN32) # Forwarder is only needed on Windows
             install(TARGETS main-forwarder BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR})
         endif()
