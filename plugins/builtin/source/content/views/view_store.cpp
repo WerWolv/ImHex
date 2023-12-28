@@ -203,6 +203,9 @@ namespace hex::plugin::builtin {
                     for (auto &entry : category.entries) {
                         if (entry.hasUpdate) {
                             entry.downloading = this->download(category.path, entry.fileName, entry.link, true);
+                            if (!m_download.valid())
+                                continue;
+
                             m_download.wait();
                             this->handleDownloadFinished(category, entry);
                             task.update(progress);
@@ -305,12 +308,13 @@ namespace hex::plugin::builtin {
                 return false;
             }
 
+            log::info("{} file {}", update ? "Updating" : "Downloading", fullPath.string());
             if (!update || wolv::io::fs::exists(fullPath)) {
-                downloading          = true;
+                downloading = true;
                 m_downloadPath = fullPath;
 
                 m_httpRequest.setUrl(url);
-                m_download     = m_httpRequest.downloadFile(fullPath);
+                m_download = m_httpRequest.downloadFile(fullPath);
                 break;
             }
         }
