@@ -17,6 +17,8 @@
 namespace hex {
 
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
+        log::info("Loading plugin '{}'", wolv::util::toUTF8String(path.filename()));
+
         #if defined(OS_WINDOWS)
             m_handle = uintptr_t(LoadLibraryW(path.c_str()));
 
@@ -32,8 +34,6 @@ namespace hex {
                 return;
             }
         #endif
-
-        log::info("Loaded plugin '{}'", wolv::util::toUTF8String(path.filename()));
 
         m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
         m_functions.initializeLibraryFunction    = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializeLibrary");
@@ -88,8 +88,6 @@ namespace hex {
         const auto pluginName = wolv::util::toUTF8String(m_path.filename());
 
         if (this->isLibraryPlugin()) {
-            m_functions.initializeLibraryFunction();
-            log::info("Library plugin '{}' initialized successfully", pluginName);
             return true;
         }
 
