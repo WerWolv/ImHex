@@ -500,6 +500,16 @@ namespace hex::plugin::builtin {
         });
 
         EventWindowInitialized::subscribe([] {
+            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
+                ui::PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
+                    []{
+                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
+                    },
+                    []{ });
+            }
+
+            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+
             // Documentation of the value above the setting definition
             auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
             if (allowServerContact == 2) {
@@ -510,16 +520,6 @@ namespace hex::plugin::builtin {
                     PopupTelemetryRequest::open();
                 #endif
             }
-
-            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
-                ui::PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
-                    []{
-                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
-                    },
-                    []{ });
-            }
-
-            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
         });
 
         // Clear project context if we go back to the welcome screen
