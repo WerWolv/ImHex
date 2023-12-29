@@ -20,6 +20,7 @@ macro(addOptionalLibrary package library)
         string(TOUPPER ${package} PACKAGE)
         add_compile_definitions(${PACKAGE}_FOUND)
         set(LIBRARIES ${LIBRARIES} ${package}::${library})
+        message(STATUS "Enabling decompression support using ${package} (${${package}_VERSION})")
     endif()
 
 endmacro()
