@@ -122,10 +122,10 @@ namespace hex::plugin::yara {
                 }
             }
 
-            /*PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
+            ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Yara File", "yara" }, { "Yara File", "yar" } }, true,
                 [&](const auto &path) {
                     m_rules->push_back({ path.filename(), path });
-                });*/
+            });
         }
 
         ImGui::SameLine();
