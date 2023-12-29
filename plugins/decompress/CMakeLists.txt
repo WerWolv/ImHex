@@ -12,18 +12,23 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
     )
     set(LibArchive_INCLUDE_DIR "${LIBARCHIVE_PREFIX}/include")
 endif()
-find_package(LibArchive REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(BZip2 REQUIRED)
-find_package(LibLZMA REQUIRED)
-find_package(zstd REQUIRED)
 
-set_property(TARGET LibArchive::LibArchive  PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_property(TARGET ZLIB::ZLIB              PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_property(TARGET BZip2::BZip2            PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_property(TARGET LibLZMA::LibLZMA        PROPERTY POSITION_INDEPENDENT_CODE ON)
-set_property(TARGET zstd::libzstd_static    PROPERTY POSITION_INDEPENDENT_CODE ON)
+macro(addOptionalLibrary package library)
+    find_package(${package})
+    if (${package}_FOUND)
+        set_property(TARGET ${package}::${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
+        string(TOUPPER ${package} PACKAGE)
+        add_compile_definitions(${PACKAGE}_FOUND)
+        set(LIBRARIES ${LIBRARIES} ${package}::${library})
+    endif()
 
+endmacro()
+
+addOptionalLibrary(LibArchive LibArchive)
+addOptionalLibrary(ZLIB ZLIB)
+addOptionalLibrary(BZip2 BZip2)
+addOptionalLibrary(LibLZMA LibLZMA)
+addOptionalLibrary(zstd libzstd_static)
 
 add_imhex_plugin(
     NAME
@@ -36,9 +41,5 @@ add_imhex_plugin(
         include
     LIBRARIES
         ui
-        LibArchive::LibArchive
-        ZLIB::ZLIB
-        BZip2::BZip2
-        LibLZMA::LibLZMA
-        zstd::libzstd_static
+        ${LIBRARIES}
 )
