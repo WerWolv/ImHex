@@ -18,18 +18,12 @@ macro(addOptionalLibrary package library)
     if (${package}_FOUND)
         set_property(TARGET ${package}::${library} PROPERTY POSITION_INDEPENDENT_CODE ON)
         string(TOUPPER ${package} PACKAGE)
-        add_compile_definitions(${PACKAGE}_FOUND)
         set(LIBRARIES ${LIBRARIES} ${package}::${library})
         message(STATUS "Enabling decompression support using ${package} (${${package}_VERSION})")
+        enable_plugin_feature(${PACKAGE})
     endif()
 
 endmacro()
-
-addOptionalLibrary(LibArchive LibArchive)
-addOptionalLibrary(ZLIB ZLIB)
-addOptionalLibrary(BZip2 BZip2)
-addOptionalLibrary(LibLZMA LibLZMA)
-addOptionalLibrary(zstd libzstd_static)
 
 add_imhex_plugin(
     NAME
@@ -42,5 +36,17 @@ add_imhex_plugin(
         include
     LIBRARIES
         ui
-        ${LIBRARIES}
+    FEATURES
+        LIBARCHIVE
+        ZLIB
+        BZIP2
+        LIBLZMA
+        ZSTD
 )
+
+addOptionalLibrary(LibArchive LibArchive)
+addOptionalLibrary(ZLIB ZLIB)
+addOptionalLibrary(BZip2 BZip2)
+addOptionalLibrary(LibLZMA LibLZMA)
+addOptionalLibrary(zstd libzstd_static)
+target_link_libraries(decompress PRIVATE ${LIBRARIES})

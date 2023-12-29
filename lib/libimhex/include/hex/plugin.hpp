@@ -88,3 +88,12 @@
         return &g_subCommands;                                                          \
     }                                                                                   \
     std::vector<hex::SubCommand> g_subCommands
+
+#define IMHEX_FEATURE_ENABLED(feature) WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(WOLV_TOKEN_CONCAT(IMHEX_PLUGIN_, IMHEX_PLUGIN_NAME), _FEATURE_), feature)
+#define IMHEX_PLUGIN_FEATURES() IMHEX_PLUGIN_FEATURES_IMPL()
+#define IMHEX_PLUGIN_FEATURES_IMPL()                                                    \
+    extern std::vector<hex::Feature> g_features;                                        \
+    extern "C" [[gnu::visibility("default")]] void* getFeatures() {                     \
+        return &g_features;                                                             \
+    }                                                                                   \
+    std::vector<hex::Feature> g_features

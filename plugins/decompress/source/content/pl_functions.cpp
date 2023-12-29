@@ -1,4 +1,5 @@
 #include <hex.hpp>
+#include <hex/plugin.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <pl/core/evaluator.hpp>
@@ -9,20 +10,20 @@
 #include <vector>
 #include <optional>
 
-#if defined (LIBARCHIVE_FOUND)
+#if IMHEX_FEATURE_ENABLED(LIBARCHIVE)
     #include <archive.h>
     #include <archive_entry.h>
 #endif
-#if defined (ZLIB_FOUND)
+#if IMHEX_FEATURE_ENABLED(ZLIB)
     #include <zlib.h>
 #endif
-#if defined (BZIP2_FOUND)
+#if IMHEX_FEATURE_ENABLED(BZIP2)
     #include <bzlib.h>
 #endif
-#if defined (LIBLZMA_FOUND)
+#if IMHEX_FEATURE_ENABLED(LIBLZMA)
     #include <lzma.h>
 #endif
-#if defined (ZSTD_FOUND)
+#if IMHEX_FEATURE_ENABLED(ZSTD)
     #include <zstd.h>
 #endif
 
@@ -50,7 +51,7 @@ namespace hex::plugin::decompress {
 
         /* decompress() */
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
-            #if defined (LIBARCHIVE_FOUND)
+            #if IMHEX_FEATURE_ENABLED(LIBARCHIVE)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
 
@@ -82,13 +83,13 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
+                hex::unused(evaluator);
                 err::E0012.throwError("hex::dec::decompress is not available. Please recompile with libarchive support.");
-                return false;
             #endif
         });
 
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zlib_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
-            #if defined (ZLIB_FOUND)
+            #if IMHEX_FEATURE_ENABLED(ZLIB)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
 
@@ -127,13 +128,13 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
+                hex::unused(evaluator);
                 err::E0012.throwError("hex::dec::zlib_decompress is not available. Please recompile with zlib support.");
-                return false;
             #endif
         });
 
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "bzlib_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
-            #if defined(BZIP2_FOUND)
+            #if IMHEX_FEATURE_ENABLED(BZIP2)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
 
@@ -172,14 +173,14 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
+                hex::unused(evaluator);
                 err::E0012.throwError("hex::dec::bzlib_decompress is not available. Please recompile with bzip2 support.");
-                return false;
             #endif
 
         });
 
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lzma_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
-            #if defined (LIBLZMA_FOUND)
+            #if IMHEX_FEATURE_ENABLED(LIBLZMA)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
 
@@ -218,13 +219,13 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
+                hex::unused(evaluator);
                 err::E0012.throwError("hex::dec::lzma_decompress is not available. Please recompile with liblzma support.");
-                return false;
             #endif
         });
 
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zstd_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
-            #if defined (ZSTD_FOUND)
+            #if IMHEX_FEATURE_ENABLED(ZSTD)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
 
@@ -262,8 +263,8 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
+                hex::unused(evaluator);
                 err::E0012.throwError("hex::dec::zstd_decompress is not available. Please recompile with zstd support.");
-                return false;
             #endif
         });
     }

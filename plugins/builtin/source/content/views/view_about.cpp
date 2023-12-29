@@ -342,7 +342,7 @@ namespace hex::plugin::builtin {
         ImGuiExt::BeginSubWindow("hex.builtin.view.help.about.plugins"_lang);
         ImGui::PopStyleVar();
         {
-            if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit)) {
+            if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.plugin"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.author"_lang);
@@ -355,18 +355,40 @@ namespace hex::plugin::builtin {
                     if (plugin.isLibraryPlugin())
                         continue;
 
+                    auto features = plugin.getFeatures();
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormattedColored(
-                        plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight) : ImGui::GetStyleColorVec4(ImGuiCol_Text),
-                        "{}", plugin.getPluginName().c_str()
-                    );
+                    bool open = false;
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight) : ImGui::GetColorU32(ImGuiCol_Text));
+                    if (features.empty())
+                        ImGui::BulletText("%s", plugin.getPluginName().c_str());
+                    else
+                        open = ImGui::TreeNode(plugin.getPluginName().c_str());
+                    ImGui::PopStyleColor();
+
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
+
+                    if (open) {
+                        for (const auto &feature : plugin.getFeatures()) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormatted("  {}", feature.name.c_str());
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(feature.enabled ? ICON_VS_CHECK : ICON_VS_CLOSE);
+
+                        }
+
+                        ImGui::TreePop();
+                    }
                 }
 
                 ImGui::EndTable();
