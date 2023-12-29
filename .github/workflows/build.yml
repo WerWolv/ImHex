@@ -244,7 +244,7 @@ jobs:
         name: macOS DMG${{matrix.suffix}} x86_64
         path: build/*.dmg
 
-  macos-arm64:
+  macos-arm64-build:
     runs-on: ubuntu-22.04
     name: 🍎 macOS 12.1 arm64
     steps:
@@ -272,7 +272,7 @@ jobs:
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: macOS ZIP arm64
+        name: macOS_arm64_intermediate
         path: out/
 
       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
@@ -283,6 +283,49 @@ jobs:
       run: |
           gh extension install actions/gh-actions-cache
           gh actions-cache delete "build-macos-arm64-cache" --confirm || true
+
+  macos-arm64-package:
+    runs-on: macos-12
+    name: 🍎 macOS 12.1 arm64 Packaging
+    needs: macos-arm64-build
+    steps:
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: macOS_arm64_intermediate
+          path: out
+
+      - name: 🗑️ Delete artifact
+        uses: geekyeggo/delete-artifact@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: macOS_arm64_intermediate
+
+      - name: ✒️ Fix Signature
+        run: |
+          set -x
+          cd out
+          codesign --remove-signature imhex.app
+          codesign --force --deep --sign - imhex.app
+
+      - name: 📁 Fix permissions
+        run: |
+          set -x
+          cd out
+          chmod -R 755 imhex.app/
+
+      - name: 📦 Create DMG
+        run: |
+          set -x
+          cd out
+          hdiutil create -volname "ImHex" -srcfolder imhex.app -ov -format UDZO imhex.dmg
+
+      - name: ⬆️ Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: macOS DMG arm64
+          path: out/imhex.dmg
   
   # Ubuntu build
   ubuntu:
