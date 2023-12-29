@@ -272,7 +272,7 @@ jobs:
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: macOS_arm64_intermediate
+        name: macos_arm64_intermediate
         path: out/
 
       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
@@ -288,11 +288,13 @@ jobs:
     runs-on: macos-12
     name: 🍎 macOS 12.1 arm64 Packaging
     needs: macos-arm64-build
+    permissions:
+      contents: write
     steps:
       - name: ⬇️ Download artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
-          name: macOS_arm64_intermediate
+          name: macos_arm64_intermediate
           path: out
 
       - name: 🗑️ Delete artifact
