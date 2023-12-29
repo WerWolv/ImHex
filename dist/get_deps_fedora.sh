@@ -17,4 +17,4 @@ dnf install -y      \
   libzstd-devel     \
   zlib-devel        \
   bzip2-devel       \
-  lzma-sdk-devel
+  xz-devel

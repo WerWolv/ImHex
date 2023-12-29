@@ -18,6 +18,13 @@ find_package(BZip2 REQUIRED)
 find_package(LibLZMA REQUIRED)
 find_package(zstd REQUIRED)
 
+set_property(TARGET LibArchive::LibArchive  PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET ZLIB::ZLIB              PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET BZip2::BZip2            PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET LibLZMA::LibLZMA        PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET zstd::libzstd_static    PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+
 add_imhex_plugin(
     NAME
         decompress

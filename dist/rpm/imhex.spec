@@ -31,7 +31,7 @@ BuildRequires:  libarchive-devel
 BuildRequires:  libzstd-devel
 BuildRequires:  zlib-devel
 BuildRequires:  bzip2-devel
-BuildRequires:  lzma-sdk-devel
+BuildRequires:  xz-devel
 %if 0%{?rhel}
 BuildRequires:  gcc-toolset-12
 %endif
