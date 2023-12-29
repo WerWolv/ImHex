@@ -301,7 +301,7 @@ jobs:
         uses: geekyeggo/delete-artifact@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: macOS_arm64_intermediate
+          name: macos_arm64_intermediate
 
       - name: ✒️ Fix Signature
         run: |
