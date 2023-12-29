@@ -38,6 +38,10 @@ mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 /vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
 /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
 /vcpkg/vcpkg install --triplet=wasm32-emscripten libarchive
+/vcpkg/vcpkg install --triplet=wasm32-emscripten zlib
+/vcpkg/vcpkg install --triplet=wasm32-emscripten bzip2
+/vcpkg/vcpkg install --triplet=wasm32-emscripten liblzma
+/vcpkg/vcpkg install --triplet=wasm32-emscripten zstd
 EOF
 
 # Build ImHex

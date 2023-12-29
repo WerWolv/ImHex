@@ -25,5 +25,9 @@ RDEPEND="${DEPEND}
 		dbus
 		xdg-desktop-portal
 		app-arch/libarchive
+		sys-libs/zlib
+        app-arch/bzip2
+        app-arch/lzma
+        app-arch/zstd
 		"
 BDEPEND="${DEPEND}"

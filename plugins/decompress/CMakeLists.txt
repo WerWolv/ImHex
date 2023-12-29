@@ -13,6 +13,10 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
     set(LibArchive_INCLUDE_DIR "${LIBARCHIVE_PREFIX}/include")
 endif()
 find_package(LibArchive REQUIRED)
+find_package(ZLIB REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(LibLZMA REQUIRED)
+find_package(zstd REQUIRED)
 
 add_imhex_plugin(
     NAME
@@ -26,4 +30,8 @@ add_imhex_plugin(
     LIBRARIES
         ui
         LibArchive::LibArchive
+        ZLIB::ZLIB
+        BZip2::BZip2
+        LibLZMA::LibLZMA
+        zstd::libzstd_static
 )

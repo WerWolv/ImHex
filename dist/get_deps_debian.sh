@@ -23,4 +23,8 @@ apt install -y \
   libcurl4-gnutls-dev   \
   libgtk-3-dev          \
   ninja-build           \
-  libarchive-dev
+  libarchive-dev        \
+  zlib1g-dev            \
+  libbz2-dev            \
+  liblzma-dev           \
+  libzstd-dev

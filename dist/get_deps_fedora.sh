@@ -13,4 +13,8 @@ dnf install -y      \
   lld               \
   mbedtls-devel     \
   gtk3-devel        \
-  libarchive-devel
+  libarchive-devel  \
+  libzstd-devel     \
+  zlib-devel        \
+  bzip2-devel       \
+  lzma-sdk-devel

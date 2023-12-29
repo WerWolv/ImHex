@@ -28,6 +28,10 @@ BuildRequires:  yara-devel
 BuildRequires:  nativefiledialog-extended-devel
 BuildRequires:  dotnet-sdk-7.0
 BuildRequires:  libarchive-devel
+BuildRequires:  libzstd-devel
+BuildRequires:  zlib-devel
+BuildRequires:  bzip2-devel
+BuildRequires:  lzma-sdk-devel
 %if 0%{?rhel}
 BuildRequires:  gcc-toolset-12
 %endif

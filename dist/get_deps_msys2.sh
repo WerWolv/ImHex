@@ -13,4 +13,8 @@ pacman -S --needed --noconfirm  \
   mingw-w64-x86_64-dlfcn        \
   mingw-w64-x86_64-ninja        \
   mingw-w64-x86_64-capstone     \
-  mingw-w64-x86_64-libarchive
+  mingw-w64-x86_64-libarchive   \
+  mingw-w64-x86_64-zlib         \
+  mingw-w64-x86_64-bzip2        \
+  mingw-w64-x86_64-xz           \
+  mingw-w64-x86_64-zstd
