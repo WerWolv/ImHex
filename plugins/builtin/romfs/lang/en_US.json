@@ -782,6 +782,8 @@
         "hex.builtin.view.hex_editor.shortcut.cursor_left": "Move cursor to the left",
         "hex.builtin.view.hex_editor.shortcut.selection_up": "Move selection up",
         "hex.builtin.view.hex_editor.shortcut.cursor_up": "Move cursor up",
+        "hex.builtin.view.hex_editor.shortcut.cursor_start": "Move cursor to line start",
+        "hex.builtin.view.hex_editor.shortcut.cursor_end": "Move cursor to line end",
         "hex.builtin.view.hex_editor.shortcut.selection_down": "Move selection down",
         "hex.builtin.view.hex_editor.shortcut.cursor_down": "Move cursor down",
         "hex.builtin.view.hex_editor.shortcut.selection_page_up": "Move selection up one page",
