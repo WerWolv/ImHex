@@ -44,9 +44,9 @@ add_imhex_plugin(
         ZSTD
 )
 
-if (EMSCRIPTEN)
+if (TARGET zstd::libzstd_static)
     addOptionalLibrary(zstd libzstd_static)
-else()
+elseif(TARGET zstd::libzstd_shared)
     addOptionalLibrary(zstd libzstd_shared)
 endif()
 
