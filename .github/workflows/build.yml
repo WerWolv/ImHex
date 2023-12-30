@@ -247,6 +247,8 @@ jobs:
   macos-arm64-build:
     runs-on: ubuntu-22.04
     name: 🍎 macOS 12.1 arm64
+    outputs:
+      IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v3
@@ -266,7 +268,9 @@ jobs:
         cache-target: /cache
 
     - name: 🛠️ Build using docker
+      id: build
       run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_OUTPUT
         docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
 
     - name: ⬆️ Upload artifacts
@@ -290,6 +294,8 @@ jobs:
     needs: macos-arm64-build
     permissions:
       contents: write
+    env:
+      IMHEX_VERSION: ${{ needs.macos-arm64-build.outputs.IMHEX_VERSION }}
     steps:
       - name: ⬇️ Download artifact
         uses: actions/download-artifact@v4
@@ -307,27 +313,28 @@ jobs:
         run: |
           set -x
           cd out
-          codesign --remove-signature imhex.app
-          codesign --force --deep --sign - imhex.app
+          codesign --remove-signature ImHex.app
+          codesign --force --deep --sign - ImHex.app
 
       - name: 📁 Fix permissions
         run: |
           set -x
           cd out
-          chmod -R 755 imhex.app/
+          chmod -R 755 ImHex.app/
 
       - name: 📦 Create DMG
         run: |
           set -x
           cd out
-          hdiutil create -volname "ImHex" -srcfolder imhex.app -ov -format UDZO imhex.dmg
+          ln -s /Applications Applications
+          hdiutil create -volname "ImHex" -srcfolder ImHex.app -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
 
       - name: ⬆️ Upload DMG
         uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: macOS DMG arm64
-          path: out/imhex.dmg
+          path: out/*.dmg
   
   # Ubuntu build
   ubuntu:
