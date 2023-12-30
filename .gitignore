@@ -10,3 +10,4 @@ venv/
 imgui.ini
 .DS_Store
 ./CMakeUserPresets.json
+Brewfile.lock.json
