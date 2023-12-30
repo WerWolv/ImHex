@@ -32,6 +32,10 @@
         hex::log::info("Library plugin '{}' initialized successfully", WOLV_STRINGIFY(IMHEX_PLUGIN_NAME));          \
         return 0;                                                                                                   \
     }();                                                                                                            \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                        \
+        ImGui::SetCurrentContext(ctx);                                                                              \
+        GImGui = ctx;                                                                                               \
+    }                                                                                                               \
     extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {       \
         hex::PluginManager::addPlugin(hex::PluginFunctions {                                                        \
             nullptr,                                                                                                \
@@ -40,7 +44,7 @@
             nullptr,                                                                                                \
             nullptr,                                                                                                \
             nullptr,                                                                                                \
-            nullptr,                                                                                                \
+            setImGuiContext,                                                                                                \
             nullptr,                                                                                                \
             nullptr                                                                                                 \
         });                                                                                                         \

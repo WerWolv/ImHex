@@ -407,6 +407,7 @@ namespace hex::ui {
 
 
                     m_visibleRowCount = ImGui::GetWindowSize().y / CharacterSize.y;
+                    m_visibleRowCount = std::clamp<u32>(m_visibleRowCount, 1, numRows - m_scrollPosition);
 
                     // Loop over rows
                     for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
@@ -498,8 +499,7 @@ namespace hex::ui {
 
                                 this->handleSelection(byteAddress, bytesPerCell, &bytes[x * bytesPerCell], cellHovered);
 
-                                // Get byte foreground color
-
+                                // Set byte foreground color
                                 auto popForeground = SCOPE_GUARD { ImGui::PopStyleColor(); };
                                 if (foregroundColor.has_value() && m_editingAddress != byteAddress)
                                     ImGui::PushStyleColor(ImGuiCol_Text, *foregroundColor);
@@ -552,6 +552,13 @@ namespace hex::ui {
                                         if (backgroundColor.has_value()) {
                                             this->drawSelectionFrame(x, y, selection, byteAddress, 1, cellStartPos, cellSize, backgroundColor.value());
                                         }
+
+                                        // Set cell foreground color
+                                        auto popForeground = SCOPE_GUARD { ImGui::PopStyleColor(); };
+                                        if (foregroundColor.has_value() && m_editingAddress != byteAddress)
+                                            ImGui::PushStyleColor(ImGuiCol_Text, *foregroundColor);
+                                        else
+                                            popForeground.release();
 
                                         ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (m_characterCellPadding * 1_scaled) / 2);
                                         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));

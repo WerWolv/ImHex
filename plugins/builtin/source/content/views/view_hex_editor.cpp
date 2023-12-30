@@ -851,6 +851,26 @@ namespace hex::plugin::builtin {
             m_hexEditor.jumpIfOffScreen();
         });
 
+        ShortcutManager::addShortcut(this, Keys::Home, "hex.builtin.view.hex_editor.shortcut.cursor_start", [this] {
+            auto selection = getSelection();
+            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
+
+            auto pos = cursor - cursor % m_hexEditor.getBytesPerRow();
+            this->setSelection(pos, (pos + m_hexEditor.getBytesPerCell()) - 1);
+            m_hexEditor.scrollToSelection();
+            m_hexEditor.jumpIfOffScreen();
+        });
+
+        ShortcutManager::addShortcut(this, Keys::End, "hex.builtin.view.hex_editor.shortcut.cursor_end", [this] {
+            auto selection = getSelection();
+            auto cursor = m_hexEditor.getCursorPosition().value_or(selection.getEndAddress());
+
+            auto pos = cursor - cursor % m_hexEditor.getBytesPerRow() + m_hexEditor.getBytesPerRow() - m_hexEditor.getBytesPerCell();
+            this->setSelection(pos, (pos + m_hexEditor.getBytesPerCell()) - 1);
+            m_hexEditor.scrollToSelection();
+            m_hexEditor.jumpIfOffScreen();
+        });
+
         // Move selection around
         ShortcutManager::addShortcut(this, SHIFT + Keys::Up, "hex.builtin.view.hex_editor.shortcut.selection_up", [this] {
             auto selection = getSelection();
