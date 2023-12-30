@@ -323,10 +323,12 @@ jobs:
       - name: 📦 Create DMG
         run: |
           set -x
-          cd out
+          mkdir bundle
+          mv out/ImHex.app bundle
+          cd bundle
           ln -s /Applications Applications
           cd ..
-          hdiutil create -volname "ImHex" -srcfolder out -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
+          hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
 
       - name: ⬆️ Upload DMG
         uses: actions/upload-artifact@v4
