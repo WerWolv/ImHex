@@ -44,9 +44,14 @@ add_imhex_plugin(
         ZSTD
 )
 
+if (EMSCRIPTEN)
+    addOptionalLibrary(zstd libzstd_static)
+else()
+    addOptionalLibrary(zstd libzstd_shared)
+endif()
+
 addOptionalLibrary(LibArchive LibArchive)
 addOptionalLibrary(ZLIB ZLIB)
 addOptionalLibrary(BZip2 BZip2)
 addOptionalLibrary(LibLZMA LibLZMA)
-addOptionalLibrary(zstd libzstd_static)
 target_link_libraries(decompress PRIVATE ${LIBRARIES})

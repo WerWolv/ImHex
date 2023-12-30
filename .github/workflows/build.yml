@@ -390,6 +390,7 @@ jobs:
 
       # Ubuntu cmake build
       - name: 🛠️ Build
+        shell: bash
         run: |
           set -x
           git config --global --add safe.directory '*'
