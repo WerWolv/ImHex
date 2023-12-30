@@ -95,7 +95,7 @@ jobs:
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
     - name: ⬆️ Upload Windows Installer
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: Windows Installer x86_64
@@ -103,7 +103,7 @@ jobs:
           imhex-*.msi
 
     - name: ⬆️ Upload Portable ZIP
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: Windows Portable x86_64
@@ -120,7 +120,7 @@ jobs:
         mv opengl32.dll build/install
 
     - name: ⬆️ Upload NoGPU Portable ZIP
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: Windows Portable NoGPU x86_64
@@ -238,7 +238,7 @@ jobs:
         ninja package
 
     - name: ⬆️ Upload DMG
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: macOS DMG${{matrix.suffix}} x86_64
@@ -270,7 +270,7 @@ jobs:
         docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
 
     - name: ⬆️ Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: macOS ZIP arm64
         path: out/
@@ -282,7 +282,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
           gh extension install actions/gh-actions-cache
-          gh actions-cache delete "build-macos-arm64-cache" --confirm
+          gh actions-cache delete "build-macos-arm64-cache" --confirm || true
   
   # Ubuntu build
   ubuntu:
@@ -376,7 +376,7 @@ jobs:
           mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
 
       - name: ⬆️ Upload DEB
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Ubuntu ${{ matrix.release_num }} DEB x86_64
@@ -412,14 +412,14 @@ jobs:
 
 
       - name: ⬆️ Upload AppImage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Linux AppImage x86_64
           path: 'out/*.AppImage'
 
       - name: ⬆️ Upload AppImage zsync
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Linux AppImage zsync x86_64
@@ -522,7 +522,7 @@ jobs:
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: ArchLinux .pkg.tar.zst x86_64
@@ -650,7 +650,7 @@ jobs:
           $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
 
       - name: ⬆️ Upload RPM
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64

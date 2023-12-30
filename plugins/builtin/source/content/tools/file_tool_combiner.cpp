@@ -2,6 +2,7 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <algorithm>
 #include <random>
@@ -9,7 +10,7 @@
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <content/popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/io/file.hpp>
 
@@ -105,15 +106,15 @@ namespace hex::plugin::builtin {
 
         ImGui::BeginDisabled(files.empty() || outputPath.empty());
         {
-            if (combinerTask.isRunning())
+            if (combinerTask.isRunning()) {
                 ImGuiExt::TextSpinner("hex.builtin.tools.file_tools.combiner.combining"_lang);
-            else {
+            } else {
                 if (ImGui::Button("hex.builtin.tools.file_tools.combiner.combine"_lang)) {
                     combinerTask = TaskManager::createTask("hex.builtin.tools.file_tools.combiner.combining", 0, [](auto &task) {
                         wolv::io::File output(outputPath, wolv::io::File::Mode::Create);
 
                         if (!output.isValid()) {
-                            PopupError::open("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
+                            ui::ToastError::open("hex.builtin.tools.file_tools.combiner.error.open_output"_lang);
                             return;
                         }
 
@@ -126,7 +127,7 @@ namespace hex::plugin::builtin {
 
                             wolv::io::File input(file, wolv::io::File::Mode::Read);
                             if (!input.isValid()) {
-                                PopupError::open(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
+                                ui::ToastError::open(hex::format("hex.builtin.tools.file_tools.combiner.open_input"_lang, wolv::util::toUTF8String(file)));
                                 return;
                             }
 
@@ -142,7 +143,7 @@ namespace hex::plugin::builtin {
                         selectedIndex = 0;
                         outputPath.clear();
 
-                        PopupInfo::open("hex.builtin.tools.file_tools.combiner.success"_lang);
+                        ui::ToastInfo::open("hex.builtin.tools.file_tools.combiner.success"_lang);
                     });
                 }
             }

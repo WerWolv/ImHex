@@ -12,4 +12,5 @@ dnf install -y      \
   glfw-devel        \
   lld               \
   mbedtls-devel     \
-  gtk3-devel
+  gtk3-devel        \
+  libarchive-devel

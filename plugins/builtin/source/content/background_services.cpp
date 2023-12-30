@@ -69,7 +69,7 @@ namespace hex::plugin::builtin {
             if (autoBackupTime > 0 && (now - lastBackupTime) > std::chrono::seconds(autoBackupTime)) {
                 lastBackupTime = now;
 
-                if (ImHexApi::Provider::isValid()) {
+                if (ImHexApi::Provider::isValid() && ImHexApi::Provider::isDirty()) {
                     for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Backups)) {
                         const auto fileName = hex::format("auto_backup.{:%y%m%d_%H%M%S}.hexproj", fmt::gmtime(std::chrono::system_clock::now()));
                         if (ProjectFile::store(path / fileName, false))
@@ -91,8 +91,8 @@ namespace hex::plugin::builtin {
             autoBackupTime = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_backup_time", 0).get<int>() * 30;
         });
 
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface"_lang, handleNetworkInterfaceService);
-        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup"_lang, handleAutoBackup);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.network_interface", handleNetworkInterfaceService);
+        ContentRegistry::BackgroundServices::registerService("hex.builtin.background_service.auto_backup", handleAutoBackup);
     }
 
 }

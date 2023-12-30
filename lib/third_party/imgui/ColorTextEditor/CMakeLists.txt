@@ -12,5 +12,7 @@ target_include_directories(imgui_color_text_editor PUBLIC
     include
 )
 
+target_include_directories(imgui_all_includes INTERFACE include)
+
 target_link_libraries(imgui_color_text_editor PRIVATE imgui_includes)
 set_property(TARGET imgui_color_text_editor PROPERTY POSITION_INDEPENDENT_CODE ON)

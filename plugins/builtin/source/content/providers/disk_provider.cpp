@@ -50,21 +50,21 @@ namespace hex::plugin::builtin {
     bool DiskProvider::isAvailable() const {
 #if defined(OS_WINDOWS)
 
-        return this->m_diskHandle != INVALID_HANDLE_VALUE;
+        return m_diskHandle != INVALID_HANDLE_VALUE;
 
 #else
 
-        return this->m_diskHandle != -1;
+        return m_diskHandle != -1;
 
 #endif
     }
 
     bool DiskProvider::isReadable() const {
-        return this->m_readable;
+        return m_readable;
     }
 
     bool DiskProvider::isWritable() const {
-        return this->m_writable;
+        return m_writable;
     }
 
     bool DiskProvider::isResizable() const {
@@ -77,7 +77,7 @@ namespace hex::plugin::builtin {
 
 
     void DiskProvider::setPath(const std::fs::path &path) {
-        this->m_path = path;
+        m_path = path;
     }
 
 #if defined (OS_LINUX)
@@ -143,27 +143,29 @@ namespace hex::plugin::builtin {
 #endif
 
     bool DiskProvider::open() {
-        this->m_readable = true;
-        this->m_writable = true;
+        m_readable = true;
+        m_writable = true;
 
 #if defined(OS_WINDOWS)
 
-        const auto &path = this->m_path.native();
+        const auto &path = m_path.native();
 
-            this->m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-            if (this->m_diskHandle == INVALID_HANDLE_VALUE) {
-                this->m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-                this->m_writable   = false;
+            m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+            if (m_diskHandle == INVALID_HANDLE_VALUE) {
+                m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+                m_writable   = false;
 
-                if (this->m_diskHandle == INVALID_HANDLE_VALUE)
+                if (m_diskHandle == INVALID_HANDLE_VALUE) {
+                    this->setErrorMessage(std::system_category().message(::GetLastError()));
                     return false;
+                }
             }
 
             {
                 DISK_GEOMETRY_EX diskGeometry = { };
                 DWORD bytesRead               = 0;
                 if (DeviceIoControl(
-                        this->m_diskHandle,
+                        m_diskHandle,
                         IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
                         nullptr,
                         0,
@@ -171,45 +173,46 @@ namespace hex::plugin::builtin {
                         sizeof(DISK_GEOMETRY_EX),
                         &bytesRead,
                         nullptr)) {
-                    this->m_diskSize   = diskGeometry.DiskSize.QuadPart;
-                    this->m_sectorSize = diskGeometry.Geometry.BytesPerSector;
-                    this->m_sectorBuffer.resize(this->m_sectorSize);
+                    m_diskSize   = diskGeometry.DiskSize.QuadPart;
+                    m_sectorSize = diskGeometry.Geometry.BytesPerSector;
+                    m_sectorBuffer.resize(m_sectorSize);
                 }
             }
 
-            if (this->m_diskHandle == nullptr || this->m_diskHandle == INVALID_HANDLE_VALUE) {
-                this->m_readable   = false;
-                this->m_diskHandle = nullptr;
-                CloseHandle(this->m_diskHandle);
+            if (m_diskHandle == nullptr || m_diskHandle == INVALID_HANDLE_VALUE) {
+                this->setErrorMessage(std::system_category().message(::GetLastError()));
+                m_readable   = false;
+                m_diskHandle = nullptr;
+                CloseHandle(m_diskHandle);
 
                 return false;
             }
 
 #else
 
-        const auto &path = this->m_path.native();
+        const auto &path = m_path.native();
 
-        this->m_diskHandle = ::open(path.c_str(), O_RDWR);
-        if (this->m_diskHandle == -1) {
+        m_diskHandle = ::open(path.c_str(), O_RDWR);
+        if (m_diskHandle == -1) {
             this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_rw"_lang, path, ::strerror(errno)));
             log::warn(this->getErrorMessage());
-            this->m_diskHandle = ::open(path.c_str(), O_RDONLY);
-            this->m_writable   = false;
+            m_diskHandle = ::open(path.c_str(), O_RDONLY);
+            m_writable   = false;
         }
 
-        if (this->m_diskHandle == -1) {
+        if (m_diskHandle == -1) {
             this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_ro"_lang, path, ::strerror(errno)));
             log::warn(this->getErrorMessage());
-            this->m_readable = false;
+            m_readable = false;
             return false;
         }
 
         u64 diskSize = 0;
-        blkdev_get_size(this->m_diskHandle, &diskSize);
-        this->m_diskSize = diskSize;
-        blkdev_get_sector_size(this->m_diskHandle, reinterpret_cast<int *>(&this->m_sectorSize));
+        blkdev_get_size(m_diskHandle, &diskSize);
+        m_diskSize = diskSize;
+        blkdev_get_sector_size(m_diskHandle, reinterpret_cast<int *>(&m_sectorSize));
 
-        this->m_sectorBuffer.resize(this->m_sectorSize);
+        m_sectorBuffer.resize(m_sectorSize);
 
 #endif
 
@@ -219,17 +222,17 @@ namespace hex::plugin::builtin {
     void DiskProvider::close() {
 #if defined(OS_WINDOWS)
 
-        if (this->m_diskHandle != INVALID_HANDLE_VALUE)
-                ::CloseHandle(this->m_diskHandle);
+        if (m_diskHandle != INVALID_HANDLE_VALUE)
+            ::CloseHandle(m_diskHandle);
 
-            this->m_diskHandle = INVALID_HANDLE_VALUE;
+        m_diskHandle = INVALID_HANDLE_VALUE;
 
 #else
 
-        if (this->m_diskHandle != -1)
-            ::close(this->m_diskHandle);
+        if (m_diskHandle != -1)
+            ::close(m_diskHandle);
 
-        this->m_diskHandle = -1;
+        m_diskHandle = -1;
 
 #endif
     }
@@ -243,19 +246,19 @@ namespace hex::plugin::builtin {
 
             while (size > 0) {
                 LARGE_INTEGER seekPosition;
-                seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
+                seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);
                 seekPosition.HighPart = LONG(offset >> 32);
 
-                if (this->m_sectorBufferAddress != static_cast<u64>(seekPosition.QuadPart)) {
-                    ::SetFilePointer(this->m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
-                    ::ReadFile(this->m_diskHandle, this->m_sectorBuffer.data(), this->m_sectorBuffer.size(), &bytesRead, nullptr);
-                    this->m_sectorBufferAddress = seekPosition.QuadPart;
+                if (m_sectorBufferAddress != static_cast<u64>(seekPosition.QuadPart)) {
+                    ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
+                    ::ReadFile(m_diskHandle, m_sectorBuffer.data(), m_sectorBuffer.size(), &bytesRead, nullptr);
+                    m_sectorBufferAddress = seekPosition.QuadPart;
                 }
 
-                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), this->m_sectorBuffer.data() + (offset & (this->m_sectorSize - 1)), std::min<u64>(this->m_sectorSize, size));
+                std::memcpy(static_cast<u8 *>(buffer) + (offset - startOffset), m_sectorBuffer.data() + (offset & (m_sectorSize - 1)), std::min<u64>(m_sectorSize, size));
 
-                size = std::max<ssize_t>(static_cast<ssize_t>(size) - this->m_sectorSize, 0);
-                offset += this->m_sectorSize;
+                size = std::max<ssize_t>(static_cast<ssize_t>(size) - m_sectorSize, 0);
+                offset += m_sectorSize;
             }
 
 #else
@@ -263,22 +266,22 @@ namespace hex::plugin::builtin {
         u64 startOffset    = offset;
 
         while (size > 0) {
-            u64 seekPosition = offset - (offset % this->m_sectorSize);
+            u64 seekPosition = offset - (offset % m_sectorSize);
 
-            if (this->m_sectorBufferAddress != seekPosition || this->m_sectorBufferAddress == 0) {
-                ::lseek(this->m_diskHandle, seekPosition, SEEK_SET);
-                if (::read(this->m_diskHandle, this->m_sectorBuffer.data(), this->m_sectorBuffer.size()) == -1)
+            if (m_sectorBufferAddress != seekPosition || m_sectorBufferAddress == 0) {
+                ::lseek(m_diskHandle, seekPosition, SEEK_SET);
+                if (::read(m_diskHandle, m_sectorBuffer.data(), m_sectorBuffer.size()) == -1)
                     break;
 
-                this->m_sectorBufferAddress = seekPosition;
+                m_sectorBufferAddress = seekPosition;
             }
 
             std::memcpy(reinterpret_cast<u8 *>(buffer) + (offset - startOffset),
-                        this->m_sectorBuffer.data() + (offset & (this->m_sectorSize - 1)),
-                        std::min<u64>(this->m_sectorSize, size));
+                        m_sectorBuffer.data() + (offset & (m_sectorSize - 1)),
+                        std::min<u64>(m_sectorSize, size));
 
-            size = std::max<ssize_t>(static_cast<ssize_t>(size) - this->m_sectorSize, 0);
-            offset += this->m_sectorSize;
+            size = std::max<ssize_t>(static_cast<ssize_t>(size) - m_sectorSize, 0);
+            offset += m_sectorSize;
         }
 
 #endif
@@ -292,21 +295,21 @@ namespace hex::plugin::builtin {
             u64 startOffset = offset;
 
             std::vector<u8> modifiedSectorBuffer;
-            modifiedSectorBuffer.resize(this->m_sectorSize);
+            modifiedSectorBuffer.resize(m_sectorSize);
 
             while (size > 0) {
-                u64 sectorBase  = offset - (offset % this->m_sectorSize);
-                size_t currSize = std::min<u64>(size, this->m_sectorSize);
+                u64 sectorBase  = offset - (offset % m_sectorSize);
+                size_t currSize = std::min<u64>(size, m_sectorSize);
 
                 this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
-                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
+                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), static_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
                 LARGE_INTEGER seekPosition;
-                seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % this->m_sectorSize);
+                seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);
                 seekPosition.HighPart = offset >> 32;
 
-                ::SetFilePointer(this->m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
-                ::WriteFile(this->m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size(), &bytesWritten, nullptr);
+                ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
+                ::WriteFile(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size(), &bytesWritten, nullptr);
 
                 offset += currSize;
                 size -= currSize;
@@ -317,17 +320,17 @@ namespace hex::plugin::builtin {
         u64 startOffset = offset;
 
         std::vector<u8> modifiedSectorBuffer;
-        modifiedSectorBuffer.resize(this->m_sectorSize);
+        modifiedSectorBuffer.resize(m_sectorSize);
 
         while (size > 0) {
-            u64 sectorBase  = offset - (offset % this->m_sectorSize);
-            size_t currSize = std::min<u64>(size, this->m_sectorSize);
+            u64 sectorBase  = offset - (offset % m_sectorSize);
+            size_t currSize = std::min<u64>(size, m_sectorSize);
 
             this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
-            std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % this->m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
+            std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
-            ::lseek(this->m_diskHandle, sectorBase, SEEK_SET);
-            if (::write(this->m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
+            ::lseek(m_diskHandle, sectorBase, SEEK_SET);
+            if (::write(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
                 break;
 
             offset += currSize;
@@ -338,21 +341,21 @@ namespace hex::plugin::builtin {
     }
 
     u64 DiskProvider::getActualSize() const {
-        return this->m_diskSize;
+        return m_diskSize;
     }
 
     std::string DiskProvider::getName() const {
-        if (this->m_friendlyName.empty())
-            return wolv::util::toUTF8String(this->m_path);
+        if (m_friendlyName.empty())
+            return wolv::util::toUTF8String(m_path);
         else
-            return this->m_friendlyName;
+            return m_friendlyName;
     }
 
     std::vector<DiskProvider::Description> DiskProvider::getDataDescription() const {
         return {
-                { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(this->m_path) },
-                { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(this->m_diskSize)    },
-                { "hex.builtin.provider.disk.sector_size"_lang,   hex::toByteString(this->m_sectorSize)  }
+                { "hex.builtin.provider.disk.selected_disk"_lang, wolv::util::toUTF8String(m_path) },
+                { "hex.builtin.provider.disk.disk_size"_lang,     hex::toByteString(m_diskSize)    },
+                { "hex.builtin.provider.disk.sector_size"_lang,   hex::toByteString(m_sectorSize)  }
         };
     }
 
@@ -360,7 +363,7 @@ namespace hex::plugin::builtin {
     void DiskProvider::reloadDrives() {
 #if defined(OS_WINDOWS)
 
-        this->m_availableDrives.clear();
+        m_availableDrives.clear();
 
         std::array<TCHAR, MAX_DEVICE_ID_LEN> deviceInstanceID = {};
         std::array<TCHAR, 1024> description = {};
@@ -412,7 +415,7 @@ namespace hex::plugin::builtin {
 
             auto friendlyName = description.data();
 
-            this->m_availableDrives.insert({ path, friendlyName });
+            m_availableDrives.insert({ path, friendlyName });
         }
 
         // Add all logical drives
@@ -420,7 +423,7 @@ namespace hex::plugin::builtin {
         for (char i = 0; i < 26; i++) {
             if (drives[i]) {
                 char letter = 'A' + i;
-                this->m_availableDrives.insert({ hex::format(R"(\\.\{:c}:)", letter), hex::format(R"({:c}:/)", letter) });
+                m_availableDrives.insert({ hex::format(R"(\\.\{:c}:)", letter), hex::format(R"({:c}:/)", letter) });
             }
         }
 
@@ -430,12 +433,12 @@ namespace hex::plugin::builtin {
     bool DiskProvider::drawLoadInterface() {
         #if defined(OS_WINDOWS)
 
-            if (this->m_availableDrives.empty()) {
+            if (m_availableDrives.empty()) {
                 this->reloadDrives();
-                this->m_elevated = hex::isProcessElevated();
+                m_elevated = hex::isProcessElevated();
             }
 
-            if (!this->m_elevated) {
+            if (!m_elevated) {
                 ImGui::PushTextWrapPos(0);
                 ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorU32(ImGuiCustomCol_LoggerError), ICON_VS_SHIELD "{}", "hex.builtin.provider.disk.elevation"_lang);
                 ImGui::PopTextWrapPos();
@@ -445,10 +448,10 @@ namespace hex::plugin::builtin {
             ImGui::PushItemWidth(300_scaled);
             if (ImGui::BeginListBox("hex.builtin.provider.disk.selected_disk"_lang)) {
                 ImGui::PushID(1);
-                for (const auto &[path, friendlyName] : this->m_availableDrives) {
-                    if (ImGui::Selectable(friendlyName.c_str(), this->m_path == path)) {
-                        this->m_path = path;
-                        this->m_friendlyName = friendlyName;
+                for (const auto &[path, friendlyName] : m_availableDrives) {
+                    if (ImGui::Selectable(friendlyName.c_str(), m_path == path)) {
+                        m_path = path;
+                        m_friendlyName = friendlyName;
                     }
 
                     ImGuiExt::InfoTooltip(path.c_str());
@@ -467,20 +470,20 @@ namespace hex::plugin::builtin {
 
         #else
 
-            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, this->m_pathBuffer.data(), this->m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGuiExt::UpdateStringSizeCallback, &this->m_pathBuffer)) {
-                this->m_path = this->m_pathBuffer;
-                this->m_friendlyName = this->m_pathBuffer;
+            if (ImGui::InputText("hex.builtin.provider.disk.selected_disk"_lang, m_pathBuffer.data(), m_pathBuffer.size(), ImGuiInputTextFlags_CallbackResize, ImGuiExt::UpdateStringSizeCallback, &m_pathBuffer)) {
+                m_path = m_pathBuffer;
+                m_friendlyName = m_pathBuffer;
             }
 
         #endif
 
-        return !this->m_path.empty();
+        return !m_path.empty();
     }
 
     nlohmann::json DiskProvider::storeSettings(nlohmann::json settings) const {
-        settings["path"] = wolv::util::toUTF8String(this->m_path);
+        settings["path"] = wolv::util::toUTF8String(m_path);
 
-        settings["friendly_name"] = this->m_friendlyName;
+        settings["friendly_name"] = m_friendlyName;
 
         return Provider::storeSettings(settings);
     }
@@ -491,7 +494,7 @@ namespace hex::plugin::builtin {
         auto path = settings.at("path").get<std::string>();
 
         if (settings.contains("friendly_name"))
-            this->m_friendlyName = settings.at("friendly_name").get<std::string>();
+            m_friendlyName = settings.at("friendly_name").get<std::string>();
 
         this->setPath(std::u8string(path.begin(), path.end()));
         this->reloadDrives();
@@ -508,11 +511,11 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> DiskProvider::queryInformation(const std::string &category, const std::string &argument) {
         if (category == "file_path")
-            return wolv::util::toUTF8String(this->m_path);
+            return wolv::util::toUTF8String(m_path);
         else if (category == "sector_size")
-            return this->m_sectorSize;
+            return m_sectorSize;
         else if (category == "friendly_name")
-            return this->m_friendlyName;
+            return m_friendlyName;
         else
             return Provider::queryInformation(category, argument);
     }

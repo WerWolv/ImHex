@@ -3,13 +3,14 @@
 #include <hex/helpers/literals.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <algorithm>
 
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <content/popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
@@ -88,9 +89,9 @@ namespace hex::plugin::builtin {
 
         ImGui::BeginDisabled(selectedFile.empty() || baseOutputPath.empty() || splitSize == 0);
         {
-            if (splitterTask.isRunning())
+            if (splitterTask.isRunning()) {
                 ImGuiExt::TextSpinner("hex.builtin.tools.file_tools.splitter.picker.splitting"_lang);
-            else {
+            } else {
                 if (ImGui::Button("hex.builtin.tools.file_tools.splitter.picker.split"_lang)) {
                     splitterTask = TaskManager::createTask("hex.builtin.tools.file_tools.splitter.picker.splitting", 0, [](auto &task) {
                         ON_SCOPE_EXIT {
@@ -101,12 +102,12 @@ namespace hex::plugin::builtin {
                         wolv::io::File file(selectedFile, wolv::io::File::Mode::Read);
 
                         if (!file.isValid()) {
-                            PopupError::open("hex.builtin.tools.file_tools.splitter.picker.error.open"_lang);
+                            ui::ToastError::open("hex.builtin.tools.file_tools.splitter.picker.error.open"_lang);
                             return;
                         }
 
                         if (file.getSize() < splitSize) {
-                            PopupError::open("hex.builtin.tools.file_tools.splitter.picker.error.size"_lang);
+                            ui::ToastError::open("hex.builtin.tools.file_tools.splitter.picker.error.size"_lang);
                             return;
                         }
 
@@ -122,7 +123,7 @@ namespace hex::plugin::builtin {
                             wolv::io::File partFile(path, wolv::io::File::Mode::Create);
 
                             if (!partFile.isValid()) {
-                                PopupError::open(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
+                                ui::ToastError::open(hex::format("hex.builtin.tools.file_tools.splitter.picker.error.create"_lang, index));
                                 return;
                             }
 
@@ -135,7 +136,7 @@ namespace hex::plugin::builtin {
                             index++;
                         }
 
-                        PopupInfo::open("hex.builtin.tools.file_tools.splitter.picker.success"_lang);
+                        ui::ToastInfo::open("hex.builtin.tools.file_tools.splitter.picker.success"_lang);
                     });
                 }
             }

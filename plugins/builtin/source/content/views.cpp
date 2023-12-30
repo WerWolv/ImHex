@@ -1,18 +1,15 @@
 #include "content/views/view_hex_editor.hpp"
 #include "content/views/view_pattern_editor.hpp"
 #include "content/views/view_pattern_data.hpp"
-#include "content/views/view_hashes.hpp"
 #include "content/views/view_information.hpp"
 #include "content/views/view_about.hpp"
 #include "content/views/view_tools.hpp"
 #include "content/views/view_data_inspector.hpp"
-#include "content/views/view_disassembler.hpp"
 #include "content/views/view_bookmarks.hpp"
 #include "content/views/view_patches.hpp"
 #include "content/views/view_command_palette.hpp"
 #include "content/views/view_settings.hpp"
 #include "content/views/view_data_processor.hpp"
-#include "content/views/view_yara.hpp"
 #include "content/views/view_constants.hpp"
 #include "content/views/view_store.hpp"
 #include "content/views/view_diff.hpp"
@@ -31,9 +28,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewPatternEditor>();
         ContentRegistry::Views::add<ViewPatternData>();
         ContentRegistry::Views::add<ViewDataInspector>();
-        ContentRegistry::Views::add<ViewHashes>();
         ContentRegistry::Views::add<ViewInformation>();
-        ContentRegistry::Views::add<ViewDisassembler>();
         ContentRegistry::Views::add<ViewBookmarks>();
         ContentRegistry::Views::add<ViewPatches>();
         ContentRegistry::Views::add<ViewTools>();
@@ -41,7 +36,6 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewAbout>();
         ContentRegistry::Views::add<ViewSettings>();
         ContentRegistry::Views::add<ViewDataProcessor>();
-        ContentRegistry::Views::add<ViewYara>();
         ContentRegistry::Views::add<ViewConstants>();
         ContentRegistry::Views::add<ViewStore>();
         ContentRegistry::Views::add<ViewDiff>();

@@ -8,7 +8,7 @@ pkgdesc="A Hex Editor for Reverse Engineers, Programmers and people who value th
 arch=("x86_64")
 url="https://github.com/WerWolv/ImHex"
 license=('GPL2')
-depends=(glfw mbedtls freetype2 libglvnd dbus gtk3 curl fmt yara nlohmann-json)
+depends=(glfw mbedtls freetype2 libglvnd dbus gtk3 curl fmt yara nlohmann-json libarchive)
 makedepends=(git)
 provides=(imhex)
 conflicts=(imhex)
@@ -17,9 +17,10 @@ md5sums=(SKIP)
 
 package() {
     install -Dm755 "$srcdir/usr/bin/imhex" "$pkgdir/usr/bin/imhex"
+    install -Dm755 "$srcdir/usr/bin/imhex-updater" "$pkgdir/usr/bin/imhex-updater"
     install -Dm644 "$srcdir/usr/lib/libimhex.so.$pkgver" "$pkgdir/usr/lib/libimhex.so.$pkgver"
 
-    for plugin in "$srcdir/usr/lib/imhex/plugins/"*.hexplug; do
+    for plugin in "$srcdir/usr/lib/imhex/plugins/"*.hexplug*; do
         install -Dm644 "$plugin" "$pkgdir/usr/lib/imhex/plugins/${plugin##*/}"
     done
 

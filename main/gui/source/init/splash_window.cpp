@@ -46,7 +46,7 @@ namespace hex::init {
         ImHexApi::System::impl::setGPUVendor(reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
 
         RequestAddInitTask::subscribe([this](const std::string& name, bool async, const TaskFunction &function){
-            this->m_tasks.push_back(Task{ name, function, async });
+            m_tasks.push_back(Task{ name, function, async });
         });
     }
 
@@ -82,6 +82,9 @@ namespace hex::init {
     static ImColor getHighlightColor(u32 index) {
         static auto highlightConfig = nlohmann::json::parse(romfs::get("splash_colors.json").string());
         static std::list<nlohmann::json> selectedConfigs;
+        static nlohmann::json selectedConfig;
+
+        static std::mt19937 random(std::random_device{}());
 
         if (selectedConfigs.empty()) {
             const auto now = []{
@@ -92,9 +95,9 @@ namespace hex::init {
             }();
 
             for (const auto &colorConfig : highlightConfig) {
-                if (!colorConfig.contains("time"))
+                if (!colorConfig.contains("time")) {
                     selectedConfigs.push_back(colorConfig);
-                else {
+                } else {
                     const auto &time = colorConfig["time"];
                     const auto &start = time["start"];
                     const auto &end = time["end"];
@@ -110,15 +113,14 @@ namespace hex::init {
             // Remove the default color theme if there's another one available
             if (selectedConfigs.size() != 1)
                 selectedConfigs.erase(selectedConfigs.begin());
+
+            selectedConfig = *std::next(selectedConfigs.begin(), random() % selectedConfigs.size());
+
+            log::debug("Using '{}' highlight color theme", selectedConfig["name"].get<std::string>());
         }
-
-        std::mt19937 random(std::random_device{}());
-
-        static const auto &selectedConfig = *std::next(selectedConfigs.begin(), random() % selectedConfigs.size());
 
         const auto colorString = selectedConfig["colors"][index % selectedConfig["colors"].size()].get<std::string>();
 
-        log::debug("Using '{}' highlight color theme", selectedConfig["name"].get<std::string>());
         if (colorString == "random") {
             float r, g, b;
             ImGui::ColorConvertHSVtoRGB(
@@ -142,17 +144,17 @@ namespace hex::init {
         auto runTask = [&, task] {
             try {
                 // Save an iterator to the current task name
-                decltype(this->m_currTaskNames)::iterator taskNameIter;
+                decltype(m_currTaskNames)::iterator taskNameIter;
                 {
-                    std::lock_guard guard(this->m_progressMutex);
-                    this->m_currTaskNames.push_back(task.name + "...");
-                    taskNameIter = std::prev(this->m_currTaskNames.end());
+                    std::lock_guard guard(m_progressMutex);
+                    m_currTaskNames.push_back(task.name + "...");
+                    taskNameIter = std::prev(m_currTaskNames.end());
                 }
 
                 // When the task finished, increment the progress bar
                 ON_SCOPE_EXIT {
-                    this->m_completedTaskCount += 1;
-                    this->m_progress = float(this->m_completedTaskCount) / float(this->m_totalTaskCount);
+                    m_completedTaskCount += 1;
+                    m_progress = float(m_completedTaskCount) / float(m_totalTaskCount);
                 };
 
                 // Execute the actual task and track the amount of time it took to run
@@ -168,23 +170,23 @@ namespace hex::init {
                     log::warn("Task '{}' finished unsuccessfully in {} ms", task.name, milliseconds);
 
                 // Track the overall status of the tasks
-                this->m_taskStatus = this->m_taskStatus && taskStatus;
+                m_taskStatus = m_taskStatus && taskStatus;
 
                 // Erase the task name from the list of running tasks
                 {
-                    std::lock_guard guard(this->m_progressMutex);
-                    this->m_currTaskNames.erase(taskNameIter);
+                    std::lock_guard guard(m_progressMutex);
+                    m_currTaskNames.erase(taskNameIter);
                 }
             } catch (const std::exception &e) {
                 log::error("Init task '{}' threw an exception: {}", task.name, e.what());
-                this->m_taskStatus = false;
+                m_taskStatus = false;
             } catch (...) {
                 log::error("Init task '{}' threw an unidentifiable exception", task.name);
-                this->m_taskStatus = false;
+                m_taskStatus = false;
             }
         };
 
-        this->m_totalTaskCount += 1;
+        m_totalTaskCount += 1;
 
         // If the task can be run asynchronously, run it in a separate thread
         // otherwise run it in this thread and wait for it to finish
@@ -200,7 +202,7 @@ namespace hex::init {
             auto startTime = std::chrono::high_resolution_clock::now();
 
             // Loop over all registered init tasks
-            for (auto it = this->m_tasks.begin(); it != this->m_tasks.end(); ++it) {
+            for (auto it = m_tasks.begin(); it != m_tasks.end(); ++it) {
                 // Construct a new task callback
                 this->createTask(*it);
             }
@@ -208,8 +210,8 @@ namespace hex::init {
             // Check every 100ms if all tasks have run
             while (true) {
                 {
-                    std::scoped_lock lock(this->m_tasksMutex);
-                    if (this->m_completedTaskCount >= this->m_totalTaskCount)
+                    std::scoped_lock lock(m_tasksMutex);
+                    if (m_completedTaskCount >= m_totalTaskCount)
                         break;
                 }
 
@@ -224,14 +226,14 @@ namespace hex::init {
             // Small extra delay so the last progress step is visible
             std::this_thread::sleep_for(100ms);
 
-            return this->m_taskStatus.load();
+            return m_taskStatus.load();
         });
     }
 
 
     FrameResult WindowSplash::fullFrame() {
-        glfwSetWindowSize(this->m_window, 640_scaled, 400_scaled);
-        centerWindow(this->m_window);
+        glfwSetWindowSize(m_window, 640_scaled, 400_scaled);
+        centerWindow(m_window);
 
         glfwPollEvents();
 
@@ -301,7 +303,7 @@ namespace hex::init {
                     highlightBytes(highlight.start, highlight.count, highlight.color, this->progressLerp);
             }
 
-            this->progressLerp += (this->m_progress - this->progressLerp) * 0.1F;
+            this->progressLerp += (m_progress - this->progressLerp) * 0.1F;
 
             // Draw the splash screen foreground
             drawList->AddImage(this->splashTextTexture, ImVec2(0, 0), this->splashTextTexture.getSize() * scale);
@@ -322,21 +324,21 @@ namespace hex::init {
 
         // Draw the task progress bar
         {
-            std::lock_guard guard(this->m_progressMutex);
+            std::lock_guard guard(m_progressMutex);
 
             const auto progressBackgroundStart = ImVec2(99, 357) * scale;
             const auto progressBackgroundSize = ImVec2(442, 30) * scale;
 
             const auto progressStart = progressBackgroundStart + ImVec2(0, 20) * scale;
-            const auto progressSize = ImVec2(progressBackgroundSize.x * this->m_progress, 10 * scale);
+            const auto progressSize = ImVec2(progressBackgroundSize.x * m_progress, 10 * scale);
 
             // Draw progress bar
             drawList->AddRectFilled(progressStart, progressStart + progressSize, 0xD0FFFFFF);
 
             // Draw task names separated by | characters
-            if (!this->m_currTaskNames.empty()) {
+            if (!m_currTaskNames.empty()) {
                 drawList->PushClipRect(progressBackgroundStart, progressBackgroundStart + progressBackgroundSize, true);
-                drawList->AddText(progressStart + ImVec2(5, -20) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(this->m_currTaskNames, " | ")).c_str());
+                drawList->AddText(progressStart + ImVec2(5, -20) * scale, ImColor(0xFF, 0xFF, 0xFF, 0xFF), hex::format("{}", fmt::join(m_currTaskNames, " | ")).c_str());
                 drawList->PopClipRect();
             }
         }
@@ -344,13 +346,13 @@ namespace hex::init {
         // Render the frame
         ImGui::Render();
         int displayWidth, displayHeight;
-        glfwGetFramebufferSize(this->m_window, &displayWidth, &displayHeight);
+        glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
         glViewport(0, 0, displayWidth, displayHeight);
         glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        glfwSwapBuffers(this->m_window);
+        glfwSwapBuffers(m_window);
 
         // Check if all background tasks have finished so the splash screen can be closed
         if (this->tasksSucceeded.wait_for(0s) == std::future_status::ready) {
@@ -411,8 +413,8 @@ namespace hex::init {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
         // Create the splash screen window
-        this->m_window = glfwCreateWindow(1, 1, "Starting ImHex...", nullptr, nullptr);
-        if (this->m_window == nullptr) {
+        m_window = glfwCreateWindow(1, 1, "Starting ImHex...", nullptr, nullptr);
+        if (m_window == nullptr) {
             hex::nativeErrorMessage(hex::format(
                 "Failed to create GLFW window: [{}] {}.\n"
                 "You may not have a renderer available.\n"
@@ -423,12 +425,12 @@ namespace hex::init {
         }
 
         // Force window to be fully opaque by default
-        glfwSetWindowOpacity(this->m_window, 1.0F);
+        glfwSetWindowOpacity(m_window, 1.0F);
 
         // Calculate native scale factor for hidpi displays
         {
             float xScale = 0, yScale = 0;
-            glfwGetWindowContentScale(this->m_window, &xScale, &yScale);
+            glfwGetWindowContentScale(m_window, &xScale, &yScale);
 
             auto meanScale = std::midpoint(xScale, yScale);
             if (meanScale <= 0.0F)
@@ -446,7 +448,7 @@ namespace hex::init {
             log::info("Native scaling set to: {:.1f}", meanScale);
         }
 
-        glfwMakeContextCurrent(this->m_window);
+        glfwMakeContextCurrent(m_window);
         glfwSwapInterval(1);
     }
 
@@ -456,7 +458,7 @@ namespace hex::init {
         GImGui = ImGui::CreateContext();
         ImGui::StyleColorsDark();
 
-        ImGui_ImplGlfw_InitForOpenGL(this->m_window, true);
+        ImGui_ImplGlfw_InitForOpenGL(m_window, true);
 
         #if defined(OS_MACOS)
             ImGui_ImplOpenGL3_Init("#version 150");
@@ -539,7 +541,7 @@ namespace hex::init {
     }
 
     void WindowSplash::exitGLFW() const {
-        glfwDestroyWindow(this->m_window);
+        glfwDestroyWindow(m_window);
         glfwTerminate();
     }
 

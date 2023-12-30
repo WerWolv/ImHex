@@ -4,7 +4,6 @@
 
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/http_requests.hpp>
-#include <hex/helpers/fmt.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
@@ -59,7 +58,7 @@ namespace hex::plugin::builtin {
                     ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
                 // Check if there is a telemetry uuid
-                std::string uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
+                auto uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
                 if (uuid.empty()) {
                     // Generate a new uuid
                     uuid = wolv::hash::generateUUID();

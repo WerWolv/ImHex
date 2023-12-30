@@ -1,16 +1,14 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <cstdio>
-#include <thread>
 #include <functional>
 #include <mutex>
 #include <memory>
 #include <list>
 #include <condition_variable>
-
-#include <jthread.hpp>
 
 namespace hex {
 
@@ -23,7 +21,7 @@ namespace hex {
     class Task {
     public:
         Task() = default;
-        Task(std::string unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
+        Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function);
 
         Task(const Task&) = delete;
         Task(Task &&other) noexcept;
@@ -64,7 +62,7 @@ namespace hex {
         void clearException();
         [[nodiscard]] std::string getExceptionMessage() const;
 
-        [[nodiscard]] const std::string &getUnlocalizedName();
+        [[nodiscard]] const UnlocalizedString &getUnlocalizedName();
         [[nodiscard]] u64 getValue() const;
         [[nodiscard]] u64 getMaxValue() const;
 
@@ -76,7 +74,7 @@ namespace hex {
     private:
         mutable std::mutex m_mutex;
 
-        std::string m_unlocalizedName;
+        UnlocalizedString m_unlocalizedName;
         std::atomic<u64> m_currValue = 0, m_maxValue = 0;
         std::function<void()> m_interruptCallback;
         std::function<void(Task &)> m_function;
@@ -165,8 +163,6 @@ namespace hex {
         static void runDeferredCalls();
 
     private:
-        static void runner(const std::stop_token &stopToken);
-
         static TaskHolder createTask(std::string name, u64 maxValue, bool background, std::function<void(Task &)> function);
     };
 

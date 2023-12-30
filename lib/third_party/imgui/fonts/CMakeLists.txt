@@ -10,3 +10,5 @@ add_library(imgui_fonts INTERFACE)
 target_include_directories(imgui_fonts INTERFACE
     include
 )
+
+target_include_directories(imgui_all_includes INTERFACE include)

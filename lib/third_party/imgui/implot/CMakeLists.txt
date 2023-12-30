@@ -15,4 +15,6 @@ target_include_directories(imgui_implot PUBLIC
 )
 
 target_link_libraries(imgui_implot PRIVATE imgui_includes)
+target_include_directories(imgui_all_includes INTERFACE include)
+
 set_property(TARGET imgui_implot PROPERTY POSITION_INDEPENDENT_CODE ON)

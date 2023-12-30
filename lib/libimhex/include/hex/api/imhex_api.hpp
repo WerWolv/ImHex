@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
 
 #include <optional>
 #include <span>
@@ -33,8 +34,8 @@ namespace hex {
                 Highlighting() = default;
                 Highlighting(Region region, color_t color);
 
-                [[nodiscard]] const Region &getRegion() const { return this->m_region; }
-                [[nodiscard]] const color_t &getColor() const { return this->m_color; }
+                [[nodiscard]] const Region &getRegion() const { return m_region; }
+                [[nodiscard]] const color_t &getColor() const { return m_color; }
 
             private:
                 Region m_region = {};
@@ -46,9 +47,9 @@ namespace hex {
                 Tooltip() = default;
                 Tooltip(Region region, std::string value, color_t color);
 
-                [[nodiscard]] const Region &getRegion() const { return this->m_region; }
-                [[nodiscard]] const color_t &getColor() const { return this->m_color; }
-                [[nodiscard]] const std::string &getValue() const { return this->m_value; }
+                [[nodiscard]] const Region &getRegion() const { return m_region; }
+                [[nodiscard]] const color_t &getColor() const { return m_color; }
+                [[nodiscard]] const std::string &getValue() const { return m_value; }
 
             private:
                 Region m_region = {};
@@ -338,7 +339,7 @@ namespace hex {
              * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
              * @param select Whether to select the provider after adding it
              */
-            prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface = false, bool select = true);
+            prv::Provider* createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface = false, bool select = true);
 
         }
 
@@ -365,6 +366,7 @@ namespace hex {
 
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
+                void setLastFrameTime(double time);
             }
 
             struct ProgramArguments {
@@ -556,6 +558,8 @@ namespace hex {
             bool updateImHex(UpdateType updateType);
 
             void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function);
+
+            double getLastFrameTime();
         }
 
         /**

@@ -6,7 +6,7 @@
 namespace hex::plugin::builtin {
 
     ViewTools::ViewTools() : View::Window("hex.builtin.view.tools.name") {
-        this->m_dragStartIterator = ContentRegistry::Tools::impl::getEntries().end();
+        m_dragStartIterator = ContentRegistry::Tools::impl::getEntries().end();
     }
 
     void ViewTools::drawContent() {
@@ -27,15 +27,15 @@ namespace hex::plugin::builtin {
                 // Handle dragging the tool out of the main window
 
                 // If the user clicks on the header, start dragging the tool remember the iterator
-                if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && this->m_dragStartIterator == tools.end())
-                    this->m_dragStartIterator = iter;
+                if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && m_dragStartIterator == tools.end())
+                    m_dragStartIterator = iter;
 
                 // If the user released the mouse button, stop dragging the tool
                 if (!ImGui::IsMouseDown(0))
-                    this->m_dragStartIterator = tools.end();
+                    m_dragStartIterator = tools.end();
 
                 // Detach the tool if the user dragged it out of the main window
-                if (!ImGui::IsItemHovered() && this->m_dragStartIterator == iter) {
+                if (!ImGui::IsItemHovered() && m_dragStartIterator == iter) {
                     detached = true;
                 }
 
@@ -62,8 +62,8 @@ namespace hex::plugin::builtin {
                 function();
 
                 // Handle the first frame after the tool has been detached
-                if (ImGui::IsWindowAppearing() && this->m_dragStartIterator == iter) {
-                    this->m_dragStartIterator = tools.end();
+                if (ImGui::IsWindowAppearing() && m_dragStartIterator == iter) {
+                    m_dragStartIterator = tools.end();
 
                     // Attach the newly created window to the cursor, so it gets dragged around
                     GImGui->MovingWindow = ImGui::GetCurrentWindowRead();

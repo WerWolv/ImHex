@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
 
     private:
         struct InspectorCacheEntry {
-            std::string unlocalizedName;
+            UnlocalizedString unlocalizedName;
             ContentRegistry::DataInspector::impl::DisplayFunction displayFunction;
             std::optional<ContentRegistry::DataInspector::impl::EditingFunction> editingFunction;
             bool editing;

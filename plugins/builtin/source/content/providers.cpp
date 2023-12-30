@@ -9,7 +9,8 @@
 #include "content/providers/memory_file_provider.hpp"
 #include "content/providers/view_provider.hpp"
 #include <content/providers/process_memory_provider.hpp>
-#include "content/popups/popup_notification.hpp"
+#include <content/providers/base64_provider.hpp>
+#include <popups/popup_notification.hpp>
 #include "content/helpers/notification.hpp"
 
 #include <hex/api/project_file_manager.hpp>
@@ -32,6 +33,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Provider::add<GDBProvider>();
         ContentRegistry::Provider::add<IntelHexProvider>();
         ContentRegistry::Provider::add<MotorolaSRECProvider>();
+        ContentRegistry::Provider::add<Base64Provider>();
         ContentRegistry::Provider::add<MemoryFileProvider>(false);
         ContentRegistry::Provider::add<ViewProvider>(false);
 
@@ -42,7 +44,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerHandler({
             .basePath = "providers",
             .required = true,
-            .load = [](const std::fs::path &basePath, Tar &tar) {
+            .load = [](const std::fs::path &basePath, const Tar &tar) {
                 auto json = nlohmann::json::parse(tar.readString(basePath / "providers.json"));
                 auto providerIds = json.at("providers").get<std::vector<int>>();
 
@@ -86,8 +88,9 @@ namespace hex::plugin::builtin {
                     if (loaded) {
                         if (!newProvider->open() || !newProvider->isAvailable() || !newProvider->isReadable()) {
                             providerWarnings[newProvider] = newProvider->getErrorMessage();
-                        } else
+                        } else {
                             EventProviderOpened::post(newProvider);
+                        }
                     }
                 }
 
@@ -108,15 +111,16 @@ namespace hex::plugin::builtin {
                  } else {
 
                     // Else, if are warnings, still display them
-                    if (warningMsg.empty()) return true;
-                    else {
+                    if (warningMsg.empty()) {
+                        return true;
+                    } else {
                         showWarning(
                             hex::format("hex.builtin.popup.error.project.load.some_providers_failed"_lang, warningMsg));
                     }
                     return success;
                 }
             },
-            .store = [](const std::fs::path &basePath, Tar &tar) {
+            .store = [](const std::fs::path &basePath, const Tar &tar) {
                 std::vector<int> providerIds;
                 for (const auto &provider : ImHexApi::Provider::getProviders()) {
                     auto id = provider->getID();

@@ -33,8 +33,8 @@ namespace hex {
         wolv::util::Expected<std::vector<u8>, IPSError> toIPSPatch() const;
         wolv::util::Expected<std::vector<u8>, IPSError> toIPS32Patch() const;
 
-        const auto& get() const { return this->m_patches; }
-        auto& get() { return this->m_patches; }
+        const auto& get() const { return m_patches; }
+        auto& get() { return m_patches; }
 
     private:
         std::map<u64, u8> m_patches;

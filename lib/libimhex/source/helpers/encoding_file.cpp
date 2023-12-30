@@ -12,19 +12,19 @@ namespace hex {
     }
 
     EncodingFile::EncodingFile(const hex::EncodingFile &other) {
-        this->m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
-        this->m_tableContent = other.m_tableContent;
-        this->m_longestSequence = other.m_longestSequence;
-        this->m_valid = other.m_valid;
-        this->m_name = other.m_name;
+        m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
+        m_tableContent = other.m_tableContent;
+        m_longestSequence = other.m_longestSequence;
+        m_valid = other.m_valid;
+        m_name = other.m_name;
     }
 
     EncodingFile::EncodingFile(EncodingFile &&other) noexcept {
-        this->m_mapping = std::move(other.m_mapping);
-        this->m_tableContent = std::move(other.m_tableContent);
-        this->m_longestSequence = other.m_longestSequence;
-        this->m_valid = other.m_valid;
-        this->m_name = std::move(other.m_name);
+        m_mapping = std::move(other.m_mapping);
+        m_tableContent = std::move(other.m_tableContent);
+        m_longestSequence = other.m_longestSequence;
+        m_valid = other.m_valid;
+        m_name = std::move(other.m_name);
     }
 
     EncodingFile::EncodingFile(Type type, const std::fs::path &path) : EncodingFile() {
@@ -38,14 +38,14 @@ namespace hex {
         }
 
         {
-            this->m_name = path.stem().string();
-            this->m_name = wolv::util::replaceStrings(this->m_name, "_", " ");
+            m_name = path.stem().string();
+            m_name = wolv::util::replaceStrings(m_name, "_", " ");
 
-            if (!this->m_name.empty())
-                this->m_name[0] = std::toupper(this->m_name[0]);
+            if (!m_name.empty())
+                m_name[0] = std::toupper(m_name[0]);
         }
 
-        this->m_valid = true;
+        m_valid = true;
     }
 
     EncodingFile::EncodingFile(Type type, const std::string &content) : EncodingFile() {
@@ -57,27 +57,27 @@ namespace hex {
                 return;
         }
 
-        this->m_name = "Unknown";
-        this->m_valid = true;
+        m_name = "Unknown";
+        m_valid = true;
     }
 
 
     EncodingFile &EncodingFile::operator=(const hex::EncodingFile &other) {
-        this->m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
-        this->m_tableContent = other.m_tableContent;
-        this->m_longestSequence = other.m_longestSequence;
-        this->m_valid = other.m_valid;
-        this->m_name = other.m_name;
+        m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
+        m_tableContent = other.m_tableContent;
+        m_longestSequence = other.m_longestSequence;
+        m_valid = other.m_valid;
+        m_name = other.m_name;
 
         return *this;
     }
 
     EncodingFile &EncodingFile::operator=(EncodingFile &&other) noexcept {
-        this->m_mapping = std::move(other.m_mapping);
-        this->m_tableContent = std::move(other.m_tableContent);
-        this->m_longestSequence = other.m_longestSequence;
-        this->m_valid = other.m_valid;
-        this->m_name = std::move(other.m_name);
+        m_mapping = std::move(other.m_mapping);
+        m_tableContent = std::move(other.m_tableContent);
+        m_longestSequence = other.m_longestSequence;
+        m_valid = other.m_valid;
+        m_name = std::move(other.m_name);
 
         return *this;
     }
@@ -85,7 +85,7 @@ namespace hex {
 
 
     std::pair<std::string_view, size_t> EncodingFile::getEncodingFor(std::span<u8> buffer) const {
-        for (auto riter = this->m_mapping->crbegin(); riter != this->m_mapping->crend(); ++riter) {
+        for (auto riter = m_mapping->crbegin(); riter != m_mapping->crend(); ++riter) {
             const auto &[size, mapping] = *riter;
 
             if (size > buffer.size()) continue;
@@ -99,7 +99,7 @@ namespace hex {
     }
 
     size_t EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
-        for (auto riter = this->m_mapping->crbegin(); riter != this->m_mapping->crend(); ++riter) {
+        for (auto riter = m_mapping->crbegin(); riter != m_mapping->crend(); ++riter) {
             const auto &[size, mapping] = *riter;
 
             if (size > buffer.size()) continue;
@@ -113,8 +113,8 @@ namespace hex {
     }
 
     void EncodingFile::parse(const std::string &content) {
-        this->m_tableContent = content;
-        for (const auto &line : splitString(this->m_tableContent, "\n")) {
+        m_tableContent = content;
+        for (const auto &line : splitString(m_tableContent, "\n")) {
 
             std::string from, to;
             {
@@ -137,13 +137,13 @@ namespace hex {
             if (to.empty())
                 to = " ";
 
-            if (!this->m_mapping->contains(fromBytes.size()))
-                this->m_mapping->insert({ fromBytes.size(), {} });
+            if (!m_mapping->contains(fromBytes.size()))
+                m_mapping->insert({ fromBytes.size(), {} });
 
             auto keySize = fromBytes.size();
-            (*this->m_mapping)[keySize].insert({ std::move(fromBytes), to });
+            (*m_mapping)[keySize].insert({ std::move(fromBytes), to });
 
-            this->m_longestSequence = std::max(this->m_longestSequence, keySize);
+            m_longestSequence = std::max(m_longestSequence, keySize);
         }
     }
 

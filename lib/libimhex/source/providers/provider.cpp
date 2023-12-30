@@ -29,7 +29,7 @@ namespace hex::prv {
     }
 
     Provider::~Provider() {
-        this->m_overlays.clear();
+        m_overlays.clear();
 
         if (auto selection = ImHexApi::HexEditor::getSelection(); selection.has_value() && selection->provider == this)
             EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion { { 0x00, 0x00 }, nullptr });
@@ -92,7 +92,7 @@ namespace hex::prv {
     }
 
     void Provider::applyOverlays(u64 offset, void *buffer, size_t size) const {
-        for (auto &overlay : this->m_overlays) {
+        for (auto &overlay : m_overlays) {
             auto overlayOffset = overlay->getAddress();
             auto overlaySize   = overlay->getSize();
 
@@ -104,22 +104,22 @@ namespace hex::prv {
     }
 
     Overlay *Provider::newOverlay() {
-        return this->m_overlays.emplace_back(std::make_unique<Overlay>()).get();
+        return m_overlays.emplace_back(std::make_unique<Overlay>()).get();
     }
 
     void Provider::deleteOverlay(Overlay *overlay) {
-        this->m_overlays.remove_if([overlay](const auto &item) {
+        m_overlays.remove_if([overlay](const auto &item) {
             return item.get() == overlay;
         });
     }
 
     const std::list<std::unique_ptr<Overlay>> &Provider::getOverlays() const {
-        return this->m_overlays;
+        return m_overlays;
     }
 
 
     u64 Provider::getPageSize() const {
-        return this->m_pageSize;
+        return m_pageSize;
     }
 
     void Provider::setPageSize(u64 pageSize) {
@@ -128,7 +128,7 @@ namespace hex::prv {
         if (pageSize == 0)
             return;
 
-        this->m_pageSize = pageSize;
+        m_pageSize = pageSize;
     }
 
     u32 Provider::getPageCount() const {
@@ -136,22 +136,22 @@ namespace hex::prv {
     }
 
     u32 Provider::getCurrentPage() const {
-        return this->m_currPage;
+        return m_currPage;
     }
 
     void Provider::setCurrentPage(u32 page) {
         if (page < getPageCount())
-            this->m_currPage = page;
+            m_currPage = page;
     }
 
 
     void Provider::setBaseAddress(u64 address) {
-        this->m_baseAddress = address;
+        m_baseAddress = address;
         this->markDirty();
     }
 
     u64 Provider::getBaseAddress() const {
-        return this->m_baseAddress;
+        return m_baseAddress;
     }
 
     u64 Provider::getCurrentPageAddress() const {
@@ -159,7 +159,7 @@ namespace hex::prv {
     }
 
     u64 Provider::getSize() const {
-        return std::min<u64>(this->getActualSize() - this->getPageSize() * this->m_currPage, this->getPageSize());
+        return std::min<u64>(this->getActualSize() - this->getPageSize() * m_currPage, this->getPageSize());
     }
 
     std::optional<u32> Provider::getPageOfAddress(u64 address) const {
@@ -176,19 +176,19 @@ namespace hex::prv {
     }
 
     void Provider::undo() {
-        this->m_undoRedoStack.undo();
+        m_undoRedoStack.undo();
     }
 
     void Provider::redo() {
-        this->m_undoRedoStack.redo();
+        m_undoRedoStack.redo();
     }
 
     bool Provider::canUndo() const {
-        return this->m_undoRedoStack.canUndo();
+        return m_undoRedoStack.canUndo();
     }
 
     bool Provider::canRedo() const {
-        return this->m_undoRedoStack.canRedo();
+        return m_undoRedoStack.canRedo();
     }
 
     bool Provider::hasFilePicker() const {
@@ -218,25 +218,28 @@ namespace hex::prv {
         settings["displayName"] = this->getName();
         settings["type"]        = this->getTypeName();
 
-        settings["baseAddress"] = this->m_baseAddress;
-        settings["currPage"]    = this->m_currPage;
+        settings["baseAddress"] = m_baseAddress;
+        settings["currPage"]    = m_currPage;
 
         return settings;
     }
 
     void Provider::loadSettings(const nlohmann::json &settings) {
-        this->m_baseAddress = settings["baseAddress"];
-        this->m_currPage    = settings["currPage"];
+        m_baseAddress = settings["baseAddress"];
+        m_currPage    = settings["currPage"];
     }
 
     std::pair<Region, bool> Provider::getRegionValidity(u64 address) const {
-        if ((address - this->getBaseAddress()) > this->getActualSize())
-            return { Region::Invalid(), false };
+        u64 absoluteAddress = address - this->getBaseAddress();
+
+        if (absoluteAddress < this->getActualSize())
+            return { Region { this->getBaseAddress() + absoluteAddress, this->getActualSize() - absoluteAddress }, true };
+
 
         bool insideValidRegion = false;
 
         std::optional<u64> nextRegionAddress;
-        for (const auto &overlay : this->m_overlays) {
+        for (const auto &overlay : m_overlays) {
             Region overlayRegion = { overlay->getAddress(), overlay->getSize() };
             if (!nextRegionAddress.has_value() || overlay->getAddress() < nextRegionAddress) {
                 nextRegionAddress = overlayRegion.getStartAddress();
@@ -255,11 +258,11 @@ namespace hex::prv {
 
 
     u32 Provider::getID() const {
-        return this->m_id;
+        return m_id;
     }
 
     void Provider::setID(u32 id) {
-        this->m_id = id;
+        m_id = id;
         if (id > s_idCounter)
             s_idCounter = id + 1;
     }

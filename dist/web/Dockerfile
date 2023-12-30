@@ -37,6 +37,7 @@ mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
 /vcpkg/vcpkg install --triplet=wasm32-emscripten libmagic
 /vcpkg/vcpkg install --triplet=wasm32-emscripten freetype
 /vcpkg/vcpkg install --triplet=wasm32-emscripten mbedtls
+/vcpkg/vcpkg install --triplet=wasm32-emscripten libarchive
 EOF
 
 # Build ImHex
@@ -54,6 +55,7 @@ ccache -zs
 cmake /imhex                                                                                            \
     -DIMHEX_OFFLINE_BUILD=ON                                                                            \
     -DIMHEX_STATIC_LINK_PLUGINS=ON                                                                      \
+    -DIMHEX_EXCLUDE_PLUGINS="script_loader"                                                             \
     -DNATIVE_CMAKE_C_COMPILER=gcc                                                                       \
     -DNATIVE_CMAKE_CXX_COMPILER=g++                                                                     \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                                  \

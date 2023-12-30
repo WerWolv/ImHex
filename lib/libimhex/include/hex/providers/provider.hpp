@@ -33,7 +33,7 @@ namespace hex::prv {
             std::function<void()> callback;
         };
 
-        constexpr static size_t MaxPageSize = 0x1000'0000;
+        constexpr static u64 MaxPageSize = 0xFFFF'FFFF'FFFF'FFFF;
 
         Provider();
         virtual ~Provider();
@@ -210,23 +210,23 @@ namespace hex::prv {
         [[nodiscard]] virtual nlohmann::json storeSettings(nlohmann::json settings) const;
         virtual void loadSettings(const nlohmann::json &settings);
 
-        void markDirty(bool dirty = true) { this->m_dirty = dirty; }
-        [[nodiscard]] bool isDirty() const { return this->m_dirty; }
+        void markDirty(bool dirty = true) { m_dirty = dirty; }
+        [[nodiscard]] bool isDirty() const { return m_dirty; }
 
         [[nodiscard]] virtual std::pair<Region, bool> getRegionValidity(u64 address) const;
 
-        void skipLoadInterface() { this->m_skipLoadInterface = true; }
-        [[nodiscard]] bool shouldSkipLoadInterface() const { return this->m_skipLoadInterface; }
+        void skipLoadInterface() { m_skipLoadInterface = true; }
+        [[nodiscard]] bool shouldSkipLoadInterface() const { return m_skipLoadInterface; }
 
-        void setErrorMessage(const std::string &errorMessage) { this->m_errorMessage = errorMessage; }
-        [[nodiscard]] const std::string& getErrorMessage() const { return this->m_errorMessage; }
+        void setErrorMessage(const std::string &errorMessage) { m_errorMessage = errorMessage; }
+        [[nodiscard]] const std::string& getErrorMessage() const { return m_errorMessage; }
 
         template<std::derived_from<undo::Operation> T>
         bool addUndoableOperation(auto && ... args) {
-            return this->m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
+            return m_undoRedoStack.add<T>(std::forward<decltype(args)...>(args)...);
         }
 
-        [[nodiscard]] undo::Stack& getUndoStack() { return this->m_undoRedoStack; }
+        [[nodiscard]] undo::Stack& getUndoStack() { return m_undoRedoStack; }
 
     protected:
         u32 m_currPage    = 0;

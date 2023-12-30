@@ -43,9 +43,9 @@ namespace hex::plugin::builtin {
                 return string[offset++];
             };
 
-            auto parseValue = [&](u8 byteCount) {
+            auto parseValue = [&](u8 count) {
                 u64 value = 0x00;
-                for (u8 i = 0; i < byteCount; i++) {
+                for (u8 i = 0; i < count; i++) {
                     u8 byte = (parseHexDigit(c()) << 4) | parseHexDigit(c());
                     value <<= 8;
                     value |= byte;
@@ -171,7 +171,7 @@ namespace hex::plugin::builtin {
     }
 
     bool MotorolaSRECProvider::open() {
-        auto file = wolv::io::File(this->m_sourceFilePath, wolv::io::File::Mode::Read);
+        auto file = wolv::io::File(m_sourceFilePath, wolv::io::File::Mode::Read);
         if (!file.isValid())
             return false;
 
@@ -182,14 +182,14 @@ namespace hex::plugin::builtin {
         u64 maxAddress = 0x00;
         for (auto &[address, bytes] : data) {
             auto endAddress = (address + bytes.size()) - 1;
-            this->m_data.emplace({ address, endAddress }, std::move(bytes));
+            m_data.emplace({ address, endAddress }, std::move(bytes));
 
             if (endAddress > maxAddress)
                 maxAddress = endAddress;
         }
 
-        this->m_dataSize = maxAddress + 1;
-        this->m_dataValid = true;
+        m_dataSize = maxAddress + 1;
+        m_dataValid = true;
 
         return true;
     }
@@ -199,14 +199,14 @@ namespace hex::plugin::builtin {
     }
 
     [[nodiscard]] std::string MotorolaSRECProvider::getName() const {
-        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(this->m_sourceFilePath.filename()));
+        return hex::format("hex.builtin.provider.motorola_srec.name"_lang, wolv::util::toUTF8String(m_sourceFilePath.filename()));
     }
 
 
     [[nodiscard]] std::vector<MotorolaSRECProvider::Description> MotorolaSRECProvider::getDataDescription() const {
         std::vector<Description> result;
 
-        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(this->m_sourceFilePath));
+        result.emplace_back("hex.builtin.provider.file.path"_lang, wolv::util::toUTF8String(m_sourceFilePath));
         result.emplace_back("hex.builtin.provider.file.size"_lang, hex::toByteString(this->getActualSize()));
 
         return result;
@@ -228,13 +228,13 @@ namespace hex::plugin::builtin {
                 { "Motorola SREC File", "mxt" }
             },
             [this](const std::fs::path &path) {
-                this->m_sourceFilePath = path;
+                m_sourceFilePath = path;
             }
         );
 
         if (!picked)
             return false;
-        if (!wolv::io::fs::isRegularFile(this->m_sourceFilePath))
+        if (!wolv::io::fs::isRegularFile(m_sourceFilePath))
             return false;
 
         return true;

@@ -51,88 +51,259 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 
 ## Screenshots
 
-![Hex editor, patterns and data information](https://user-images.githubusercontent.com/10835354/139717326-8044769d-527b-4d88-8adf-2d4ecafdca1f.png)
+![Hex editor, patterns and data information](https://private-user-images.githubusercontent.com/10835354/290512928-ae20c3ce-4c02-4579-9471-640f43fd6bad.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDMyNDk0NTksIm5iZiI6MTcwMzI0OTE1OSwicGF0aCI6Ii8xMDgzNTM1NC8yOTA1MTI5MjgtYWUyMGMzY2UtNGMwMi00NTc5LTk0NzEtNjQwZjQzZmQ2YmFkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFJV05KWUFYNENTVkVINTNBJTJGMjAyMzEyMjIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMxMjIyVDEyNDU1OVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTFmN2RhYmNlYWVjYzI0YWQxNjE0YjI1NDNjMTQ2MGFlODhkMmYzMTVkY2Y3MzNlYzUzYTM3N2IwNWE4OGY2YTAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.RbVnFXxuJS0xUoWbdgqCHtd-BopaFCyDypAfgkzGezU)
 ![Bookmarks, disassembler and data processor](https://user-images.githubusercontent.com/10835354/139717323-1f8c9d52-f7eb-4f43-9f11-097ac728ed6c.png)
+
+<details>
+<summary><strong>More Screenshots</strong></summary>
+
+![Data Processor decrypting some data and displaying it as an image](https://private-user-images.githubusercontent.com/10835354/290514353-d7f53f91-09e9-46c4-a720-e979c1c4e820.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDMyNDk0NTksIm5iZiI6MTcwMzI0OTE1OSwicGF0aCI6Ii8xMDgzNTM1NC8yOTA1MTQzNTMtZDdmNTNmOTEtMDllOS00NmM0LWE3MjAtZTk3OWMxYzRlODIwLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFJV05KWUFYNENTVkVINTNBJTJGMjAyMzEyMjIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMxMjIyVDEyNDU1OVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWE4OGIxNjg0NDcyMWVkYTMzOTAzMTAxMmJlNjE2ZjVkMTVmNzhlMDU1ZWNhODQyZjNjYTgzMzgzYjYyODVlNzQmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.Y4VAVgSPBZI3Q1gDehPuoC98pQXVe-z9FUWhvDAV-1g)
+![STL Parser written in the Pattern Language visualizing a 3D model](https://private-user-images.githubusercontent.com/10835354/290517253-426d83c5-f6b7-4b69-aa87-05e48ab73e24.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDMyNDk0NTksIm5iZiI6MTcwMzI0OTE1OSwicGF0aCI6Ii8xMDgzNTM1NC8yOTA1MTcyNTMtNDI2ZDgzYzUtZjZiNy00YjY5LWFhODctMDVlNDhhYjczZTI0LnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFJV05KWUFYNENTVkVINTNBJTJGMjAyMzEyMjIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMxMjIyVDEyNDU1OVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWJlMmJmZDYzOTgyZGYxOWQ5MmJhMTMyMzA2YWE3YmU0ODJlY2MwYmQxM2RlODc1MTgwYTQ5ZGYxMWNkY2JlNjAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.lsJSbAnAWZNXm_bteUWZUM96Nd4qKhk3H3WZtjsFQB4)
+![Data Information view displaying various stats about the file](https://private-user-images.githubusercontent.com/10835354/290517882-1601cd05-e50b-41f7-8272-cb9af9e6fb81.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDMyNDk0NTksIm5iZiI6MTcwMzI0OTE1OSwicGF0aCI6Ii8xMDgzNTM1NC8yOTA1MTc4ODItMTYwMWNkMDUtZTUwYi00MWY3LTgyNzItY2I5YWY5ZTZmYjgxLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFJV05KWUFYNENTVkVINTNBJTJGMjAyMzEyMjIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMxMjIyVDEyNDU1OVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWRlZjNmNDA4NThlZjFmOTdmYWVlNGIxODQ3MDdmZDkzZGM4ZDEwOWZmNWRiMmM3NjNlODFiMTQ5ZTFhZTRlOTMmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.AWm3GajW2KkNMT7AWhhCYca18UbXqZCS3-8RG4YN_ng)
+
+</details>
 
 ## Features
 
-- Featureful hex view
+<details>
+  <summary><strong>Featureful hex view</strong></summary>
+
   - Byte patching
   - Patch management
-  - Copy bytes as feature
+  - Infinite Undo/Redo
+  - "Copy bytes as..."
     - Bytes
     - Hex string
     - C, C++, C#, Rust, Python, Java & JavaScript array
     - ASCII-Art hex view
     - HTML self-contained div
-  - String and hex search
-  - Colorful highlighting
+  - Simple string and hex search
   - Goto from start, end and current cursor position
-- Custom C++-like pattern language for parsing highlighting a file's content
-  - Automatic loading based on MIME type
-  - arrays, pointers, structs, unions, enums, bitfields, namespaces, little and big endian support, conditionals and much more!
+  - Colorful highlighting
+    - Configurable foreground highlighting rules
+    - Background highlighting using patterns, find results and bookmarks
+  - Displaying data as a list of many different types
+    - Hexadecimal integers (8, 16, 32, 64 bit)
+    - Signed and unsigned decimal integers (8, 16, 32, 64 bit)
+    - Floats (16, 32, 64 bit)
+    - RGBA8 Colors
+    - HexII
+    - Binary
+  - Decoding data as ASCII and custom encodings
+    - Built-in support for UTF-8, UTF-16, ShiftJIS, most Windows encodings and many more
+  - Paged data view
+</details>
+<details>
+  <summary><strong>Custom C++-like pattern language for parsing highlighting a file's content</strong></summary>
+  
+  - Automatic loading based on MIME types and magic values
+  - Arrays, pointers, structs, unions, enums, bitfields, namespaces, little and big endian support, conditionals and much more!
   - Useful error messages, syntax highlighting and error marking
-- Doesn't burn out your retinas when used in late-night sessions
-  - Dark mode by default, but a light mode is available as well
-- Data importing
+  - Support for visualizing many different types of data
+    - Images
+    - Audio
+    - 3D Models
+    - Coordinates
+    - Time stamps
+</details>
+<details>
+  <summary><strong>Theming support</strong></summary>
+
+  - Doesn't burn out your retinas when used in late-night sessions
+    - Dark mode by default, but a light mode is available as well
+  - Customizable colors and styles for all UI elements through shareable theme files
+  - Support for custom fonts
+</details>
+<details>
+  <summary><strong>Importing and Exporting data</strong></summary>
+  
   - Base64 files
   - IPS and IPS32 patches
-- Data exporting
-  - IPS and IPS32 patches
-- Data inspector allowing interpretation of data as many different types (little and big endian)
-- Huge file support with fast and efficient loading
-- String search
-  - Copying of strings
-  - Copying of demangled strings
-- File hashing support
-  - CRC16 and CRC32 with custom initial values and polynomials
-  - MD4, MD5
-  - SHA-1, SHA-224, SHA-256, SHA-384, SHA-512
-- Diffing
-  - Compare binaries and analyze differences with ease
-- Disassembler supporting many architectures (frontend for Capstone)
-  - ARM32 (ARM, Thumb, Cortex-M, AArch32)
-  - ARM64
-  - MIPS (MIPS32, MIPS64, MIPS32R6, Micro)
-  - x86 (16-bit, 32-bit, 64-bit)
-  - PowerPC (32-bit, 64-bit)
-  - SPARC
-  - IBM SystemZ
-  - xCORE
-  - M68K
-  - TMS320C64X
-  - M680X
-  - Ethereum
-  - RISC-V
-  - WebAssembly
-  - MOS65XX
-  - Berkeley Packet Filter
-- Bookmarks
-  - Region highlighting
-  - Comments
-- Data Analyzer
+  - Markdown reports
+</details>
+<details>
+  <summary><strong>Data Inspector</strong></summary>
+
+  - Interpreting data as many different types with endianess, decimal, hexadecimal and octal support and bit inversion
+    - Unsigned and signed integers (8, 16, 24, 32, 48, 64 bit)
+    - Floats (16, 32, 64 bit)
+    - Signed and Unsigned LEB128
+    - ASCII, Wide and UTF-8 characters and strings
+    - time32_t, time64_t, DOS date and time
+    - GUIDs
+    - RGBA8 and RGB65 Colors
+  - Copying and modifying bytes through the inspector
+  - Adding new data types through the pattern language
+  - Support for hiding rows that aren't used
+</details>
+<details>
+  <summary><strong>Node-based data pre-processor</strong></summary>
+
+  - Modify, decrypt and decode data before it's being displayed in the hex editor
+  - Modify data without touching the underlying source
+  - Support for adding custom nodes
+</details>
+<details>
+  <summary><strong>Loading data from many different data sources</strong></summary>
+
+  - Local Files
+    - Support for huge files with fast and efficient loading
+  - Raw Disks
+    - Loading data from raw disks and partitions
+  - GDB Server
+    - Access the RAM of a running process or embedded devices through GDB
+  - Intel Hex and Motorola SREC data
+  - Process Memory
+    - Inspect the entire address space of a running process
+</details>
+<details>
+  <summary><strong>Data searching</strong></summary>
+  
+  - Support for searching the entire file or only a selection
+  - String extraction
+    - Option to specify minimum length and character set (lower case, upper case, digits, symbols)
+    - Option to specify encoding (ASCII, UTF-8, UTF-16 big and little endian)
+  - Sequence search
+    - Search for a sequence of bytes or characters
+    - Option to ignore character case
+  - Regex search
+    - Search for strings using regular expressions
+  - Binary Pattern
+    - Search for sequences of bytes with optional wildcards
+  - Numeric Value search
+    - Search for signed/unsigned integers and floats
+    - Search for ranges of values
+    - Option to specify size and endianess
+    - Option to ignore unaligned values
+</details>
+<details>
+  <summary><strong>Data hashing support</strong></summary>
+
+  - Many different algorithms available
+    - CRC8, CRC16 and CRC32 with custom initial values and polynomials
+      - Many default polynomials available
+    - MD5
+    - SHA-1, SHA-224, SHA-256, SHA-384, SHA-512
+    - Adler32
+    - AP
+    - BKDR
+    - Bernstein, Bernstein1
+    - DEK, DJB, ELF, FNV1, FNV1a, JS, PJW, RS, SDBM
+    - OneAtTime, Rotating, ShiftAndXor, SuperFast
+    - Murmur2_32, MurmurHash3_x86_32, MurmurHash3_x86_128, MurmurHash3_x64_128
+    - SipHash64, SipHash128
+    - XXHash32, XXHash64
+    - Tiger, Tiger2
+    - Blake2B, Blake2S
+  - Hashing of specific regions of the loaded data
+  - Hashing of arbitrary strings
+</details>
+<details>
+  <summary><strong>Diffing support</strong></summary>
+
+  - Compare data of different data sources
+  - Difference highlighting
+  - Table view of differences
+</details>
+<details>
+  <summary><strong>Integrated disassembler</strong></summary>
+  
+  - Support for all architectures supported by Capstone
+    - ARM32 (ARM, Thumb, Cortex-M, AArch32)
+    - ARM64
+    - MIPS (MIPS32, MIPS64, MIPS32R6, Micro)
+    - x86 (16-bit, 32-bit, 64-bit)
+    - PowerPC (32-bit, 64-bit)
+    - SPARC
+    - IBM SystemZ
+    - xCORE
+    - M68K
+    - TMS320C64X
+    - M680X
+    - Ethereum
+    - RISC-V
+    - WebAssembly
+    - MOS65XX
+    - Berkeley Packet Filter
+</details>
+<details>
+  <summary><strong>Bookmarks</strong></summary>
+
+  - Support for bookmarks with custom names and colors
+  - Highlighting of bookmarked region in the hex editor
+  - Jump to bookmarks
+  - Open content of bookmark in a new tab
+  - Add comments to bookmarks
+</details>
+<details>
+  <summary><strong>Featureful data analyzer and visualizer</strong></summary>
+
   - File magic-based file parser and MIME type database
-  - Byte distribution graph
+  - Byte type distribution graph
   - Entropy graph
   - Highest and average entropy
   - Encrypted / Compressed file detection
-- Built-in Content Store
-  - Download all files found in the database directly from within ImHex
-- Yara Rules support
-  - Quickly scan a file for vulnerabilities with official yara rules
-- Helpful tools
-  - Itanium and MSVC demangler
+  - Digram and Layered distribution graphs
+</details>
+<details>
+  <summary><strong>YARA Rule support</strong></summary>
+
+  - Scan a file for vulnerabilities with official yara rules
+  - Highlight matches in the hex editor
+  - Jump to matches
+  - Apply multiple rules at once
+</details>
+<details>
+  <summary><strong>Helpful tools</strong></summary>
+
+  - Itanium, MSVC, Rust and D-Lang demangler based on LLVM
   - ASCII table
   - Regex replacer
   - Mathematical expression evaluator (Calculator)
-  - Hexadecimal Color picker
+  - Graphing calculator
+  - Hexadecimal Color picker with support for many different formats
   - Base converter
+  - Byte swapper
   - UNIX Permissions calculator
   - Wikipedia term definition finder
   - File utilities
     - File splitter
     - File combiner
     - File shredder
+  - IEEE754 Float visualizer
+  - Division by invariant multiplication calculator
+  - TCP Client/Server
+  - Euclidean algorithm calculator
+</details>
+<details>
+  <summary><strong>Built-in Content updater</strong></summary>
+
+  - Download all files found in the database directly from within ImHex
+    - Pattern files for decoding various file formats
+    - Libraries for the pattern language
+    - Magic files for file type detection
+    - Custom data processor nodes
+    - Custom encodings
+    - Custom themes
+    - Yara rules
+</details>
+<details>
+  <summary><strong>Modern Interface</strong></summary>
+
+  - Support for multiple workspaces
+  - Support for custom layouts
+  - Detachable windows
+</details>
+<details>
+  <summary><strong>Easy to get started</strong></summary>
+
+  - Support for many different languages
+  - Simplified mode for beginners
+  - Extensive documentation
+  - Many example files available on [the Database](https://github.com/WerWolv/ImHex-Patterns)
+  - Achievements guiding you through the features of ImHex
+  - Interactive tutorials
+</details>
 
 ## Pattern Language
 
@@ -150,7 +321,13 @@ For format patterns, libraries, magic and constant files, check out the [ImHex-P
 
 ## Requirements
 
-To use ImHex, the following minimal system requirements need to be met:
+To use ImHex, the following minimal system requirements need to be met.
+
+> [!IMPORTANT]
+> ImHex requires a GPU with OpenGL 3.0 support in general.
+> There are releases available (with the `-NoGPU` suffix) that are software rendered and don't require a GPU, however these can be a lot slower than the GPU accelerated versions.
+> 
+> If possible at all, make ImHex use the dedicated GPU on your system instead of the integrated one (especially Intel HD GPUs are known to cause issues).
 
 - **OS**: 
   - **Windows**: Windows 7 or higher (Windows 10/11 recommended)
@@ -177,8 +354,9 @@ To compile ImHex on any platform, GCC (or Clang) is required with a version that
 On macOS, Clang is also required to compile some ObjC code.
 All releases are being built using latest available GCC.
 
-Many dependencies are bundled into the repository using submodules so make sure to clone it using the `--recurse-submodules` option.
-All dependencies that aren't bundled, can be installed using the dependency installer scripts found in the `/dist` folder.
+> [!NOTE]
+> Many dependencies are bundled into the repository using submodules so make sure to clone it using the `--recurse-submodules` option.
+> All dependencies that aren't bundled, can be installed using the dependency installer scripts found in the `/dist` folder.
 
 For more information, check out the [Compiling](/dist/compiling) guide.
 

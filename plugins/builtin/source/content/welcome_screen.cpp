@@ -29,7 +29,7 @@
 
 #include <string>
 #include <random>
-#include <content/popups/popup_question.hpp>
+#include <popups/popup_question.hpp>
 #include <hex/api/tutorial_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
@@ -55,31 +55,31 @@ namespace hex::plugin::builtin {
                     m_restoreCallback(restoreCallback),
                     m_deleteCallback(deleteCallback) {
 
-                this->m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
+                m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
             }
 
             void drawContent() override {
                 ImGui::TextUnformatted("hex.builtin.popup.safety_backup.desc"_lang);
-                if (!this->m_logFilePath.empty()) {
+                if (!m_logFilePath.empty()) {
                     ImGui::NewLine();
                     ImGui::TextUnformatted("hex.builtin.popup.safety_backup.log_file"_lang);
                     ImGui::SameLine(0, 2_scaled);
-                    if (ImGuiExt::Hyperlink(this->m_logFilePath.filename().string().c_str())) {
-                        fs::openFolderWithSelectionExternal(this->m_logFilePath);
+                    if (ImGuiExt::Hyperlink(m_logFilePath.filename().string().c_str())) {
+                        fs::openFolderWithSelectionExternal(m_logFilePath);
                     }
 
-                    ImGui::Checkbox("hex.builtin.popup.safety_backup.report_error"_lang, &this->m_reportError);
+                    ImGui::Checkbox("hex.builtin.popup.safety_backup.report_error"_lang, &m_reportError);
                     ImGui::NewLine();
                 }
 
                 auto width = ImGui::GetWindowWidth();
                 ImGui::SetCursorPosX(width / 9);
                 if (ImGui::Button("hex.builtin.popup.safety_backup.restore"_lang, ImVec2(width / 3, 0))) {
-                    this->m_restoreCallback();
-                    this->m_deleteCallback();
+                    m_restoreCallback();
+                    m_deleteCallback();
 
-                    if (this->m_reportError) {
-                        wolv::io::File logFile(this->m_logFilePath, wolv::io::File::Mode::Read);
+                    if (m_reportError) {
+                        wolv::io::File logFile(m_logFilePath, wolv::io::File::Mode::Read);
                         if (logFile.isValid()) {
                             // Read current log file data
                             auto data = logFile.readString();
@@ -94,21 +94,21 @@ namespace hex::plugin::builtin {
                                 }
                             }
 
-                            TaskManager::createBackgroundTask("Upload Crash report", [path = this->m_logFilePath, data](auto&){
+                            TaskManager::createBackgroundTask("Upload Crash report", [path = m_logFilePath, data](auto&){
                                 HttpRequest request("POST", ImHexApiURL + std::string("/crash_upload"));
                                 request.uploadFile(std::vector<u8>(data.begin(), data.end()), "file", path.filename()).wait();
                             });
                         }
                     }
 
-                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", this->m_reportError);
+                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", m_reportError);
 
                     this->close();
                 }
                 ImGui::SameLine();
                 ImGui::SetCursorPosX(width / 9 * 5);
                 if (ImGui::Button("hex.builtin.popup.safety_backup.delete"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
-                    this->m_deleteCallback();
+                    m_deleteCallback();
 
                     this->close();
                 }
@@ -126,13 +126,13 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
 
                 static bool dontShowAgain = false;
-                if (ImGui::Checkbox("hex.builtin.common.dont_show_again"_lang, &dontShowAgain)) {
+                if (ImGui::Checkbox("hex.ui.common.dont_show_again"_lang, &dontShowAgain)) {
                     ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
                 }
 
-                ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.builtin.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
+                ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.ui.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
 
-                if (ImGui::Button("hex.builtin.common.close"_lang) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
+                if (ImGui::Button("hex.ui.common.close"_lang) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape)))
                     Popup::close();
             }
         };
@@ -229,16 +229,6 @@ namespace hex::plugin::builtin {
                     ImGui::Dummy({});
                     recent::draw();
 
-                    if (ImHexApi::System::getInitArguments().contains("update-available")) {
-                        ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 5);
-                        ImGui::TableNextColumn();
-                        ImGuiExt::UnderlinedText("hex.builtin.welcome.header.update"_lang);
-                        {
-                            if (ImGuiExt::DescriptionButton("hex.builtin.welcome.update.title"_lang, hex::format("hex.builtin.welcome.update.desc"_lang, ImHexApi::System::getInitArguments()["update-available"]).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
-                                ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
-                        }
-                    }
-
                     ImGui::TableNextRow(ImGuiTableRowFlags_None, ImGui::GetTextLineHeightWithSpacing() * 6);
                     ImGui::TableNextColumn();
 
@@ -250,6 +240,14 @@ namespace hex::plugin::builtin {
                         if (ImGuiExt::IconHyperlink(ICON_VS_COMMENT_DISCUSSION, "hex.builtin.welcome.help.discord"_lang)) hex::openWebpage("hex.builtin.welcome.help.discord.link"_lang);
                     }
                     ImGuiExt::EndSubWindow();
+
+                    if (ImHexApi::System::getInitArguments().contains("update-available")) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        if (ImGuiExt::DescriptionButton("hex.builtin.welcome.update.title"_lang, hex::format("hex.builtin.welcome.update.desc"_lang, ImHexApi::System::getInitArguments()["update-available"]).c_str(), ImVec2(ImGui::GetContentRegionAvail().x * 0.8F, 0)))
+                            ImHexApi::System::updateImHex(ImHexApi::System::UpdateType::Stable);
+                    }
 
                     ImGui::EndTable();
                 }
@@ -354,6 +352,7 @@ namespace hex::plugin::builtin {
                         ImGui::SetNextWindowScroll({ 0.0F, -1.0F });
                         ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
                         ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
+                        ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
                         if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                             ImGui::BringWindowToDisplayBack(ImGui::GetCurrentWindowRead());
                             if (s_simplifiedWelcomeScreen)
@@ -395,6 +394,7 @@ namespace hex::plugin::builtin {
          * @brief Draw some default background if there are no views available in the current layout
          */
         void drawNoViewsBackground() {
+            ImGui::PushStyleColor(ImGuiCol_WindowShadow, 0x00);
             if (ImGui::Begin("ImHexDockSpace")) {
                 static std::array<char, 256> title;
                 ImFormatString(title.data(), title.size(), "%s/DockSpace_%08X", ImGui::GetCurrentWindowRead()->Name, ImGui::GetID("ImHexMainDock"));
@@ -405,6 +405,7 @@ namespace hex::plugin::builtin {
                     ImGui::SetNextWindowScroll({ 0.0F, -1.0F });
                     ImGui::SetNextWindowSize(ImGui::GetContentRegionAvail() + scaled({ 0, 10 }));
                     ImGui::SetNextWindowPos(ImGui::GetCursorScreenPos() - ImVec2(0, ImGui::GetStyle().FramePadding.y + 2_scaled));
+                    ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
                     if (ImGui::Begin("Welcome Screen", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove)) {
                         auto imageSize = scaled(ImVec2(350, 350));
                         auto imagePos = (ImGui::GetContentRegionAvail() - imageSize) / 2;
@@ -432,6 +433,7 @@ namespace hex::plugin::builtin {
                 ImGui::End();
             }
             ImGui::End();
+            ImGui::PopStyleColor();
         }
     }
 
@@ -496,6 +498,16 @@ namespace hex::plugin::builtin {
         });
 
         EventWindowInitialized::subscribe([] {
+            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
+                ui::PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
+                    []{
+                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
+                    },
+                    []{ });
+            }
+
+            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+
             // Documentation of the value above the setting definition
             auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
             if (allowServerContact == 2) {
@@ -506,16 +518,6 @@ namespace hex::plugin::builtin {
                     PopupTelemetryRequest::open();
                 #endif
             }
-
-            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
-                PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
-                    []{
-                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
-                    },
-                    []{ });
-            }
-
-            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
         });
 
         // Clear project context if we go back to the welcome screen
@@ -560,7 +562,7 @@ namespace hex::plugin::builtin {
                     crashFileData.value("logFile", ""),
 
                     // Restore callback
-                    [=] {
+                    [crashFileData, backupFilePath, hasProject, hasBackupFile] {
                         if (hasBackupFile) {
                             ProjectFile::load(backupFilePath);
                             if (hasProject) {
@@ -591,8 +593,8 @@ namespace hex::plugin::builtin {
             auto tipsCategories = nlohmann::json::parse(tipsData.string());
 
             auto now = std::chrono::system_clock::now();
-            auto days_since_epoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
-            std::mt19937 random(days_since_epoch.count());
+            auto daysSinceEpoch = std::chrono::duration_cast<std::chrono::days>(now.time_since_epoch());
+            std::mt19937 random(daysSinceEpoch.count());
 
             auto chosenCategory = tipsCategories[random()%tipsCategories.size()].at("tips");
             auto chosenTip = chosenCategory[random()%chosenCategory.size()];

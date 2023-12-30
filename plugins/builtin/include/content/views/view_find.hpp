@@ -63,6 +63,9 @@ namespace hex::plugin::builtin {
 
             struct Sequence {
                 std::string sequence;
+
+                StringType type = StringType::ASCII;
+                bool ignoreCase = false;
             } bytes;
 
             struct Regex {

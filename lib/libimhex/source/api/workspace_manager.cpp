@@ -89,6 +89,7 @@ namespace hex {
             if (s_previousWorkspace != s_workspaces.end())
                 exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first);
 
+            LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromMemory(s_currentWorkspace->second.layout.c_str());
 
             s_previousWorkspace = s_currentWorkspace;

@@ -39,12 +39,7 @@ setDefaultBuiltTypeIfUnset()
 detectBadClone()
 verifyCompiler()
 
-# List plugin names here. Project name must match folder name
-set(PLUGINS
-    builtin
-    windows
-    script_loader
-)
+detectBundledPlugins()
 
 # Add various defines
 detectOS()
@@ -67,3 +62,4 @@ add_subdirectory(tests EXCLUDE_FROM_ALL)
 # Configure packaging
 createPackage()
 generatePDBs()
+generateSDKDirectory()

@@ -27,14 +27,14 @@ namespace hex::plugin::builtin {
 
             if (ImGui::BeginTable("Tutorials", 1, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImGui::GetContentRegionAvail())) {
                 for (const auto &tutorial : tutorials | std::views::values) {
-                    if (this->m_selectedTutorial == nullptr)
-                        this->m_selectedTutorial = &tutorial;
+                    if (m_selectedTutorial == nullptr)
+                        m_selectedTutorial = &tutorial;
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
-                    if (ImGui::Selectable(Lang(tutorial.getUnlocalizedName()), this->m_selectedTutorial == &tutorial, ImGuiSelectableFlags_SpanAllColumns)) {
-                        this->m_selectedTutorial = &tutorial;
+                    if (ImGui::Selectable(Lang(tutorial.getUnlocalizedName()), m_selectedTutorial == &tutorial, ImGuiSelectableFlags_SpanAllColumns)) {
+                        m_selectedTutorial = &tutorial;
                     }
                 }
 
@@ -43,16 +43,17 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextColumn();
 
-            if (this->m_selectedTutorial != nullptr) {
+            if (m_selectedTutorial != nullptr) {
                 ImGuiExt::BeginSubWindow("hex.builtin.view.tutorials.description"_lang, ImGui::GetContentRegionAvail() - ImVec2(0, ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().ItemSpacing.y * 2));
                 {
-                    ImGuiExt::TextFormattedWrapped(Lang(this->m_selectedTutorial->getUnlocalizedDescription()));
+                    ImGuiExt::TextFormattedWrapped(Lang(m_selectedTutorial->getUnlocalizedDescription()));
                 }
                 ImGuiExt::EndSubWindow();
 
                 ImGui::BeginDisabled(currTutorial != tutorials.end());
                 if (ImGuiExt::DimmedButton("hex.builtin.view.tutorials.start"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
-                    TutorialManager::startTutorial(this->m_selectedTutorial->getUnlocalizedName());
+                    TutorialManager::startTutorial(m_selectedTutorial->getUnlocalizedName());
+                    this->getWindowOpenState() = false;
                 }
                 ImGui::EndDisabled();
             }

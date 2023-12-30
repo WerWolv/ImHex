@@ -16,20 +16,20 @@ namespace hex::plugin::builtin::undo {
             m_newData(newData, newData + size) { }
 
         void undo(prv::Provider *provider) override {
-            provider->writeRaw(this->m_offset, this->m_oldData.data(), this->m_oldData.size());
+            provider->writeRaw(m_offset, m_oldData.data(), m_oldData.size());
         }
 
         void redo(prv::Provider *provider) override {
-            provider->writeRaw(this->m_offset, this->m_newData.data(), this->m_newData.size());
+            provider->writeRaw(m_offset, m_newData.data(), m_newData.size());
         }
 
         [[nodiscard]] std::string format() const override {
-            return hex::format("hex.builtin.undo_operation.write"_lang, hex::toByteString(this->m_newData.size()), this->m_offset);
+            return hex::format("hex.builtin.undo_operation.write"_lang, hex::toByteString(m_newData.size()), m_offset);
         }
 
         std::vector<std::string> formatContent() const override {
             return {
-                hex::format("{} {} {}", hex::crypt::encode16(this->m_oldData), ICON_VS_ARROW_RIGHT, hex::crypt::encode16(this->m_newData)),
+                hex::format("{} {} {}", hex::crypt::encode16(m_oldData), ICON_VS_ARROW_RIGHT, hex::crypt::encode16(m_newData)),
             };
         }
 
@@ -38,7 +38,7 @@ namespace hex::plugin::builtin::undo {
         }
 
         [[nodiscard]] Region getRegion() const override {
-            return { this->m_offset, this->m_oldData.size() };
+            return { m_offset, m_oldData.size() };
         }
 
     private:

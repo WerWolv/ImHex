@@ -7,6 +7,7 @@
 #include <imgui.h>
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
+#include <hex/ui/view.hpp>
 
 namespace hex {
 
@@ -64,16 +65,26 @@ namespace hex {
         return s_layouts;
     }
 
+    void LayoutManager::closeAllViews() {
+        for (const auto &[name, view] : ContentRegistry::Views::impl::getEntries())
+            view->getWindowOpenState() = false;
+    }
+
     void LayoutManager::process() {
         if (s_layoutPathToLoad.has_value()) {
             const auto pathString = wolv::util::toUTF8String(*s_layoutPathToLoad);
+
+            LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromDisk(pathString.c_str());
+
             s_layoutPathToLoad = std::nullopt;
             log::info("Loaded layout from {}", pathString);
         }
 
         if (s_layoutStringToLoad.has_value()) {
+            LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromMemory(s_layoutStringToLoad->c_str());
+
             s_layoutStringToLoad = std::nullopt;
             log::info("Loaded layout from string");
         }

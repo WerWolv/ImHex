@@ -24,5 +24,6 @@ RDEPEND="${DEPEND}
 		dev-cpp/nlohmann_json
 		dbus
 		xdg-desktop-portal
+		app-arch/libarchive
 		"
 BDEPEND="${DEPEND}"

@@ -3,8 +3,6 @@
 
 #include <hex/api/localization_manager.hpp>
 
-#include <wolv/math_eval/math_evaluator.hpp>
-
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>

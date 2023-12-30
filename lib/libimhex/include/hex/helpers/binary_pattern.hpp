@@ -17,13 +17,13 @@ namespace hex {
         BinaryPattern() = default;
         explicit BinaryPattern(const std::string &pattern) : m_patterns(parseBinaryPatternString(pattern)) { }
 
-        [[nodiscard]] bool isValid() const { return !this->m_patterns.empty(); }
+        [[nodiscard]] bool isValid() const { return !m_patterns.empty(); }
 
         [[nodiscard]] bool matches(const std::vector<u8> &bytes) const {
-            if (bytes.size() < this->m_patterns.size())
+            if (bytes.size() < m_patterns.size())
                 return false;
 
-            for (u32 i = 0; i < this->m_patterns.size(); i++) {
+            for (u32 i = 0; i < m_patterns.size(); i++) {
                 if (!this->matchesByte(bytes[i], i))
                     return false;
             }
@@ -32,13 +32,13 @@ namespace hex {
         }
 
         [[nodiscard]] bool matchesByte(u8 byte, u32 offset) const {
-            const auto &pattern = this->m_patterns[offset];
+            const auto &pattern = m_patterns[offset];
 
             return (byte & pattern.mask) == pattern.value;
         }
 
         [[nodiscard]] u64 getSize() const {
-            return this->m_patterns.size();
+            return m_patterns.size();
         }
 
     private:

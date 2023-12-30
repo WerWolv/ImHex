@@ -115,10 +115,10 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "highlight_rules.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 const auto json = nlohmann::json::parse(tar.readString(basePath));
 
-                auto &rules = this->m_rules.get(provider);
+                auto &rules = m_rules.get(provider);
                 rules.clear();
 
                 for (const auto &entry : json) {
@@ -138,9 +138,9 @@ namespace hex::plugin::builtin {
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 nlohmann::json result = nlohmann::json::array();
-                for (const auto &rule : this->m_rules.get(provider)) {
+                for (const auto &rule : m_rules.get(provider)) {
                     nlohmann::json content;
 
                     content["name"]    = rule.name;
@@ -163,9 +163,9 @@ namespace hex::plugin::builtin {
         });
 
         // Initialize the selected rule iterators to point to the end of the rules lists
-        this->m_selectedRule = this->m_rules->end();
+        m_selectedRule = m_rules->end();
         EventProviderCreated::subscribe([this](prv::Provider *provider) {
-            this->m_selectedRule.get(provider) = this->m_rules.get(provider).end();
+            m_selectedRule.get(provider) = m_rules.get(provider).end();
         });
     }
 
@@ -175,7 +175,7 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("Name", ImGuiTableColumnFlags_WidthStretch, 1);
             ImGui::TableSetupColumn("Enabled", ImGuiTableColumnFlags_WidthFixed, 10_scaled);
 
-            for (auto it = this->m_rules->begin(); it != this->m_rules->end(); ++it) {
+            for (auto it = m_rules->begin(); it != m_rules->end(); ++it) {
                 auto &rule = *it;
 
                 ImGui::TableNextRow();
@@ -184,8 +184,8 @@ namespace hex::plugin::builtin {
                 // Add a selectable for each rule to be able to switch between them
                 ImGui::PushID(&rule);
                 ImGui::BeginDisabled(!rule.enabled);
-                if (ImGui::Selectable(rule.name.c_str(), this->m_selectedRule == it, ImGuiSelectableFlags_SpanAvailWidth)) {
-                    this->m_selectedRule = it;
+                if (ImGui::Selectable(rule.name.c_str(), m_selectedRule == it, ImGuiSelectableFlags_SpanAvailWidth)) {
+                    m_selectedRule = it;
                 }
                 ImGui::EndDisabled();
 
@@ -205,21 +205,21 @@ namespace hex::plugin::builtin {
 
         // Draw button to add a new rule
         if (ImGuiExt::DimmedIconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            this->m_rules->emplace_back("hex.builtin.view.highlight_rules.new_rule"_lang);
+            m_rules->emplace_back("hex.builtin.view.highlight_rules.new_rule"_lang);
 
-            if (this->m_selectedRule == this->m_rules->end())
-                this->m_selectedRule = this->m_rules->begin();
+            if (m_selectedRule == m_rules->end())
+                m_selectedRule = m_rules->begin();
         }
 
 
         ImGui::SameLine();
 
         // Draw button to remove the selected rule
-        ImGui::BeginDisabled(this->m_selectedRule == this->m_rules->end());
+        ImGui::BeginDisabled(m_selectedRule == m_rules->end());
         if (ImGuiExt::DimmedIconButton(ICON_VS_REMOVE, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-            auto next = std::next(*this->m_selectedRule);
-            this->m_rules->erase(*this->m_selectedRule);
-            this->m_selectedRule = next;
+            auto next = std::next(*m_selectedRule);
+            m_rules->erase(*m_selectedRule);
+            m_selectedRule = next;
         }
         ImGui::EndDisabled();
     }
@@ -228,14 +228,14 @@ namespace hex::plugin::builtin {
     void ViewHighlightRules::drawRulesConfig() {
         ImGuiExt::BeginSubWindow("hex.builtin.view.highlight_rules.config"_lang, ImGui::GetContentRegionAvail());
         {
-            if (this->m_selectedRule != this->m_rules->end()) {
+            if (m_selectedRule != m_rules->end()) {
 
                 // Draw text input field for the rule name
                 ImGui::PushItemWidth(-1);
-                ImGui::InputTextWithHint("##name", "Name", this->m_selectedRule.get()->name);
+                ImGui::InputTextWithHint("##name", "Name", m_selectedRule.get()->name);
                 ImGui::PopItemWidth();
 
-                auto &rule = *this->m_selectedRule;
+                auto &rule = *m_selectedRule;
 
                 // Draw a table containing all the expressions for the selected rule
                 ImGui::PushID(&rule);
@@ -282,7 +282,7 @@ namespace hex::plugin::builtin {
 
                 // Draw button to add a new expression
                 if (ImGuiExt::DimmedIconButton(ICON_VS_ADD, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                    this->m_selectedRule.get()->addExpression(Rule::Expression("", {}));
+                    m_selectedRule.get()->addExpression(Rule::Expression("", {}));
                     ImHexApi::Provider::markDirty();
                 }
 

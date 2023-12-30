@@ -127,11 +127,11 @@ namespace hex::plugin::builtin {
     }
 
     bool GDBProvider::isAvailable() const {
-        return this->m_socket.isConnected();
+        return m_socket.isConnected();
     }
 
     bool GDBProvider::isReadable() const {
-        return this->m_socket.isConnected();
+        return m_socket.isConnected();
     }
 
     bool GDBProvider::isWritable() const {
@@ -155,28 +155,28 @@ namespace hex::plugin::builtin {
         u64 alignedOffset = offset - (offset % CacheLineSize);
 
         if (size <= CacheLineSize) {
-            std::scoped_lock lock(this->m_cacheLock);
+            std::scoped_lock lock(m_cacheLock);
 
-            const auto &cacheLine = std::find_if(this->m_cache.begin(), this->m_cache.end(), [&](auto &line) {
+            const auto &cacheLine = std::find_if(m_cache.begin(), m_cache.end(), [&](auto &line) {
                 return line.address == alignedOffset;
             });
 
-            if (cacheLine != this->m_cache.end()) {
+            if (cacheLine != m_cache.end()) {
                 // Cache hit
 
             } else {
                 // Cache miss
 
-                this->m_cache.push_back({ alignedOffset, { 0 } });
+                m_cache.push_back({ alignedOffset, { 0 } });
             }
 
-            if (cacheLine != this->m_cache.end())
+            if (cacheLine != m_cache.end())
                 std::memcpy(buffer, &cacheLine->data[0] + (offset % CacheLineSize), std::min<u64>(size, cacheLine->data.size()));
         } else {
             while (size > 0) {
                 size_t readSize = std::min<u64>(size, CacheLineSize);
 
-                auto data = gdb::readMemory(this->m_socket, offset, size);
+                auto data = gdb::readMemory(m_socket, offset, size);
                 if (!data.empty())
                     std::memcpy(buffer, &data[0], data.size());
 
@@ -192,7 +192,7 @@ namespace hex::plugin::builtin {
 
         offset -= this->getBaseAddress();
 
-        gdb::writeMemory(this->m_socket, offset, buffer, size);
+        gdb::writeMemory(m_socket, offset, buffer, size);
     }
 
     void GDBProvider::save() {
@@ -200,7 +200,7 @@ namespace hex::plugin::builtin {
     }
 
     u64 GDBProvider::getActualSize() const {
-        return this->m_size;
+        return m_size;
     }
 
     std::string GDBProvider::getName() const {
@@ -208,8 +208,8 @@ namespace hex::plugin::builtin {
         std::string port = "-";
 
         if (this->isConnected()) {
-            address = this->m_ipAddress;
-            port    = std::to_string(this->m_port);
+            address = m_ipAddress;
+            port    = std::to_string(m_port);
         }
 
         return hex::format("hex.builtin.provider.gdb.name"_lang, address, port);
@@ -217,46 +217,46 @@ namespace hex::plugin::builtin {
 
     std::vector<GDBProvider::Description> GDBProvider::getDataDescription() const {
         return {
-            {"hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", this->m_ipAddress, this->m_port)},
+            {"hex.builtin.provider.gdb.server"_lang, hex::format("{}:{}", m_ipAddress, m_port)},
         };
     }
 
     bool GDBProvider::open() {
-        this->m_socket = wolv::net::SocketClient(wolv::net::SocketClient::Type::TCP);
-        this->m_socket.connect(this->m_ipAddress, this->m_port);
-        if (!gdb::enableNoAckMode(this->m_socket)) {
-            this->m_socket.disconnect();
+        m_socket = wolv::net::SocketClient(wolv::net::SocketClient::Type::TCP);
+        m_socket.connect(m_ipAddress, m_port);
+        if (!gdb::enableNoAckMode(m_socket)) {
+            m_socket.disconnect();
             return false;
         }
 
-        if (this->m_socket.isConnected()) {
-            gdb::continueExecution(this->m_socket);
+        if (m_socket.isConnected()) {
+            gdb::continueExecution(m_socket);
 
-            this->m_cacheUpdateThread = std::thread([this] {
-                auto cacheLine = this->m_cache.begin();
+            m_cacheUpdateThread = std::thread([this] {
+                auto cacheLine = m_cache.begin();
                 while (this->isConnected()) {
                     {
-                        std::scoped_lock lock(this->m_cacheLock);
+                        std::scoped_lock lock(m_cacheLock);
 
-                        if (this->m_resetCache) {
-                            this->m_cache.clear();
-                            this->m_resetCache = false;
-                            cacheLine = this->m_cache.begin();
+                        if (m_resetCache) {
+                            m_cache.clear();
+                            m_resetCache = false;
+                            cacheLine = m_cache.begin();
                         }
 
-                        if (cacheLine != this->m_cache.end()) {
-                            std::vector<u8> data = gdb::readMemory(this->m_socket, cacheLine->address, CacheLineSize);
+                        if (cacheLine != m_cache.end()) {
+                            std::vector<u8> data = gdb::readMemory(m_socket, cacheLine->address, CacheLineSize);
 
-                            while (std::count_if(this->m_cache.begin(), this->m_cache.end(), [&](auto &line) { return !line.data.empty(); }) > 100) {
-                                this->m_cache.pop_front();
-                                cacheLine = this->m_cache.begin();
+                            while (std::count_if(m_cache.begin(), m_cache.end(), [&](auto &line) { return !line.data.empty(); }) > 100) {
+                                m_cache.pop_front();
+                                cacheLine = m_cache.begin();
                             }
 
                             std::memcpy(cacheLine->data.data(), data.data(), data.size());
                         }
 
-                        if (cacheLine == this->m_cache.end())
-                            cacheLine = this->m_cache.begin();
+                        if (cacheLine == m_cache.end())
+                            cacheLine = m_cache.begin();
                         else
                             ++cacheLine;
                     }
@@ -271,46 +271,46 @@ namespace hex::plugin::builtin {
     }
 
     void GDBProvider::close() {
-        this->m_socket.disconnect();
+        m_socket.disconnect();
 
-        if (this->m_cacheUpdateThread.joinable()) {
-            this->m_cacheUpdateThread.join();
+        if (m_cacheUpdateThread.joinable()) {
+            m_cacheUpdateThread.join();
         }
     }
 
     bool GDBProvider::isConnected() const {
-        return this->m_socket.isConnected();
+        return m_socket.isConnected();
     }
 
 
     bool GDBProvider::drawLoadInterface() {
-        ImGui::InputText("hex.builtin.provider.gdb.ip"_lang, this->m_ipAddress);
-        ImGui::InputInt("hex.builtin.provider.gdb.port"_lang, &this->m_port, 0, 0);
+        ImGui::InputText("hex.builtin.provider.gdb.ip"_lang, m_ipAddress);
+        ImGui::InputInt("hex.builtin.provider.gdb.port"_lang, &m_port, 0, 0);
 
         ImGui::Separator();
 
-        ImGuiExt::InputHexadecimal("hex.builtin.common.size"_lang, &this->m_size, ImGuiInputTextFlags_CharsHexadecimal);
+        ImGuiExt::InputHexadecimal("hex.ui.common.size"_lang, &m_size, ImGuiInputTextFlags_CharsHexadecimal);
 
-        if (this->m_port < 0)
-            this->m_port = 0;
-        else if (this->m_port > 0xFFFF)
-            this->m_port = 0xFFFF;
+        if (m_port < 0)
+            m_port = 0;
+        else if (m_port > 0xFFFF)
+            m_port = 0xFFFF;
 
-        return !this->m_ipAddress.empty() && this->m_port != 0;
+        return !m_ipAddress.empty() && m_port != 0;
     }
 
     void GDBProvider::loadSettings(const nlohmann::json &settings) {
         Provider::loadSettings(settings);
 
-        this->m_ipAddress = settings.at("ip").get<std::string>();
-        this->m_port      = settings.at("port").get<int>();
-        this->m_size      = settings.at("size").get<size_t>();
+        m_ipAddress = settings.at("ip").get<std::string>();
+        m_port      = settings.at("port").get<int>();
+        m_size      = settings.at("size").get<size_t>();
     }
 
     nlohmann::json GDBProvider::storeSettings(nlohmann::json settings) const {
-        settings["ip"]   = this->m_ipAddress;
-        settings["port"] = this->m_port;
-        settings["size"] = this->m_size;
+        settings["ip"]   = m_ipAddress;
+        settings["port"] = m_port;
+        settings["size"] = m_size;
 
         return Provider::storeSettings(settings);
     }
@@ -326,9 +326,9 @@ namespace hex::plugin::builtin {
 
     std::variant<std::string, i128> GDBProvider::queryInformation(const std::string &category, const std::string &argument) {
         if (category == "ip")
-            return this->m_ipAddress;
+            return m_ipAddress;
         else if (category == "port")
-            return this->m_port;
+            return m_port;
         else
             return Provider::queryInformation(category, argument);
     }

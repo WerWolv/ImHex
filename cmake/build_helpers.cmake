@@ -147,28 +147,28 @@ macro(createPackage)
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
         if (TARGET ${plugin})
-            get_target_property(IS_RUST_PROJECT ${plugin} RUST_PROJECT)
-
             set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
             set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
 
-            if (IS_RUST_PROJECT)
-                set_target_properties(${plugin} PROPERTIES CARGO_BUILD_TARGET_DIR  ${CMAKE_BINARY_DIR}/plugins)
-
-                get_target_property(PLUGIN_LOCATION ${plugin} LOCATION)
-
-                install(FILES "${PLUGIN_LOCATION}/../${plugin}.hexplug" DESTINATION "${PLUGINS_INSTALL_LOCATION}" PERMISSIONS ${LIBRARY_PERMISSIONS})
-            else ()
-                if (APPLE)
-                    if (IMHEX_GENERATE_PACKAGE)
-                        set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PLUGINS_INSTALL_LOCATION})
-                    else ()
-                        set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
-                    endif ()
+            if (APPLE)
+                if (IMHEX_GENERATE_PACKAGE)
+                    set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PLUGINS_INSTALL_LOCATION})
                 else ()
-                    install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                    set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
                 endif ()
-            endif ()
+            else ()
+                if (WIN32)
+                    get_target_property(target_type ${plugin} TYPE)
+                    if (target_type STREQUAL "SHARED_LIBRARY")
+                        install(TARGETS ${plugin} RUNTIME DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                    else ()
+                        install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                    endif()
+                else()
+                    install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                endif()
+
+            endif()
 
             add_dependencies(imhex_all ${plugin})
         endif ()
@@ -180,12 +180,17 @@ macro(createPackage)
         # Install binaries directly in the prefix, usually C:\Program Files\ImHex.
         set(CMAKE_INSTALL_BINDIR ".")
 
+        set(PLUGIN_TARGET_FILES "")
+        foreach (plugin IN LISTS PLUGINS)
+            list(APPEND PLUGIN_TARGET_FILES "$<TARGET_FILE:${plugin}>")
+        endforeach ()
+
         # Grab all dynamically linked dependencies.
-        INSTALL(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
-        INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
+        install(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
+        install(CODE "set(PLUGIN_TARGET_FILES \"${PLUGIN_TARGET_FILES}\")")
         install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES
-            EXECUTABLES $<TARGET_FILE:builtin> $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
+            EXECUTABLES ${PLUGIN_TARGET_FILES} $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
             RESOLVED_DEPENDENCIES_VAR _r_deps
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
             CONFLICTING_DEPENDENCIES_PREFIX _c_deps
@@ -248,7 +253,9 @@ macro(createPackage)
 
         install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
         install(TARGETS main BUNDLE DESTINATION ".")
+        install(TARGETS updater BUNDLE DESTINATION ".")
         install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
+        install(FILES $<TARGET_FILE:updater> DESTINATION "${IMHEX_BUNDLE_PATH}")
 
         # Update library references to make the bundle portable
         postprocess_bundle(imhex_all main)
@@ -256,11 +263,14 @@ macro(createPackage)
         # Enforce DragNDrop packaging.
         set(CPACK_GENERATOR "DragNDrop")
 
-        set (CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
-        set (CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
+        set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
+        set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-        if(WIN32) # Forwarder is only needed on Windows
+        if (TARGET updater)
+            install(TARGETS updater RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        endif()
+        if (TARGET main-forwarder)
             install(TARGETS main-forwarder BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR})
         endif()
     endif()
@@ -394,6 +404,35 @@ function(verifyCompiler)
         message(FATAL_ERROR "ImHex can only be compiled with GCC or Clang. ${CMAKE_CXX_COMPILER_ID} is not supported.")
     endif()
 endfunction()
+
+macro(detectBundledPlugins)
+    file(GLOB PLUGINS_DIRS "plugins/*")
+
+    if (NOT DEFINED IMHEX_INCLUDE_PLUGINS)
+        foreach(PLUGIN_DIR ${PLUGINS_DIRS})
+            if (EXISTS "${PLUGIN_DIR}/CMakeLists.txt")
+                get_filename_component(PLUGIN_NAME ${PLUGIN_DIR} NAME)
+                if (NOT (${PLUGIN_NAME} IN_LIST IMHEX_EXCLUDE_PLUGINS))
+                    list(APPEND PLUGINS ${PLUGIN_NAME})
+                endif ()
+            endif()
+        endforeach()
+    else()
+        set(PLUGINS ${IMHEX_INCLUDE_PLUGINS})
+    endif()
+
+    foreach(PLUGIN_NAME ${PLUGINS})
+        message(STATUS "Enabled bundled plugin '${PLUGIN_NAME}'")
+    endforeach()
+
+    if (NOT PLUGINS)
+        message(FATAL_ERROR "No bundled plugins enabled")
+    endif()
+
+    if (NOT ("builtin" IN_LIST PLUGINS))
+        message(FATAL_ERROR "The 'builtin' plugin is required for ImHex to work!")
+    endif ()
+endmacro()
 
 macro(setVariableInParent variable value)
     get_directory_property(hasParent PARENT_DIRECTORY)
@@ -561,24 +600,6 @@ macro(addBundledLibraries)
         find_package(LLVM REQUIRED Demangle)
     endif()
 
-    if (NOT USE_SYSTEM_YARA)
-        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/yara EXCLUDE_FROM_ALL)
-        set_target_properties(libyara PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        set(YARA_LIBRARIES libyara)
-    else()
-        find_package(PkgConfig REQUIRED)
-        pkg_check_modules(YARA REQUIRED IMPORTED_TARGET yara)
-    endif()
-
-    if (NOT USE_SYSTEM_MINIAUDIO)
-        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/miniaudio EXCLUDE_FROM_ALL)
-        set_target_properties(miniaudio PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        set(MINIAUDIO_LIBRARIES miniaudio)
-    else()
-        find_package(PkgConfig REQUIRED)
-        pkg_check_modules(miniaudio REQUIRED IMPORTED_TARGET miniaudio)
-    endif()
-
     if (NOT USE_SYSTEM_JTHREAD)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/jthread EXCLUDE_FROM_ALL)
         set(JTHREAD_LIBRARIES jthread)
@@ -589,20 +610,6 @@ macro(addBundledLibraries)
         add_library(jthread INTERFACE)
         target_include_directories(jthread INTERFACE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
         set(JTHREAD_LIBRARIES jthread)
-    endif()
-
-    if (NOT USE_SYSTEM_CAPSTONE)
-        set(CAPSTONE_BUILD_STATIC_RUNTIME OFF CACHE BOOL "Disable shared library building")
-        set(CAPSTONE_BUILD_SHARED OFF CACHE BOOL "Disable shared library building")
-        set(CAPSTONE_BUILD_TESTS OFF CACHE BOOL "Disable tests")
-        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/capstone EXCLUDE_FROM_ALL)
-        set_target_properties(capstone PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        target_compile_options(capstone PRIVATE -Wno-unused-function)
-        set(CAPSTONE_LIBRARIES "capstone")
-        set(CAPSTONE_INCLUDE_DIRS ${THIRD_PARTY_LIBS_FOLDER}/capstone/include)
-    else()
-        find_package(PkgConfig REQUIRED)
-        pkg_search_module(CAPSTONE 4.0.2 REQUIRED capstone)
     endif()
 
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
@@ -678,9 +685,11 @@ function(generatePDBs)
         add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb
                 WORKING_DIRECTORY ${cv2pdb_SOURCE_DIR}
                 COMMAND
-        (${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
-                ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
-                $<TARGET_FILE:${PDB}>) || (exit 0)
+                (
+                    ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
+                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
+                    $<TARGET_FILE:${PDB}>
+                ) || (exit 0)
                 DEPENDS $<TARGET_FILE:${PDB}>
                 COMMAND_EXPAND_LISTS)
 
@@ -691,10 +700,33 @@ function(generatePDBs)
 endfunction()
 
 function(generateSDKDirectory)
-    set(SDK_PATH "./sdk")
+    if (WIN32)
+        set(SDK_PATH "./sdk")
+    elseif (APPLE)
+        set(SDK_PATH "imhex.app/Contents/Resources/sdk")
+    else()
+        set(SDK_PATH "share/imhex/sdk")
+    endif()
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex/include DESTINATION "${SDK_PATH}")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party")
+    if (NOT USE_SYSTEM_FMT)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
+    if (NOT USE_SYSTEM_NLOHMANN_JSON)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
+
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
+    install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
+    install(FILES ${CMAKE_SOURCE_DIR}/cmake/sdk/CMakeLists.txt DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
     install(TARGETS libimhex RUNTIME DESTINATION "${SDK_PATH}/lib")
+    install(TARGETS libimhex LIBRARY DESTINATION "${SDK_PATH}/lib")
+endfunction()
+
+function(addIncludesFromLibrary target library)
+    get_target_property(library_include_dirs ${library} INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(${target} PRIVATE ${library_include_dirs})
 endfunction()

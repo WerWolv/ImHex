@@ -40,11 +40,13 @@ set(LIBIMHEX_SOURCES
         source/helpers/debugging.cpp
 
         source/providers/provider.cpp
+        source/providers/memory_provider.cpp
         source/providers/undo/stack.cpp
 
         source/ui/imgui_imhex_extensions.cpp
         source/ui/view.cpp
         source/ui/popup.cpp
+        source/ui/toast.cpp
 
         source/subcommands/subcommands.cpp
 )
@@ -64,10 +66,17 @@ endif ()
 
 add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
-if (IMHEX_STATIC_LINK_PLUGINS)
-    add_library(libimhex STATIC ${LIBIMHEX_SOURCES})
+if (IMHEX_EXTERNAL_PLUGIN_BUILD)
+    add_library(libimhex IMPORTED SHARED GLOBAL)
+    set(LIBIMHEX_LIBRARY_TYPE INTERFACE)
 else()
-    add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+    if (IMHEX_STATIC_LINK_PLUGINS)
+        add_library(libimhex STATIC ${LIBIMHEX_SOURCES})
+    else()
+        add_library(libimhex SHARED ${LIBIMHEX_SOURCES})
+    endif()
+
+    set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
 endif()
 
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -77,26 +86,29 @@ setupCompilerFlags(libimhex)
 include(GenerateExportHeader)
 generate_export_header(libimhex)
 
-target_include_directories(libimhex PUBLIC include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${CAPSTONE_INCLUDE_DIRS} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${YARA_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
-target_link_directories(libimhex PUBLIC ${MBEDTLS_LIBRARY_DIR} ${CAPSTONE_LIBRARY_DIRS} ${MAGIC_LIBRARY_DIRS})
+target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} include ${XDGPP_INCLUDE_DIRS} ${MBEDTLS_INCLUDE_DIR} ${MAGIC_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS} ${FMT_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS} ${LIBBACKTRACE_INCLUDE_DIRS})
+target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR} ${MAGIC_LIBRARY_DIRS})
 
 if (NOT EMSCRIPTEN)
     # curl is only used in non-emscripten builds
-    target_include_directories(libimhex PUBLIC  ${CURL_INCLUDE_DIRS})
-    target_link_libraries(libimhex PUBLIC ${LIBCURL_LIBRARIES})
+    target_include_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE}  ${CURL_INCLUDE_DIRS})
+    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${LIBCURL_LIBRARIES})
 endif()
 
 
-if (WIN32)
-    set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-    target_link_options(libimhex PRIVATE -Wl,--export-all-symbols)
-elseif (APPLE)
-    find_library(FOUNDATION NAMES Foundation)
-    target_link_libraries(libimhex PUBLIC ${FOUNDATION})
-endif ()
+if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
+    if (WIN32)
+        set_target_properties(libimhex PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+        target_link_options(libimhex PRIVATE -Wl,--export-all-symbols)
+    elseif (APPLE)
+        find_library(FOUNDATION NAMES Foundation)
+        target_link_libraries(libimhex PUBLIC ${FOUNDATION})
+    endif ()
 
-target_link_libraries(libimhex PRIVATE ${FMT_LIBRARIES})
-target_link_libraries(libimhex PUBLIC dl ${IMGUI_LIBRARIES} ${NFD_LIBRARIES} magic ${CAPSTONE_LIBRARIES} LLVMDemangle microtar ${NLOHMANN_JSON_LIBRARIES} ${YARA_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} plcli libpl libpl-gen ${MINIAUDIO_LIBRARIES} ${JTHREAD_LIBRARIES} wolv::utils wolv::io wolv::hash wolv::net wolv::containers wolv::math_eval)
+    target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${FMT_LIBRARIES} ${NFD_LIBRARIES} magic dl ${IMGUI_LIBRARIES} ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} ${JTHREAD_LIBRARIES})
+endif()
+
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} ${IMGUI_LIBRARIES} LLVMDemangle)
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 

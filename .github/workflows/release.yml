@@ -154,7 +154,6 @@ jobs:
           WINGET_GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         if: "${{ env.WINGET_GITHUB_TOKEN != '' }}"
         run: |
-          set -x
           $tagname = $env:GITHUB_REF.Replace("refs/tags/", "")
           $version = $tagname.Replace("v", "")
           $url = "https://github.com/WerWolv/ImHex/releases/download/${tagname}/imhex-${version}-Windows-x86_64.msi"

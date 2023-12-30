@@ -1,0 +1,21 @@
+{
+    "code": "en-US",
+    "language": "English",
+    "country": "United States",
+    "fallback": true,
+    "translations": {
+        "hex.yara_rules.view.yara.error": "Yara Compiler error: {0}",
+        "hex.yara_rules.view.yara.header.matches": "Matches",
+        "hex.yara_rules.view.yara.header.rules": "Rules",
+        "hex.yara_rules.view.yara.match": "Match Rules",
+        "hex.yara_rules.view.yara.matches.identifier": "Identifier",
+        "hex.yara_rules.view.yara.matches.variable": "Variable",
+        "hex.yara_rules.view.yara.matching": "Matching...",
+        "hex.yara_rules.view.yara.name": "Yara Rules",
+        "hex.yara_rules.view.yara.no_rules": "No YARA rules found. Put them in ImHex's 'yara' folder",
+        "hex.yara_rules.view.yara.reload": "Reload",
+        "hex.yara_rules.view.yara.reset": "Reset",
+        "hex.yara_rules.view.yara.rule_added": "Yara rule added!",
+        "hex.yara_rules.view.yara.whole_data": "Whole file matches!"
+    }
+}

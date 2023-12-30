@@ -16,16 +16,16 @@ namespace hex::plugin::builtin {
             ImGui::TextUnformatted("hex.builtin.popup.blocking_task.desc"_lang);
             ImGui::Separator();
 
-            if (this->m_task.getProgress() == 0)
+            if (m_task.getProgress() == 0)
                 ImGuiExt::TextSpinner("");
             else
-                ImGui::ProgressBar(this->m_task.getProgress() / 100.0F);
+                ImGui::ProgressBar(m_task.getProgress() / 100.0F);
 
             ImGui::NewLine();
-            if (ImGui::ButtonEx("hex.builtin.common.cancel"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
-                this->m_task.interrupt();
+            if (ImGui::ButtonEx("hex.ui.common.cancel"_lang, ImVec2(ImGui::GetContentRegionAvail().x, 0)) || ImGui::IsKeyDown(ImGuiKey_Escape))
+                m_task.interrupt();
 
-            if (!this->m_task.isRunning()) {
+            if (!m_task.isRunning()) {
                 ImGui::CloseCurrentPopup();
             }
         }

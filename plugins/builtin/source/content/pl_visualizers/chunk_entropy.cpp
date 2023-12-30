@@ -1,12 +1,10 @@
-#include <hex/helpers/utils.hpp>
-
-#include <content/pl_visualizers/visualizer_helpers.hpp>
-
 #include <implot.h>
 #include <imgui.h>
 #include <content/helpers/diagrams.hpp>
 
 #include <hex/ui/imgui_imhex_extensions.h>
+
+#include <pl/patterns/pattern.hpp>
 
 namespace hex::plugin::builtin {
 

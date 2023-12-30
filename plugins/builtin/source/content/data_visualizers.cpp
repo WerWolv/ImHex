@@ -3,7 +3,6 @@
 #include <imgui.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/string.hpp>
@@ -30,9 +29,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsHexadecimal);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:
@@ -73,9 +72,9 @@ namespace hex::plugin::builtin {
                             ImGui::Text(getFormatString(upperCase), c);
                         break;
                 }
-            }
-            else
+            } else {
                 ImGuiExt::TextFormatted("{: {}s}", CharCount);
+            }
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
@@ -83,9 +82,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<u8>(), data, ImGuiInputTextFlags_None);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:
@@ -116,9 +115,9 @@ namespace hex::plugin::builtin {
                     ImGui::Text(getFormatString(), static_cast<i64>(*reinterpret_cast<const T*>(data)));
                 else
                     ImGui::Text(getFormatString(), static_cast<u64>(*reinterpret_cast<const T*>(data)));
-            }
-            else
+            } else {
                 ImGuiExt::TextFormatted("{: {}s}", CharCount);
+            }
         }
 
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
@@ -126,9 +125,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, FormatString.c_str(), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_None);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:
@@ -163,9 +162,9 @@ namespace hex::plugin::builtin {
 
             if (size == ByteCount) {
                 return drawDefaultScalarEditingTextBox(address, getFormatString(upperCase), ImGuiExt::getImGuiDataType<T>(), data, ImGuiInputTextFlags_CharsScientific);
-            }
-            else
+            } else {
                 return false;
+            }
         }
 
     private:
@@ -235,17 +234,17 @@ namespace hex::plugin::builtin {
         bool drawEditing(u64 address, u8 *data, size_t size, bool upperCase, bool startedEditing) override {
             hex::unused(address, data, size, upperCase);
 
+            m_currColor = { float(data[0]) / 0xFF, float(data[1]) / 0xFF, float(data[2]) / 0xFF, float(data[3]) / 0xFF };
             if (startedEditing) {
-                this->m_currColor = { float(data[0]) / 0xFF, float(data[1]) / 0xFF, float(data[2]) / 0xFF, float(data[3]) / 0xFF };
                 ImGui::OpenPopup("##color_popup");
             }
 
-            ImGui::ColorButton("##color", ImColor(this->m_currColor[0], this->m_currColor[1], this->m_currColor[2], this->m_currColor[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
+            ImGui::ColorButton("##color", ImColor(m_currColor[0], m_currColor[1], m_currColor[2], m_currColor[3]), ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoDragDrop, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
 
             if (ImGui::BeginPopup("##color_popup")) {
-                if (ImGui::ColorPicker4("##picker", this->m_currColor.data(), ImGuiColorEditFlags_AlphaBar)) {
+                if (ImGui::ColorPicker4("##picker", m_currColor.data(), ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_InputRGB)) {
                     for (u8 i = 0; i < 4; i++)
-                        data[i] = this->m_currColor[i] * 0xFF;
+                        data[i] = m_currColor[i] * 0xFF;
                 }
                 ImGui::EndPopup();
             } else {
@@ -274,11 +273,11 @@ namespace hex::plugin::builtin {
             hex::unused(address, startedEditing);
 
             if (startedEditing) {
-                this->m_inputBuffer = hex::format("{:08b}", *data);
+                m_inputBuffer = hex::format("{:08b}", *data);
             }
 
-            if (drawDefaultTextEditingTextBox(address, this->m_inputBuffer, ImGuiInputTextFlags_None)) {
-                if (auto result = hex::parseBinaryString(wolv::util::trim(this->m_inputBuffer)); result.has_value()) {
+            if (drawDefaultTextEditingTextBox(address, m_inputBuffer, ImGuiInputTextFlags_None)) {
+                if (auto result = hex::parseBinaryString(wolv::util::trim(m_inputBuffer)); result.has_value()) {
                     *data = result.value();
                     return true;
                 }

@@ -67,8 +67,9 @@ namespace hex {
         if (value < 0) {
             data[index] = '-';
             return { data + index };
-        } else
+        } else {
             return { data + index + 1 };
+        }
     }
 
     std::string toLower(std::string string) {
@@ -376,9 +377,9 @@ namespace hex {
         std::string result;
 
         for (u8 byte : bytes) {
-            if (std::isprint(byte) && byte != '\\')
+            if (std::isprint(byte) && byte != '\\') {
                 result += char(byte);
-            else {
+            } else {
                 switch (byte) {
                     case '\\':
                         result += "\\";
@@ -483,6 +484,70 @@ namespace hex {
         }
 
         return result;
+    }
+
+    std::wstring utf8ToUtf16(const std::string& utf8) {
+        std::vector<u32> unicodes;
+
+        for (size_t byteIndex = 0; byteIndex < utf8.size();) {
+            u32 unicode = 0;
+            size_t unicodeSize = 0;
+
+            u8 ch = utf8[byteIndex];
+            byteIndex += 1;
+
+            if (ch <= 0x7F) {
+                unicode = ch;
+                unicodeSize = 0;
+            } else if (ch <= 0xBF) {
+                return { };
+            } else if (ch <= 0xDF) {
+                unicode = ch&0x1F;
+                unicodeSize = 1;
+            } else if (ch <= 0xEF) {
+                unicode = ch&0x0F;
+                unicodeSize = 2;
+            } else if (ch <= 0xF7) {
+                unicode = ch&0x07;
+                unicodeSize = 3;
+            } else {
+                return { };
+            }
+
+            for (size_t unicodeByteIndex = 0; unicodeByteIndex < unicodeSize; unicodeByteIndex += 1) {
+                if (byteIndex == utf8.size())
+                    return { };
+
+                u8 byte = utf8[byteIndex];
+                if (byte < 0x80 || byte > 0xBF)
+                    return { };
+
+                unicode <<= 6;
+                unicode += byte & 0x3F;
+
+                byteIndex += 1;
+            }
+
+            if (unicode >= 0xD800 && unicode <= 0xDFFF)
+                return { };
+            if (unicode > 0x10FFFF)
+                return { };
+
+            unicodes.push_back(unicode);
+        }
+
+        std::wstring utf16;
+
+        for (auto unicode : unicodes) {
+            if (unicode <= 0xFFFF) {
+                utf16 += static_cast<wchar_t>(unicode);
+            } else {
+                unicode -= 0x10000;
+                utf16 += static_cast<wchar_t>(((unicode >> 10) + 0xD800));
+                utf16 += static_cast<wchar_t>(((unicode & 0x3FF) + 0xDC00));
+            }
+        }
+        return utf16;
     }
 
     float float16ToFloat32(u16 float16) {

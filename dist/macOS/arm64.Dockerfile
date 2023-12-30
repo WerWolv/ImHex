@@ -52,6 +52,7 @@ vcpkg install --triplet=arm-osx-mytriplet curl
 vcpkg install --triplet=arm-osx-mytriplet mbedtls
 vcpkg install --triplet=arm-osx-mytriplet freetype
 vcpkg install --triplet=arm-osx-mytriplet josuttis-jthread
+vcpkg install --triplet=arm-osx-mytriplet libarchive
 EOF
 
 ## Install glfw3 dep

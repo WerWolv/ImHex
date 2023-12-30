@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
         std::string m_exactResult;
 
         void focusInputTextBox() {
-            this->m_focusInputTextBox = true;
+            m_focusInputTextBox = true;
         }
 
         std::vector<CommandResult> getCommandResults(const std::string &input);

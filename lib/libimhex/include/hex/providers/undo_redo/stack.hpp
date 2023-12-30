@@ -1,9 +1,10 @@
 #pragma once
 
 #include <hex.hpp>
+#include <hex/api/localization_manager.hpp>
+
 #include <hex/providers/undo_redo/operations/operation.hpp>
 
-#include <atomic>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -24,7 +25,7 @@ namespace hex::prv::undo {
         void undo(u32 count = 1);
         void redo(u32 count = 1);
 
-        void groupOperations(u32 count, const std::string &unlocalizedName);
+        void groupOperations(u32 count, const UnlocalizedString &unlocalizedName);
         void apply(const Stack &otherStack);
 
         [[nodiscard]] bool canUndo() const;
@@ -38,21 +39,21 @@ namespace hex::prv::undo {
         bool add(std::unique_ptr<Operation> &&operation);
 
         const std::vector<std::unique_ptr<Operation>> &getAppliedOperations() const {
-            return this->m_undoStack;
+            return m_undoStack;
         }
 
         const std::vector<std::unique_ptr<Operation>> &getUndoneOperations() const {
-            return this->m_redoStack;
+            return m_redoStack;
         }
 
         void reset() {
-            this->m_undoStack.clear();
-            this->m_redoStack.clear();
+            m_undoStack.clear();
+            m_redoStack.clear();
         }
 
     private:
         [[nodiscard]] Operation* getLastOperation() const {
-            return this->m_undoStack.back().get();
+            return m_undoStack.back().get();
         }
 
     private:

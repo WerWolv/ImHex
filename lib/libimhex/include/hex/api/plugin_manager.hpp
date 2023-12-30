@@ -5,6 +5,7 @@
 #include <string>
 
 #include <wolv/io/fs.hpp>
+#include <hex/helpers/logger.hpp>
 
 struct ImGuiContext;
 
@@ -18,6 +19,7 @@ namespace hex {
 
     struct PluginFunctions {
         using InitializePluginFunc     = void (*)();
+        using InitializeLibraryFunc    = void (*)();
         using GetPluginNameFunc        = const char *(*)();
         using GetPluginAuthorFunc      = const char *(*)();
         using GetPluginDescriptionFunc = const char *(*)();
@@ -27,6 +29,7 @@ namespace hex {
         using GetSubCommandsFunc       = void* (*)();
 
         InitializePluginFunc        initializePluginFunction        = nullptr;
+        InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
         GetPluginNameFunc           getPluginNameFunction           = nullptr;
         GetPluginAuthorFunc         getPluginAuthorFunction         = nullptr;
         GetPluginDescriptionFunc    getPluginDescriptionFunction    = nullptr;
@@ -39,11 +42,14 @@ namespace hex {
     class Plugin {
     public:
         explicit Plugin(const std::fs::path &path);
-        explicit Plugin(PluginFunctions functions);
+        explicit Plugin(const PluginFunctions &functions);
 
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;
         ~Plugin();
+
+        Plugin& operator=(const Plugin &) = delete;
+        Plugin& operator=(Plugin &&other) noexcept;
 
         [[nodiscard]] bool initializePlugin() const;
         [[nodiscard]] std::string getPluginName() const;
@@ -55,9 +61,12 @@ namespace hex {
 
         [[nodiscard]] const std::fs::path &getPath() const;
 
+        [[nodiscard]] bool isValid() const;
         [[nodiscard]] bool isLoaded() const;
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
+
+        [[nodiscard]] bool isLibraryPlugin() const;
 
     private:
         uintptr_t m_handle = 0;

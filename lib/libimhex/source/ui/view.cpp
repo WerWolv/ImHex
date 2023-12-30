@@ -2,12 +2,11 @@
 
 #include <imgui.h>
 
-#include <functional>
 #include <string>
 
 namespace hex {
 
-    View::View(std::string unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
+    View::View(UnlocalizedString unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
 
     bool View::shouldDraw() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();
@@ -36,33 +35,33 @@ namespace hex {
 
 
     bool &View::getWindowOpenState() {
-        return this->m_windowOpen;
+        return m_windowOpen;
     }
 
     const bool &View::getWindowOpenState() const {
-        return this->m_windowOpen;
+        return m_windowOpen;
     }
 
-    const std::string &View::getUnlocalizedName() const {
-        return this->m_unlocalizedViewName;
+    const UnlocalizedString &View::getUnlocalizedName() const {
+        return m_unlocalizedViewName;
     }
 
     std::string View::getName() const {
-        return View::toWindowName(this->m_unlocalizedViewName);
+        return View::toWindowName(m_unlocalizedViewName);
     }
 
     bool View::didWindowJustOpen() {
-        return std::exchange(this->m_windowJustOpened, false);
+        return std::exchange(m_windowJustOpened, false);
     }
 
     void View::setWindowJustOpened(bool state) {
-        this->m_windowJustOpened = state;
+        m_windowJustOpened = state;
     }
 
     void View::trackViewOpenState() {
-        if (this->m_windowOpen && !this->m_prevWindowOpen)
+        if (m_windowOpen && !m_prevWindowOpen)
             this->setWindowJustOpened(true);
-        this->m_prevWindowOpen = this->m_windowOpen;
+        m_prevWindowOpen = m_windowOpen;
     }
 
 
@@ -71,8 +70,8 @@ namespace hex {
             ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_NavEnableKeyboard;
     }
 
-    std::string View::toWindowName(const std::string &unlocalizedName) {
-        return Lang(unlocalizedName) + "###" + unlocalizedName;
+    std::string View::toWindowName(const UnlocalizedString &unlocalizedName) {
+        return Lang(unlocalizedName) + "###" + unlocalizedName.get();
     }
 
 }

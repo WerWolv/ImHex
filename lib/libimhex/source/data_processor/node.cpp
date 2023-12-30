@@ -9,8 +9,8 @@ namespace hex::dp {
 
     int Node::s_idCounter = 1;
 
-    Node::Node(std::string unlocalizedTitle, std::vector<Attribute> attributes) : m_id(s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
-        for (auto &attr : this->m_attributes)
+    Node::Node(UnlocalizedString unlocalizedTitle, std::vector<Attribute> attributes) : m_id(s_idCounter++), m_unlocalizedTitle(std::move(unlocalizedTitle)), m_attributes(std::move(attributes)) {
+        for (auto &attr : m_attributes)
             attr.setParentNode(this);
     }
 
@@ -18,7 +18,7 @@ namespace hex::dp {
         auto attribute = this->getConnectedInputAttribute(index);
 
         if (attribute == nullptr)
-            throwNodeError(hex::format("Nothing connected to input '{0}'", Lang(this->m_attributes[index].getUnlocalizedName())));
+            throwNodeError(hex::format("Nothing connected to input '{0}'", Lang(m_attributes[index].getUnlocalizedName())));
 
         if (attribute->getType() != Attribute::Type::Buffer)
             throwNodeError("Tried to read buffer from non-buffer attribute");
@@ -141,11 +141,11 @@ namespace hex::dp {
     }
 
     void Node::setOverlayData(u64 address, const std::vector<u8> &data) {
-        if (this->m_overlay == nullptr)
+        if (m_overlay == nullptr)
             throwNodeError("Tried setting overlay data on a node that's not the end of a chain!");
 
-        this->m_overlay->setAddress(address);
-        this->m_overlay->getData() = data;
+        m_overlay->setAddress(address);
+        m_overlay->getData() = data;
     }
 
     void Node::setIdCounter(int id) {

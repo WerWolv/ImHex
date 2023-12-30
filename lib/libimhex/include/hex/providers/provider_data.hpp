@@ -34,19 +34,19 @@ namespace hex {
         }
 
         T& get(prv::Provider *provider = ImHexApi::Provider::get()) {
-            return this->m_data[provider];
+            return m_data[provider];
         }
 
         const T& get(prv::Provider *provider = ImHexApi::Provider::get()) const {
-            return this->m_data[provider];
+            return m_data.at(provider);
         }
 
         void set(const T &data, prv::Provider *provider = ImHexApi::Provider::get()) {
-            this->m_data[provider] = data;
+            m_data[provider] = data;
         }
 
         void set(T &&data, prv::Provider *provider = ImHexApi::Provider::get()) {
-            this->m_data[provider] = std::move(data);
+            m_data[provider] = std::move(data);
         }
 
         T& operator*() {
@@ -74,15 +74,15 @@ namespace hex {
     private:
         void onCreate() {
             EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
-                this->m_data.emplace(provider, T());
+                m_data.emplace(provider, T());
             });
 
             EventProviderDeleted::subscribe(this, [this](prv::Provider *provider){
-                this->m_data.erase(provider);
+                m_data.erase(provider);
             });
 
             EventImHexClosing::subscribe(this, [this] {
-                this->m_data.clear();
+                m_data.clear();
             });
 
             // Moves the data of this PerProvider instance from one provider to another
@@ -94,11 +94,11 @@ namespace hex {
                 if (node.empty()) return;
 
                 // Delete the value from the new provider, that we want to replace
-                this->m_data.erase(to);
+                m_data.erase(to);
 
                 // Re-insert it with the key of the new provider
                 node.key() = to;
-                this->m_data.insert(std::move(node));
+                m_data.insert(std::move(node));
             });
         }
 
@@ -106,6 +106,7 @@ namespace hex {
             EventProviderOpened::unsubscribe(this);
             EventProviderDeleted::unsubscribe(this);
             EventImHexClosing::unsubscribe(this);
+            MovePerProviderData::unsubscribe(this);
         }
 
     private:

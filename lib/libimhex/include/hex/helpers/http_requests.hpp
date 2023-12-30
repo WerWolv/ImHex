@@ -31,7 +31,7 @@ namespace hex {
             explicit ResultBase(u32 statusCode) : m_statusCode(statusCode), m_valid(true) { }
 
             [[nodiscard]] u32 getStatusCode() const {
-                return this->m_statusCode;
+                return m_statusCode;
             }
 
             [[nodiscard]] bool isSuccess() const {
@@ -39,7 +39,7 @@ namespace hex {
             }
 
             [[nodiscard]] bool isValid() const {
-                return this->m_valid;
+                return m_valid;
             }
 
         private:
@@ -55,7 +55,7 @@ namespace hex {
 
             [[nodiscard]]
             const T& getData() const {
-                return this->m_data;
+                return m_data;
             }
 
         private:
@@ -76,31 +76,31 @@ namespace hex {
         static void setProxyUrl(std::string proxy);
 
         void setMethod(std::string method) {
-            this->m_method = std::move(method);
+            m_method = std::move(method);
         }
 
         void setUrl(std::string url) {
-            this->m_url = std::move(url);
+            m_url = std::move(url);
         }
 
         void addHeader(std::string key, std::string value) {
-            this->m_headers[std::move(key)] = std::move(value);
+            m_headers[std::move(key)] = std::move(value);
         }
 
         void setBody(std::string body) {
-            this->m_body = std::move(body);
+            m_body = std::move(body);
         }
 
         void setTimeout(u32 timeout) {
-            this->m_timeout = timeout;
+            m_timeout = timeout;
         }
 
         float getProgress() const {
-            return this->m_progress;
+            return m_progress;
         }
 
         void cancel() {
-            this->m_canceled = true;
+            m_canceled = true;
         }
 
         template<typename T = std::string>

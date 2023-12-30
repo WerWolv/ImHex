@@ -22,26 +22,27 @@ namespace hex::plugin::builtin {
 
         {
             auto &step = tutorial.addStep();
+            static EventManager::EventList::iterator eventHandle;
 
             step.setMessage(
-                    "hex.builtin.tutorial.introduction.step2.title",
-                    "hex.builtin.tutorial.introduction.step2.description",
-                    Bottom | Right
-                )
-                .addHighlight("hex.builtin.tutorial.introduction.step2.highlight",
-                    {
-                    "Welcome Screen/Start##SubWindow_685A2CE9",
-                        Lang("hex.builtin.welcome.start.create_file")
-                })
-                .onAppear([&step] {
-                    EventProviderOpened::subscribe(&step, [&step](prv::Provider *provider) {
-                        if (dynamic_cast<MemoryFileProvider*>(provider))
-                            step.complete();
-                    });
-                })
-                .onComplete([&step] {
-                    EventProviderOpened::unsubscribe(&step);
+                "hex.builtin.tutorial.introduction.step2.title",
+                "hex.builtin.tutorial.introduction.step2.description",
+                Bottom | Right
+            )
+            .addHighlight("hex.builtin.tutorial.introduction.step2.highlight",
+            {
+                "Welcome Screen/Start##SubWindow_69AA6996",
+                Lang("hex.builtin.welcome.start.create_file")
+            })
+            .onAppear([&step] {
+                eventHandle = EventProviderOpened::subscribe([&step](prv::Provider *provider) {
+                    if (dynamic_cast<MemoryFileProvider*>(provider))
+                        step.complete();
                 });
+            })
+            .onComplete([] {
+                EventProviderOpened::unsubscribe(eventHandle);
+            });
         }
 
         {
@@ -91,8 +92,8 @@ namespace hex::plugin::builtin {
                 Lang("hex.builtin.view.tutorials.name")
             })
             .onAppear([&step] {
-                EventViewOpened::subscribe([&step](View *view){
-                    if (view->getUnlocalizedName() == "hex.builtin.view.tutorials.name")
+                EventViewOpened::subscribe([&step](const View *view){
+                    if (view->getUnlocalizedName() == UnlocalizedString("hex.builtin.view.tutorials.name"))
                         step.complete();
                 });
             })

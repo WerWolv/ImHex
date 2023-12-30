@@ -46,15 +46,15 @@ namespace ImGuiExt {
         if (size == 0)
             return;
 
-        unsigned char *imageData = stbi_load_from_memory(buffer, size, &this->m_width, &this->m_height, nullptr, 4);
+        unsigned char *imageData = stbi_load_from_memory(buffer, size, &m_width, &m_height, nullptr, 4);
         if (imageData == nullptr) {
             if (width * height * 4 > size)
                 return;
 
             imageData = static_cast<unsigned char *>(STBI_MALLOC(size));
             std::memcpy(imageData, buffer, size);
-            this->m_width = width;
-            this->m_height = height;
+            m_width = width;
+            m_height = height;
         }
         if (imageData == nullptr)
             return;
@@ -70,10 +70,10 @@ namespace ImGuiExt {
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         #endif
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->m_width, this->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         stbi_image_free(imageData);
 
-        this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
 
     Texture::Texture(std::span<const std::byte> bytes, Filter filter, int width, int height) : Texture(reinterpret_cast<const ImU8*>(bytes.data()), bytes.size(), filter, width, height) { }
@@ -81,7 +81,7 @@ namespace ImGuiExt {
     Texture::Texture(const std::fs::path &path, Filter filter) : Texture(reinterpret_cast<const char *>(path.u8string().c_str()), filter) { }
 
     Texture::Texture(const char *path, Filter filter) {
-        unsigned char *imageData = stbi_load(path, &this->m_width, &this->m_height, nullptr, 4);
+        unsigned char *imageData = stbi_load(path, &m_width, &m_height, nullptr, 4);
         if (imageData == nullptr)
             return;
 
@@ -96,10 +96,10 @@ namespace ImGuiExt {
             glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
         #endif
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->m_width, this->m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageData);
         stbi_image_free(imageData);
 
-        this->m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
+        m_textureId = reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture));
     }
 
     Texture::Texture(unsigned int texture, int width, int height) : m_textureId(reinterpret_cast<ImTextureID>(static_cast<intptr_t>(texture))), m_width(width), m_height(height) {
@@ -107,19 +107,19 @@ namespace ImGuiExt {
     }
 
     Texture::Texture(Texture&& other) noexcept {
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&this->m_textureId));
-        this->m_textureId = other.m_textureId;
-        this->m_width = other.m_width;
-        this->m_height = other.m_height;
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        m_textureId = other.m_textureId;
+        m_width = other.m_width;
+        m_height = other.m_height;
 
         other.m_textureId = nullptr;
     }
 
     Texture& Texture::operator=(Texture&& other) noexcept {
-        glDeleteTextures(1, reinterpret_cast<GLuint*>(&this->m_textureId));
-        this->m_textureId = other.m_textureId;
-        this->m_width = other.m_width;
-        this->m_height = other.m_height;
+        glDeleteTextures(1, reinterpret_cast<GLuint*>(&m_textureId));
+        m_textureId = other.m_textureId;
+        m_width = other.m_width;
+        m_height = other.m_height;
 
         other.m_textureId = nullptr;
         
@@ -127,10 +127,10 @@ namespace ImGuiExt {
     }
 
     Texture::~Texture() {
-        if (this->m_textureId == nullptr)
+        if (m_textureId == nullptr)
             return;
 
-        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(this->m_textureId));
+        auto glTextureId = static_cast<GLuint>(reinterpret_cast<intptr_t>(m_textureId));
         glDeleteTextures(1, &glTextureId);
     }
 
@@ -181,8 +181,6 @@ namespace ImGuiExt {
 
     bool Hyperlink(const char *label, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
         ImGuiWindow *window = GetCurrentWindow();
-        if (window->SkipItems)
-            return false;
 
         ImGuiContext &g         = *GImGui;
         const ImGuiID id        = window->GetID(label);
@@ -192,8 +190,7 @@ namespace ImGuiExt {
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         const ImRect bb(pos, pos + size);
-        if (!ItemAdd(bb, id))
-            return false;
+        ItemAdd(bb, id);
 
         if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
             flags |= ImGuiButtonFlags_Repeat;
@@ -723,10 +720,17 @@ namespace ImGuiExt {
             return;
 
         // Render
+        bool no_progress = fraction < 0;
         fraction = ImSaturate(fraction);
         RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
         bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
-        RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+
+        if (no_progress) {
+            auto time = (fmod(ImGui::GetTime() * 2, 1.8) - 0.4);
+            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), ImSaturate(time), ImSaturate(time + 0.2), style.FrameRounding);
+        } else {
+            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+        }
     }
 
     void TextUnformattedCentered(const char *text) {

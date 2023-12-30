@@ -8,7 +8,6 @@
 #include <hex/data_processor/node.hpp>
 
 #include <filesystem>
-#include <thread>
 #include <jthread.hpp>
 
 #if defined(OS_WEB)
@@ -28,7 +27,7 @@ namespace hex {
 
         namespace impl {
 
-            nlohmann::json& getSetting(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue) {
+            nlohmann::json& getSetting(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &defaultValue) {
                 auto &settings = getSettingsData();
 
                 if (!settings.contains(unlocalizedCategory))
@@ -90,16 +89,21 @@ namespace hex {
                 }
 
                 void store() {
+                    auto settingsData = getSettingsData();
+
                     // During a crash settings can be empty, causing them to be overwritten.
-                    if(getSettingsData().empty()) {
+                    if (settingsData.empty()) {
                         return;
                     }
 
                     for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
+                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Write);
 
                         if (file.isValid()) {
-                            file.writeString(getSettingsData().dump(4));
+                            auto result = settingsData.dump(4);
+
+                            file.setSize(0);
+                            file.writeString(result);
                             break;
                         }
                     }
@@ -113,7 +117,7 @@ namespace hex {
             #endif
 
             template<typename T>
-            static T* insertOrGetEntry(std::vector<T> &vector, const std::string &unlocalizedName) {
+            static T* insertOrGetEntry(std::vector<T> &vector, const UnlocalizedString &unlocalizedName) {
                 T *foundEntry = nullptr;
                 for (auto &entry : vector) {
                     if (entry.unlocalizedName == unlocalizedName) {
@@ -138,7 +142,7 @@ namespace hex {
                 return categories;
             }
 
-            Widgets::Widget* add(const std::string &unlocalizedCategory, const std::string &unlocalizedSubCategory, const std::string &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget) {
+            Widgets::Widget* add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget) {
                 const auto category    = insertOrGetEntry(getSettings(),     unlocalizedCategory);
                 const auto subCategory = insertOrGetEntry(category->subCategories, unlocalizedSubCategory);
                 const auto entry       = insertOrGetEntry(subCategory->entries,    unlocalizedName);
@@ -152,13 +156,13 @@ namespace hex {
 
         }
 
-        void setCategoryDescription(const std::string &unlocalizedCategory, const std::string &unlocalizedDescription) {
+        void setCategoryDescription(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedDescription) {
             const auto category = insertOrGetEntry(impl::getSettings(),     unlocalizedCategory);
 
             category->unlocalizedDescription = unlocalizedDescription;
         }
 
-        nlohmann::json read(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &defaultValue) {
+        nlohmann::json read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &defaultValue) {
             auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
 
             if (setting.is_number() && defaultValue.is_boolean())
@@ -169,67 +173,67 @@ namespace hex {
             return setting;
         }
 
-        void write(const std::string &unlocalizedCategory, const std::string &unlocalizedName, const nlohmann::json &value) {
+        void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
             impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
         }
 
         namespace Widgets {
 
             bool Checkbox::draw(const std::string &name) {
-                return ImGui::Checkbox(name.c_str(), &this->m_value);
+                return ImGui::Checkbox(name.c_str(), &m_value);
             }
 
             void Checkbox::load(const nlohmann::json &data) {
                 if (data.is_number()) {
-                    this->m_value = data.get<int>() != 0;
+                    m_value = data.get<int>() != 0;
                 } else if (data.is_boolean()) {
-                    this->m_value = data.get<bool>();
+                    m_value = data.get<bool>();
                 } else {
                     log::warn("Invalid data type loaded from settings for checkbox!");
                 }
             }
 
             nlohmann::json Checkbox::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             bool SliderInteger::draw(const std::string &name) {
-                return ImGui::SliderInt(name.c_str(), &this->m_value, this->m_min, this->m_max);
+                return ImGui::SliderInt(name.c_str(), &m_value, m_min, m_max);
             }
 
             void SliderInteger::load(const nlohmann::json &data) {
                 if (data.is_number_integer()) {
-                    this->m_value = data.get<int>();
+                    m_value = data.get<int>();
                 } else {
                     log::warn("Invalid data type loaded from settings for slider!");
                 }
             }
 
             nlohmann::json SliderInteger::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             bool SliderFloat::draw(const std::string &name) {
-                return ImGui::SliderFloat(name.c_str(), &this->m_value, this->m_min, this->m_max);
+                return ImGui::SliderFloat(name.c_str(), &m_value, m_min, m_max);
             }
 
             void SliderFloat::load(const nlohmann::json &data) {
                 if (data.is_number()) {
-                    this->m_value = data.get<float>();
+                    m_value = data.get<float>();
                 } else {
                     log::warn("Invalid data type loaded from settings for slider!");
                 }
             }
 
             nlohmann::json SliderFloat::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             ColorPicker::ColorPicker(ImColor defaultColor) {
-                this->m_value = {
+                m_value = {
                         defaultColor.Value.x,
                         defaultColor.Value.y,
                         defaultColor.Value.z,
@@ -238,43 +242,43 @@ namespace hex {
             }
 
             bool ColorPicker::draw(const std::string &name) {
-                return ImGui::ColorEdit4(name.c_str(), this->m_value.data(), ImGuiColorEditFlags_NoInputs);
+                return ImGui::ColorEdit4(name.c_str(), m_value.data(), ImGuiColorEditFlags_NoInputs);
             }
 
             void ColorPicker::load(const nlohmann::json &data) {
                 if (data.is_number()) {
                     ImColor color(data.get<u32>());
-                    this->m_value = { color.Value.x, color.Value.y, color.Value.z, color.Value.w };
+                    m_value = { color.Value.x, color.Value.y, color.Value.z, color.Value.w };
                 } else {
                     log::warn("Invalid data type loaded from settings for color picker!");
                 }
             }
 
             nlohmann::json ColorPicker::store() {
-                const ImColor color(this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3]);
+                const ImColor color(m_value[0], m_value[1], m_value[2], m_value[3]);
 
                 return static_cast<ImU32>(color);
             }
 
             ImColor ColorPicker::getColor() const {
-                return { this->m_value[0], this->m_value[1], this->m_value[2], this->m_value[3] };
+                return { m_value[0], m_value[1], m_value[2], m_value[3] };
             }
 
 
             bool DropDown::draw(const std::string &name) {
                 const char *preview = "";
-                if (static_cast<size_t>(this->m_value) < this->m_items.size())
-                    preview = this->m_items[this->m_value].c_str();
+                if (static_cast<size_t>(m_value) < m_items.size())
+                    preview = m_items[m_value].c_str();
 
                 bool changed = false;
                 if (ImGui::BeginCombo(name.c_str(), Lang(preview))) {
 
                     int index = 0;
-                    for (const auto &item : this->m_items) {
-                        const bool selected = index == this->m_value;
+                    for (const auto &item : m_items) {
+                        const bool selected = index == m_value;
 
                         if (ImGui::Selectable(Lang(item), selected)) {
-                            this->m_value = index;
+                            m_value = index;
                             changed = true;
                         }
 
@@ -291,60 +295,60 @@ namespace hex {
             }
 
             void DropDown::load(const nlohmann::json &data) {
-                this->m_value = 0;
+                m_value = 0;
 
                 int defaultItemIndex = 0;
 
                 int index = 0;
-                for (const auto &item : this->m_settingsValues) {
-                    if (item == this->m_defaultItem)
+                for (const auto &item : m_settingsValues) {
+                    if (item == m_defaultItem)
                         defaultItemIndex = index;
 
                     if (item == data) {
-                        this->m_value = index;
+                        m_value = index;
                         return;
                     }
 
                     index += 1;
                 }
 
-                this->m_value = defaultItemIndex;
+                m_value = defaultItemIndex;
             }
 
             nlohmann::json DropDown::store() {
-                if (this->m_value == -1)
-                    return this->m_defaultItem;
-                if (static_cast<size_t>(this->m_value) >= this->m_items.size())
-                    return this->m_defaultItem;
+                if (m_value == -1)
+                    return m_defaultItem;
+                if (static_cast<size_t>(m_value) >= m_items.size())
+                    return m_defaultItem;
 
-                return this->m_settingsValues[this->m_value];
+                return m_settingsValues[m_value];
             }
 
             const nlohmann::json& DropDown::getValue() const {
-                return this->m_settingsValues[this->m_value];
+                return m_settingsValues[m_value];
             }
 
 
             bool TextBox::draw(const std::string &name) {
-                return ImGui::InputText(name.c_str(), this->m_value);
+                return ImGui::InputText(name.c_str(), m_value);
             }
 
             void TextBox::load(const nlohmann::json &data) {
                 if (data.is_string()) {
-                    this->m_value = data.get<std::string>();
+                    m_value = data.get<std::string>();
                 } else {
                     log::warn("Invalid data type loaded from settings for text box!");
                 }
             }
 
             nlohmann::json TextBox::store() {
-                return this->m_value;
+                return m_value;
             }
 
 
             bool FilePicker::draw(const std::string &name) {
                 bool changed = false;
-                if (ImGui::InputText("##font_path", this->m_value)) {
+                if (ImGui::InputText("##font_path", m_value)) {
                     changed = true;
                 }
 
@@ -353,7 +357,7 @@ namespace hex {
                 if (ImGuiExt::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
                                                [&](const std::fs::path &path) {
-                                                   this->m_value = wolv::util::toUTF8String(path);
+                                                   m_value = wolv::util::toUTF8String(path);
                                                });
                 }
 
@@ -366,14 +370,14 @@ namespace hex {
 
             void FilePicker::load(const nlohmann::json &data) {
                 if (data.is_string()) {
-                    this->m_value = data.get<std::string>();
+                    m_value = data.get<std::string>();
                 } else {
                     log::warn("Invalid data type loaded from settings for file picker!");
                 }
             }
 
             nlohmann::json FilePicker::store() {
-                return this->m_value;
+                return m_value;
             }
 
             bool Label::draw(const std::string& name) {
@@ -391,7 +395,7 @@ namespace hex {
 
     namespace ContentRegistry::CommandPaletteCommands {
 
-        void add(Type type, const std::string &command, const std::string &unlocalizedDescription, const impl::DisplayCallback &displayCallback, const impl::ExecuteCallback &executeCallback) {
+        void add(Type type, const std::string &command, const UnlocalizedString &unlocalizedDescription, const impl::DisplayCallback &displayCallback, const impl::ExecuteCallback &executeCallback) {
             log::debug("Registered new command palette command: {}", command);
 
             impl::getEntries().push_back(impl::Entry { type, command, unlocalizedDescription, displayCallback, executeCallback });
@@ -561,12 +565,12 @@ namespace hex {
         }
 
         void impl::add(std::unique_ptr<View> &&view) {
-            log::debug("Registered new view: {}", view->getUnlocalizedName());
+            log::debug("Registered new view: {}", view->getUnlocalizedName().get());
 
             getEntries().insert({ view->getUnlocalizedName(), std::move(view) });
         }
 
-        View* getViewByName(const std::string &unlocalizedName) {
+        View* getViewByName(const UnlocalizedString &unlocalizedName) {
             auto &views = impl::getEntries();
 
             if (views.contains(unlocalizedName))
@@ -579,8 +583,8 @@ namespace hex {
 
     namespace ContentRegistry::Tools {
 
-        void add(const std::string &unlocalizedName, const impl::Callback &function) {
-            log::debug("Registered new tool: {}", unlocalizedName);
+        void add(const UnlocalizedString &unlocalizedName, const impl::Callback &function) {
+            log::debug("Registered new tool: {}", unlocalizedName.get());
 
             impl::getEntries().emplace_back(impl::Entry { unlocalizedName, function, false });
         }
@@ -599,14 +603,14 @@ namespace hex {
 
     namespace ContentRegistry::DataInspector {
 
-        void add(const std::string &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
-            log::debug("Registered new data inspector format: {}", unlocalizedName);
+        void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
+            log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
             impl::getEntries().push_back({ unlocalizedName, requiredSize, requiredSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
 
-        void add(const std::string &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
-            log::debug("Registered new data inspector format: {}", unlocalizedName);
+        void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction) {
+            log::debug("Registered new data inspector format: {}", unlocalizedName.get());
 
             impl::getEntries().push_back({ unlocalizedName, requiredSize, maxSize, std::move(displayGeneratorFunction), std::move(editingFunction) });
         }
@@ -627,7 +631,7 @@ namespace hex {
     namespace ContentRegistry::DataProcessorNode {
 
         void impl::add(const Entry &entry) {
-            log::debug("Registered new data processor node type: [{}]: {}", entry.category, entry.name);
+            log::debug("Registered new data processor node type: [{}]: {}", entry.unlocalizedCategory.get(), entry.unlocalizedName.get());
 
             getEntries().push_back(entry);
         }
@@ -712,14 +716,14 @@ namespace hex {
 
     namespace ContentRegistry::Interface {
 
-        void registerMainMenuItem(const std::string &unlocalizedName, u32 priority) {
-            log::debug("Registered new main menu item: {}", unlocalizedName);
+        void registerMainMenuItem(const UnlocalizedString &unlocalizedName, u32 priority) {
+            log::debug("Registered new main menu item: {}", unlocalizedName.get());
 
             impl::getMainMenuItems().insert({ priority, { unlocalizedName } });
         }
 
-        void addMenuItem(const std::vector<std::string> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
-            log::debug("Added new menu item to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
+        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
+            log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             impl::getMenuItems().insert({
                 priority, impl::MenuItem { unlocalizedMainMenuNames, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback }
@@ -733,8 +737,8 @@ namespace hex {
             }
         }
 
-        void addMenuItemSubMenu(std::vector<std::string> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
-            log::debug("Added new menu item sub menu to menu {} with priority {}", wolv::util::combineStrings(unlocalizedMainMenuNames, " -> "), priority);
+        void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
+            log::debug("Added new menu item sub menu to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::getMenuItems().insert({
@@ -742,7 +746,7 @@ namespace hex {
             });
         }
 
-        void addMenuItemSeparator(std::vector<std::string> unlocalizedMainMenuNames, u32 priority) {
+        void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::getMenuItems().insert({
                 priority, impl::MenuItem { unlocalizedMainMenuNames, std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; } }
@@ -765,7 +769,7 @@ namespace hex {
             impl::getSidebarItems().push_back({ icon, function, enabledCallback });
         }
 
-        void addTitleBarButton(const std::string &icon, const std::string &unlocalizedTooltip, const impl::ClickCallback &function) {
+        void addTitleBarButton(const std::string &icon, const UnlocalizedString &unlocalizedTooltip, const impl::ClickCallback &function) {
             impl::getTitleBarButtons().push_back({ icon, unlocalizedTooltip, function });
         }
 
@@ -835,8 +839,8 @@ namespace hex {
                 return providerNames;
             }
 
-            void addProviderName(const std::string &unlocalizedName) {
-                log::debug("Registered new provider: {}", unlocalizedName);
+            void addProviderName(const UnlocalizedString &unlocalizedName) {
+                log::debug("Registered new provider: {}", unlocalizedName.get());
 
                 getEntries().push_back(unlocalizedName);
             }
@@ -848,8 +852,8 @@ namespace hex {
 
     namespace ContentRegistry::DataFormatter {
 
-        void add(const std::string &unlocalizedName, const impl::Callback &callback) {
-            log::debug("Registered new data formatter: {}", unlocalizedName);
+        void add(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
+            log::debug("Registered new data formatter: {}", unlocalizedName.get());
 
             impl::getEntries().push_back({ unlocalizedName, callback });
         }
@@ -966,7 +970,7 @@ namespace hex {
 
         }
 
-        std::shared_ptr<DataVisualizer> getVisualizerByName(const std::string &unlocalizedName) {
+        std::shared_ptr<DataVisualizer> getVisualizerByName(const UnlocalizedString &unlocalizedName) {
             for (const auto &visualizer : impl::getVisualizers()) {
                 if (visualizer->getUnlocalizedName() == unlocalizedName)
                     return visualizer;
@@ -1000,6 +1004,11 @@ namespace hex {
 
         namespace impl {
 
+            struct Service {
+                std::string name;
+                std::jthread thread;
+            };
+
             std::vector<Service> &getServices() {
                 static std::vector<Service> services;
 
@@ -1007,20 +1016,24 @@ namespace hex {
             }
 
             void stopServices() {
-                for (auto &service : getServices()) {
+                auto &services = getServices();
+
+                for (auto &service : services) {
                     service.thread.request_stop();
                 }
 
-                for (auto &service : getServices()) {
+                for (auto &service : services) {
                     if (service.thread.joinable())
                         service.thread.join();
                 }
+
+                services.clear();
             }
 
         }
 
-        void registerService(const std::string &unlocalizedName, const impl::Callback &callback) {
-            log::debug("Registered new background service: {}", unlocalizedName);
+        void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
+            log::debug("Registered new background service: {}", unlocalizedName.get());
 
             impl::getServices().push_back(impl::Service {
                 unlocalizedName,
@@ -1067,7 +1080,7 @@ namespace hex {
 
         }
 
-        void addExperiment(const std::string &experimentName, const std::string &unlocalizedName, const std::string &unlocalizedDescription) {
+        void addExperiment(const std::string &experimentName, const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription) {
             auto &experiments = impl::getExperiments();
 
             if (experiments.contains(experimentName)) {

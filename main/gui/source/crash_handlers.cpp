@@ -8,7 +8,6 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/stacktrace.hpp>
 
-#include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <window.hpp>
@@ -85,15 +84,17 @@ namespace hex::crash {
         // Trigger a breakpoint if we're in a debug build or raise the signal again for the default handler to handle it
         #if defined(DEBUG)
 
-            if (signalNumber == 0) {
+            static bool breakpointTriggered = false;
+            if (!breakpointTriggered) {
+                breakpointTriggered = true;
                 #if defined(OS_WINDOWS)
                     __debugbreak();
                 #else
                     raise(SIGTRAP);
                 #endif
-            } else {
-                std::exit(signalNumber);
             }
+
+            std::exit(signalNumber);
 
         #else
 

@@ -2,6 +2,7 @@
 
 #include <hex.hpp>
 #include <hex/api/plugin_manager.hpp>
+#include <hex/helpers/logger.hpp>
 
 #include <string>
 
@@ -22,29 +23,53 @@
  * Name, Author and Description will be displayed in the in the plugin list on the Welcome screen.
  */
 #define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
+#define IMHEX_LIBRARY_SETUP() IMHEX_LIBRARY_SETUP_IMPL()
 
-#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                      \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                 \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                             \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                   \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getCompatibleVersion() { return IMHEX_VERSION; }                 \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                    \
-        ImGui::SetCurrentContext(ctx);                                                                          \
-        GImGui = ctx;                                                                                           \
-    }                                                                                                           \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                     \
-    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {   \
-        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                    \
-            initializePlugin,                                                                                   \
-            getPluginName,                                                                                      \
-            getPluginAuthor,                                                                                    \
-            getPluginDescription,                                                                               \
-            getCompatibleVersion,                                                                               \
-            setImGuiContext,                                                                                    \
-            nullptr,                                                                                            \
-            nullptr                                                                                             \
-        });                                                                                                     \
-    }                                                                                                           \
+#define IMHEX_LIBRARY_SETUP_IMPL()                                                                                  \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                        \
+    static auto WOLV_TOKEN_CONCAT(libraryInitializer_, IMHEX_PLUGIN_NAME) = [] {                                    \
+        initializeLibrary();                                                                                        \
+        hex::log::info("Library plugin '{}' initialized successfully", WOLV_STRINGIFY(IMHEX_PLUGIN_NAME));          \
+        return 0;                                                                                                   \
+    }();                                                                                                            \
+    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {       \
+        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                        \
+            nullptr,                                                                                                \
+            initializeLibrary,                                                                                      \
+            nullptr,                                                                                                \
+            nullptr,                                                                                                \
+            nullptr,                                                                                                \
+            nullptr,                                                                                                \
+            nullptr,                                                                                                \
+            nullptr,                                                                                                \
+            nullptr                                                                                                 \
+        });                                                                                                         \
+    }                                                                                                               \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary()
+
+#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                          \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                     \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                 \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                       \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getCompatibleVersion() { return IMHEX_VERSION; }                     \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                        \
+        ImGui::SetCurrentContext(ctx);                                                                              \
+        GImGui = ctx;                                                                                               \
+    }                                                                                                               \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                         \
+    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {       \
+        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                        \
+            initializePlugin,                                                                                       \
+            nullptr,                                                                                                \
+            getPluginName,                                                                                          \
+            getPluginAuthor,                                                                                        \
+            getPluginDescription,                                                                                   \
+            getCompatibleVersion,                                                                                   \
+            setImGuiContext,                                                                                        \
+            nullptr,                                                                                                \
+            nullptr                                                                                                 \
+        });                                                                                                         \
+    }                                                                                                               \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin()
 
 /**

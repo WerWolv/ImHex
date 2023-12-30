@@ -365,7 +365,7 @@ namespace hex {
             });
         }
 
-        prv::Provider* createProvider(const std::string &unlocalizedName, bool skipLoadInterface, bool select) {
+        prv::Provider* createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface, bool select) {
             prv::Provider* result = nullptr;
             RequestCreateProvider::post(unlocalizedName, skipLoadInterface, select, &result);
 
@@ -381,7 +381,6 @@ namespace hex {
 
             // Default to true means we forward to ourselves by default
             static bool s_isMainInstance = true;
-
             void setMainInstanceStatus(bool status) {
                 s_isMainInstance = status;
             }
@@ -435,6 +434,12 @@ namespace hex {
 
                 getInitArguments()[key] = value;
             }
+
+            static double s_lastFrameTime;
+            void setLastFrameTime(double time) {
+                s_lastFrameTime = time;
+            }
+
 
         }
 
@@ -601,9 +606,9 @@ namespace hex {
 
         std::string getImHexVersion(bool withBuildType) {
             #if defined IMHEX_VERSION
-                if (withBuildType)
+                if (withBuildType) {
                     return IMHEX_VERSION;
-                else {
+                } else {
                     auto version = std::string(IMHEX_VERSION);
                     return version.substr(0, version.find('-'));
                 }
@@ -686,6 +691,11 @@ namespace hex {
         void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function) {
             RequestAddInitTask::post(name, async, function);
         }
+
+        double getLastFrameTime() {
+            return impl::s_lastFrameTime;
+        }
+
 
     }
 

@@ -1,6 +1,6 @@
 html, body {
     height: 100%;
-    margin: 0px;
+    margin: 0;
     user-select: none;
 }
 
@@ -16,16 +16,7 @@ body {
     margin-left: auto;
     margin-right: auto;
     display: none;
-    border: 0px none;
-}
-
-.canvas_full_screen {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    top: 0;
-    left: 0;
-    image-rendering: pixelated;
+    border: 0 none;
 }
 
 h1, h2, h5 {
@@ -44,7 +35,7 @@ h2 {
 }
 
 h5 {
-    margin-top: 0px;
+    margin-top: 0;
     font-size: 17px;
 }
 
@@ -63,7 +54,7 @@ a {
 }
 
 a:hover {
-    text-shadow: #3a4677 0px 0px 10px;
+    text-shadow: #3a4677 0 0 10px;
 }
 
 .footer {
@@ -135,8 +126,8 @@ a:hover {
         opacity: 1;
     }
     100% {
-        top: 0px;
-        left: 0px;
+        top: 0;
+        left: 0;
         width: 72px;
         height: 72px;
         opacity: 0;

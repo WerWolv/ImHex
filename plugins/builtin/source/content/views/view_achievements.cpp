@@ -17,7 +17,7 @@ namespace hex::plugin::builtin {
 
         // Add newly unlocked achievements to the display queue
         EventAchievementUnlocked::subscribe(this, [this](const Achievement &achievement) {
-            this->m_achievementUnlockQueue.push_back(&achievement);
+            m_achievementUnlockQueue.push_back(&achievement);
         });
 
         RequestOpenWindow::subscribe(this, [this](const std::string &name) {
@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
         });
 
         // Load settings
-        this->m_showPopup = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", true);
+        m_showPopup = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", true);
     }
 
     ViewAchievements::~ViewAchievements() {
@@ -53,14 +53,14 @@ namespace hex::plugin::builtin {
 
         // Determine achievement fill color based on unlock state
         const auto fillColor = [&] {
-            if (achievement.isUnlocked())
+            if (achievement.isUnlocked()) {
                 return ImGui::GetColorU32(ImGuiCol_FrameBg, 1.0F) | 0xFF000000;
-            else if (node->isUnlockable()) {
+            } else if (node->isUnlockable()) {
                 auto cycleProgress = sinf(float(ImGui::GetTime()) * 6.0F) * 0.5F + 0.5F;
                 return (u32(ImColor(ImLerp(ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled), ImGui::GetStyleColorVec4(ImGuiCol_Text), cycleProgress))) & 0x00FFFFFF) | 0x80000000;
-            }
-            else
+            } else {
                 return ImGui::GetColorU32(ImGuiCol_TextDisabled, 0.5F);
+            }
         }();
 
         // Draw achievement background
@@ -273,9 +273,9 @@ namespace hex::plugin::builtin {
                 drawList->AddBezierQuadratic(start, middle, end, color, 2_scaled);
 
                 // Handle jumping to an achievement
-                if (this->m_achievementToGoto != nullptr) {
-                    if (this->m_achievementToGoto == node->achievement) {
-                        this->m_offset = position - scaled({ 100, 100 });
+                if (m_achievementToGoto != nullptr) {
+                    if (m_achievementToGoto == node->achievement) {
+                        m_offset = position - scaled({ 100, 100 });
                     }
                 }
             }
@@ -331,8 +331,8 @@ namespace hex::plugin::builtin {
                 ImGuiTabItemFlags flags = ImGuiTabItemFlags_None;
 
                 // Handle jumping to the category of an achievement
-                if (this->m_achievementToGoto != nullptr) {
-                    if (this->m_achievementToGoto->getUnlocalizedCategory() == categoryName) {
+                if (m_achievementToGoto != nullptr) {
+                    if (m_achievementToGoto->getUnlocalizedCategory() == categoryName) {
                         flags |= ImGuiTabItemFlags_SetSelected;
                     }
                 }
@@ -358,10 +358,10 @@ namespace hex::plugin::builtin {
                     drawList->ChannelsSetCurrent(0);
 
                     // Draw achievement background
-                    drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, this->m_offset);
+                    drawBackground(drawList, innerWindowPos, innerWindowPos + innerWindowSize, m_offset);
 
                     // Draw the achievement tree
-                    auto maxPos = drawAchievementTree(drawList, nullptr, achievements, innerWindowPos + scaled({ 100, 100 }) + this->m_offset);
+                    auto maxPos = drawAchievementTree(drawList, nullptr, achievements, innerWindowPos + scaled({ 100, 100 }) + m_offset);
 
                     drawList->ChannelsSetCurrent(3);
 
@@ -373,12 +373,12 @@ namespace hex::plugin::builtin {
                     // Handle dragging the achievement tree around
                     if (ImGui::IsMouseHoveringRect(innerWindowPos, innerWindowPos + innerWindowSize)) {
                         auto dragDelta = ImGui::GetMouseDragDelta(ImGuiMouseButton_Left);
-                        this->m_offset += dragDelta;
+                        m_offset += dragDelta;
                         ImGui::ResetMouseDragDelta(ImGuiMouseButton_Left);
                     }
 
                     // Clamp the achievement tree to the window
-                    this->m_offset = -ImClamp(-this->m_offset, { 0, 0 }, ImMax(maxPos - innerWindowPos - innerWindowSize, { 0, 0 }));
+                    m_offset = -ImClamp(-m_offset, { 0, 0 }, ImMax(maxPos - innerWindowPos - innerWindowSize, { 0, 0 }));
 
                     drawList->PopClipRect();
 
@@ -386,8 +386,8 @@ namespace hex::plugin::builtin {
                     ImGui::SetCursorScreenPos(innerWindowPos + ImVec2(0, innerWindowSize.y + windowPadding.y));
                     ImGui::BeginGroup();
                     {
-                        if (ImGui::Checkbox("Show popup", &this->m_showPopup))
-                            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", this->m_showPopup);
+                        if (ImGui::Checkbox("Show popup", &m_showPopup))
+                            ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.achievement_popup", m_showPopup);
                     }
                     ImGui::EndGroup();
 
@@ -398,17 +398,17 @@ namespace hex::plugin::builtin {
             ImGui::EndTabBar();
         }
 
-        this->m_achievementToGoto = nullptr;
+        m_achievementToGoto = nullptr;
     }
 
     void ViewAchievements::drawAlwaysVisibleContent() {
 
         // Handle showing the achievement unlock popup
-        if (this->m_achievementUnlockQueueTimer >= 0 && this->m_showPopup) {
-            this->m_achievementUnlockQueueTimer -= ImGui::GetIO().DeltaTime;
+        if (m_achievementUnlockQueueTimer >= 0 && m_showPopup) {
+            m_achievementUnlockQueueTimer -= ImGui::GetIO().DeltaTime;
 
             // Check if there's an achievement that can be drawn
-            if (this->m_currAchievement != nullptr) {
+            if (m_currAchievement != nullptr) {
 
                 const ImVec2 windowSize = scaled({ 200, 55 });
                 ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition() + ImVec2 { ImHexApi::System::getMainWindowSize().x - windowSize.x - 100_scaled, 0 });
@@ -420,34 +420,34 @@ namespace hex::plugin::builtin {
                     ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_AchievementUnlocked), "{}", "hex.builtin.view.achievements.unlocked"_lang);
 
                     // Draw achievement icon
-                    ImGui::Image(this->m_currAchievement->getIcon(), scaled({ 20, 20 }));
+                    ImGui::Image(m_currAchievement->getIcon(), scaled({ 20, 20 }));
 
                     ImGui::SameLine();
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     ImGui::SameLine();
 
                     // Draw name of achievement
-                    ImGuiExt::TextFormattedWrapped("{}", Lang(this->m_currAchievement->getUnlocalizedName()));
+                    ImGuiExt::TextFormattedWrapped("{}", Lang(m_currAchievement->getUnlocalizedName()));
 
                     // Handle clicking on the popup
                     if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
                         // Open the achievement window and jump to the achievement
                         this->getWindowOpenState() = true;
-                        this->m_achievementToGoto = this->m_currAchievement;
+                        m_achievementToGoto = m_currAchievement;
                     }
                 }
                 ImGui::End();
             }
         } else {
             // Reset the achievement unlock queue timer
-            this->m_achievementUnlockQueueTimer = -1.0F;
-            this->m_currAchievement = nullptr;
+            m_achievementUnlockQueueTimer = -1.0F;
+            m_currAchievement = nullptr;
 
             // If there are more achievements to draw, draw the next one
-            if (!this->m_achievementUnlockQueue.empty()) {
-                this->m_currAchievement = this->m_achievementUnlockQueue.front();
-                this->m_achievementUnlockQueue.pop_front();
-                this->m_achievementUnlockQueueTimer = 5.0F;
+            if (!m_achievementUnlockQueue.empty()) {
+                m_currAchievement = m_achievementUnlockQueue.front();
+                m_achievementUnlockQueue.pop_front();
+                m_achievementUnlockQueueTimer = 5.0F;
             }
         }
     }

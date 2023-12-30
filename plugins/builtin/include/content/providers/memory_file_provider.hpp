@@ -11,9 +11,9 @@ namespace hex::plugin::builtin {
 
         [[nodiscard]] bool isAvailable() const override { return true; }
         [[nodiscard]] bool isReadable()  const override { return true; }
-        [[nodiscard]] bool isWritable()  const override { return !this->m_readOnly; }
-        [[nodiscard]] bool isResizable() const override { return !this->m_readOnly; }
-        [[nodiscard]] bool isSavable()   const override { return this->m_name.empty(); }
+        [[nodiscard]] bool isWritable()  const override { return !m_readOnly; }
+        [[nodiscard]] bool isResizable() const override { return !m_readOnly; }
+        [[nodiscard]] bool isSavable()   const override { return m_name.empty(); }
         [[nodiscard]] bool isSavableAsRecent() const override { return false; }
 
         [[nodiscard]] bool open() override;
@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
 
         void readRaw(u64 offset, void *buffer, size_t size) override;
         void writeRaw(u64 offset, const void *buffer, size_t size) override;
-        [[nodiscard]] u64 getActualSize() const override { return this->m_data.size(); }
+        [[nodiscard]] u64 getActualSize() const override { return m_data.size(); }
 
         void resizeRaw(u64 newSize) override;
         void insertRaw(u64 offset, u64 size) override;
@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
         void loadSettings(const nlohmann::json &settings) override;
         [[nodiscard]] nlohmann::json storeSettings(nlohmann::json settings) const override;
 
-        void setReadOnly(bool readOnly) { this->m_readOnly = readOnly; }
+        void setReadOnly(bool readOnly) { m_readOnly = readOnly; }
 
     private:
         void renameFile();
