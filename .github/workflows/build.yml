@@ -325,7 +325,8 @@ jobs:
           set -x
           cd out
           ln -s /Applications Applications
-          hdiutil create -volname "ImHex" -srcfolder ImHex.app -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
+          cd ..
+          hdiutil create -volname "ImHex" -srcfolder out -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
 
       - name: ⬆️ Upload DMG
         uses: actions/upload-artifact@v4
