@@ -149,6 +149,7 @@ RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/
         -DIMHEX_GENERATE_PACKAGE=ON -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
         `# other flags` \
         -DIMHEX_STRICT_WARNINGS=OFF \
+        -DCMAKE_INSTALL_PREFIX=/mnt/ImHex/build/install \
         -B build
 ## Build ImHex
 RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/_deps <<EOF
@@ -156,11 +157,11 @@ RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/
     set -xe
 
     cd /mnt/ImHex
-    cmake --build build --parallel $JOBS
+    cmake --build build --parallel $JOBS --target install
 
     ccache -s
 EOF
 
 
 FROM scratch
-COPY --from=build /mnt/ImHex/build/imhex.app imhex.app
+COPY --from=build /mnt/ImHex/build/install/imhex.app ImHex.app
