@@ -83,7 +83,7 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator);
+                hex::unused(evaluator, params);
                 err::E0012.throwError("hex::dec::decompress is not available. Please recompile with libarchive support.");
             #endif
         });
@@ -128,7 +128,7 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator);
+                hex::unused(evaluator, params);
                 err::E0012.throwError("hex::dec::zlib_decompress is not available. Please recompile with zlib support.");
             #endif
         });
@@ -173,7 +173,7 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator);
+                hex::unused(evaluator, params);
                 err::E0012.throwError("hex::dec::bzlib_decompress is not available. Please recompile with bzip2 support.");
             #endif
 
@@ -219,7 +219,7 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator);
+                hex::unused(evaluator, params);
                 err::E0012.throwError("hex::dec::lzma_decompress is not available. Please recompile with liblzma support.");
             #endif
         });
@@ -263,7 +263,7 @@ namespace hex::plugin::decompress {
 
                 return true;
             #else
-                hex::unused(evaluator);
+                hex::unused(evaluator, params);
                 err::E0012.throwError("hex::dec::zstd_decompress is not available. Please recompile with zstd support.");
             #endif
         });
