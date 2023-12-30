@@ -44,7 +44,7 @@
             nullptr,                                                                                                \
             nullptr,                                                                                                \
             nullptr,                                                                                                \
-            nullptr,                                                                                                \
+            setImGuiContext,                                                                                                \
             nullptr,                                                                                                \
             nullptr                                                                                                 \
         });                                                                                                         \
