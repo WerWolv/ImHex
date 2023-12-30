@@ -814,9 +814,9 @@ namespace hex {
                 continue;
 
             const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
-                const auto &[unlocalizedName, view] = entry;
+                const auto &[unlocalizedName, openView] = entry;
 
-                return view->hasViewMenuItemEntry() && view->shouldProcess();
+                return openView->hasViewMenuItemEntry() && openView->shouldProcess();
             });
 
             ImGuiWindowClass windowClass = {};

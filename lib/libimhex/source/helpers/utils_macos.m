@@ -9,7 +9,11 @@
     #include <string.h>
     #include <stdlib.h>
     #include <stdint.h>
-    
+
+    #define GLFW_EXPOSE_NATIVE_COCOA
+    #include <GLFW/glfw3.h>
+    #include <GLFW/glfw3native.h>
+
     #import <Cocoa/Cocoa.h>
     #import <Foundation/Foundation.h>
 
@@ -38,6 +42,11 @@
 
     float getBackingScaleFactor(void) {
         return [[NSScreen mainScreen] backingScaleFactor];
+    }
+
+    void setupMacosWindowStyle(GLFWwindow *window) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+        cocoaWindow.titleVisibility = NSWindowTitleHidden;
     }
 
     @interface HexDocument : NSDocument

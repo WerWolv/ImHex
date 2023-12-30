@@ -3,13 +3,11 @@
 #if defined(OS_MACOS)
 
     #include <hex/api/imhex_api.hpp>
-    #include <hex/api/content_registry.hpp>
     #include <hex/api/event_manager.hpp>
 
     #include <hex/helpers/utils_macos.hpp>
     #include <hex/helpers/logger.hpp>
 
-    #include <nlohmann/json.hpp>
     #include <cstdio>
     #include <unistd.h>
 
@@ -53,12 +51,16 @@ namespace hex {
 
         if (themeFollowSystem)
             EventOSThemeChanged::post();
+
+        setupMacosWindowStyle(m_window);
     }
 
     void Window::beginNativeWindowFrame() {
+
     }
 
     void Window::endNativeWindowFrame() {
+
     }
 
 }
