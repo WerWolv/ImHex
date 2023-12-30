@@ -1,7 +1,5 @@
 if (WIN32)
     set(IMHEX_APPLICATION_NAME "imhex-gui")
-elseif (APPLE)
-    set(IMHEX_APPLICATION_NAME "ImHex")
 else ()
     set(IMHEX_APPLICATION_NAME "imhex")
 endif ()
