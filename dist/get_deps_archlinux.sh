@@ -15,4 +15,8 @@ pacman -S $@ --needed \
   yara          \
   nlohmann-json \
   ninja         \
-  libarchive
+  libarchive    \
+  zlib          \
+  bzip2         \
+  xz            \
+  zstd
