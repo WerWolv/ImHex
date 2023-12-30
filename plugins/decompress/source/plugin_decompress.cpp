@@ -21,7 +21,6 @@ IMHEX_PLUGIN_SETUP("Decompressing", "WerWolv", "Support for decompressing data")
 }
 
 IMHEX_PLUGIN_FEATURES() {
-    { "Archive Support",    IMHEX_FEATURE_ENABLED(LIBARCHIVE) },
     { "bzip2 Support",      IMHEX_FEATURE_ENABLED(BZIP2)      },
     { "zlib Support",       IMHEX_FEATURE_ENABLED(ZLIB)       },
     { "LZMA Support",       IMHEX_FEATURE_ENABLED(LIBLZMA)    },

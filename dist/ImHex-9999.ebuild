@@ -24,7 +24,6 @@ RDEPEND="${DEPEND}
 		dev-cpp/nlohmann_json
 		dbus
 		xdg-desktop-portal
-		app-arch/libarchive
 		sys-libs/zlib
         app-arch/bzip2
         app-arch/lzma

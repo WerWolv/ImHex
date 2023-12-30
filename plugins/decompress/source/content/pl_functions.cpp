@@ -10,10 +10,6 @@
 #include <vector>
 #include <optional>
 
-#if IMHEX_FEATURE_ENABLED(LIBARCHIVE)
-    #include <archive.h>
-    #include <archive_entry.h>
-#endif
 #if IMHEX_FEATURE_ENABLED(ZLIB)
     #include <zlib.h>
 #endif
@@ -49,45 +45,7 @@ namespace hex::plugin::decompress {
 
         const pl::api::Namespace nsHexDec = { "builtin", "hex", "dec" };
 
-        /* decompress() */
-        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
-            #if IMHEX_FEATURE_ENABLED(LIBARCHIVE)
-                auto compressedData = getCompressedData(evaluator, params[0]);
-                auto &section = evaluator->getSection(params[1].toUnsigned());
-
-                auto inArchive = archive_read_new();
-                if (inArchive == nullptr)
-                    return false;
-
-                ON_SCOPE_EXIT {
-                    archive_read_close(inArchive);
-                    archive_read_free(inArchive);
-                };
-
-                archive_read_support_filter_gzip(inArchive);
-                archive_read_support_format_all(inArchive);
-
-                archive_read_open_memory(inArchive, compressedData.data(), compressedData.size());
-
-                archive_entry *entry = nullptr;
-                while (archive_read_next_header(inArchive, &entry) == ARCHIVE_OK) {
-                    const void *block = nullptr;
-                    size_t size = 0x00;
-                    i64 offset = 0x00;
-
-                    while (archive_read_data_block(inArchive, &block, &size, &offset) == ARCHIVE_OK) {
-                        section.resize(section.size() + size);
-                        std::memcpy(section.data(), block, size);
-                    }
-                }
-
-                return true;
-            #else
-                hex::unused(evaluator, params);
-                err::E0012.throwError("hex::dec::decompress is not available. Please recompile with libarchive support.");
-            #endif
-        });
-
+        /* zlib_decompress(compressed_pattern, section_id) */
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zlib_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(ZLIB)
                 auto compressedData = getCompressedData(evaluator, params[0]);
@@ -133,7 +91,8 @@ namespace hex::plugin::decompress {
             #endif
         });
 
-        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "bzlib_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
+        /* bzip_decompress(compressed_pattern, section_id) */
+        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "bzip_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(BZIP2)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
@@ -179,6 +138,7 @@ namespace hex::plugin::decompress {
 
         });
 
+        /* lzma_decompress(compressed_pattern, section_id) */
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "lzma_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(LIBLZMA)
                 auto compressedData = getCompressedData(evaluator, params[0]);
@@ -224,6 +184,7 @@ namespace hex::plugin::decompress {
             #endif
         });
 
+        /* zstd_decompress(compressed_pattern, section_id) */
         ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zstd_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(ZSTD)
                 auto compressedData = getCompressedData(evaluator, params[0]);
