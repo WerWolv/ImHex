@@ -335,7 +335,7 @@ jobs:
         with:
           if-no-files-found: error
           name: macOS DMG arm64
-          path: out/*.dmg
+          path: ./*.dmg
   
   # Ubuntu build
   ubuntu:
