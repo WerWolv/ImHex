@@ -244,9 +244,11 @@ jobs:
         name: macOS DMG${{matrix.suffix}} x86_64
         path: build/*.dmg
 
-  macos-arm64:
+  macos-arm64-build:
     runs-on: ubuntu-22.04
     name: 🍎 macOS 12.1 arm64
+    outputs:
+      IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v3
@@ -266,13 +268,15 @@ jobs:
         cache-target: /cache
 
     - name: 🛠️ Build using docker
+      id: build
       run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_OUTPUT
         docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
 
     - name: ⬆️ Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: macOS ZIP arm64
+        name: macos_arm64_intermediate
         path: out/
 
       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
@@ -283,6 +287,55 @@ jobs:
       run: |
           gh extension install actions/gh-actions-cache
           gh actions-cache delete "build-macos-arm64-cache" --confirm || true
+
+  macos-arm64-package:
+    runs-on: macos-12
+    name: 🍎 macOS 12.1 arm64 Packaging
+    needs: macos-arm64-build
+    env:
+      IMHEX_VERSION: ${{ needs.macos-arm64-build.outputs.IMHEX_VERSION }}
+    steps:
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos_arm64_intermediate
+          path: out
+
+      - name: 🗑️ Delete artifact
+        uses: geekyeggo/delete-artifact@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: macos_arm64_intermediate
+
+      - name: ✒️ Fix Signature
+        run: |
+          set -x
+          cd out
+          codesign --remove-signature ImHex.app
+          codesign --force --deep --sign - ImHex.app
+
+      - name: 📁 Fix permissions
+        run: |
+          set -x
+          cd out
+          chmod -R 755 ImHex.app/
+
+      - name: 📦 Create DMG
+        run: |
+          set -x
+          mkdir bundle
+          mv out/ImHex.app bundle
+          cd bundle
+          ln -s /Applications Applications
+          cd ..
+          hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
+
+      - name: ⬆️ Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: macOS DMG arm64
+          path: ./*.dmg
   
   # Ubuntu build
   ubuntu:
@@ -337,12 +390,6 @@ jobs:
         with:
           dotnet-version: '8.0.100'
 
-      - name: 🏔️ Set Environment variables
-        run: |
-          echo COMMIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
-          echo COMMIT_SHA_LONG=$(git rev-parse HEAD) >> $GITHUB_ENV
-          echo COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $GITHUB_ENV
-
       # Ubuntu cmake build
       - name: 🛠️ Build
         run: |
@@ -356,9 +403,9 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
             -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-            -DIMHEX_COMMIT_HASH_SHORT="${{ env.COMMIT_SHA_SHORT }}"   \
-            -DIMHEX_COMMIT_HASH_LONG="${{ env.COMMIT_SHA_LONG }}"     \
-            -DIMHEX_COMMIT_BRANCH="${{ env.COMMIT_BRANCH }}"          \
+            -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"              \
+            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
             -DIMHEX_ENABLE_LTO=ON                                     \
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
             -DDOTNET_EXECUTABLE="dotnet"                              \
