@@ -201,7 +201,11 @@ namespace hex {
                 for (const auto &[categoryName, achievements] : getAchievements()) {
                     for (const auto &[achievementName, achievement] : achievements) {
                         try {
-                            achievement->setProgress(json[categoryName][achievementName]);
+                            const auto &progress = json[categoryName][achievementName];
+                            if (progress.is_null())
+                                continue;
+
+                            achievement->setProgress(progress);
                         } catch (const std::exception &e) {
                             log::warn("Failed to load achievement progress for '{}::{}': {}", categoryName, achievementName, e.what());
                         }
