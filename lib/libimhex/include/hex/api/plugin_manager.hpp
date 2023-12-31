@@ -17,6 +17,11 @@ namespace hex {
         std::function<void(const std::vector<std::string>&)> callback;
     };
 
+    struct Feature {
+        std::string name;
+        bool enabled;
+    };
+
     struct PluginFunctions {
         using InitializePluginFunc     = void (*)();
         using InitializeLibraryFunc    = void (*)();
@@ -27,6 +32,7 @@ namespace hex {
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using IsBuiltinPluginFunc      = bool (*)();
         using GetSubCommandsFunc       = void* (*)();
+        using GetFeaturesFunc          = void* (*)();
 
         InitializePluginFunc        initializePluginFunction        = nullptr;
         InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
@@ -37,6 +43,7 @@ namespace hex {
         SetImGuiContextFunc         setImGuiContextFunction         = nullptr;
         IsBuiltinPluginFunc         isBuiltinPluginFunction         = nullptr;
         GetSubCommandsFunc          getSubCommandsFunction          = nullptr;
+        GetFeaturesFunc             getFeaturesFunction             = nullptr;
     };
 
     class Plugin {
@@ -65,6 +72,7 @@ namespace hex {
         [[nodiscard]] bool isLoaded() const;
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
+        [[nodiscard]] std::span<Feature> getFeatures() const;
 
         [[nodiscard]] bool isLibraryPlugin() const;
 
