@@ -250,7 +250,7 @@ namespace hex {
         }
     }
 
-    void Window::drawTitleBar() const {
+    void Window::drawTitleBar() {
         auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
         auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
@@ -260,8 +260,10 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
         const auto windowSize = ImHexApi::System::getMainWindowSize();
-        const auto searchBoxSize = ImVec2(std::sqrt(windowSize.x) * 14_scaled, titleBarHeight - 3_scaled);
+        const auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight - 3_scaled);
         const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 3_scaled);
+
+        m_searchBarPosition = searchBoxPos.x;
 
         // Custom titlebar buttons implementation for borderless window mode
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
@@ -519,9 +521,11 @@ namespace hex {
                     }
                 };
 
-                const auto windowWidth = ImHexApi::System::getMainWindowSize().x;
-                if (windowWidth > 1200_scaled) {
+                static u32 menuEndPos = 0;
+
+                if (menuEndPos < m_searchBarPosition) {
                     drawMenu();
+                    menuEndPos = ImGui::GetCursorPosX();
                 } else {
                     if (ImGui::BeginMenu(ICON_VS_MENU)) {
                         drawMenu();
