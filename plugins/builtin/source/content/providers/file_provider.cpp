@@ -232,7 +232,11 @@ namespace hex::plugin::builtin {
         m_fileStats = file.getFileInfo();
         m_file      = std::move(file);
 
-        m_file.map();
+        if (!m_file.map()) {
+            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(errno)));
+            return false;
+        }
+
         m_fileSize = m_file.getSize();
 
         m_file.close();
