@@ -15,7 +15,7 @@
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
 
-#include <complex>
+#include <string>
 
 namespace hex::plugin::builtin {
 
@@ -81,14 +81,22 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
 
-        // Add documentation links to the help menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 3000, Shortcut::None, [] {
-            hex::openWebpage("https://docs.werwolv.net/imhex");
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.help" }, 3000, [] {
+            static std::string content;
+            if (ImGui::InputTextWithHint("##search", "hex.builtin.view.help.documentation_search"_lang, content, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                PopupDocsQuestion::open(content);
+                content.clear();
+                ImGui::CloseCurrentPopup();
+            }
         });
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.menu.help.ask_for_help" }, 4000, CTRLCMD + SHIFT + Keys::D, [] {
-            PopupDocsQuestion::open();
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
+
+
+        // Add documentation link to the help menu
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 5000, Shortcut::None, [] {
+            hex::openWebpage("https://docs.werwolv.net/imhex");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
         });
     }
 

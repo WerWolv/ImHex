@@ -14,8 +14,14 @@ namespace hex::plugin::builtin {
 
     class PopupDocsQuestion : public Popup<PopupDocsQuestion> {
     public:
-        PopupDocsQuestion()
-            : hex::Popup<PopupDocsQuestion>("hex.builtin.popup.docs_question.title", true, true) { }
+        PopupDocsQuestion(const std::string &input = "")
+            : hex::Popup<PopupDocsQuestion>("hex.builtin.popup.docs_question.title", true, true) {
+
+            if (!input.empty()) {
+                m_inputBuffer = input;
+                this->executeQuery();
+            }
+        }
 
         enum class TextBlockType {
             Text,
@@ -99,6 +105,7 @@ namespace hex::plugin::builtin {
 
                     try {
                         auto json = nlohmann::json::parse(response.getData());
+
                         if (!json.contains("answer"))
                             continue;
 
@@ -126,9 +133,9 @@ namespace hex::plugin::builtin {
                     } catch(...) {
                         continue;
                     }
-
-                    m_noAnswer = m_answer.empty();
                 }
+
+                m_noAnswer = m_answer.empty();
             });
         }
 

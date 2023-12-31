@@ -721,6 +721,7 @@
         "hex.builtin.view.help.about.translator": "Translated by WerWolv",
         "hex.builtin.view.help.calc_cheat_sheet": "Calculator Cheat Sheet",
         "hex.builtin.view.help.documentation": "ImHex Documentation",
+        "hex.builtin.view.help.documentation_search": "Search Documentation",
         "hex.builtin.view.help.name": "Help",
         "hex.builtin.view.help.pattern_cheat_sheet": "Pattern Language Cheat Sheet",
         "hex.builtin.view.hex_editor.copy.address": "Address",
