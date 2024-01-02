@@ -173,11 +173,14 @@ namespace hex {
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
 
+            // Determine if the application should be in long sleep mode
             bool shouldLongSleep = !m_unlockFrameRate;
 
+            // Wait 5 frames before actually enabling the long sleep mode to make animations not stutter
+            constexpr static auto LongSleepTimeout = 5;
             static i32 lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = (1.0 / m_lastFrameTime);
+                lockTimeout = LongSleepTimeout;
             } else if (lockTimeout > 0) {
                 lockTimeout -= 1;
             }
@@ -191,13 +194,17 @@ namespace hex {
                 // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
             } else {
-                // If no events have been received in a while, lower the frame rate
-                {
-                    // Calculate the time until the next frame
-                    const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - m_lastStartFrameTime));
+                // If the application is visible, render a frame
 
-                    if (shouldLongSleep)
-                        glfwWaitEventsTimeout(timeout);
+                // If the application is in long sleep mode, only render a frame every 200ms
+                // Long sleep mode is enabled automatically after a few frames if the window content hasn't changed
+                // and no events have been received
+                if (shouldLongSleep) {
+                    // Calculate the time until the next frame
+                    constexpr static auto LongSleepFPS = 5.0;
+                    const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
+
+                    glfwWaitEventsTimeout(timeout);
                 }
             }
 
