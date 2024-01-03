@@ -35,7 +35,6 @@ set(LIBIMHEX_SOURCES
         source/helpers/patches.cpp
         source/helpers/encoding_file.cpp
         source/helpers/logger.cpp
-        source/helpers/stacktrace.cpp
         source/helpers/tar.cpp
         source/helpers/debugging.cpp
 
@@ -64,8 +63,6 @@ if (APPLE)
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
 endif ()
 
-add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
-
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(libimhex IMPORTED SHARED GLOBAL)
     set(LIBIMHEX_LIBRARY_TYPE INTERFACE)
@@ -79,6 +76,7 @@ else()
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
 endif()
 
+target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
@@ -108,7 +106,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
     target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${FMT_LIBRARIES} ${NFD_LIBRARIES} magic dl ${IMGUI_LIBRARIES} ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} ${JTHREAD_LIBRARIES})
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} ${IMGUI_LIBRARIES} LLVMDemangle)
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} ${IMGUI_LIBRARIES})
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 

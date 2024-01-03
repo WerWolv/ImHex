@@ -14,7 +14,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/stacktrace.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -46,8 +45,6 @@ namespace hex {
     using namespace std::literals::chrono_literals;
 
     Window::Window() {
-        stacktrace::initialize();
-
         constexpr static auto openEmergencyPopup = [](const std::string &title){
             TaskManager::doLater([title] {
                 for (const auto &provider : ImHexApi::Provider::getProviders())

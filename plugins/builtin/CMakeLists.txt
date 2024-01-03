@@ -118,6 +118,7 @@ add_imhex_plugin(
         ui
         ${JTHREAD_LIBRARIES}
         plcli
+        LLVMDemangle
 )
 
 if (WIN32)

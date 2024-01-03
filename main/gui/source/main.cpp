@@ -247,7 +247,7 @@ namespace {
  */
 int main(int argc, char **argv) {
     Window::initNative();
-    hex::crash::setupCrashHandlers();
+    crash::setupCrashHandlers();
 
     if (argc > 1) {
         handleCommandLineInterface(argc, argv);

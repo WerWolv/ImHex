@@ -20,6 +20,8 @@ add_subdirectory(lib/third_party/imgui)
 add_subdirectory_if_exists(lib/third_party/fmt)
 add_subdirectory_if_exists(lib/third_party/nlohmann_json)
 
+set(FMT_LIBRARIES fmt::fmt-header-only)
+
 add_subdirectory(lib/external/libwolv)
 
 set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
