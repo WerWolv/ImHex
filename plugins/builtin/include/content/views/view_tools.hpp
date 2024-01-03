@@ -17,6 +17,8 @@ namespace hex::plugin::builtin {
 
     private:
         std::vector<ContentRegistry::Tools::impl::Entry>::iterator m_dragStartIterator;
+
+        std::map<ImGuiWindow*, float> m_windowHeights;
     };
 
 }
