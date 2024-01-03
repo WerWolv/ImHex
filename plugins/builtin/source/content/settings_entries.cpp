@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &name) override {
                 auto format = [this] -> std::string {
                     if (m_value == 0)
-                        return "hex.builtin.setting.interface.scaling.native"_lang;
+                        return "hex.builtin.setting.interface.scaling.native"_lang + hex::format(" (x{:.1f})", ImHexApi::System::getNativeScale());
                     else
                         return "x%.1f";
                 }();
