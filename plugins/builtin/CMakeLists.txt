@@ -80,6 +80,7 @@ add_imhex_plugin(
         source/content/tools/regex_replacer.cpp
         source/content/tools/tcp_client_server.cpp
         source/content/tools/wiki_explainer.cpp
+        source/content/tools/http_requests.cpp
 
         source/content/pl_visualizers/hex_viewer.cpp
         source/content/pl_visualizers/chunk_entropy.cpp

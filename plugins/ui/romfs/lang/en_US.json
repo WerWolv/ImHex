@@ -4,6 +4,7 @@
     "country": "United States",
     "fallback": true,
     "translations": {
+        "hex.ui.common.add": "Add",
         "hex.ui.common.address": "Address",
         "hex.ui.common.allow": "Allow",
         "hex.ui.common.begin": "Begin",
@@ -34,6 +35,7 @@
         "hex.ui.common.hexadecimal": "Hexadecimal",
         "hex.ui.common.info": "Information",
         "hex.ui.common.instruction": "Instruction",
+        "hex.ui.common.key": "Key",
         "hex.ui.common.link": "Link",
         "hex.ui.common.little": "Little",
         "hex.ui.common.little_endian": "Little Endian",
