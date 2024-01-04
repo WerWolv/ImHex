@@ -74,9 +74,9 @@ else()
     endif()
 
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
+    target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
-target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
@@ -103,7 +103,7 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex PUBLIC ${FOUNDATION})
     endif ()
 
-    target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${FMT_LIBRARIES} ${NFD_LIBRARIES} magic dl ${IMGUI_LIBRARIES} ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${FMT_LIBRARIES} ${NFD_LIBRARIES} magic dl ${IMGUI_LIBRARIES} ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} ${JTHREAD_LIBRARIES})
 endif()
 
 target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} ${IMGUI_LIBRARIES})
