@@ -65,9 +65,18 @@ macro(add_imhex_plugin)
         add_definitions(-DIMHEX_PLUGIN_${IMHEX_PLUGIN_NAME}_FEATURE_${feature}=0)
     endforeach()
 
+    # Fix rpath
+    if (APPLE)
+        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks")
+    endif()
+
     # Add the new plugin to the main dependency list so it gets built by default
     if (TARGET imhex_all)
         add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
+    endif()
+    
+    if (IMHEX_EXTERNAL_PLUGIN_BUILD)
+        install(TARGETS ${IMHEX_PLUGIN_NAME} DESTINATION ".")
     endif()
 endmacro()
 

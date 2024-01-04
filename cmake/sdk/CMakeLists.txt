@@ -13,18 +13,20 @@ function(add_subdirectory_if_exists folder)
     endif()
 endfunction()
 
-set(IMHEX_EXTERNAL_PLUGIN_BUILD ON)
+set(IMHEX_EXTERNAL_PLUGIN_BUILD ON PARENT_SCOPE)
 add_custom_target(imhex_all)
 
 add_subdirectory(lib/third_party/imgui)
-add_subdirectory_if_exists(lib/third_party/fmt)
-add_subdirectory_if_exists(lib/third_party/nlohmann_json)
 
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
+add_subdirectory_if_exists(lib/third_party/fmt)
 set(FMT_LIBRARIES fmt::fmt-header-only PARENT_SCOPE)
+
+add_subdirectory_if_exists(lib/third_party/nlohmann_json)
 
 add_subdirectory(lib/external/libwolv)
 
-set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
+set(LIBPL_ENABLE_CLI OFF)
 add_subdirectory(lib/external/pattern_language)
 
 add_subdirectory(lib/libimhex)
