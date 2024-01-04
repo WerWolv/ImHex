@@ -300,6 +300,9 @@ namespace hex {
 
         s_tasks.clear();
         s_taskQueue.clear();
+
+        s_deferredCalls.clear();
+        s_tasksFinishedCallbacks.clear();
     }
 
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, bool background, std::function<void(Task&)> function) {
