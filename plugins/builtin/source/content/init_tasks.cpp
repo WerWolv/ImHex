@@ -216,7 +216,7 @@ namespace hex::plugin::builtin {
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
                 if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
-                if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
+                if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", true))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
             }
 

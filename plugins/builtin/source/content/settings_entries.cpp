@@ -473,7 +473,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
                 .requiresRestart()
                 .setEnabledCallback(customFontSettingsEnabled);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", false)
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", true)
                 .requiresRestart()
                 .setEnabledCallback(customFontSettingsEnabled);
 
