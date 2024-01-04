@@ -122,6 +122,7 @@ else()
             OUTPUT_VARIABLE GIT_BRANCH
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE RESULT_BRANCH
+            ERROR_QUIET
     )
 
     # Get the latest abbreviated commit hash of the working branch
@@ -131,6 +132,7 @@ else()
             OUTPUT_VARIABLE GIT_COMMIT_HASH_SHORT
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE RESULT_HASH_SHORT
+            ERROR_QUIET
     )
 
     execute_process(
@@ -139,6 +141,7 @@ else()
             OUTPUT_VARIABLE GIT_COMMIT_HASH_LONG
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE RESULT_HASH_LONG
+            ERROR_QUIET
     )
 endif ()
 

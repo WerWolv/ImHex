@@ -1,9 +1,14 @@
 macro(add_imhex_plugin)
     # Parse arguments
     set(options LIBRARY_PLUGIN)
-    set(oneValueArgs NAME)
+    set(oneValueArgs NAME IMHEX_VERSION)
     set(multiValueArgs SOURCES INCLUDES LIBRARIES FEATURES)
     cmake_parse_arguments(IMHEX_PLUGIN "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if (IMHEX_PLUGIN_IMHEX_VERSION)
+        message(STATUS "Compiling plugin ${IMHEX_PLUGIN_NAME} for ImHex Version ${IMHEX_PLUGIN_IMHEX_VERSION}")
+        set(IMHEX_VERSION_STRING "${IMHEX_PLUGIN_IMHEX_VERSION}")
+    endif()
 
     if (IMHEX_STATIC_LINK_PLUGINS)
         set(IMHEX_PLUGIN_LIBRARY_TYPE STATIC)
@@ -65,18 +70,18 @@ macro(add_imhex_plugin)
         add_definitions(-DIMHEX_PLUGIN_${IMHEX_PLUGIN_NAME}_FEATURE_${feature}=0)
     endforeach()
 
-    # Fix rpath
-    if (APPLE)
-        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks")
-    endif()
-
     # Add the new plugin to the main dependency list so it gets built by default
     if (TARGET imhex_all)
         add_dependencies(imhex_all ${IMHEX_PLUGIN_NAME})
     endif()
-    
+
     if (IMHEX_EXTERNAL_PLUGIN_BUILD)
         install(TARGETS ${IMHEX_PLUGIN_NAME} DESTINATION ".")
+
+        # Fix rpath
+        if (APPLE)
+            set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks")
+        endif()
     endif()
 endmacro()
 
