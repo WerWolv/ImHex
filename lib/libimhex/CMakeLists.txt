@@ -103,10 +103,11 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex PUBLIC ${FOUNDATION})
     endif ()
 
-    target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${NFD_LIBRARIES} magic dl ${IMGUI_LIBRARIES} ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${NFD_LIBRARIES} magic dl ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PUBLIC ${IMGUI_LIBRARIES})
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} ${IMGUI_LIBRARIES} ${FMT_LIBRARIES})
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES})
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
