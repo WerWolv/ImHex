@@ -68,8 +68,10 @@ macro(detectOS)
             set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
         else()
             set(PLUGINS_INSTALL_LOCATION "${CMAKE_INSTALL_LIBDIR}/imhex/plugins")
-            # Warning : Do not work with portable versions such as appimage (because the path is hardcoded)
-            add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended from the app
+
+            # Add System plugin location for plugins to be loaded from
+            # IMPORTANT: This does not work for Sandboxed or portable builds such as the Flatpak or AppImage release
+            add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex")
         endif()
 
     else ()
@@ -77,16 +79,6 @@ macro(detectOS)
     endif()
 
 endmacro()
-
-# Detect 32 vs. 64 bit system
-macro(detectArch)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        add_compile_definitions(ARCH_64_BIT)
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        add_compile_definitions(ARCH_32_BIT)
-    endif()
-endmacro()
-
 
 macro(configurePackingResources)
     if (WIN32)
@@ -247,7 +239,6 @@ macro(createPackage)
             # Fix rpath
             add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
 
-            # FIXME: Remove this once we move/integrate the plugins directory.
             add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
             add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
 
@@ -282,7 +273,7 @@ macro(createPackage)
     endif()
 
     if (IMHEX_GENERATE_PACKAGE)
-        set (CPACK_BUNDLE_NAME "ImHex")
+        set(CPACK_BUNDLE_NAME "ImHex")
 
         include(CPack)
     endif()

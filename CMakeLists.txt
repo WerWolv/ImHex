@@ -43,8 +43,9 @@ detectBundledPlugins()
 
 # Add various defines
 detectOS()
-detectArch()
 addDefines()
+
+# Configure packaging and install targets
 configurePackingResources()
 setUninstallTarget()
 addBundledLibraries()
@@ -59,7 +60,7 @@ add_subdirectory(main)
 enable_testing()
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 
-# Configure packaging
+# Configure more resources that will be added to the install package
 createPackage()
 generatePDBs()
 generateSDKDirectory()
