@@ -14,6 +14,7 @@ function(add_subdirectory_if_exists folder)
 endfunction()
 
 set(IMHEX_EXTERNAL_PLUGIN_BUILD ON PARENT_SCOPE)
+set(IMHEX_EXTERNAL_PLUGIN_BUILD ON)
 add_custom_target(imhex_all)
 
 add_subdirectory(lib/third_party/imgui)
