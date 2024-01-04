@@ -54,7 +54,7 @@ set_target_properties(main PROPERTIES
 
 target_compile_definitions(main PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 
-target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv libpl plcli libpl-gen ${FMT_LIBRARIES} LLVMDemangle)
+target_link_libraries(main PRIVATE libromfs-imhex libimhex libwolv libpl plcli libpl-gen ${FMT_LIBRARIES} LLVMDemangle ${LIBBACKTRACE_LIBRARIES})
 if (WIN32)
     target_link_libraries(main PRIVATE usp10 wsock32 ws2_32 Dwmapi.lib)
 else ()
