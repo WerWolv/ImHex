@@ -50,9 +50,8 @@ If you like my work, please consider supporting me on GitHub Sponsors, Patreon o
 </p>
 
 ## Screenshots
-
-![Hex editor, patterns and data information](https://private-user-images.githubusercontent.com/10835354/290512928-ae20c3ce-4c02-4579-9471-640f43fd6bad.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTEiLCJleHAiOjE3MDMyNDk0NTksIm5iZiI6MTcwMzI0OTE1OSwicGF0aCI6Ii8xMDgzNTM1NC8yOTA1MTI5MjgtYWUyMGMzY2UtNGMwMi00NTc5LTk0NzEtNjQwZjQzZmQ2YmFkLnBuZz9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFJV05KWUFYNENTVkVINTNBJTJGMjAyMzEyMjIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjMxMjIyVDEyNDU1OVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTFmN2RhYmNlYWVjYzI0YWQxNjE0YjI1NDNjMTQ2MGFlODhkMmYzMTVkY2Y3MzNlYzUzYTM3N2IwNWE4OGY2YTAmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.RbVnFXxuJS0xUoWbdgqCHtd-BopaFCyDypAfgkzGezU)
-![Bookmarks, disassembler and data processor](https://user-images.githubusercontent.com/10835354/139717323-1f8c9d52-f7eb-4f43-9f11-097ac728ed6c.png)
+![Hex editor, patterns and data information](https://github.com/WerWolv/ImHex/assets/10835354/4f358238-2d27-41aa-9015-a2c6cc3708cf)
+![Bookmarks, disassembler and data processor](https://github.com/WerWolv/ImHex/assets/10835354/183bc2cc-2439-4ded-b4c5-b140e19fc92f)
 
 <details>
 <summary><strong>More Screenshots</strong></summary>
