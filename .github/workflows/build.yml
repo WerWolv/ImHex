@@ -49,7 +49,6 @@ jobs:
     - name: ⬇️ Install dependencies
       run: |
         set -x
-        pacman -Syu --noconfirm
         dist/get_deps_msys2.sh
 
     - name: ⬇️ Install .NET
