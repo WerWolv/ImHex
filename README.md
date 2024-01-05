@@ -364,9 +364,8 @@ See [Contributing](/CONTRIBUTING.md)
 
 ## Plugin development
 
-To develop plugins for ImHex, use one of the following two templates projects to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
-- [C++ Plugin Template](https://github.com/WerWolv/ImHex-Cpp-Plugin-Template)
-- [Rust Plugin Template](https://github.com/WerWolv/ImHex-Rust-Plugin-Template)
+To develop plugins for ImHex, use the following template project to get started. You then have access to the entirety of libimhex as well as the ImHex API and the Content Registry to interact with ImHex or to add new content.
+- [ImHex Plugin Template](https://github.com/WerWolv/ImHex-Plugin-Template)
 
 
 ## Credits
