@@ -45,20 +45,12 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: mingw64
-        pacboy: >-
-          gcc:p
-          lld:p
-          cmake:p
-          ccache:p
-          glfw:p
-          file:p
-          mbedtls:p
-          freetype:p
-          dlfcn:p
-          libbacktrace:p
-          ninja:p
-          curl-winssl:p
-          capstone:p
+
+    - name: ⬇️ Install dependencies
+      run: |
+        set -x
+        pacman -Syu --noconfirm
+        dist/get_deps_msys2.sh
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v3
