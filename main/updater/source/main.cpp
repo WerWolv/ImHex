@@ -8,7 +8,7 @@ using namespace std::literals::string_literals;
 
 std::string getUpdateUrl(std::string_view versionType, std::string_view operatingSystem) {
     // Get the latest version info from the ImHex API
-    auto response = hex::HttpRequest("GET",
+    const auto response = hex::HttpRequest("GET",
                                      ImHexApiURL + fmt::format("/update/{}/{}",
                                                                versionType,
                                                                operatingSystem
@@ -29,7 +29,7 @@ std::string getUpdateUrl(std::string_view versionType, std::string_view operatin
 
 std::optional<std::fs::path> downloadUpdate(const std::string &url) {
     // Download the update
-    auto response = hex::HttpRequest("GET", url).downloadFile().get();
+    const auto response = hex::HttpRequest("GET", url).downloadFile().get();
 
     // Make sure we got a valid response
     if (!response.isSuccess()) {
@@ -106,8 +106,9 @@ int installUpdate(const std::string &type, std::fs::path updatePath) {
     for (const auto &handler : UpdateHandlers) {
         if (type == handler.type) {
             // Rename the update file to the correct extension
+            const auto originalPath = updatePath;
             updatePath.replace_extension(handler.extension);
-            std::fs::rename(updatePath, updatePath);
+            std::fs::rename(originalPath, updatePath);
 
             // Install the update using the correct command
             hex::startProgram(hex::format(handler.command, updatePath.string()));
@@ -158,7 +159,7 @@ int main(int argc, char **argv) {
     hex::log::info("Update URL found: {}", updateUrl);
 
     // Download the update file
-    auto updatePath = downloadUpdate(updateUrl);
+    const auto updatePath = downloadUpdate(updateUrl);
     if (!updatePath.has_value())
         return EXIT_FAILURE;
 
