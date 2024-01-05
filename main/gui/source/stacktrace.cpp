@@ -1,4 +1,4 @@
-#include <hex/helpers/stacktrace.hpp>
+#include <stacktrace.hpp>
 #include <hex/helpers/fmt.hpp>
 
 #include <array>

@@ -216,7 +216,7 @@ namespace hex::plugin::builtin {
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
                 if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
-                if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", false))
+                if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", true))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
             }
 
@@ -230,6 +230,7 @@ namespace hex::plugin::builtin {
 
                 if (fontFile.empty()) {
                     defaultConfig.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
+                    defaultConfig.SizePixels = std::floor(ImHexApi::Fonts::getFontSize() / ImHexApi::Fonts::DefaultFontSize) * ImHexApi::Fonts::DefaultFontSize;
                     defaultFont = fonts->AddFontDefault(&defaultConfig);
                 } else {
                     defaultFont = fonts->AddFontFromFileTTF(wolv::util::toUTF8String(fontFile).c_str(), 0, &defaultConfig, defaultGlyphRanges.Data);

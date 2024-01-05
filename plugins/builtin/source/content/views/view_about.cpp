@@ -15,7 +15,7 @@
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
 
-#include <complex>
+#include <string>
 
 namespace hex::plugin::builtin {
 
@@ -81,14 +81,22 @@ namespace hex::plugin::builtin {
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 2000);
 
-        // Add documentation links to the help menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 3000, Shortcut::None, [] {
-            hex::openWebpage("https://docs.werwolv.net/imhex");
-            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.help" }, 3000, [] {
+            static std::string content;
+            if (ImGui::InputTextWithHint("##search", "hex.builtin.view.help.documentation_search"_lang, content, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                PopupDocsQuestion::open(content);
+                content.clear();
+                ImGui::CloseCurrentPopup();
+            }
         });
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.menu.help.ask_for_help" }, 4000, CTRLCMD + SHIFT + Keys::D, [] {
-            PopupDocsQuestion::open();
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.help" }, 4000);
+
+
+        // Add documentation link to the help menu
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 5000, Shortcut::None, [] {
+            hex::openWebpage("https://docs.werwolv.net/imhex");
+            AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
         });
     }
 
@@ -342,7 +350,7 @@ namespace hex::plugin::builtin {
         ImGuiExt::BeginSubWindow("hex.builtin.view.help.about.plugins"_lang);
         ImGui::PopStyleVar();
         {
-            if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit)) {
+            if (ImGui::BeginTable("plugins", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                 ImGui::TableSetupScrollFreeze(0, 1);
                 ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.plugin"_lang);
                 ImGui::TableSetupColumn("hex.builtin.view.help.about.plugins.author"_lang);
@@ -355,18 +363,40 @@ namespace hex::plugin::builtin {
                     if (plugin.isLibraryPlugin())
                         continue;
 
+                    auto features = plugin.getFeatures();
+
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormattedColored(
-                        plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_Highlight) : ImGui::GetStyleColorVec4(ImGuiCol_Text),
-                        "{}", plugin.getPluginName().c_str()
-                    );
+                    bool open = false;
+
+                    ImGui::PushStyleColor(ImGuiCol_Text, plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight) : ImGui::GetColorU32(ImGuiCol_Text));
+                    if (features.empty())
+                        ImGui::BulletText("%s", plugin.getPluginName().c_str());
+                    else
+                        open = ImGui::TreeNode(plugin.getPluginName().c_str());
+                    ImGui::PopStyleColor();
+
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(plugin.getPluginAuthor().c_str());
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(plugin.getPluginDescription().c_str());
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(plugin.isLoaded() ? ICON_VS_CHECK : ICON_VS_CLOSE);
+
+                    if (open) {
+                        for (const auto &feature : plugin.getFeatures()) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            ImGuiExt::TextFormatted("  {}", feature.name.c_str());
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(feature.enabled ? ICON_VS_CHECK : ICON_VS_CLOSE);
+
+                        }
+
+                        ImGui::TreePop();
+                    }
                 }
 
                 ImGui::EndTable();

@@ -44,6 +44,7 @@ namespace hex {
         m_functions.setImGuiContextFunction      = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
         m_functions.isBuiltinPluginFunction      = getPluginFunction<PluginFunctions::IsBuiltinPluginFunc>("isBuiltinPlugin");
         m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
+        m_functions.getFeaturesFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
     }
 
     Plugin::Plugin(const hex::PluginFunctions &functions) {
@@ -183,6 +184,15 @@ namespace hex {
         if (m_functions.getSubCommandsFunction != nullptr) {
             auto result = m_functions.getSubCommandsFunction();
             return *static_cast<std::vector<SubCommand>*>(result);
+        } else {
+            return { };
+        }
+    }
+
+    std::span<Feature> Plugin::getFeatures() const {
+        if (m_functions.getFeaturesFunction != nullptr) {
+            auto result = m_functions.getFeaturesFunction();
+            return *static_cast<std::vector<Feature>*>(result);
         } else {
             return { };
         }

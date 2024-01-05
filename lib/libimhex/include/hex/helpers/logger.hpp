@@ -32,16 +32,16 @@ namespace hex::log {
         [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName);
 
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto && ... args) {
-            std::scoped_lock lock(impl::g_loggerMutex);
+            std::scoped_lock lock(g_loggerMutex);
 
-            auto dest = impl::getDestination();
+            auto dest = getDestination();
             printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
 
             auto message = fmt::format(fmt::runtime(fmt), args...);
             fmt::print(dest, "{}\n", message);
             fflush(dest);
 
-            impl::getLogEntries().push_back({ IMHEX_PROJECT_NAME, level, std::move(message) });
+            getLogEntries().push_back({ IMHEX_PROJECT_NAME, level, std::move(message) });
         }
 
     }

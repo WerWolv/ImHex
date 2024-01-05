@@ -35,7 +35,6 @@ set(LIBIMHEX_SOURCES
         source/helpers/patches.cpp
         source/helpers/encoding_file.cpp
         source/helpers/logger.cpp
-        source/helpers/stacktrace.cpp
         source/helpers/tar.cpp
         source/helpers/debugging.cpp
 
@@ -64,8 +63,6 @@ if (APPLE)
     set(LIBIMHEX_SOURCES ${LIBIMHEX_SOURCES} source/helpers/utils_macos.m)
 endif ()
 
-add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
-
 if (IMHEX_EXTERNAL_PLUGIN_BUILD)
     add_library(libimhex IMPORTED SHARED GLOBAL)
     set(LIBIMHEX_LIBRARY_TYPE INTERFACE)
@@ -77,6 +74,7 @@ else()
     endif()
 
     set(LIBIMHEX_LIBRARY_TYPE PUBLIC)
+    target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
 set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -105,10 +103,11 @@ if (NOT IMHEX_EXTERNAL_PLUGIN_BUILD)
         target_link_libraries(libimhex PUBLIC ${FOUNDATION})
     endif ()
 
-    target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${FMT_LIBRARIES} ${NFD_LIBRARIES} magic dl ${IMGUI_LIBRARIES} ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PRIVATE microtar libpl plcli libpl-gen libwolv ${NFD_LIBRARIES} magic dl ${NLOHMANN_JSON_LIBRARIES} ${MBEDTLS_LIBRARIES} ${LIBBACKTRACE_LIBRARIES} ${JTHREAD_LIBRARIES})
+    target_link_libraries(libimhex PUBLIC ${IMGUI_LIBRARIES})
 endif()
 
-target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} ${IMGUI_LIBRARIES} LLVMDemangle)
+target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${NLOHMANN_JSON_LIBRARIES} imgui_all_includes ${FMT_LIBRARIES})
 
 set_property(TARGET libimhex PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
 
@@ -124,6 +123,7 @@ else()
             OUTPUT_VARIABLE GIT_BRANCH
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE RESULT_BRANCH
+            ERROR_QUIET
     )
 
     # Get the latest abbreviated commit hash of the working branch
@@ -133,6 +133,7 @@ else()
             OUTPUT_VARIABLE GIT_COMMIT_HASH_SHORT
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE RESULT_HASH_SHORT
+            ERROR_QUIET
     )
 
     execute_process(
@@ -141,6 +142,7 @@ else()
             OUTPUT_VARIABLE GIT_COMMIT_HASH_LONG
             OUTPUT_STRIP_TRAILING_WHITESPACE
             RESULT_VARIABLE RESULT_HASH_LONG
+            ERROR_QUIET
     )
 endif ()
 

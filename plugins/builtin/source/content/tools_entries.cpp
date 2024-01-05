@@ -47,6 +47,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Tools::add("hex.builtin.tools.invariant_multiplication",   drawInvariantMultiplicationDecoder);
         ContentRegistry::Tools::add("hex.builtin.tools.tcp_client_server",          drawTCPClientServer);
         ContentRegistry::Tools::add("hex.builtin.tools.euclidean_algorithm",        drawEuclidianAlgorithm);
+        ContentRegistry::Tools::add("hex.builtin.tools.http_requests",              drawHTTPRequestMaker);
     }
 
 }

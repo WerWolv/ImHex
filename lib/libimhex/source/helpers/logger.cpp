@@ -67,7 +67,7 @@ namespace hex::log::impl {
 
         fmt::print(dest, "[{0:%H:%M:%S}] ", now);
 
-        if (impl::isRedirected())
+        if (isRedirected())
             fmt::print(dest, "{0} ", level);
         else
             fmt::print(dest, ts, "{0} ", level);

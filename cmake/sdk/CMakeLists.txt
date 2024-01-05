@@ -9,21 +9,26 @@ include(ImHexPlugin)
 
 function(add_subdirectory_if_exists folder)
     if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${folder}/CMakeLists.txt")
-        add_subdirectory("${folder}")
+        add_subdirectory("${folder}" EXCLUDE_FROM_ALL)
     endif()
 endfunction()
 
+set(IMHEX_EXTERNAL_PLUGIN_BUILD ON PARENT_SCOPE)
 set(IMHEX_EXTERNAL_PLUGIN_BUILD ON)
 add_custom_target(imhex_all)
 
-add_subdirectory(lib/third_party/imgui)
+add_subdirectory(lib/third_party/imgui EXCLUDE_FROM_ALL)
+
+set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory_if_exists(lib/third_party/fmt)
+set(FMT_LIBRARIES fmt::fmt-header-only PARENT_SCOPE)
+
 add_subdirectory_if_exists(lib/third_party/nlohmann_json)
 
-add_subdirectory(lib/external/libwolv)
+add_subdirectory(lib/external/libwolv EXCLUDE_FROM_ALL)
 
-set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
-add_subdirectory(lib/external/pattern_language)
+set(LIBPL_ENABLE_CLI OFF CACHE BOOL "" FORCE)
+add_subdirectory(lib/external/pattern_language EXCLUDE_FROM_ALL)
 
 add_subdirectory(lib/libimhex)
 

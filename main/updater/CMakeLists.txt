@@ -4,7 +4,7 @@ add_executable(updater
     source/main.cpp
 )
 
-add_compile_definitions(IMHEX_PROJECT_NAME="${PROJECT_NAME}")
+target_compile_definitions(updater PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 target_link_libraries(updater PRIVATE libimhex wolv::io ${FMT_LIBRARIES})
 add_dependencies(main updater)
 

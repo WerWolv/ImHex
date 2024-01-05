@@ -14,7 +14,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/stacktrace.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -46,8 +45,6 @@ namespace hex {
     using namespace std::literals::chrono_literals;
 
     Window::Window() {
-        stacktrace::initialize();
-
         constexpr static auto openEmergencyPopup = [](const std::string &title){
             TaskManager::doLater([title] {
                 for (const auto &provider : ImHexApi::Provider::getProviders())
@@ -173,11 +170,14 @@ namespace hex {
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
 
+            // Determine if the application should be in long sleep mode
             bool shouldLongSleep = !m_unlockFrameRate;
 
+            // Wait 5 frames before actually enabling the long sleep mode to make animations not stutter
+            constexpr static auto LongSleepTimeout = 5;
             static i32 lockTimeout = 0;
             if (!shouldLongSleep) {
-                lockTimeout = (1.0 / m_lastFrameTime);
+                lockTimeout = LongSleepTimeout;
             } else if (lockTimeout > 0) {
                 lockTimeout -= 1;
             }
@@ -191,13 +191,17 @@ namespace hex {
                 // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
             } else {
-                // If no events have been received in a while, lower the frame rate
-                {
-                    // Calculate the time until the next frame
-                    const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - m_lastStartFrameTime));
+                // If the application is visible, render a frame
 
-                    if (shouldLongSleep)
-                        glfwWaitEventsTimeout(timeout);
+                // If the application is in long sleep mode, only render a frame every 200ms
+                // Long sleep mode is enabled automatically after a few frames if the window content hasn't changed
+                // and no events have been received
+                if (shouldLongSleep) {
+                    // Calculate the time until the next frame
+                    constexpr static auto LongSleepFPS = 5.0;
+                    const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
+
+                    glfwWaitEventsTimeout(timeout);
                 }
             }
 
@@ -250,7 +254,7 @@ namespace hex {
         }
     }
 
-    void Window::drawTitleBar() const {
+    void Window::drawTitleBar() {
         auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
         auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
@@ -260,8 +264,10 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
         const auto windowSize = ImHexApi::System::getMainWindowSize();
-        const auto searchBoxSize = ImVec2(std::sqrt(windowSize.x) * 14_scaled, titleBarHeight - 3_scaled);
+        const auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight - 3_scaled);
         const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 3_scaled);
+
+        m_searchBarPosition = searchBoxPos.x;
 
         // Custom titlebar buttons implementation for borderless window mode
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
@@ -519,9 +525,11 @@ namespace hex {
                     }
                 };
 
-                const auto windowWidth = ImHexApi::System::getMainWindowSize().x;
-                if (windowWidth > 1200_scaled) {
+                static u32 menuEndPos = 0;
+
+                if (menuEndPos < m_searchBarPosition) {
                     drawMenu();
+                    menuEndPos = ImGui::GetCursorPosX();
                 } else {
                     if (ImGui::BeginMenu(ICON_VS_MENU)) {
                         drawMenu();

@@ -23,4 +23,6 @@ namespace hex::plugin::builtin {
     void drawFileToolSplitter();
     void drawFileToolCombiner();
 
+    void drawHTTPRequestMaker();
+
 }

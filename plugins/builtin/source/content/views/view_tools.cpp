@@ -56,9 +56,15 @@ namespace hex::plugin::builtin {
             // If the tool is still attached to the main window, don't draw it here
             if (!detached) continue;
 
+            // Load the window height that is dependent on the tool content
+            const auto windowName = View::toWindowName(name);
+            const auto height = m_windowHeights[ImGui::FindWindowByName(windowName.c_str())];
+            if (height > 0)
+                ImGui::SetNextWindowSizeConstraints(ImVec2(400_scaled, height), ImVec2(FLT_MAX, height));
+
             // Create a new window for the tool
-            if (ImGui::Begin(View::toWindowName(name).c_str(), &detached, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize)) {
-                // Draw the tool
+            if (ImGui::Begin(windowName.c_str(), &detached, ImGuiWindowFlags_NoCollapse)) {
+                // Draw the tool content
                 function();
 
                 // Handle the first frame after the tool has been detached
@@ -69,6 +75,9 @@ namespace hex::plugin::builtin {
                     GImGui->MovingWindow = ImGui::GetCurrentWindowRead();
                     GImGui->ActiveId = GImGui->MovingWindow->MoveId;
                 }
+
+                const auto window = ImGui::GetCurrentWindowRead();
+                m_windowHeights[ImGui::GetCurrentWindowRead()] = ImGui::CalcWindowNextAutoFitSize(window).y;
             }
             ImGui::End();
         }

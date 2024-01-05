@@ -32,7 +32,7 @@ namespace hex {
         void setupNativeWindow();
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
-        void drawTitleBar() const;
+        void drawTitleBar();
 
         void frameBegin();
         void frame();
@@ -61,6 +61,8 @@ namespace hex {
         bool m_unlockFrameRate = false;
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
+
+        u32 m_searchBarPosition;
     };
 
 }
