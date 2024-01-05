@@ -52,6 +52,16 @@ jobs:
           repo: ImHex-Patterns
           token: ${{ secrets.RELEASE_TOKEN }}
 
+      - name: 🎫 Create imhex-download-sdk release
+        uses: ncipollo/release-action@v1
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        if: "${{ env.RELEASE_TOKEN != '' }}"
+        with:
+          tag: v${{ env.IMHEX_VERSION }}
+          repo: imhex-download-sdk
+          token: ${{ secrets.RELEASE_TOKEN }}
+
   release-upload-artifacts:
     runs-on: ubuntu-latest
     name: Release Upload Artifacts
