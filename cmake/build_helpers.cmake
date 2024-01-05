@@ -255,12 +255,6 @@ macro(createPackage)
 
             set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns")
             set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}/Contents/Info.plist")
-
-            # Sign the bundle
-            find_program(CODESIGN_PATH codesign)
-            if (CODESIGN_PATH)
-                add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CODESIGN_PATH} --force --deep --sign - ${CMAKE_BINARY_DIR}/${BUNDLE_NAME})
-            endif()
         endif()
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
