@@ -126,7 +126,7 @@ if [ "$CUSTOM_GLFW" ]; then
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache         \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache       \
           -DCMAKE_INSTALL_PREFIX=/vcpkg/installed/arm-osx-mytriplet \
-          -DVCPKG_TARGET_TRIPLET=arm-osx-mytriplet -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/osxcross/target/toolchain.cmake -DCMAKE_OSX_SYSROOT=/osxcross/target/SDK/MacOSX14.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+          -DVCPKG_TARGET_TRIPLET=arm-osx-mytriplet -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/osxcross/target/toolchain.cmake -DCMAKE_OSX_SYSROOT=/osxcross/target/SDK/MacOSX14.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=12.1 \
         ..
     ninja -j $JOBS install
 
@@ -148,7 +148,7 @@ RUN --mount=type=cache,target=/cache --mount=type=cache,target=/mnt/ImHex/build/
         `# ccache flags` \
         -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
         `# MacOS cross-compiling flags` \
-        -DVCPKG_TARGET_TRIPLET=arm-osx-mytriplet -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/osxcross/target/toolchain.cmake -DCMAKE_OSX_SYSROOT=/osxcross/target/SDK/MacOSX14.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
+        -DVCPKG_TARGET_TRIPLET=arm-osx-mytriplet -DCMAKE_TOOLCHAIN_FILE=/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=/osxcross/target/toolchain.cmake -DCMAKE_OSX_SYSROOT=/osxcross/target/SDK/MacOSX14.0.sdk -DCMAKE_OSX_DEPLOYMENT_TARGET=12.1 \
         `# Override compilers for code generators` \
         -DNATIVE_CMAKE_C_COMPILER=/usr/bin/clang -DNATIVE_CMAKE_CXX_COMPILER=/usr/bin/clang++ \
         `# Normal ImHex flags` \
