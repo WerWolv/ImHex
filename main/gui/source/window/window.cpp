@@ -39,6 +39,7 @@
 
 #include <GLFW/glfw3.h>
 #include <hex/ui/toast.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex {
 
@@ -673,9 +674,16 @@ namespace hex {
             static bool positionSet = false;
             static bool sizeSet = false;
             static double popupDelay = -2.0;
+            static u32 displayFrameCount = 0;
 
             static std::unique_ptr<impl::PopupBase> currPopup;
             static Lang name("");
+
+            AT_FIRST_TIME {
+                EventImHexClosing::subscribe([] {
+                    currPopup.reset();
+                });
+            };
 
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
@@ -687,6 +695,7 @@ namespace hex {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
                             name = Lang(currPopup->getUnlocalizedName());
+                            displayFrameCount = 0;
 
                             ImGui::OpenPopup(name);
                             popups.pop_back();
@@ -720,6 +729,7 @@ namespace hex {
 
                 const auto createPopup = [&](bool displaying) {
                     if (displaying) {
+                        displayFrameCount += 1;
                         currPopup->drawContent();
 
                         if (ImGui::GetWindowSize().x > ImGui::GetStyle().FramePadding.x * 10)
@@ -745,6 +755,10 @@ namespace hex {
                     createPopup(ImGui::BeginPopupModal(name, closeButton, flags));
                 else
                     createPopup(ImGui::BeginPopup(name, flags));
+
+                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 10) {
+                    ImGui::OpenPopup(name);
+                }
 
                 if (currPopup->shouldClose()) {
                     log::debug("Closing popup '{}'", name);

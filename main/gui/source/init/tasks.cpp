@@ -19,6 +19,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
+#include <hex/ui/toast.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -98,6 +99,7 @@ namespace hex::init {
 
         ContentRegistry::Views::impl::getEntries().clear();
         impl::PopupBase::getOpenPopups().clear();
+        impl::ToastBase::getQueuedToasts().clear();
 
 
         ContentRegistry::Tools::impl::getEntries().clear();
