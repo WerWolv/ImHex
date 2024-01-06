@@ -3,6 +3,7 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -89,6 +90,7 @@ namespace hex {
         const auto pluginName = wolv::util::toUTF8String(m_path.filename());
 
         if (this->isLibraryPlugin()) {
+            m_initialized = true;
             return true;
         }
 
@@ -242,8 +244,19 @@ namespace hex {
     }
 
     void PluginManager::unload() {
-        getPlugins().clear();
         getPluginPaths().clear();
+
+        // Unload plugins in reverse order
+        auto &plugins = getPlugins();
+        const auto pluginCount = plugins.size();
+        for (size_t i = 0; i < pluginCount; i++) {
+            auto &plugin = plugins[pluginCount - 1 - i];
+            if (plugin.isLoaded()) {
+                log::info("Unloading plugin '{}'", plugin.getPluginName());
+            }
+
+            plugins.pop_back();
+        }
     }
 
     void PluginManager::reload() {
