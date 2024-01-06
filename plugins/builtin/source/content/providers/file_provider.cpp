@@ -46,14 +46,14 @@ namespace hex::plugin::builtin {
         if (m_fileSize == 0 || (offset + size) > m_fileSize || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(buffer, m_file.getMapping() + offset, size);
+        m_file.readBufferAtomic(offset, static_cast<u8*>(buffer), size);
     }
 
     void FileProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
         if ((offset + size) > this->getActualSize() || buffer == nullptr || size == 0)
             return;
 
-        std::memcpy(m_file.getMapping() + offset, buffer, size);
+        m_file.writeBufferAtomic(offset, static_cast<const u8*>(buffer), size);
     }
 
     void FileProvider::save() {
@@ -229,23 +229,15 @@ namespace hex::plugin::builtin {
             }
         }
 
-        m_fileStats = file.getFileInfo();
         m_file      = std::move(file);
-
-        if (!m_file.map()) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.file.error.open"_lang, m_path.string(), ::strerror(errno)));
-            return false;
-        }
-
-        m_fileSize = m_file.getSize();
-
-        m_file.close();
+        m_fileStats = m_file.getFileInfo();
+        m_fileSize  = m_file.getSize();
 
         return true;
     }
 
     void FileProvider::close() {
-        m_file.unmap();
+        m_file.close();
     }
 
     void FileProvider::loadSettings(const nlohmann::json &settings) {
