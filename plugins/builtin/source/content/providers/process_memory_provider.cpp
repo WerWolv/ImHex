@@ -16,6 +16,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/ui/view.hpp>
 
+#include <toasts/toast_notification.hpp>
+
 #include <wolv/io/fs.hpp>
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
@@ -252,9 +254,9 @@ namespace hex::plugin::builtin {
         #endif
 
         if (ImGui::BeginTable("##module_table", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY, ImVec2(availableX, availableY))) {
-            ImGui::TableSetupColumn("hex.builtin.common.region"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.size"_lang);
-            ImGui::TableSetupColumn("hex.builtin.common.name"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.region"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang);
+            ImGui::TableSetupColumn("hex.ui.common.name"_lang);
             ImGui::TableSetupScrollFreeze(0, 1);
 
             ImGui::TableHeadersRow();
@@ -294,7 +296,7 @@ namespace hex::plugin::builtin {
                             if (loadLibraryW != nullptr) {
                                 if (auto threadHandle = CreateRemoteThread(m_processHandle, nullptr, 0, loadLibraryW, pathAddress, 0, nullptr); threadHandle != nullptr) {
                                     WaitForSingleObject(threadHandle, INFINITE);
-                                    RequestOpenErrorPopup::post(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
+                                    ui::ToastInfo::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.success"_lang, path.filename().string()));
                                     this->reloadProcessModules();
                                     CloseHandle(threadHandle);
                                     return;
@@ -303,7 +305,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    RequestOpenErrorPopup::post(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
+                    ui::ToastError::open(hex::format("hex.builtin.provider.process_memory.utils.inject_dll.failure"_lang, path.filename().string()));
                 });
             }
         #endif
@@ -398,8 +400,9 @@ namespace hex::plugin::builtin {
             return m_selectedProcess->id;
         } else if (category == "process_name") {
             return m_selectedProcess->name;
-        } else
+        } else {
             return Provider::queryInformation(category, argument);
+        }
     }
 
 }

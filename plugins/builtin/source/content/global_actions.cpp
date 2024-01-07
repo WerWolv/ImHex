@@ -3,7 +3,7 @@
 #include <hex/api/project_file_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
-#include <content/popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -13,7 +13,7 @@ namespace hex::plugin::builtin {
         fs::openFileBrowser(fs::DialogMode::Open, { {"Project File", "hexproj"} },
                             [](const auto &path) {
                                 if (!ProjectFile::load(path)) {
-                                    PopupError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
+                                    ui::ToastError::open(hex::format("hex.builtin.popup.error.project.load"_lang, wolv::util::toUTF8String(path)));
                                 }
                             });
     }
@@ -21,7 +21,7 @@ namespace hex::plugin::builtin {
     void saveProject() {
         if (ImHexApi::Provider::isValid() && ProjectFile::hasPath()) {
             if (!ProjectFile::store()) {
-                PopupError::open("hex.builtin.popup.error.project.save"_lang);
+                ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
             } else {
                 log::debug("Project saved");
             }
@@ -36,7 +36,7 @@ namespace hex::plugin::builtin {
                                 }
 
                                 if (!ProjectFile::store(path)) {
-                                    PopupError::open("hex.builtin.popup.error.project.save"_lang);
+                                    ui::ToastError::open("hex.builtin.popup.error.project.save"_lang);
                                 }
                             });
     }

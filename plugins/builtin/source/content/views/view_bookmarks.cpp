@@ -104,7 +104,7 @@ namespace hex::plugin::builtin {
                                 // Draw region
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
-                                ImGuiExt::TextFormatted("{}: ", "hex.builtin.common.region"_lang.get());
+                                ImGuiExt::TextFormatted("{}: ", "hex.ui.common.region"_lang.get());
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("[ 0x{:08X} - 0x{:08X} ] ", bookmark.region.getStartAddress(), bookmark.region.getEndAddress());
 
@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "bookmarks.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 auto fileContent = tar.readString(basePath);
                 if (fileContent.empty())
                     return true;
@@ -150,7 +150,7 @@ namespace hex::plugin::builtin {
                 m_bookmarks.get(provider).clear();
                 return this->importBookmarks(provider, data);
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) -> bool {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) -> bool {
                 nlohmann::json data;
 
                 bool result = this->exportBookmarks(provider, data);
@@ -194,7 +194,7 @@ namespace hex::plugin::builtin {
 
     static void drawColorPopup(ImColor &color) {
         // Generate color picker palette
-        static auto Palette = [] {
+        const static auto Palette = [] {
             constexpr static auto ColorCount = 36;
             std::array<ImColor, ColorCount> result = { 0 };
 
@@ -212,7 +212,7 @@ namespace hex::plugin::builtin {
         bool colorChanged = false;
 
         // Draw default color picker
-        if (ImGui::ColorPicker4("##picker", (float*)&color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview))
+        if (ImGui::ColorPicker4("##picker", &color.Value.x, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview))
             colorChanged = true;
 
         ImGui::Separator();
@@ -343,9 +343,9 @@ namespace hex::plugin::builtin {
                         ImGui::SameLine();
 
                         // Draw bookmark name if the bookmark is locked or an input text box if it's unlocked
-                        if (locked)
+                        if (locked) {
                             ImGui::TextUnformatted(name.data());
-                        else {
+                        } else {
                             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                             ImGui::InputText("##nameInput", name);
                             ImGui::PopItemWidth();
@@ -354,7 +354,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
                         ImGui::TableNextColumn();
 
-                        ImGui::TextUnformatted("hex.builtin.common.address"_lang);
+                        ImGui::TextUnformatted("hex.ui.common.address"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TableNextColumn();
 
@@ -405,7 +405,7 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
 
                         // Draw size of the bookmark
-                        ImGui::TextUnformatted("hex.builtin.common.size"_lang);
+                        ImGui::TextUnformatted("hex.ui.common.size"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted(hex::toByteString(region.size));

@@ -4,8 +4,9 @@
 
 #include <hex/helpers/crypto.hpp>
 
-#include <content/popups/popup_notification.hpp>
-#include <content/popups/popup_text_input.hpp>
+#include <toasts/toast_notification.hpp>
+#include <popups/popup_notification.hpp>
+#include <popups/popup_text_input.hpp>
 
 #include <nlohmann/json.hpp>
 #include <romfs/romfs.hpp>
@@ -178,11 +179,6 @@ namespace hex::plugin::builtin {
                     .setDescription("hex.builtin.achievement.misc.download_from_store.desc")
                     .setIcon(romfs::get("assets/achievements/package.png").span())
                     .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
-
-            AchievementManager::addAchievement<AchievementMisc>("hex.builtin.achievement.misc.create_hash.name")
-                    .setDescription("hex.builtin.achievement.misc.create_hash.desc")
-                    .setIcon(romfs::get("assets/achievements/fortune-cookie.png").span())
-                    .addRequirement("hex.builtin.achievement.starting_out.open_file.name");
         }
 
 
@@ -224,7 +220,7 @@ namespace hex::plugin::builtin {
             ProjectFile::registerHandler({
                 .basePath = "challenge",
                 .required = false,
-                .load = [](const std::fs::path &basePath, Tar &tar) {
+                .load = [](const std::fs::path &basePath, const Tar &tar) {
                     if (!tar.contains(basePath / "achievements.json") || !tar.contains(basePath / "description.txt"))
                         return true;
 
@@ -276,11 +272,11 @@ namespace hex::plugin::builtin {
                                             if (password.empty())
                                                 achievement.setUnlocked(true);
                                             else
-                                                PopupTextInput::open("Enter Password", "Enter the password to unlock this achievement", [password, &achievement](const std::string &input) {
+                                                ui::PopupTextInput::open("Enter Password", "Enter the password to unlock this achievement", [password, &achievement](const std::string &input) {
                                                     if (input == password)
                                                         achievement.setUnlocked(true);
                                                     else
-                                                        PopupInfo::open("The password you entered was incorrect.");
+                                                        ui::ToastWarning::open("The password you entered was incorrect.");
                                                 });
                                         });
 
@@ -301,12 +297,12 @@ namespace hex::plugin::builtin {
                         return false;
                     }
 
-                    PopupInfo::open(challengeDescription);
+                    ui::PopupInfo::open(challengeDescription);
 
 
                     return true;
                 },
-                .store = [](const std::fs::path &basePath, Tar &tar) {
+                .store = [](const std::fs::path &basePath, const Tar &tar) {
                     if (!challengeAchievement.empty())
                         tar.writeString(basePath / "achievements.json", challengeAchievement);
                     if (!challengeDescription.empty())

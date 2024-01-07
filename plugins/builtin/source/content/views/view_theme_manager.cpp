@@ -38,7 +38,7 @@ namespace hex::plugin::builtin {
                     auto color = handler.getFunction(colorId);
 
                     // Draw a color picker for the color
-                    if (ImGui::ColorEdit4(colorName.c_str(), reinterpret_cast<float*>(&color.Value), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf)) {
+                    if (ImGui::ColorEdit4(colorName.c_str(), &color.Value.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_AlphaPreviewHalf)) {
                         // Update the color value
                         handler.setFunction(colorId, color);
                         EventThemeChanged::post();

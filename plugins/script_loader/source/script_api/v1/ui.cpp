@@ -8,6 +8,8 @@
 
 #include <hex/helpers/utils.hpp>
 
+#include <popups/popup_notification.hpp>
+
 using namespace hex;
 
 #define VERSION V1
@@ -28,13 +30,13 @@ public:
 
         auto width = ImGui::GetWindowWidth();
         ImGui::SetCursorPosX(width / 9);
-        if (ImGui::Button("hex.builtin.common.yes"_lang, ImVec2(width / 3, 0))) {
+        if (ImGui::Button("hex.ui.common.yes"_lang, ImVec2(width / 3, 0))) {
             s_yesNoQuestionBoxResult = true;
             this->close();
         }
         ImGui::SameLine();
         ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button("hex.builtin.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::Button("hex.ui.common.no"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             s_yesNoQuestionBoxResult = false;
             this->close();
         }
@@ -80,14 +82,14 @@ public:
         auto width = ImGui::GetWindowWidth();
         ImGui::SetCursorPosX(width / 9);
         ImGui::BeginDisabled(m_input.empty());
-        if (ImGui::Button("hex.builtin.common.okay"_lang, ImVec2(width / 3, 0)) || submitted) {
+        if (ImGui::Button("hex.ui.common.okay"_lang, ImVec2(width / 3, 0)) || submitted) {
             s_inputTextBoxResult = m_input;
             this->close();
         }
         ImGui::EndDisabled();
         ImGui::SameLine();
         ImGui::SetCursorPosX(width / 9 * 5);
-        if (ImGui::Button("hex.builtin.common.cancel"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
+        if (ImGui::Button("hex.ui.common.cancel"_lang, ImVec2(width / 3, 0)) || ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Escape))) {
             s_inputTextBoxResult = "";
             this->close();
         }
@@ -114,7 +116,7 @@ private:
 };
 
 SCRIPT_API(void showMessageBox, const char *message) {
-    hex::RequestOpenInfoPopup::post(message);
+    ui::PopupInfo::open(message);
 }
 
 SCRIPT_API(void showInputTextBox, const char *title, const char *message, char *buffer, u32 bufferSize) {

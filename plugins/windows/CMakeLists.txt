@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-# Add your source files here #
+
 if (WIN32)
 
     include(ImHexPlugin)
@@ -15,6 +15,9 @@ if (WIN32)
             source/content/settings_entries.cpp
         INCLUDES
             include
+        LIBRARIES
+            ui
+            ${JTHREAD_LIBRARIES}
     )
 
 endif ()

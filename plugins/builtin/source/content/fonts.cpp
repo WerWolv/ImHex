@@ -1,4 +1,3 @@
-#include <imgui_internal.h>
 #include <hex/api/imhex_api.hpp>
 
 #include <romfs/romfs.hpp>
@@ -7,8 +6,6 @@
 
 #include <fonts/codicons_font.h>
 #include <fonts/blendericons_font.h>
-
-#include <imgui_freetype.h>
 
 namespace hex::plugin::builtin {
 

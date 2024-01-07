@@ -1,7 +1,6 @@
 #include <content/views/view_pattern_data.hpp>
 
 #include <hex/api/content_registry.hpp>
-#include <hex/providers/provider.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <wolv/utils/lock.hpp>

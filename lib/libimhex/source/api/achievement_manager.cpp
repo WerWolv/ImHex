@@ -201,7 +201,11 @@ namespace hex {
                 for (const auto &[categoryName, achievements] : getAchievements()) {
                     for (const auto &[achievementName, achievement] : achievements) {
                         try {
-                            achievement->setProgress(json[categoryName][achievementName]);
+                            const auto &progress = json[categoryName][achievementName];
+                            if (progress.is_null())
+                                continue;
+
+                            achievement->setProgress(progress);
                         } catch (const std::exception &e) {
                             log::warn("Failed to load achievement progress for '{}::{}': {}", categoryName, achievementName, e.what());
                         }
@@ -218,7 +222,7 @@ namespace hex {
         for (const auto &directory : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             auto path = directory / AchievementsFile;
 
-            wolv::io::File file(path, wolv::io::File::Mode::Create);
+            wolv::io::File file(path, wolv::io::File::Mode::Write);
 
             if (!file.isValid()) {
                 continue;
@@ -234,7 +238,9 @@ namespace hex {
                 }
             }
 
-            file.writeString(json.dump(4));
+            auto result = json.dump(4);
+            file.setSize(0);
+            file.writeString(result);
             break;
         }
     }

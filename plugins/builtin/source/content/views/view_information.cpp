@@ -14,7 +14,7 @@
 
 #include <implot.h>
 
-#include <content/popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -48,7 +48,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
             for (const auto &destPath : fs::getDefaultPaths(fs::ImHexPath::Magic)) {
                 if (wolv::io::fs::copyFile(path, destPath / path.filename(), std::fs::copy_options::overwrite_existing)) {
-                    PopupInfo::open("hex.builtin.view.information.magic_db_added"_lang);
+                    ui::ToastInfo::open("hex.builtin.view.information.magic_db_added"_lang);
                     return true;
                 }
             }
@@ -141,7 +141,7 @@ namespace hex::plugin::builtin {
             auto provider = ImHexApi::Provider::get();
             if (ImHexApi::Provider::isValid() && provider->isReadable()) {
                 ImGui::BeginDisabled(m_analyzerTask.isRunning());
-                ImGuiExt::BeginSubWindow("hex.builtin.common.settings"_lang);
+                ImGuiExt::BeginSubWindow("hex.ui.common.settings"_lang);
                 {
                     if (ImGui::BeginTable("SettingsTable", 2, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedSame, ImVec2(ImGui::GetContentRegionAvail().x, 0))) {
                         ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5F);
@@ -292,9 +292,9 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.file_entropy"_lang);
                         ImGui::TableNextColumn();
-                        if (m_averageEntropy < 0)
+                        if (m_averageEntropy < 0) {
                             ImGui::TextUnformatted("???");
-                        else {
+                        } else {
                             auto entropy = std::abs(m_averageEntropy);
                             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
                             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
@@ -333,9 +333,9 @@ namespace hex::plugin::builtin {
                         ImGui::TableNextColumn();
                         ImGuiExt::TextFormatted("{}", "hex.builtin.view.information.plain_text_percentage"_lang);
                         ImGui::TableNextColumn();
-                        if (m_plainTextCharacterPercentage < 0)
+                        if (m_plainTextCharacterPercentage < 0) {
                             ImGui::TextUnformatted("???");
-                        else {
+                        } else {
                             ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 0.1F);
                             ImGui::PushStyleColor(ImGuiCol_FrameBg, ImGui::GetColorU32(ImGuiCol_TableRowBgAlt));
                             ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImColor::HSV(0.3F * (m_plainTextCharacterPercentage / 100.0F), 0.8F, 0.6F, 1.0F).Value);

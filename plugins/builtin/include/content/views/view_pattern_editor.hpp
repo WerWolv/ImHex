@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
                 ImGui::NewLine();
                 ImGui::TextUnformatted("hex.builtin.view.pattern_editor.accept_pattern.question"_lang);
 
-                ImGuiExt::ConfirmButtons("hex.builtin.common.yes"_lang, "hex.builtin.common.no"_lang,
+                ImGuiExt::ConfirmButtons("hex.ui.common.yes"_lang, "hex.ui.common.no"_lang,
                         [this, provider] {
                             m_view->loadPatternFile(m_view->m_possiblePatternFiles.get(provider)[m_selectedPatternFile], provider);
                             this->close();

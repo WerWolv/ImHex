@@ -181,8 +181,6 @@ namespace ImGuiExt {
 
     bool Hyperlink(const char *label, const ImVec2 &size_arg, ImGuiButtonFlags flags) {
         ImGuiWindow *window = GetCurrentWindow();
-        if (window->SkipItems)
-            return false;
 
         ImGuiContext &g         = *GImGui;
         const ImGuiID id        = window->GetID(label);
@@ -192,8 +190,7 @@ namespace ImGuiExt {
         ImVec2 size = CalcItemSize(size_arg, label_size.x, label_size.y);
 
         const ImRect bb(pos, pos + size);
-        if (!ItemAdd(bb, id))
-            return false;
+        ItemAdd(bb, id);
 
         if (g.LastItemData.InFlags & ImGuiItemFlags_ButtonRepeat)
             flags |= ImGuiButtonFlags_Repeat;
@@ -723,10 +720,17 @@ namespace ImGuiExt {
             return;
 
         // Render
+        bool no_progress = fraction < 0;
         fraction = ImSaturate(fraction);
         RenderFrame(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg), true, style.FrameRounding);
         bb.Expand(ImVec2(-style.FrameBorderSize, -style.FrameBorderSize));
-        RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+
+        if (no_progress) {
+            auto time = (fmod(ImGui::GetTime() * 2, 1.8) - 0.4);
+            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), ImSaturate(time), ImSaturate(time + 0.2), style.FrameRounding);
+        } else {
+            RenderRectFilledRangeH(window->DrawList, bb, GetColorU32(ImGuiCol_PlotHistogram), 0.0f, fraction, style.FrameRounding);
+        }
     }
 
     void TextUnformattedCentered(const char *text) {

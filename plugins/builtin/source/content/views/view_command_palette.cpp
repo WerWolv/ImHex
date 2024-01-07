@@ -164,9 +164,9 @@ namespace hex::plugin::builtin {
                 // These commands are used by entering a single symbol and then any input
 
                 if (auto [match, value] = MatchCommand(input, command); match != MatchType::NoMatch) {
-                    if (match != MatchType::PerfectMatch)
+                    if (match != MatchType::PerfectMatch) {
                         results.push_back({ command + " (" + Lang(unlocalizedDescription) + ")", "", AutoComplete });
-                    else {
+                    } else {
                         auto matchedCommand = wolv::util::trim(input.substr(command.length()));
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }
@@ -176,9 +176,9 @@ namespace hex::plugin::builtin {
                 // These commands are used by entering a keyword followed by a space and then any input
 
                 if (auto [match, value] = MatchCommand(input, command + " "); match != MatchType::NoMatch) {
-                    if (match != MatchType::PerfectMatch)
+                    if (match != MatchType::PerfectMatch) {
                         results.push_back({ command + " (" + Lang(unlocalizedDescription) + ")", "", AutoComplete });
-                    else {
+                    } else {
                         auto matchedCommand = wolv::util::trim(input.substr(command.length() + 1));
                         results.push_back({ displayCallback(matchedCommand), matchedCommand, executeCallback });
                     }

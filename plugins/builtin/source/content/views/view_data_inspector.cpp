@@ -332,7 +332,7 @@ namespace hex::plugin::builtin {
                 ImGui::EndTable();
             }
 
-            ImGuiExt::DimmedButtonToggle("hex.builtin.common.edit"_lang, &m_tableEditingModeEnabled, ImVec2(ImGui::GetContentRegionAvail().x, 0));
+            ImGuiExt::DimmedButtonToggle("hex.ui.common.edit"_lang, &m_tableEditingModeEnabled, ImVec2(ImGui::GetContentRegionAvail().x, 0));
 
             ImGui::NewLine();
             ImGui::Separator();
@@ -350,9 +350,9 @@ namespace hex::plugin::builtin {
                    }
                 }();
 
-                std::array options = { "hex.builtin.common.little"_lang, "hex.builtin.common.big"_lang };
+                std::array options = { "hex.ui.common.little"_lang, "hex.ui.common.big"_lang };
 
-                if (ImGui::SliderInt("hex.builtin.common.endian"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
+                if (ImGui::SliderInt("hex.ui.common.endian"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
                     m_shouldInvalidate = true;
 
                     switch (selection) {
@@ -373,9 +373,9 @@ namespace hex::plugin::builtin {
                         case NumberDisplayStyle::Octal:         return 2;
                     }
                 }();
-                std::array options = { "hex.builtin.common.decimal"_lang, "hex.builtin.common.hexadecimal"_lang, "hex.builtin.common.octal"_lang };
+                std::array options = { "hex.ui.common.decimal"_lang, "hex.ui.common.hexadecimal"_lang, "hex.ui.common.octal"_lang };
 
-                if (ImGui::SliderInt("hex.builtin.common.number_format"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
+                if (ImGui::SliderInt("hex.ui.common.number_format"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
                     m_shouldInvalidate = true;
 
                     switch (selection) {
@@ -390,7 +390,7 @@ namespace hex::plugin::builtin {
             // Draw invert setting
             {
                 int selection = m_invert ? 1 : 0;
-                std::array options = { "hex.builtin.common.no"_lang, "hex.builtin.common.yes"_lang };
+                std::array options = { "hex.ui.common.no"_lang, "hex.ui.common.yes"_lang };
 
                 if (ImGui::SliderInt("hex.builtin.view.data_inspector.invert"_lang, &selection, 0, options.size() - 1, options[selection], ImGuiSliderFlags_NoInput)) {
                     m_shouldInvalidate = true;

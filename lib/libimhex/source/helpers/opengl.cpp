@@ -635,13 +635,13 @@ namespace hex::gl {
         }
     }
 
-    void LightSourceVectors::moveTo(const Vector<float, 3> &positionVector) {
+    void LightSourceVectors::moveTo(const Vector<float, 3> &position) {
         auto vertexCount = m_vertices.size();
 
         for (unsigned k = 0; k < vertexCount; k += 3) {
-            m_vertices[k    ] = m_radius * m_normals[k    ] + positionVector[0];
-            m_vertices[k + 1] = m_radius * m_normals[k + 1] + positionVector[1];
-            m_vertices[k + 2] = m_radius * m_normals[k + 2] + positionVector[2];
+            m_vertices[k    ] = m_radius * m_normals[k    ] + position[0];
+            m_vertices[k + 1] = m_radius * m_normals[k + 1] + position[1];
+            m_vertices[k + 2] = m_radius * m_normals[k + 2] + position[2];
         }
     }
 

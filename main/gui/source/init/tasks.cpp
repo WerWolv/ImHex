@@ -19,6 +19,7 @@
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
+#include <hex/ui/toast.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -98,6 +99,7 @@ namespace hex::init {
 
         ContentRegistry::Views::impl::getEntries().clear();
         impl::PopupBase::getOpenPopups().clear();
+        impl::ToastBase::getQueuedToasts().clear();
 
 
         ContentRegistry::Tools::impl::getEntries().clear();
@@ -125,7 +127,6 @@ namespace hex::init {
         ContentRegistry::HexEditor::impl::getVisualizers().clear();
 
         ContentRegistry::BackgroundServices::impl::stopServices();
-        ContentRegistry::BackgroundServices::impl::getServices().clear();
 
         ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints().clear();
 
@@ -183,12 +184,23 @@ namespace hex::init {
             return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
         };
 
+        // Load library plugins first since plugins might depend on them
+        for (const auto &plugin : plugins) {
+            if (!plugin.isLibraryPlugin()) continue;
+
+            // Initialize the plugin
+            if (!plugin.initializePlugin()) {
+                log::error("Failed to initialize library plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
+            }
+        }
+
         u32 builtinPlugins = 0;
         u32 loadErrors     = 0;
 
         // Load the builtin plugin first, so it can initialize everything that's necessary for ImHex to work
         for (const auto &plugin : plugins) {
             if (!plugin.isBuiltinPlugin()) continue;
+            if (plugin.isLibraryPlugin()) continue;
 
             if (!shouldLoadPlugin(plugin)) {
                 log::debug("Skipping built-in plugin {}", plugin.getPath().string());
@@ -210,6 +222,7 @@ namespace hex::init {
         // Load all other plugins
         for (const auto &plugin : plugins) {
             if (plugin.isBuiltinPlugin()) continue;
+            if (plugin.isLibraryPlugin()) continue;
 
             if (!shouldLoadPlugin(plugin)) {
                 log::debug("Skipping plugin {}", plugin.getPath().string());
@@ -307,6 +320,7 @@ namespace hex::init {
     bool storeSettings() {
         try {
             ContentRegistry::Settings::impl::store();
+            AchievementManager::storeProgress();
         } catch (std::exception &e) {
             log::error("Failed to store configuration! {}", e.what());
             return false;

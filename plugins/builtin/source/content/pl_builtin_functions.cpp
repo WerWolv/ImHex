@@ -6,7 +6,6 @@
 
 #include <pl/core/token.hpp>
 #include <pl/core/evaluator.hpp>
-#include <pl/patterns/pattern.hpp>
 
 #include <llvm/Demangle/Demangle.h>
 

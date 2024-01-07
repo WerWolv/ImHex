@@ -1,6 +1,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/imhex_api.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/helpers/utils.hpp>
@@ -13,7 +14,7 @@
 #include <implot.h>
 #include <hex/ui/imgui_imhex_extensions.h>
 
-#include <content/popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -43,10 +44,10 @@ namespace hex::plugin::builtin {
     }
 
     static void drawGlobalPopups() {
-        // Task exception popup
+        // Task exception toast
         for (const auto &task : TaskManager::getRunningTasks()) {
             if (task->hadException()) {
-                PopupError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
+                ui::ToastError::open(hex::format("hex.builtin.popup.error.task_exception"_lang, Lang(task->getUnlocalizedName()), task->getExceptionMessage()));
                 task->clearException();
                 break;
             }
@@ -78,19 +79,26 @@ namespace hex::plugin::builtin {
                 if (ImGui::IsItemHovered()) {
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
                     if (ImGui::BeginTooltip()) {
+
+                        static u32 frameCount = 0;
+                        static double largestFrameTime = 0;
                         if (ImPlot::BeginPlot("##frame_time_graph", scaled({ 200, 100 }), ImPlotFlags_CanvasOnly | ImPlotFlags_NoFrame | ImPlotFlags_NoInputs)) {
                             ImPlot::SetupAxes("", "", ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_NoTickLabels, ImPlotAxisFlags_NoLabel | ImPlotAxisFlags_LockMin | ImPlotAxisFlags_AutoFit);
-                            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, 0.01, ImPlotCond_Always);
+                            ImPlot::SetupAxisLimits(ImAxis_Y1, 0, largestFrameTime * 1.25F, ImPlotCond_Always);
                             ImPlot::SetupAxisFormat(ImAxis_Y1, [](double value, char* buff, int size, void*) -> int {
                                 return snprintf(buff, size, "%dms", int(value * 1000.0));
                             }, nullptr);
-                            ImPlot::SetupAxisTicks(ImAxis_Y1, 0, 0.01, 3);
+                            ImPlot::SetupAxisTicks(ImAxis_Y1, 0, largestFrameTime * 1.25F, 3);
 
                             static std::vector<double> values(100);
 
                             values.push_back(ImHexApi::System::getLastFrameTime());
                             if (values.size() > 100)
                                 values.erase(values.begin());
+
+                            if (frameCount % 100 == 0)
+                                largestFrameTime = *std::ranges::max_element(values);
+                            frameCount += 1;
 
                             ImPlot::PlotLine("FPS", values.data(), values.size());
                             ImPlot::EndPlot();
@@ -113,7 +121,7 @@ namespace hex::plugin::builtin {
                 if (frontTask == nullptr)
                     return;
 
-                const auto progress = frontTask->getMaxValue() == 0 ? 1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
+                const auto progress = frontTask->getMaxValue() == 0 ? -1 : float(frontTask->getValue()) / float(frontTask->getMaxValue());
 
                 ImHexApi::System::setTaskBarProgress(ImHexApi::System::TaskProgressState::Progress, ImHexApi::System::TaskProgressType::Normal, u32(progress * 100));
 
@@ -127,12 +135,12 @@ namespace hex::plugin::builtin {
                 const auto widgetEnd = ImGui::GetCursorPos();
 
                 ImGui::SetCursorPos(widgetStart);
-                ImGui::InvisibleButton("FrontTask", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
+                ImGui::InvisibleButton("RestTasks", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
                 ImGui::SetCursorPos(widgetEnd);
 
                 ImGuiExt::InfoTooltip(hex::format("[{:.1f}%] {}", progress * 100.0F, Lang(frontTask->getUnlocalizedName())).c_str());
 
-                if (ImGui::BeginPopupContextItem("FrontTask", ImGuiPopupFlags_MouseButtonLeft)) {
+                if (ImGui::BeginPopupContextItem("RestTasks", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
                         if (task->isBackgroundTask())
                             continue;
@@ -142,7 +150,7 @@ namespace hex::plugin::builtin {
                         ImGui::SameLine();
                         ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                         ImGui::SameLine();
-                        ImGuiExt::SmallProgressBar(task->getMaxValue() == 0 ? 1 : (float(task->getValue()) / float(task->getMaxValue())), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
+                        ImGuiExt::SmallProgressBar(task->getMaxValue() == 0 ? -1 : (float(task->getValue()) / float(task->getMaxValue())), (ImGui::GetTextLineHeightWithSpacing() - 5_scaled) / 2);
                         ImGui::SameLine();
 
                         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));

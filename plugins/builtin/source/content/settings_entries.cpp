@@ -166,7 +166,7 @@ namespace hex::plugin::builtin {
             bool draw(const std::string &name) override {
                 auto format = [this] -> std::string {
                     if (m_value == 0)
-                        return "hex.builtin.setting.interface.scaling.native"_lang;
+                        return "hex.builtin.setting.interface.scaling.native"_lang + hex::format(" (x{:.1f})", ImHexApi::System::getNativeScale());
                     else
                         return "x%.1f";
                 }();
@@ -197,7 +197,7 @@ namespace hex::plugin::builtin {
                 auto format = [this] -> std::string {
                     auto value = m_value * 30;
                     if (value == 0)
-                        return "hex.builtin.common.off"_lang;
+                        return "hex.ui.common.off"_lang;
                     else if (value < 60)
                         return hex::format("hex.builtin.setting.general.auto_backup_time.format.simple"_lang, value);
                     else
@@ -374,8 +374,11 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
-        ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
+
+        #if !defined(OS_WEB)
+            ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
+        #endif
 
         /* Interface */
 
@@ -470,7 +473,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
                 .requiresRestart()
                 .setEnabledCallback(customFontSettingsEnabled);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", false)
+        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", true)
                 .requiresRestart()
                 .setEnabledCallback(customFontSettingsEnabled);
 
@@ -543,9 +546,9 @@ namespace hex::plugin::builtin {
     static void loadThemeSettings() {
         auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
 
-        if (theme == ThemeManager::NativeTheme)
+        if (theme == ThemeManager::NativeTheme) {
             ImHexApi::System::enableSystemThemeDetection(true);
-        else {
+        } else {
             ImHexApi::System::enableSystemThemeDetection(false);
             ThemeManager::changeTheme(theme);
         }

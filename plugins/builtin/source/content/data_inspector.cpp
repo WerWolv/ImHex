@@ -464,7 +464,7 @@ namespace hex::plugin::builtin {
             }
         );
 
-#if defined(OS_WINDOWS) && defined(ARCH_64_BIT)
+#if defined(OS_WINDOWS)
 
         ContentRegistry::DataInspector::add("hex.builtin.inspector.time32", sizeof(u32), [](auto buffer, auto endian, auto style) {
             hex::unused(style);

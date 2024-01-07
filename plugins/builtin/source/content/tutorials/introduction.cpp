@@ -92,7 +92,7 @@ namespace hex::plugin::builtin {
                 Lang("hex.builtin.view.tutorials.name")
             })
             .onAppear([&step] {
-                EventViewOpened::subscribe([&step](View *view){
+                EventViewOpened::subscribe([&step](const View *view){
                     if (view->getUnlocalizedName() == UnlocalizedString("hex.builtin.view.tutorials.name"))
                         step.complete();
                 });

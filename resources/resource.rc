@@ -20,7 +20,7 @@ GLFW_ICON ICON dist/windows/icon.ico
             BLOCK "080904b0"
             BEGIN
                 VALUE "CompanyName",        "WerWolv"
-                VALUE "FileDescription",    "ImHex Hex Editor 🔍"
+                VALUE "FileDescription",    "ImHex"
                 VALUE "LegalCopyright",     "WerWolv 2020-2023"
                 VALUE "OriginalFilename",   "imhex.exe"
                 VALUE "ProductName",        "ImHex"

@@ -4,7 +4,7 @@ include(ImHexPlugin)
 
 find_file(DEFAULT_MAGIC_FILE_PATH magic.mgc HINTS ${MAGIC_INCLUDE_DIRS}/../share/misc)
 if (DEFAULT_MAGIC_FILE_PATH)
-    add_romfs_resource(${DEFAULT_MAGIC_FILE_PATH} auto_extract/magic/magic.mgc)
+    add_romfs_resource(${DEFAULT_MAGIC_FILE_PATH} always_auto_extract/magic/magic.mgc)
 endif ()
 
 add_imhex_plugin(
@@ -21,8 +21,6 @@ add_imhex_plugin(
         source/content/data_inspector.cpp
         source/content/pl_builtin_functions.cpp
         source/content/pl_pragmas.cpp
-        source/content/pl_visualizers.cpp
-        source/content/pl_inline_visualizers.cpp
         source/content/settings_entries.cpp
         source/content/tools_entries.cpp
         source/content/data_processor_nodes.cpp
@@ -34,7 +32,6 @@ add_imhex_plugin(
         source/content/welcome_screen.cpp
         source/content/data_visualizers.cpp
         source/content/events.cpp
-        source/content/hashes.cpp
         source/content/global_actions.cpp
         source/content/themes.cpp
         source/content/recent.cpp
@@ -46,6 +43,7 @@ add_imhex_plugin(
         source/content/init_tasks.cpp
         source/content/fonts.cpp
         source/content/workspaces.cpp
+        source/content/pl_visualizers.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp
@@ -62,6 +60,7 @@ add_imhex_plugin(
         source/content/providers/motorola_srec_provider.cpp
         source/content/providers/memory_file_provider.cpp
         source/content/providers/process_memory_provider.cpp
+        source/content/providers/base64_provider.cpp
 
         source/content/tools/ascii_table.cpp
         source/content/tools/base_converter.cpp
@@ -81,30 +80,21 @@ add_imhex_plugin(
         source/content/tools/regex_replacer.cpp
         source/content/tools/tcp_client_server.cpp
         source/content/tools/wiki_explainer.cpp
+        source/content/tools/http_requests.cpp
+
+        source/content/pl_visualizers/hex_viewer.cpp
+        source/content/pl_visualizers/chunk_entropy.cpp
 
         source/content/tutorials/tutorials.cpp
         source/content/tutorials/introduction.cpp
 
-        source/content/pl_visualizers/line_plot.cpp
-        source/content/pl_visualizers/scatter_plot.cpp
-        source/content/pl_visualizers/image.cpp
-        source/content/pl_visualizers/disassembler.cpp
-        source/content/pl_visualizers/3d_model.cpp
-        source/content/pl_visualizers/sound.cpp
-        source/content/pl_visualizers/chunk_entropy.cpp
-        source/content/pl_visualizers/hex_viewer.cpp
-        source/content/pl_visualizers/coordinates.cpp
-        source/content/pl_visualizers/timestamp.cpp
-
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
         source/content/views/view_pattern_data.cpp
-        source/content/views/view_hashes.cpp
         source/content/views/view_information.cpp
         source/content/views/view_about.cpp
         source/content/views/view_tools.cpp
         source/content/views/view_data_inspector.cpp
-        source/content/views/view_disassembler.cpp
         source/content/views/view_bookmarks.cpp
         source/content/views/view_patches.cpp
         source/content/views/view_command_palette.cpp
@@ -120,15 +110,16 @@ add_imhex_plugin(
         source/content/views/view_achievements.cpp
         source/content/views/view_highlight_rules.cpp
         source/content/views/view_tutorials.cpp
-        source/content/views/view_yara.cpp
 
         source/content/helpers/notification.cpp
-
-        source/ui/hex_editor.cpp
-        source/ui/pattern_drawer.cpp
-
     INCLUDES
         include
+
+    LIBRARIES
+        ui
+        ${JTHREAD_LIBRARIES}
+        plcli
+        LLVMDemangle
 )
 
 if (WIN32)

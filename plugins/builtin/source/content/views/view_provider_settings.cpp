@@ -1,7 +1,9 @@
 #include "content/views/view_provider_settings.hpp"
 
-#include <content/popups/popup_notification.hpp>
 #include <hex/api/content_registry.hpp>
+#include <hex/api/task_manager.hpp>
+
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -37,7 +39,7 @@ namespace hex::plugin::builtin {
             ImGui::Separator();
 
             ImGui::BeginDisabled(!settingsValid);
-            if (ImGui::Button("hex.builtin.common.open"_lang)) {
+            if (ImGui::Button("hex.ui.common.open"_lang)) {
                 if (provider->open()) {
                     EventProviderOpened::post(provider);
 
@@ -49,9 +51,9 @@ namespace hex::plugin::builtin {
                     ImGui::CloseCurrentPopup();
                     auto errorMessage = provider->getErrorMessage();
                     if (errorMessage.empty()) {
-                        PopupError::open("hex.builtin.view.provider_settings.load_error"_lang);
+                        ui::ToastError::open("hex.builtin.view.provider_settings.load_error"_lang);
                     } else {
-                        PopupError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
+                        ui::ToastError::open(hex::format("hex.builtin.view.provider_settings.load_error_details"_lang, errorMessage));
                     }
                     TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });
                 }
@@ -60,7 +62,7 @@ namespace hex::plugin::builtin {
 
             ImGui::SameLine();
 
-            if (ImGui::Button("hex.builtin.common.cancel"_lang)) {
+            if (ImGui::Button("hex.ui.common.cancel"_lang)) {
                 ImGui::CloseCurrentPopup();
                 this->getWindowOpenState() = false;
                 TaskManager::doLater([=] { ImHexApi::Provider::remove(provider); });

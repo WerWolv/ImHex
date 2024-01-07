@@ -46,7 +46,7 @@ namespace hex::plugin::builtin {
                     } else {
                         m_value = std::stod(value) * m_multiplier;
                     }
-                } catch (const std::exception &e) {
+                } catch (const std::exception &) {
                     m_value = 0;
                     m_unit = Unit::Invalid;
                     m_unitString.clear();
@@ -176,34 +176,34 @@ namespace hex::plugin::builtin {
                     else if (unitString.starts_with("a"))  { multiplier = 1E-18; unitString = unitString.substr(1); }
                     else if (unitString.starts_with("z"))  { multiplier = 1E-21; unitString = unitString.substr(1); }
                     else if (unitString.starts_with("y"))  { multiplier = 1E-24; unitString = unitString.substr(1); }
-                    else return parseUnit(unitString, false);
+                    else { return parseUnit(unitString, false); }
                 }
 
                 unitString = wolv::util::trim(unitString);
                 m_unitString = unitString;
                 if (unitString.empty()) {
-                    if (multiplier == 1)
+                    if (multiplier == 1) {
                         return { Unit::Unitless, 1 };
-                    else {
+                    } else {
                         m_unitString = unitStringCopy;
                         return { Unit::Unitless, 1 };
                     }
 
-                }
-                else if (unitString == "bit" || unitString == "bits" || unitString == "b")
+                } else if (unitString == "bit" || unitString == "bits" || unitString == "b") {
                     return { Unit::Bits, multiplier };
-                else if (unitString == "byte" || unitString == "bytes" || unitString == "B")
+                } else if (unitString == "byte" || unitString == "bytes" || unitString == "B") {
                     return { Unit::Bytes, multiplier };
-                else if (unitString == "hex" || unitString == "hex.builtin.command.convert.hexadecimal"_lang.get())
+                } else if (unitString == "hex" || unitString == "hex.builtin.command.convert.hexadecimal"_lang.get()) {
                     return { Unit::Hexadecimal, multiplier };
-                else if (unitString == "bin" || unitString == "hex.builtin.command.convert.binary"_lang.get())
+                } else if (unitString == "bin" || unitString == "hex.builtin.command.convert.binary"_lang.get()) {
                     return { Unit::Binary, multiplier };
-                else if (unitString == "oct" || unitString == "hex.builtin.command.convert.octal"_lang.get())
+                } else if (unitString == "oct" || unitString == "hex.builtin.command.convert.octal"_lang.get()) {
                     return { Unit::Octal, multiplier };
-                else if (unitString == "dec" || unitString == "hex.builtin.command.convert.decimal"_lang.get())
+                } else if (unitString == "dec" || unitString == "hex.builtin.command.convert.decimal"_lang.get()) {
                     return { Unit::Decimal, multiplier };
-                else
+                } else {
                     return { Unit::Invalid, multiplier };
+                }
             }
 
         private:

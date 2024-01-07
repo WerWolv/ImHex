@@ -27,6 +27,10 @@ BuildRequires:  mbedtls-devel
 BuildRequires:  yara-devel
 BuildRequires:  nativefiledialog-extended-devel
 BuildRequires:  dotnet-sdk-7.0
+BuildRequires:  libzstd-devel
+BuildRequires:  zlib-devel
+BuildRequires:  bzip2-devel
+BuildRequires:  xz-devel
 %if 0%{?rhel}
 BuildRequires:  gcc-toolset-12
 %endif
@@ -120,6 +124,7 @@ cp -a lib/third_party/xdgpp/LICENSE                                  %{buildroot
 %license %{_datadir}/licenses/%{name}/
 %doc README.md
 %{_bindir}/imhex
+%{_bindir}/imhex-updater
 %{_datadir}/pixmaps/%{name}.png
 %{_datadir}/applications/%{name}.desktop
 %{_libdir}/libimhex.so*

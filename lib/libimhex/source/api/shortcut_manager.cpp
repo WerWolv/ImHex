@@ -98,7 +98,7 @@ namespace hex {
         return result;
     }
 
-    std::vector<ShortcutManager::ShortcutEntry> ShortcutManager::getViewShortcuts(View *view) {
+    std::vector<ShortcutManager::ShortcutEntry> ShortcutManager::getViewShortcuts(const View *view) {
         std::vector<ShortcutManager::ShortcutEntry> result;
 
         for (auto &[shortcut, entry] : view->m_shortcuts)

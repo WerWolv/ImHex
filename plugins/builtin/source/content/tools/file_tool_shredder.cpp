@@ -1,5 +1,6 @@
 #include <hex/helpers/fs.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/task_manager.hpp>
 
 #include <algorithm>
 #include <random>
@@ -7,7 +8,7 @@
 #include <imgui.h>
 
 #include <hex/ui/imgui_imhex_extensions.h>
-#include <content/popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <wolv/io/file.hpp>
 #include <wolv/utils/guards.hpp>
@@ -41,9 +42,9 @@ namespace hex::plugin::builtin {
         }
         ImGui::EndChild();
 
-        if (shredderTask.isRunning())
+        if (shredderTask.isRunning()) {
             ImGuiExt::TextSpinner("hex.builtin.tools.file_tools.shredder.shredding"_lang);
-        else {
+        } else {
             ImGui::BeginDisabled(selectedFile.empty());
             {
                 if (ImGui::Button("hex.builtin.tools.file_tools.shredder.shred"_lang)) {
@@ -54,7 +55,7 @@ namespace hex::plugin::builtin {
                         wolv::io::File file(selectedFile, wolv::io::File::Mode::Write);
 
                         if (!file.isValid()) {
-                            PopupError::open("hex.builtin.tools.file_tools.shredder.error.open"_lang);
+                            ui::ToastError::open("hex.builtin.tools.file_tools.shredder.error.open"_lang);
                             return;
                         }
 
@@ -128,7 +129,7 @@ namespace hex::plugin::builtin {
 
                         file.remove();
 
-                        PopupInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
+                        ui::ToastInfo::open("hex.builtin.tools.file_tools.shredder.success"_lang);
                     });
                 }
             }

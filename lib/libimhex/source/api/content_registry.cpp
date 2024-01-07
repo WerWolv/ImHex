@@ -8,7 +8,6 @@
 #include <hex/data_processor/node.hpp>
 
 #include <filesystem>
-#include <thread>
 #include <jthread.hpp>
 
 #if defined(OS_WEB)
@@ -90,16 +89,21 @@ namespace hex {
                 }
 
                 void store() {
+                    auto settingsData = getSettingsData();
+
                     // During a crash settings can be empty, causing them to be overwritten.
-                    if(getSettingsData().empty()) {
+                    if (settingsData.empty()) {
                         return;
                     }
 
                     for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
-                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Create);
+                        wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Write);
 
                         if (file.isValid()) {
-                            file.writeString(getSettingsData().dump(4));
+                            auto result = settingsData.dump(4);
+
+                            file.setSize(0);
+                            file.writeString(result);
                             break;
                         }
                     }
@@ -1000,6 +1004,11 @@ namespace hex {
 
         namespace impl {
 
+            struct Service {
+                std::string name;
+                std::jthread thread;
+            };
+
             std::vector<Service> &getServices() {
                 static std::vector<Service> services;
 
@@ -1007,14 +1016,18 @@ namespace hex {
             }
 
             void stopServices() {
-                for (auto &service : getServices()) {
+                auto &services = getServices();
+
+                for (auto &service : services) {
                     service.thread.request_stop();
                 }
 
-                for (auto &service : getServices()) {
+                for (auto &service : services) {
                     if (service.thread.joinable())
                         service.thread.join();
                 }
+
+                services.clear();
             }
 
         }

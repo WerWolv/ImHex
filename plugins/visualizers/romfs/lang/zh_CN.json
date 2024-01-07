@@ -1,0 +1,15 @@
+{
+    "code": "zh-CN",
+    "language": "Chinese (Simplified)",
+    "country": "China",
+    "fallback": false,
+    "translations": {
+        "hex.visualizers.pl_visualizer.3d.rotation": "旋转",
+        "hex.visualizers.pl_visualizer.3d.scale": "缩放",
+        "hex.visualizers.pl_visualizer.coordinates.latitude": "维度",
+        "hex.visualizers.pl_visualizer.coordinates.longitude": "精度",
+        "hex.visualizers.pl_visualizer.coordinates.query": "查找地址",
+        "hex.visualizers.pl_visualizer.coordinates.querying": "正在查找地址...",
+        "hex.visualizers.pl_visualizer.coordinates.querying_no_address": "找不到地址"
+    }
+}

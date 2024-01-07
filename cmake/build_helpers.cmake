@@ -68,8 +68,10 @@ macro(detectOS)
             set(PLUGINS_INSTALL_LOCATION "share/imhex/plugins")
         else()
             set(PLUGINS_INSTALL_LOCATION "${CMAKE_INSTALL_LIBDIR}/imhex/plugins")
-            # Warning : Do not work with portable versions such as appimage (because the path is hardcoded)
-            add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex") # "plugins" will be appended from the app
+
+            # Add System plugin location for plugins to be loaded from
+            # IMPORTANT: This does not work for Sandboxed or portable builds such as the Flatpak or AppImage release
+            add_compile_definitions(SYSTEM_PLUGINS_LOCATION="${CMAKE_INSTALL_FULL_LIBDIR}/imhex")
         endif()
 
     else ()
@@ -77,16 +79,6 @@ macro(detectOS)
     endif()
 
 endmacro()
-
-# Detect 32 vs. 64 bit system
-macro(detectArch)
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        add_compile_definitions(ARCH_64_BIT)
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        add_compile_definitions(ARCH_32_BIT)
-    endif()
-endmacro()
-
 
 macro(configurePackingResources)
     if (WIN32)
@@ -111,8 +103,9 @@ macro(configurePackingResources)
             )
             set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/resources/dist/windows/LICENSE.rtf")
         endif()
-    elseif (APPLE)
-        set (IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
+    elseif (APPLE OR ${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
+        set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
+        set(BUNDLE_NAME "imhex.app")
 
         if (IMHEX_GENERATE_PACKAGE)
             set(APPLICATION_TYPE MACOSX_BUNDLE)
@@ -129,9 +122,9 @@ macro(configurePackingResources)
             string(TIMESTAMP CURR_YEAR "%Y")
             set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 - ${CURR_YEAR} WerWolv. All rights reserved." )
             if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
-                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/imhex.app")
+                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${BUNDLE_NAME}")
             else ()
-                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/imhex.app")
+                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
             endif()
 
             set(PLUGINS_INSTALL_LOCATION "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
@@ -147,28 +140,28 @@ macro(createPackage)
     foreach (plugin IN LISTS PLUGINS)
         add_subdirectory("plugins/${plugin}")
         if (TARGET ${plugin})
-            get_target_property(IS_RUST_PROJECT ${plugin} RUST_PROJECT)
-
             set_target_properties(${plugin} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
             set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
 
-            if (IS_RUST_PROJECT)
-                set_target_properties(${plugin} PROPERTIES CARGO_BUILD_TARGET_DIR  ${CMAKE_BINARY_DIR}/plugins)
-
-                get_target_property(PLUGIN_LOCATION ${plugin} LOCATION)
-
-                install(FILES "${PLUGIN_LOCATION}/../${plugin}.hexplug" DESTINATION "${PLUGINS_INSTALL_LOCATION}" PERMISSIONS ${LIBRARY_PERMISSIONS})
-            else ()
-                if (APPLE)
-                    if (IMHEX_GENERATE_PACKAGE)
-                        set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PLUGINS_INSTALL_LOCATION})
-                    else ()
-                        set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
-                    endif ()
+            if (APPLE)
+                if (IMHEX_GENERATE_PACKAGE)
+                    set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PLUGINS_INSTALL_LOCATION})
                 else ()
-                    install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                    set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
                 endif ()
-            endif ()
+            else ()
+                if (WIN32)
+                    get_target_property(target_type ${plugin} TYPE)
+                    if (target_type STREQUAL "SHARED_LIBRARY")
+                        install(TARGETS ${plugin} RUNTIME DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                    else ()
+                        install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                    endif()
+                else()
+                    install(TARGETS ${plugin} LIBRARY DESTINATION ${PLUGINS_INSTALL_LOCATION})
+                endif()
+
+            endif()
 
             add_dependencies(imhex_all ${plugin})
         endif ()
@@ -180,12 +173,17 @@ macro(createPackage)
         # Install binaries directly in the prefix, usually C:\Program Files\ImHex.
         set(CMAKE_INSTALL_BINDIR ".")
 
+        set(PLUGIN_TARGET_FILES "")
+        foreach (plugin IN LISTS PLUGINS)
+            list(APPEND PLUGIN_TARGET_FILES "$<TARGET_FILE:${plugin}>")
+        endforeach ()
+
         # Grab all dynamically linked dependencies.
-        INSTALL(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
-        INSTALL(CODE "LIST(APPEND DEP_FOLDERS \${PY_PARENT})")
+        install(CODE "set(CMAKE_INSTALL_BINDIR \"${CMAKE_INSTALL_BINDIR}\")")
+        install(CODE "set(PLUGIN_TARGET_FILES \"${PLUGIN_TARGET_FILES}\")")
         install(CODE [[
         file(GET_RUNTIME_DEPENDENCIES
-            EXECUTABLES $<TARGET_FILE:builtin> $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
+            EXECUTABLES ${PLUGIN_TARGET_FILES} $<TARGET_FILE:libimhex> $<TARGET_FILE:main>
             RESOLVED_DEPENDENCIES_VAR _r_deps
             UNRESOLVED_DEPENDENCIES_VAR _u_deps
             CONFLICTING_DEPENDENCIES_PREFIX _c_deps
@@ -230,43 +228,46 @@ macro(createPackage)
 
     endif()
 
-    if (IMHEX_GENERATE_PACKAGE AND APPLE)
-        include(PostprocessBundle)
+    if (APPLE)
+        if (IMHEX_GENERATE_PACKAGE)
+            include(PostprocessBundle)
 
-        set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
+            set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
 
-        set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
+            set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
 
-        # Fix rpath
-        add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
+            # Fix rpath
+            add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
 
-        # FIXME: Remove this once we move/integrate the plugins directory.
-        add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
-        add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
+            add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
+            add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
 
-        downloadImHexPatternsFiles("${IMHEX_BUNDLE_PATH}/Contents/MacOS")
+            downloadImHexPatternsFiles("${IMHEX_BUNDLE_PATH}/Contents/MacOS")
 
-        install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
-        install(TARGETS main BUNDLE DESTINATION ".")
-        install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
+            install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
+            install(TARGETS main BUNDLE DESTINATION ".")
 
-        # Update library references to make the bundle portable
-        postprocess_bundle(imhex_all main)
+            # Update library references to make the bundle portable
+            postprocess_bundle(imhex_all main)
 
-        # Enforce DragNDrop packaging.
-        set(CPACK_GENERATOR "DragNDrop")
+            # Enforce DragNDrop packaging.
+            set(CPACK_GENERATOR "DragNDrop")
 
-        set (CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
-        set (CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
+            set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns")
+            set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}/Contents/Info.plist")
+        endif()
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-        if(WIN32) # Forwarder is only needed on Windows
+        if (TARGET updater)
+            install(TARGETS updater RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        endif()
+        if (TARGET main-forwarder)
             install(TARGETS main-forwarder BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR})
         endif()
     endif()
 
     if (IMHEX_GENERATE_PACKAGE)
-        set (CPACK_BUNDLE_NAME "ImHex")
+        set(CPACK_BUNDLE_NAME "ImHex")
 
         include(CPack)
     endif()
@@ -395,6 +396,35 @@ function(verifyCompiler)
     endif()
 endfunction()
 
+macro(detectBundledPlugins)
+    file(GLOB PLUGINS_DIRS "plugins/*")
+
+    if (NOT DEFINED IMHEX_INCLUDE_PLUGINS)
+        foreach(PLUGIN_DIR ${PLUGINS_DIRS})
+            if (EXISTS "${PLUGIN_DIR}/CMakeLists.txt")
+                get_filename_component(PLUGIN_NAME ${PLUGIN_DIR} NAME)
+                if (NOT (${PLUGIN_NAME} IN_LIST IMHEX_EXCLUDE_PLUGINS))
+                    list(APPEND PLUGINS ${PLUGIN_NAME})
+                endif ()
+            endif()
+        endforeach()
+    else()
+        set(PLUGINS ${IMHEX_INCLUDE_PLUGINS})
+    endif()
+
+    foreach(PLUGIN_NAME ${PLUGINS})
+        message(STATUS "Enabled bundled plugin '${PLUGIN_NAME}'")
+    endforeach()
+
+    if (NOT PLUGINS)
+        message(FATAL_ERROR "No bundled plugins enabled")
+    endif()
+
+    if (NOT ("builtin" IN_LIST PLUGINS))
+        message(FATAL_ERROR "The 'builtin' plugin is required for ImHex to work!")
+    endif ()
+endmacro()
+
 macro(setVariableInParent variable value)
     get_directory_property(hasParent PARENT_DIRECTORY)
 
@@ -429,7 +459,7 @@ function(downloadImHexPatternsFiles dest)
     endif ()
 
     if (EXISTS ${imhex_patterns_SOURCE_DIR})
-        set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic)
+        set(PATTERNS_FOLDERS_TO_INSTALL constants encodings includes patterns magic nodes)
         foreach (FOLDER ${PATTERNS_FOLDERS_TO_INSTALL})
             install(DIRECTORY "${imhex_patterns_SOURCE_DIR}/${FOLDER}" DESTINATION ${dest} PATTERN "**/_schema.json" EXCLUDE)
         endforeach ()
@@ -561,24 +591,6 @@ macro(addBundledLibraries)
         find_package(LLVM REQUIRED Demangle)
     endif()
 
-    if (NOT USE_SYSTEM_YARA)
-        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/yara EXCLUDE_FROM_ALL)
-        set_target_properties(libyara PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        set(YARA_LIBRARIES libyara)
-    else()
-        find_package(PkgConfig REQUIRED)
-        pkg_check_modules(YARA REQUIRED IMPORTED_TARGET yara)
-    endif()
-
-    if (NOT USE_SYSTEM_MINIAUDIO)
-        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/miniaudio EXCLUDE_FROM_ALL)
-        set_target_properties(miniaudio PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        set(MINIAUDIO_LIBRARIES miniaudio)
-    else()
-        find_package(PkgConfig REQUIRED)
-        pkg_check_modules(miniaudio REQUIRED IMPORTED_TARGET miniaudio)
-    endif()
-
     if (NOT USE_SYSTEM_JTHREAD)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/jthread EXCLUDE_FROM_ALL)
         set(JTHREAD_LIBRARIES jthread)
@@ -589,20 +601,6 @@ macro(addBundledLibraries)
         add_library(jthread INTERFACE)
         target_include_directories(jthread INTERFACE ${JOSUTTIS_JTHREAD_INCLUDE_DIRS})
         set(JTHREAD_LIBRARIES jthread)
-    endif()
-
-    if (NOT USE_SYSTEM_CAPSTONE)
-        set(CAPSTONE_BUILD_STATIC_RUNTIME OFF CACHE BOOL "Disable shared library building")
-        set(CAPSTONE_BUILD_SHARED OFF CACHE BOOL "Disable shared library building")
-        set(CAPSTONE_BUILD_TESTS OFF CACHE BOOL "Disable tests")
-        add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/capstone EXCLUDE_FROM_ALL)
-        set_target_properties(capstone PROPERTIES POSITION_INDEPENDENT_CODE ON)
-        target_compile_options(capstone PRIVATE -Wno-unused-function)
-        set(CAPSTONE_LIBRARIES "capstone")
-        set(CAPSTONE_INCLUDE_DIRS ${THIRD_PARTY_LIBS_FOLDER}/capstone/include)
-    else()
-        find_package(PkgConfig REQUIRED)
-        pkg_search_module(CAPSTONE 4.0.2 REQUIRED capstone)
     endif()
 
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
@@ -679,10 +677,9 @@ function(generatePDBs)
                 WORKING_DIRECTORY ${cv2pdb_SOURCE_DIR}
                 COMMAND
                 (
-                    ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:${PDB}> ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.bak &&
                     ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
-                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.bak &&
-                    ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.bak
+                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe
+                    $<TARGET_FILE:${PDB}>
                 ) || (exit 0)
                 DEPENDS $<TARGET_FILE:${PDB}>
                 COMMAND_EXPAND_LISTS)
@@ -694,10 +691,33 @@ function(generatePDBs)
 endfunction()
 
 function(generateSDKDirectory)
-    set(SDK_PATH "./sdk")
+    if (WIN32)
+        set(SDK_PATH "./sdk")
+    elseif (APPLE)
+        set(SDK_PATH "${BUNDLE_NAME}/Contents/Resources/sdk")
+    else()
+        set(SDK_PATH "share/imhex/sdk")
+    endif()
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex/include DESTINATION "${SDK_PATH}")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party")
+    if (NOT USE_SYSTEM_FMT)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
+    if (NOT USE_SYSTEM_NLOHMANN_JSON)
+        install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
+    endif()
+
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
+    install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/sdk/ DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
     install(TARGETS libimhex RUNTIME DESTINATION "${SDK_PATH}/lib")
+    install(TARGETS libimhex LIBRARY DESTINATION "${SDK_PATH}/lib")
+endfunction()
+
+function(addIncludesFromLibrary target library)
+    get_target_property(library_include_dirs ${library} INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(${target} PRIVATE ${library_include_dirs})
 endfunction()

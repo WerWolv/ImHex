@@ -1,6 +1,6 @@
 #include "content/providers/memory_file_provider.hpp"
 #include "content/providers/file_provider.hpp"
-#include "content/popups/popup_text_input.hpp"
+#include <popups/popup_text_input.hpp>
 
 #include <cstring>
 
@@ -53,9 +53,9 @@ namespace hex::plugin::builtin {
             if (auto fileProvider = dynamic_cast<FileProvider*>(newProvider); fileProvider != nullptr) {
                 fileProvider->setPath(path);
 
-                if (!fileProvider->open())
+                if (!fileProvider->open()) {
                     ImHexApi::Provider::remove(newProvider);
-                else {
+                } else {
                     MovePerProviderData::post(this, fileProvider);
 
                     fileProvider->markDirty(false);
@@ -146,7 +146,7 @@ namespace hex::plugin::builtin {
     }
 
     void MemoryFileProvider::renameFile() {
-        PopupTextInput::open("hex.builtin.provider.mem_file.rename", "hex.builtin.provider.mem_file.rename.desc", [this](const std::string &name) {
+        ui::PopupTextInput::open("hex.builtin.provider.mem_file.rename", "hex.builtin.provider.mem_file.rename.desc", [this](const std::string &name) {
             m_name = name;
             RequestUpdateWindowTitle::post();
         });

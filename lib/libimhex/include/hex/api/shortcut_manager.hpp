@@ -448,7 +448,7 @@ namespace hex {
         [[nodiscard]] static std::optional<Shortcut> getPreviousShortcut();
 
         [[nodiscard]] static std::vector<ShortcutEntry> getGlobalShortcuts();
-        [[nodiscard]] static std::vector<ShortcutEntry> getViewShortcuts(View *view);
+        [[nodiscard]] static std::vector<ShortcutEntry> getViewShortcuts(const View *view);
 
         [[nodiscard]] static bool updateShortcut(const Shortcut &oldShortcut, const Shortcut &newShortcut, View *view = nullptr);
     };

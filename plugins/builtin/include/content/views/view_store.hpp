@@ -59,16 +59,6 @@ namespace hex::plugin::builtin {
         [[nodiscard]] ImVec2 getMaxSize() const override { return scaled({ 900, 700 }); }
 
     private:
-        HttpRequest m_httpRequest = HttpRequest("GET", "");
-        std::future<HttpRequest::Result<std::string>> m_apiRequest;
-        std::future<HttpRequest::Result<std::string>> m_download;
-        std::fs::path m_downloadPath;
-        RequestStatus m_requestStatus = RequestStatus::NotAttempted;
-
-        std::vector<StoreCategory> m_categories;
-        TaskHolder m_updateAllTask;
-        std::atomic<u32> m_updateCount = 0;
-
         void drawStore();
         void drawTab(StoreCategory &category);
         void handleDownloadFinished(const StoreCategory &category, StoreEntry &entry);
@@ -78,8 +68,19 @@ namespace hex::plugin::builtin {
 
         void addCategory(const UnlocalizedString &unlocalizedName, const std::string &requestName, fs::ImHexPath path, std::function<void()> downloadCallback = []{});
 
-        bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url, bool update);
+        bool download(fs::ImHexPath pathType, const std::string &fileName, const std::string &url);
         bool remove(fs::ImHexPath pathType, const std::string &fileName);
+
+    private:
+        HttpRequest m_httpRequest = HttpRequest("GET", "");
+        std::future<HttpRequest::Result<std::string>> m_apiRequest;
+        std::future<HttpRequest::Result<std::string>> m_download;
+        std::fs::path m_downloadPath;
+        RequestStatus m_requestStatus = RequestStatus::NotAttempted;
+
+        std::vector<StoreCategory> m_categories;
+        TaskHolder m_updateAllTask;
+        std::atomic<u32> m_updateCount = 0;
     };
 
 }

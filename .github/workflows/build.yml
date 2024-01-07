@@ -45,20 +45,11 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         msystem: mingw64
-        pacboy: >-
-          gcc:p
-          lld:p
-          cmake:p
-          ccache:p
-          glfw:p
-          file:p
-          mbedtls:p
-          freetype:p
-          dlfcn:p
-          libbacktrace:p
-          ninja:p
-          curl-winssl:p
-          capstone:p
+
+    - name: ⬇️ Install dependencies
+      run: |
+        set -x
+        dist/get_deps_msys2.sh
 
     - name: ⬇️ Install .NET
       uses: actions/setup-dotnet@v3
@@ -95,7 +86,7 @@ jobs:
         echo "ImHex checks for the existence of this file to determine if it is running in portable mode. You should not delete this file" > $PWD/install/PORTABLE
 
     - name: ⬆️ Upload Windows Installer
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: Windows Installer x86_64
@@ -103,7 +94,7 @@ jobs:
           imhex-*.msi
 
     - name: ⬆️ Upload Portable ZIP
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: Windows Portable x86_64
@@ -120,7 +111,7 @@ jobs:
         mv opengl32.dll build/install
 
     - name: ⬆️ Upload NoGPU Portable ZIP
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: Windows Portable NoGPU x86_64
@@ -238,15 +229,17 @@ jobs:
         ninja package
 
     - name: ⬆️ Upload DMG
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
         name: macOS DMG${{matrix.suffix}} x86_64
         path: build/*.dmg
 
-  macos-arm64:
+  macos-arm64-build:
     runs-on: ubuntu-22.04
     name: 🍎 macOS 12.1 arm64
+    outputs:
+      IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
     steps:
     - name: 🧰 Checkout
       uses: actions/checkout@v3
@@ -266,13 +259,15 @@ jobs:
         cache-target: /cache
 
     - name: 🛠️ Build using docker
+      id: build
       run: |
+        echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_OUTPUT
         docker buildx build . -f dist/macOS/arm64.Dockerfile --progress=plain --build-arg 'JOBS=4' --build-arg "BUILD_TYPE=$(BUILD_TYPE)" --build-context imhex=$(pwd) --output out
 
     - name: ⬆️ Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: macOS ZIP arm64
+        name: macos_arm64_intermediate
         path: out/
 
       # See https://github.com/actions/cache/issues/342#issuecomment-1711054115
@@ -282,7 +277,56 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
           gh extension install actions/gh-actions-cache
-          gh actions-cache delete "build-macos-arm64-cache" --confirm
+          gh actions-cache delete "build-macos-arm64-cache" --confirm || true
+
+  macos-arm64-package:
+    runs-on: macos-12
+    name: 🍎 macOS 12.1 arm64 Packaging
+    needs: macos-arm64-build
+    env:
+      IMHEX_VERSION: ${{ needs.macos-arm64-build.outputs.IMHEX_VERSION }}
+    steps:
+      - name: ⬇️ Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos_arm64_intermediate
+          path: out
+
+      - name: 🗑️ Delete artifact
+        uses: geekyeggo/delete-artifact@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          name: macos_arm64_intermediate
+
+      - name: ✒️ Fix Signature
+        run: |
+          set -x
+          cd out
+          codesign --remove-signature ImHex.app
+          codesign --force --deep --sign - ImHex.app
+
+      - name: 📁 Fix permissions
+        run: |
+          set -x
+          cd out
+          chmod -R 755 ImHex.app/
+
+      - name: 📦 Create DMG
+        run: |
+          set -x
+          mkdir bundle
+          mv out/ImHex.app bundle
+          cd bundle
+          ln -s /Applications Applications
+          cd ..
+          hdiutil create -volname "ImHex" -srcfolder bundle -ov -format UDZO imhex-${{env.IMHEX_VERSION}}-macOS-arm64.dmg
+
+      - name: ⬆️ Upload DMG
+        uses: actions/upload-artifact@v4
+        with:
+          if-no-files-found: error
+          name: macOS DMG arm64
+          path: ./*.dmg
   
   # Ubuntu build
   ubuntu:
@@ -335,14 +379,9 @@ jobs:
         with:
           dotnet-version: '8.0.100'
 
-      - name: 🏔️ Set Environment variables
-        run: |
-          echo COMMIT_SHA_SHORT=$(git rev-parse --short HEAD) >> $GITHUB_ENV
-          echo COMMIT_SHA_LONG=$(git rev-parse HEAD) >> $GITHUB_ENV
-          echo COMMIT_BRANCH=$(git rev-parse --abbrev-ref HEAD) >> $GITHUB_ENV
-
       # Ubuntu cmake build
       - name: 🛠️ Build
+        shell: bash
         run: |
           set -x
           git config --global --add safe.directory '*'
@@ -354,9 +393,9 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
             -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-            -DIMHEX_COMMIT_HASH_SHORT="${{ env.COMMIT_SHA_SHORT }}"   \
-            -DIMHEX_COMMIT_HASH_LONG="${{ env.COMMIT_SHA_LONG }}"     \
-            -DIMHEX_COMMIT_BRANCH="${{ env.COMMIT_BRANCH }}"          \
+            -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"              \
+            -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
+            -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
             -DIMHEX_ENABLE_LTO=ON                                     \
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
             -DDOTNET_EXECUTABLE="dotnet"                              \
@@ -374,7 +413,7 @@ jobs:
           mv build/DebDir.deb imhex-${{env.IMHEX_VERSION}}-Ubuntu-${{ matrix.release_num }}-x86_64.deb
 
       - name: ⬆️ Upload DEB
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Ubuntu ${{ matrix.release_num }} DEB x86_64
@@ -410,14 +449,14 @@ jobs:
 
 
       - name: ⬆️ Upload AppImage
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Linux AppImage x86_64
           path: 'out/*.AppImage'
 
       - name: ⬆️ Upload AppImage zsync
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: Linux AppImage zsync x86_64
@@ -520,7 +559,7 @@ jobs:
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: ArchLinux .pkg.tar.zst x86_64
@@ -648,7 +687,7 @@ jobs:
           $GITHUB_WORKSPACE/imhex-${{env.IMHEX_VERSION}}-${{matrix.name}}-${{matrix.release_num}}-x86_64.rpm
 
       - name: ⬆️ Upload RPM
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           if-no-files-found: error
           name: ${{ matrix.name }} ${{ matrix.release_num }} RPM x86_64

@@ -38,7 +38,7 @@ namespace hex {
         }
 
         const T& get(prv::Provider *provider = ImHexApi::Provider::get()) const {
-            return m_data[provider];
+            return m_data.at(provider);
         }
 
         void set(const T &data, prv::Provider *provider = ImHexApi::Provider::get()) {
@@ -106,6 +106,7 @@ namespace hex {
             EventProviderOpened::unsubscribe(this);
             EventProviderDeleted::unsubscribe(this);
             EventImHexClosing::unsubscribe(this);
+            MovePerProviderData::unsubscribe(this);
         }
 
     private:

@@ -197,7 +197,7 @@ namespace hex::plugin::builtin {
 
     class NodeBufferPatch : public dp::Node {
     public:
-        NodeBufferPatch() : Node("hex.builtin.nodes.buffer.patch.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.patch.input.patch"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.builtin.common.address"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
+        NodeBufferPatch() : Node("hex.builtin.nodes.buffer.patch.header", { dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.input"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Buffer, "hex.builtin.nodes.buffer.patch.input.patch"), dp::Attribute(dp::Attribute::IOType::In, dp::Attribute::Type::Integer, "hex.ui.common.address"), dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer, "hex.builtin.nodes.common.output") }) { }
 
         void process() override {
             auto buffer     = this->getBufferOnInput(0);

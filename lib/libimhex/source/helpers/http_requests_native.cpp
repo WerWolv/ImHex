@@ -85,8 +85,8 @@ namespace hex {
         s_proxyUrl = std::move(proxy);
     }
 
-    void HttpRequest::setProxyState(bool state) {
-        s_proxyState = state;
+    void HttpRequest::setProxyState(bool enabled) {
+        s_proxyState = enabled;
     }
 
     void HttpRequest::checkProxyErrors() {

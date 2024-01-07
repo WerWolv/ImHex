@@ -5,6 +5,7 @@
 #include <string>
 
 #include <wolv/io/fs.hpp>
+#include <hex/helpers/logger.hpp>
 
 struct ImGuiContext;
 
@@ -16,8 +17,14 @@ namespace hex {
         std::function<void(const std::vector<std::string>&)> callback;
     };
 
+    struct Feature {
+        std::string name;
+        bool enabled;
+    };
+
     struct PluginFunctions {
         using InitializePluginFunc     = void (*)();
+        using InitializeLibraryFunc    = void (*)();
         using GetPluginNameFunc        = const char *(*)();
         using GetPluginAuthorFunc      = const char *(*)();
         using GetPluginDescriptionFunc = const char *(*)();
@@ -25,8 +32,10 @@ namespace hex {
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
         using IsBuiltinPluginFunc      = bool (*)();
         using GetSubCommandsFunc       = void* (*)();
+        using GetFeaturesFunc          = void* (*)();
 
         InitializePluginFunc        initializePluginFunction        = nullptr;
+        InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
         GetPluginNameFunc           getPluginNameFunction           = nullptr;
         GetPluginAuthorFunc         getPluginAuthorFunction         = nullptr;
         GetPluginDescriptionFunc    getPluginDescriptionFunction    = nullptr;
@@ -34,16 +43,20 @@ namespace hex {
         SetImGuiContextFunc         setImGuiContextFunction         = nullptr;
         IsBuiltinPluginFunc         isBuiltinPluginFunction         = nullptr;
         GetSubCommandsFunc          getSubCommandsFunction          = nullptr;
+        GetFeaturesFunc             getFeaturesFunction             = nullptr;
     };
 
     class Plugin {
     public:
         explicit Plugin(const std::fs::path &path);
-        explicit Plugin(PluginFunctions functions);
+        explicit Plugin(const PluginFunctions &functions);
 
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;
         ~Plugin();
+
+        Plugin& operator=(const Plugin &) = delete;
+        Plugin& operator=(Plugin &&other) noexcept;
 
         [[nodiscard]] bool initializePlugin() const;
         [[nodiscard]] std::string getPluginName() const;
@@ -55,9 +68,13 @@ namespace hex {
 
         [[nodiscard]] const std::fs::path &getPath() const;
 
+        [[nodiscard]] bool isValid() const;
         [[nodiscard]] bool isLoaded() const;
 
         [[nodiscard]] std::span<SubCommand> getSubCommands() const;
+        [[nodiscard]] std::span<Feature> getFeatures() const;
+
+        [[nodiscard]] bool isLibraryPlugin() const;
 
     private:
         uintptr_t m_handle = 0;

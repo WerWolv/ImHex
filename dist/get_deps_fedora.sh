@@ -12,4 +12,8 @@ dnf install -y      \
   glfw-devel        \
   lld               \
   mbedtls-devel     \
-  gtk3-devel
+  gtk3-devel        \
+  libzstd-devel     \
+  zlib-devel        \
+  bzip2-devel       \
+  xz-devel

@@ -32,13 +32,11 @@ namespace hex {
         void setupNativeWindow();
         void beginNativeWindowFrame();
         void endNativeWindowFrame();
-        void drawTitleBar() const;
+        void drawTitleBar();
 
         void frameBegin();
         void frame();
         void frameEnd();
-
-        void processEvent() { m_hadEvent = true; }
 
         void initGLFW();
         void initImGui();
@@ -60,13 +58,11 @@ namespace hex {
         std::list<std::string> m_popupsToOpen;
         std::vector<int> m_pressedKeys;
 
-        bool m_buttonDown = false;
-
-        bool m_hadEvent = false;
-        bool m_frameRateTemporarilyUnlocked = false;
-        double m_frameRateUnlockTime = 0;
+        bool m_unlockFrameRate = false;
 
         ImGuiExt::ImHexCustomData m_imguiCustomData;
+
+        u32 m_searchBarPosition;
     };
 
 }

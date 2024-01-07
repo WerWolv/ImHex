@@ -1,5 +1,5 @@
 #include "content/views/view_data_processor.hpp"
-#include "content/popups/popup_notification.hpp"
+#include <toasts/toast_notification.hpp>
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
@@ -213,9 +213,10 @@ namespace hex::plugin::builtin {
             // Find the index of an attribute by its id
             auto indexFromId = [this](u32 id) -> std::optional<u32> {
                 const auto &attributes = this->getAttributes();
-                for (u32 i = 0; i < attributes.size(); i++)
+                for (u32 i = 0; i < attributes.size(); i++) {
                     if (u32(attributes[i].getId()) == id)
                         return i;
+                }
                 return std::nullopt;
             };
 
@@ -355,7 +356,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "data_processor.json",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 std::string save = tar.readString(basePath);
 
                 ViewDataProcessor::loadNodes(m_mainWorkspace.get(provider), nlohmann::json::parse(save));
@@ -363,7 +364,7 @@ namespace hex::plugin::builtin {
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 tar.writeString(basePath, ViewDataProcessor::saveNodes(m_mainWorkspace.get(provider)).dump(4));
 
                 return true;
@@ -599,11 +600,11 @@ namespace hex::plugin::builtin {
 
             // Show a different context menu depending on if a node, a link
             // or the background was right-clicked
-            if (ImNodes::IsNodeHovered(&m_rightClickedId))
+            if (ImNodes::IsNodeHovered(&m_rightClickedId)) {
                 ImGui::OpenPopup("Node Menu");
-            else if (ImNodes::IsLinkHovered(&m_rightClickedId))
+            } else if (ImNodes::IsLinkHovered(&m_rightClickedId)) {
                 ImGui::OpenPopup("Link Menu");
-            else {
+            } else {
                 ImGui::OpenPopup("Context Menu");
                 this->reloadCustomNodes();
             }
@@ -852,7 +853,7 @@ namespace hex::plugin::builtin {
             int nodeId;
             if (ImNodes::IsNodeHovered(&nodeId) && workspace.currNodeError.has_value() && workspace.currNodeError->node->getId() == nodeId) {
                 ImGui::BeginTooltip();
-                ImGui::TextUnformatted("hex.builtin.common.error"_lang);
+                ImGui::TextUnformatted("hex.ui.common.error"_lang);
                 ImGui::Separator();
                 ImGui::TextUnformatted(workspace.currNodeError->message.c_str());
                 ImGui::EndTooltip();
@@ -1194,7 +1195,7 @@ namespace hex::plugin::builtin {
 
             m_updateNodePositions = true;
         } catch (nlohmann::json::exception &e) {
-            PopupError::open(hex::format("Failed to load nodes: {}", e.what()));
+            ui::ToastError::open(hex::format("Failed to load nodes: {}", e.what()));
         }
     }
 

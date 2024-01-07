@@ -14,7 +14,6 @@
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
-#include <hex/helpers/stacktrace.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
@@ -40,14 +39,13 @@
 
 #include <GLFW/glfw3.h>
 #include <hex/ui/toast.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex {
 
     using namespace std::literals::chrono_literals;
 
     Window::Window() {
-        stacktrace::initialize();
-
         constexpr static auto openEmergencyPopup = [](const std::string &title){
             TaskManager::doLater([title] {
                 for (const auto &provider : ImHexApi::Provider::getProviders())
@@ -170,48 +168,45 @@ namespace hex {
     }
 
     void Window::loop() {
-        u64 frameCount = 0;
         while (!glfwWindowShouldClose(m_window)) {
             m_lastStartFrameTime = glfwGetTime();
+
+            // Determine if the application should be in long sleep mode
+            bool shouldLongSleep = !m_unlockFrameRate;
+
+            // Wait 5 frames before actually enabling the long sleep mode to make animations not stutter
+            constexpr static auto LongSleepTimeout = 5;
+            static i32 lockTimeout = 0;
+            if (!shouldLongSleep) {
+                lockTimeout = LongSleepTimeout;
+            } else if (lockTimeout > 0) {
+                lockTimeout -= 1;
+            }
+
+            if (shouldLongSleep && lockTimeout > 0)
+                shouldLongSleep = false;
+
+            m_unlockFrameRate = false;
 
             if (!glfwGetWindowAttrib(m_window, GLFW_VISIBLE) || glfwGetWindowAttrib(m_window, GLFW_ICONIFIED)) {
                 // If the application is minimized or not visible, don't render anything
                 glfwWaitEvents();
             } else {
-                // If no events have been received in a while, lower the frame rate
-                {
-                    // If the mouse is down, the mouse is moving or a popup is open, we don't want to lower the frame rate
-                    bool frameRateUnlocked =
-                            ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId) ||
-                            TaskManager::getRunningTaskCount() > 0 ||
-                            m_buttonDown ||
-                            m_hadEvent ||
-                            !m_pressedKeys.empty() ||
-                            frameCount < 100;
+                // If the application is visible, render a frame
 
-                    m_hadEvent = false;
-
+                // If the application is in long sleep mode, only render a frame every 200ms
+                // Long sleep mode is enabled automatically after a few frames if the window content hasn't changed
+                // and no events have been received
+                if (shouldLongSleep) {
                     // Calculate the time until the next frame
-                    const double timeout = std::max(0.0, (1.0 / 5.0) - (glfwGetTime() - m_lastStartFrameTime));
+                    constexpr static auto LongSleepFPS = 5.0;
+                    const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
 
-                    // If the frame rate has been unlocked for 5 seconds, lock it again
-                    if ((m_lastStartFrameTime - m_frameRateUnlockTime) > 5 && m_frameRateTemporarilyUnlocked && !frameRateUnlocked) {
-                        m_frameRateTemporarilyUnlocked = false;
-                    }
-
-                    // If the frame rate is locked, wait for events with a timeout
-                    if (frameRateUnlocked && !m_frameRateTemporarilyUnlocked) {
-                        m_frameRateTemporarilyUnlocked = true;
-                        m_frameRateUnlockTime = m_lastStartFrameTime;
-                    }
-
-                    if (!m_frameRateTemporarilyUnlocked)
-                        glfwWaitEventsTimeout(timeout);
+                    glfwWaitEventsTimeout(timeout);
                 }
             }
 
             this->fullFrame();
-            frameCount += 1;
 
             ImHexApi::System::impl::setLastFrameTime(glfwGetTime() - m_lastStartFrameTime);
 
@@ -223,7 +218,7 @@ namespace hex {
             } else if (targetFPS > 200) {
                 glfwSwapInterval(0);
             } else {
-                if (m_frameRateTemporarilyUnlocked) {
+                if (!shouldLongSleep) {
                     glfwSwapInterval(0);
                     const auto frameTime = glfwGetTime() - m_lastStartFrameTime;
                     const auto targetFrameTime = 1.0 / targetFPS;
@@ -260,7 +255,7 @@ namespace hex {
         }
     }
 
-    void Window::drawTitleBar() const {
+    void Window::drawTitleBar() {
         auto titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
         auto buttonSize = ImVec2(titleBarHeight * 1.5F, titleBarHeight - 1);
 
@@ -270,8 +265,10 @@ namespace hex {
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
         const auto windowSize = ImHexApi::System::getMainWindowSize();
-        const auto searchBoxSize = ImVec2(std::sqrt(windowSize.x) * 14_scaled, titleBarHeight - 3_scaled);
+        const auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight - 3_scaled);
         const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 3_scaled);
+
+        m_searchBarPosition = searchBoxPos.x;
 
         // Custom titlebar buttons implementation for borderless window mode
         auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
@@ -380,9 +377,9 @@ namespace hex {
             ImGui::PopStyleVar();
 
             bool shouldDrawSidebar = [] {
-                if (const auto &items = ContentRegistry::Interface::impl::getSidebarItems(); items.empty())
+                if (const auto &items = ContentRegistry::Interface::impl::getSidebarItems(); items.empty()) {
                     return false;
-                else {
+                } else {
                     return std::any_of(items.begin(), items.end(), [](const auto &item) {
                         return item.enabledCallback();
                     });
@@ -529,9 +526,11 @@ namespace hex {
                     }
                 };
 
-                const auto windowWidth = ImHexApi::System::getMainWindowSize().x;
-                if (windowWidth > 1200_scaled) {
+                static u32 menuEndPos = 0;
+
+                if (menuEndPos < m_searchBarPosition) {
                     drawMenu();
+                    menuEndPos = ImGui::GetCursorPosX();
                 } else {
                     if (ImGui::BeginMenu(ICON_VS_MENU)) {
                         drawMenu();
@@ -595,7 +594,7 @@ namespace hex {
                         ImGui::TableNextColumn();
                         ImGui::TextUnformatted(wolv::util::toUTF8String(filePath).c_str());
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(wolv::io::fs::exists(filePath) ? ICON_VS_CHECK : ICON_VS_CLOSE);
+                        ImGui::TextUnformatted(wolv::io::fs::exists(filePath) ? "Yes" : "No");
                     }
                     ImGui::EndTable();
                 }
@@ -672,13 +671,19 @@ namespace hex {
 
         // Draw popup stack
         {
-            static bool popupDisplaying = false;
             static bool positionSet = false;
             static bool sizeSet = false;
             static double popupDelay = -2.0;
+            static u32 displayFrameCount = 0;
 
             static std::unique_ptr<impl::PopupBase> currPopup;
             static Lang name("");
+
+            AT_FIRST_TIME {
+                EventImHexClosing::subscribe([] {
+                    currPopup.reset();
+                });
+            };
 
             if (auto &popups = impl::PopupBase::getOpenPopups(); !popups.empty()) {
                 if (!ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopupId)) {
@@ -690,6 +695,7 @@ namespace hex {
                             popupDelay = -2.0;
                             currPopup = std::move(popups.back());
                             name = Lang(currPopup->getUnlocalizedName());
+                            displayFrameCount = 0;
 
                             ImGui::OpenPopup(name);
                             popups.pop_back();
@@ -723,8 +729,8 @@ namespace hex {
 
                 const auto createPopup = [&](bool displaying) {
                     if (displaying) {
+                        displayFrameCount += 1;
                         currPopup->drawContent();
-                        popupDisplaying = true;
 
                         if (ImGui::GetWindowSize().x > ImGui::GetStyle().FramePadding.x * 10)
                             sizeSet = true;
@@ -742,8 +748,6 @@ namespace hex {
                         }
 
                         ImGui::EndPopup();
-                    } else {
-                        popupDisplaying = false;
                     }
                 };
 
@@ -752,7 +756,11 @@ namespace hex {
                 else
                     createPopup(ImGui::BeginPopup(name, flags));
 
-                if (!popupDisplaying || currPopup->shouldClose()) {
+                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 10) {
+                    ImGui::OpenPopup(name);
+                }
+
+                if (currPopup->shouldClose()) {
                     log::debug("Closing popup '{}'", name);
                     positionSet = sizeSet = false;
 
@@ -763,41 +771,38 @@ namespace hex {
 
         // Draw Toasts
         {
-            static std::unique_ptr<impl::ToastBase> currToast;
-            if (currToast == nullptr) {
-                if (auto &queuedToasts = impl::ToastBase::getQueuedToasts(); !queuedToasts.empty()) {
-                    currToast = std::move(queuedToasts.front());
-                    queuedToasts.pop_front();
-
-                    currToast->setAppearTime(ImGui::GetTime());
-                }
-            } else {
+            u32 index = 0;
+            for (const auto &toast : impl::ToastBase::getQueuedToasts() | std::views::take(4)) {
+                const auto toastHeight = 60_scaled;
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 5_scaled);
-                ImGui::SetNextWindowSize(scaled({ 280, 60 }));
-                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }), ImGuiCond_Always, ImVec2(1, 1));
-                if (ImGui::Begin("##Toast", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs)) {
+                ImGui::SetNextWindowSize(ImVec2(280_scaled, toastHeight));
+                ImGui::SetNextWindowPos((ImHexApi::System::getMainWindowPosition() + ImHexApi::System::getMainWindowSize()) - scaled({ 10, 10 }) - scaled({ 0, (10 + toastHeight) * index }), ImGuiCond_Always, ImVec2(1, 1));
+                if (ImGui::Begin(hex::format("##Toast_{}", index).c_str(), nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing)) {
                     auto drawList = ImGui::GetWindowDrawList();
 
                     const auto min = ImGui::GetWindowPos();
                     const auto max = min + ImGui::GetWindowSize();
 
                     drawList->PushClipRect(min, min + scaled({ 5, 60 }));
-                    drawList->AddRectFilled(min, max, currToast->getColor(), 5_scaled);
+                    drawList->AddRectFilled(min, max, toast->getColor(), 5_scaled);
                     drawList->PopClipRect();
 
                     ImGui::Indent();
-                    currToast->draw();
+                    toast->draw();
                     ImGui::Unindent();
+
+                    if (ImGui::IsWindowHovered() || toast->getAppearTime() <= 0)
+                        toast->setAppearTime(ImGui::GetTime());
                 }
                 ImGui::End();
                 ImGui::PopStyleVar();
 
-                if ((currToast->getAppearTime() + impl::ToastBase::VisibilityTime) < ImGui::GetTime()) {
-                    currToast.reset();
-                }
+                index += 1;
             }
 
-
+            std::erase_if(impl::ToastBase::getQueuedToasts(), [](const auto &toast){
+                return toast->getAppearTime() > 0 && (toast->getAppearTime() + impl::ToastBase::VisibilityTime) < ImGui::GetTime();
+            });
         }
 
         // Run all deferred calls
@@ -831,9 +836,9 @@ namespace hex {
                 continue;
 
             const auto openViewCount = std::ranges::count_if(ContentRegistry::Views::impl::getEntries(), [](const auto &entry) {
-                const auto &[unlocalizedName, view] = entry;
+                const auto &[unlocalizedName, openView] = entry;
 
-                return view->hasViewMenuItemEntry() && view->shouldProcess();
+                return openView->hasViewMenuItemEntry() && openView->shouldProcess();
             });
 
             ImGuiWindowClass windowClass = {};
@@ -896,22 +901,49 @@ namespace hex {
 
         this->endNativeWindowFrame();
 
-        // Render UI
+        // Finalize ImGui frame
         ImGui::Render();
 
-        int displayWidth, displayHeight;
-        glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
-        glViewport(0, 0, displayWidth, displayHeight);
-        glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // Hash the draw data to determine if anything changed on the screen
+        // If not, there's no point in sending the draw data off to the GPU and swapping buffers
+        bool shouldRender = false;
+        {
+            u32 drawDataHash = 0;
+            static u32 previousDrawDataHash = 0;
 
-        GLFWwindow *backup_current_context = glfwGetCurrentContext();
+            for (const auto viewPort : ImGui::GetPlatformIO().Viewports) {
+                auto drawData = viewPort->DrawData;
+                for (int n = 0; n < drawData->CmdListsCount; n++) {
+                    const ImDrawList *cmdList = drawData->CmdLists[n];
+                    drawDataHash = ImHashData(cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert), drawDataHash);
+                }
+                for (int n = 0; n < drawData->CmdListsCount; n++) {
+                    const ImDrawList *cmdList = drawData->CmdLists[n];
+                    drawDataHash = ImHashData(cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx), drawDataHash);
+                }
+            }
+
+            shouldRender = drawDataHash != previousDrawDataHash;
+            previousDrawDataHash = drawDataHash;
+        }
+
+        if (shouldRender) {
+            int displayWidth, displayHeight;
+            glfwGetFramebufferSize(m_window, &displayWidth, &displayHeight);
+            glViewport(0, 0, displayWidth, displayHeight);
+            glClearColor(0.00F, 0.00F, 0.00F, 0.00F);
+            glClear(GL_COLOR_BUFFER_BIT);
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(m_window);
+
+            m_unlockFrameRate = true;
+        }
+
+        GLFWwindow *backupContext = glfwGetCurrentContext();
         ImGui::UpdatePlatformWindows();
         ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backup_current_context);
-
-        glfwSwapBuffers(m_window);
+        glfwMakeContextCurrent(backupContext);
 
         // Process layout load requests
         // NOTE: This needs to be done before a new frame is started, otherwise ImGui won't handle docking correctly
@@ -1033,10 +1065,11 @@ namespace hex {
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+
             win->frameBegin();
             win->frame();
             win->frameEnd();
-            win->processEvent();
         });
 
         // Register window resize callback
@@ -1047,45 +1080,26 @@ namespace hex {
             if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+            win->m_unlockFrameRate = true;
+
             win->frameBegin();
             win->frame();
             win->frameEnd();
-            win->processEvent();
         });
 
-        // Register mouse handling callback
-        glfwSetMouseButtonCallback(m_window, [](GLFWwindow *window, int button, int action, int mods) {
-            hex::unused(button, mods);
+        glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
+            if (auto g = ImGui::GetCurrentContext(); g == nullptr || g->WithinFrameScope) return;
 
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-
-            if (action == GLFW_PRESS)
-                win->m_buttonDown = true;
-            else if (action == GLFW_RELEASE)
-                win->m_buttonDown = false;
-            win->processEvent();
-        });
-
-        // Register scrolling callback
-        glfwSetScrollCallback(m_window, [](GLFWwindow *window, double xOffset, double yOffset) {
-            hex::unused(xOffset, yOffset);
-
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->processEvent();
+            win->m_unlockFrameRate = true;
         });
 
         #if !defined(OS_WEB)
             // Register key press callback
+            glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
             glfwSetKeyCallback(m_window, [](GLFWwindow *window, int key, int scanCode, int action, int mods) {
                 hex::unused(mods);
 
-                auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-
-                if (action == GLFW_RELEASE) {
-                    win->m_buttonDown = false;
-                } else {
-                    win->m_buttonDown = true;
-                }
 
                 // Handle A-Z keys using their ASCII value instead of the keycode
                 if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z) {
@@ -1107,21 +1121,26 @@ namespace hex {
                         key != GLFW_KEY_LEFT_SHIFT && key != GLFW_KEY_RIGHT_SHIFT &&
                         key != GLFW_KEY_LEFT_SUPER && key != GLFW_KEY_RIGHT_SUPER
                     ) {
+                        auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
+                        win->m_unlockFrameRate = true;
+
+                        if (!(mods & GLFW_MOD_NUM_LOCK)) {
+                            if (key == GLFW_KEY_KP_0) key = GLFW_KEY_INSERT;
+                            else if (key == GLFW_KEY_KP_1) key = GLFW_KEY_END;
+                            else if (key == GLFW_KEY_KP_2) key = GLFW_KEY_DOWN;
+                            else if (key == GLFW_KEY_KP_3) key = GLFW_KEY_PAGE_DOWN;
+                            else if (key == GLFW_KEY_KP_4) key = GLFW_KEY_LEFT;
+                            else if (key == GLFW_KEY_KP_6) key = GLFW_KEY_RIGHT;
+                            else if (key == GLFW_KEY_KP_7) key = GLFW_KEY_HOME;
+                            else if (key == GLFW_KEY_KP_8) key = GLFW_KEY_UP;
+                            else if (key == GLFW_KEY_KP_9) key = GLFW_KEY_PAGE_UP;
+                        }
+
                         win->m_pressedKeys.push_back(key);
                     }
                 }
-
-                win->processEvent();
             });
         #endif
-
-        // Register cursor position callback
-        glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double x, double y) {
-            hex::unused(x, y);
-
-            auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
-            win->processEvent();
-        });
 
         // Register window close callback
         glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
@@ -1229,7 +1248,7 @@ namespace hex {
             handler.ReadOpenFn = [](ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) -> void* { return ctx; };
 
             handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line) {
-                Window* window = static_cast<Window*>(handler->UserData);
+                auto window = static_cast<Window*>(handler->UserData);
 
                 for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                     std::string format = view->getUnlocalizedName().get() + "=%d";

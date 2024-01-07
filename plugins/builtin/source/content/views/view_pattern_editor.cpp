@@ -17,11 +17,14 @@
 #include <hex/helpers/magic.hpp>
 #include <hex/helpers/binary_pattern.hpp>
 
+#include <hex/providers/memory_provider.hpp>
+
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
 
-#include <content/popups/popup_file_chooser.hpp>
-#include <content/popups/popup_question.hpp>
+#include <popups/popup_file_chooser.hpp>
+#include <popups/popup_question.hpp>
+#include <toasts/toast_notification.hpp>
 
 #include <nlohmann/json.hpp>
 #include <chrono>
@@ -66,12 +69,13 @@ namespace hex::plugin::builtin {
                     paletteIndex = TextEditor::PaletteIndex::Default;
                 } else if (TokenizeCStyleIdentifier(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Identifier;
-                } else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd))
+                } else if (TokenizeCStyleNumber(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::Number;
-                else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd))
+                } else if (TokenizeCStyleCharacterLiteral(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::CharLiteral;
-                else if (TokenizeCStyleString(inBegin, inEnd, outBegin, outEnd))
+                } else if (TokenizeCStyleString(inBegin, inEnd, outBegin, outEnd)) {
                     paletteIndex = TextEditor::PaletteIndex::String;
+                }
 
                 return paletteIndex != TextEditor::PaletteIndex::Max;
             };
@@ -461,7 +465,7 @@ namespace hex::plugin::builtin {
         }
 
         if (m_dangerousFunctionCalled && !ImGui::IsPopupOpen(ImGuiID(0), ImGuiPopupFlags_AnyPopup)) {
-            PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
+            ui::PopupQuestion::open("hex.builtin.view.pattern_editor.dangerous_function.desc"_lang,
                 [this] {
                     m_dangerousFunctionsAllowed = DangerousFunctionPerms::Allow;
                 }, [this] {
@@ -974,9 +978,9 @@ namespace hex::plugin::builtin {
 
         if (ImGui::BeginTable("##sections_table", 3, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, size)) {
             ImGui::TableSetupScrollFreeze(0, 1);
-            ImGui::TableSetupColumn("hex.builtin.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
-            ImGui::TableSetupColumn("hex.builtin.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
-            ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
+            ImGui::TableSetupColumn("hex.ui.common.name"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("hex.ui.common.size"_lang, ImGuiTableColumnFlags_WidthStretch, 0.5F);
+            ImGui::TableSetupColumn("##button", ImGuiTableColumnFlags_WidthFixed, 50_scaled);
 
             ImGui::TableHeadersRow();
 
@@ -994,12 +998,8 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted("{} | 0x{:02X}", hex::toByteString(section.data.size()), section.data.size());
                     ImGui::TableNextColumn();
-                    if (ImGuiExt::IconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
-                        auto dataProvider = std::make_shared<MemoryFileProvider>();
-                        dataProvider->resize(section.data.size());
-                        dataProvider->writeRaw(0x00, section.data.data(), section.data.size());
-                        dataProvider->setReadOnly(true);
-
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_OPEN_PREVIEW, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        auto dataProvider = std::make_shared<prv::MemoryProvider>(section.data);
                         auto hexEditor = auto(m_sectionHexEditor);
 
                         hexEditor.setBackgroundHighlightCallback([this, id, &runtime](u64 address, const u8 *, size_t) -> std::optional<color_t> {
@@ -1033,9 +1033,9 @@ namespace hex::plugin::builtin {
                             });
 
                             const auto &patterns = [&, this] -> const auto& {
-                                if (patternProvider->isReadable() && *m_executionDone)
+                                if (patternProvider->isReadable() && *m_executionDone) {
                                     return runtime.getPatterns(id);
-                                else {
+                                } else {
                                     static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
                                     return empty;
                                 }
@@ -1044,6 +1044,18 @@ namespace hex::plugin::builtin {
                             if (*m_executionDone)
                                 patternDrawer->draw(patterns, &runtime, 150_scaled);
                         };
+                    }
+                    ImGui::SameLine();
+                    if (ImGuiExt::DimmedIconButton(ICON_VS_SAVE_AS, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                        fs::openFileBrowser(fs::DialogMode::Save, {}, [id, &runtime](const auto &path) {
+                            wolv::io::File file(path, wolv::io::File::Mode::Create);
+                            if (!file.isValid()) {
+                                ui::ToastError::open("hex.builtin.popup.error.create"_lang);
+                                return;
+                            }
+
+                            file.writeVector(runtime.getSection(id));
+                        });
                     }
 
                     ImGui::PopID();
@@ -1144,8 +1156,22 @@ namespace hex::plugin::builtin {
         if (!m_lastEvaluationProcessed) {
             if (!m_lastEvaluationResult) {
                 if (m_lastEvaluationError->has_value()) {
+                    const auto message = [this]{
+                        auto message = (*m_lastEvaluationError)->message;
+                        auto lines = wolv::util::splitString(message, "\n");
+
+                        std::ranges::transform(lines, lines.begin(), [](auto line) {
+                            if (line.size() >= 128)
+                                line = wolv::util::trim(line);
+
+                            return hex::limitStringLength(line, 128);
+                        });
+
+                        return wolv::util::combineStrings(lines, "\n");
+                    }();
+
                     TextEditor::ErrorMarkers errorMarkers = {
-                            { (*m_lastEvaluationError)->line, (*m_lastEvaluationError)->message }
+                            { (*m_lastEvaluationError)->line, message }
                     };
                     m_textEditor.SetErrorMarkers(errorMarkers);
                 }
@@ -1310,32 +1336,32 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.type"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.type"_lang);
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted(" {}", pattern->getTypeName());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.address"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.address"_lang);
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted(" 0x{:08X}", pattern->getOffset());
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.size"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.size"_lang);
                     ImGui::TableNextColumn();
                     ImGuiExt::TextFormatted(" {}", hex::toByteString(pattern->getSize()));
 
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted("{} ", "hex.builtin.common.endian"_lang);
+                    ImGuiExt::TextFormatted("{} ", "hex.ui.common.endian"_lang);
                     ImGui::TableNextColumn();
-                    ImGuiExt::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.builtin.common.little"_lang : "hex.builtin.common.big"_lang);
+                    ImGuiExt::TextFormatted(" {}", pattern->getEndian() == std::endian::little ? "hex.ui.common.little"_lang : "hex.ui.common.big"_lang);
 
                     if (const auto &comment = pattern->getComment(); !comment.empty()) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
-                        ImGuiExt::TextFormatted("{} ", "hex.builtin.common.comment"_lang);
+                        ImGuiExt::TextFormatted("{} ", "hex.ui.common.comment"_lang);
                         ImGui::TableNextColumn();
                         ImGui::TextWrapped(" \"%s\"", comment.c_str());
                     }
@@ -1546,9 +1572,9 @@ namespace hex::plugin::builtin {
                 if (newProvider != nullptr) {
                     m_consoleEditor.SetTextLines(m_console.get(newProvider));
                     m_textEditor.SetText(wolv::util::trim(m_sourceCode.get(newProvider)));
-                }
-                else
+                } else {
                     m_textEditor.SetText("");
+                }
             } else {
                 m_hasUnevaluatedChanges = true;
             }
@@ -1615,7 +1641,7 @@ namespace hex::plugin::builtin {
                                                         }
                                                     }
 
-                                                    PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
+                                                    ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
                                                                                [this, provider](const std::fs::path &path) {
                                                                                    this->loadPatternFile(path, provider);
                                                                                    AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
@@ -1648,16 +1674,18 @@ namespace hex::plugin::builtin {
             [&, this] {
                 if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
                     if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {
-                        for (const auto &[type, size] : Types)
+                        for (const auto &[type, size] : Types) {
                             if (ImGui::MenuItem(type))
                                 appendVariable(type);
+                        }
                         ImGui::EndMenu();
                     }
 
                     if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.array"_lang)) {
-                        for (const auto &[type, size] : Types)
+                        for (const auto &[type, size] : Types) {
                             if (ImGui::MenuItem(type))
                                 appendArray(type, size);
+                        }
                         ImGui::EndMenu();
                     }
 
@@ -1762,7 +1790,7 @@ namespace hex::plugin::builtin {
         ProjectFile::registerPerProviderHandler({
             .basePath = "pattern_source_code.hexpat",
             .required = false,
-            .load = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .load = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 std::string sourceCode = tar.readString(basePath);
 
                 if (!m_syncPatternSourceCode)
@@ -1773,7 +1801,7 @@ namespace hex::plugin::builtin {
 
                 return true;
             },
-            .store = [this](prv::Provider *provider, const std::fs::path &basePath, Tar &tar) {
+            .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {
                 std::string sourceCode;
 
                 if (provider == ImHexApi::Provider::get())

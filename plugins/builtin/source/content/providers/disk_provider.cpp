@@ -155,8 +155,10 @@ namespace hex::plugin::builtin {
                 m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
                 m_writable   = false;
 
-                if (m_diskHandle == INVALID_HANDLE_VALUE)
+                if (m_diskHandle == INVALID_HANDLE_VALUE) {
+                    this->setErrorMessage(std::system_category().message(::GetLastError()));
                     return false;
+                }
             }
 
             {
@@ -178,6 +180,7 @@ namespace hex::plugin::builtin {
             }
 
             if (m_diskHandle == nullptr || m_diskHandle == INVALID_HANDLE_VALUE) {
+                this->setErrorMessage(std::system_category().message(::GetLastError()));
                 m_readable   = false;
                 m_diskHandle = nullptr;
                 CloseHandle(m_diskHandle);
@@ -220,9 +223,9 @@ namespace hex::plugin::builtin {
 #if defined(OS_WINDOWS)
 
         if (m_diskHandle != INVALID_HANDLE_VALUE)
-                ::CloseHandle(m_diskHandle);
+            ::CloseHandle(m_diskHandle);
 
-            m_diskHandle = INVALID_HANDLE_VALUE;
+        m_diskHandle = INVALID_HANDLE_VALUE;
 
 #else
 
@@ -299,7 +302,7 @@ namespace hex::plugin::builtin {
                 size_t currSize = std::min<u64>(size, m_sectorSize);
 
                 this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
-                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
+                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), static_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
                 LARGE_INTEGER seekPosition;
                 seekPosition.LowPart  = (offset & 0xFFFF'FFFF) - (offset % m_sectorSize);

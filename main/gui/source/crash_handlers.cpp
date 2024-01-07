@@ -6,15 +6,14 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
-#include <hex/helpers/stacktrace.hpp>
 
-#include <wolv/io/fs.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <window.hpp>
 
 #include <nlohmann/json.hpp>
 
+#include <stacktrace.hpp>
 #include <llvm/Demangle/Demangle.h>
 
 #include <csignal>
@@ -154,7 +153,9 @@ namespace hex::crash {
 
     // Setup functions to handle signals, uncaught exception, or similar stuff that will crash ImHex
     void setupCrashHandlers() {
-         // Register signal handlers
+        stacktrace::initialize();
+
+        // Register signal handlers
         {
             #define HANDLE_SIGNAL(name)              \
             std::signal(name, [](int signalNumber) { \

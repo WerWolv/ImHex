@@ -33,7 +33,7 @@ namespace hex::prv {
             std::function<void()> callback;
         };
 
-        constexpr static size_t MaxPageSize = 0x1000'0000;
+        constexpr static u64 MaxPageSize = 0xFFFF'FFFF'FFFF'FFFF;
 
         Provider();
         virtual ~Provider();

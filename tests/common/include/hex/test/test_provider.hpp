@@ -1,14 +1,14 @@
-#include <hex/providers/provider.hpp>
+#pragma once
 
-#include <hex/helpers/logger.hpp>
-#include <stdexcept>
+#include <hex/providers/provider.hpp>
+#include <nlohmann/json.hpp>
 
 namespace hex::test {
     using namespace hex::prv;
 
     class TestProvider : public prv::Provider {
     public:
-        explicit TestProvider(std::vector<u8> *data) : Provider() {
+        explicit TestProvider(std::vector<u8> *data) {
             this->setData(data);
         }
         ~TestProvider() override = default;
@@ -47,10 +47,13 @@ namespace hex::test {
             return m_data->size();
         }
 
-        [[nodiscard]] virtual std::string getTypeName() const override { return "hex.test.provider.test"; }
+        [[nodiscard]] std::string getTypeName() const override { return "hex.test.provider.test"; }
 
         bool open() override { return true; }
         void close() override { }
+
+        nlohmann::json storeSettings(nlohmann::json) const override { return {}; }
+        void loadSettings(const nlohmann::json &) override {};
 
     private:
         std::vector<u8> *m_data = nullptr;

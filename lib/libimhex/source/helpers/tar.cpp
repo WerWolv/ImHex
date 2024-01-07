@@ -5,12 +5,14 @@
 
 #include <wolv/io/file.hpp>
 
+#include <microtar.h>
+
 namespace hex {
 
     using namespace hex::literals;
 
     Tar::Tar(const std::fs::path &path, Mode mode) {
-        int tar_error = MTAR_ESUCCESS;
+        int tarError = MTAR_ESUCCESS;
 
         // Explicitly create file so a short path gets generated
         if (mode == Mode::Create) {
@@ -18,21 +20,23 @@ namespace hex {
             file.flush();
         }
 
+        m_ctx = std::make_unique<mtar_t>();
+
         auto shortPath = wolv::io::fs::toShortPath(path);
         if (mode == Tar::Mode::Read)
-            tar_error = mtar_open(&m_ctx, shortPath.string().c_str(), "r");
+            tarError = mtar_open(m_ctx.get(), shortPath.string().c_str(), "r");
         else if (mode == Tar::Mode::Write)
-            tar_error = mtar_open(&m_ctx, shortPath.string().c_str(), "a");
+            tarError = mtar_open(m_ctx.get(), shortPath.string().c_str(), "a");
         else if (mode == Tar::Mode::Create)
-            tar_error = mtar_open(&m_ctx, shortPath.string().c_str(), "w");
+            tarError = mtar_open(m_ctx.get(), shortPath.string().c_str(), "w");
         else
-            tar_error = MTAR_EFAILURE;
+            tarError = MTAR_EFAILURE;
 
         m_path = path;
-        m_valid = (tar_error == MTAR_ESUCCESS);
+        m_valid = (tarError == MTAR_ESUCCESS);
 
         if (!m_valid) {
-            m_tarOpenErrno = tar_error;
+            m_tarOpenErrno = tarError;
             
             // Hopefully this errno corresponds to the file open call in mtar_open
             m_fileOpenErrno = errno;
@@ -44,7 +48,7 @@ namespace hex {
     }
 
     Tar::Tar(hex::Tar &&other) noexcept {
-        m_ctx = other.m_ctx;
+        m_ctx = std::move(other.m_ctx);
         m_path = other.m_path;
         m_valid = other.m_valid;
         m_tarOpenErrno = other.m_tarOpenErrno;
@@ -55,10 +59,8 @@ namespace hex {
     }
 
     Tar &Tar::operator=(Tar &&other) noexcept {
-        m_ctx = other.m_ctx;
-        other.m_ctx = { };
-
-        m_path = other.m_path;
+        m_ctx  = std::move(other.m_ctx);
+        m_path = std::move(other.m_path);
 
         m_valid = other.m_valid;
         other.m_valid = false;
@@ -68,24 +70,24 @@ namespace hex {
         return *this;
     }
 
-    std::vector<std::fs::path> Tar::listEntries(const std::fs::path &basePath) {
+    std::vector<std::fs::path> Tar::listEntries(const std::fs::path &basePath) const {
         std::vector<std::fs::path> result;
 
         const std::string PaxHeaderName = "@PaxHeader";
         mtar_header_t header;
-        while (mtar_read_header(&m_ctx, &header) != MTAR_ENULLRECORD) {
+        while (mtar_read_header(m_ctx.get(), &header) != MTAR_ENULLRECORD) {
             std::fs::path path = header.name;
             if (header.name != PaxHeaderName && wolv::io::fs::isSubPath(basePath, path)) {
                 result.emplace_back(header.name);
             }
 
-            mtar_next(&m_ctx);
+            mtar_next(m_ctx.get());
         }
 
         return result;
     }
 
-    bool Tar::contains(const std::fs::path &path) {
+    bool Tar::contains(const std::fs::path &path) const {
         mtar_header_t header;
 
         auto fixedPath = path.string();
@@ -93,7 +95,7 @@ namespace hex {
             std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
         #endif
 
-        return mtar_find(&m_ctx, fixedPath.c_str(), &header) == MTAR_ESUCCESS;
+        return mtar_find(m_ctx.get(), fixedPath.c_str(), &header) == MTAR_ESUCCESS;
     }
 
     std::string Tar::getOpenErrorString() const {
@@ -102,22 +104,22 @@ namespace hex {
 
     void Tar::close() {
         if (m_valid) {
-            mtar_finalize(&m_ctx);
-            mtar_close(&m_ctx);
+            mtar_finalize(m_ctx.get());
+            mtar_close(m_ctx.get());
         }
 
-        m_ctx = { };
+        m_ctx.reset();
         m_valid = false;
     }
 
-    std::vector<u8> Tar::readVector(const std::fs::path &path) {
+    std::vector<u8> Tar::readVector(const std::fs::path &path) const {
         mtar_header_t header;
 
         auto fixedPath = path.string();
         #if defined(OS_WINDOWS)
             std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
         #endif
-        int ret = mtar_find(&m_ctx, fixedPath.c_str(), &header);
+        int ret = mtar_find(m_ctx.get(), fixedPath.c_str(), &header);
         if (ret != MTAR_ESUCCESS){
             log::debug("Failed to read vector from path {} in tarred file {}: {}",
                 path.string(), m_path.string(), mtar_strerror(ret));
@@ -125,17 +127,17 @@ namespace hex {
         }
         
         std::vector<u8> result(header.size, 0x00);
-        mtar_read_data(&m_ctx, result.data(), result.size());
+        mtar_read_data(m_ctx.get(), result.data(), result.size());
 
         return result;
     }
 
-    std::string Tar::readString(const std::fs::path &path) {
+    std::string Tar::readString(const std::fs::path &path) const {
         auto result = this->readVector(path);
         return { result.begin(), result.end() };
     }
 
-    void Tar::writeVector(const std::fs::path &path, const std::vector<u8> &data) {
+    void Tar::writeVector(const std::fs::path &path, const std::vector<u8> &data) const {
         if (path.has_parent_path()) {
             std::fs::path pathPart;
             for (const auto &part : path.parent_path()) {
@@ -145,7 +147,7 @@ namespace hex {
                 #if defined(OS_WINDOWS)
                     std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
                 #endif
-                mtar_write_dir_header(&m_ctx, fixedPath.c_str());
+                mtar_write_dir_header(m_ctx.get(), fixedPath.c_str());
             }
         }
 
@@ -153,11 +155,11 @@ namespace hex {
         #if defined(OS_WINDOWS)
             std::replace(fixedPath.begin(), fixedPath.end(), '\\', '/');
         #endif
-        mtar_write_file_header(&m_ctx, fixedPath.c_str(), data.size());
-        mtar_write_data(&m_ctx, data.data(), data.size());
+        mtar_write_file_header(m_ctx.get(), fixedPath.c_str(), data.size());
+        mtar_write_data(m_ctx.get(), data.data(), data.size());
     }
 
-    void Tar::writeString(const std::fs::path &path, const std::string &data) {
+    void Tar::writeString(const std::fs::path &path, const std::string &data) const {
         this->writeVector(path, { data.begin(), data.end() });
     }
 
@@ -175,26 +177,26 @@ namespace hex {
         }
     }
 
-    void Tar::extract(const std::fs::path &path, const std::fs::path &outputPath) {
+    void Tar::extract(const std::fs::path &path, const std::fs::path &outputPath) const {
         mtar_header_t header;
-        mtar_find(&m_ctx, path.string().c_str(), &header);
+        mtar_find(m_ctx.get(), path.string().c_str(), &header);
 
-        writeFile(&m_ctx, &header, outputPath);
+        writeFile(m_ctx.get(), &header, outputPath);
     }
 
-    void Tar::extractAll(const std::fs::path &outputPath) {
+    void Tar::extractAll(const std::fs::path &outputPath) const {
         mtar_header_t header;
-        while (mtar_read_header(&m_ctx, &header) != MTAR_ENULLRECORD) {
+        while (mtar_read_header(m_ctx.get(), &header) != MTAR_ENULLRECORD) {
             const auto filePath = std::fs::absolute(outputPath / std::fs::path(header.name));
 
             if (filePath.filename() != "@PaxHeader") {
 
                 std::fs::create_directories(filePath.parent_path());
 
-                writeFile(&m_ctx, &header, filePath);
+                writeFile(m_ctx.get(), &header, filePath);
             }
 
-            mtar_next(&m_ctx);
+            mtar_next(m_ctx.get());
         }
     }
 

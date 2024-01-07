@@ -1,16 +1,16 @@
 #include <hex/helpers/logger.hpp>
 
-#include <content/popups/popup_notification.hpp>
+#include <toasts/toast_notification.hpp>
 
 namespace hex::plugin::builtin {
 
     void showError(const std::string& message){
-        PopupError::open(message);
+        ui::ToastError::open(message);
         log::error(message);
     }
 
     void showWarning(const std::string& message){
-        PopupWarning::open(message);
+        ui::ToastWarning::open(message);
         log::warn(message);
     }
 }
