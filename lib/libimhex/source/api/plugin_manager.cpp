@@ -79,7 +79,9 @@ namespace hex {
     Plugin::~Plugin() {
         #if defined(OS_WINDOWS)
             if (m_handle != 0)
-                FreeLibrary(HMODULE(m_handle));
+                if (FreeLibrary(HMODULE(m_handle)) == FALSE) {
+                    log::error("Error when unloading plugin '{}': {}!", wolv::util::toUTF8String(m_path.filename()), std::system_category().message(::GetLastError()));
+                }
         #else
             if (m_handle != 0)
                 dlclose(reinterpret_cast<void*>(m_handle));
