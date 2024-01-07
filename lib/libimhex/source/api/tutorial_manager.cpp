@@ -105,17 +105,18 @@ namespace hex {
                     windowSize.y = textSize.y + margin.y * 2;
 
                     if (windowPos.y + windowSize.y > mainWindowPos.y + mainWindowSize.y)
-                        windowPos.y = rect.Min.y - windowSize.y - 10_scaled;
+                        windowPos.y = rect.Min.y - windowSize.y - 15_scaled;
                     if (windowPos.y < mainWindowPos.y)
-                        windowPos.y = mainWindowPos.y + 10_scaled;
+                        windowPos.y = rect.Min.y + 10_scaled;
 
-                    auto &style = ImGui::GetStyle();
-
-                    ImVec2 shadowOffset = ImVec2(ImCos(style.WindowShadowOffsetAngle), ImSin(style.WindowShadowOffsetAngle)) * style.WindowShadowOffsetDist;
-                    drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg) | 0xFF000000);
-                    drawList->AddRect(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_Border));
-                    drawList->AddShadowRect(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowShadow), style.WindowShadowSize, shadowOffset, ImDrawFlags_ShadowCutOutShapeBackground);
-                    drawList->AddText(nullptr, 0.0F, windowPos + margin, ImGui::GetColorU32(ImGuiCol_Text), text, nullptr, windowSize.x - margin.x * 2);
+                    ImGui::SetNextWindowPos(windowPos);
+                    ImGui::SetNextWindowSize(windowSize);
+                    ImGui::SetNextWindowViewport(ImGui::GetMainViewport()->ID);
+                    if (ImGui::Begin(unlocalizedText.c_str(), nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize)) {
+                        ImGui::BringWindowToDisplayFront(ImGui::GetCurrentWindowRead());
+                        ImGuiExt::TextFormattedWrapped("{}", text);
+                    }
+                    ImGui::End();
                 }
             }
             drawList->PopClipRect();
