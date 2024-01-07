@@ -104,6 +104,8 @@ namespace hex {
 
         static std::vector<Plugin> &getPlugins();
         static std::vector<std::fs::path> &getPluginPaths();
+
+        static bool isPluginLoaded(const std::fs::path &path);
     };
 
 }

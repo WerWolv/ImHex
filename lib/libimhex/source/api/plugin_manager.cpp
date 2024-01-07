@@ -217,6 +217,8 @@ namespace hex {
         #endif
     }
 
+
+
     bool PluginManager::load(const std::fs::path &pluginFolder) {
         if (!wolv::io::fs::exists(pluginFolder))
             return false;
@@ -225,14 +227,20 @@ namespace hex {
 
         // Load library plugins first
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
-            if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexpluglib")
-                getPlugins().emplace_back(pluginPath.path());
+            if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexpluglib") {
+                if (!isPluginLoaded(pluginPath.path())) {
+                    getPlugins().emplace_back(pluginPath.path());
+                }
+            }
         }
 
         // Load regular plugins afterwards
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
-            if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug")
-                getPlugins().emplace_back(pluginPath.path());
+            if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug") {
+                if (!isPluginLoaded(pluginPath.path())) {
+                    getPlugins().emplace_back(pluginPath.path());
+                }
+            }
         }
 
         std::erase_if(getPlugins(), [](const Plugin &plugin) {
@@ -284,5 +292,12 @@ namespace hex {
 
         return pluginPaths;
     }
+
+    bool PluginManager::isPluginLoaded(const std::fs::path &path) {
+        return std::ranges::any_of(getPlugins(), [&path](const Plugin &plugin) {
+            return plugin.getPath().filename() == path.filename();
+        });
+    }
+
 
 }
