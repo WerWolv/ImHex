@@ -527,15 +527,16 @@ namespace hex {
                     }
                 };
 
-                static u32 menuEndPos = 0;
-
-                if (menuEndPos < m_searchBarPosition) {
-                    drawMenu();
-                    menuEndPos = ImGui::GetCursorPosX();
-                } else {
-                    if (ImGui::BeginMenu(ICON_VS_MENU)) {
+                if (m_lastStartFrameTime > 0) {
+                    static u32 menuEndPos = 0;
+                    if (menuEndPos < m_searchBarPosition) {
                         drawMenu();
-                        ImGui::EndMenu();
+                        menuEndPos = ImGui::GetCursorPosX();
+                    } else {
+                        if (ImGui::BeginMenu(ICON_VS_MENU)) {
+                            drawMenu();
+                            ImGui::EndMenu();
+                        }
                     }
                 }
 
