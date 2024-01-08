@@ -11,7 +11,7 @@ namespace hex::plugin::builtin {
 
     ViewAchievements::ViewAchievements() : View::Floating("hex.builtin.view.achievements.name") {
         // Add achievements menu item to Extas menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.achievements.name" }, 2600, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.achievements.name" }, ICON_VS_SPARKLE, 2600, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
 

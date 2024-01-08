@@ -75,7 +75,7 @@ namespace hex::plugin::builtin {
 
     ViewAbout::ViewAbout() : View::Modal("hex.builtin.view.help.about.name") {
         // Add "About" menu item to the help menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, 1000, Shortcut::None, [this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.about.name" }, ICON_VS_INFO, 1000, Shortcut::None, [this] {
             this->getWindowOpenState() = true;
         });
 
@@ -94,7 +94,7 @@ namespace hex::plugin::builtin {
 
 
         // Add documentation link to the help menu
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, 5000, Shortcut::None, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.help", "hex.builtin.view.help.documentation" }, ICON_VS_BOOK, 5000, Shortcut::None, [] {
             hex::openWebpage("https://docs.werwolv.net/imhex");
             AchievementManager::unlockAchievement("hex.builtin.achievement.starting_out", "hex.builtin.achievement.starting_out.docs.name");
         });

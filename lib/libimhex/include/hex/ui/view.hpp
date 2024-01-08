@@ -24,7 +24,7 @@
 namespace hex {
 
     class View {
-        explicit View(UnlocalizedString unlocalizedName);
+        explicit View(UnlocalizedString unlocalizedName, const char *icon);
     public:
         virtual ~View() = default;
 
@@ -82,7 +82,7 @@ namespace hex {
          */
         [[nodiscard]] virtual ImGuiWindowFlags getWindowFlags() const;
 
-
+        [[nodiscard]] const char *getIcon() const { return m_icon; }
 
         [[nodiscard]] bool &getWindowOpenState();
         [[nodiscard]] const bool &getWindowOpenState() const;
@@ -110,6 +110,7 @@ namespace hex {
         bool m_windowOpen = false, m_prevWindowOpen = false;
         std::map<Shortcut, ShortcutManager::ShortcutEntry> m_shortcuts;
         bool m_windowJustOpened = false;
+        const char *m_icon;
 
         friend class ShortcutManager;
     };
@@ -120,7 +121,7 @@ namespace hex {
      */
     class View::Window : public View {
     public:
-        explicit Window(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName)) {}
+        explicit Window(UnlocalizedString unlocalizedName, const char *icon) : View(std::move(unlocalizedName), icon) {}
 
         void draw() final {
             if (this->shouldDraw()) {
@@ -139,7 +140,7 @@ namespace hex {
      */
     class View::Special : public View {
     public:
-        explicit Special(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName)) {}
+        explicit Special(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName), "") {}
 
         void draw() final {
             if (this->shouldDraw()) {
@@ -154,7 +155,7 @@ namespace hex {
      */
     class View::Floating : public View::Window {
     public:
-        explicit Floating(UnlocalizedString unlocalizedName) : Window(std::move(unlocalizedName)) {}
+        explicit Floating(UnlocalizedString unlocalizedName) : Window(std::move(unlocalizedName), "") {}
 
         [[nodiscard]] ImGuiWindowFlags getWindowFlags() const override { return ImGuiWindowFlags_NoDocking; }
     };
@@ -164,7 +165,7 @@ namespace hex {
      */
     class View::Modal : public View {
     public:
-        explicit Modal(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName)) {}
+        explicit Modal(UnlocalizedString unlocalizedName) : View(std::move(unlocalizedName), "") {}
 
         void draw() final {
             if (this->shouldDraw()) {

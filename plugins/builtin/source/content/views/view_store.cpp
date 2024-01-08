@@ -29,7 +29,7 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     ViewStore::ViewStore() : View::Floating("hex.builtin.view.store.name") {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, 1000, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.store.name" }, ICON_VS_GLOBE, 1000, Shortcut::None, [&, this] {
             if (m_requestStatus == RequestStatus::NotAttempted)
                 this->refresh();
 

@@ -12,7 +12,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewConstants::ViewConstants() : View::Window("hex.builtin.view.constants.name") {
+    ViewConstants::ViewConstants() : View::Window("hex.builtin.view.constants.name", ICON_VS_SYMBOL_CONSTANT) {
         this->reloadConstants();
     }
 

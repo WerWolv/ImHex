@@ -54,7 +54,7 @@ namespace hex::plugin::hashes {
         ContentRegistry::Hashes::Hash::Function m_hash;
     };
 
-    ViewHashes::ViewHashes() : View::Window("hex.hashes.view.hashes.name") {
+    ViewHashes::ViewHashes() : View::Window("hex.hashes.view.hashes.name", ICON_VS_KEY) {
         EventRegionSelected::subscribe(this, [this](const auto &providerRegion) {
             for (auto &function : m_hashFunctions.get(providerRegion.getProvider()))
                 function.reset();

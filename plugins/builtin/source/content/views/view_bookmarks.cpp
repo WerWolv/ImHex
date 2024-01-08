@@ -17,7 +17,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name") {
+    ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name", ICON_VS_BOOKMARK) {
 
         // Handle bookmark add requests sent by the API
         RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
@@ -526,7 +526,7 @@ namespace hex::plugin::builtin {
 
     void ViewBookmarks::registerMenuItems() {
         /* Create bookmark */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, 1900, CTRLCMD + Keys::B, [&] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, ICON_VS_BOOKMARK, 1900, CTRLCMD + Keys::B, [&] {
             if (!ImHexApi::HexEditor::isSelectionValid())
                 return;
 
@@ -538,7 +538,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 3000);
 
         /* Import bookmarks */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, 3050, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, ICON_VS_BOOKMARK, 3050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 try {
                     this->importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
@@ -550,7 +550,7 @@ namespace hex::plugin::builtin {
 
 
         /* Export bookmarks */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.bookmark" }, 6250, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.bookmark" }, ICON_VS_BOOKMARK, 6250, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 nlohmann::json json;
                 this->exportBookmarks(ImHexApi::Provider::get(), json);

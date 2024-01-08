@@ -13,7 +13,7 @@
 
 namespace hex::plugin::windows {
 
-    ViewTTYConsole::ViewTTYConsole() : View::Window("hex.windows.view.tty_console.name") {
+    ViewTTYConsole::ViewTTYConsole() : View::Window("hex.windows.view.tty_console.name", ICON_VS_TERMINAL) {
         m_comPorts = getAvailablePorts();
         m_transmitDataBuffer.resize(0xFFF, 0x00);
         m_receiveDataBuffer.reserve(0xFFF);

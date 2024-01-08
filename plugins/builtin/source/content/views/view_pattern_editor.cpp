@@ -129,7 +129,7 @@ namespace hex::plugin::builtin {
         return langDef;
     }
 
-    ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name") {
+    ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name", ICON_VS_SYMBOL_NAMESPACE) {
         m_parserRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_parserRuntime, nullptr);
 
@@ -1217,7 +1217,7 @@ namespace hex::plugin::builtin {
 
     void ViewPatternEditor::registerMenuItems() {
         /* Import Pattern */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, 4050, Shortcut::None,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 4050, Shortcut::None,
                                                 [this] {
                                                     auto provider = ImHexApi::Provider::get();
                                                     const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Patterns);
@@ -1242,7 +1242,7 @@ namespace hex::plugin::builtin {
                                                 }, ImHexApi::Provider::isValid);
 
         /* Export Pattern */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, 7050, Shortcut::None,
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None,
                                                 [this] {
                                                     fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
                                                                         [this](const auto &path) {
@@ -1263,7 +1263,7 @@ namespace hex::plugin::builtin {
         }};
 
         /* Place pattern... */
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern" }, 3000,
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.edit", "hex.builtin.view.pattern_editor.menu.edit.place_pattern" }, ICON_VS_LIBRARY, 3000,
             [&, this] {
                 if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin"_lang)) {
                     if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.builtin.single"_lang)) {

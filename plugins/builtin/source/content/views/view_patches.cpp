@@ -16,7 +16,7 @@ using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
 
-    ViewPatches::ViewPatches() : View::Window("hex.builtin.view.patches.name") {
+    ViewPatches::ViewPatches() : View::Window("hex.builtin.view.patches.name", ICON_VS_GIT_PULL_REQUEST_NEW_CHANGES) {
 
         ProjectFile::registerPerProviderHandler({
             .basePath = "patches.json",

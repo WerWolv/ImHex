@@ -1,6 +1,7 @@
 #include <unordered_set>
 
 #include <imgui.h>
+#include <imgui_internal.h>
 
 #include <hex/api/event_manager.hpp>
 #include <hex/api/content_registry.hpp>
@@ -330,7 +331,7 @@ namespace hex::plugin::builtin::recent {
 
     void addMenuItems() {
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file" }, 1200, [] {
-            if (ImGui::BeginMenu("hex.builtin.menu.file.open_recent"_lang, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
+            if (ImGui::BeginMenuEx("hex.builtin.menu.file.open_recent"_lang, ICON_VS_ARCHIVE, !recent::s_recentEntriesUpdating && !s_recentEntries.empty())) {
                 // Copy to avoid changing list while iteration
                 auto recentEntries = s_recentEntries;
                 for (auto &recentEntry : recentEntries) {

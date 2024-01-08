@@ -15,7 +15,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewFind::ViewFind() : View::Window("hex.builtin.view.find.name") {
+    ViewFind::ViewFind() : View::Window("hex.builtin.view.find.name", ICON_VS_SEARCH) {
         const static auto HighlightColor = [] { return (ImGuiExt::GetCustomColorU32(ImGuiCustomCol_FindHighlight) & 0x00FFFFFF) | 0x70000000; };
 
         ImHexApi::HexEditor::addBackgroundHighlightingProvider([this](u64 address, const u8* data, size_t size, bool) -> std::optional<color_t> {
