@@ -28,7 +28,6 @@ namespace hex::plugin::builtin {
             TextEditor editor;
         };
 
-        std::list<Bookmark>::iterator m_dragStartIterator;
         PerProvider<std::list<Bookmark>> m_bookmarks;
         PerProvider<u64> m_currBookmarkId;
     };

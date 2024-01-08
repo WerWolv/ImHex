@@ -86,7 +86,7 @@ namespace hex::plugin::builtin {
                     drawBitsSlider(&bitValue);
 
                     // Configure drag and drop source and target
-                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None)) {
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
                         // Set the current slider index as the payload
                         ImGui::SetDragDropPayload("BIT_VALUE", &index, sizeof(u32));
 
