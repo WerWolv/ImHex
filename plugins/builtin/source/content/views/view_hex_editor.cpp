@@ -1308,15 +1308,11 @@ namespace hex::plugin::builtin {
                                                     };
 
                                                     if (ImGui::MenuItem(hex::format("0x{:08X}", littleEndianValue).c_str(), "hex.ui.common.little_endian"_lang, false, canJumpTo(littleEndianValue))) {
-                                                        if (value < provider->getBaseAddress() + provider->getActualSize()) {
-                                                            ImHexApi::HexEditor::setSelection(littleEndianValue, 1);
-                                                        }
+                                                        ImHexApi::HexEditor::setSelection(littleEndianValue, 1);
                                                     }
 
                                                     if (ImGui::MenuItem(hex::format("0x{:08X}", bigEndianValue).c_str(), "hex.ui.common.big_endian"_lang, false, canJumpTo(bigEndianValue))) {
-                                                        if (value < provider->getBaseAddress() + provider->getActualSize()) {
-                                                            ImHexApi::HexEditor::setSelection(bigEndianValue, 1);
-                                                        }
+                                                        ImHexApi::HexEditor::setSelection(bigEndianValue, 1);
                                                     }
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); });
