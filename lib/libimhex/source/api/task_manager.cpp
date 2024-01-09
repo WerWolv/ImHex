@@ -365,7 +365,9 @@ namespace hex {
         s_tasksFinishedCallbacks.push_back(function);
     }
 
+    thread_local static std::string s_currentThreadName;
     void TaskManager::setCurrentThreadName(const std::string &name) {
+        s_currentThreadName = name;
         #if defined(OS_WINDOWS)
             using SetThreadDescriptionFunc =  HRESULT(WINAPI*)(HANDLE hThread, PCWSTR lpThreadDescription);
 
@@ -408,26 +410,7 @@ namespace hex {
     }
 
     std::string TaskManager::getCurrentThreadName() {
-        #if defined(OS_WINDOWS)
-            PWSTR name;
-            if (SUCCEEDED(::GetThreadDescription(::GetCurrentThread(), &name))) {
-                auto utf8Name = hex::utf16ToUtf8(name);
-                LocalFree(name);
-
-                return utf8Name;
-            }
-
-            return "";
-        #elif defined(OS_MACOS) || defined(OS_LINUX)
-            std::array<char, 256> name = { };
-            pthread_getname_np(pthread_self(), name.data(), name.size());
-
-            return name.data();
-        #elif defined(OS_WEB)
-            return "";
-        #else
-            return "";
-        #endif
+        return s_currentThreadName;
     }
 
 
