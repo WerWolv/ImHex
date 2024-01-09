@@ -167,6 +167,10 @@ namespace hex::crash {
             HANDLE_SIGNAL(SIGABRT);
             HANDLE_SIGNAL(SIGFPE);
 
+            #if defined (SIGBUS)
+                HANDLE_SIGNAL(SIGBUS);
+            #endif
+
             #undef HANDLE_SIGNAL
         }
 

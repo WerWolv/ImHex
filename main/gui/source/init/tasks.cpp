@@ -67,11 +67,12 @@ namespace hex::init {
         EventImHexClosing::post();
         EventManager::clear();
 
+        while (ImHexApi::Provider::isValid())
+            ImHexApi::Provider::remove(ImHexApi::Provider::get());
+
         // Terminate all asynchronous tasks
         TaskManager::exit();
 
-        while (ImHexApi::Provider::isValid())
-            ImHexApi::Provider::remove(ImHexApi::Provider::get());
         ContentRegistry::Provider::impl::getEntries().clear();
 
         ImHexApi::System::getInitArguments().clear();
