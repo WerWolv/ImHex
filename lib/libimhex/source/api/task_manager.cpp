@@ -29,6 +29,8 @@ namespace hex {
         std::condition_variable s_jobCondVar;
         std::vector<std::jthread> s_workers;
 
+        thread_local std::string s_currentThreadName;
+
     }
 
 
@@ -56,6 +58,7 @@ namespace hex {
     Task::~Task() {
         if (!this->isFinished())
             this->interrupt();
+        s_currentThreadName.clear();
     }
 
     void Task::update(u64 value) {
@@ -277,6 +280,8 @@ namespace hex {
 
         s_deferredCalls.clear();
         s_tasksFinishedCallbacks.clear();
+
+        s_currentThreadName.clear();
     }
 
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, bool background, std::function<void(Task&)> function) {
@@ -365,7 +370,6 @@ namespace hex {
         s_tasksFinishedCallbacks.push_back(function);
     }
 
-    thread_local static std::string s_currentThreadName;
     void TaskManager::setCurrentThreadName(const std::string &name) {
         s_currentThreadName = name;
         #if defined(OS_WINDOWS)

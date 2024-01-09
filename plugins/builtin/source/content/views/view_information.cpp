@@ -41,8 +41,11 @@ namespace hex::plugin::builtin {
             } 
         });
 
-        EventProviderDeleted::subscribe(this, [this](const auto*) {
-            m_dataValid = false;
+        EventProviderDeleted::subscribe(this, [this](const auto *provider) {
+            if (provider == m_analyzedProvider) {
+                m_dataValid = false;
+                m_analyzedProvider = nullptr;
+            }
         });
 
         ContentRegistry::FileHandler::add({ ".mgc" }, [](const auto &path) {
@@ -68,6 +71,8 @@ namespace hex::plugin::builtin {
 
         m_analyzerTask = TaskManager::createTask("hex.builtin.view.information.analyzing", 0, [this](auto &task) {
             auto provider = ImHexApi::Provider::get();
+
+            m_analyzedProvider = provider;
 
             if ((m_analyzedRegion.getStartAddress() >= m_analyzedRegion.getEndAddress()) || (m_analyzedRegion.getEndAddress() > provider->getActualSize())) {
                 m_analyzedRegion = { provider->getBaseAddress(), provider->getActualSize() };
@@ -170,7 +175,7 @@ namespace hex::plugin::builtin {
                     ImGui::NewLine();
                 }
 
-                if (!m_analyzerTask.isRunning() && m_dataValid) {
+                if (!m_analyzerTask.isRunning() && m_dataValid && m_analyzedProvider != nullptr) {
 
                     // Provider information
                     ImGuiExt::Header("hex.builtin.view.information.provider_information"_lang, true);
@@ -181,7 +186,7 @@ namespace hex::plugin::builtin {
 
                         ImGui::TableNextRow();
 
-                        for (auto &[name, value] : provider->getDataDescription()) {
+                        for (auto &[name, value] : m_analyzedProvider->getDataDescription()) {
                             ImGui::TableNextColumn();
                             ImGuiExt::TextFormatted("{}", name);
                             ImGui::TableNextColumn();
