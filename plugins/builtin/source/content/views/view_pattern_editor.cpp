@@ -173,7 +173,7 @@ namespace hex::plugin::builtin {
                 textEditorSize.y = std::clamp(textEditorSize.y, 1.0F, std::max(1.0F, availableSize.y - ImGui::GetTextLineHeightWithSpacing() * 3));
 
             m_textEditor.Render("hex.builtin.view.pattern_editor.name"_lang, textEditorSize, true);
-
+            TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
             if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
                 ImGui::OpenPopup("##pattern_editor_context_menu");
             }
@@ -206,23 +206,23 @@ namespace hex::plugin::builtin {
                 if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find"_lang, Shortcut(CTRLCMD + Keys::F).toString().c_str(),false,this->m_textEditor.HasSelection()))
                     clickedMenuFind = true;
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_next"_lang, Shortcut(Keys::F3).toString().c_str(),false,!m_textEditor.GetFindWord().empty()))
-                    this->m_textEditor.FindMatch(true);
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_next"_lang, Shortcut(Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
+                    findReplaceHandler->FindMatch(&m_textEditor,true);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!m_textEditor.GetFindWord().empty()))
-                    this->m_textEditor.FindMatch(false);
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.find_previous"_lang, Shortcut(SHIFT + Keys::F3).toString().c_str(),false,!findReplaceHandler->GetFindWord().empty()))
+                    findReplaceHandler->FindMatch(&m_textEditor,false);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace"_lang, Shortcut(CTRLCMD +  Keys::H).toString().c_str(),false,!this->m_textEditor.GetReplaceWord().empty()))
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace"_lang, Shortcut(CTRLCMD +  Keys::H).toString().c_str(),false,!findReplaceHandler->GetReplaceWord().empty()))
                     clickedMenuReplace = true;
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_next"_lang,"",false,!this->m_textEditor.GetReplaceWord().empty()))
-                    this->m_textEditor.Replace(true);
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_next"_lang,"",false,!findReplaceHandler->GetReplaceWord().empty()))
+                    findReplaceHandler->Replace(&m_textEditor,true);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_previous"_lang, "",false,!this->m_textEditor.GetReplaceWord().empty()))
-                    this->m_textEditor.Replace(false);
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_previous"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
+                    findReplaceHandler->Replace(&m_textEditor,false);
 
-                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_all"_lang, "",false,!this->m_textEditor.GetReplaceWord().empty()))
-                    this->m_textEditor.ReplaceAll();
+                if (ImGui::MenuItem("hex.builtin.view.pattern_editor.menu.replace_all"_lang, "",false,!findReplaceHandler->GetReplaceWord().empty()))
+                    findReplaceHandler->ReplaceAll(&m_textEditor);
 
                 ImGui::EndPopup();
             }
@@ -255,6 +255,9 @@ namespace hex::plugin::builtin {
 
             static std::string findWord;
             static bool requestFocus = false;
+            static unsigned position = 0;
+            static unsigned count = 0;
+            static bool updateCount = false;
 
             if (openFindPopup) {
                 // place the popup at the top right of the window
@@ -270,7 +273,7 @@ namespace hex::plugin::builtin {
                 auto label_size = ImGui::CalcTextSize(ICON_VS_WHOLE_WORD);
                 // six icon buttons
                 auto popupSize =  ImVec2({(label_size.x + style.FramePadding.x * 2.0f) * 6.0f,
-                                           label_size.y + style.FramePadding.y * 2.0f });
+                                           label_size.y + style.FramePadding.y * 2.0f + style.WindowPadding.y + 3 });
                 //2 * 11 spacings in between elements
                 popupSize.x += style.FramePadding.x * 22.0f;
                 // text input fields are set to 12 characters wide
@@ -282,24 +285,37 @@ namespace hex::plugin::builtin {
                 ImVec2 windowPosForPopup = ImGui::GetWindowPos();
                 // not really the window height but the content height
                 windowPosForPopup.y += popupSize.y;
+                // Add remaining window height
+                popupSize.y += style.WindowPadding.y + 1;
                 // move to the right so as not to overlap the scrollbar
                 windowPosForPopup.x += windowSize.x - popupSize.x;
-                m_textEditor.SetFindWindowPos(windowPosForPopup);
+                findReplaceHandler->SetFindWindowPos(windowPosForPopup);
+                if (replace) {
+                    // Remove one window padding
+                    popupSize.y -= style.WindowPadding.y;
+                    // add the replace window height
+                    popupSize.y *= 2;
+                }
                 ImGui::SetNextWindowPos(windowPosForPopup);
+                ImGui::SetNextWindowSize(popupSize);
                 ImGui::OpenPopup("##pattern_editor_find_replace");
-                m_textEditor.resetMatches();
+                findReplaceHandler->resetMatches();
                 // use selection as find word if there is one
                 // otherwise use the word under the cursor
                 if (!this->m_textEditor.HasSelection())
                     this->m_textEditor.SelectWordUnderCursor();
                 findWord = this->m_textEditor.GetSelectedText();
                 // Find all matches to findWord
-                this->m_textEditor.FindAllMatches(findWord);
-                this->m_textEditor.SetFindWord(findWord);
+                findReplaceHandler->FindAllMatches(&m_textEditor,findWord);
+                position = findReplaceHandler->FindPosition(&m_textEditor,m_textEditor.GetCursorPosition(), true);
+                count = findReplaceHandler->GetMatches().size();
+                findReplaceHandler->SetFindWord(&m_textEditor,findWord);
                 requestFocus = true;
+                updateCount = true;
             }
 
-            drawFindReplaceDialog(findWord, requestFocus);
+            drawFindReplaceDialog(findWord, requestFocus, position, count, updateCount);
+
             ImGui::PopID();
 
             ImGui::Button("##settings_drag_bar", ImVec2(ImGui::GetContentRegionAvail().x, 2_scaled));
@@ -495,16 +511,14 @@ namespace hex::plugin::builtin {
         }
     }
 
-    void ViewPatternEditor::drawFindReplaceDialog(std::string &findWord, bool &requestFocus) {
+    void ViewPatternEditor::drawFindReplaceDialog(std::string &findWord, bool &requestFocus, unsigned &position, unsigned &count, bool &updateCount) {
 
         static std::string replaceWord;
 
-        static unsigned position = 0;
-        static unsigned count = 0;
-
+        TextEditor::FindReplaceHandler *findReplaceHandler = m_textEditor.GetFindReplaceHandler();
         static bool requestFocusReplace = false;
         static bool requestFocusFind = false;
-        static bool updateCount = false;
+
         static bool downArrowFind = false;
         static bool upArrowFind = false;
         static bool downArrowReplace = false;
@@ -561,7 +575,7 @@ namespace hex::plugin::builtin {
                     }
                     updateCount = true;
                     requestFocusFind = true;
-                    m_textEditor.SetFindWord(findWord);
+                    findReplaceHandler->SetFindWord(&m_textEditor,findWord);
                 }
 
                 if ((!replace && requestFocus) || requestFocusFind) {
@@ -579,9 +593,9 @@ namespace hex::plugin::builtin {
                         m_findHistoryIndex = (m_findHistoryIndex + 1) % m_findHistorySize;
 
                     findWord = m_findHistory[m_findHistoryIndex];
-                    m_textEditor.SetFindWord(findWord);
-                    position = m_textEditor.FindPosition(m_textEditor.GetCursorPosition(), true);
-                    count = m_textEditor.GetMatches().size();
+                    findReplaceHandler->SetFindWord(&m_textEditor,findWord);
+                    position = findReplaceHandler->FindPosition(&m_textEditor,m_textEditor.GetCursorPosition(), true);
+                    count = findReplaceHandler->GetMatches().size();
                     updateCount = true;
                     requestFocusFind = true;
                 }
@@ -589,43 +603,43 @@ namespace hex::plugin::builtin {
 
                 ImGui::SameLine();
 
-                bool matchCase = this->m_textEditor.GetMatchCase();
+                bool matchCase = findReplaceHandler->GetMatchCase();
                 // Allow Alt-C to toggle case sensitivity
                 bool altCPressed = ImGui::IsKeyPressed(ImGuiKey_C, false) && alt;
                 if (altCPressed || ImGuiExt::DimmedIconToggle(ICON_VS_CASE_SENSITIVE, &matchCase)) {
                     if (altCPressed)
                         matchCase = !matchCase;
-                    this->m_textEditor.SetMatchCase(matchCase);
+                    findReplaceHandler->SetMatchCase(&m_textEditor,matchCase);
                     updateCount = true;
                     requestFocusFind = true;
                 }
 
                 ImGui::SameLine();
 
-                bool matchWholeWord = this->m_textEditor.GetWholeWord();
+                bool matchWholeWord = findReplaceHandler->GetWholeWord();
                 // Allow Alt-W to toggle whole word
                 bool altWPressed = ImGui::IsKeyPressed(ImGuiKey_W, false) && alt;
                 if (altWPressed || ImGuiExt::DimmedIconToggle(ICON_VS_WHOLE_WORD, &matchWholeWord)) {
                     if (altWPressed)
                         matchWholeWord = !matchWholeWord;
-                    this->m_textEditor.SetWholeWord(matchWholeWord);
-                    position = m_textEditor.FindPosition(m_textEditor.GetCursorPosition(), true);
-                    count = m_textEditor.GetMatches().size();
+                    findReplaceHandler->SetWholeWord(&m_textEditor,matchWholeWord);
+                    position = findReplaceHandler->FindPosition(&m_textEditor,m_textEditor.GetCursorPosition(), true);
+                    count =findReplaceHandler->GetMatches().size();
                     updateCount = true;
                     requestFocusFind = true;
                 }
 
                 ImGui::SameLine();
 
-                bool useRegex = this->m_textEditor.GetFindRegEx();
+                bool useRegex = findReplaceHandler->GetFindRegEx();
                 // Allow Alt-R to toggle regex
                 bool altRPressed = ImGui::IsKeyPressed(ImGuiKey_R, false) && alt;
                 if (altRPressed || ImGuiExt::DimmedIconToggle(ICON_VS_REGEX, &useRegex)) {
                     if (altRPressed)
                         useRegex = !useRegex;
-                    m_textEditor.SetFindRegEx(useRegex);
-                    position = m_textEditor.FindPosition(m_textEditor.GetCursorPosition(), true);
-                    count = m_textEditor.GetMatches().size();
+                    findReplaceHandler->SetFindRegEx(&m_textEditor,useRegex);
+                    position =findReplaceHandler->FindPosition(&m_textEditor,m_textEditor.GetCursorPosition(), true);
+                    count = findReplaceHandler->GetMatches().size();
                     updateCount = true;
                     requestFocusFind = true;
                 }
@@ -644,12 +658,12 @@ namespace hex::plugin::builtin {
                         if (position > 1999)
                             indexOfCount = "?";
                         else
-                            indexOfCount = std::format("{} ", position);
+                            indexOfCount = hex::format("{} ", position);
                         indexOfCount += "hex.builtin.view.pattern_editor.of"_lang.operator const char *();
                         if (count > 1999)
                             indexOfCount += "1999+";
                         else
-                            indexOfCount += std::format(" {}", count);
+                            indexOfCount += hex::format(" {}", count);
                     }
                 }
                 auto resultSize = ImGui::CalcTextSize(indexOfCount.c_str());
@@ -694,9 +708,9 @@ namespace hex::plugin::builtin {
                     if (ImGui::InputTextWithHint("##replaceInputTextWidget", hint.c_str(), replaceWord, replaceFlags) ||
                         downArrowReplace || upArrowReplace) {
 
-                        this->m_textEditor.SetReplaceWord(replaceWord);
+                        findReplaceHandler->SetReplaceWord(replaceWord);
                         historyInsert(m_replaceHistory, m_replaceHistorySize, m_replaceHistoryIndex, replaceWord);
-                        bool textReplaced = this->m_textEditor.Replace(!shift && !upArrowReplace);
+                        bool textReplaced = findReplaceHandler->Replace(&m_textEditor,!shift && !upArrowReplace);
                         if (textReplaced) {
                             if (count > 0) {
                                 if (position == count)
@@ -734,7 +748,7 @@ namespace hex::plugin::builtin {
                             m_replaceHistoryIndex = (m_replaceHistoryIndex + 1) % m_replaceHistorySize;
 
                         replaceWord = m_replaceHistory[m_replaceHistoryIndex];
-                        this->m_textEditor.SetReplaceWord(replaceWord);
+                        findReplaceHandler->SetReplaceWord(replaceWord);
 
                         requestFocusReplace = true;
                     }
@@ -751,23 +765,23 @@ namespace hex::plugin::builtin {
 
                     ImGui::SameLine();
                     if (ImGuiExt::IconButton(ICON_VS_REPLACE_ALL, ImVec4(1, 1, 1, 1))) {
-                        this->m_textEditor.SetReplaceWord(replaceWord);
+                        findReplaceHandler->SetReplaceWord(replaceWord);
                         historyInsert(m_replaceHistory,m_replaceHistorySize, m_replaceHistoryIndex, replaceWord);
-                        this->m_textEditor.ReplaceAll();
+                        findReplaceHandler->ReplaceAll(&m_textEditor);
                         count = 0;
                         position = 0;
                         requestFocusFind = true;
                         updateCount = true;
                     }
-                    m_textEditor.SetFindWindowSize(ImGui::GetWindowSize());
+                    findReplaceHandler->SetFindWindowSize(ImGui::GetWindowSize());
                 } else
-                    m_textEditor.SetFindWindowSize(ImGui::GetWindowSize());
+                    findReplaceHandler->SetFindWindowSize(ImGui::GetWindowSize());
 
                 if ((ImGui::IsKeyPressed(ImGuiKey_F3, false)) || downArrowFind || upArrowFind || enterPressedFind) {
 
                     historyInsert(m_findHistory, m_findHistorySize, m_findHistoryIndex, findWord);
-                    position = m_textEditor.FindMatch(!shift && !upArrowFind);
-                    count = m_textEditor.GetMatches().size();
+                    position = findReplaceHandler->FindMatch(&m_textEditor,!shift && !upArrowFind);
+                    count = findReplaceHandler->GetMatches().size();
                     updateCount = true;
                     downArrowFind = false;
                     upArrowFind = false;

@@ -203,7 +203,10 @@ public:
 
 	std::string GetSelectedText() const;
 	std::string GetCurrentLineText()const;
+    class FindReplaceHandler;
 
+public:
+    FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
 
@@ -259,60 +262,9 @@ public:
 	void Cut();
 	void Paste();
 	void Delete();
-	bool FindNext(bool wrapAround);
-    int FindMatch(bool isNex);
-    bool Replace(bool right);
-    bool ReplaceAll();
-	std::string &GetFindWord()  { return mFindWord; }
-	void SetFindWord(const std::string &aFindWord) {
-        if (aFindWord != mFindWord) {
-            FindAllMatches(aFindWord);
-            mFindWord = aFindWord;
-        }
-    }
-	std::string &GetReplaceWord()  { return mReplaceWord; }
-	void SetReplaceWord(const std::string &aReplaceWord) { mReplaceWord = aReplaceWord; }
-	void SelectFound(int found);
-    void FindAllMatches(std::string findWord);
-    int FindPosition( Coordinates pos, bool isNext);
-    bool GetMatchCase() const { return mMatchCase; }
-    void SetMatchCase(bool matchCase)  {
-        if (matchCase != mMatchCase) {
-            mMatchCase = matchCase;
-            mOptionsChanged = true;
-            FindAllMatches(mFindWord);
-        }
-    }
-    bool GetWholeWord()  const { return mWholeWord; }
-    void SetWholeWord(bool wholeWord)  {
-        if (wholeWord != mWholeWord) {
-            mWholeWord = wholeWord;
-            mOptionsChanged = true;
-            FindAllMatches(mFindWord);
-        }
-    }
-    bool GetFindRegEx()  const { return mFindRegEx; }
-    void SetFindRegEx(bool findRegEx)  {
-        if (findRegEx != mFindRegEx) {
-            mFindRegEx = findRegEx;
-            mOptionsChanged = true;
-            FindAllMatches(mFindWord);
-        }
-    }
-    void resetMatches() {
-        mMatches.clear();
-        mFindWord = "";
-    }
-
-    void SetFindWindowPos(const ImVec2 &pos) { mFindWindowPos = pos; }
-    void SetFindWindowSize(const ImVec2 &size) { mFindWindowSize = size; }
-    ImVec2 GetFindWindowPos() const { return mFindWindowPos; }
-    ImVec2 GetFindWindowSize() const { return mFindWindowSize; }
 
 	ImVec2 &GetCharAdvance() { return mCharAdvance; }
 
-    unsigned GetSelectionLength() const { return mSelectionLength; }
-    void SetSelectionLength(unsigned aLength) { mSelectionLength = aLength; }
 	bool CanUndo() const;
 	bool CanRedo() const;
 	void Undo(int aSteps = 1);
@@ -332,11 +284,74 @@ private:
 		Coordinates mCursorPosition;
 	};
 
-	typedef std::vector<EditorState> Matches;
 
 public:
-	TextEditor::Matches &GetMatches() { return mMatches;}
+    class FindReplaceHandler {
+    public:
+        FindReplaceHandler();
+        typedef std::vector<EditorState> Matches;
+        Matches &GetMatches() { return mMatches; }
+        bool FindNext(TextEditor *editor,bool wrapAround);
+        unsigned FindMatch(TextEditor *editor,bool isNex);
+        bool Replace(TextEditor *editor,bool right);
+        bool ReplaceAll(TextEditor *editor);
+        std::string &GetFindWord()  { return mFindWord; }
+        void SetFindWord(TextEditor *editor, const std::string &aFindWord) {
+            if (aFindWord != mFindWord) {
+                FindAllMatches(editor, aFindWord);
+                mFindWord = aFindWord;
+            }
+        }
+        std::string &GetReplaceWord()  { return mReplaceWord; }
+        void SetReplaceWord(const std::string &aReplaceWord) { mReplaceWord = aReplaceWord; }
+        void SelectFound(TextEditor *editor, int found);
+        void FindAllMatches(TextEditor *editor,std::string findWord);
+        unsigned FindPosition( TextEditor *editor, Coordinates pos, bool isNext);
+        bool GetMatchCase() const { return mMatchCase; }
+        void SetMatchCase(TextEditor *editor, bool matchCase)  {
+            if (matchCase != mMatchCase) {
+                mMatchCase = matchCase;
+                mOptionsChanged = true;
+                FindAllMatches(editor, mFindWord);
+            }
+        }
+        bool GetWholeWord()  const { return mWholeWord; }
+        void SetWholeWord(TextEditor *editor, bool wholeWord)  {
+            if (wholeWord != mWholeWord) {
+                mWholeWord = wholeWord;
+                mOptionsChanged = true;
+                FindAllMatches(editor, mFindWord);
+            }
+        }
+        bool GetFindRegEx()  const { return mFindRegEx; }
+        void SetFindRegEx(TextEditor *editor, bool findRegEx)  {
+            if (findRegEx != mFindRegEx) {
+                mFindRegEx = findRegEx;
+                mOptionsChanged = true;
+                FindAllMatches(editor, mFindWord);
+            }
+        }
+        void resetMatches() {
+            mMatches.clear();
+            mFindWord = "";
+        }
 
+        void SetFindWindowPos(const ImVec2 &pos) { mFindWindowPos = pos; }
+        void SetFindWindowSize(const ImVec2 &size) { mFindWindowSize = size; }
+        ImVec2 GetFindWindowPos() const { return mFindWindowPos; }
+        ImVec2 GetFindWindowSize() const { return mFindWindowSize; }
+    private:
+        std::string mFindWord;
+        std::string mReplaceWord;
+        bool mMatchCase;
+        bool mWholeWord;
+        bool mFindRegEx;
+        bool mOptionsChanged;
+        Matches mMatches;
+        ImVec2 mFindWindowPos;
+        ImVec2 mFindWindowSize;
+    };
+    FindReplaceHandler mFindReplaceHandler;
 private:
 	class UndoRecord
 	{
@@ -417,6 +432,8 @@ private:
 	EditorState mState;
 	UndoBuffer mUndoBuffer;
 	int mUndoIndex;
+    bool mScrollToBottom;
+    float mTopMargin;
 
 	int mTabSize;
 	bool mOverwrite;
@@ -440,16 +457,6 @@ private:
 	Palette mPalette;
 	LanguageDefinition mLanguageDefinition;
 	RegexList mRegexList;
-	std::string mFindWord;
-	std::string mReplaceWord;
-    bool mMatchCase;
-    bool mWholeWord;
-    bool mFindRegEx;
-    bool mOptionsChanged;
-    unsigned mSelectionLength;
-	Matches mMatches;
-    ImVec2 mFindWindowPos;
-    ImVec2 mFindWindowSize;
     bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;

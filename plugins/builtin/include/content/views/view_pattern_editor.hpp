@@ -204,7 +204,7 @@ namespace hex::plugin::builtin {
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
 
-        void drawFindReplaceDialog(std::string &findWord, bool &requestFocus);
+        void drawFindReplaceDialog(std::string &findWord, bool &requestFocus, unsigned &position, unsigned &count, bool &updateCount);
 
         void historyInsert(std::array<std::string,256> &history,u32 &size,  u32 &index, const std::string &value);
 
