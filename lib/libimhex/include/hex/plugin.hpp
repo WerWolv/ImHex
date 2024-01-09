@@ -11,6 +11,7 @@
 
 #include <wolv/utils/string.hpp>
 #include <wolv/utils/preproc.hpp>
+#include <wolv/utils/guards.hpp>
 
 #if defined (IMHEX_STATIC_LINK_PLUGINS)
     #define IMHEX_PLUGIN_VISIBILITY_PREFIX static
@@ -23,57 +24,59 @@
  * Name, Author and Description will be displayed in the in the plugin list on the Welcome screen.
  */
 #define IMHEX_PLUGIN_SETUP(name, author, description) IMHEX_PLUGIN_SETUP_IMPL(name, author, description)
-#define IMHEX_LIBRARY_SETUP() IMHEX_LIBRARY_SETUP_IMPL()
+#define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
 
-#define IMHEX_LIBRARY_SETUP_IMPL()                                                                                  \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                        \
-    static auto WOLV_TOKEN_CONCAT(libraryInitializer_, IMHEX_PLUGIN_NAME) = [] {                                    \
-        initializeLibrary();                                                                                        \
-        hex::log::info("Library plugin '{}' initialized successfully", WOLV_STRINGIFY(IMHEX_PLUGIN_NAME));          \
-        return 0;                                                                                                   \
-    }();                                                                                                            \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                        \
-        ImGui::SetCurrentContext(ctx);                                                                              \
-        GImGui = ctx;                                                                                               \
-    }                                                                                                               \
-    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {       \
-        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                        \
-            nullptr,                                                                                                \
-            initializeLibrary,                                                                                      \
-            nullptr,                                                                                                \
-            nullptr,                                                                                                \
-            nullptr,                                                                                                \
-            nullptr,                                                                                                \
-            setImGuiContext,                                                                                                \
-            nullptr,                                                                                                \
-            nullptr                                                                                                 \
-        });                                                                                                         \
-    }                                                                                                               \
+#define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
+    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloading library '{}'", name); } } HANDLER; }   \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                                    \
+    static auto WOLV_TOKEN_CONCAT(libraryInitializer_, IMHEX_PLUGIN_NAME) = [] {                                                \
+        initializeLibrary();                                                                                                    \
+        hex::log::info("Library plugin '{}' initialized successfully", WOLV_STRINGIFY(IMHEX_PLUGIN_NAME));                      \
+        return 0;                                                                                                               \
+    }();                                                                                                                        \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                                    \
+        ImGui::SetCurrentContext(ctx);                                                                                          \
+        GImGui = ctx;                                                                                                           \
+    }                                                                                                                           \
+    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                   \
+        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                                    \
+            nullptr,                                                                                                            \
+            initializeLibrary,                                                                                                  \
+            nullptr,                                                                                                            \
+            nullptr,                                                                                                            \
+            nullptr,                                                                                                            \
+            nullptr,                                                                                                            \
+            setImGuiContext,                                                                                                    \
+            nullptr,                                                                                                            \
+            nullptr                                                                                                             \
+        });                                                                                                                     \
+    }                                                                                                                           \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary()
 
-#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                          \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                     \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                 \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                       \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getCompatibleVersion() { return IMHEX_VERSION; }                     \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                        \
-        ImGui::SetCurrentContext(ctx);                                                                              \
-        GImGui = ctx;                                                                                               \
-    }                                                                                                               \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                         \
-    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {       \
-        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                        \
-            initializePlugin,                                                                                       \
-            nullptr,                                                                                                \
-            getPluginName,                                                                                          \
-            getPluginAuthor,                                                                                        \
-            getPluginDescription,                                                                                   \
-            getCompatibleVersion,                                                                                   \
-            setImGuiContext,                                                                                        \
-            nullptr,                                                                                                \
-            nullptr                                                                                                 \
-        });                                                                                                         \
-    }                                                                                                               \
+#define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                                      \
+    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloading plugin '{}'", name); } } HANDLER; }    \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                                 \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                             \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                                   \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getCompatibleVersion() { return IMHEX_VERSION; }                                 \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                                    \
+        ImGui::SetCurrentContext(ctx);                                                                                          \
+        GImGui = ctx;                                                                                                           \
+    }                                                                                                                           \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                                     \
+    extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                   \
+        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                                    \
+            initializePlugin,                                                                                                   \
+            nullptr,                                                                                                            \
+            getPluginName,                                                                                                      \
+            getPluginAuthor,                                                                                                    \
+            getPluginDescription,                                                                                               \
+            getCompatibleVersion,                                                                                               \
+            setImGuiContext,                                                                                                    \
+            nullptr,                                                                                                            \
+            nullptr                                                                                                             \
+        });                                                                                                                     \
+    }                                                                                                                           \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin()
 
 /**
