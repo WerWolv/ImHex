@@ -19,7 +19,7 @@ namespace hex::plugin::builtin {
 
     using NumberDisplayStyle = ContentRegistry::DataInspector::NumberDisplayStyle;
 
-    ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name") {
+    ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name", ICON_VS_INSPECT) {
         // Handle region selection
         EventRegionSelected::subscribe(this, [this](const auto &region) {
 

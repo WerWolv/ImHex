@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
 
     using namespace hex::literals;
 
-    ViewInformation::ViewInformation() : View::Window("hex.builtin.view.information.name") {
+    ViewInformation::ViewInformation() : View::Window("hex.builtin.view.information.name", ICON_VS_GRAPH_LINE) {
         EventDataChanged::subscribe(this, [this] {
             m_dataValid = false;
             m_plainTextCharacterPercentage = -1.0;

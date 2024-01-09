@@ -17,7 +17,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name") {
+    ViewBookmarks::ViewBookmarks() : View::Window("hex.builtin.view.bookmarks.name", ICON_VS_BOOKMARK) {
 
         // Handle bookmark add requests sent by the API
         RequestAddBookmark::subscribe(this, [this](Region region, std::string name, std::string comment, color_t color, u64 *id) {
@@ -253,7 +253,6 @@ namespace hex::plugin::builtin {
                 ImGuiExt::TextFormattedCentered("hex.builtin.view.bookmarks.no_bookmarks"_lang);
             }
 
-            int id = 1;
             auto bookmarkToRemove = m_bookmarks->end();
 
             // Draw all bookmarks
@@ -272,34 +271,58 @@ namespace hex::plugin::builtin {
                 hoverColor.Value.w *= 1.3F;
 
                 // Draw bookmark header in the same color as the bookmark was set to
-                ImGui::PushID(id);
+                ImGui::PushID(bookmarkId);
                 ImGui::PushStyleColor(ImGuiCol_Header, color);
                 ImGui::PushStyleColor(ImGuiCol_HeaderActive, color);
                 ImGui::PushStyleColor(ImGuiCol_HeaderHovered, u32(hoverColor));
 
                 ON_SCOPE_EXIT {
-                    ImGui::PopID();
                     ImGui::PopStyleColor(3);
-                    id++;
+                    ImGui::PopID();
                 };
 
                 bool open = true;
                 if (!ImGui::CollapsingHeader(hex::format("{}###bookmark", name).c_str(), locked ? nullptr : &open)) {
                     // Handle dragging bookmarks up and down when they're collapsed
 
-                    // Set the currently held bookmark as the one being dragged
-                    if (ImGui::IsMouseClicked(0) && ImGui::IsItemActivated() && m_dragStartIterator == m_bookmarks->end())
-                        m_dragStartIterator = it;
+                    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceNoHoldToOpenOthers)) {
+                        // Set the payload to the bookmark id
+                        ImGui::SetDragDropPayload("BOOKMARK_PAYLOAD", &bookmarkId, sizeof(bookmarkId));
 
-                    // When the mouse moved away from the current bookmark, swap the dragged bookmark with the current one
-                    if (ImGui::IsItemHovered() && m_dragStartIterator != m_bookmarks->end()) {
-                        std::iter_swap(it, m_dragStartIterator);
-                        m_dragStartIterator = it;
+                        // Draw drag and drop tooltip
+                        ImGui::ColorButton("##color", headerColor.Value, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoAlpha);
+                        ImGui::SameLine();
+                        ImGuiExt::TextFormatted("{}", name);
+                        ImGui::Separator();
+
+                        if (!comment.empty()) {
+                            ImGui::PushTextWrapPos(300_scaled);
+                            ImGuiExt::TextFormatted("{}", comment);
+                            ImGui::PopTextWrapPos();
+                        }
+
+                        ImGui::EndDragDropSource();
                     }
 
-                    // When the mouse is released, reset the dragged bookmark
-                    if (!ImGui::IsMouseDown(0))
-                        m_dragStartIterator = m_bookmarks->end();
+                    if (ImGui::BeginDragDropTarget()) {
+
+                        if (auto payload = ImGui::AcceptDragDropPayload("BOOKMARK_PAYLOAD"); payload != nullptr) {
+                            // Receive the bookmark id from the payload
+                            u64 droppedBookmarkId = *static_cast<const u64*>(payload->Data);
+
+                            // Find the correct bookmark with that id
+                            auto droppedIter = std::ranges::find_if(m_bookmarks->begin(), m_bookmarks->end(), [droppedBookmarkId](const auto &bookmark) {
+                                return bookmark.entry.id == droppedBookmarkId;
+                            });
+
+                            // Swap the two bookmarks
+                            if (droppedIter != m_bookmarks->end()) {
+                                std::iter_swap(it, droppedIter);
+                            }
+                        }
+
+                        ImGui::EndDragDropTarget();
+                    }
                 } else {
                     const auto rowHeight = ImGui::GetTextLineHeightWithSpacing() + 2 * ImGui::GetStyle().FramePadding.y;
                     if (ImGui::BeginTable("##bookmark_table", 3, ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
@@ -465,15 +488,14 @@ namespace hex::plugin::builtin {
                     .comment    = bookmark["comment"],
                     .color      = bookmark["color"],
                     .locked     = bookmark["locked"],
-                    .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : *m_currBookmarkId
+                    .id         = bookmark.contains("id") ? bookmark["id"].get<u64>() : m_currBookmarkId.get(provider)
                 },
                 editor
             });
-
             if (bookmark.contains("id"))
-                m_currBookmarkId = std::max<u64>(m_currBookmarkId, bookmark["id"].get<i64>() + 1);
+                m_currBookmarkId.get(provider) = std::max<u64>(m_currBookmarkId.get(provider), bookmark["id"].get<i64>() + 1);
             else
-                m_currBookmarkId += 1;
+                m_currBookmarkId.get(provider) += 1;
         }
 
         return true;
@@ -504,7 +526,7 @@ namespace hex::plugin::builtin {
 
     void ViewBookmarks::registerMenuItems() {
         /* Create bookmark */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, 1900, CTRLCMD + Keys::B, [&] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.edit", "hex.builtin.menu.edit.bookmark.create" }, ICON_VS_BOOKMARK, 1900, CTRLCMD + Keys::B, [&] {
             if (!ImHexApi::HexEditor::isSelectionValid())
                 return;
 
@@ -516,7 +538,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.file", "hex.builtin.menu.file.import" }, 3000);
 
         /* Import bookmarks */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, 3050, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.bookmark" }, ICON_VS_BOOKMARK, 3050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 try {
                     this->importBookmarks(ImHexApi::Provider::get(), nlohmann::json::parse(wolv::io::File(path, wolv::io::File::Mode::Read).readString()));
@@ -528,7 +550,7 @@ namespace hex::plugin::builtin {
 
 
         /* Export bookmarks */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.bookmark" }, 6250, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.bookmark" }, ICON_VS_BOOKMARK, 6250, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { { "Bookmarks File", "hexbm"} }, [&, this](const std::fs::path &path) {
                 nlohmann::json json;
                 this->exportBookmarks(ImHexApi::Provider::get(), json);

@@ -46,7 +46,11 @@ namespace ImGuiExt {
         if (size == 0)
             return;
 
-        unsigned char *imageData = stbi_load_from_memory(buffer, size, &m_width, &m_height, nullptr, 4);
+        unsigned char *imageData = nullptr;
+
+        if (width == 0 || height == 0)
+            imageData = stbi_load_from_memory(buffer, size, &m_width, &m_height, nullptr, 4);
+
         if (imageData == nullptr) {
             if (width * height * 4 > size)
                 return;

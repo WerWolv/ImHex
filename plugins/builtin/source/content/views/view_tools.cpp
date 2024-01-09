@@ -5,7 +5,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewTools::ViewTools() : View::Window("hex.builtin.view.tools.name") {
+    ViewTools::ViewTools() : View::Window("hex.builtin.view.tools.name", ICON_VS_TOOLS) {
         m_dragStartIterator = ContentRegistry::Tools::impl::getEntries().end();
     }
 

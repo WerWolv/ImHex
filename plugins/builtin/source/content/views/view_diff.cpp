@@ -15,7 +15,7 @@ namespace hex::plugin::builtin {
 
     }
 
-    ViewDiff::ViewDiff() : View::Window("hex.builtin.view.diff.name") {
+    ViewDiff::ViewDiff() : View::Window("hex.builtin.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
 
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {

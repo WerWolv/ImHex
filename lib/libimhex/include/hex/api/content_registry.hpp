@@ -639,6 +639,7 @@ namespace hex {
 
                 struct MenuItem {
                     std::vector<UnlocalizedString> unlocalizedNames;
+                    const char *icon;
                     std::unique_ptr<Shortcut> shortcut;
                     View *view;
                     MenuCallback callback;
@@ -681,6 +682,19 @@ namespace hex {
             /**
              * @brief Adds a new main menu entry
              * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
+             * @param icon The icon to use for the entry
+             * @param priority The priority of the entry. Lower values are displayed first
+             * @param shortcut The shortcut to use for the entry
+             * @param function The function to call when the entry is clicked
+             * @param enabledCallback The function to call to determine if the entry is enabled
+             * @param view The view to use for the entry. If nullptr, the shortcut will work globally
+             */
+            void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const char *icon, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; }, View *view = nullptr);
+
+
+            /**
+             * @brief Adds a new main menu entry
+             * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
              * @param priority The priority of the entry. Lower values are displayed first
              * @param shortcut The shortcut to use for the entry
              * @param function The function to call when the entry is clicked
@@ -697,6 +711,17 @@ namespace hex {
              * @param enabledCallback The function to call to determine if the entry is enabled
              */
             void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+
+            /**
+             * @brief Adds a new main menu sub-menu entry
+             * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
+             * @param icon The icon to use for the entry
+             * @param priority The priority of the entry. Lower values are displayed first
+             * @param function The function to call when the entry is clicked
+             * @param enabledCallback The function to call to determine if the entry is enabled
+             */
+            void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, const char *icon, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+
 
             /**
              * @brief Adds a new main menu separator

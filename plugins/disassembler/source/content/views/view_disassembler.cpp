@@ -9,7 +9,7 @@ using namespace std::literals::string_literals;
 
 namespace hex::plugin::disasm {
 
-    ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name") {
+    ViewDisassembler::ViewDisassembler() : View::Window("hex.disassembler.view.disassembler.name", ICON_VS_FILE_CODE) {
         EventProviderDeleted::subscribe(this, [this](const auto*) {
             m_disassembly.clear();
         });

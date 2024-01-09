@@ -6,7 +6,7 @@
 namespace hex::plugin::builtin {
 
     ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name") {
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.logs.name" }, 2500, Shortcut::None, [&, this] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.logs.name" }, ICON_VS_BRACKET_ERROR, 2500, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
     }

@@ -25,7 +25,7 @@ namespace hex::plugin::yara {
 
     using namespace wolv::literals;
 
-    ViewYara::ViewYara() : View::Window("hex.yara_rules.view.yara.name") {
+    ViewYara::ViewYara() : View::Window("hex.yara_rules.view.yara.name", ICON_VS_BUG) {
         yr_initialize();
 
         ContentRegistry::FileHandler::add({ ".yar", ".yara" }, [](const auto &path) {

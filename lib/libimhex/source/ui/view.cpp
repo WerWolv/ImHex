@@ -6,7 +6,7 @@
 
 namespace hex {
 
-    View::View(UnlocalizedString unlocalizedName) : m_unlocalizedViewName(std::move(unlocalizedName)) { }
+    View::View(UnlocalizedString unlocalizedName, const char *icon) : m_unlocalizedViewName(std::move(unlocalizedName)), m_icon(icon) { }
 
     bool View::shouldDraw() const {
         return ImHexApi::Provider::isValid() && ImHexApi::Provider::get()->isAvailable();

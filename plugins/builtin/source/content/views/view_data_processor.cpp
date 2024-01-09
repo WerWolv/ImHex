@@ -348,7 +348,7 @@ namespace hex::plugin::builtin {
         ViewDataProcessor::Workspace m_workspace;
     };
 
-    ViewDataProcessor::ViewDataProcessor() : View::Window("hex.builtin.view.data_processor.name") {
+    ViewDataProcessor::ViewDataProcessor() : View::Window("hex.builtin.view.data_processor.name", ICON_VS_CHIP) {
         ContentRegistry::DataProcessorNode::add<NodeCustom>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.custom", this);
         ContentRegistry::DataProcessorNode::add<NodeCustomInput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.input");
         ContentRegistry::DataProcessorNode::add<NodeCustomOutput>("hex.builtin.nodes.custom", "hex.builtin.nodes.custom.output");
@@ -393,7 +393,7 @@ namespace hex::plugin::builtin {
         });
 
         /* Import Nodes */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, 4050, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.data_processor" }, ICON_VS_CHIP, 4050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Open, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Read);
@@ -405,7 +405,7 @@ namespace hex::plugin::builtin {
         }, ImHexApi::Provider::isValid);
 
         /* Export Nodes */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, 8050, Shortcut::None, [this]{
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.data_processor" }, ICON_VS_CHIP, 8050, Shortcut::None, [this]{
             fs::openFileBrowser(fs::DialogMode::Save, { {"hex.builtin.view.data_processor.name"_lang, "hexnode" } },
                                 [&, this](const std::fs::path &path) {
                                     wolv::io::File file(path, wolv::io::File::Mode::Create);

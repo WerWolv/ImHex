@@ -7,7 +7,7 @@
 
 namespace hex::plugin::builtin {
 
-    ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name") {
+    ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE) {
         m_patternDrawer = std::make_unique<ui::PatternDrawer>();
 
         // Handle tree style setting changes
