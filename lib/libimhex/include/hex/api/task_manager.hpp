@@ -154,6 +154,9 @@ namespace hex {
          */
         static void runWhenTasksFinished(const std::function<void()> &function);
 
+        static void setCurrentThreadName(const std::string &name);
+        static std::string getCurrentThreadName();
+
         static void collectGarbage();
 
         static size_t getRunningTaskCount();

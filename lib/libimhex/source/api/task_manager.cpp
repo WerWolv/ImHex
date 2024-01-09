@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include <jthread.hpp>
+#include <hex/helpers/utils.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -30,32 +31,6 @@ namespace hex {
 
     }
 
-
-    static void setThreadName(const std::string &name) {
-        #if defined(OS_WINDOWS)
-            typedef struct tagTHREADNAME_INFO {
-                DWORD dwType;
-                LPCSTR szName;
-                DWORD dwThreadID;
-                DWORD dwFlags;
-            } THREADNAME_INFO;
-
-            THREADNAME_INFO info;
-            info.dwType = 0x1000;
-            info.szName = name.c_str();
-            info.dwThreadID = ::GetCurrentThreadId();
-            info.dwFlags = 0;
-
-            constexpr static DWORD MS_VC_EXCEPTION = 0x406D1388;
-            RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), reinterpret_cast<ULONG_PTR*>(&info));
-        #elif defined(OS_LINUX)
-            pthread_setname_np(pthread_self(), name.c_str());
-        #elif defined(OS_WEB)
-            hex::unused(name);
-        #elif defined(OS_MACOS)
-            pthread_setname_np(name.c_str());
-        #endif
-    }
 
     Task::Task(UnlocalizedString unlocalizedName, u64 maxValue, bool background, std::function<void(Task &)> function)
     : m_unlocalizedName(std::move(unlocalizedName)), m_maxValue(maxValue), m_function(std::move(function)), m_background(background) { }
@@ -222,7 +197,6 @@ namespace hex {
         return u32((task->getValue() * 100) / task->getMaxValue());
     }
 
-
     void TaskManager::init() {
         const auto threadCount = std::thread::hardware_concurrency();
 
@@ -235,7 +209,7 @@ namespace hex {
                     std::shared_ptr<Task> task;
 
                     // Set the thread name to "Idle Task" while waiting for a task
-                    setThreadName("Idle Task");
+                    TaskManager::setCurrentThreadName("Idle Task");
 
                     {
                         // Wait for a task to be added to the queue
@@ -255,7 +229,7 @@ namespace hex {
 
                     try {
                         // Set the thread name to the name of the task
-                        setThreadName(Lang(task->m_unlocalizedName));
+                        TaskManager::setCurrentThreadName(Lang(task->m_unlocalizedName));
 
                         // Execute the task
                         task->m_function(*task);
@@ -390,5 +364,42 @@ namespace hex {
 
         s_tasksFinishedCallbacks.push_back(function);
     }
+
+    void TaskManager::setCurrentThreadName(const std::string &name) {
+        #if defined(OS_WINDOWS)
+                auto longName = hex::utf8ToUtf16(name);
+                ::SetThreadDescription(::GetCurrentThread(), longName.c_str());
+        #elif defined(OS_LINUX)
+                pthread_setname_np(pthread_self(), name.c_str());
+        #elif defined(OS_WEB)
+                hex::unused(name);
+        #elif defined(OS_MACOS)
+                pthread_setname_np(name.c_str());
+        #endif
+    }
+
+    std::string TaskManager::getCurrentThreadName() {
+        #if defined(OS_WINDOWS)
+            PWSTR name;
+            if (SUCCEEDED(::GetThreadDescription(::GetCurrentThread(), &name))) {
+                auto utf8Name = hex::utf16ToUtf8(name);
+                LocalFree(name);
+
+                return utf8Name;
+            }
+
+            return "";
+        #elif defined(OS_MACOS) || defined(OS_LINUX)
+            std::array<char, 256> name;
+            pthread_getname_np(pthread_self(), name.data(), name.size());
+
+            return name;
+        #elif defined(OS_WEB)
+            return "";
+        #else
+            return "";
+        #endif
+    }
+
 
 }
