@@ -27,7 +27,7 @@
 #define IMHEX_LIBRARY_SETUP(name) IMHEX_LIBRARY_SETUP_IMPL(name)
 
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloading library '{}'", name); } } HANDLER; }   \
+    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloaded library '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                                    \
     static auto WOLV_TOKEN_CONCAT(libraryInitializer_, IMHEX_PLUGIN_NAME) = [] {                                                \
         initializeLibrary();                                                                                                    \
@@ -54,7 +54,7 @@
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary()
 
 #define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                                      \
-    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloading plugin '{}'", name); } } HANDLER; }    \
+    namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloaded plugin '{}'", name); } } HANDLER; }     \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginName() { return name; }                                                 \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginAuthor() { return author; }                                             \
     IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getPluginDescription() { return description; }                                   \
