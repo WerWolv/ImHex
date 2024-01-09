@@ -311,7 +311,6 @@ namespace hex {
             ::DwmSetWindowAttribute(hwnd, DWMWA_NCRENDERING_POLICY, &attribute, sizeof(attribute));
 
             ::SetWindowPos(hwnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE);
-            ::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW);
         } else {
             s_oldWndProc = ::SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)commonWindowProc);
         }
@@ -389,6 +388,10 @@ namespace hex {
 
     void Window::beginNativeWindowFrame() {
         s_titleBarHeight = ImGui::GetCurrentWindowRead()->MenuBarHeight();
+
+        // Remove WS_POPUP style from the window to make various window management tools work
+        auto hwnd = glfwGetWin32Window(m_window);
+        ::SetWindowLong(hwnd, GWL_STYLE, (GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW) & ~WS_POPUP);
     }
 
     void Window::endNativeWindowFrame() {
