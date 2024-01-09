@@ -33,6 +33,7 @@ namespace hex::plugin::builtin {
 
         Region m_analysisRegion = { 0, 0 };
         Region m_analyzedRegion = { 0, 0 };
+        prv::Provider *m_analyzedProvider = nullptr;
 
         std::string m_dataDescription;
         std::string m_dataMimeType;
