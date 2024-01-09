@@ -29,11 +29,6 @@
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
     namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloaded library '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                                    \
-    static auto WOLV_TOKEN_CONCAT(libraryInitializer_, IMHEX_PLUGIN_NAME) = [] {                                                \
-        initializeLibrary();                                                                                                    \
-        hex::log::info("Library plugin '{}' initialized successfully", WOLV_STRINGIFY(IMHEX_PLUGIN_NAME));                      \
-        return 0;                                                                                                               \
-    }();                                                                                                                        \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                                    \
         ImGui::SetCurrentContext(ctx);                                                                                          \
         GImGui = ctx;                                                                                                           \

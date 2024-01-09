@@ -92,9 +92,9 @@ namespace hex {
         const auto pluginName = wolv::util::toUTF8String(m_path.filename());
 
         if (this->isLibraryPlugin()) {
-            m_initialized = true;
-            return true;
+            m_functions.initializeLibraryFunction();
         }
+
 
         const auto requestedVersion = getCompatibleVersion();
         if (requestedVersion != ImHexApi::System::getImHexVersion()) {

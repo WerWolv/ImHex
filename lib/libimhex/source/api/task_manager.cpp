@@ -390,10 +390,10 @@ namespace hex {
 
             return "";
         #elif defined(OS_MACOS) || defined(OS_LINUX)
-            std::array<char, 256> name;
+            std::array<char, 256> name = { };
             pthread_getname_np(pthread_self(), name.data(), name.size());
 
-            return name;
+            return name.data();
         #elif defined(OS_WEB)
             return "";
         #else
