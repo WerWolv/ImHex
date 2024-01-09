@@ -75,7 +75,7 @@ namespace hex::log::impl {
 
         std::string projectThreadTag = projectName;
         if (auto threadName = TaskManager::getCurrentThreadName(); !threadName.empty())
-            projectThreadTag += fmt::format("|{0}", threadName);
+            projectThreadTag += fmt::format(" | {0}", threadName);
 
         constexpr static auto MaxTagLength = 25;
         if (projectThreadTag.length() > MaxTagLength)

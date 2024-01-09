@@ -367,8 +367,37 @@ namespace hex {
 
     void TaskManager::setCurrentThreadName(const std::string &name) {
         #if defined(OS_WINDOWS)
-                auto longName = hex::utf8ToUtf16(name);
-                ::SetThreadDescription(::GetCurrentThread(), longName.c_str());
+            using SetThreadDescriptionFunc =  HRESULT(WINAPI*)(HANDLE hThread, PCWSTR lpThreadDescription);
+
+            static auto setThreadDescription = reinterpret_cast<SetThreadDescriptionFunc>(
+                reinterpret_cast<uintptr_t>(
+                    ::GetProcAddress(
+                        ::GetModuleHandle("Kernel32.dll"),
+                        "SetThreadDescription"
+                    )
+                )
+            );
+
+            if (setThreadDescription != nullptr) {
+                const auto longName = hex::utf8ToUtf16(name);
+                setThreadDescription(::GetCurrentThread(), longName.c_str());
+            } else {
+                struct THREADNAME_INFO {
+                    DWORD dwType;
+                    LPCSTR szName;
+                    DWORD dwThreadID;
+                    DWORD dwFlags;
+                };
+
+                THREADNAME_INFO info = { };
+                info.dwType = 0x1000;
+                info.szName = name.c_str();
+                info.dwThreadID = ::GetCurrentThreadId();
+                info.dwFlags = 0;
+
+                constexpr static DWORD MS_VC_EXCEPTION = 0x406D1388;
+                RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), reinterpret_cast<ULONG_PTR*>(&info));
+            }
         #elif defined(OS_LINUX)
                 pthread_setname_np(pthread_self(), name.c_str());
         #elif defined(OS_WEB)
@@ -390,10 +419,10 @@ namespace hex {
 
             return "";
         #elif defined(OS_MACOS) || defined(OS_LINUX)
-            std::array<char, 256> name;
+            std::array<char, 256> name = { };
             pthread_getname_np(pthread_self(), name.data(), name.size());
 
-            return name;
+            return name.data();
         #elif defined(OS_WEB)
             return "";
         #else
