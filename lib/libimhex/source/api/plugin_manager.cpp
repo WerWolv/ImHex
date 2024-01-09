@@ -93,6 +93,11 @@ namespace hex {
 
         if (this->isLibraryPlugin()) {
             m_functions.initializeLibraryFunction();
+
+            log::info("Library '{}' initialized successfully", pluginName);
+
+            m_initialized = true;
+            return true;
         }
 
 
