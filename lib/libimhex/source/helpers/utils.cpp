@@ -550,6 +550,60 @@ namespace hex {
         return utf16;
     }
 
+    std::string utf16ToUtf8(const std::wstring& utf16) {
+        std::vector<u32> unicodes;
+
+        for (size_t index = 0; index < utf16.size();) {
+            u32 unicode = 0;
+
+            wchar_t wch = utf16[index];
+            index += 1;
+
+            if (wch < 0xD800 || wch > 0xDFFF) {
+                unicode = static_cast<u32>(wch);
+            } else if (wch >= 0xD800 && wch <= 0xDBFF) {
+                if (index == utf16.size())
+                    return "";
+
+                wchar_t nextWch = utf16[index];
+                index += 1;
+
+                if (nextWch < 0xDC00 || nextWch > 0xDFFF)
+                    return "";
+
+                unicode = static_cast<u32>(((wch - 0xD800) << 10) + (nextWch - 0xDC00) + 0x10000);
+            } else {
+                return "";
+            }
+
+            unicodes.push_back(unicode);
+        }
+
+        std::string utf8;
+
+        for (auto unicode : unicodes) {
+            if (unicode <= 0x7F) {
+                utf8 += static_cast<char>(unicode);
+            } else if (unicode <= 0x7FF) {
+                utf8 += static_cast<char>(0xC0 | ((unicode >> 6) & 0x1F));
+                utf8 += static_cast<char>(0x80 | (unicode & 0x3F));
+            } else if (unicode <= 0xFFFF) {
+                utf8 += static_cast<char>(0xE0 | ((unicode >> 12) & 0x0F));
+                utf8 += static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
+                utf8 += static_cast<char>(0x80 | (unicode & 0x3F));
+            } else if (unicode <= 0x10FFFF) {
+                utf8 += static_cast<char>(0xF0 | ((unicode >> 18) & 0x07));
+                utf8 += static_cast<char>(0x80 | ((unicode >> 12) & 0x3F));
+                utf8 += static_cast<char>(0x80 | ((unicode >> 6) & 0x3F));
+                utf8 += static_cast<char>(0x80 | (unicode & 0x3F));
+            } else {
+                return "";
+            }
+        }
+
+        return utf8;
+    }
+
     float float16ToFloat32(u16 float16) {
         u32 sign     = float16 >> 15;
         u32 exponent = (float16 >> 10) & 0x1F;

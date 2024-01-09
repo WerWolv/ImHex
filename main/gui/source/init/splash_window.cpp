@@ -25,6 +25,7 @@
 #include <future>
 #include <numeric>
 #include <random>
+#include <hex/api/task_manager.hpp>
 #include <nlohmann/json.hpp>
 
 using namespace std::literals::chrono_literals;
@@ -191,7 +192,10 @@ namespace hex::init {
         // If the task can be run asynchronously, run it in a separate thread
         // otherwise run it in this thread and wait for it to finish
         if (task.async) {
-            std::thread([runTask = std::move(runTask)]{ runTask(); }).detach();
+            std::thread([name = task.name, runTask = std::move(runTask)] {
+                TaskManager::setCurrentThreadName(name);
+                runTask();
+            }).detach();
         } else {
             runTask();
         }
@@ -199,6 +203,8 @@ namespace hex::init {
 
     std::future<bool> WindowSplash::processTasksAsync() {
         return std::async(std::launch::async, [this] {
+            TaskManager::setCurrentThreadName("Init Tasks");
+
             auto startTime = std::chrono::high_resolution_clock::now();
 
             // Loop over all registered init tasks

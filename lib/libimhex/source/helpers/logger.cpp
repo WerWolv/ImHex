@@ -6,6 +6,7 @@
 
 #include <chrono>
 #include <fmt/chrono.h>
+#include <hex/api/task_manager.hpp>
 
 #if defined(OS_WINDOWS)
     #include <Windows.h>
@@ -72,10 +73,18 @@ namespace hex::log::impl {
         else
             fmt::print(dest, ts, "{0} ", level);
 
-        fmt::print(dest, "[{0}] ", projectName);
+        std::string projectThreadTag = projectName;
+        if (auto threadName = TaskManager::getCurrentThreadName(); !threadName.empty())
+            projectThreadTag += fmt::format("|{0}", threadName);
 
-        auto projectNameLength = std::string_view(projectName).length();
-        fmt::print(dest, "{}", std::string(projectNameLength > 10 ? 0 : 10 - projectNameLength, ' '));
+        constexpr static auto MaxTagLength = 25;
+        if (projectThreadTag.length() > MaxTagLength)
+            projectThreadTag.resize(MaxTagLength);
+
+        fmt::print(dest, "[{0}] ", projectThreadTag);
+
+        const auto projectNameLength = projectThreadTag.length();
+        fmt::print(dest, "{0}", std::string(projectNameLength > MaxTagLength ? 0 : MaxTagLength - projectNameLength, ' '));
     }
 
     void assertionHandler(bool expr, const char* exprString, const char* file, int line) {

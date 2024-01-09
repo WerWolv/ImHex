@@ -259,6 +259,7 @@
         "hex.builtin.nodes.constants.rgba8.output.b": "Blue",
         "hex.builtin.nodes.constants.rgba8.output.g": "Green",
         "hex.builtin.nodes.constants.rgba8.output.r": "Red",
+        "hex.builtin.nodes.constants.rgba8.output.color": "RGBA8",
         "hex.builtin.nodes.constants.string": "String",
         "hex.builtin.nodes.constants.string.header": "String",
         "hex.builtin.nodes.control_flow": "Control flow",

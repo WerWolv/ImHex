@@ -262,7 +262,7 @@ namespace hex {
         for (size_t i = 0; i < pluginCount; i++) {
             auto &plugin = plugins[pluginCount - 1 - i];
             if (plugin.isLoaded()) {
-                log::info("Unloading plugin '{}'", plugin.getPluginName());
+                log::info("Trying to unload plugin '{}'", plugin.getPluginName());
             }
 
             plugins.pop_back();

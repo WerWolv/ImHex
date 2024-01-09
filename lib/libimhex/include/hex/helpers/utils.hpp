@@ -78,7 +78,8 @@ namespace hex {
     [[nodiscard]] std::string encodeByteString(const std::vector<u8> &bytes);
     [[nodiscard]] std::vector<u8> decodeByteString(const std::string &string);
 
-    std::wstring utf8ToUtf16(const std::string& utf8);
+    [[nodiscard]] std::wstring utf8ToUtf16(const std::string& utf8);
+    [[nodiscard]] std::string utf16ToUtf8(const std::wstring& utf16);
 
     [[nodiscard]] constexpr u64 extract(u8 from, u8 to, const std::unsigned_integral auto &value) {
         if (from < to) std::swap(from, to);

@@ -144,10 +144,13 @@ namespace hex::plugin::builtin {
     class NodeRGBA8 : public dp::Node {
     public:
         NodeRGBA8() : Node("hex.builtin.nodes.constants.rgba8.header",
-                          { dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.r"),
+                          {
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.r"),
                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.g"),
                               dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.b"),
-                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.a") }) { }
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Integer, "hex.builtin.nodes.constants.rgba8.output.a"),
+                              dp::Attribute(dp::Attribute::IOType::Out, dp::Attribute::Type::Buffer,  "hex.builtin.nodes.constants.rgba8.output.color"),
+                          }) { }
 
         void drawNode() override {
             ImGui::PushItemWidth(200_scaled);
@@ -156,10 +159,18 @@ namespace hex::plugin::builtin {
         }
 
         void process() override {
-            this->setBufferOnOutput(0, wolv::util::toBytes<u8>(u8(m_color.Value.x * 0xFF)));
-            this->setBufferOnOutput(1, wolv::util::toBytes<u8>(u8(m_color.Value.y * 0xFF)));
-            this->setBufferOnOutput(2, wolv::util::toBytes<u8>(u8(m_color.Value.z * 0xFF)));
-            this->setBufferOnOutput(3, wolv::util::toBytes<u8>(u8(m_color.Value.w * 0xFF)));
+            this->setIntegerOnOutput(0, u8(m_color.Value.x * 0xFF));
+            this->setIntegerOnOutput(1, u8(m_color.Value.y * 0xFF));
+            this->setIntegerOnOutput(2, u8(m_color.Value.z * 0xFF));
+            this->setIntegerOnOutput(3, u8(m_color.Value.w * 0xFF));
+
+            std::array buffer = {
+                u8(m_color.Value.x * 0xFF),
+                u8(m_color.Value.y * 0xFF),
+                u8(m_color.Value.z * 0xFF),
+                u8(m_color.Value.w * 0xFF)
+            };
+            this->setBufferOnOutput(4, buffer);
         }
 
         void store(nlohmann::json &j) const override {

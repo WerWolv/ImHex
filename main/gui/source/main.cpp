@@ -246,6 +246,7 @@ namespace {
  * @return Exit code
  */
 int main(int argc, char **argv) {
+    TaskManager::setCurrentThreadName("Main");
     Window::initNative();
     crash::setupCrashHandlers();
 
