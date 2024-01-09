@@ -528,9 +528,11 @@ namespace hex::plugin::builtin {
         }
 
     private:
-        static void fill(u64 address, size_t size, const std::string &input) {
+        static void fill(u64 address, size_t size, std::string input) {
             if (!ImHexApi::Provider::isValid())
                 return;
+
+            std::erase(input, ' ');
 
             auto bytes = crypt::decode16(input);
             if (bytes.empty())
