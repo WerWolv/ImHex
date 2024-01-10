@@ -4,6 +4,7 @@
 #include <hex/helpers/logger.hpp>
 
 #include <algorithm>
+#include <ranges>
 
 #include <jthread.hpp>
 #include <hex/helpers/utils.hpp>
@@ -29,7 +30,7 @@ namespace hex {
         std::condition_variable s_jobCondVar;
         std::vector<std::jthread> s_workers;
 
-        thread_local std::string s_currentThreadName;
+        thread_local std::array<char, 256> s_currentThreadName;
 
     }
 
@@ -58,7 +59,6 @@ namespace hex {
     Task::~Task() {
         if (!this->isFinished())
             this->interrupt();
-        s_currentThreadName.clear();
     }
 
     void Task::update(u64 value) {
@@ -280,8 +280,6 @@ namespace hex {
 
         s_deferredCalls.clear();
         s_tasksFinishedCallbacks.clear();
-
-        s_currentThreadName.clear();
     }
 
     TaskHolder TaskManager::createTask(std::string name, u64 maxValue, bool background, std::function<void(Task&)> function) {
@@ -371,7 +369,9 @@ namespace hex {
     }
 
     void TaskManager::setCurrentThreadName(const std::string &name) {
-        s_currentThreadName = name;
+        std::ranges::fill(s_currentThreadName, '\0');
+        std::ranges::copy(name | std::views::take(255), s_currentThreadName.begin());
+
         #if defined(OS_WINDOWS)
             using SetThreadDescriptionFunc =  HRESULT(WINAPI*)(HANDLE hThread, PCWSTR lpThreadDescription);
 
@@ -414,7 +414,7 @@ namespace hex {
     }
 
     std::string TaskManager::getCurrentThreadName() {
-        return s_currentThreadName;
+        return s_currentThreadName.data();
     }
 
 
