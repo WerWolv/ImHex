@@ -80,7 +80,7 @@ namespace hex::plugin::builtin {
                 const auto offset = scaled({ 15, 15 });
                 const auto margin = scaled({ 20, 20 });
 
-                const auto text = "Drop files here to open them...";
+                const auto text = "hex.builtin.drag_drop.text"_lang;
                 const auto textSize = ImGui::CalcTextSize(text);
 
                 drawList->AddShadowRect(center - ImVec2(textSize.x, iconSize.y + 40_scaled) / 2.0F - offset - margin, center + ImVec2(textSize.x, iconSize.y + 75_scaled) / 2.0F + offset + ImVec2(0, textSize.y) + margin, ImGui::GetColorU32(ImGuiCol_WindowShadow), 20_scaled, ImVec2(), ImDrawFlags_None, 10_scaled);
