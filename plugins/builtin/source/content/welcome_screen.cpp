@@ -632,9 +632,11 @@ namespace hex::plugin::builtin {
 
                     if (response.isSuccess()) {
                         const auto &data = response.getData();
-                        TaskManager::doLater([data] {
-                            s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
-                        });
+                        if (!data.empty()) {
+                            TaskManager::doLater([data] {
+                                s_infoBannerTexture = ImGuiExt::Texture(data.data(), data.size(), ImGuiExt::Texture::Filter::Linear);
+                            });
+                        }
                     }
                 });
             }
