@@ -90,7 +90,6 @@ namespace hex::plugin::builtin {
         EventProviderOpened::subscribe([](hex::prv::Provider *provider) {
             if (provider != nullptr && ImHexApi::Provider::get() == provider)
                 RequestUpdateWindowTitle::post();
-            EventProviderChanged::post(nullptr, provider);
         });
 
         RequestOpenFile::subscribe(openFile);

@@ -7,15 +7,10 @@
 #include <pl/pattern_language.hpp>
 #include <pl/core/errors/error.hpp>
 
-#include <content/providers/memory_file_provider.hpp>
-
 #include <ui/hex_editor.hpp>
 #include <ui/pattern_drawer.hpp>
 
-
-#include <cstring>
 #include <filesystem>
-#include <string_view>
 #include <functional>
 
 #include <TextEditor.h>
@@ -23,6 +18,36 @@
 namespace pl::ptrn { class Pattern; }
 
 namespace hex::plugin::builtin {
+
+    class PatternSourceCode {
+    public:
+        const std::string& get(prv::Provider *provider) {
+            if (m_synced)
+                return m_sharedSource;
+
+            return m_perProviderSource.get(provider);
+        }
+
+        void set(prv::Provider *provider, std::string source) {
+            source = wolv::util::trim(source);
+
+            m_perProviderSource.set(source, provider);
+            m_sharedSource = std::move(source);
+        }
+
+        bool isSynced() const {
+            return m_synced;
+        }
+
+        void enableSync(bool enabled) {
+            m_synced = enabled;
+        }
+
+    private:
+        bool m_synced = false;
+        PerProvider<std::string> m_perProviderSource;
+        std::string m_sharedSource;
+    };
 
     class ViewPatternEditor : public View::Window {
     public:
@@ -166,14 +191,13 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_dangerousFunctionCalled = false;
         std::atomic<DangerousFunctionPerms> m_dangerousFunctionsAllowed = DangerousFunctionPerms::Ask;
 
-        bool m_syncPatternSourceCode = false;
         bool m_autoLoadPatterns = true;
 
         std::map<prv::Provider*, std::function<void()>> m_sectionWindowDrawer;
 
         ui::HexEditor m_sectionHexEditor;
 
-        PerProvider<std::string> m_sourceCode;
+        PatternSourceCode m_sourceCode;
         PerProvider<std::vector<std::string>> m_console;
         PerProvider<bool> m_executionDone = true;
 
