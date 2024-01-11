@@ -37,6 +37,11 @@ namespace hex::prv {
 
         Provider();
         virtual ~Provider();
+        Provider(const Provider&) = delete;
+        Provider& operator=(const Provider&) = delete;
+
+        Provider(Provider &&provider) noexcept = default;
+        Provider& operator=(Provider &&provider) noexcept = default;
 
         /**
          * @brief Opens this provider

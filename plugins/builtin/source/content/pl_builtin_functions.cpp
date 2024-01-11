@@ -8,6 +8,7 @@
 #include <pl/core/evaluator.hpp>
 
 #include <llvm/Demangle/Demangle.h>
+#include <pl/patterns/pattern.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -26,6 +27,20 @@ namespace hex::plugin::builtin {
                 auto selection = ImHexApi::HexEditor::getSelection();
 
                 return u128(u128(selection->getStartAddress()) << 64 | u128(selection->getSize()));
+            });
+
+            /* add_virtual_file(path, pattern) */
+            ContentRegistry::PatternLanguage::addFunction(nsHexCore, "add_virtual_file", FunctionParameterCount::exactly(2), [](Evaluator *, auto params) -> std::optional<Token::Literal> {
+                auto path = params[0].toString(false);
+                auto pattern = params[1].toPattern();
+
+                Region region = Region::Invalid();
+                if (pattern->getSection() == pl::ptrn::Pattern::MainSectionId)
+                    region = Region(pattern->getOffset(), pattern->getSize());
+
+                ImHexApi::HexEditor::addVirtualFile(path, pattern->getBytes(), region);
+
+                return std::nullopt;
             });
         }
 

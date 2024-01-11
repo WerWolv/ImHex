@@ -4,6 +4,7 @@
 #include <hex/api/event_manager.hpp>
 
 #include <map>
+#include <ranges>
 #include <utility>
 
 namespace hex {
@@ -71,10 +72,21 @@ namespace hex {
             return this->get();
         }
 
+        auto all() {
+            return m_data | std::views::values;
+        }
+
+        void setOnCreateCallback(std::function<void(prv::Provider *, T&)> callback) {
+            m_onCreateCallback = std::move(callback);
+        }
+
     private:
         void onCreate() {
             EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {
-                m_data.emplace(provider, T());
+                auto [it, inserted] = m_data.emplace(provider, T());
+                auto &[key, value] = *it;
+                if (m_onCreateCallback)
+                    m_onCreateCallback(key, value);
             });
 
             EventProviderDeleted::subscribe(this, [this](prv::Provider *provider){
@@ -111,6 +123,7 @@ namespace hex {
 
     private:
         std::map<prv::Provider *, T> m_data;
+        std::function<void(prv::Provider *, T&)> m_onCreateCallback;
     };
 
 }

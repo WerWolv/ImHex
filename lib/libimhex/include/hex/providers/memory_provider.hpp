@@ -11,8 +11,14 @@ namespace hex::prv {
     class MemoryProvider : public hex::prv::Provider {
     public:
         MemoryProvider() = default;
-        explicit MemoryProvider(std::vector<u8> data) : m_data(std::move(data)) { }
+        explicit MemoryProvider(std::vector<u8> data, std::string name = "") : m_data(std::move(data)), m_name(std::move(name)) { }
         ~MemoryProvider() override = default;
+
+        MemoryProvider(const MemoryProvider&) = delete;
+        MemoryProvider& operator=(const MemoryProvider&) = delete;
+
+        MemoryProvider(MemoryProvider &&provider) noexcept = default;
+        MemoryProvider& operator=(MemoryProvider &&provider) noexcept = default;
 
         [[nodiscard]] bool isAvailable()        const override { return true;           }
         [[nodiscard]] bool isReadable()         const override { return true;           }
@@ -32,7 +38,7 @@ namespace hex::prv {
         void insertRaw(u64 offset, u64 size) override;
         void removeRaw(u64 offset, u64 size) override;
 
-        [[nodiscard]] std::string getName() const override { return ""; }
+        [[nodiscard]] std::string getName() const override { return m_name; }
 
         [[nodiscard]] std::string getTypeName() const override { return "MemoryProvider"; }
     private:

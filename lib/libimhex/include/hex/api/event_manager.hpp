@@ -285,6 +285,7 @@ namespace hex {
     EVENT_DEF(RequestOpenFile, std::fs::path);
     EVENT_DEF(RequestChangeTheme, std::string);
     EVENT_DEF(RequestOpenPopup, std::string);
+    EVENT_DEF(RequestAddVirtualFile, std::fs::path, std::vector<u8>, Region);
 
     /**
      * @brief Creates a provider from it's unlocalized name, and add it to the provider list

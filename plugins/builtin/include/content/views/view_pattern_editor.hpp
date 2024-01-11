@@ -35,13 +35,20 @@ namespace hex::plugin::builtin {
             return ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
         }
 
-    private:
+    public:
+        struct VirtualFile {
+            std::fs::path path;
+            std::vector<u8> data;
+            Region region;
+        };
+
         enum class DangerousFunctionPerms : u8 {
             Ask,
             Allow,
             Deny
         };
 
+    private:
         class PopupAcceptPattern : public Popup<PopupAcceptPattern> {
         public:
             explicit PopupAcceptPattern(ViewPatternEditor *view) : Popup("hex.builtin.view.pattern_editor.accept_pattern"), m_view(view) {}
@@ -145,7 +152,7 @@ namespace hex::plugin::builtin {
         bool m_triggerEvaluation  = false;
         std::atomic<bool> m_triggerAutoEvaluate = false;
 
-        bool m_lastEvaluationProcessed = true;
+        volatile bool m_lastEvaluationProcessed = true;
         bool m_lastEvaluationResult    = false;
 
         std::atomic<u32> m_runningEvaluators = 0;
@@ -177,6 +184,8 @@ namespace hex::plugin::builtin {
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
 
+        PerProvider<std::vector<VirtualFile>> m_virtualFiles;
+
         PerProvider<std::list<EnvVar>> m_envVarEntries;
 
         PerProvider<bool> m_shouldAnalyze;
@@ -185,7 +194,7 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_resetDebuggerVariables;
         int m_debuggerScopeIndex = 0;
 
-        std::array<AccessData, 512> m_accessHistory;
+        std::array<AccessData, 512> m_accessHistory = {};
         u32 m_accessHistoryIndex = 0;
 
     private:
@@ -193,6 +202,7 @@ namespace hex::plugin::builtin {
         void drawEnvVars(ImVec2 size, std::list<EnvVar> &envVars);
         void drawVariableSettings(ImVec2 size, std::map<std::string, PatternVariable> &patternVariables);
         void drawSectionSelector(ImVec2 size, const std::map<u64, pl::api::Section> &sections);
+        void drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const;
         void drawDebugger(ImVec2 size);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);

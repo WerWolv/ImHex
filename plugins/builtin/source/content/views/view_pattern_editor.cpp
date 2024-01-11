@@ -129,6 +129,49 @@ namespace hex::plugin::builtin {
         return langDef;
     }
 
+    static void drawVirtualFileTree(const std::vector<const ViewPatternEditor::VirtualFile*> &virtualFiles, u32 level = 0) {
+        std::map<std::string, std::vector<const ViewPatternEditor::VirtualFile*>> currFolderEntries;
+        for (const auto &file : virtualFiles) {
+            const auto &path = file->path;
+
+            auto currSegment = wolv::util::toUTF8String(*std::next(path.begin(), level));
+            if (std::distance(path.begin(), path.end()) == (level + 1)) {
+                ImGui::TableNextRow();
+                ImGui::TableNextColumn();
+
+                ImGui::TextUnformatted(ICON_VS_FILE);
+                ImGui::SameLine();
+
+                ImGui::TreeNodeEx(currSegment.c_str(), ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+
+                if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+                    ImHexApi::Provider::add<prv::MemoryProvider>(file->data, wolv::util::toUTF8String(file->path.filename()));
+                }
+
+                continue;
+            }
+
+            currFolderEntries[currSegment].emplace_back(file);
+        }
+
+        for (const auto &[segment, entries] : currFolderEntries) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+
+            if (level == 0) {
+                ImGui::TextUnformatted(ICON_VS_DATABASE);
+            } else {
+                ImGui::TextUnformatted(ICON_VS_FOLDER);
+            }
+
+            ImGui::SameLine();
+            if (ImGui::TreeNodeEx(segment.c_str(), ImGuiTreeNodeFlags_SpanFullWidth)) {
+                drawVirtualFileTree(entries, level + 1);
+                ImGui::TreePop();
+            }
+        }
+    }
+
     ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name", ICON_VS_SYMBOL_NAMESPACE) {
         m_parserRuntime = std::make_unique<pl::PatternLanguage>();
         ContentRegistry::PatternLanguage::configureRuntime(*m_parserRuntime, nullptr);
@@ -153,6 +196,7 @@ namespace hex::plugin::builtin {
         EventFileLoaded::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         EventProviderClosed::unsubscribe(this);
+        RequestAddVirtualFile::unsubscribe(this);
     }
 
     void ViewPatternEditor::drawContent() {
@@ -237,6 +281,10 @@ namespace hex::plugin::builtin {
                     this->drawSectionSelector(settingsSize, *m_sections);
                     ImGui::EndTabItem();
                 }
+                if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.virtual_files"_lang)) {
+                    this->drawVirtualFiles(settingsSize, *m_virtualFiles);
+                    ImGui::EndTabItem();
+                }
                 if (ImGui::BeginTabItem("hex.builtin.view.pattern_editor.debugger"_lang)) {
                     this->drawDebugger(settingsSize);
                     ImGui::EndTabItem();
@@ -296,7 +344,7 @@ namespace hex::plugin::builtin {
                         const auto dataSize = runtime.getInternals().evaluator->getDataSize();
 
                         const auto insertPos = [&, this](u64 address, u32 color) {
-                            const auto progress = (address - dataBaseAddress) / float(dataSize);
+                            const auto progress = float(address - dataBaseAddress) / float(dataSize);
 
                             m_accessHistory[m_accessHistoryIndex] = { progress, color };
                             m_accessHistoryIndex = (m_accessHistoryIndex + 1) % m_accessHistory.size();
@@ -658,6 +706,22 @@ namespace hex::plugin::builtin {
             ImGui::EndTable();
         }
     }
+
+    void ViewPatternEditor::drawVirtualFiles(ImVec2 size, const std::vector<VirtualFile> &virtualFiles) const {
+        std::vector<const VirtualFile*> virtualFilePointers;
+
+        for (const auto &file : virtualFiles)
+            virtualFilePointers.emplace_back(&file);
+
+        if (ImGui::BeginTable("Virtual File Tree", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_RowBg, size)) {
+            ImGui::TableSetupColumn("##path", ImGuiTableColumnFlags_WidthStretch);
+
+            drawVirtualFileTree(virtualFilePointers);
+
+            ImGui::EndTable();
+        }
+    }
+
 
     void ViewPatternEditor::drawDebugger(ImVec2 size) {
         auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
@@ -1178,6 +1242,10 @@ namespace hex::plugin::builtin {
                 m_textEditor.SetText("");
                 m_sourceCode = "";
             }
+        });
+
+        RequestAddVirtualFile::subscribe(this, [this](const std::fs::path &path, const std::vector<u8> &data, Region region) {
+            m_virtualFiles->emplace_back(path, data, region);
         });
     }
 
