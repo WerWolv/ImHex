@@ -174,7 +174,7 @@ namespace hex {
         if (m_functions.isBuiltinPluginFunction != nullptr)
             return m_functions.isBuiltinPluginFunction();
         else
-            return false;
+            return getPluginName() == "Built-in";
     }
 
     const std::fs::path &Plugin::getPath() const {
