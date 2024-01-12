@@ -26,22 +26,22 @@ namespace hex {
         using InitializePluginFunc     = void (*)();
         using InitializeLibraryFunc    = void (*)();
         using GetPluginNameFunc        = const char *(*)();
+        using GetLibraryNameFunc       = const char *(*)();
         using GetPluginAuthorFunc      = const char *(*)();
         using GetPluginDescriptionFunc = const char *(*)();
         using GetCompatibleVersionFunc = const char *(*)();
         using SetImGuiContextFunc      = void (*)(ImGuiContext *);
-        using IsBuiltinPluginFunc      = bool (*)();
         using GetSubCommandsFunc       = void* (*)();
         using GetFeaturesFunc          = void* (*)();
 
         InitializePluginFunc        initializePluginFunction        = nullptr;
         InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
         GetPluginNameFunc           getPluginNameFunction           = nullptr;
+        GetLibraryNameFunc          getLibraryNameFunction           = nullptr;
         GetPluginAuthorFunc         getPluginAuthorFunction         = nullptr;
         GetPluginDescriptionFunc    getPluginDescriptionFunction    = nullptr;
         GetCompatibleVersionFunc    getCompatibleVersionFunction    = nullptr;
         SetImGuiContextFunc         setImGuiContextFunction         = nullptr;
-        IsBuiltinPluginFunc         isBuiltinPluginFunction         = nullptr;
         GetSubCommandsFunc          getSubCommandsFunction          = nullptr;
         GetFeaturesFunc             getFeaturesFunction             = nullptr;
     };
@@ -49,7 +49,7 @@ namespace hex {
     class Plugin {
     public:
         explicit Plugin(const std::fs::path &path);
-        explicit Plugin(const PluginFunctions &functions);
+        explicit Plugin(const std::string &name, const PluginFunctions &functions);
 
         Plugin(const Plugin &) = delete;
         Plugin(Plugin &&other) noexcept;
@@ -64,7 +64,6 @@ namespace hex {
         [[nodiscard]] std::string getPluginDescription() const;
         [[nodiscard]] std::string getCompatibleVersion() const;
         void setImGuiContext(ImGuiContext *ctx) const;
-        [[nodiscard]] bool isBuiltinPlugin() const;
 
         [[nodiscard]] const std::fs::path &getPath() const;
 
@@ -100,7 +99,7 @@ namespace hex {
         static void unload();
         static void reload();
 
-        static void addPlugin(PluginFunctions functions);
+        static void addPlugin(const std::string &name, PluginFunctions functions);
 
         static std::vector<Plugin> &getPlugins();
         static std::vector<std::fs::path> &getPluginPaths();

@@ -119,7 +119,3 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
 
     handleBorderlessWindowMode();
 }
-
-// This is the default plugin
-// DO NOT USE THIS IN ANY OTHER PLUGIN
-extern "C" bool isBuiltinPlugin() { return true; }

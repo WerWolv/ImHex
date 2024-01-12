@@ -60,10 +60,8 @@ namespace hex {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
                     openEmergencyPopup("No Plugins");
-                } else if (argument == "no-builtin-plugin") {
-                    openEmergencyPopup("No Builtin Plugin");
-                } else if (argument == "multiple-builtin-plugins") {
-                    openEmergencyPopup("Multiple Builtin Plugins");
+                } else if (argument == "duplicate-plugins") {
+                    openEmergencyPopup("Duplicate Plugins loaded");
                 }
             }
         }
@@ -620,31 +618,13 @@ namespace hex {
                 ImGui::EndPopup();
             }
 
-            // No built-in plugin error popup
+            // Duplicate plugins error popup
             ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-            if (ImGui::BeginPopupModal("No Builtin Plugin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-                ImGui::TextUnformatted("The ImHex built-in plugins could not be loaded!");
-                ImGui::TextUnformatted("Make sure you installed ImHex correctly.");
-                ImGui::TextUnformatted("There should be at least a 'builtin.hexplug' file in your plugins folder.");
-
-                ImGui::NewLine();
-
-                drawPluginFolderTable();
-
-                ImGui::NewLine();
-                if (ImGui::Button("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-                    ImHexApi::System::closeImHex(true);
-
-                ImGui::EndPopup();
-            }
-
-            // Multiple built-in plugins error popup
-            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-            if (ImGui::BeginPopupModal("Multiple Builtin Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-                ImGui::TextUnformatted("ImHex found and attempted to load multiple built-in plugins!");
+            if (ImGui::BeginPopupModal("Duplicate Plugins loaded", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+                ImGui::TextUnformatted("ImHex found and attempted to load multiple plugins with the same name!");
                 ImGui::TextUnformatted("Make sure you installed ImHex correctly and, if needed,");
-                ImGui::TextUnformatted("cleaned up older installations correctly,");
-                ImGui::TextUnformatted("There should be exactly one 'builtin.hexplug' file in any one your plugin folders.");
+                ImGui::TextUnformatted("cleaned up older installations correctly.");
+                ImGui::TextUnformatted("Each plugin should only ever be loaded once.");
 
                 ImGui::NewLine();
 

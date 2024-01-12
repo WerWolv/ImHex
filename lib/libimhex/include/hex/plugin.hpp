@@ -29,15 +29,17 @@
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
     namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::info("Unloaded library '{}'", name); } } HANDLER; }    \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                                    \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getLibraryName() { return name; }                                                \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                                    \
         ImGui::SetCurrentContext(ctx);                                                                                          \
         GImGui = ctx;                                                                                                           \
     }                                                                                                                           \
     extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                   \
-        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                                    \
+        hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                                    \
             nullptr,                                                                                                            \
             initializeLibrary,                                                                                                  \
             nullptr,                                                                                                            \
+            getLibraryName,                                                                                                     \
             nullptr,                                                                                                            \
             nullptr,                                                                                                            \
             nullptr,                                                                                                            \
@@ -60,10 +62,11 @@
     }                                                                                                                           \
     IMHEX_PLUGIN_VISIBILITY_PREFIX void initializePlugin();                                                                     \
     extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                   \
-        hex::PluginManager::addPlugin(hex::PluginFunctions {                                                                    \
+        hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                                    \
             initializePlugin,                                                                                                   \
             nullptr,                                                                                                            \
             getPluginName,                                                                                                      \
+            nullptr,                                                                                                            \
             getPluginAuthor,                                                                                                    \
             getPluginDescription,                                                                                               \
             getCompatibleVersion,                                                                                               \

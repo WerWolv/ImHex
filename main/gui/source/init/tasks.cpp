@@ -157,9 +157,11 @@ namespace hex::init {
 
     bool loadPlugins() {
         // Load all plugins
-        for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
-            PluginManager::load(dir);
-        }
+        #if !defined(IMHEX_STATIC_LINK_PLUGINS)
+            for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
+                PluginManager::load(dir);
+            }
+        #endif
 
         // Get loaded plugins
         auto &plugins = PluginManager::getPlugins();
@@ -185,44 +187,28 @@ namespace hex::init {
             return !std::fs::relative(plugin.getPath(), executablePath->parent_path()).string().starts_with("..");
         };
 
+        u32 loadErrors = 0;
+        std::set<std::string> pluginNames;
+
         // Load library plugins first since plugins might depend on them
         for (const auto &plugin : plugins) {
             if (!plugin.isLibraryPlugin()) continue;
 
-            // Initialize the plugin
-            if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize library plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
-            }
-        }
-
-        u32 builtinPlugins = 0;
-        u32 loadErrors     = 0;
-
-        // Load the builtin plugin first, so it can initialize everything that's necessary for ImHex to work
-        for (const auto &plugin : plugins) {
-            if (!plugin.isBuiltinPlugin()) continue;
-            if (plugin.isLibraryPlugin()) continue;
-
             if (!shouldLoadPlugin(plugin)) {
-                log::debug("Skipping built-in plugin {}", plugin.getPath().string());
+                log::debug("Skipping library plugin {}", plugin.getPath().string());
                 continue;
             }
 
-            // Make sure there's only one built-in plugin
-            if (builtinPlugins > 1) continue;
-
-            // Initialize the plugin
+            // Initialize the library
             if (!plugin.initializePlugin()) {
-                log::error("Failed to initialize plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
+                log::error("Failed to initialize library plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
-            } else {
-                builtinPlugins++;
             }
+            pluginNames.insert(plugin.getPluginName());
         }
 
-        // Load all other plugins
+        // Load all plugins
         for (const auto &plugin : plugins) {
-            if (plugin.isBuiltinPlugin()) continue;
             if (plugin.isLibraryPlugin()) continue;
 
             if (!shouldLoadPlugin(plugin)) {
@@ -235,6 +221,7 @@ namespace hex::init {
                 log::error("Failed to initialize plugin {}", wolv::util::toUTF8String(plugin.getPath().filename()));
                 loadErrors++;
             }
+            pluginNames.insert(plugin.getPluginName());
         }
 
         // If no plugins were loaded successfully, ImHex wasn't installed properly. This will trigger an error popup later on
@@ -243,20 +230,11 @@ namespace hex::init {
             ImHexApi::System::impl::addInitArgument("no-plugins");
             return false;
         }
-
-        // ImHex requires exactly one built-in plugin
-        // If no built-in plugin or more than one was found, something's wrong and we can't continue
-        #if !defined(EMSCRIPTEN)
-            if (builtinPlugins == 0) {
-                log::error("Built-in plugin not found!");
-                ImHexApi::System::impl::addInitArgument("no-builtin-plugin");
-                return false;
-            } else if (builtinPlugins > 1) {
-                log::error("Found more than one built-in plugin!");
-                ImHexApi::System::impl::addInitArgument("multiple-builtin-plugins");
-                return false;
-            }
-        #endif
+        if (pluginNames.size() != plugins.size()) {
+            log::error("Duplicate plugins detected!");
+            ImHexApi::System::impl::addInitArgument("duplicate-plugins");
+            return false;
+        }
 
         return true;
     }

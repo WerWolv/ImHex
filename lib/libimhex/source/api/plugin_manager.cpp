@@ -39,18 +39,19 @@ namespace hex {
         m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
         m_functions.initializeLibraryFunction    = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializeLibrary");
         m_functions.getPluginNameFunction        = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
+        m_functions.getLibraryNameFunction       = getPluginFunction<PluginFunctions::GetLibraryNameFunc>("getLibraryName");
         m_functions.getPluginAuthorFunction      = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
         m_functions.getPluginDescriptionFunction = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
         m_functions.getCompatibleVersionFunction = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
         m_functions.setImGuiContextFunction      = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
-        m_functions.isBuiltinPluginFunction      = getPluginFunction<PluginFunctions::IsBuiltinPluginFunc>("isBuiltinPlugin");
         m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
         m_functions.getFeaturesFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
     }
 
-    Plugin::Plugin(const hex::PluginFunctions &functions) {
+    Plugin::Plugin(const std::string &name, const hex::PluginFunctions &functions) {
         m_handle        = 0;
         m_functions     = functions;
+        m_path          = name;
     }
 
 
@@ -137,7 +138,7 @@ namespace hex {
             return m_functions.getPluginNameFunction();
         } else {
             if (this->isLibraryPlugin())
-                return "Library Plugin";
+                return m_functions.getLibraryNameFunction();
             else
                 return hex::format("Unknown Plugin @ 0x{0:016X}", m_handle);
         }
@@ -170,13 +171,6 @@ namespace hex {
             m_functions.setImGuiContextFunction(ctx);
     }
 
-    [[nodiscard]] bool Plugin::isBuiltinPlugin() const {
-        if (m_functions.isBuiltinPluginFunction != nullptr)
-            return m_functions.isBuiltinPluginFunction();
-        else
-            return false;
-    }
-
     const std::fs::path &Plugin::getPath() const {
         return m_path;
     }
@@ -191,7 +185,8 @@ namespace hex {
 
     std::span<SubCommand> Plugin::getSubCommands() const {
         if (m_functions.getSubCommandsFunction != nullptr) {
-            auto result = m_functions.getSubCommandsFunction();
+            const auto result = m_functions.getSubCommandsFunction();
+
             return *static_cast<std::vector<SubCommand>*>(result);
         } else {
             return { };
@@ -200,7 +195,8 @@ namespace hex {
 
     std::span<Feature> Plugin::getFeatures() const {
         if (m_functions.getFeaturesFunction != nullptr) {
-            auto result = m_functions.getFeaturesFunction();
+            const auto result = m_functions.getFeaturesFunction();
+
             return *static_cast<std::vector<Feature>*>(result);
         } else {
             return { };
@@ -274,16 +270,8 @@ namespace hex {
         }
     }
 
-    void PluginManager::reload() {
-        auto paths = getPluginPaths();
-
-        PluginManager::unload();
-        for (const auto &path : paths)
-            PluginManager::load(path);
-    }
-
-    void PluginManager::addPlugin(hex::PluginFunctions functions) {
-        getPlugins().emplace_back(functions);
+    void PluginManager::addPlugin(const std::string &name, hex::PluginFunctions functions) {
+        getPlugins().emplace_back(name, functions);
     }
 
     std::vector<Plugin> &PluginManager::getPlugins() {

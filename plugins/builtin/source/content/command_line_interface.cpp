@@ -114,12 +114,7 @@ namespace hex::plugin::builtin {
         hex::log::println("Loaded plugins:");
 
         for (const auto &plugin : PluginManager::getPlugins()) {
-            hex::log::print("- ");
-
-            if (plugin.isBuiltinPlugin())
-                hex::log::print("\033[1;43m{}\033[0m", plugin.getPluginName());
-            else
-                hex::log::print("\033[1m{}\033[0m", plugin.getPluginName());
+            hex::log::print("- \033[1m{}\033[0m", plugin.getPluginName());
 
             hex::log::println(" by {}", plugin.getPluginAuthor());
 
