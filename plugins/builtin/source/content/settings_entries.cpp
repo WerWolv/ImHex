@@ -360,6 +360,125 @@ namespace hex::plugin::builtin {
             bool m_hasDuplicate = false;
         };
 
+        class ToolbarIconsWidget : public ContentRegistry::Settings::Widgets::Widget {
+        public:
+            bool draw(const std::string &) override {
+                if (ImGui::BeginTable("##top_level", 2, ImGuiTableFlags_None, ImGui::GetContentRegionAvail())) {
+                    ImGui::TableSetupColumn("##left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
+                    ImGui::TableSetupColumn("##right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+
+                    if (ImGui::BeginTable("##all_icons", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, 280_scaled))) {
+                        for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                            if (menuItem.icon == nullptr)
+                                continue;
+
+                            const auto &unlocalizedName = menuItem.unlocalizedNames.back();
+                            if (menuItem.unlocalizedNames.size() > 2)
+                                continue;
+                            if (unlocalizedName.get() == ContentRegistry::Interface::impl::SeparatorValue)
+                                continue;
+                            if (unlocalizedName.get() == ContentRegistry::Interface::impl::SubMenuValue)
+                                continue;
+                            if (menuItem.inToolbar)
+                                continue;
+
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+
+                            ImGui::Selectable(hex::format("{} {}", menuItem.icon, Lang(unlocalizedName)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                            if (ImGui::BeginDragDropSource()) {
+                                auto ptr = &menuItem;
+                                ImGui::SetDragDropPayload("TOOLBAR_MENU_PAYLOAD", &ptr, sizeof(ptr));
+
+                                ImGuiExt::TextFormatted("{} {}", menuItem.icon, Lang(unlocalizedName));
+
+                                ImGui::EndDragDropSource();
+                            }
+                        }
+
+                        ImGui::EndTable();
+                    }
+
+                    if (ImGui::BeginDragDropTarget()) {
+                        if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ICON_PAYLOAD"); payload != nullptr) {
+                            auto menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+
+                            menuItem->inToolbar = false;
+                        }
+
+                        ImGui::EndDragDropTarget();
+                    }
+
+                    ImGui::TableNextColumn();
+
+                    ImGuiExt::BeginSubWindow("##icons", ImGui::GetContentRegionAvail());
+                    {
+                        if (ImGui::BeginTable("##icons", 5, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
+                            ImGui::TableNextRow();
+
+                            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                                if (menuItem.icon == nullptr)
+                                    continue;
+
+                                const auto &unlocalizedName = menuItem.unlocalizedNames.back();
+                                if (menuItem.unlocalizedNames.size() > 2)
+                                    continue;
+                                if (unlocalizedName.get() == ContentRegistry::Interface::impl::SeparatorValue)
+                                    continue;
+                                if (unlocalizedName.get() == ContentRegistry::Interface::impl::SubMenuValue)
+                                    continue;
+                                if (!menuItem.inToolbar)
+                                    continue;
+
+                                ImGui::TableNextColumn();
+
+                                ImGui::InvisibleButton(unlocalizedName.get().c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x));
+                                if (ImGui::BeginDragDropSource()) {
+                                    auto ptr = &menuItem;
+                                    ImGui::SetDragDropPayload("TOOLBAR_ICON_PAYLOAD", &ptr, sizeof(ptr));
+
+                                    ImGuiExt::TextFormatted("{} {}", menuItem.icon, Lang(unlocalizedName));
+
+                                    ImGui::EndDragDropSource();
+                                }
+                                auto min = ImGui::GetItemRectMin();
+                                auto max = ImGui::GetItemRectMax();
+                                auto iconSize = ImGui::CalcTextSize(menuItem.icon);
+
+                                auto text = Lang(unlocalizedName);
+                                auto textSize = ImGui::CalcTextSize(text);
+
+                                auto drawList = ImGui::GetWindowDrawList();
+                                drawList->AddText((min + ((max - min) - iconSize) / 2) - ImVec2(0, 10_scaled), ImGui::GetColorU32(ImGuiCol_Text), menuItem.icon);
+                                drawList->AddText((min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text);
+                            }
+
+                            ImGui::EndTable();
+                        }
+                    }
+                    ImGuiExt::EndSubWindow();
+
+                    if (ImGui::BeginDragDropTarget()) {
+                        if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_MENU_PAYLOAD"); payload != nullptr) {
+                            auto menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+
+                            menuItem->inToolbar = true;
+                        }
+
+                        ImGui::EndDragDropTarget();
+                    }
+
+                    ImGui::EndTable();
+                }
+                return false;
+            }
+
+            nlohmann::json store() override { return {}; }
+            void load(const nlohmann::json &) override {}
+        };
+
     }
 
     void registerSettings() {
@@ -535,6 +654,9 @@ namespace hex::plugin::builtin {
                 }
             }
        });
+
+       /* Toolbar icons */
+       ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
 
     }
 

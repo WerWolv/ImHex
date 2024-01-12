@@ -730,7 +730,7 @@ namespace hex {
             log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback, false }
             });
 
             if (shortcut != Shortcut::None) {
@@ -750,14 +750,14 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback, false }
             });
         }
 
         void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; } }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; }, false }
             });
         }
 

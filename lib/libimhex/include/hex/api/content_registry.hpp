@@ -644,6 +644,7 @@ namespace hex {
                     View *view;
                     MenuCallback callback;
                     EnabledCallback enabledCallback;
+                    bool inToolbar;
                 };
 
                 struct SidebarItem {
