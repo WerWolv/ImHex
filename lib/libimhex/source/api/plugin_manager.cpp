@@ -196,6 +196,8 @@ namespace hex {
     std::span<Feature> Plugin::getFeatures() const {
         if (m_functions.getFeaturesFunction != nullptr) {
             const auto result = m_functions.getFeaturesFunction();
+            if (result == nullptr)
+                return { };
 
             return *static_cast<std::vector<Feature>*>(result);
         } else {
