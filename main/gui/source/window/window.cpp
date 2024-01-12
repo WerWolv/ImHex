@@ -565,11 +565,6 @@ namespace hex {
                 ImGui::EndMenuBar();
             }
 
-            if (ImGui::BeginDragDropTargetCustom(ImGui::GetCurrentWindow()->MenuBarRect(), ImGui::GetCurrentWindow()->ID)) {
-
-                ImGui::EndDragDropTarget();
-            }
-
             this->beginNativeWindowFrame();
 
             if (ImHexApi::Provider::isValid() && isAnyViewOpen()) {
@@ -1156,29 +1151,8 @@ namespace hex {
 
         // Register file drop callback
         glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
-            // Loop over all dropped files
             for (int i = 0; i < count; i++) {
-                auto path = std::fs::path(reinterpret_cast<const char8_t *>(paths[i]));
-
-                // Check if a custom file handler can handle the file
-                bool handled = false;
-                for (const auto &[extensions, handler] : ContentRegistry::FileHandler::impl::getEntries()) {
-                    for (const auto &extension : extensions) {
-                        if (path.extension() == extension) {
-                            // Pass the file to the handler and check if it was successful
-                            if (!handler(path)) {
-                                log::error("Handler for extensions '{}' failed to process file!", extension);
-                                break;
-                            }
-
-                            handled = true;
-                        }
-                    }
-                }
-
-                // If no custom handler was found, just open the file regularly
-                if (!handled)
-                    RequestOpenFile::post(path);
+                EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
             }
         });
 

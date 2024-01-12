@@ -202,6 +202,14 @@ namespace hex {
              */
             void setSelection(u64 address, size_t size, prv::Provider *provider = nullptr);
 
+            /**
+             * @brief Adds a virtual file to the list in the Hex Editor
+             * @param path The path of the file
+             * @param data The data of the file
+             * @param region The location of the file in the Hex Editor if available
+             */
+            void addVirtualFile(const std::fs::path &path, std::vector<u8> data, Region region = Region::Invalid());
+
         }
 
         /* Functions to interact with Bookmarks */

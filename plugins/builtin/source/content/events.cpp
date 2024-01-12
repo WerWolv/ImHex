@@ -1,6 +1,7 @@
 #include <hex/api/event_manager.hpp>
 
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
 
@@ -89,7 +90,6 @@ namespace hex::plugin::builtin {
         EventProviderOpened::subscribe([](hex::prv::Provider *provider) {
             if (provider != nullptr && ImHexApi::Provider::get() == provider)
                 RequestUpdateWindowTitle::post();
-            EventProviderChanged::post(nullptr, provider);
         });
 
         RequestOpenFile::subscribe(openFile);
@@ -170,6 +170,28 @@ namespace hex::plugin::builtin {
 
         EventRegionSelected::subscribe([](const ImHexApi::HexEditor::ProviderRegion &region) {
            ImHexApi::HexEditor::impl::setCurrentSelection(region);
+        });
+
+        EventFileDropped::subscribe([](const std::fs::path &path) {
+             // Check if a custom file handler can handle the file
+             bool handled = false;
+             for (const auto &[extensions, handler] : ContentRegistry::FileHandler::impl::getEntries()) {
+                 for (const auto &extension : extensions) {
+                     if (path.extension() == extension) {
+                         // Pass the file to the handler and check if it was successful
+                         if (!handler(path)) {
+                             log::error("Handler for extensions '{}' failed to process file!", extension);
+                             break;
+                         }
+
+                         handled = true;
+                     }
+                 }
+             }
+
+             // If no custom handler was found, just open the file regularly
+             if (!handled)
+                 RequestOpenFile::post(path);
         });
 
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){

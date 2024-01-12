@@ -8,7 +8,7 @@
 	ignore = dirty
 [submodule "lib/third_party/xdgpp"]
 	path = lib/third_party/xdgpp
-	url = https://git.sr.ht/~danyspin97/xdgpp
+	url = https://github.com/WerWolv/xdgpp
 	ignore = dirty
 [submodule "lib/third_party/fmt"]
 	path = lib/third_party/fmt

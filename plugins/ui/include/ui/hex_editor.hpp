@@ -76,11 +76,21 @@ namespace hex::ui {
         ~HexEditor();
         void draw(float height = ImGui::GetContentRegionAvail().y);
 
+        HexEditor(const HexEditor&) = default;
+        HexEditor& operator=(const HexEditor&) = default;
+
+        HexEditor(HexEditor &&editor) noexcept = default;
+        HexEditor& operator=(HexEditor &&) noexcept = default;
+
         void setProvider(prv::Provider *provider) {
             m_provider = provider;
             m_currValidRegion = { Region::Invalid(), false };
             m_scrollPosition.setProvider(provider);
         }
+        prv::Provider* getProvider() const {
+            return m_provider;
+        }
+
         void setUnknownDataCharacter(char character) { m_unknownDataCharacter = character; }
     private:
         enum class CellType { None, Hex, ASCII };
@@ -285,7 +295,7 @@ namespace hex::ui {
         }
 
     private:
-        prv::Provider *m_provider;
+        prv::Provider *m_provider = nullptr;
 
         std::optional<u64> m_selectionStart;
         std::optional<u64> m_selectionEnd;

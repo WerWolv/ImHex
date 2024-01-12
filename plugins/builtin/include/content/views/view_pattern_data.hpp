@@ -14,7 +14,10 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        std::unique_ptr<ui::PatternDrawer> m_patternDrawer;
+        bool m_rowColoring = false;
+        ui::PatternDrawer::TreeStyle m_treeStyle = ui::PatternDrawer::TreeStyle::Default;
+
+        PerProvider<std::unique_ptr<ui::PatternDrawer>> m_patternDrawer;
     };
 
 }

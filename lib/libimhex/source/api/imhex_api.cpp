@@ -197,6 +197,9 @@ namespace hex {
             setSelection({ { address, size }, provider == nullptr ? Provider::get() : provider });
         }
 
+        void addVirtualFile(const std::fs::path &path, std::vector<u8> data, Region region) {
+            RequestAddVirtualFile::post(path, std::move(data), region);
+        }
     }
 
 

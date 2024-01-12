@@ -253,6 +253,9 @@ namespace hex {
     EVENT_DEF(EventSearchBoxClicked, u32);
     EVENT_DEF(EventViewOpened, View*);
 
+    EVENT_DEF(EventFileDragged, bool);
+    EVENT_DEF(EventFileDropped, std::fs::path);
+
     EVENT_DEF(EventProviderDataModified, prv::Provider *, u64, u64, const u8*);
     EVENT_DEF(EventProviderDataInserted, prv::Provider *, u64, u64);
     EVENT_DEF(EventProviderDataRemoved, prv::Provider *, u64, u64);
@@ -282,6 +285,7 @@ namespace hex {
     EVENT_DEF(RequestOpenFile, std::fs::path);
     EVENT_DEF(RequestChangeTheme, std::string);
     EVENT_DEF(RequestOpenPopup, std::string);
+    EVENT_DEF(RequestAddVirtualFile, std::fs::path, std::vector<u8>, Region);
 
     /**
      * @brief Creates a provider from it's unlocalized name, and add it to the provider list

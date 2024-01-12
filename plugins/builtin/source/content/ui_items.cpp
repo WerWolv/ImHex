@@ -54,8 +54,53 @@ namespace hex::plugin::builtin {
         }
     }
 
+    static bool s_drawDragDropOverlay = false;
+    static void drawDragNDropOverlay() {
+        if (!s_drawDragDropOverlay)
+            return;
+
+        auto drawList = ImGui::GetForegroundDrawList();
+
+        drawList->PushClipRectFullScreen();
+        {
+            const auto windowPos = ImHexApi::System::getMainWindowPosition();
+            const auto windowSize = ImHexApi::System::getMainWindowSize();
+            const auto center = windowPos + (windowSize / 2.0F) - scaled({ 0, 50 });
+
+            // Draw background
+            {
+                const ImVec2 margin = scaled({ 15, 15 });
+                drawList->AddRectFilled(windowPos, windowPos + windowSize, ImGui::GetColorU32(ImGuiCol_WindowBg, 200.0/255.0));
+                drawList->AddRect(windowPos + margin, (windowPos + windowSize) - margin, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight), 10_scaled, ImDrawFlags_None, 7.5_scaled);
+            }
+
+            // Draw drag n drop icon
+            {
+                const ImVec2 iconSize = scaled({ 64, 64 });
+                const auto offset = scaled({ 15, 15 });
+                const auto margin = scaled({ 20, 20 });
+
+                const auto text = "hex.builtin.drag_drop.text"_lang;
+                const auto textSize = ImGui::CalcTextSize(text);
+
+                drawList->AddShadowRect(center - ImVec2(textSize.x, iconSize.y + 40_scaled) / 2.0F - offset - margin, center + ImVec2(textSize.x, iconSize.y + 75_scaled) / 2.0F + offset + ImVec2(0, textSize.y) + margin, ImGui::GetColorU32(ImGuiCol_WindowShadow), 20_scaled, ImVec2(), ImDrawFlags_None, 10_scaled);
+                drawList->AddRectFilled(center - ImVec2(textSize.x, iconSize.y + 40_scaled) / 2.0F - offset - margin, center + ImVec2(textSize.x, iconSize.y + 75_scaled) / 2.0F + offset + ImVec2(0, textSize.y) + margin, ImGui::GetColorU32(ImGuiCol_MenuBarBg, 10), 1_scaled, ImDrawFlags_None);
+                drawList->AddRect(center - iconSize / 2.0F - offset, center + iconSize / 2.0F - offset, ImGui::GetColorU32(ImGuiCol_Text), 5_scaled, ImDrawFlags_None, 7.5_scaled);
+                drawList->AddRect(center - iconSize / 2.0F + offset, center + iconSize / 2.0F + offset, ImGui::GetColorU32(ImGuiCol_Text), 5_scaled, ImDrawFlags_None, 7.5_scaled);
+
+                drawList->AddText(center + ImVec2(-textSize.x / 2, 85_scaled), ImGui::GetColorU32(ImGuiCol_Text), text);
+            }
+        }
+        drawList->PopClipRect();
+    }
+
     void addGlobalUIItems() {
         EventFrameEnd::subscribe(drawGlobalPopups);
+        EventFrameEnd::subscribe(drawDragNDropOverlay);
+
+        EventFileDragged::subscribe([](bool entered) {
+            s_drawDragDropOverlay = entered;
+        });
     }
 
     void addFooterItems() {

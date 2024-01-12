@@ -21,6 +21,7 @@
     #include <shobjidl.h>
     #include <wrl/client.h>
     #include <fcntl.h>
+    #include <oleidl.h>
 
     #include <cstdio>
 
@@ -294,9 +295,93 @@ namespace hex {
         }
     }
 
+    class DropManager : public IDropTarget {
+    public:
+        DropManager() = default;
+        virtual ~DropManager() = default;
+
+        ULONG AddRef()  override { return 1; }
+        ULONG Release() override { return 0; }
+
+        HRESULT QueryInterface(REFIID riid, void **ppvObject) override {
+            if (riid == IID_IDropTarget) {
+                *ppvObject = this;
+
+                return S_OK;
+            }
+
+            *ppvObject = nullptr;
+            return E_NOINTERFACE;
+        }
+
+        HRESULT STDMETHODCALLTYPE DragEnter(
+            IDataObject *,
+            DWORD,
+            POINTL,
+            DWORD *pdwEffect) override
+        {
+            EventFileDragged::post(true);
+
+            *pdwEffect = DROPEFFECT_NONE;
+            return S_OK;
+        }
+
+        HRESULT STDMETHODCALLTYPE DragOver(
+            DWORD,
+            POINTL,
+            DWORD *pdwEffect) override
+        {
+            *pdwEffect = DROPEFFECT_NONE;
+            return S_OK;
+        }
+
+        HRESULT STDMETHODCALLTYPE DragLeave() override
+        {
+            EventFileDragged::post(false);
+            return S_OK;
+        }
+
+        HRESULT STDMETHODCALLTYPE Drop(
+            IDataObject *pDataObj,
+            DWORD,
+            POINTL,
+            DWORD *pdwEffect) override
+        {
+            FORMATETC fmte = { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+            STGMEDIUM stgm;
+
+            if (SUCCEEDED(pDataObj->GetData(&fmte, &stgm))) {
+                auto hdrop = HDROP(stgm.hGlobal);
+                auto fileCount = DragQueryFile(hdrop, 0xFFFFFFFF, nullptr, 0);
+
+                for (UINT i = 0; i < fileCount; i++) {
+                    WCHAR szFile[MAX_PATH];
+                    UINT cch = DragQueryFileW(hdrop, i, szFile, MAX_PATH);
+                    if (cch > 0 && cch < MAX_PATH) {
+                        EventFileDropped::post(szFile);
+                    }
+                }
+
+                ReleaseStgMedium(&stgm);
+            }
+
+            EventFileDragged::post(false);
+
+            *pdwEffect &= DROPEFFECT_NONE;
+            return S_OK;
+
+            return S_OK;
+        }
+    };
+
     void Window::setupNativeWindow() {
         // Setup borderless window
         auto hwnd = glfwGetWin32Window(m_window);
+
+        OleInitialize(nullptr);
+
+        static DropManager dm;
+        RegisterDragDrop(hwnd, &dm);
 
         bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
 
