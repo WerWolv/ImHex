@@ -369,7 +369,7 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
                     bool open = false;
 
-                    ImGui::PushStyleColor(ImGuiCol_Text, plugin.isBuiltinPlugin() ? ImGuiExt::GetCustomColorU32(ImGuiCustomCol_Highlight) : ImGui::GetColorU32(ImGuiCol_Text));
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text));
                     if (features.empty())
                         ImGui::BulletText("%s", plugin.getPluginName().c_str());
                     else
