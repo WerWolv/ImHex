@@ -676,7 +676,7 @@ namespace hex::plugin::builtin {
                                 if (patternProvider->isReadable() && *m_executionDone) {
                                     return runtime.getPatterns(id);
                                 } else {
-                                    constexpr static std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
+                                    static const std::vector<std::shared_ptr<pl::ptrn::Pattern>> empty;
                                     return empty;
                                 }
                             }();
