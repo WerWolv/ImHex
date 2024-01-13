@@ -18,6 +18,8 @@
 #include <imgui_internal.h>
 #include <content/popups/popup_blocking_task.hpp>
 
+#include <codecvt>
+
 using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
@@ -199,9 +201,83 @@ namespace hex::plugin::builtin {
 
                     this->drawButtons();
 
+                    constexpr static std::array StringModeEncodingNames = {
+                        "UTF-8",
+                        "UTF-16",
+                        "UTF-32"
+                    };
+                    
+                    if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.encoding"_lang, 
+                        StringModeEncodingNames[static_cast<u8>(m_stringModeEncoding.load())])) {
+                        if (ImGui::Selectable(StringModeEncodingNames[0], m_stringModeEncoding == StringModeEncoding::UTF8))
+                            m_stringModeEncoding = StringModeEncoding::UTF8;
+                        if (ImGui::Selectable(StringModeEncodingNames[1], m_stringModeEncoding == StringModeEncoding::UTF16))
+                            m_stringModeEncoding = StringModeEncoding::UTF16;
+                        if (ImGui::Selectable(StringModeEncodingNames[2], m_stringModeEncoding == StringModeEncoding::UTF32))
+                            m_stringModeEncoding = StringModeEncoding::UTF32;
+                        ImGui::EndCombo();
+                    }
+
+                    constexpr static std::array StringModeEndianessNames = {
+                        "Little endian",
+                        "Big endian"
+                    };
+
+                    if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.endianess"_lang, 
+                        StringModeEndianessNames[static_cast<u8>(m_stringModeEndianess.load())])) {
+                        if (ImGui::Selectable(StringModeEndianessNames[0], m_stringModeEndianess == StringModeEndianness::Little))
+                            m_stringModeEndianess = StringModeEndianness::Little;
+                        if (ImGui::Selectable(StringModeEndianessNames[1], m_stringModeEndianess == StringModeEndianness::Big))
+                            m_stringModeEndianess = StringModeEndianness::Big;
+                        ImGui::EndCombo();
+                    }
+
                     if (m_shouldSearch) {
                         searchSequence.clear();
-                        std::copy(m_input.begin(), m_input.end(), std::back_inserter(searchSequence));
+
+                        std::endian nativeEndianess = std::endian::native;
+                        if (m_stringModeEndianess == StringModeEndianness::Big)
+                            nativeEndianess = std::endian::big;
+                        else if (m_stringModeEndianess == StringModeEndianness::Little)
+                            nativeEndianess = std::endian::little;
+                        
+                        auto swapEndianess = [](auto &value, std::endian endian, StringModeEncoding encoding) {
+                            if (encoding == StringModeEncoding::UTF16 || encoding == StringModeEncoding::UTF32) {
+                                if ((endian == std::endian::big && std::endian::big != std::endian::native) ||
+                                    (endian == std::endian::little && std::endian::little != std::endian::native)) {
+                                    if constexpr (sizeof(value) == 2)
+                                        value = __builtin_bswap16(value);
+                                    else if constexpr (sizeof(value) == 4)
+                                        value = __builtin_bswap32(value);
+                                }
+                            }
+                        };
+                                            
+                        switch (m_stringModeEncoding.load()) {
+                            case StringModeEncoding::UTF8: {
+                                std::copy(m_input.begin(), m_input.end(), std::back_inserter(searchSequence));
+                                log::info("UTF-8: {}", crypt::encode16(searchSequence));
+                            }
+                                break;
+                            case StringModeEncoding::UTF16: {
+                                std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> convert;
+                                std::u16string utf16 = convert.from_bytes(m_input);
+                                for (auto &c : utf16)
+                                    swapEndianess(c, nativeEndianess, StringModeEncoding::UTF16);
+                                std::copy(reinterpret_cast<const u8 *>(utf16.data()), reinterpret_cast<const u8 *>(utf16.data() + utf16.size()), std::back_inserter(searchSequence));
+                                log::info("UTF-16: {}", crypt::encode16(searchSequence));
+                            }
+                                break;
+                            case StringModeEncoding::UTF32: {
+                                std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+                                std::u32string utf32 = convert.from_bytes(m_input);
+                                for (auto &c : utf32)
+                                    swapEndianess(c, nativeEndianess, StringModeEncoding::UTF32);
+                                std::copy(reinterpret_cast<const u8 *>(utf32.data()), reinterpret_cast<const u8 *>(utf32.data() + utf32.size()), std::back_inserter(searchSequence));
+                                log::info("UTF-32: {}", crypt::encode16(searchSequence));
+                            }
+                                break;
+                        }
 
                         if (!searchSequence.empty() && searchSequence.back() == 0x00)
                             searchSequence.pop_back();
@@ -325,6 +401,17 @@ namespace hex::plugin::builtin {
             return std::nullopt;
         }
 
+        enum class StringModeEncoding : u8 {
+            UTF8,
+            UTF16,
+            UTF32
+        };
+
+        enum class StringModeEndianness : u8 {
+            Little,
+            Big
+        };
+
         std::string m_input;
         std::optional<u64> m_searchPosition, m_nextSearchPosition;
 
@@ -332,6 +419,9 @@ namespace hex::plugin::builtin {
         std::atomic<bool> m_shouldSearch = false;
         std::atomic<bool> m_backwards    = false;
         std::atomic<bool> m_reachedEnd   = false;
+
+        std::atomic<StringModeEncoding> m_stringModeEncoding = StringModeEncoding::UTF8;
+        std::atomic<StringModeEndianness> m_stringModeEndianess = StringModeEndianness::Little;
 
         TaskHolder m_searchTask;
     };
