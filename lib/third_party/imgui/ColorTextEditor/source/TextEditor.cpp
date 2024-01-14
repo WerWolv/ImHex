@@ -720,7 +720,7 @@ void TextEditor::HandleMouseInputs() {
     auto alt    = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
     if (ImGui::IsWindowHovered()) {
-        if (!shift && !alt) {
+        if (!alt) {
             auto click       = ImGui::IsMouseClicked(0);
             auto doubleClick = ImGui::IsMouseDoubleClicked(0);
             auto t           = ImGui::GetTime();
@@ -761,11 +761,16 @@ void TextEditor::HandleMouseInputs() {
             Left mouse button click
             */
             else if (click) {
-                mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                if (ctrl)
+                if (ctrl) {
+                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
                     mSelectionMode = SelectionMode::Word;
-                else
+                } else if (shift) {
                     mSelectionMode = SelectionMode::Normal;
+                    mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+                } else {
+                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+                    mSelectionMode = SelectionMode::Normal;
+                }
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
 
                 mLastClick = (float)ImGui::GetTime();
@@ -993,6 +998,8 @@ void TextEditor::Render() {
 
             ++lineNo;
         }
+        if (lineNo < mLines.size() && ImGui::GetScrollMaxX() > 0.0f)
+            longest       = std::max(mTextStart + TextDistanceToLineStart(Coordinates(lineNo, GetLineMaxColumn(lineNo))), longest);
 
         // Draw a tooltip on known identifiers/preprocessor symbols
         if (ImGui::IsMousePosValid()) {
@@ -1015,15 +1022,12 @@ void TextEditor::Render() {
         }
     }
 
-
     ImGui::Dummy(ImVec2((longest + 2), mLines.size() * mCharAdvance.y));
 
     if (mScrollToCursor) {
         EnsureCursorVisible();
         mScrollToCursor = false;
     }
-
-
 
     ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
     ImGuiContext& g = *GImGui;
@@ -1044,8 +1048,6 @@ void TextEditor::Render() {
     } else {
         mTopMargin = 0;
     }
-
-
 
     static float linesAdded = 0;
     static float pixelsAdded = 0;
@@ -1072,12 +1074,7 @@ void TextEditor::Render() {
             auto state = mState;
             auto oldScrollY = ImGui::GetScrollY();
             int lineCountInt;
-            //float pixelsAfterBottom = maxScroll - oldScrollY;
-            //float linesAfterBottom = pixelsAfterBottom / mCharAdvance.y;
-            //if (pixelCount > pixelsAfterBottom) {
-              //  pixelCount -= pixelsAfterBottom;
-               // lineCount -= linesAfterBottom;
-           // }
+
             if (mTopMargin > oldTopMargin) {
                 lineCountInt = std::round(lineCount + linesAdded - std::floor(linesAdded));
             } else
@@ -1106,7 +1103,7 @@ void TextEditor::Render() {
                 else if (ImGui::GetScrollY() == shiftedScrollY)
                     shiftedScrollY = savedScrollY;
                 else
-                    shiftedScrollY = ImGui::GetScrollY();
+                    shiftedScrollY = ImGui::GetScrollY() - pixelCount;
                 ImGui::SetScrollY(shiftedScrollY);
             } else {
                 if (mTopMargin > oldTopMargin)
@@ -1215,15 +1212,12 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             if (start > end)
                 std::swap(start, end);
             start.mColumn = 0;
-            //			end.mColumn = end.mLine < mLines.size() ? mLines[end.mLine].size() : 0;
+
             if (end.mColumn == 0 && end.mLine > 0)
                 --end.mLine;
             if (end.mLine >= (int)mLines.size())
                 end.mLine = mLines.empty() ? 0 : (int)mLines.size() - 1;
             end.mColumn = GetLineMaxColumn(end.mLine);
-
-            // if (end.mColumn >= GetLineMaxColumn(end.mLine))
-            //	end.mColumn = GetLineMaxColumn(end.mLine) - 1;
 
             u.mRemovedStart = start;
             u.mRemovedEnd   = end;
@@ -1303,10 +1297,19 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                 newLine.push_back(line[it]);
 
         const size_t whitespaceSize = newLine.size();
+        int cstart                  = 0;
+        int cpos                    = 0;
         auto cindex                 = GetCharacterIndex(coord);
-        newLine.insert(newLine.end(), line.begin() + cindex, line.end());
-        line.erase(line.begin() + cindex, line.begin() + line.size());
-        SetCursorPosition(Coordinates(coord.mLine + 1, GetCharacterColumn(coord.mLine + 1, (int)whitespaceSize)));
+        if (cindex < whitespaceSize && mLanguageDefinition.mAutoIndentation) {
+            cstart = (int) whitespaceSize;
+            cpos = cindex;
+        } else {
+            cstart = cindex;
+            cpos = (int) whitespaceSize;
+        }
+        newLine.insert(newLine.end(), line.begin() + cstart, line.end());
+        line.erase(line.begin() + cstart, line.begin() + line.size());
+        SetCursorPosition(Coordinates(coord.mLine + 1, GetCharacterColumn(coord.mLine + 1, cpos)));
         u.mAdded = (char)aChar;
     } else if (aChar == '\t') {
         auto &line  = mLines[coord.mLine];
@@ -1778,9 +1781,6 @@ void TextEditor::Backspace() {
             while (cindex > 0 && IsUTFSequence(line[cindex].mChar))
                 --cindex;
 
-            // if (cindex > 0 && UTF8CharLength(line[cindex].mChar) > 1)
-            //	--cindex;
-
             u.mRemovedStart = u.mRemovedEnd = GetActualCursorCoordinates();
             --u.mRemovedStart.mColumn;
             mState.mCursorPosition.mColumn = GetCharacterColumn(mState.mCursorPosition.mLine, cindex);
@@ -2003,7 +2003,7 @@ unsigned TextEditor::FindReplaceHandler::FindPosition( TextEditor *editor, TextE
     return 0;
 }
 
-// Create a sring that escapes special characters
+// Create a string that escapes special characters
 // and separate word from non word
 std::string make_wholeWord(const std::string &s) {
     static const char metacharacters[] = R"(\.^$-+()[]{}|?*)";
