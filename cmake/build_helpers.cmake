@@ -648,6 +648,10 @@ function(enableUnityBuild TARGET)
 endfunction()
 
 function(generatePDBs)
+    if (NOT IMHEX_GENERATE_PDBS)
+        return()
+    endif ()
+
     if (NOT WIN32 OR CMAKE_BUILD_TYPE STREQUAL "Debug")
         return()
     endif ()
