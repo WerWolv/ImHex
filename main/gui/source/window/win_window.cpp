@@ -170,6 +170,10 @@ namespace hex {
                     static_cast<LONG>((::GetSystemMetrics(SM_CYFRAME) + ::GetSystemMetrics(SM_CXPADDEDBORDER)) * ImHexApi::System::getGlobalScale())
                 };
 
+                if (glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr) {
+                    return HTCLIENT;
+                }
+
                 RECT window;
                 if (!::GetWindowRect(hwnd, &window)) {
                     return HTNOWHERE;
