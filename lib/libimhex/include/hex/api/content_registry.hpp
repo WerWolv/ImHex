@@ -676,7 +676,7 @@ namespace hex {
                     MenuCallback callback;
                     EnabledCallback enabledCallback;
                     SelectedCallback selectedCallback;
-                    bool inToolbar;
+                    i32 toolbarIndex;
                 };
 
                 struct SidebarItem {

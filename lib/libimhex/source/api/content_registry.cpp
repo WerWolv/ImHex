@@ -148,8 +148,6 @@ namespace hex {
                 const auto entry       = insertOrGetEntry(subCategory->entries,    unlocalizedName);
 
                 entry->widget = std::move(widget);
-                entry->widget->load(getSetting(unlocalizedCategory, unlocalizedName, entry->widget->store()));
-                entry->widget->onChanged();
 
                 return entry->widget.get();
             }
@@ -738,7 +736,7 @@ namespace hex {
             log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback, selectedCallback, false }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback, selectedCallback, -1 }
             });
 
             if (shortcut != Shortcut::None) {
@@ -758,14 +756,14 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback, []{ return false; }, false }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback, []{ return false; }, -1 }
             });
         }
 
         void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; }, []{ return false; }, false }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; }, []{ return false; }, -1 }
             });
         }
 

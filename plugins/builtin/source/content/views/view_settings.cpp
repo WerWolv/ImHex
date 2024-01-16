@@ -24,10 +24,22 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.extras", "hex.builtin.view.settings.name" }, ICON_VS_SETTINGS_GEAR, 4000, Shortcut::None, [&, this] {
             this->getWindowOpenState() = true;
         });
+
+        EventImHexStartupFinished::subscribe(this, [] {
+            for (const auto &[unlocalizedCategory, unlocalizedDescription, subCategories] : ContentRegistry::Settings::impl::getSettings()) {
+                for (const auto &[unlocalizedSubCategory, entries] : subCategories) {
+                    for (const auto &[unlocalizedName, widget] : entries) {
+                        widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, widget->store()));
+                        widget->onChanged();
+                    }
+                }
+            }
+        });
     }
 
     ViewSettings::~ViewSettings() {
         RequestOpenWindow::unsubscribe(this);
+        EventImHexStartupFinished::unsubscribe(this);
     }
 
     void ViewSettings::drawContent() {

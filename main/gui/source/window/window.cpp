@@ -519,7 +519,7 @@ namespace hex {
                     }
 
                     for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallack, inToolbar] = menuItem;
+                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallack, toolbarIndex] = menuItem;
 
                         createNestedMenu(unlocalizedNames, icon, *shortcut, callback, enabledCallback, selectedCallack);
                     }
@@ -792,7 +792,7 @@ namespace hex {
 
         // Draw main menu popups
         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallback, inToolbar] = menuItem;
+            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallback, toolbarIndex] = menuItem;
 
             if (ImGui::BeginPopup(unlocalizedNames.front().get().c_str())) {
                 createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon, *shortcut, callback, enabledCallback, selectedCallback);

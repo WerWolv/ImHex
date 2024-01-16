@@ -82,6 +82,13 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     loadFonts();
     extractBundledFiles();
 
+    addFooterItems();
+    addTitleBarButtons();
+    addToolbarItems();
+    addGlobalUIItems();
+
+    registerMainMenuEntries();
+
     registerEventHandlers();
     registerDataVisualizers();
     registerDataInspectorEntries();
@@ -109,13 +116,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerReportGenerators();
     registerTutorials();
     loadWorkspaces();
-
-    addFooterItems();
-    addTitleBarButtons();
-    addToolbarItems();
-    addGlobalUIItems();
-
-    registerMainMenuEntries();
 
     handleBorderlessWindowMode();
 }

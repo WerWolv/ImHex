@@ -361,8 +361,16 @@ namespace hex::plugin::builtin {
         };
 
         class ToolbarIconsWidget : public ContentRegistry::Settings::Widgets::Widget {
+        private:
+            struct MenuItemSorter {
+                bool operator()(const auto *a, const auto *b) const {
+                    return a->toolbarIndex < b->toolbarIndex;
+                }
+            };
+
         public:
             bool draw(const std::string &) override {
+                bool changed = false;
                 if (ImGui::BeginTable("##top_level", 2, ImGuiTableFlags_None, ImGui::GetContentRegionAvail())) {
                     ImGui::TableSetupColumn("##left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
                     ImGui::TableSetupColumn("##right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
@@ -370,6 +378,23 @@ namespace hex::plugin::builtin {
                     ImGui::TableNextColumn();
 
                     if (ImGui::BeginTable("##all_icons", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, 280_scaled))) {
+                        ImGui::TableNextRow();
+                        ImGui::TableNextColumn();
+
+                        ImGui::Selectable("Separator", false, ImGuiSelectableFlags_SpanAllColumns);
+                        if (ImGui::BeginDragDropSource()) {
+                            static ContentRegistry::Interface::impl::MenuItem separatorItem = {
+                                .unlocalizedNames = { ContentRegistry::Interface::impl::SeparatorValue },
+                                .icon = "|"
+                            };
+                            auto ptr = &separatorItem;
+                            ImGui::SetDragDropPayload("TOOLBAR_MENU_PAYLOAD", &ptr, sizeof(ptr));
+
+                            ImGuiExt::TextFormatted("Separator");
+
+                            ImGui::EndDragDropSource();
+                        }
+
                         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
                             if (menuItem.icon == nullptr)
                                 continue;
@@ -381,7 +406,7 @@ namespace hex::plugin::builtin {
                                 continue;
                             if (unlocalizedName.get() == ContentRegistry::Interface::impl::SubMenuValue)
                                 continue;
-                            if (menuItem.inToolbar)
+                            if (menuItem.toolbarIndex != -1)
                                 continue;
 
                             ImGui::TableNextRow();
@@ -405,7 +430,8 @@ namespace hex::plugin::builtin {
                         if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ICON_PAYLOAD"); payload != nullptr) {
                             auto menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
-                            menuItem->inToolbar = false;
+                            menuItem->toolbarIndex = -1;
+                            changed = true;
                         }
 
                         ImGui::EndDragDropTarget();
@@ -413,23 +439,30 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    ImGuiExt::BeginSubWindow("##icons", ImGui::GetContentRegionAvail());
+                    ImGuiExt::BeginSubWindow("Toolbar Icons", ImGui::GetContentRegionAvail());
                     {
-                        if (ImGui::BeginTable("##icons", 5, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
+                        if (ImGui::BeginTable("##icons", 6, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
                             ImGui::TableNextRow();
 
+                            std::set<ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> toolbarItems;
+
                             for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                                if (menuItem.icon == nullptr)
+                                if (menuItem.toolbarIndex == -1)
                                     continue;
 
-                                const auto &unlocalizedName = menuItem.unlocalizedNames.back();
-                                if (menuItem.unlocalizedNames.size() > 2)
+                                toolbarItems.emplace(&menuItem);
+                            }
+
+                            for (auto menuItem : toolbarItems) {
+                                if (menuItem->icon == nullptr)
                                     continue;
-                                if (unlocalizedName.get() == ContentRegistry::Interface::impl::SeparatorValue)
+
+                                const auto &unlocalizedName = menuItem->unlocalizedNames.back();
+                                if (menuItem->unlocalizedNames.size() > 2)
                                     continue;
                                 if (unlocalizedName.get() == ContentRegistry::Interface::impl::SubMenuValue)
                                     continue;
-                                if (!menuItem.inToolbar)
+                                if (menuItem->toolbarIndex == -1)
                                     continue;
 
                                 ImGui::TableNextColumn();
@@ -439,19 +472,19 @@ namespace hex::plugin::builtin {
                                     auto ptr = &menuItem;
                                     ImGui::SetDragDropPayload("TOOLBAR_ICON_PAYLOAD", &ptr, sizeof(ptr));
 
-                                    ImGuiExt::TextFormatted("{} {}", menuItem.icon, Lang(unlocalizedName));
+                                    ImGuiExt::TextFormatted("{} {}", menuItem->icon, Lang(unlocalizedName));
 
                                     ImGui::EndDragDropSource();
                                 }
                                 auto min = ImGui::GetItemRectMin();
                                 auto max = ImGui::GetItemRectMax();
-                                auto iconSize = ImGui::CalcTextSize(menuItem.icon);
+                                auto iconSize = ImGui::CalcTextSize(menuItem->icon);
 
                                 auto text = Lang(unlocalizedName);
                                 auto textSize = ImGui::CalcTextSize(text);
 
                                 auto drawList = ImGui::GetWindowDrawList();
-                                drawList->AddText((min + ((max - min) - iconSize) / 2) - ImVec2(0, 10_scaled), ImGui::GetColorU32(ImGuiCol_Text), menuItem.icon);
+                                drawList->AddText((min + ((max - min) - iconSize) / 2) - ImVec2(0, 10_scaled), ImGui::GetColorU32(ImGuiCol_Text), menuItem->icon);
                                 drawList->AddText((min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text);
                             }
 
@@ -464,7 +497,9 @@ namespace hex::plugin::builtin {
                         if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_MENU_PAYLOAD"); payload != nullptr) {
                             auto menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
-                            menuItem->inToolbar = true;
+                            menuItem->toolbarIndex = m_currIndex;
+                            m_currIndex += 1;
+                            changed = true;
                         }
 
                         ImGui::EndDragDropTarget();
@@ -472,11 +507,40 @@ namespace hex::plugin::builtin {
 
                     ImGui::EndTable();
                 }
-                return false;
+
+                return changed;
             }
 
-            nlohmann::json store() override { return {}; }
-            void load(const nlohmann::json &) override {}
+            nlohmann::json store() override {
+                std::map<i32, std::string> items;
+
+                for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                    if (menuItem.toolbarIndex != -1)
+                        items.emplace(menuItem.toolbarIndex, menuItem.unlocalizedNames.back().get());
+                }
+
+                return items;
+            }
+
+            void load(const nlohmann::json &data) override {
+                if (data.is_null())
+                    return;
+
+                auto toolbarItems = data.get<std::map<i32, std::string>>();
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                    for (const auto &[index, name] : toolbarItems) {
+                        if (menuItem.unlocalizedNames.back().get() == name) {
+                            menuItem.toolbarIndex = index;
+                            break;
+                        }
+                    }
+                }
+
+                m_currIndex = toolbarItems.size();
+            }
+
+        private:
+            i32 m_currIndex = 0;
         };
 
     }
