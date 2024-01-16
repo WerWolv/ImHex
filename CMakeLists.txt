@@ -16,6 +16,7 @@ option(IMHEX_STRICT_WARNINGS "Enable most available warnings and treat them as e
 option(IMHEX_STATIC_LINK_PLUGINS "Statically link all plugins into the main executable" OFF)
 option(IMHEX_GENERATE_PACKAGE "Specify if a native package should be built. Only usable on Windows and MacOS" OFF)
 option(IMHEX_ENABLE_UNITY_BUILD "Enables building ImHex as a unity build." OFF)
+option(IMHEX_GENERATE_PDBS "Enable generating PDB files in non-debug builds" ON)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)

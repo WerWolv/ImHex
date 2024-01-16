@@ -60,10 +60,8 @@ namespace hex {
             for (const auto &[argument, value] : ImHexApi::System::getInitArguments()) {
                 if (argument == "no-plugins") {
                     openEmergencyPopup("No Plugins");
-                } else if (argument == "no-builtin-plugin") {
-                    openEmergencyPopup("No Builtin Plugin");
-                } else if (argument == "multiple-builtin-plugins") {
-                    openEmergencyPopup("Multiple Builtin Plugins");
+                } else if (argument == "duplicate-plugins") {
+                    openEmergencyPopup("Duplicate Plugins loaded");
                 }
             }
         }
@@ -232,7 +230,7 @@ namespace hex {
         }
     }
 
-    static void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const std::function<void()> &callback, const std::function<bool()> &enabledCallback) {
+    static void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
         const auto &name = menuItems.front();
 
         if (name.get() == ContentRegistry::Interface::impl::SeparatorValue) {
@@ -243,13 +241,13 @@ namespace hex {
         if (name.get() == ContentRegistry::Interface::impl::SubMenuValue) {
             callback();
         } else if (menuItems.size() == 1) {
-            if (ImGui::MenuItemEx(Lang(name), icon, shortcut.toString().c_str(), false, enabledCallback()))
+            if (ImGui::MenuItemEx(Lang(name), icon, shortcut.toString().c_str(), selectedCallback(), enabledCallback()))
                 callback();
         } else {
             bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;
 
             if (ImGui::BeginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::Interface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
-                createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback);
+                createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback, selectedCallback);
                 ImGui::EndMenu();
             }
         }
@@ -287,7 +285,7 @@ namespace hex {
             }
         }
 
-        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+        if (ImHexApi::System::isBorderlessWindowModeEnabled() && glfwGetWindowMonitor(m_window) == nullptr) {
             // Draw minimize, restore and maximize buttons
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
             if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
@@ -521,9 +519,9 @@ namespace hex {
                     }
 
                     for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, inToolbar] = menuItem;
+                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallack, inToolbar] = menuItem;
 
-                        createNestedMenu(unlocalizedNames, icon, *shortcut, callback, enabledCallback);
+                        createNestedMenu(unlocalizedNames, icon, *shortcut, callback, enabledCallback, selectedCallack);
                     }
                 };
 
@@ -620,31 +618,13 @@ namespace hex {
                 ImGui::EndPopup();
             }
 
-            // No built-in plugin error popup
+            // Duplicate plugins error popup
             ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-            if (ImGui::BeginPopupModal("No Builtin Plugin", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-                ImGui::TextUnformatted("The ImHex built-in plugins could not be loaded!");
-                ImGui::TextUnformatted("Make sure you installed ImHex correctly.");
-                ImGui::TextUnformatted("There should be at least a 'builtin.hexplug' file in your plugins folder.");
-
-                ImGui::NewLine();
-
-                drawPluginFolderTable();
-
-                ImGui::NewLine();
-                if (ImGui::Button("Close ImHex", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-                    ImHexApi::System::closeImHex(true);
-
-                ImGui::EndPopup();
-            }
-
-            // Multiple built-in plugins error popup
-            ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5F, 0.5F));
-            if (ImGui::BeginPopupModal("Multiple Builtin Plugins", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
-                ImGui::TextUnformatted("ImHex found and attempted to load multiple built-in plugins!");
+            if (ImGui::BeginPopupModal("Duplicate Plugins loaded", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove)) {
+                ImGui::TextUnformatted("ImHex found and attempted to load multiple plugins with the same name!");
                 ImGui::TextUnformatted("Make sure you installed ImHex correctly and, if needed,");
-                ImGui::TextUnformatted("cleaned up older installations correctly,");
-                ImGui::TextUnformatted("There should be exactly one 'builtin.hexplug' file in any one your plugin folders.");
+                ImGui::TextUnformatted("cleaned up older installations correctly.");
+                ImGui::TextUnformatted("Each plugin should only ever be loaded once.");
 
                 ImGui::NewLine();
 
@@ -812,10 +792,10 @@ namespace hex {
 
         // Draw main menu popups
         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, inToolbar] = menuItem;
+            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallback, inToolbar] = menuItem;
 
             if (ImGui::BeginPopup(unlocalizedNames.front().get().c_str())) {
-                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon, *shortcut, callback, enabledCallback);
+                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon, *shortcut, callback, enabledCallback, selectedCallback);
                 ImGui::EndPopup();
             }
         }
@@ -1002,6 +982,8 @@ namespace hex {
         // Create window
         m_windowTitle = "ImHex";
         m_window      = glfwCreateWindow(1280_scaled, 720_scaled, m_windowTitle.c_str(), nullptr, nullptr);
+
+        ImHexApi::System::impl::setMainWindowHandle(m_window);
 
         glfwSetWindowUserPointer(m_window, this);
 
