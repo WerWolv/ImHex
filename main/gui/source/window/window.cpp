@@ -230,7 +230,7 @@ namespace hex {
         }
     }
 
-    static void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const std::function<void()> &callback, const std::function<bool()> &enabledCallback) {
+    static void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
         const auto &name = menuItems.front();
 
         if (name.get() == ContentRegistry::Interface::impl::SeparatorValue) {
@@ -241,13 +241,13 @@ namespace hex {
         if (name.get() == ContentRegistry::Interface::impl::SubMenuValue) {
             callback();
         } else if (menuItems.size() == 1) {
-            if (ImGui::MenuItemEx(Lang(name), icon, shortcut.toString().c_str(), false, enabledCallback()))
+            if (ImGui::MenuItemEx(Lang(name), icon, shortcut.toString().c_str(), selectedCallback(), enabledCallback()))
                 callback();
         } else {
             bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;
 
             if (ImGui::BeginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::Interface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
-                createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback);
+                createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback, selectedCallback);
                 ImGui::EndMenu();
             }
         }
@@ -285,7 +285,7 @@ namespace hex {
             }
         }
 
-        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+        if (ImHexApi::System::isBorderlessWindowModeEnabled() && glfwGetWindowMonitor(m_window) == nullptr) {
             // Draw minimize, restore and maximize buttons
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
             if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
@@ -519,9 +519,9 @@ namespace hex {
                     }
 
                     for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback] = menuItem;
+                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallack] = menuItem;
 
-                        createNestedMenu(unlocalizedNames, icon, *shortcut, callback, enabledCallback);
+                        createNestedMenu(unlocalizedNames, icon, *shortcut, callback, enabledCallback, selectedCallack);
                     }
                 };
 
@@ -792,10 +792,10 @@ namespace hex {
 
         // Draw main menu popups
         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback] = menuItem;
+            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallback] = menuItem;
 
             if (ImGui::BeginPopup(unlocalizedNames.front().get().c_str())) {
-                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon, *shortcut, callback, enabledCallback);
+                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon, *shortcut, callback, enabledCallback, selectedCallback);
                 ImGui::EndPopup();
             }
         }
@@ -982,6 +982,8 @@ namespace hex {
         // Create window
         m_windowTitle = "ImHex";
         m_window      = glfwCreateWindow(1280_scaled, 720_scaled, m_windowTitle.c_str(), nullptr, nullptr);
+
+        ImHexApi::System::impl::setMainWindowHandle(m_window);
 
         glfwSetWindowUserPointer(m_window, this);
 

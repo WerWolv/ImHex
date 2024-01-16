@@ -403,6 +403,11 @@ namespace hex {
                 s_mainDockSpaceId = id;
             }
 
+            static GLFWwindow *s_mainWindowHandle;
+            void setMainWindowHandle(GLFWwindow *window) {
+                s_mainWindowHandle = window;
+            }
+
 
             static float s_globalScale = 1.0;
             void setGlobalScale(float scale) {
@@ -497,6 +502,10 @@ namespace hex {
 
         ImGuiID getMainDockSpaceId() {
             return impl::s_mainDockSpaceId;
+        }
+
+        GLFWwindow* getMainWindowHandle() {
+            return impl::s_mainWindowHandle;
         }
 
         bool isBorderlessWindowModeEnabled() {

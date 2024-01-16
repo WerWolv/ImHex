@@ -165,6 +165,8 @@
         "hex.builtin.menu.workspace.layout.lock": "Lock Layout",
         "hex.builtin.menu.workspace.layout.save": "Save Layout",
         "hex.builtin.menu.view": "View",
+        "hex.builtin.menu.view.always_on_top": "Always on Top",
+        "hex.builtin.menu.view.fullscreen": "Full Screen Mode",
         "hex.builtin.menu.view.debug": "Show Debugging View",
         "hex.builtin.menu.view.demo": "Show ImGui Demo",
         "hex.builtin.menu.view.fps": "Display FPS",
