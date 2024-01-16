@@ -1,227 +1,296 @@
 #include "content/popups/hex_editor/popup_hex_editor_find.hpp"
+
 #include "content/views/view_hex_editor.hpp"
-#include "hex/api/content_registry.hpp"
-#include "hex/providers/buffered_reader.hpp"
+
 #include <hex/helpers/crypto.hpp>
+#include <hex/helpers/utils.hpp>
+#include <hex/providers/buffered_reader.hpp>
+
+#include <bit>
 #include <codecvt>
 
-using namespace hex;
-using namespace hex::plugin::builtin;
+namespace hex::plugin::builtin {
 
-PopupFind::PopupFind(ViewHexEditor* editor) noexcept {
-    EventRegionSelected::subscribe(this, [this](Region region) {
-        m_searchFoundRegion = region;
-    });
+    PopupFind::PopupFind(ViewHexEditor *editor) noexcept {
+        EventRegionSelected::subscribe(this, [this](Region region) {
+            m_foundRegion = region;
+        });
 
-    m_searchFoundRegion = editor->getSelection();
-}
-
-PopupFind::~PopupFind() { 
-    EventRegionSelected::unsubscribe(this);
-}
-
-void PopupFind::draw(ViewHexEditor *editor) {
-    std::vector<u8> searchSequence;
-
-    ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
-    if (ImGui::BeginTabBar("##find_tabs")) {
-        if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
-            m_isStringMode = false;
-            if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_NUMERIC, m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
-                if (!m_input.empty()) {
-                    m_requestSearch = true;
-                    m_backwards = false;
-                }
-            }
-            this->drawButtons();
-            if (m_requestSearch) {
-                searchSequence = crypt::decode16(m_input);
-            }
-            ImGui::EndTabItem();
-        }
-
-        if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.string"_lang)) {
-            m_isStringMode = true;
-            if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-                if (!m_input.empty()) {
-                    m_requestSearch = true;
-                    m_backwards = false;
-                }
-            }
-            this->drawButtons();
-            constexpr static std::array StringModeEncodingNames = {
-                "UTF-8",
-                "UTF-16",
-                "UTF-32"
-            };
-            if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.encoding"_lang,
-                StringModeEncodingNames[static_cast<u8>(m_stringModeEncoding.load())])) {
-                    if (ImGui::Selectable(StringModeEncodingNames[0], m_stringModeEncoding == StringModeEncoding::UTF8))
-                        m_stringModeEncoding = StringModeEncoding::UTF8;
-                    if (ImGui::Selectable(StringModeEncodingNames[1], m_stringModeEncoding == StringModeEncoding::UTF16))
-                        m_stringModeEncoding = StringModeEncoding::UTF16;
-                    if (ImGui::Selectable(StringModeEncodingNames[2], m_stringModeEncoding == StringModeEncoding::UTF32))
-                        m_stringModeEncoding = StringModeEncoding::UTF32;
-                    ImGui::EndCombo();
-            }
-            constexpr static std::array StringModeEndianessNames = {
-                    "Little endian",
-                    "Big endian"
-            };
-            if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.endianess"_lang,
-                StringModeEndianessNames[static_cast<u8>(m_stringModeEndianess.load())])) {
-                    if (ImGui::Selectable(StringModeEndianessNames[0], m_stringModeEndianess == StringModeEndianness::Little))
-                        m_stringModeEndianess = StringModeEndianness::Little;
-                    if (ImGui::Selectable(StringModeEndianessNames[1], m_stringModeEndianess == StringModeEndianness::Big))
-                        m_stringModeEndianess = StringModeEndianness::Big;
-                    ImGui::EndCombo();
-            }
-            if (m_requestSearch) {
-                searchSequence.clear();
-
-                if (!m_isStringMode) // String
-                {
-                    std::endian nativeEndianess = std::endian::native;
-                    if (m_stringModeEndianess == StringModeEndianness::Big)
-                        nativeEndianess = std::endian::big;
-                    else if (m_stringModeEndianess == StringModeEndianness::Little)
-                        nativeEndianess = std::endian::little;
-                        
-                    auto swapEndianess = [](auto &value, std::endian endian, StringModeEncoding encoding) {
-                            if (encoding == StringModeEncoding::UTF16 || encoding == StringModeEncoding::UTF32) {
-                                if ((endian == std::endian::big && std::endian::big != std::endian::native) ||
-                                    (endian == std::endian::little && std::endian::little != std::endian::native)) {
-                                    if constexpr (sizeof(value) == 2)
-                                        value = __builtin_bswap16(value);
-                                    else if constexpr (sizeof(value) == 4)
-                                        value = __builtin_bswap32(value);
-                                }
-                            }
-                    };
-
-                    switch (m_stringModeEncoding.load()) {
-                        case StringModeEncoding::UTF8: {
-                            std::copy(m_input.begin(), m_input.end(), std::back_inserter(searchSequence));
-                        }
-                            break;
-                        case StringModeEncoding::UTF16: {
-                            std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> convert;
-                            std::u16string utf16 = convert.from_bytes(m_input);
-                            for (auto &c : utf16)
-                                swapEndianess(c, nativeEndianess, StringModeEncoding::UTF16);
-                            std::copy(reinterpret_cast<const u8 *>(utf16.data()), reinterpret_cast<const u8 *>(utf16.data() + utf16.size()), std::back_inserter(searchSequence));
-                        }
-                            break;
-                        case StringModeEncoding::UTF32: {
-                            std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
-                            std::u32string utf32 = convert.from_bytes(m_input);
-                            for (auto &c : utf32)
-                                swapEndianess(c, nativeEndianess, StringModeEncoding::UTF32);
-                            std::copy(reinterpret_cast<const u8 *>(utf32.data()), reinterpret_cast<const u8 *>(utf32.data() + utf32.size()), std::back_inserter(searchSequence));
-                        } 
-                            break;
-                    }
-                }
-                else // Bytes
-                {
-                    std::copy(m_input.begin(), m_input.end(), std::back_inserter(searchSequence));
-
-                    if (!searchSequence.empty() && searchSequence.back() == 0x00)
-                    {
-                        searchSequence.pop_back();
-                    }
-                }
-            }
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
+        m_foundRegion = editor->getSelection();
     }
 
-    auto canSearch = !m_searchTask.isRunning() && !searchSequence.empty() && m_requestSearch;
-    if (canSearch) {
-        m_searchTask = TaskManager::createTask("hex.ui.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
-            auto region = this->findSequence(searchSequence, m_backwards);
+    PopupFind::~PopupFind() {
+        EventRegionSelected::unsubscribe(this);
+    }
+
+    void PopupFind::draw(ViewHexEditor *editor) {
+        ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
+
+        if (ImGui::BeginTabBar("##find_tabs")) {
+            if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
+                m_searchMode = SearchMode::ByteSequence;
+                this->drawTabContents();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.string"_lang)) {
+                m_searchMode = SearchMode::String;
+                this->drawTabContents();
+                ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
+
+        const auto doSearch = [this, editor](auto &) {
+            auto region = this->findByteSequence(m_searchByteSequence);
+
             if (region.has_value()) {
-                m_searchFoundRegion = region.value();
+                m_foundRegion = region.value();
+
                 if (editor->getSelection() != region) {
-                    TaskManager::doLater([editor, region]{
+                    TaskManager::doLater([editor, region] {
                         editor->setSelection(region->getStartAddress(), region->getEndAddress());
                         editor->jumpToSelection();
                     });
                 }
+
                 m_reachedEnd = false;
             } else {
                 m_reachedEnd = true;
             }
+
             m_requestSearch = false;
             m_requestFocus = true;
-        });
-    }
-}
+        };
 
-void PopupFind::drawButtons() {
-    const auto ButtonSize = ImVec2(ImGui::CalcTextSize(ICON_VS_SEARCH).x, ImGui::GetTextLineHeight()) + ImGui::GetStyle().CellPadding * 2;
-    const auto ButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
+        if (m_requestSearch) {
+            this->processInputString();
 
-    if (m_requestFocus) {
-        ImGui::SetKeyboardFocusHere(-1);
-        m_requestFocus = false;
-    }
-    ImGui::BeginDisabled(m_searchTask.isRunning());
-    {
-        ImGui::SameLine();
-        if (ImGuiExt::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
-            m_requestSearch = true;
-            m_backwards = true;
-        }
-        ImGui::SameLine();
-        if (ImGuiExt::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
-            m_requestSearch = true;
-            m_backwards = false;
+            if (!m_searchTask.isRunning() && !m_searchByteSequence.empty()) {
+                m_searchTask = TaskManager::createTask("hex.ui.common.processing",
+                                                       ImHexApi::Provider::get()->getActualSize(),
+                                                       doSearch);
+            }
+            m_requestSearch = false;
         }
 
+    }
 
-        const static auto SearchPositionFormat = "hex.builtin.view.hex_editor.search.position"_lang;
+    void PopupFind::drawSearchDirectionButtons() {
+        const auto ButtonSize = ImVec2(ImGui::CalcTextSize(ICON_VS_SEARCH).x, ImGui::GetTextLineHeight()) +
+                                ImGui::GetStyle().CellPadding * 2;
+        const auto ButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
 
-        // Status label
-        if(m_reachedEnd)
+        if (m_requestFocus) {
+            ImGui::SetKeyboardFocusHere(-1);
+            m_requestFocus = false;
+        }
+
+        ImGui::BeginDisabled(m_searchTask.isRunning());
         {
-            auto statusString = "No more results";
             ImGui::SameLine();
-            ImGui::TextUnformatted(statusString);
-        }
-    }
-    ImGui::EndDisabled();
-}
 
-std::optional<Region> PopupFind::findSequence(const std::vector<u8> &sequence, bool backwards) {
-    auto provider = ImHexApi::Provider::get();
-    prv::ProviderReader reader(provider);
-    
-    auto sequenceSize = sequence.size();
-    auto startAbsolutePosition = provider->getBaseAddress();
-    auto endAbsolutePosition = provider->getBaseAddress() + provider->getActualSize() - 1;
+            if (ImGuiExt::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
+                m_requestSearch = true;
+                m_searchBackwards = true;
+            }
 
-    constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
-        return std::search(haystackBegin, haystackEnd, needleBegin, needleEnd);
-    };
+            ImGui::SameLine();
 
-    if (!backwards) { // Forwards
-        reader.seek(m_searchFoundRegion->getStartAddress() + 1);
-        reader.setEndAddress(endAbsolutePosition);
-        auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
-        if (occurrence != reader.end()) {
-            return Region { occurrence.getAddress(), sequence.size() };
+            if (ImGuiExt::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
+                m_requestSearch = true;
+                m_searchBackwards = false;
+            }
+
+            // TODO: Implement this
+            //const static auto SearchPositionFormat = "hex.builtin.view.hex_editor.search.position"_lang;
+            // // Status label // std::atomic<bool> m_reachedEnd   = false;
+            if (m_reachedEnd) {
+                auto statusString = "No more results";
+                ImGui::SameLine();
+                ImGui::TextUnformatted(statusString);
+            }
         }
-    } else { // Backwardss
-        reader.seek(startAbsolutePosition);
-        reader.setEndAddress(m_searchFoundRegion->getEndAddress() - 1);
-        auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.rbegin(), sequence.rend());
-        if (occurrence != reader.rend()) {
-            return Region { occurrence.getAddress() - (sequence.size() - 1), sequence.size() };
-        }
+        ImGui::EndDisabled();
     }
 
-    return std::nullopt;
-}
+    void PopupFind::drawTabContents() {
+        static std::array EncodingNames = {
+                "hex.builtin.view.hex_editor.search.string.encoding.utf8"_lang,
+                "hex.builtin.view.hex_editor.search.string.encoding.utf16"_lang,
+                "hex.builtin.view.hex_editor.search.string.encoding.utf32"_lang
+        };
 
+        static std::array EndiannessNames = {
+                "hex.builtin.view.hex_editor.search.string.endianness.little"_lang,
+                "hex.builtin.view.hex_editor.search.string.endianness.big"_lang
+        };
+
+        const char *searchInputIcon = nullptr;
+        ImGuiInputTextFlags searchInputFlags = 0;
+
+        // Set search input icon and flags
+        switch (m_searchMode) {
+            case SearchMode::ByteSequence:
+                searchInputIcon = ICON_VS_SYMBOL_NUMERIC;
+                searchInputFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll |
+                                   ImGuiInputTextFlags_CharsHexadecimal;
+                break;
+            case SearchMode::String:
+                searchInputIcon = ICON_VS_SYMBOL_KEY;
+                searchInputFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll;
+                break;
+        }
+
+        // Draw search input
+        if (ImGuiExt::InputTextIcon("##input", searchInputIcon, m_inputString, searchInputFlags)) {
+            if (!m_inputString.empty()) {
+                m_requestSearch = true;
+                m_searchBackwards = ImGui::GetIO().KeyShift;
+            }
+        }
+
+        // Draw search direction buttons
+        this->drawSearchDirectionButtons();
+
+        // Draw search options for string search
+        if (m_searchMode == SearchMode::String) {
+            if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.encoding"_lang,
+                                  EncodingNames[std::underlying_type_t<Encoding>(m_stringEncoding.load())])) {
+                if (ImGui::Selectable(EncodingNames[0],
+                                      m_stringEncoding == Encoding::UTF8)) {
+                    m_stringEncoding = Encoding::UTF8;
+                }
+
+                if (ImGui::Selectable(EncodingNames[1],
+                                      m_stringEncoding == Encoding::UTF16)) {
+                    m_stringEncoding = Encoding::UTF16;
+                }
+
+                if (ImGui::Selectable(EncodingNames[2],
+                                      m_stringEncoding == Encoding::UTF32)) {
+                    m_stringEncoding = Encoding::UTF32;
+                }
+
+                ImGui::EndCombo();
+            }
+
+            ImGui::BeginDisabled(m_stringEncoding == Encoding::UTF8);
+            {
+                if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.endianness"_lang,
+                                      EndiannessNames[std::underlying_type_t<Endianness>(m_stringEndianness.load())])) {
+                    if (ImGui::Selectable(EndiannessNames[0], m_stringEndianness == Endianness::Little)) {
+                        m_stringEndianness = Endianness::Little;
+                    }
+
+                    if (ImGui::Selectable(EndiannessNames[1], m_stringEndianness == Endianness::Big)) {
+                        m_stringEndianness = Endianness::Big;
+                    }
+
+                    ImGui::EndCombo();
+                }
+            }
+            ImGui::EndDisabled();
+        }
+    }
+
+    std::optional<Region> PopupFind::findByteSequence(const std::vector<u8> &sequence) {
+        auto provider = ImHexApi::Provider::get();
+        prv::ProviderReader reader(provider);
+
+        auto startAbsolutePosition = provider->getBaseAddress();
+        auto endAbsolutePosition = provider->getBaseAddress() + provider->getActualSize() - 1;
+
+        constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd,
+                                                  const auto &needleBegin, const auto &needleEnd) {
+            return std::search(haystackBegin, haystackEnd, needleBegin, needleEnd);
+        };
+
+        if (!m_searchBackwards) {
+            if (m_reachedEnd || !m_foundRegion.has_value()) {
+                reader.seek(startAbsolutePosition);
+            } else {
+                reader.seek(m_foundRegion->getStartAddress() + 1);
+            }
+            reader.setEndAddress(endAbsolutePosition);
+
+            auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
+            if (occurrence != reader.end()) {
+                return Region{occurrence.getAddress(), sequence.size()};
+            }
+        } else {
+            if (m_reachedEnd || !m_foundRegion.has_value()) {
+                reader.setEndAddress(endAbsolutePosition);
+            } else {
+                reader.setEndAddress(m_foundRegion->getEndAddress() - 1);
+            }
+            reader.seek(startAbsolutePosition);
+
+            auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.rbegin(), sequence.rend());
+            if (occurrence != reader.rend()) {
+                return Region{occurrence.getAddress() - (sequence.size() - 1), sequence.size()};
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    void PopupFind::processInputString() {
+        m_searchByteSequence.clear();
+
+        constexpr auto swapEndianness = [](auto &value, Encoding encoding, Endianness endianness) {
+            if (encoding == Encoding::UTF16 || encoding == Encoding::UTF32) {
+                std::endian endian = (endianness == Endianness::Little)
+                                     ? std::endian::little
+                                     : std::endian::big;
+                value = hex::changeEndianess(value, endian);
+            }
+        };
+
+        switch (m_searchMode) {
+            case SearchMode::ByteSequence: {
+                m_searchByteSequence = crypt::decode16(m_inputString);
+            }
+                break;
+
+            case SearchMode::String: {
+                switch (m_stringEncoding) {
+                    case Encoding::UTF8: {
+                        std::copy(m_inputString.data(), m_inputString.data() + m_inputString.size(),
+                                  std::back_inserter(m_searchByteSequence));
+                    }
+                        break;
+
+                    case Encoding::UTF16: {
+                        std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> convert16;
+                        auto utf16 = convert16.from_bytes(m_inputString);
+
+                        for (auto &c: utf16) {
+                            swapEndianness(c, Encoding::UTF16, m_stringEndianness);
+                        }
+
+                        std::copy(reinterpret_cast<const u8 *>(utf16.data()),
+                                  reinterpret_cast<const u8 *>(utf16.data() + utf16.size()),
+                                  std::back_inserter(m_searchByteSequence));
+                    }
+                        break;
+
+                    case Encoding::UTF32: {
+                        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert32;
+                        auto utf32 = convert32.from_bytes(m_inputString);
+
+                        for (auto &c: utf32) {
+                            swapEndianness(c, Encoding::UTF32, m_stringEndianness);
+                        }
+
+                        std::copy(reinterpret_cast<const u8 *>(utf32.data()),
+                                  reinterpret_cast<const u8 *>(utf32.data() + utf32.size()),
+                                  std::back_inserter(m_searchByteSequence));
+                    }
+                        break;
+                }
+            }
+                break;
+        }
+    }
+} // namespace hex::plugin::builtin
