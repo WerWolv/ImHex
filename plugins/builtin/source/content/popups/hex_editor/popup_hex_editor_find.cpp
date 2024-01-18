@@ -102,11 +102,8 @@ namespace hex::plugin::builtin {
                 m_searchBackwards = false;
             }
 
-            // TODO: Implement this
-            //const static auto SearchPositionFormat = "hex.builtin.view.hex_editor.search.position"_lang;
-            // // Status label // std::atomic<bool> m_reachedEnd   = false;
             if (m_reachedEnd) {
-                auto statusString = "No more results";
+                auto statusString = "hex.builtin.view.hex_editor.search.no_more_results"_lang;
                 ImGui::SameLine();
                 ImGui::TextUnformatted(statusString);
             }
@@ -116,14 +113,14 @@ namespace hex::plugin::builtin {
 
     void PopupFind::drawTabContents() {
         static std::array EncodingNames = {
-                "hex.builtin.view.hex_editor.search.string.encoding.utf8"_lang,
-                "hex.builtin.view.hex_editor.search.string.encoding.utf16"_lang,
-                "hex.builtin.view.hex_editor.search.string.encoding.utf32"_lang
+                "hex.builtin.view.hex_editor.search.string.encoding.utf8",
+                "hex.builtin.view.hex_editor.search.string.encoding.utf16",
+                "hex.builtin.view.hex_editor.search.string.encoding.utf32"
         };
 
         static std::array EndiannessNames = {
-                "hex.builtin.view.hex_editor.search.string.endianness.little"_lang,
-                "hex.builtin.view.hex_editor.search.string.endianness.big"_lang
+                "hex.builtin.view.hex_editor.search.string.endianness.little",
+                "hex.builtin.view.hex_editor.search.string.endianness.big"
         };
 
         const char *searchInputIcon = nullptr;
@@ -155,20 +152,16 @@ namespace hex::plugin::builtin {
 
         // Draw search options for string search
         if (m_searchMode == SearchMode::String) {
-            if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.encoding"_lang,
-                                  EncodingNames[std::underlying_type_t<Encoding>(m_stringEncoding.load())])) {
-                if (ImGui::Selectable(EncodingNames[0],
-                                      m_stringEncoding == Encoding::UTF8)) {
+            if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.encoding"_lang, Lang(EncodingNames[std::to_underlying<Encoding>(m_stringEncoding.load())]))) {
+                if (ImGui::Selectable(Lang(EncodingNames[0]), m_stringEncoding == Encoding::UTF8)) {
                     m_stringEncoding = Encoding::UTF8;
                 }
 
-                if (ImGui::Selectable(EncodingNames[1],
-                                      m_stringEncoding == Encoding::UTF16)) {
+                if (ImGui::Selectable(Lang(EncodingNames[1]), m_stringEncoding == Encoding::UTF16)) {
                     m_stringEncoding = Encoding::UTF16;
                 }
 
-                if (ImGui::Selectable(EncodingNames[2],
-                                      m_stringEncoding == Encoding::UTF32)) {
+                if (ImGui::Selectable(Lang(EncodingNames[2]), m_stringEncoding == Encoding::UTF32)) {
                     m_stringEncoding = Encoding::UTF32;
                 }
 
@@ -177,13 +170,12 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(m_stringEncoding == Encoding::UTF8);
             {
-                if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.endianness"_lang,
-                                      EndiannessNames[std::underlying_type_t<Endianness>(m_stringEndianness.load())])) {
-                    if (ImGui::Selectable(EndiannessNames[0], m_stringEndianness == Endianness::Little)) {
+                if (ImGui::BeginCombo("hex.builtin.view.hex_editor.search.string.endianness"_lang, Lang(EndiannessNames[std::to_underlying<Endianness>(m_stringEndianness.load())]))) {
+                    if (ImGui::Selectable(Lang(EndiannessNames[0]), m_stringEndianness == Endianness::Little)) {
                         m_stringEndianness = Endianness::Little;
                     }
 
-                    if (ImGui::Selectable(EndiannessNames[1], m_stringEndianness == Endianness::Big)) {
+                    if (ImGui::Selectable(Lang(EndiannessNames[1]), m_stringEndianness == Endianness::Big)) {
                         m_stringEndianness = Endianness::Big;
                     }
 
@@ -293,4 +285,4 @@ namespace hex::plugin::builtin {
                 break;
         }
     }
-} // namespace hex::plugin::builtin
+}
