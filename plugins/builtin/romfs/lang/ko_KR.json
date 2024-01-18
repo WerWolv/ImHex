@@ -694,6 +694,7 @@
         "hex.builtin.view.hex_editor.search.string.endianness": "엔디안",
         "hex.builtin.view.hex_editor.search.string.endianness.little": "리틀 엔디안",
         "hex.builtin.view.hex_editor.search.string.endianness.big": "빅 엔디안",
+        "hex.builtin.view.hex_editor.search.no_more_results": "더이상 결과 없음",
         "hex.builtin.view.hex_editor.select.offset.begin": "시작",
         "hex.builtin.view.hex_editor.select.offset.end": "끝",
         "hex.builtin.view.hex_editor.select.offset.region": "지역",

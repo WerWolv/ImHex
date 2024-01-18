@@ -673,6 +673,7 @@
         "hex.builtin.view.hex_editor.search.string.endianness": "Endianness",
         "hex.builtin.view.hex_editor.search.string.endianness.little": "Little",
         "hex.builtin.view.hex_editor.search.string.endianness.big": "Big",
+        "hex.builtin.view.hex_editor.search.no_more_results": "No se encontraron más resultados",
         "hex.builtin.view.hex_editor.select.offset.begin": "Inicio",
         "hex.builtin.view.hex_editor.select.offset.end": "Fin",
         "hex.builtin.view.hex_editor.select.offset.region": "Región",

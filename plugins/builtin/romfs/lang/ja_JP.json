@@ -673,6 +673,7 @@
         "hex.builtin.view.hex_editor.search.string.endianness": "バイトオーダ",
         "hex.builtin.view.hex_editor.search.string.endianness.little": "リトルエンディアン",
         "hex.builtin.view.hex_editor.search.string.endianness.big": "ビッグエンディアン",
+        "hex.builtin.view.hex_editor.search.no_more_results": "結果がありません",
         "hex.builtin.view.hex_editor.select.offset.begin": "",
         "hex.builtin.view.hex_editor.select.offset.end": "",
         "hex.builtin.view.hex_editor.select.offset.region": "",
