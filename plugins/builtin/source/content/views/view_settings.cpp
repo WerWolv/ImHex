@@ -29,8 +29,12 @@ namespace hex::plugin::builtin {
             for (const auto &[unlocalizedCategory, unlocalizedDescription, subCategories] : ContentRegistry::Settings::impl::getSettings()) {
                 for (const auto &[unlocalizedSubCategory, entries] : subCategories) {
                     for (const auto &[unlocalizedName, widget] : entries) {
-                        widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, widget->store()));
-                        widget->onChanged();
+                        try {
+                            widget->load(ContentRegistry::Settings::impl::getSetting(unlocalizedCategory, unlocalizedName, widget->store()));
+                            widget->onChanged();
+                        } catch (const std::exception &e) {
+                            log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                        }
                     }
                 }
             }

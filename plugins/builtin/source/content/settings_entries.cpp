@@ -371,32 +371,24 @@ namespace hex::plugin::builtin {
         public:
             bool draw(const std::string &) override {
                 bool changed = false;
+
+                // Top level layout table
                 if (ImGui::BeginTable("##top_level", 2, ImGuiTableFlags_None, ImGui::GetContentRegionAvail())) {
                     ImGui::TableSetupColumn("##left", ImGuiTableColumnFlags_WidthStretch, 0.3F);
                     ImGui::TableSetupColumn("##right", ImGuiTableColumnFlags_WidthStretch, 0.7F);
                     ImGui::TableNextRow();
                     ImGui::TableNextColumn();
 
+                    // Draw list of menu items that can be added to the toolbar
                     if (ImGui::BeginTable("##all_icons", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, 280_scaled))) {
                         ImGui::TableNextRow();
                         ImGui::TableNextColumn();
 
-                        ImGui::Selectable("Separator", false, ImGuiSelectableFlags_SpanAllColumns);
-                        if (ImGui::BeginDragDropSource()) {
-                            static ContentRegistry::Interface::impl::MenuItem separatorItem = {
-                                .unlocalizedNames = { ContentRegistry::Interface::impl::SeparatorValue },
-                                .icon = "|"
-                            };
-                            auto ptr = &separatorItem;
-                            ImGui::SetDragDropPayload("TOOLBAR_MENU_PAYLOAD", &ptr, sizeof(ptr));
-
-                            ImGuiExt::TextFormatted("Separator");
-
-                            ImGui::EndDragDropSource();
-                        }
-
+                        // Loop over all available menu items
                         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                            if (menuItem.icon == nullptr)
+                            // Filter out items without icon, separators, submenus and items that are already in the toolbar
+
+                            if (menuItem.icon.glyph.empty())
                                 continue;
 
                             const auto &unlocalizedName = menuItem.unlocalizedNames.back();
@@ -412,12 +404,15 @@ namespace hex::plugin::builtin {
                             ImGui::TableNextRow();
                             ImGui::TableNextColumn();
 
-                            ImGui::Selectable(hex::format("{} {}", menuItem.icon, Lang(unlocalizedName)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+                            // Draw the menu item
+                            ImGui::Selectable(hex::format("{} {}", menuItem.icon.glyph, Lang(unlocalizedName)).c_str(), false, ImGuiSelectableFlags_SpanAllColumns);
+
+                            // Handle draggin the menu item to the toolbar box
                             if (ImGui::BeginDragDropSource()) {
                                 auto ptr = &menuItem;
-                                ImGui::SetDragDropPayload("TOOLBAR_MENU_PAYLOAD", &ptr, sizeof(ptr));
+                                ImGui::SetDragDropPayload("MENU_ITEM_PAYLOAD", &ptr, sizeof(void*));
 
-                                ImGuiExt::TextFormatted("{} {}", menuItem.icon, Lang(unlocalizedName));
+                                ImGuiExt::TextFormatted("{} {}", menuItem.icon.glyph, Lang(unlocalizedName));
 
                                 ImGui::EndDragDropSource();
                             }
@@ -426,9 +421,10 @@ namespace hex::plugin::builtin {
                         ImGui::EndTable();
                     }
 
+                    // Handle dropping menu items from the toolbar box
                     if (ImGui::BeginDragDropTarget()) {
-                        if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ICON_PAYLOAD"); payload != nullptr) {
-                            auto menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+                        if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ITEM_PAYLOAD"); payload != nullptr) {
+                            auto &menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
                             menuItem->toolbarIndex = -1;
                             changed = true;
@@ -439,13 +435,14 @@ namespace hex::plugin::builtin {
 
                     ImGui::TableNextColumn();
 
-                    ImGuiExt::BeginSubWindow("Toolbar Icons", ImGui::GetContentRegionAvail());
+                    // Draw toolbar icon box
+                    ImGuiExt::BeginSubWindow("hex.builtin.setting.toolbar.icons"_lang, ImGui::GetContentRegionAvail());
                     {
                         if (ImGui::BeginTable("##icons", 6, ImGuiTableFlags_SizingStretchSame, ImGui::GetContentRegionAvail())) {
                             ImGui::TableNextRow();
 
+                            // Find all menu items that are in the toolbar and sort them by their toolbar index
                             std::set<ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> toolbarItems;
-
                             for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
                                 if (menuItem.toolbarIndex == -1)
                                     continue;
@@ -453,8 +450,10 @@ namespace hex::plugin::builtin {
                                 toolbarItems.emplace(&menuItem);
                             }
 
-                            for (auto menuItem : toolbarItems) {
-                                if (menuItem->icon == nullptr)
+                            // Loop over all toolbar items
+                            for (auto &menuItem : toolbarItems) {
+                                // Filter out items without icon, separators, submenus and items that are not in the toolbar
+                                if (menuItem->icon.glyph.empty())
                                     continue;
 
                                 const auto &unlocalizedName = menuItem->unlocalizedNames.back();
@@ -467,25 +466,75 @@ namespace hex::plugin::builtin {
 
                                 ImGui::TableNextColumn();
 
+                                // Draw the toolbar item
                                 ImGui::InvisibleButton(unlocalizedName.get().c_str(), ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().x));
-                                if (ImGui::BeginDragDropSource()) {
-                                    auto ptr = &menuItem;
-                                    ImGui::SetDragDropPayload("TOOLBAR_ICON_PAYLOAD", &ptr, sizeof(ptr));
 
-                                    ImGuiExt::TextFormatted("{} {}", menuItem->icon, Lang(unlocalizedName));
+                                // Handle dragging the toolbar item around
+                                if (ImGui::BeginDragDropSource()) {
+                                    ImGui::SetDragDropPayload("TOOLBAR_ITEM_PAYLOAD", &menuItem, sizeof(void*));
+
+                                    ImGuiExt::TextFormatted("{} {}", menuItem->icon.glyph, Lang(unlocalizedName));
 
                                     ImGui::EndDragDropSource();
                                 }
+
+                                // Handle dropping toolbar items onto each other to reorder them
+                                if (ImGui::BeginDragDropTarget()) {
+                                    if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_ITEM_PAYLOAD"); payload != nullptr) {
+                                        auto &otherMenuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+
+                                        std::swap(menuItem->toolbarIndex, otherMenuItem->toolbarIndex);
+                                        changed = true;
+                                    }
+
+                                    ImGui::EndDragDropTarget();
+                                }
+
+                                // Handle right clicking toolbar items to open the color selection popup
+                                if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                                    ImGui::OpenPopup(unlocalizedName.get().c_str());
+
+                                // Draw the color selection popup
+                                if (ImGui::BeginPopup(unlocalizedName.get().c_str())) {
+                                    constexpr static std::array Colors = {
+                                        ImGuiCustomCol_ToolbarGray,
+                                        ImGuiCustomCol_ToolbarRed,
+                                        ImGuiCustomCol_ToolbarYellow,
+                                        ImGuiCustomCol_ToolbarGreen,
+                                        ImGuiCustomCol_ToolbarBlue,
+                                        ImGuiCustomCol_ToolbarPurple,
+                                        ImGuiCustomCol_ToolbarBrown
+                                    };
+
+                                    // Draw all the color buttons
+                                    for (auto color : Colors) {
+                                        ImGui::PushID(&color);
+                                        if (ImGui::ColorButton(hex::format("##color{}", u32(color)).c_str(), ImGuiExt::GetCustomColorVec4(color), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker, ImVec2(20, 20))) {
+                                            menuItem->icon.color = color;
+                                            ImGui::CloseCurrentPopup();
+                                            changed = true;
+                                        }
+                                        ImGui::PopID();
+                                        ImGui::SameLine();
+                                    }
+
+                                    ImGui::EndPopup();
+                                }
+
                                 auto min = ImGui::GetItemRectMin();
                                 auto max = ImGui::GetItemRectMax();
-                                auto iconSize = ImGui::CalcTextSize(menuItem->icon);
+                                auto iconSize = ImGui::CalcTextSize(menuItem->icon.glyph.c_str());
 
-                                auto text = Lang(unlocalizedName);
-                                auto textSize = ImGui::CalcTextSize(text);
+                                auto text = Lang(unlocalizedName).get();
+                                if (text.ends_with("..."))
+                                    text = text.substr(0, text.size() - 3);
 
+                                auto textSize = ImGui::CalcTextSize(text.c_str());
+
+                                // Draw icon and text of the toolbar item
                                 auto drawList = ImGui::GetWindowDrawList();
-                                drawList->AddText((min + ((max - min) - iconSize) / 2) - ImVec2(0, 10_scaled), ImGui::GetColorU32(ImGuiCol_Text), menuItem->icon);
-                                drawList->AddText((min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text);
+                                drawList->AddText((min + ((max - min) - iconSize) / 2) - ImVec2(0, 10_scaled), ImGuiExt::GetCustomColorU32(ImGuiCustomCol(menuItem->icon.color)), menuItem->icon.glyph.c_str());
+                                drawList->AddText((min + ((max - min)) / 2) + ImVec2(-textSize.x / 2, 5_scaled), ImGui::GetColorU32(ImGuiCol_Text), text.c_str());
                             }
 
                             ImGui::EndTable();
@@ -493,9 +542,10 @@ namespace hex::plugin::builtin {
                     }
                     ImGuiExt::EndSubWindow();
 
+                    // Handle dropping menu items onto the toolbar box
                     if (ImGui::BeginDragDropTarget()) {
-                        if (auto payload = ImGui::AcceptDragDropPayload("TOOLBAR_MENU_PAYLOAD"); payload != nullptr) {
-                            auto menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
+                        if (auto payload = ImGui::AcceptDragDropPayload("MENU_ITEM_PAYLOAD"); payload != nullptr) {
+                            auto &menuItem = *static_cast<ContentRegistry::Interface::impl::MenuItem **>(payload->Data);
 
                             menuItem->toolbarIndex = m_currIndex;
                             m_currIndex += 1;
@@ -512,11 +562,11 @@ namespace hex::plugin::builtin {
             }
 
             nlohmann::json store() override {
-                std::map<i32, std::string> items;
+                std::map<i32, std::pair<std::string, u32>> items;
 
                 for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
                     if (menuItem.toolbarIndex != -1)
-                        items.emplace(menuItem.toolbarIndex, menuItem.unlocalizedNames.back().get());
+                        items.emplace(menuItem.toolbarIndex, std::make_pair(menuItem.unlocalizedNames.back().get(), menuItem.icon.color));
                 }
 
                 return items;
@@ -526,11 +576,19 @@ namespace hex::plugin::builtin {
                 if (data.is_null())
                     return;
 
-                auto toolbarItems = data.get<std::map<i32, std::string>>();
+                auto toolbarItems = data.get<std::map<i32, std::pair<std::string, u32>>>();
+                if (toolbarItems.empty())
+                    return;
+
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems())
+                    menuItem.toolbarIndex = -1;
+
                 for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                    for (const auto &[index, name] : toolbarItems) {
+                    for (const auto &[index, value] : toolbarItems) {
+                        const auto &[name, color] = value;
                         if (menuItem.unlocalizedNames.back().get() == name) {
                             menuItem.toolbarIndex = index;
+                            menuItem.icon.color   = ImGuiCustomCol(color);
                             break;
                         }
                     }
@@ -720,6 +778,8 @@ namespace hex::plugin::builtin {
        });
 
        /* Toolbar icons */
+        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.toolbar", "hex.builtin.setting.toolbar.description");
+
        ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
 
     }
