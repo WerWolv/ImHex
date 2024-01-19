@@ -252,6 +252,7 @@ namespace hex {
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
     EVENT_DEF(EventSearchBoxClicked, u32);
     EVENT_DEF(EventViewOpened, View*);
+    EVENT_DEF(EventFirstLaunch);
 
     EVENT_DEF(EventFileDragged, bool);
     EVENT_DEF(EventFileDropped, std::fs::path);
