@@ -350,6 +350,10 @@ macro(configureCMake)
     # display a warning about options being set using set() instead of option().
     # Explicitly set the policy to NEW to suppress the warning.
     set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+
+    set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 endmacro()
 
 macro(setDefaultBuiltTypeIfUnset)

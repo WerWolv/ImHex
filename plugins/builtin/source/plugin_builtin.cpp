@@ -71,7 +71,6 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
-
     using namespace hex::plugin::builtin;
 
     hex::log::debug("Using romfs: '{}'", romfs::name());

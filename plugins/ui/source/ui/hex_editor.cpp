@@ -48,6 +48,7 @@ namespace hex::ui {
                 };
 
                 ImGui::PushID(reinterpret_cast<void*>(address));
+                ON_SCOPE_EXIT { ImGui::PopID(); };
                 char buffer[2] = { std::isprint(data[0]) ? char(data[0]) : '.', 0x00 };
                 ImGui::InputText("##editing_input", buffer, 2, TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                     auto &userData = *static_cast<UserData*>(data->UserData);
@@ -59,7 +60,6 @@ namespace hex::ui {
 
                     return 0;
                 }, &userData);
-                ImGui::PopID();
 
                 return userData.editingDone || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_Escape);
             } else {
@@ -608,6 +608,7 @@ namespace hex::ui {
 
                                 ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
                                 ImGui::PushID(y);
+                                ON_SCOPE_EXIT { ImGui::PopID(); };
                                 if (ImGui::BeginTable("##encoding_cell", encodingData.size(), ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible)) {
                                     ImGui::TableNextRow();
 
@@ -642,7 +643,6 @@ namespace hex::ui {
                                     ImGui::EndTable();
                                 }
                                 ImGui::PopStyleVar();
-                                ImGui::PopID();
                             }
                         }
 
@@ -704,8 +704,9 @@ namespace hex::ui {
                 ImGui::EndTable();
                 ImGui::PopStyleVar();
             }
-            ImGui::EndChild();
+
         }
+        ImGui::EndChild();
 
         m_shouldScrollToSelection = false;
     }

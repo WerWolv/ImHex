@@ -22,8 +22,6 @@ namespace hex {
         PerProvider& operator=(const PerProvider&) = delete;
         PerProvider& operator=(PerProvider &&) = delete;
 
-        PerProvider(T data) : m_data({ { ImHexApi::Provider::get(), std::move(data) } }) { this->onCreate(); }
-
         ~PerProvider() { this->onDestroy(); }
 
         T* operator->() {
