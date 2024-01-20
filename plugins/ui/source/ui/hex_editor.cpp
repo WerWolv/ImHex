@@ -704,8 +704,8 @@ namespace hex::ui {
                 ImGui::EndTable();
                 ImGui::PopStyleVar();
             }
-            ImGui::EndChild();
         }
+        ImGui::EndChild();
 
         m_shouldScrollToSelection = false;
     }
