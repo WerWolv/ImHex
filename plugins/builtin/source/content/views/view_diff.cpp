@@ -87,15 +87,16 @@ namespace hex::plugin::builtin {
             edlibConfig.mode = EdlibAlignMode::EDLIB_MODE_NW;
             edlibConfig.task = EdlibAlignTask::EDLIB_TASK_PATH;
 
-            const auto windowStart = std::max(providerA->getBaseAddress(), providerB->getBaseAddress());
-            const auto windowEnd   = std::min(providerA->getBaseAddress() + providerA->getActualSize(), providerB->getBaseAddress() + providerB->getActualSize());
+            const auto windowStart = std::min(providerA->getBaseAddress(), providerB->getBaseAddress());
+            const auto windowEnd   = std::max(providerA->getBaseAddress() + providerA->getActualSize(), providerB->getBaseAddress() + providerB->getActualSize());
 
             const auto WindowSize = 64 * 1024;
             for (u64 address = windowStart; address < windowEnd; address += WindowSize) {
                 task.update(address);
 
-                auto currWindowSize = std::min<u64>(WindowSize, windowEnd - address);
-                std::vector<u8> dataA(currWindowSize), dataB(currWindowSize);
+                auto currWindowSizeA = std::min<u64>(WindowSize, providerA->getActualSize() - address);
+                auto currWindowSizeB = std::min<u64>(WindowSize, providerB->getActualSize() - address);
+                std::vector<u8> dataA(currWindowSizeA), dataB(currWindowSizeB);
 
                 providerA->read(address, dataA.data(), dataA.size());
                 providerB->read(address, dataB.data(), dataB.size());
@@ -122,16 +123,13 @@ namespace hex::plugin::builtin {
                             break;
                         case Insertion:
                             differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, currentOperation);
-                            currentAddressB += regionA.size;
+                            currentAddressB -= regionA.size;
                             break;
                         case Deletion:
                             differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, currentOperation);
-                            currentAddressA += regionB.size;
+                            currentAddressA -= regionB.size;
                             break;
                     }
-
-                    currentAddressA--;
-                    currentAddressB--;
                 };
 
                 for (const u8 alignmentType : std::span(result.alignment, result.alignmentLength)) {
@@ -142,6 +140,7 @@ namespace hex::plugin::builtin {
 
                     if (currentOperation == ViewDiff::DifferenceType(alignmentType)) {
                         regionA.size++;
+                        regionB.size++;
 
                         continue;
                     } else if (currentOperation != ViewDiff::DifferenceType(0xFF)) {
@@ -272,20 +271,10 @@ namespace hex::plugin::builtin {
 
             if (type == DifferenceType::Mismatch) {
                 return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffChanged);
-            }
-
-            if (otherIndex == 0) {
-                if (type == DifferenceType::Insertion) {
-                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffRemoved);
-                } else if (type == DifferenceType::Deletion) {
-                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffAdded);
-                }
-            } else if (otherIndex == 1) {
-                if (type == DifferenceType::Insertion) {
-                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffAdded);
-                } else if (type == DifferenceType::Deletion) {
-                    return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffRemoved);
-                }
+            } else if (type == DifferenceType::Insertion) {
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffAdded);
+            } else if (type == DifferenceType::Deletion) {
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffRemoved);
             }
 
             return std::nullopt;
