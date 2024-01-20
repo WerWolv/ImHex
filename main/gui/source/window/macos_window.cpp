@@ -52,6 +52,13 @@ namespace hex {
         if (themeFollowSystem)
             EventOSThemeChanged::post();
 
+        // Register file drop callback
+        glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
+            for (int i = 0; i < count; i++) {
+                EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
+            }
+        });
+
         setupMacosWindowStyle(m_window);
     }
 
