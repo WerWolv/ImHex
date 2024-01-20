@@ -5,17 +5,22 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/event_manager.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
+#include <hex/api/tutorial_manager.hpp>
 #include <hex/helpers/utils.hpp>
 
 #include <romfs/romfs.hpp>
 #include <wolv/hash/uuid.hpp>
+#include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::builtin {
 
     namespace {
 
         ImGuiExt::Texture s_imhexBanner;
+        std::list<ImGuiExt::Texture> s_screenshots;
+
         std::string s_uuid;
 
         class Blend {
@@ -29,7 +34,6 @@ namespace hex::plugin::builtin {
                 t -= m_start;
                 t /= (m_end - m_start);
                 t = std::clamp(t, 0.0F, 1.0F);
-                log::info("{}", t);
 
                 float square = t * t;
                 return square / (2.0F * (square - t) + 1.0F);
@@ -42,28 +46,37 @@ namespace hex::plugin::builtin {
 
         EventManager::EventList::iterator s_drawEvent;
         void drawOutOfBoxExperience() {
+            static float windowAlpha = 1.0F;
+            static bool oobeDone = false;
+            static bool tutorialEnabled = false;
+
             ImGui::SetNextWindowPos(ImHexApi::System::getMainWindowPosition());
             ImGui::SetNextWindowSize(ImHexApi::System::getMainWindowSize());
+
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, windowAlpha);
+            ON_SCOPE_EXIT { ImGui::PopStyleVar(); };
+
             if (ImGui::Begin("##oobe", nullptr, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize)) {
                 ImGui::BringWindowToFocusFront(ImGui::GetCurrentWindowRead());
+
+                static Blend bannerSlideIn(-0.2F, 1.5F);
+                static Blend bannerFadeIn(-0.2F, 1.5F);
+
+                // Draw banner
+                ImGui::SetCursorPos(scaled({ 25 * bannerSlideIn, 25 }));
+                ImGui::Image(
+                    s_imhexBanner,
+                    s_imhexBanner.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale())),
+                    { 0, 0 }, { 1, 1 },
+                    { 1, 1, 1, (bannerFadeIn - 0.5F) * 2.0F }
+                );
 
                 static u32 page = 0;
                 switch (page) {
                     // Landing page
                     case 0: {
-                        static Blend bannerSlideIn(-0.2F, 1.5F);
-                        static Blend bannerFadeIn(-0.2F, 1.5F);
                         static Blend textFadeIn(2.0F, 2.5F);
                         static Blend buttonFadeIn(2.5F, 3.0F);
-
-                        // Draw banner
-                        ImGui::SetCursorPos(scaled({ 25 * bannerSlideIn, 25 }));
-                        ImGui::Image(
-                            s_imhexBanner,
-                            s_imhexBanner.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale())),
-                            { 0, 0 }, { 1, 1 },
-                            { 1, 1, 1, (bannerFadeIn - 0.5F) * 2.0F }
-                        );
 
                         // Draw welcome text
                         ImGui::SetCursorPos({ 0, 0 });
@@ -75,7 +88,7 @@ namespace hex::plugin::builtin {
                         const auto buttonSize = scaled({ 100, 50 });
                         ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, buttonFadeIn);
-                        if (ImGuiExt::DimmedButton(hex::format("Continue {}", ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
+                        if (ImGuiExt::DimmedButton(hex::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
                             page += 1;
                         ImGui::PopStyleVar();
 
@@ -87,41 +100,36 @@ namespace hex::plugin::builtin {
                         static ImVec2 subWindowSize = { 0, 0 };
                         const auto windowSize = ImHexApi::System::getMainWindowSize();
 
-                        // Draw banner
-                        ImGui::SetCursorPos(scaled({ 25, 25 }));
-                        ImGui::Image(
-                            s_imhexBanner,
-                            s_imhexBanner.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()))
-                        );
-
-
+                        // Draw telemetry subwindow
                         ImGui::SetCursorPos((windowSize - subWindowSize) / 2);
-                        ImGuiExt::BeginSubWindow("Data Reporting", subWindowSize, ImGuiChildFlags_AutoResizeY);
+                        ImGuiExt::BeginSubWindow("hex.builtin.oobe.server_contact"_lang, subWindowSize, ImGuiChildFlags_AutoResizeY);
                         {
+                            // Draw telemetry information
                             auto yBegin = ImGui::GetCursorPosY();
-                            std::string message = "hex.builtin.welcome.server_contact_text"_lang;
+                            std::string message = "hex.builtin.oobe.server_contact_text"_lang;
                             ImGuiExt::TextFormattedWrapped("{}", message.c_str());
                             ImGui::NewLine();
 
-                            if (ImGui::CollapsingHeader("hex.builtin.welcome.server_contact.data_collected_title"_lang)) {
-                                if (ImGui::BeginTable("hex.builtin.welcome.server_contact.data_collected_table"_lang, 2,
+                            // Draw table containing everything that's being reported
+                            if (ImGui::CollapsingHeader("hex.builtin.oobe.server_contact.data_collected_title"_lang)) {
+                                if (ImGui::BeginTable("hex.builtin.oobe.server_contact.data_collected_table"_lang, 2,
                                                      ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_NoHostExtendY,
                                                      ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled))) {
-                                    ImGui::TableSetupColumn("hex.builtin.welcome.server_contact.data_collected_table.key"_lang);
-                                    ImGui::TableSetupColumn("hex.builtin.welcome.server_contact.data_collected_table.value"_lang, ImGuiTableColumnFlags_WidthStretch);
+                                    ImGui::TableSetupColumn("hex.builtin.oobe.server_contact.data_collected_table.key"_lang);
+                                    ImGui::TableSetupColumn("hex.builtin.oobe.server_contact.data_collected_table.value"_lang, ImGuiTableColumnFlags_WidthStretch);
                                     ImGui::TableSetupScrollFreeze(0, 1);
 
                                     ImGui::TableHeadersRow();
 
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.uuid"_lang);
+                                    ImGui::TextUnformatted("hex.builtin.oobe.server_contact.data_collected.uuid"_lang);
                                     ImGui::TableNextColumn();
                                     ImGui::TextWrapped("%s", s_uuid.c_str());
 
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.version"_lang);
+                                    ImGui::TextUnformatted("hex.builtin.oobe.server_contact.data_collected.version"_lang);
                                     ImGui::TableNextColumn();
                                     ImGuiExt::TextFormattedWrapped("{}\n{}@{}\n{}",
                                                                 ImHexApi::System::getImHexVersion(),
@@ -132,7 +140,7 @@ namespace hex::plugin::builtin {
 
                                     ImGui::TableNextRow();
                                     ImGui::TableNextColumn();
-                                    ImGui::TextUnformatted("hex.builtin.welcome.server_contact.data_collected.os"_lang);
+                                    ImGui::TextUnformatted("hex.builtin.oobe.server_contact.data_collected.os"_lang);
                                     ImGui::TableNextColumn();
                                     ImGuiExt::TextFormattedWrapped("{}\n{}\n{}\n{}",
                                                                 ImHexApi::System::getOSName(),
@@ -150,20 +158,27 @@ namespace hex::plugin::builtin {
                             const auto buttonSize = ImVec2(width / 3 - ImGui::GetStyle().FramePadding.x * 3, 0);
                             const auto buttonPos = [&](u8 index) { return ImGui::GetStyle().FramePadding.x + (buttonSize.x + ImGui::GetStyle().FramePadding.x * 3) * index; };
 
+                            // Draw allow button
                             ImGui::SetCursorPosX(buttonPos(0));
                             if (ImGui::Button("hex.ui.common.allow"_lang, buttonSize)) {
                                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
                                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
                                 page += 1;
                             }
+
                             ImGui::SameLine();
+
+                            // Draw crash logs only button
                             ImGui::SetCursorPosX(buttonPos(1));
-                            if (ImGui::Button("hex.builtin.welcome.server_contact.crash_logs_only"_lang, buttonSize)) {
+                            if (ImGui::Button("hex.builtin.oobe.server_contact.crash_logs_only"_lang, buttonSize)) {
                                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
                                 ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
                                 page += 1;
                             }
+
                             ImGui::SameLine();
+
+                            // Draw deny button
                             ImGui::SetCursorPosX(buttonPos(2));
                             if (ImGui::Button("hex.ui.common.deny"_lang, buttonSize)) {
                                 page += 1;
@@ -180,13 +195,101 @@ namespace hex::plugin::builtin {
 
                     // Tutorial page
                     case 2: {
-                        
+                        ImGui::NewLine();
+
+                        if (s_screenshots.empty()) {
+                            page += 1;
+                            break;
+                        }
+
+                        const auto imageSize = s_screenshots.front().getSize() * ImHexApi::System::getGlobalScale();
+                        const auto padding = ImGui::GetStyle().CellPadding.x;
+                        const auto stride = imageSize.x + padding * 2;
+
+                        // Move last screenshot to the front of the list when the last screenshot is out of view
+                        static float position = 0;
+                        if (position >= stride) {
+                            position = 0;
+                            s_screenshots.splice(s_screenshots.begin(), s_screenshots, std::prev(s_screenshots.end()), s_screenshots.end());
+                        }
+                        position += (ImGui::GetIO().DeltaTime) * 40;
+
+                        auto drawList = ImGui::GetWindowDrawList();
+                        const auto drawImage = [&](const auto &screenshot) {
+                            auto pos = ImGui::GetCursorScreenPos();
+
+                            // Draw image
+                            ImGui::Image(screenshot, imageSize);
+
+                            // Draw shadow
+                            auto &style = ImGui::GetStyle();
+                            float shadowSize = style.WindowShadowSize;
+                            ImU32 shadowCol = ImGui::GetColorU32(ImGuiCol_WindowShadow);
+                            ImVec2 shadowOffset = ImVec2(ImCos(style.WindowShadowOffsetAngle), ImSin(style.WindowShadowOffsetAngle)) * style.WindowShadowOffsetDist;
+                            drawList->AddShadowRect(pos, pos + imageSize, shadowCol, shadowSize, shadowOffset, ImDrawFlags_ShadowCutOutShapeBackground);
+
+                            ImGui::SameLine();
+                        };
+
+                        // Draw top screenshot row
+                        ImGui::SetCursorPosX(-position);
+                        for (const auto &screenshot : s_screenshots | std::views::take(s_screenshots.size() / 2) | std::views::reverse) {
+                            drawImage(screenshot);
+                        }
+
+                        ImGui::NewLine();
+
+                        // Draw bottom screenshot row
+                        ImGui::SetCursorPosX(-stride + position);
+                        for (const auto &screenshot : s_screenshots | std::views::drop(s_screenshots.size() / 2)) {
+                            drawImage(screenshot);
+                        }
+
+                        ImGui::NewLine();
+                        ImGui::NewLine();
+                        ImGui::NewLine();
+
+                        // Draw information text about playing the tutorial
+                        if (ImGui::BeginChild("Information", scaled({ 1000, 50 }))) {
+                            ImGuiExt::TextFormattedCentered("hex.builtin.oobe.tutorial_question"_lang);
+                        }
+                        ImGui::EndChild();
+
+                        // Draw no button
+                        const auto buttonSize = scaled({ 100, 50 });
+                        ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - ImVec2(buttonSize.x * 2 + 20, buttonSize.y + 10));
+                        if (ImGuiExt::DimmedButton("hex.ui.common.no"_lang, buttonSize)) {
+                            oobeDone = true;
+                        }
+
+                        // Draw yes button
+                        ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - ImVec2(buttonSize.x + 10, buttonSize.y + 10));
+                        if (ImGuiExt::DimmedButton("hex.ui.common.yes"_lang, buttonSize)) {
+                            tutorialEnabled = true;
+                            oobeDone = true;
+                        }
+                        break;
                     }
-                    default:
-                        EventFrameBegin::unsubscribe(s_drawEvent);
                 }
             }
             ImGui::End();
+
+            // Handle finishing the out of box experience
+            if (oobeDone) {
+                static Blend backgroundFadeOut(0.0F, 1.0F);
+                windowAlpha = 1.0F - backgroundFadeOut;
+
+                if (backgroundFadeOut >= 1.0F) {
+                    if (tutorialEnabled) {
+                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
+                    }
+
+                    TaskManager::doLater([] {
+                        ImHexApi::System::setWindowResizable(true);
+                        EventFrameBegin::unsubscribe(s_drawEvent);
+                    });
+                }
+            }
         }
 
     }
@@ -204,8 +307,14 @@ namespace hex::plugin::builtin {
         }
 
         EventFirstLaunch::subscribe([] {
+            ImHexApi::System::setWindowResizable(false);
+
             const auto imageTheme = ThemeManager::getImageTheme();
             s_imhexBanner = ImGuiExt::Texture(romfs::get(hex::format("assets/{}/banner.png", imageTheme)).span<std::byte>());
+
+            for (const auto &path : romfs::list("assets/screenshots")) {
+                s_screenshots.emplace_back(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear);
+            }
 
             s_drawEvent = EventFrameBegin::subscribe(drawOutOfBoxExperience);
         });

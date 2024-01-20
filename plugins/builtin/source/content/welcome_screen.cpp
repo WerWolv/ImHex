@@ -24,13 +24,11 @@
 
 #include <fonts/codicons_font.h>
 
-#include <content/popups/popup_telemetry_request.hpp>
 #include <content/recent.hpp>
 
 #include <string>
 #include <random>
 #include <popups/popup_question.hpp>
-#include <hex/api/tutorial_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
 namespace hex::plugin::builtin {
