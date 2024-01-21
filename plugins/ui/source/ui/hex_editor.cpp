@@ -326,8 +326,8 @@ namespace hex::ui {
                         ImGui::GetWindowScrollbarID(window, axis),
                         axis,
                         &m_scrollPosition.get(),
-                        (std::ceil(innerRect.Max.y - innerRect.Min.y) / CharacterSize.y) - (m_visibleRowCount - 1),
-                        std::nextafterf(numRows, std::numeric_limits<float>::max()),
+                        (std::ceil(innerRect.Max.y - innerRect.Min.y) / CharacterSize.y),
+                        std::nextafterf(numRows + ImGui::GetWindowSize().y / CharacterSize.y, std::numeric_limits<float>::max()),
                         roundingCorners);
                 }
 
@@ -712,19 +712,19 @@ namespace hex::ui {
     }
 
     void HexEditor::drawFooter(const ImVec2 &size) {
-        if (m_provider != nullptr && m_provider->isReadable()) {
-            const auto pageCount = std::max<u32>(1, m_provider->getPageCount());
-            constexpr static u32 MinPage = 1;
+        const auto windowEndPos = ImGui::GetWindowPos() + size - ImGui::GetStyle().WindowPadding;
+        ImGui::GetWindowDrawList()->AddLine(windowEndPos - ImVec2(0, size.y - 1_scaled), windowEndPos - size + ImVec2(0, 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator), 2.0_scaled);
 
-            const auto windowEndPos = ImGui::GetWindowPos() + size - ImGui::GetStyle().WindowPadding;
-            ImGui::GetWindowDrawList()->AddLine(windowEndPos - ImVec2(0, size.y - 1_scaled), windowEndPos - size + ImVec2(0, 1_scaled), ImGui::GetColorU32(ImGuiCol_Separator), 2.0_scaled);
+        if (ImGui::BeginChild("##footer", size, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+            if (ImGui::BeginTable("##footer_table", 3, ImGuiTableFlags_SizingFixedFit)) {
+                ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5f);
+                ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
+                ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
+                ImGui::TableNextRow();
 
-            if (ImGui::BeginChild("##footer", size, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-                if (ImGui::BeginTable("##footer_table", 3, ImGuiTableFlags_SizingFixedFit)) {
-                    ImGui::TableSetupColumn("Left", ImGuiTableColumnFlags_WidthStretch, 0.5f);
-                    ImGui::TableSetupColumn("Center", ImGuiTableColumnFlags_WidthFixed, 20_scaled);
-                    ImGui::TableSetupColumn("Right", ImGuiTableColumnFlags_WidthStretch, 0.5F);
-                    ImGui::TableNextRow();
+                if (m_provider != nullptr && m_provider->isReadable()) {
+                    const auto pageCount = std::max<u32>(1, m_provider->getPageCount());
+                    constexpr static u32 MinPage = 1;
 
                     // Page slider
                     ImGui::TableNextColumn();
@@ -899,12 +899,12 @@ namespace hex::ui {
                             ImGui::PopItemWidth();
                         }
                     }
-
-                    ImGui::EndTable();
                 }
+
+                ImGui::EndTable();
             }
-            ImGui::EndChild();
         }
+        ImGui::EndChild();
     }
 
     void HexEditor::handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered) {
