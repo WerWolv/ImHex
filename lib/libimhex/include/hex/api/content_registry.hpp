@@ -18,6 +18,7 @@
 using ImGuiDataType = int;
 using ImGuiInputTextFlags = int;
 struct ImColor;
+enum ImGuiCustomCol : int;
 
 namespace hex {
 
@@ -656,6 +657,13 @@ namespace hex {
         /* Interface Registry. Allows adding new items to various interfaces */
         namespace Interface {
 
+            struct Icon {
+                Icon(const char *glyph, ImGuiCustomCol color = ImGuiCustomCol(0x00)) : glyph(glyph), color(color) {}
+
+                std::string glyph;
+                ImGuiCustomCol color;
+            };
+
             namespace impl {
 
                 using DrawCallback      = std::function<void()>;
@@ -670,12 +678,13 @@ namespace hex {
 
                 struct MenuItem {
                     std::vector<UnlocalizedString> unlocalizedNames;
-                    const char *icon;
+                    Icon icon;
                     std::unique_ptr<Shortcut> shortcut;
                     View *view;
                     MenuCallback callback;
                     EnabledCallback enabledCallback;
                     SelectedCallback selectedCallback;
+                    i32 toolbarIndex;
                 };
 
                 struct SidebarItem {
@@ -723,7 +732,7 @@ namespace hex {
              */
             void addMenuItem(
                 const std::vector<UnlocalizedString> &unlocalizedMainMenuNames,
-                const char *icon,
+                const Icon &icon,
                 u32 priority,
                 const Shortcut &shortcut,
                 const impl::MenuCallback &function,
@@ -743,7 +752,7 @@ namespace hex {
              */
             void addMenuItem(
                 const std::vector<UnlocalizedString> &unlocalizedMainMenuNames,
-                const char *icon,
+                const Icon &icon,
                 u32 priority,
                 const Shortcut &shortcut,
                 const impl::MenuCallback &function,
@@ -828,6 +837,13 @@ namespace hex {
              * @param function The function to call to draw the item
              */
             void addToolbarItem(const impl::DrawCallback &function);
+
+            /**
+             * @brief Adds a menu item to the toolbar
+             * @param unlocalizedName Unlocalized name of the menu item
+             * @param color Color of the toolbar icon
+             */
+            void addMenuItemToToolbar(const UnlocalizedString &unlocalizedName, ImGuiCustomCol color);
 
             /**
              * @brief Adds a new sidebar item

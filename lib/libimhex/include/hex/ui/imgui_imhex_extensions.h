@@ -14,7 +14,7 @@
 
 #include <wolv/utils/string.hpp>
 
-enum ImGuiCustomCol {
+enum ImGuiCustomCol : int {
     ImGuiCustomCol_DescButton,
     ImGuiCustomCol_DescButtonHovered,
     ImGuiCustomCol_DescButtonActive,
