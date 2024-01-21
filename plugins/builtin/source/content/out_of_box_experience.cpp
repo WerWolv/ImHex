@@ -14,6 +14,10 @@
 #include <wolv/hash/uuid.hpp>
 #include <wolv/utils/guards.hpp>
 
+#include <list>
+#include <ranges>
+#include <string>
+
 namespace hex::plugin::builtin {
 
     namespace {
