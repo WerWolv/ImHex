@@ -86,6 +86,13 @@ namespace hex {
             RequestChangeTheme::post(hex::containsIgnoreCase(result, "uint32 1") ? "Light" : "Dark");
         });
 
+        // Register file drop callback
+        glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
+            for (int i = 0; i < count; i++) {
+                EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
+            }
+        });
+
         if (themeFollowSystem)
             EventOSThemeChanged::post();
     }

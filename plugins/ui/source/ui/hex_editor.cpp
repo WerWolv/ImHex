@@ -407,7 +407,7 @@ namespace hex::ui {
 
 
                     m_visibleRowCount = ImGui::GetWindowSize().y / CharacterSize.y;
-                    m_visibleRowCount = std::clamp<u32>(m_visibleRowCount, 1, numRows - m_scrollPosition);
+                    m_visibleRowCount = std::clamp<i64>(m_visibleRowCount, 1, numRows - m_scrollPosition);
 
                     // Loop over rows
                     for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
@@ -704,7 +704,6 @@ namespace hex::ui {
                 ImGui::EndTable();
                 ImGui::PopStyleVar();
             }
-
         }
         ImGui::EndChild();
 

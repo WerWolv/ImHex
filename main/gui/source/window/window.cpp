@@ -1131,13 +1131,6 @@ namespace hex {
             EventWindowClosing::post(window);
         });
 
-        // Register file drop callback
-        glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
-            for (int i = 0; i < count; i++) {
-                EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
-            }
-        });
-
         glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
         glfwShowWindow(m_window);
