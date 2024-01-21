@@ -48,6 +48,7 @@ namespace hex::plugin::builtin {
     void loadFonts();
 
     void handleBorderlessWindowMode();
+    void setupOutOfBoxExperience();
 
     void extractBundledFiles();
 
@@ -117,4 +118,5 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     addGlobalUIItems();
 
     handleBorderlessWindowMode();
+    setupOutOfBoxExperience();
 }

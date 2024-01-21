@@ -159,6 +159,14 @@ namespace hex {
 
         glfwPollEvents();
 
+        static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
+        if (ImHexApi::System::impl::isWindowResizable()) {
+            glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+            lastWindowSize = ImHexApi::System::getMainWindowSize();
+        } else {
+            glfwSetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
+        }
+
         // Render frame
         this->frameBegin();
         this->frame();

@@ -1,0 +1,42 @@
+{
+    "3d_visualizer.png": {
+        "title": "Advanced Data Visualizers",
+        "description": "After analyzing data using the pattern language, it's often useful to visualize parts of that data. ImHex provides a variety of visualizers that can be used to visualize different types of data right in the editor.\n\nAvailable visualizers include a 3D model viewer, RGBA and Image decoder, a audio player, line and scatter plots and many more!"
+    },
+    "bookmarks.png": {
+        "title": "Bookmarks",
+        "description": "Bookmarks can be used to mark interesting locations in the file, give them a name, color and description."
+    },
+    "data_analysis.png": {
+        "title": "Data Analysis",
+        "description": "ImHex provides a variety of tools to analyze data and finding interesting information in it. This includes byte type and entropy graphs, byte frequency analysis, digram and layered distribution graphs and file magic based data type detection."
+    },
+    "data_processor.png": {
+        "title": "Data Pre-processors",
+        "description": "ImHex's data pre-processors can be used to transform the data before it's displayed in the editor. This can be used to decrypt encrypted data, extract parts of the file for further analysis or calculate custom checksums."
+    },
+    "diffing.png": {
+        "title": "Binary Diffing",
+        "description": "ImHex provides a powerful binary diffing tool that can compare two files and find the differences between them. It's able identify insertions, deletions and modifications of data."
+    },
+    "floating_windows.png": {
+        "title": "Modern Interface",
+        "description": "ImHex's interface is based on a range of dockable windows that can be moved around and detached from the main window at any time. This allows for a very flexible and customizable interface.\n\nThe interface is also fully themeable and comes with various built-in themes by default."
+    },
+    "patterns.png": {
+        "title": "Pattern Language",
+        "description": "ImHex's pattern language is a C-like language that can be used to describe data structures and patterns in the data. Writing format specifications in it allows ImHex to parse and decode the data and display it in a human readable way as well as highlight the different parts of the data in the Hex Editor.\n\nMany common data formats are already supported by the community and new ones can be created and shared easily."
+    },
+    "simplified_mode.png": {
+        "title": "Simplified Mode",
+        "description": "ImHex's simplified mode is a more beginner friendly mode that hides some of the more advanced features of the editor. It's a great way to get started with reverse engineering and binary analysis or to use ImHex without being overwhelmed by the amount of features."
+    },
+    "tools.png": {
+        "title": "Helpful Tools",
+        "description": "ImHex comes with a variety of tools that can be used to analyze and modify the data. This includes a symbol demangler, calculator, TCP client and server and many more!"
+    },
+    "welcome_screen.png": {
+        "title": "Welcome Screen",
+        "description": "ImHex's welcome screen provides a quick overview of the most important features and allows to quickly open files and projects.\n\nThere's many more options that go beyond just opening files, such as connecting to a GDB Server, attaching to a process or opening Intel Hex, Motorola S-Record and Base64 files."
+    }
+}

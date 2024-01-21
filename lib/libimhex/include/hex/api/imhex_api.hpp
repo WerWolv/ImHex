@@ -381,6 +381,8 @@ namespace hex {
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
                 void setLastFrameTime(double time);
+
+                bool isWindowResizable();
             }
 
             struct ProgramArguments {
@@ -579,6 +581,8 @@ namespace hex {
             void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function);
 
             double getLastFrameTime();
+
+            void setWindowResizable(bool resizable);
         }
 
         /**
