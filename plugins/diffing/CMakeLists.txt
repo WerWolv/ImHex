@@ -5,6 +5,7 @@ include(ImHexPlugin)
 if (USE_SYSTEM_EDLIB)
     find_package(edlib REQUIRED)
 else()
+    set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/edlib ${CMAKE_CURRENT_BINARY_DIR}/edlib EXCLUDE_FROM_ALL)
 endif()
 
