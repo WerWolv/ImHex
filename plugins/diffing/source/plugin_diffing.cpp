@@ -20,6 +20,9 @@ using namespace hex::plugin::diffing;
 IMHEX_PLUGIN_SETUP("Diffing", "WerWolv", "Support for diffing data") {
     hex::log::debug("Using romfs: '{}'", romfs::name());
 
+    for (auto &path : romfs::list("lang"))
+        hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
+
     registerDiffingAlgorithms();
 
     ContentRegistry::Views::add<ViewDiff>();
