@@ -7,8 +7,6 @@ if (DEFAULT_MAGIC_FILE_PATH)
     add_romfs_resource(${DEFAULT_MAGIC_FILE_PATH} always_auto_extract/magic/magic.mgc)
 endif ()
 
-add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/edlib ${CMAKE_CURRENT_BINARY_DIR}/edlib)
-
 add_imhex_plugin(
     NAME
         builtin
@@ -104,7 +102,6 @@ add_imhex_plugin(
         source/content/views/view_data_processor.cpp
         source/content/views/view_constants.cpp
         source/content/views/view_store.cpp
-        source/content/views/view_diff.cpp
         source/content/views/view_provider_settings.cpp
         source/content/views/view_find.cpp
         source/content/views/view_theme_manager.cpp
@@ -122,7 +119,6 @@ add_imhex_plugin(
         ${JTHREAD_LIBRARIES}
         plcli
         LLVMDemangle
-        edlib
 )
 
 if (WIN32)

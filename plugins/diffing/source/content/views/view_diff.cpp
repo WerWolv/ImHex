@@ -6,158 +6,9 @@
 #include <hex/providers/buffered_reader.hpp>
 #include <wolv/utils/guards.hpp>
 
-#include <edlib.h>
+namespace hex::plugin::diffing {
 
-namespace hex::plugin::builtin {
-
-    class AlgorithmSimple : public ViewDiff::Algorithm {
-    public:
-        [[nodiscard]] const char *getName() const override { return "Simple"; }
-        [[nodiscard]] std::vector<ViewDiff::DiffTree> analyze(Task &task, prv::Provider *providerA, prv::Provider *providerB) override {
-            wolv::container::IntervalTree<ViewDiff::DifferenceType> differences;
-
-            // Set up readers for both providers
-            auto readerA = prv::ProviderReader(providerA);
-            auto readerB = prv::ProviderReader(providerB);
-
-            // Iterate over both providers and compare the bytes
-            for (auto itA = readerA.begin(), itB = readerB.begin(); itA < readerA.end() && itB < readerB.end(); ++itA, ++itB) {
-                // Stop comparing if the diff task was canceled
-                if (task.wasInterrupted())
-                    break;
-
-                // If the bytes are different, find the end of the difference
-                if (*itA != *itB) {
-                    u64 start = itA.getAddress();
-                    size_t size = 0;
-
-                    while (itA != readerA.end() && itB != readerB.end() && *itA != *itB) {
-                        ++itA;
-                        ++itB;
-                        ++size;
-                    }
-
-                    // Add the difference to the list
-                    differences.emplace({ start, (start + size) - 1 }, ViewDiff::DifferenceType::Mismatch);
-                }
-
-                // Update the progress bar
-                task.update(itA.getAddress());
-            }
-
-            auto otherDifferences = differences;
-
-            // If one provider is larger than the other, add the extra bytes to the list
-            if (providerA->getActualSize() != providerB->getActualSize()) {
-                auto endA = providerA->getActualSize() + 1;
-                auto endB = providerB->getActualSize() + 1;
-
-                if (endA > endB) {
-                    differences.emplace({ endB, endA }, ViewDiff::DifferenceType::Insertion);
-                    otherDifferences.emplace({ endB, endA }, ViewDiff::DifferenceType::Deletion);
-                }
-                else {
-                    differences.emplace({ endA, endB }, ViewDiff::DifferenceType::Insertion);
-                    otherDifferences.emplace({ endB, endA }, ViewDiff::DifferenceType::Insertion);
-                }
-            }
-
-            return { differences, otherDifferences };
-        }
-    };
-
-    class AlgorithmMyers : public ViewDiff::Algorithm {
-    public:
-        [[nodiscard]] const char *getName() const override { return "Myers"; }
-        [[nodiscard]] std::vector<ViewDiff::DiffTree> analyze(Task &task, prv::Provider *providerA, prv::Provider *providerB) override {
-            ViewDiff::DiffTree differencesA, differencesB;
-
-            EdlibAlignConfig edlibConfig;
-            edlibConfig.k = -1;
-            edlibConfig.additionalEqualities = nullptr;
-            edlibConfig.additionalEqualitiesLength = 0;
-            edlibConfig.mode = EdlibAlignMode::EDLIB_MODE_NW;
-            edlibConfig.task = EdlibAlignTask::EDLIB_TASK_PATH;
-
-            const auto windowStart = std::min(providerA->getBaseAddress(), providerB->getBaseAddress());
-            const auto windowEnd   = std::max(providerA->getBaseAddress() + providerA->getActualSize(), providerB->getBaseAddress() + providerB->getActualSize());
-
-            const auto WindowSize = 64 * 1024;
-            for (u64 address = windowStart; address < windowEnd; address += WindowSize) {
-                task.update(address);
-
-                auto currWindowSizeA = std::min<u64>(WindowSize, providerA->getActualSize() - address);
-                auto currWindowSizeB = std::min<u64>(WindowSize, providerB->getActualSize() - address);
-                std::vector<u8> dataA(currWindowSizeA), dataB(currWindowSizeB);
-
-                providerA->read(address, dataA.data(), dataA.size());
-                providerB->read(address, dataB.data(), dataB.size());
-
-                EdlibAlignResult result = edlibAlign(
-                    reinterpret_cast<const char*>(dataA.data()), dataA.size(),
-                    reinterpret_cast<const char*>(dataB.data()), dataB.size(),
-                    edlibConfig
-                );
-
-                auto currentOperation = ViewDiff::DifferenceType(0xFF);
-                Region regionA = {}, regionB = {};
-                u64 currentAddressA = 0x00, currentAddressB = 0x00;
-
-                const auto insertDifference = [&] {
-                    switch (currentOperation) {
-                        using enum ViewDiff::DifferenceType;
-
-                        case Match:
-                            break;
-                        case Mismatch:
-                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, Mismatch);
-                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, Mismatch);
-                            break;
-                        case Insertion:
-                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, Insertion);
-                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, Insertion);
-                            currentAddressB -= regionA.size;
-                            break;
-                        case Deletion:
-                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, Deletion);
-                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, Deletion);
-                            currentAddressA -= regionB.size;
-                            break;
-                    }
-                };
-
-                for (const u8 alignmentType : std::span(result.alignment, result.alignmentLength)) {
-                    ON_SCOPE_EXIT {
-                        currentAddressA++;
-                        currentAddressB++;
-                    };
-
-                    if (currentOperation == ViewDiff::DifferenceType(alignmentType)) {
-                        regionA.size++;
-                        regionB.size++;
-
-                        continue;
-                    } else if (currentOperation != ViewDiff::DifferenceType(0xFF)) {
-                        insertDifference();
-
-                        currentOperation = ViewDiff::DifferenceType(0xFF);
-                    }
-
-                    currentOperation = ViewDiff::DifferenceType(alignmentType);
-                    regionA.address = currentAddressA;
-                    regionB.address = currentAddressB;
-                    regionA.size = 1;
-                    regionB.size = 1;
-                }
-
-                insertDifference();
-            }
-
-
-            return { differencesA, differencesB };
-        }
-    };
-
+    using DifferenceType = ContentRegistry::Diffing::DifferenceType;
 
     ViewDiff::ViewDiff() : View::Window("hex.builtin.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
         // Clear the selected diff providers when a provider is closed
@@ -169,8 +20,6 @@ namespace hex::plugin::builtin {
             }
 
         });
-
-        m_algorithm = std::make_unique<AlgorithmMyers>();
 
         // Set the background highlight callbacks for the two hex editor columns
         m_columns[0].hexEditor.setBackgroundHighlightCallback(this->createCompareFunction(1));
@@ -243,8 +92,8 @@ namespace hex::plugin::builtin {
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::min(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &task) {
-            auto differences = m_algorithm->analyze(task, providerA, providerB);
+        m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &) {
+            auto differences = m_algorithm->analyze(providerA, providerB);
 
             // Move the calculated differences over so they can be displayed
             for (size_t i = 0; i < m_columns.size(); i++) {
@@ -258,6 +107,9 @@ namespace hex::plugin::builtin {
     std::function<std::optional<color_t>(u64, const u8*, size_t)> ViewDiff::createCompareFunction(size_t otherIndex) const {
         const auto currIndex = otherIndex == 0 ? 1 : 0;
         return [=, this](u64 address, const u8 *, size_t size) -> std::optional<color_t> {
+            if (!m_analyzed)
+                return std::nullopt;
+
             const auto matches = m_columns[currIndex].diffTree.overlapping({ address, (address + size) - 1 });
             if (matches.empty())
                 return std::nullopt;
@@ -300,7 +152,7 @@ namespace hex::plugin::builtin {
         }
 
         // Analyze the providers if they are valid and the user selected a new provider
-        if (!m_analyzed && a.provider != -1 && b.provider != -1 && !m_diffTask.isRunning()) {
+        if (!m_analyzed && a.provider != -1 && b.provider != -1 && !m_diffTask.isRunning() && m_algorithm != nullptr) {
             const auto &providers = ImHexApi::Provider::getProviders();
             auto providerA = providers[a.provider];
             auto providerB = providers[b.provider];
@@ -316,10 +168,18 @@ namespace hex::plugin::builtin {
             ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
             ImGui::TableHeadersRow();
 
+            ImVec2 buttonPos;
             ImGui::BeginDisabled(m_diffTask.isRunning());
             {
-                // Draw first provider selector
+                // Draw settings button
                 ImGui::TableNextColumn();
+                if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                    ImGui::OpenPopup("DiffingAlgorithmSettings");
+                buttonPos = ImGui::GetCursorScreenPos();
+
+                ImGui::SameLine();
+
+                // Draw first provider selector
                 if (drawProviderSelector(a)) m_analyzed = false;
 
                 // Draw second provider selector
@@ -327,6 +187,41 @@ namespace hex::plugin::builtin {
                 if (drawProviderSelector(b)) m_analyzed = false;
             }
             ImGui::EndDisabled();
+
+            ImGui::SetNextWindowPos(buttonPos);
+            if (ImGui::BeginPopup("DiffingAlgorithmSettings")) {
+                ImGuiExt::Header("Diffing Algorithm", true);
+                ImGui::PushItemWidth(300_scaled);
+                if (ImGui::BeginCombo("##Algorithm", m_algorithm == nullptr ? "" : Lang(m_algorithm->getUnlocalizedName()))) {
+                    for (const auto &algorithm : ContentRegistry::Diffing::impl::getAlgorithms()) {
+                        ImGui::PushID(algorithm.get());
+                        if (ImGui::Selectable(Lang(algorithm->getUnlocalizedName()))) {
+                            m_algorithm = algorithm.get();
+                            m_analyzed  = false;
+                        }
+                        ImGui::PopID();
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::PopItemWidth();
+
+                if (m_algorithm != nullptr) {
+                    ImGuiExt::TextFormattedWrapped("{}", Lang(m_algorithm->getUnlocalizedDescription()));
+                }
+
+                ImGuiExt::Header("Settings");
+                if (m_algorithm != nullptr) {
+                    auto drawList = ImGui::GetWindowDrawList();
+                    auto prevIdx = drawList->_VtxCurrentIdx;
+                    m_algorithm->drawSettings();
+                    auto currIdx = drawList->_VtxCurrentIdx;
+
+                    if (prevIdx == currIdx)
+                        ImGuiExt::TextFormatted("No settings available");
+                }
+
+                ImGui::EndPopup();
+            }
 
             ImGui::TableNextRow();
 
