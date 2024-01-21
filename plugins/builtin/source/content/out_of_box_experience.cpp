@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                         {
                             // Draw telemetry information
                             auto yBegin = ImGui::GetCursorPosY();
-                            std::string message = "hex.builtin.oobe.server_contact_text"_lang;
+                            std::string message = "hex.builtin.oobe.server_contact.text"_lang;
                             ImGuiExt::TextFormattedWrapped("{}", message.c_str());
                             ImGui::NewLine();
 
