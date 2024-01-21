@@ -19,7 +19,10 @@ namespace hex::plugin::builtin {
     namespace {
 
         ImGuiExt::Texture s_imhexBanner;
-        std::list<ImGuiExt::Texture> s_screenshots;
+        ImGuiExt::Texture s_compassTexture;
+        std::list<std::pair<std::fs::path, ImGuiExt::Texture>> s_screenshots;
+        nlohmann::json s_screenshotDescriptions;
+
 
         std::string s_uuid;
 
@@ -64,9 +67,10 @@ namespace hex::plugin::builtin {
 
                 // Draw banner
                 ImGui::SetCursorPos(scaled({ 25 * bannerSlideIn, 25 }));
+                const auto bannerSize = s_imhexBanner.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
                 ImGui::Image(
                     s_imhexBanner,
-                    s_imhexBanner.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale())),
+                    bannerSize,
                     { 0, 0 }, { 1, 1 },
                     { 1, 1, 1, (bannerFadeIn - 0.5F) * 2.0F }
                 );
@@ -79,18 +83,95 @@ namespace hex::plugin::builtin {
                         static Blend buttonFadeIn(2.5F, 3.0F);
 
                         // Draw welcome text
-                        ImGui::SetCursorPos({ 0, 0 });
                         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, textFadeIn);
-                        ImGuiExt::TextFormattedCentered("Welcome to ImHex!\n\nA powerful data analysis and visualization suite for Reverse Engineers, Hackers and Security Researchers.");
+                        ImGui::SameLine();
+                        if (ImGui::BeginChild("Text", ImVec2(ImGui::GetContentRegionAvail().x, bannerSize.y))) {
+                            ImGuiExt::TextFormattedCentered("Welcome to ImHex!\n\nA powerful data analysis and visualization suite for Reverse Engineers, Hackers and Security Researchers.");
+                        }
+                        ImGui::EndChild();
+
+                        if (!s_screenshots.empty()) {
+                            const auto imageSize = s_screenshots.front().second.getSize() * ImHexApi::System::getGlobalScale();
+                            const auto padding = ImGui::GetStyle().CellPadding.x;
+                            const auto stride = imageSize.x + padding * 2;
+                            static bool imageHovered = false;
+                            static std::string clickedImage;
+
+                            // Move last screenshot to the front of the list when the last screenshot is out of view
+                            static float position = 0;
+                            if (position >= stride) {
+                                position = 0;
+                                s_screenshots.splice(s_screenshots.begin(), s_screenshots, std::prev(s_screenshots.end()), s_screenshots.end());
+                            }
+
+                            if (!imageHovered && clickedImage.empty())
+                                position += (ImGui::GetIO().DeltaTime) * 40;
+
+                            imageHovered = false;
+
+                            auto drawList = ImGui::GetWindowDrawList();
+                            const auto drawImage = [&](const std::fs::path &fileName, const ImGuiExt::Texture &screenshot) {
+                                auto pos = ImGui::GetCursorScreenPos();
+
+                                // Draw image
+                                ImGui::Image(screenshot, imageSize);
+                                imageHovered = imageHovered || ImGui::IsItemHovered();
+                                auto currentHovered = ImGui::IsItemHovered();
+
+                                if (ImGui::IsItemClicked()) {
+                                    clickedImage = fileName.string();
+                                    ImGui::OpenPopup("FeatureDescription");
+                                }
+
+                                // Draw shadow
+                                auto &style = ImGui::GetStyle();
+                                float shadowSize = style.WindowShadowSize * (currentHovered ? 3.0F : 1.0F);
+                                ImU32 shadowCol = ImGui::GetColorU32(ImGuiCol_WindowShadow, currentHovered ? 2.0F : 1.0F);
+                                ImVec2 shadowOffset = ImVec2(ImCos(style.WindowShadowOffsetAngle), ImSin(style.WindowShadowOffsetAngle)) * style.WindowShadowOffsetDist;
+                                drawList->AddShadowRect(pos, pos + imageSize, shadowCol, shadowSize, shadowOffset, ImDrawFlags_ShadowCutOutShapeBackground);
+
+                                ImGui::SameLine();
+                            };
+
+                            ImGui::NewLine();
+
+                            // Draw top screenshot row
+                            ImGui::SetCursorPosX(-position);
+                            for (const auto &[fileName, screenshot] : s_screenshots | std::views::take(s_screenshots.size() / 2) | std::views::reverse) {
+                                drawImage(fileName, screenshot);
+                            }
+
+                            ImGui::NewLine();
+
+                            // Draw bottom screenshot row
+                            ImGui::SetCursorPosX(-stride + position);
+                            for (const auto &[fileName, screenshot] : s_screenshots | std::views::drop(s_screenshots.size() / 2)) {
+                                drawImage(fileName, screenshot);
+                            }
+
+                            ImGui::SetNextWindowPos(ImGui::GetWindowPos() + (ImGui::GetWindowSize() / 2), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
+                            ImGui::SetNextWindowSize(ImVec2(400_scaled, 0), ImGuiCond_Always);
+                            if (ImGui::BeginPopup("FeatureDescription")) {
+                                const auto &description = s_screenshotDescriptions[clickedImage];
+                                ImGuiExt::Header(description["title"].get<std::string>().c_str(), true);
+                                ImGuiExt::TextFormattedWrapped("{}", description["description"].get<std::string>().c_str());
+                                ImGui::EndPopup();
+                            } else {
+                                clickedImage.clear();
+                            }
+
+                            // Continue button
+                            const auto buttonSize = scaled({ 100, 50 });
+                            ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
+                            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, buttonFadeIn);
+                            if (ImGuiExt::DimmedButton(hex::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
+                                page += 1;
+                            ImGui::PopStyleVar();
+                        }
+
+
                         ImGui::PopStyleVar();
 
-                        // Continue button
-                        const auto buttonSize = scaled({ 100, 50 });
-                        ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
-                        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, buttonFadeIn);
-                        if (ImGuiExt::DimmedButton(hex::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
-                            page += 1;
-                        ImGui::PopStyleVar();
 
                         break;
                     }
@@ -197,63 +278,18 @@ namespace hex::plugin::builtin {
                     case 2: {
                         ImGui::NewLine();
 
-                        if (s_screenshots.empty()) {
-                            page += 1;
-                            break;
-                        }
-
-                        const auto imageSize = s_screenshots.front().getSize() * ImHexApi::System::getGlobalScale();
-                        const auto padding = ImGui::GetStyle().CellPadding.x;
-                        const auto stride = imageSize.x + padding * 2;
-
-                        // Move last screenshot to the front of the list when the last screenshot is out of view
-                        static float position = 0;
-                        if (position >= stride) {
-                            position = 0;
-                            s_screenshots.splice(s_screenshots.begin(), s_screenshots, std::prev(s_screenshots.end()), s_screenshots.end());
-                        }
-                        position += (ImGui::GetIO().DeltaTime) * 40;
-
-                        auto drawList = ImGui::GetWindowDrawList();
-                        const auto drawImage = [&](const auto &screenshot) {
-                            auto pos = ImGui::GetCursorScreenPos();
-
-                            // Draw image
-                            ImGui::Image(screenshot, imageSize);
-
-                            // Draw shadow
-                            auto &style = ImGui::GetStyle();
-                            float shadowSize = style.WindowShadowSize;
-                            ImU32 shadowCol = ImGui::GetColorU32(ImGuiCol_WindowShadow);
-                            ImVec2 shadowOffset = ImVec2(ImCos(style.WindowShadowOffsetAngle), ImSin(style.WindowShadowOffsetAngle)) * style.WindowShadowOffsetDist;
-                            drawList->AddShadowRect(pos, pos + imageSize, shadowCol, shadowSize, shadowOffset, ImDrawFlags_ShadowCutOutShapeBackground);
-
-                            ImGui::SameLine();
-                        };
-
-                        // Draw top screenshot row
-                        ImGui::SetCursorPosX(-position);
-                        for (const auto &screenshot : s_screenshots | std::views::take(s_screenshots.size() / 2) | std::views::reverse) {
-                            drawImage(screenshot);
-                        }
-
-                        ImGui::NewLine();
-
-                        // Draw bottom screenshot row
-                        ImGui::SetCursorPosX(-stride + position);
-                        for (const auto &screenshot : s_screenshots | std::views::drop(s_screenshots.size() / 2)) {
-                            drawImage(screenshot);
-                        }
-
                         ImGui::NewLine();
                         ImGui::NewLine();
                         ImGui::NewLine();
+
+                        // Draw compass image
+                        const auto imageSize = s_compassTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
+                        ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
+                        ImGui::Image(s_compassTexture, imageSize);
 
                         // Draw information text about playing the tutorial
-                        if (ImGui::BeginChild("Information", scaled({ 1000, 50 }))) {
-                            ImGuiExt::TextFormattedCentered("hex.builtin.oobe.tutorial_question"_lang);
-                        }
-                        ImGui::EndChild();
+                        ImGui::SetCursorPosX(0);
+                        ImGuiExt::TextFormattedCentered("hex.builtin.oobe.tutorial_question"_lang);
 
                         // Draw no button
                         const auto buttonSize = scaled({ 100, 50 });
@@ -270,6 +306,8 @@ namespace hex::plugin::builtin {
                         }
                         break;
                     }
+                    default:
+                        page = 0;
                 }
             }
             ImGui::End();
@@ -311,9 +349,11 @@ namespace hex::plugin::builtin {
 
             const auto imageTheme = ThemeManager::getImageTheme();
             s_imhexBanner = ImGuiExt::Texture(romfs::get(hex::format("assets/{}/banner.png", imageTheme)).span<std::byte>());
+            s_compassTexture = ImGuiExt::Texture(romfs::get("assets/common/compass.png").span<std::byte>());
+            s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());
 
             for (const auto &path : romfs::list("assets/screenshots")) {
-                s_screenshots.emplace_back(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear);
+                s_screenshots.emplace_back(path.filename(), ImGuiExt::Texture(romfs::get(path).span<std::byte>(), ImGuiExt::Texture::Filter::Linear));
             }
 
             s_drawEvent = EventFrameBegin::subscribe(drawOutOfBoxExperience);
