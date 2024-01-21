@@ -50,7 +50,7 @@ namespace hex::plugin::builtin {
                         m_value = std::stod(value) * m_multiplier;
                     }
                 } catch (const std::exception &) {
-                    m_value = 0;
+                    m_value = i128(0);
                     m_unit = Unit::Invalid;
                     m_unitString.clear();
                     m_multiplier = 1;
@@ -331,7 +331,7 @@ namespace hex::plugin::builtin {
 
                 result.emplace_back(ContentRegistry::CommandPaletteCommands::impl::QueryResult {
                     provider->getName(),
-                    [&provider, index](const auto&) { ImHexApi::Provider::setCurrentProvider(index); }
+                    [index](const auto&) { ImHexApi::Provider::setCurrentProvider(index); }
                 });
             }
 
