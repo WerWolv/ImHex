@@ -134,6 +134,8 @@ namespace hex::init {
         ContentRegistry::Experiments::impl::getExperiments().clear();
         ContentRegistry::Reports::impl::getGenerators().clear();
 
+        ContentRegistry::Diffing::impl::getAlgorithms().clear();
+
         WorkspaceManager::reset();
         LayoutManager::reset();
 
