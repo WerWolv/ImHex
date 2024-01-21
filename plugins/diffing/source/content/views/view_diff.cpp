@@ -10,7 +10,7 @@ namespace hex::plugin::diffing {
 
     using DifferenceType = ContentRegistry::Diffing::DifferenceType;
 
-    ViewDiff::ViewDiff() : View::Window("hex.builtin.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
+    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
             for (auto &column : m_columns) {
@@ -160,12 +160,15 @@ namespace hex::plugin::diffing {
             this->analyze(providerA, providerB);
         }
 
+        if (auto &algorithms = ContentRegistry::Diffing::impl::getAlgorithms(); m_algorithm == nullptr && !algorithms.empty())
+            m_algorithm = algorithms.front().get();
+
         const auto height = ImGui::GetContentRegionAvail().y;
 
         // Draw the two hex editor columns side by side
         if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 250_scaled))) {
-            ImGui::TableSetupColumn("hex.builtin.view.diff.provider_a"_lang);
-            ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
+            ImGui::TableSetupColumn("hex.diffing.view.diff.provider_a"_lang);
+            ImGui::TableSetupColumn("hex.diffing.view.diff.provider_b"_lang);
             ImGui::TableHeadersRow();
 
             ImVec2 buttonPos;
@@ -190,7 +193,7 @@ namespace hex::plugin::diffing {
 
             ImGui::SetNextWindowPos(buttonPos);
             if (ImGui::BeginPopup("DiffingAlgorithmSettings")) {
-                ImGuiExt::Header("Diffing Algorithm", true);
+                ImGuiExt::Header("hex.diffing.view.diff.algorithm"_lang, true);
                 ImGui::PushItemWidth(300_scaled);
                 if (ImGui::BeginCombo("##Algorithm", m_algorithm == nullptr ? "" : Lang(m_algorithm->getUnlocalizedName()))) {
                     for (const auto &algorithm : ContentRegistry::Diffing::impl::getAlgorithms()) {
@@ -209,7 +212,7 @@ namespace hex::plugin::diffing {
                     ImGuiExt::TextFormattedWrapped("{}", Lang(m_algorithm->getUnlocalizedDescription()));
                 }
 
-                ImGuiExt::Header("Settings");
+                ImGuiExt::Header("hex.diffing.view.diff.settings"_lang);
                 if (m_algorithm != nullptr) {
                     auto drawList = ImGui::GetWindowDrawList();
                     auto prevIdx = drawList->_VtxCurrentIdx;
@@ -217,7 +220,7 @@ namespace hex::plugin::diffing {
                     auto currIdx = drawList->_VtxCurrentIdx;
 
                     if (prevIdx == currIdx)
-                        ImGuiExt::TextFormatted("No settings available");
+                        ImGuiExt::TextFormatted("hex.diffing.view.diff.settings.no_settings"_lang);
                 }
 
                 ImGui::EndPopup();
@@ -304,13 +307,13 @@ namespace hex::plugin::diffing {
                         ImGui::TableNextColumn();
                         switch (typeA) {
                             case DifferenceType::Mismatch:
-                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.builtin.view.diff.modified"_lang);
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.diffing.view.diff.modified"_lang);
                                 break;
                             case DifferenceType::Insertion:
-                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), "hex.builtin.view.diff.added"_lang);
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), "hex.diffing.view.diff.added"_lang);
                                 break;
                             case DifferenceType::Deletion:
-                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), "hex.builtin.view.diff.removed"_lang);
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), "hex.diffing.view.diff.removed"_lang);
                                 break;
                             default:
                                 break;

@@ -17,7 +17,7 @@ namespace hex::plugin::diffing {
 
     class AlgorithmSimple : public Algorithm {
     public:
-        AlgorithmSimple() : Algorithm("Simple", "Naiive O(n) diffing algorithm.\nCan only identify byte modifications and insertions / deletions at the end of the data") {}
+        AlgorithmSimple() : Algorithm("hex.diffing.algorithm.simple.name"_lang, "hex.diffing.algorithm.simple.description"_lang) {}
 
         [[nodiscard]] std::vector<DiffTree> analyze(prv::Provider *providerA, prv::Provider *providerB) const override {
             wolv::container::IntervalTree<DifferenceType> differences;
@@ -76,7 +76,7 @@ namespace hex::plugin::diffing {
 
     class AlgorithmMyers : public Algorithm {
     public:
-        AlgorithmMyers() : Algorithm("Myers", "Smart O(WindowSize²) diffing algorithm. Can identify modifications, insertions and deletions anywhere in the data") {}
+        AlgorithmMyers() : Algorithm("hex.diffing.algorithm.myers.name"_lang, "hex.diffing.algorithm.myers.description"_lang) {}
 
         [[nodiscard]] std::vector<DiffTree> analyze(prv::Provider *providerA, prv::Provider *providerB) const override {
             DiffTree differencesA, differencesB;
@@ -172,7 +172,7 @@ namespace hex::plugin::diffing {
 
         void drawSettings() override {
             static u64 min = 32_kiB, max = 128_kiB;
-            ImGui::SliderScalar("Window Size", ImGuiDataType_U64, &m_windowSize, &min, &max, "0x%X");
+            ImGui::SliderScalar("hex.diffing.algorithm.myers.settings.window_size"_lang, ImGuiDataType_U64, &m_windowSize, &min, &max, "0x%X");
         }
 
     private:

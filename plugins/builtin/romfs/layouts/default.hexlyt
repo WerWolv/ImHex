@@ -65,7 +65,7 @@ Pos=562,201
 Size=900,700
 Collapsed=0
 
-[Window][###hex.builtin.view.diff.name]
+[Window][###hex.diffing.view.diff.name]
 Pos=1233,38
 Size=687,1021
 Collapsed=0
@@ -149,7 +149,7 @@ hex.builtin.view.command_palette.name=0
 hex.builtin.view.constants.name=0
 hex.builtin.view.data_inspector.name=1
 hex.builtin.view.data_processor.name=0
-hex.builtin.view.diff.name=0
+hex.diffing.view.diff.name=0
 hex.disassembler.view.disassembler.name=0
 hex.builtin.view.find.name=0
 hex.hashes.view.hashes.name=0

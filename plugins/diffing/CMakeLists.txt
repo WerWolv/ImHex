@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
 
-add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/edlib ${CMAKE_CURRENT_BINARY_DIR}/edlib)
+if (USE_SYSTEM_EDLIB)
+    find_package(edlib REQUIRED)
+else()
+    add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/edlib ${CMAKE_CURRENT_BINARY_DIR}/edlib EXCLUDE_FROM_ALL)
+endif()
 
 add_imhex_plugin(
     NAME
