@@ -133,7 +133,7 @@ namespace hex::plugin::builtin {
 
                        // Execute the inspector file
                        if (!inspectorCode.empty()) {
-                           if (m_runtime.executeString(inspectorCode, {}, inVariables, true)) {
+                           if (m_runtime.executeString(inspectorCode, pl::api::Source::DefaultSource, {}, inVariables, true)) {
 
                                // Loop over patterns produced by the runtime
                                const auto &patterns = m_runtime.getPatterns();

@@ -162,22 +162,22 @@ namespace hex::ui {
             char c = filter[i];
 
             if (i < filter.size() - 1 && c == '=' && filter[i + 1] == '=') {
-                try {
-                    pl::core::Lexer lexer;
+                pl::core::Lexer lexer;
 
-                    auto source = filter.substr(i + 2);
-                    auto tokens = lexer.lex(filter.substr(i + 2), filter.substr(i + 2));
+                pl::api::Source source = {
+                    .content = filter.substr(i + 2),
+                    .source = pl::api::Source::DefaultSource
+                };
+                auto tokens = lexer.lex(&source);
 
-                    if (!tokens.has_value() || tokens->size() != 2)
-                        return std::nullopt;
-
-                    auto literal = std::get_if<pl::core::Token::Literal>(&tokens->front().value);
-                    if (literal == nullptr)
-                        return std::nullopt;
-                    result.value = *literal;
-                } catch (pl::core::err::LexerError &) {
+                if (!tokens.isOk() || tokens.unwrap().size() != 2)
                     return std::nullopt;
-                }
+
+                auto literal = std::get_if<pl::core::Token::Literal>(&tokens.unwrap().front().value);
+                if (literal == nullptr)
+                    return std::nullopt;
+                result.value = *literal;
+
                 break;
             } else if (c == '.') {
                 result.path.emplace_back();
