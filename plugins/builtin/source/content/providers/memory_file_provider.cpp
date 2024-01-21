@@ -17,7 +17,6 @@ namespace hex::plugin::builtin {
     bool MemoryFileProvider::open() {
         if (m_data.empty()) {
             m_data.resize(1);
-            this->markDirty();
         }
 
         return true;
