@@ -746,7 +746,7 @@ namespace hex {
                 else
                     createPopup(ImGui::BeginPopup(name, flags));
 
-                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 10) {
+                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 100) {
                     ImGui::OpenPopup(name);
                 }
 
