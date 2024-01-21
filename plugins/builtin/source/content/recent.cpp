@@ -1,4 +1,3 @@
-#include <unordered_set>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -18,6 +17,9 @@
 #include <content/recent.hpp>
 #include <toasts/toast_notification.hpp>
 #include <fonts/codicons_font.h>
+
+#include <ranges>
+#include <unordered_set>
 
 namespace hex::plugin::builtin::recent {
 
