@@ -672,12 +672,7 @@
         "hex.builtin.view.data_processor.menu.remove_selection": "Remove Selected",
         "hex.builtin.view.data_processor.menu.save_node": "Save Node",
         "hex.builtin.view.data_processor.name": "Data Processor",
-        "hex.builtin.view.diff.name": "Diffing",
-        "hex.builtin.view.diff.added": "Added",
-        "hex.builtin.view.diff.modified": "Modified",
-        "hex.builtin.view.diff.provider_a": "Provider A",
-        "hex.builtin.view.diff.provider_b": "Provider B",
-        "hex.builtin.view.diff.removed": "Removed",
+
         "hex.builtin.view.find.binary_pattern": "Binary Pattern",
         "hex.builtin.view.find.binary_pattern.alignment": "Alignment",
         "hex.builtin.view.find.context.copy": "Copy Value",

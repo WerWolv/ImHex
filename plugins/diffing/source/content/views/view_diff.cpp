@@ -4,27 +4,21 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/buffered_reader.hpp>
+#include <wolv/utils/guards.hpp>
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::diffing {
 
-    namespace {
+    using DifferenceType = ContentRegistry::Diffing::DifferenceType;
 
-        constexpr u32 getDiffColor(u32 color) {
-            return (color & 0x00FFFFFF) | 0x40000000;
-        }
-
-    }
-
-    ViewDiff::ViewDiff() : View::Window("hex.builtin.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
-
+    ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
-            for (u8 i = 0; i < 2; i++) {
-                m_columns[i].provider = -1;
-                m_columns[i].hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+            for (auto &column : m_columns) {
+                column.provider = -1;
+                column.hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+                column.diffTree.clear();
             }
 
-            m_diffs.clear();
         });
 
         // Set the background highlight callbacks for the two hex editor columns
@@ -39,8 +33,12 @@ namespace hex::plugin::builtin {
     namespace {
 
         bool drawDiffColumn(ViewDiff::Column &column, float height) {
+            if (height < 0)
+                return false;
+
             bool scrolled = false;
             ImGui::PushID(&column);
+            ON_SCOPE_EXIT { ImGui::PopID(); };
 
             // Draw the hex editor
             float prevScroll = column.hexEditor.getScrollPosition();
@@ -52,8 +50,6 @@ namespace hex::plugin::builtin {
                 scrolled = true;
                 column.scrollLock = 5;
             }
-
-            ImGui::PopID();
 
             return scrolled;
         }
@@ -94,92 +90,42 @@ namespace hex::plugin::builtin {
 
     }
 
-    std::function<std::optional<color_t>(u64, const u8*, size_t)> ViewDiff::createCompareFunction(size_t otherIndex) const {
-        // Create a function that will handle highlighting the differences between the two providers
-        // This is a stupidly simple diffing implementation. It will highlight bytes that are different in yellow
-        // and if one provider is larger than the other it will highlight the extra bytes in green or red depending on which provider is larger
-        // TODO: Use an actual binary diffing algorithm that searches for the longest common subsequences
-
-        return [this, otherIndex](u64 address, const u8 *data, size_t) -> std::optional<color_t> {
-            const auto &providers = ImHexApi::Provider::getProviders();
-            auto otherId = m_columns[otherIndex].provider;
-
-            // Check if the other provider is valid
-            if (otherId < 0 || size_t(otherId) >= providers.size())
-                return std::nullopt;
-
-            auto &otherProvider = providers[otherId];
-
-            // Handle the case where one provider is larger than the other one
-            if ((address - otherProvider->getBaseAddress()) > otherProvider->getActualSize()) {
-                if (otherIndex == 1)
-                    return getDiffColor(ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffAdded));
-                else
-                    return getDiffColor(ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffRemoved));
-            }
-
-            // Read the current byte from the other provider
-            u8 otherByte = 0x00;
-            otherProvider->read(address, &otherByte, 1);
-
-            // Compare the two bytes, highlight both in yellow if they are different
-            if (otherByte != *data)
-                return getDiffColor(ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffChanged));
-
-            // No difference
-            return std::nullopt;
-        };
-    }
-
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
         auto commonSize = std::min(providerA->getActualSize(), providerB->getActualSize());
-        m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &task) {
-            std::vector<Diff> differences;
-
-            // Set up readers for both providers
-            auto readerA = prv::ProviderReader(providerA);
-            auto readerB = prv::ProviderReader(providerB);
-
-            // Iterate over both providers and compare the bytes
-            for (auto itA = readerA.begin(), itB = readerB.begin(); itA < readerA.end() && itB < readerB.end(); ++itA, ++itB) {
-                // Stop comparing if the diff task was canceled
-                if (task.wasInterrupted())
-                    break;
-
-                // If the bytes are different, find the end of the difference
-                if (*itA != *itB) {
-                    u64 start = itA.getAddress();
-                    size_t end = 0;
-
-                    while (itA != readerA.end() && itB != readerB.end() && *itA != *itB) {
-                        ++itA;
-                        ++itB;
-                        ++end;
-                    }
-
-                    // Add the difference to the list
-                    differences.push_back(Diff { Region{ start, end }, ViewDiff::DifferenceType::Modified });
-                }
-
-                // Update the progress bar
-                task.update(itA.getAddress());
-            }
-
-            // If one provider is larger than the other, add the extra bytes to the list
-            if (providerA->getActualSize() != providerB->getActualSize()) {
-                auto endA = providerA->getActualSize() + 1;
-                auto endB = providerB->getActualSize() + 1;
-
-                if (endA > endB)
-                    differences.push_back(Diff { Region{ endB, endA - endB }, ViewDiff::DifferenceType::Added });
-                else
-                    differences.push_back(Diff { Region{ endA, endB - endA }, ViewDiff::DifferenceType::Removed });
-            }
+        m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &) {
+            auto differences = m_algorithm->analyze(providerA, providerB);
 
             // Move the calculated differences over so they can be displayed
-            m_diffs = std::move(differences);
+            for (size_t i = 0; i < m_columns.size(); i++) {
+                auto &column = m_columns[i];
+                column.diffTree = std::move(differences[i]);
+            }
             m_analyzed = true;
         });
+    }
+
+    std::function<std::optional<color_t>(u64, const u8*, size_t)> ViewDiff::createCompareFunction(size_t otherIndex) const {
+        const auto currIndex = otherIndex == 0 ? 1 : 0;
+        return [=, this](u64 address, const u8 *, size_t size) -> std::optional<color_t> {
+            if (!m_analyzed)
+                return std::nullopt;
+
+            const auto matches = m_columns[currIndex].diffTree.overlapping({ address, (address + size) - 1 });
+            if (matches.empty())
+                return std::nullopt;
+
+            const auto type = matches[0].value;
+
+            if (type == DifferenceType::Mismatch) {
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffChanged);
+            } else if (type == DifferenceType::Insertion && currIndex == 0) {
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffAdded);
+            } else if (type == DifferenceType::Deletion && currIndex == 1) {
+                return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffRemoved);
+            }
+
+            return std::nullopt;
+        };
     }
 
     void ViewDiff::drawContent() {
@@ -206,7 +152,7 @@ namespace hex::plugin::builtin {
         }
 
         // Analyze the providers if they are valid and the user selected a new provider
-        if (!m_analyzed && a.provider != -1 && b.provider != -1 && !m_diffTask.isRunning()) {
+        if (!m_analyzed && a.provider != -1 && b.provider != -1 && !m_diffTask.isRunning() && m_algorithm != nullptr) {
             const auto &providers = ImHexApi::Provider::getProviders();
             auto providerA = providers[a.provider];
             auto providerB = providers[b.provider];
@@ -214,18 +160,29 @@ namespace hex::plugin::builtin {
             this->analyze(providerA, providerB);
         }
 
+        if (auto &algorithms = ContentRegistry::Diffing::impl::getAlgorithms(); m_algorithm == nullptr && !algorithms.empty())
+            m_algorithm = algorithms.front().get();
+
         const auto height = ImGui::GetContentRegionAvail().y;
 
         // Draw the two hex editor columns side by side
         if (ImGui::BeginTable("##binary_diff", 2, ImGuiTableFlags_None, ImVec2(0, height - 250_scaled))) {
-            ImGui::TableSetupColumn("hex.builtin.view.diff.provider_a"_lang);
-            ImGui::TableSetupColumn("hex.builtin.view.diff.provider_b"_lang);
+            ImGui::TableSetupColumn("hex.diffing.view.diff.provider_a"_lang);
+            ImGui::TableSetupColumn("hex.diffing.view.diff.provider_b"_lang);
             ImGui::TableHeadersRow();
 
+            ImVec2 buttonPos;
             ImGui::BeginDisabled(m_diffTask.isRunning());
             {
-                // Draw first provider selector
+                // Draw settings button
                 ImGui::TableNextColumn();
+                if (ImGuiExt::DimmedIconButton(ICON_VS_SETTINGS_GEAR, ImGui::GetStyleColorVec4(ImGuiCol_Text)))
+                    ImGui::OpenPopup("DiffingAlgorithmSettings");
+                buttonPos = ImGui::GetCursorScreenPos();
+
+                ImGui::SameLine();
+
+                // Draw first provider selector
                 if (drawProviderSelector(a)) m_analyzed = false;
 
                 // Draw second provider selector
@@ -233,6 +190,41 @@ namespace hex::plugin::builtin {
                 if (drawProviderSelector(b)) m_analyzed = false;
             }
             ImGui::EndDisabled();
+
+            ImGui::SetNextWindowPos(buttonPos);
+            if (ImGui::BeginPopup("DiffingAlgorithmSettings")) {
+                ImGuiExt::Header("hex.diffing.view.diff.algorithm"_lang, true);
+                ImGui::PushItemWidth(300_scaled);
+                if (ImGui::BeginCombo("##Algorithm", m_algorithm == nullptr ? "" : Lang(m_algorithm->getUnlocalizedName()))) {
+                    for (const auto &algorithm : ContentRegistry::Diffing::impl::getAlgorithms()) {
+                        ImGui::PushID(algorithm.get());
+                        if (ImGui::Selectable(Lang(algorithm->getUnlocalizedName()))) {
+                            m_algorithm = algorithm.get();
+                            m_analyzed  = false;
+                        }
+                        ImGui::PopID();
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::PopItemWidth();
+
+                if (m_algorithm != nullptr) {
+                    ImGuiExt::TextFormattedWrapped("{}", Lang(m_algorithm->getUnlocalizedDescription()));
+                }
+
+                ImGuiExt::Header("hex.diffing.view.diff.settings"_lang);
+                if (m_algorithm != nullptr) {
+                    auto drawList = ImGui::GetWindowDrawList();
+                    auto prevIdx = drawList->_VtxCurrentIdx;
+                    m_algorithm->drawSettings();
+                    auto currIdx = drawList->_VtxCurrentIdx;
+
+                    if (prevIdx == currIdx)
+                        ImGuiExt::TextFormatted("hex.diffing.view.diff.settings.no_settings"_lang);
+                }
+
+                ImGui::EndPopup();
+            }
 
             ImGui::TableNextRow();
 
@@ -270,51 +262,66 @@ namespace hex::plugin::builtin {
             // Draw the differences if the providers have been analyzed
             if (m_analyzed) {
                 ImGuiListClipper clipper;
-                clipper.Begin(int(m_diffs.size()));
 
-                while (clipper.Step())
+                auto &diffTreeA = m_columns[0].diffTree;
+                auto &diffTreeB = m_columns[1].diffTree;
+                clipper.Begin(int(diffTreeA.size()));
+
+                auto diffIterA = diffTreeA.begin();
+                auto diffIterB = diffTreeB.begin();
+                while (clipper.Step()) {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         ImGui::TableNextRow();
 
                         // Prevent the list from trying to access non-existing diffs
-                        if (size_t(i) >= m_diffs.size())
+                        if (size_t(i) >= diffTreeA.size())
                             break;
 
                         ImGui::PushID(i);
 
-                        const auto &diff = m_diffs[i];
+                        const auto &[startA, restA] = *diffIterA;
+                        const auto &[endA, typeA] = restA;
+
+                        const auto &[startB, restB] = *diffIterB;
+                        const auto &[endB, typeB] = restB;
+
+                        std::advance(diffIterA, 1);
+                        std::advance(diffIterB, 1);
 
                         // Draw a clickable row for each difference that will select the difference in both hex editors
 
                         // Draw start address
                         ImGui::TableNextColumn();
-                        if (ImGui::Selectable(hex::format("0x{:02X}", diff.region.getStartAddress()).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            a.hexEditor.setSelection(diff.region);
+                        if (ImGui::Selectable(hex::format("0x{:02X}", startA).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            a.hexEditor.setSelection({ startA, ((endA - startA) + 1) });
                             a.hexEditor.jumpToSelection();
-                            b.hexEditor.setSelection(diff.region);
+                            b.hexEditor.setSelection({ startB, ((endB - startB) + 1) });
                             b.hexEditor.jumpToSelection();
                         }
 
                         // Draw end address
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(hex::format("0x{:02X}", diff.region.getEndAddress()).c_str());
+                        ImGui::TextUnformatted(hex::format("0x{:02X}", endA).c_str());
 
                         // Draw difference type
                         ImGui::TableNextColumn();
-                        switch (diff.type) {
-                            case DifferenceType::Modified:
-                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.builtin.view.diff.modified"_lang);
+                        switch (typeA) {
+                            case DifferenceType::Mismatch:
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.diffing.view.diff.modified"_lang);
                                 break;
-                            case DifferenceType::Added:
-                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), "hex.builtin.view.diff.added"_lang);
+                            case DifferenceType::Insertion:
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffAdded), "hex.diffing.view.diff.added"_lang);
                                 break;
-                            case DifferenceType::Removed:
-                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), "hex.builtin.view.diff.removed"_lang);
+                            case DifferenceType::Deletion:
+                                ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffRemoved), "hex.diffing.view.diff.removed"_lang);
+                                break;
+                            default:
                                 break;
                         }
 
                         ImGui::PopID();
                     }
+                }
             }
 
             ImGui::EndTable();

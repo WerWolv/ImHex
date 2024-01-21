@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
 
         PatternSourceCode m_sourceCode;
         PerProvider<std::vector<std::string>> m_console;
-        PerProvider<bool> m_executionDone = true;
+        PerProvider<bool> m_executionDone;
 
         std::mutex m_logMutex;
 

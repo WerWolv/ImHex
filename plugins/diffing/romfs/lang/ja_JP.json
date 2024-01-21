@@ -1,0 +1,14 @@
+{
+    "code": "ja-JP",
+    "language": "Japanese",
+    "country": "Japan",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.view.diff.name": "比較",
+        "hex.diffing.view.diff.added": "",
+        "hex.diffing.view.diff.modified": "",
+        "hex.diffing.view.diff.provider_a": "",
+        "hex.diffing.view.diff.provider_b": "",
+        "hex.diffing.view.diff.removed": ""
+    }
+}

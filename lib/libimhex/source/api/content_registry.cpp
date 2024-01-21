@@ -995,6 +995,23 @@ namespace hex {
             return nullptr;
         }
 
+    }
+
+    namespace ContentRegistry::Diffing {
+
+        namespace impl {
+
+            std::vector<std::unique_ptr<Algorithm>>& getAlgorithms() {
+                static std::vector<std::unique_ptr<Algorithm>> algorithms;
+
+                return algorithms;
+            }
+
+            void addAlgorithm(std::unique_ptr<Algorithm> &&hash) {
+                getAlgorithms().emplace_back(std::move(hash));
+            }
+
+        }
 
     }
 

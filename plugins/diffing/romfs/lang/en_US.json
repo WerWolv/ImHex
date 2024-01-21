@@ -1,0 +1,21 @@
+{
+    "code": "en-US",
+    "country": "United States",
+    "language": "English",
+    "translations": {
+        "hex.diffing.algorithm.simple.name": "Simple byte-by-byte algorithm",
+        "hex.diffing.algorithm.simple.description": "Naïve O(N) byte-by-byte comparison.\nCan only identify byte modifications and insertions / deletions at the end of the data",
+        "hex.diffing.algorithm.myers.name": "Myers's bit-vector algorithm",
+        "hex.diffing.algorithm.myers.description": "Smart O(N*M) diffing algorithm. Can identify modifications, insertions and deletions anywhere in the data",
+        "hex.diffing.algorithm.myers.settings.window_size": "Window size",
+        "hex.diffing.view.diff.name": "Diffing",
+        "hex.diffing.view.diff.added": "Added",
+        "hex.diffing.view.diff.modified": "Modified",
+        "hex.diffing.view.diff.provider_a": "Provider A",
+        "hex.diffing.view.diff.provider_b": "Provider B",
+        "hex.diffing.view.diff.removed": "Removed",
+        "hex.diffing.view.diff.algorithm": "Diffing Algorithm",
+        "hex.diffing.view.diff.settings": "No settings available",
+        "hex.diffing.view.diff.settings.no_settings": "No settings available"
+    }
+}
