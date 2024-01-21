@@ -10,14 +10,6 @@
 
 namespace hex::plugin::builtin {
 
-    namespace {
-
-        constexpr u32 getDiffColor(u32 color) {
-            return (color & 0x00FFFFFF) | 0x40000000;
-        }
-
-    }
-
     class AlgorithmSimple : public ViewDiff::Algorithm {
     public:
         [[nodiscard]] const char *getName() const override { return "Simple"; }
@@ -118,15 +110,17 @@ namespace hex::plugin::builtin {
                         case Match:
                             break;
                         case Mismatch:
-                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, currentOperation);
-                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, currentOperation);
+                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, Mismatch);
+                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, Mismatch);
                             break;
                         case Insertion:
-                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, currentOperation);
+                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, Insertion);
+                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, Insertion);
                             currentAddressB -= regionA.size;
                             break;
                         case Deletion:
-                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, currentOperation);
+                            differencesA.insert({ regionA.getStartAddress(), regionA.getEndAddress() }, Deletion);
+                            differencesB.insert({ regionB.getStartAddress(), regionB.getEndAddress() }, Deletion);
                             currentAddressA -= regionB.size;
                             break;
                     }
@@ -262,18 +256,19 @@ namespace hex::plugin::builtin {
     }
 
     std::function<std::optional<color_t>(u64, const u8*, size_t)> ViewDiff::createCompareFunction(size_t otherIndex) const {
+        const auto currIndex = otherIndex == 0 ? 1 : 0;
         return [=, this](u64 address, const u8 *, size_t size) -> std::optional<color_t> {
-            auto matches = m_columns[otherIndex == 0 ? 1 : 0].diffTree.overlapping({ address, (address + size) - 1 });
+            const auto matches = m_columns[currIndex].diffTree.overlapping({ address, (address + size) - 1 });
             if (matches.empty())
                 return std::nullopt;
 
-            auto type = matches[0].value;
+            const auto type = matches[0].value;
 
             if (type == DifferenceType::Mismatch) {
                 return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffChanged);
-            } else if (type == DifferenceType::Insertion) {
+            } else if (type == DifferenceType::Insertion && currIndex == 0) {
                 return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffAdded);
-            } else if (type == DifferenceType::Deletion) {
+            } else if (type == DifferenceType::Deletion && currIndex == 1) {
                 return ImGuiExt::GetCustomColorU32(ImGuiCustomCol_DiffRemoved);
             }
 
@@ -370,42 +365,49 @@ namespace hex::plugin::builtin {
             if (m_analyzed) {
                 ImGuiListClipper clipper;
 
-                auto &diffTree = m_columns[0].diffTree;
-                clipper.Begin(int(diffTree.size()));
+                auto &diffTreeA = m_columns[0].diffTree;
+                auto &diffTreeB = m_columns[1].diffTree;
+                clipper.Begin(int(diffTreeA.size()));
 
-                auto diffIter = diffTree.begin();
+                auto diffIterA = diffTreeA.begin();
+                auto diffIterB = diffTreeB.begin();
                 while (clipper.Step()) {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         ImGui::TableNextRow();
 
                         // Prevent the list from trying to access non-existing diffs
-                        if (size_t(i) >= diffTree.size())
+                        if (size_t(i) >= diffTreeA.size())
                             break;
 
                         ImGui::PushID(i);
 
-                        const auto &[start, rest] = *diffIter;
-                        const auto &[end, type] = rest;
-                        std::advance(diffIter, 1);
+                        const auto &[startA, restA] = *diffIterA;
+                        const auto &[endA, typeA] = restA;
+
+                        const auto &[startB, restB] = *diffIterB;
+                        const auto &[endB, typeB] = restB;
+
+                        std::advance(diffIterA, 1);
+                        std::advance(diffIterB, 1);
 
                         // Draw a clickable row for each difference that will select the difference in both hex editors
 
                         // Draw start address
                         ImGui::TableNextColumn();
-                        if (ImGui::Selectable(hex::format("0x{:02X}", start).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            a.hexEditor.setSelection({ start, ((end - start) + 1) });
+                        if (ImGui::Selectable(hex::format("0x{:02X}", startA).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            a.hexEditor.setSelection({ startA, ((endA - startA) + 1) });
                             a.hexEditor.jumpToSelection();
-                            b.hexEditor.setSelection({ start, ((end - start) + 1) });
+                            b.hexEditor.setSelection({ startB, ((endB - startB) + 1) });
                             b.hexEditor.jumpToSelection();
                         }
 
                         // Draw end address
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(hex::format("0x{:02X}", end).c_str());
+                        ImGui::TextUnformatted(hex::format("0x{:02X}", endA).c_str());
 
                         // Draw difference type
                         ImGui::TableNextColumn();
-                        switch (type) {
+                        switch (typeA) {
                             case DifferenceType::Mismatch:
                                 ImGuiExt::TextFormattedColored(ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_DiffChanged), "hex.builtin.view.diff.modified"_lang);
                                 break;
