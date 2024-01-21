@@ -37,6 +37,7 @@
         "hex.hashes.hash.sha256": "SHA256",
         "hex.hashes.hash.sha384": "SHA384",
         "hex.hashes.hash.sha512": "SHA512",
+        "hex.hashes.hash.sum": "Byte Sum",
         "hex.hashes.hash.tiger": "Tiger",
         "hex.hashes.hash.tiger2": "Tiger2",
         "hex.hashes.hash.blake2b": "Blake2B",

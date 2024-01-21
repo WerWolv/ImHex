@@ -429,6 +429,55 @@ namespace hex::plugin::hashes {
         int m_hashSize = 0;
     };
 
+    class HashSum : public ContentRegistry::Hashes::Hash {
+    public:
+        HashSum() : Hash("hex.hashes.hash.sum") {}
+
+        Function create(std::string name) override {
+            return Hash::create(name, [this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
+                std::array<u8, 8> result = { 0x00 };
+
+                auto reader = prv::ProviderReader(provider);
+                reader.seek(region.getStartAddress());
+                reader.setEndAddress(region.getEndAddress());
+
+                u64 sum = m_initialValue;
+                for (u8 byte : reader) {
+                    sum += byte;
+                }
+
+                std::memcpy(result.data(), &sum, m_size);
+
+                return { result.begin(), result.begin() + m_size };
+            });
+        }
+
+        void draw() override {
+            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
+            ImGui::SliderInt("hex.hashes.hash.common.size"_lang, &m_size, 1, 8, "%d", ImGuiSliderFlags_AlwaysClamp);
+        }
+
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["iv"] = m_initialValue;
+            result["size"] = m_size;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_initialValue = data.at("iv").get<int>();
+                m_size = data.at("size").get<int>();
+            } catch (std::exception&) { }
+        }
+
+    private:
+        u64 m_initialValue = 0x00;
+        int m_size = 1;
+    };
+
     void registerHashes() {
         ContentRegistry::Hashes::add<HashMD5>();
 
@@ -437,6 +486,8 @@ namespace hex::plugin::hashes {
         ContentRegistry::Hashes::add<HashSHA256>();
         ContentRegistry::Hashes::add<HashSHA384>();
         ContentRegistry::Hashes::add<HashSHA512>();
+
+        ContentRegistry::Hashes::add<HashSum>();
 
         ContentRegistry::Hashes::add<HashCRC<u8>>("hex.hashes.hash.crc8",        crypt::crc8,  0x07,        0x0000,      0x0000);
         ContentRegistry::Hashes::add<HashCRC<u16>>("hex.hashes.hash.crc16",      crypt::crc16, 0x8005,      0x0000,      0x0000);
