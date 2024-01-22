@@ -139,18 +139,26 @@ namespace hex::plugin::builtin {
 
                             ImGui::NewLine();
 
+                            u32 repeatCount = std::ceil(std::ceil(ImHexApi::System::getMainWindowSize().x / stride) / s_screenshots.size());
+                            if (repeatCount == 0)
+                                repeatCount = 1;
+
                             // Draw top screenshot row
                             ImGui::SetCursorPosX(-position);
-                            for (const auto &[fileName, screenshot] : s_screenshots | std::views::take(s_screenshots.size() / 2) | std::views::reverse) {
-                                drawImage(fileName, screenshot);
+                            for (u32 i = 0; i < repeatCount; i += 1) {
+                                for (const auto &[fileName, screenshot] : s_screenshots | std::views::reverse) {
+                                    drawImage(fileName, screenshot);
+                                }
                             }
 
                             ImGui::NewLine();
 
                             // Draw bottom screenshot row
                             ImGui::SetCursorPosX(-stride + position);
-                            for (const auto &[fileName, screenshot] : s_screenshots | std::views::drop(s_screenshots.size() / 2)) {
-                                drawImage(fileName, screenshot);
+                            for (u32 i = 0; i < repeatCount; i += 1) {
+                                for (const auto &[fileName, screenshot] : s_screenshots) {
+                                    drawImage(fileName, screenshot);
+                                }
                             }
 
                             ImGui::SetNextWindowPos(ImGui::GetWindowPos() + (ImGui::GetWindowSize() / 2), ImGuiCond_Always, ImVec2(0.5F, 0.5F));
