@@ -63,6 +63,11 @@ namespace hex::log::impl {
         return logEntries;
     }
 
+    void addLogEntry(std::string_view project, std::string_view level, std::string_view message) {
+        getLogEntries().emplace_back(project.data(), level.data(), message.data());
+    }
+
+
     void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName) {
         const auto now = fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 

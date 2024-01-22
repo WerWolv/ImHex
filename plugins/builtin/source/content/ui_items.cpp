@@ -233,6 +233,12 @@ namespace hex::plugin::builtin {
         }
     }
 
+    struct MenuItemSorter {
+        bool operator()(const auto *a, const auto *b) const {
+            return a->toolbarIndex < b->toolbarIndex;
+        }
+    };
+
     void addToolbarItems() {
         ShortcutManager::addGlobalShortcut(AllowWhileTyping + ALT + CTRLCMD + Keys::Left, "hex.builtin.shortcut.prev_provider", []{
             auto currIndex = ImHexApi::Provider::getCurrentProviderIndex();
@@ -274,87 +280,39 @@ namespace hex::plugin::builtin {
         });
 
         ContentRegistry::Interface::addToolbarItem([] {
-            auto provider      = ImHexApi::Provider::get();
-            bool providerValid = provider != nullptr;
-            bool tasksRunning  = TaskManager::getRunningTaskCount() > 0;
+            std::set<const ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
 
-            // Undo
-            ImGui::BeginDisabled(!providerValid || !provider->canUndo());
-            {
-                if (ImGuiExt::ToolBarButton(ICON_VS_DISCARD, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
-                    provider->undo();
-            }
-            ImGui::EndDisabled();
-
-            // Redo
-            ImGui::BeginDisabled(!providerValid || !provider->canRedo());
-            {
-                if (ImGuiExt::ToolBarButton(ICON_VS_REDO, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
-                    provider->redo();
-            }
-            ImGui::EndDisabled();
-
-            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-
-            ImGui::BeginDisabled(tasksRunning);
-            {
-                // Create new file
-                if (ImGuiExt::ToolBarButton(ICON_VS_FILE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGray))) {
-                    auto newProvider = hex::ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
-                    if (newProvider != nullptr && !newProvider->open())
-                        hex::ImHexApi::Provider::remove(newProvider);
-                    else
-                        EventProviderOpened::post(newProvider);
-                }
-
-                // Open file
-                if (ImGuiExt::ToolBarButton(ICON_VS_FOLDER_OPENED, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBrown)))
-                    RequestOpenWindow::post("Open File");
-            }
-            ImGui::EndDisabled();
-
-            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-
-            // Save file
-            ImGui::BeginDisabled(!providerValid || !provider->isWritable() || !provider->isSavable());
-            {
-                if (ImGuiExt::ToolBarButton(ICON_VS_SAVE, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
-                    provider->save();
-            }
-            ImGui::EndDisabled();
-
-            // Save file as
-            ImGui::BeginDisabled(!providerValid || !provider->isSavable());
-            {
-                if (ImGuiExt::ToolBarButton(ICON_VS_SAVE_AS, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarBlue)))
-                    fs::openFileBrowser(fs::DialogMode::Save, {}, [&provider](auto path) {
-                        provider->saveAs(path);
-                    });
-            }
-            ImGui::EndDisabled();
-
-
-            ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-
-
-            // Create bookmark
-            ImGui::BeginDisabled(!providerValid || !provider->isReadable() || !ImHexApi::HexEditor::isSelectionValid());
-            {
-                if (ImGuiExt::ToolBarButton(ICON_VS_BOOKMARK, ImGuiExt::GetCustomColorVec4(ImGuiCustomCol_ToolbarGreen))) {
-                    auto region = ImHexApi::HexEditor::getSelection();
-
-                    if (region.has_value())
-                        ImHexApi::Bookmarks::add(region->getStartAddress(), region->getSize(), {}, {});
+            for (const auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                if (menuItem.toolbarIndex != -1) {
+                    menuItems.insert(&menuItem);
                 }
             }
-            ImGui::EndDisabled();
+
+            for (const auto &menuItem : menuItems) {
+                if (menuItem->unlocalizedNames.back().get() == ContentRegistry::Interface::impl::SeparatorValue) {
+                    ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+                    continue;
+                }
+
+                ImGui::BeginDisabled(!menuItem->enabledCallback());
+                if (ImGuiExt::ToolBarButton(menuItem->icon.glyph.c_str(), ImGuiExt::GetCustomColorVec4(ImGuiCustomCol(menuItem->icon.color)))) {
+                    menuItem->callback();
+                }
+                ImGui::EndDisabled();
+            }
+        });
+
+        // Provider switcher
+        ContentRegistry::Interface::addToolbarItem([] {
+            const auto provider      = ImHexApi::Provider::get();
+            const bool providerValid = provider != nullptr;
+            const bool tasksRunning  = TaskManager::getRunningTaskCount() > 0;
 
             ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
             ImGui::Spacing();
             ImGui::Spacing();
             ImGui::Spacing();
 
-            // Provider switcher
             ImGui::BeginDisabled(!providerValid || tasksRunning);
             {
                 auto &providers = ImHexApi::Provider::getProviders();
@@ -446,6 +404,14 @@ namespace hex::plugin::builtin {
             }
             ImGui::EndDisabled();
         });
+
+        ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.undo", ImGuiCustomCol_ToolbarBlue);
+        ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.redo", ImGuiCustomCol_ToolbarBlue);
+        ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.create_file", ImGuiCustomCol_ToolbarGray);
+        ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.file.open_file", ImGuiCustomCol_ToolbarBrown);
+        ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save", ImGuiCustomCol_ToolbarBlue);
+        ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.view.hex_editor.menu.file.save_as", ImGuiCustomCol_ToolbarBlue);
+        ContentRegistry::Interface::addMenuItemToToolbar("hex.builtin.menu.edit.bookmark.create", ImGuiCustomCol_ToolbarGreen);
     }
 
     void handleBorderlessWindowMode() {

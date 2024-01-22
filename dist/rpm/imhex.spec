@@ -26,7 +26,7 @@ BuildRequires:  llvm-devel
 BuildRequires:  mbedtls-devel
 BuildRequires:  yara-devel
 BuildRequires:  nativefiledialog-extended-devel
-BuildRequires:  dotnet-sdk-7.0
+BuildRequires:  dotnet-sdk-8.0
 BuildRequires:  libzstd-devel
 BuildRequires:  zlib-devel
 BuildRequires:  bzip2-devel

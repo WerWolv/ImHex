@@ -1,0 +1,14 @@
+{
+    "code": "zh-CN",
+    "language": "Chinese (Simplified)",
+    "country": "China",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.view.diff.name": "差异",
+        "hex.diffing.view.diff.added": "添加",
+        "hex.diffing.view.diff.modified": "修改",
+        "hex.diffing.view.diff.provider_a": "提供者A",
+        "hex.diffing.view.diff.provider_b": "提供者B",
+        "hex.diffing.view.diff.removed": "移除"
+    }
+}

@@ -12,6 +12,7 @@
 #include <romfs/romfs.hpp>
 
 #include <hex/api/plugin_manager.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/subcommands/subcommands.hpp>
 
@@ -109,19 +110,27 @@ namespace hex::plugin::builtin {
     }
 
     void handlePluginsCommand(const std::vector<std::string> &args) {
-        hex::unused(args);
 
-        hex::log::println("Loaded plugins:");
+        if (args.empty()) {
+            hex::log::println("Loaded plugins:");
 
-        for (const auto &plugin : PluginManager::getPlugins()) {
-            hex::log::print("- \033[1m{}\033[0m", plugin.getPluginName());
+            for (const auto &plugin : PluginManager::getPlugins()) {
+                hex::log::print("- \033[1m{}\033[0m", plugin.getPluginName());
 
-            hex::log::println(" by {}", plugin.getPluginAuthor());
+                hex::log::println(" by {}", plugin.getPluginAuthor());
 
-            hex::log::println("  \033[2;3m{}\033[0m", plugin.getPluginDescription());
+                hex::log::println("  \033[2;3m{}\033[0m", plugin.getPluginDescription());
+            }
+
+            std::exit(EXIT_SUCCESS);
+        } else {
+            TaskManager::doLater([args] {
+                for (const auto &arg : args) {
+                    PluginManager::load(reinterpret_cast<const char8_t*>(arg.c_str()));
+                }
+                PluginManager::initializeNewPlugins();
+            });
         }
-
-        std::exit(EXIT_SUCCESS);
     }
 
     void handleHashCommand(const std::vector<std::string> &args) {

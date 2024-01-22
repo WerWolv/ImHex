@@ -237,7 +237,7 @@ namespace hex::plugin::builtin {
 
                         if (json.contains("achievements")) {
                             for (const auto &achievement : json["achievements"]) {
-                                auto &newAchievement = AchievementManager::addTemporaryAchievement<Achievement>("hex.builtin.achievement.challenge", achievement["name"])
+                                auto &newAchievement = AchievementManager::addTemporaryAchievement<Achievement>("hex.builtin.achievement.challenge", achievement["name"].get<std::string>())
                                         .setDescription(achievement["description"]);
 
                                 if (achievement.contains("icon")) {

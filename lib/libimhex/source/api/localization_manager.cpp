@@ -79,6 +79,7 @@ namespace hex {
     Lang::Lang(const UnlocalizedString &unlocalizedString) : m_unlocalizedString(unlocalizedString.get()) { }
     Lang::Lang(std::string_view unlocalizedString) : m_unlocalizedString(unlocalizedString) { }
 
+
     Lang::operator std::string() const {
         return get();
     }
