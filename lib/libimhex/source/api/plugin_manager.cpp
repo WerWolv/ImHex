@@ -78,6 +78,10 @@ namespace hex {
     }
 
     Plugin::~Plugin() {
+        if (isLoaded()) {
+            log::debug("Trying to unload plugin '{}'", getPluginName());
+        }
+
         #if defined(OS_WINDOWS)
             if (m_handle != 0)
                 if (FreeLibrary(HMODULE(m_handle)) == FALSE) {
@@ -258,18 +262,19 @@ namespace hex {
         return true;
     }
 
+    void PluginManager::initializeNewPlugins() {
+        for (const auto &plugin : getPlugins()) {
+            if (!plugin.isLoaded())
+                hex::unused(plugin.initializePlugin());
+        }
+    }
+
     void PluginManager::unload() {
         getPluginPaths().clear();
 
         // Unload plugins in reverse order
         auto &plugins = getPlugins();
-        const auto pluginCount = plugins.size();
-        for (size_t i = 0; i < pluginCount; i++) {
-            auto &plugin = plugins[pluginCount - 1 - i];
-            if (plugin.isLoaded()) {
-                log::info("Trying to unload plugin '{}'", plugin.getPluginName());
-            }
-
+        while (!plugins.empty()) {
             plugins.pop_back();
         }
     }
@@ -278,8 +283,8 @@ namespace hex {
         getPlugins().emplace_back(name, functions);
     }
 
-    std::vector<Plugin> &PluginManager::getPlugins() {
-        static std::vector<Plugin> plugins;
+    std::list<Plugin> &PluginManager::getPlugins() {
+        static std::list<Plugin> plugins;
 
         return plugins;
     }

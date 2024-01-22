@@ -28,6 +28,7 @@ namespace hex::log {
         };
 
         std::vector<LogEntry>& getLogEntries();
+        void addLogEntry(std::string_view project, std::string_view level, std::string_view message);
 
         [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName);
 
@@ -41,7 +42,7 @@ namespace hex::log {
             fmt::print(dest, "{}\n", message);
             fflush(dest);
 
-            getLogEntries().push_back({ IMHEX_PROJECT_NAME, level, std::move(message) });
+            addLogEntry(IMHEX_PROJECT_NAME, level, std::move(message));
         }
 
     }
@@ -50,7 +51,7 @@ namespace hex::log {
         #if defined(DEBUG)
             hex::log::impl::print(fg(fmt::color::light_green) | fmt::emphasis::bold, "[DEBUG]", fmt, args...);
         #else
-            impl::getLogEntries().push_back({ IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...) });
+            impl::addLogEntry(IMHEX_PROJECT_NAME, "[DEBUG]", fmt::format(fmt::runtime(fmt), args...));
         #endif
     }
 
