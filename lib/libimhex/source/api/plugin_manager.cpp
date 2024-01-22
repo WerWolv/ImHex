@@ -226,6 +226,18 @@ namespace hex {
         #endif
     }
 
+    void PluginManager::addLoadPath(const std::fs::path& path) {
+        getPluginLoadPaths().emplace_back(path);
+    }
+
+
+    bool PluginManager::load() {
+        bool success = true;
+        for (const auto &loadPath : getPluginLoadPaths())
+            success = PluginManager::load(loadPath) && success;
+
+        return success;
+    }
 
 
     bool PluginManager::load(const std::fs::path &pluginFolder) {
@@ -290,6 +302,12 @@ namespace hex {
     }
 
     std::vector<std::fs::path> &PluginManager::getPluginPaths() {
+        static std::vector<std::fs::path> pluginPaths;
+
+        return pluginPaths;
+    }
+
+    std::vector<std::fs::path> &PluginManager::getPluginLoadPaths() {
         static std::vector<std::fs::path> pluginPaths;
 
         return pluginPaths;
