@@ -124,12 +124,9 @@ namespace hex::plugin::builtin {
 
             std::exit(EXIT_SUCCESS);
         } else {
-            TaskManager::doLater([args] {
-                for (const auto &arg : args) {
-                    PluginManager::load(reinterpret_cast<const char8_t*>(arg.c_str()));
-                }
-                PluginManager::initializeNewPlugins();
-            });
+            for (const auto &arg : args) {
+                PluginManager::addLoadPath(reinterpret_cast<const char8_t*>(arg.c_str()));
+            }
         }
     }
 

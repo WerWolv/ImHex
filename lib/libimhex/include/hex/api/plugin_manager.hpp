@@ -96,15 +96,18 @@ namespace hex {
     public:
         PluginManager() = delete;
 
+        static bool load();
         static bool load(const std::fs::path &pluginFolder);
         static void unload();
         static void reload();
         static void initializeNewPlugins();
+        static void addLoadPath(const std::fs::path &path);
 
         static void addPlugin(const std::string &name, PluginFunctions functions);
 
         static std::list<Plugin> &getPlugins();
         static std::vector<std::fs::path> &getPluginPaths();
+        static std::vector<std::fs::path> &getPluginLoadPaths();
 
         static bool isPluginLoaded(const std::fs::path &path);
     };
