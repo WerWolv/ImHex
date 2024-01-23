@@ -25,8 +25,11 @@ public:
 		Identifier,
 		KnownIdentifier,
 		PreprocIdentifier,
+        GlobalDocComment,
+		DocComment,
 		Comment,
 		MultiLineComment,
+		PreprocessorDeactivated,
 		Background,
 		Cursor,
 		Selection,
@@ -140,9 +143,12 @@ public:
 		bool mComment : 1;
 		bool mMultiLineComment : 1;
 		bool mPreprocessor : 1;
+		bool mDocComment : 1;
+        bool mGlobalDocComment : 1;
+		bool mDeactivated : 1;
 
-		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
-			mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
+		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex), mComment(false),
+        mMultiLineComment(false), mPreprocessor(false), mDocComment(false), mGlobalDocComment(false), mDeactivated(false) {}
 	};
 
 	typedef std::vector<Glyph> Line;
@@ -158,7 +164,7 @@ public:
 		Keywords mKeywords;
 		Identifiers mIdentifiers;
 		Identifiers mPreprocIdentifiers;
-		std::string mCommentStart, mCommentEnd, mSingleLineComment;
+		std::string mCommentStart, mCommentEnd, mSingleLineComment, mGlobalDocComment, mDocComment;
 		char mPreprocChar;
 		bool mAutoIndentation;
 
@@ -169,7 +175,7 @@ public:
 		bool mCaseSensitive;
 
 		LanguageDefinition()
-			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
+			:  mGlobalDocComment("/*!"), mDocComment("/**"), mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
 		{
 		}
 
@@ -464,6 +470,7 @@ private:
 	Coordinates mInteractiveStart, mInteractiveEnd;
 	std::string mLineBuffer;
 	uint64_t mStartTime;
+	std::vector<std::string> mDefines;
 
 	float mLastClick;
     bool mShowCursor;

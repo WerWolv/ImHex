@@ -596,10 +596,16 @@ std::string TextEditor::GetWordAt(const Coordinates &aCoords) const {
 ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
     if (!mColorizerEnabled)
         return mPalette[(int)PaletteIndex::Default];
+    if (aGlyph.mGlobalDocComment)
+        return mPalette[(int)PaletteIndex::GlobalDocComment];
+    if (aGlyph.mDocComment)
+        return mPalette[(int)PaletteIndex::DocComment];
     if (aGlyph.mComment)
         return mPalette[(int)PaletteIndex::Comment];
     if (aGlyph.mMultiLineComment)
         return mPalette[(int)PaletteIndex::MultiLineComment];
+    if (aGlyph.mDeactivated && !aGlyph.mPreprocessor)
+        return mPalette[(int)PaletteIndex::PreprocessorDeactivated];
     auto const color = mPalette[(int)aGlyph.mColorIndex];
     if (aGlyph.mPreprocessor) {
         const auto ppcolor = mPalette[(int)PaletteIndex::Preprocessor];
@@ -2260,8 +2266,11 @@ const TextEditor::Palette &TextEditor::GetDarkPalette() {
             0xffaaaaaa, // Identifier
             0xff9bc64d, // Known identifier
             0xffc040a0, // Preproc identifier
+            0xff708020, // Global Doc Comment
+            0xff586820, // Doc Comment
             0xff206020, // Comment (single line)
             0xff406020, // Comment (multi line)
+            0xff004545, // Preprocessor deactivated
             0xff101010, // Background
             0xffe0e0e0, // Cursor
             0x80a06020, // Selection
@@ -2289,8 +2298,11 @@ const TextEditor::Palette &TextEditor::GetLightPalette() {
             0xff404040, // Identifier
             0xff606010, // Known identifier
             0xffc040a0, // Preproc identifier
+            0xff707820, // Global Doc Comment
+            0xff586020, // Doc Comment
             0xff205020, // Comment (single line)
             0xff405020, // Comment (multi line)
+            0xffa7cccc, // Preprocessor deactivated
             0xffffffff, // Background
             0xff000000, // Cursor
             0x80600000, // Selection
@@ -2318,8 +2330,11 @@ const TextEditor::Palette &TextEditor::GetRetroBluePalette() {
             0xff00ffff, // Identifier
             0xffffffff, // Known identifier
             0xffff00ff, // Preproc identifier
+            0xff101010, // Global Doc Comment
+            0xff202020, // Doc Comment
             0xff808080, // Comment (single line)
             0xff404040, // Comment (multi line)
+            0xff004000, // Preprocessor deactivated
             0xff800000, // Background
             0xff0080ff, // Cursor
             0x80ffff00, // Selection
@@ -2480,23 +2495,32 @@ void TextEditor::ColorizeInternal() {
         auto endIndex                = 0;
         auto commentStartLine        = endLine;
         auto commentStartIndex       = endIndex;
+        auto withinGlobalDocComment  = false;
+        auto withinDocComment        = false;
+        auto withinComment           = false;
         auto withinString            = false;
         auto withinSingleLineComment = false;
         auto withinPreproc           = false;
+        auto withinNotDef            = false;
         auto firstChar               = true;     // there is no other non-whitespace characters in the line before
-        auto concatenate             = false;    // '\' on the very end of the line
         auto currentLine             = 0;
         auto currentIndex            = 0;
+        auto &startStr               = mLanguageDefinition.mCommentStart;
+        auto &singleStartStr         = mLanguageDefinition.mSingleLineComment;
+        auto &docStartStr            = mLanguageDefinition.mDocComment;
+        auto &globalStartStr         = mLanguageDefinition.mGlobalDocComment;
+
+        std::vector<bool> ifDefs;
+        ifDefs.push_back(true);
+
         while (currentLine < endLine || currentIndex < endIndex) {
             auto &line = mLines[currentLine];
 
-            if (currentIndex == 0 && !concatenate) {
+            if (currentIndex == 0) {
                 withinSingleLineComment = false;
                 withinPreproc           = false;
                 firstChar               = true;
             }
-
-            concatenate = false;
 
             if (!line.empty()) {
                 auto &g = line[currentIndex];
@@ -2505,59 +2529,154 @@ void TextEditor::ColorizeInternal() {
                 if (c != mLanguageDefinition.mPreprocChar && !isspace(c))
                     firstChar = false;
 
-                if (currentIndex == (int)line.size() - 1 && line[line.size() - 1].mChar == '\\')
-                    concatenate = true;
-
                 bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
                 if (withinString) {
-                    line[currentIndex].mMultiLineComment = inComment;
-
+                    line[currentIndex].mMultiLineComment = withinComment;
+                    line[currentIndex].mComment          = withinSingleLineComment;
+                    line[currentIndex].mDocComment       = withinDocComment;
+                    line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                    line[currentIndex].mDeactivated      = withinNotDef;
                     if (c == '\"') {
-                        if (currentIndex + 1 < (int)line.size() && line[currentIndex + 1].mChar == '\"') {
+                        if (currentIndex > 2 && line[currentIndex - 1].mChar == '\\'  && line[currentIndex - 2].mChar != '\\') {
                             currentIndex += 1;
-                            if (currentIndex < (int)line.size())
-                                line[currentIndex].mMultiLineComment = inComment;
+                            if (currentIndex < (int)line.size()) {
+                                line[currentIndex].mMultiLineComment = withinComment;
+                                line[currentIndex].mComment          = withinSingleLineComment;
+                                line[currentIndex].mDocComment       = withinDocComment;
+                                line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                                line[currentIndex].mDeactivated      = withinNotDef;
+                            }
                         } else
                             withinString = false;
-                    } else if (c == '\\') {
-                        currentIndex += 1;
-                        if (currentIndex < (int)line.size())
-                            line[currentIndex].mMultiLineComment = inComment;
                     }
                 } else {
-                    if (firstChar && c == mLanguageDefinition.mPreprocChar)
-                        withinPreproc = true;
+                    if (firstChar && c == mLanguageDefinition.mPreprocChar) {
+                        withinPreproc = ifDefs.back();
+                        std::string directive;
+                        auto start = currentIndex + 1;
+                        while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                            directive += line[start].mChar;
+                            start++;
+                        }
+
+                        if (start < (int) line.size()) {
+
+                            if (isspace(line[start].mChar)) {
+                                start += 1;
+                                 if (directive == "define") {
+                                     while (start < (int) line.size() && isspace(line[start].mChar))
+                                         start++;
+                                     std::string identifier;
+                                     while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                         identifier += line[start].mChar;
+                                         start++;
+                                     }
+                                     if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end())
+                                         mDefines.push_back(identifier);
+                                    } else if (directive == "undef") {
+                                         while (start < (int) line.size() && isspace(line[start].mChar))
+                                             start++;
+                                         std::string identifier;
+                                         while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                             identifier += line[start].mChar;
+                                             start++;
+                                         }
+                                         if (identifier.size() > 0  && !withinNotDef)
+                                             mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
+                                } else if (directive == "ifdef") {
+                                    while (start < (int) line.size() && isspace(line[start].mChar))
+                                        start++;
+                                    std::string identifier;
+                                    while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                        identifier += line[start].mChar;
+                                        start++;
+                                    }
+                                    if (!withinNotDef) {
+                                        bool isConditionMet = std::find(mDefines.begin(),mDefines.end(),identifier) != mDefines.end();
+                                        withinNotDef = !isConditionMet;
+                                        ifDefs.push_back(isConditionMet);
+                                    } else
+                                        ifDefs.push_back(false);
+                                } else if (directive == "ifndef") {
+                                    while (start < (int) line.size() && isspace(line[start].mChar))
+                                        start++;
+                                    std::string identifier;
+                                    while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                        identifier += line[start].mChar;
+                                        start++;
+                                    }
+                                    if (!withinNotDef) {
+                                        bool isConditionMet =  std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end();
+                                        withinNotDef = !isConditionMet;
+                                        ifDefs.push_back(isConditionMet);
+                                    } else
+                                        ifDefs.push_back(false);
+                                }
+                            }
+                        } else {
+                            if (directive == "endif") {
+                                if (ifDefs.size() > 1)
+                                    ifDefs.pop_back();
+                                withinNotDef = !ifDefs.back();
+                                withinPreproc = ifDefs.back();
+                            }
+                        }
+                    }
 
                     if (c == '\"') {
                         withinString                         = true;
-                        line[currentIndex].mMultiLineComment = inComment;
+                        line[currentIndex].mMultiLineComment = withinComment;
+                        line[currentIndex].mComment          = withinSingleLineComment;
+                        line[currentIndex].mDocComment       = withinDocComment;
+                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                        line[currentIndex].mDeactivated      = withinNotDef;
                     } else {
                         auto pred            = [](const char &a, const Glyph &b) { return a == b.mChar; };
-                        auto from            = line.begin() + currentIndex;
-                        auto &startStr       = mLanguageDefinition.mCommentStart;
-                        auto &singleStartStr = mLanguageDefinition.mSingleLineComment;
 
-                        if (!singleStartStr.empty() &&
-                            currentIndex + singleStartStr.size() <= line.size() &&
-                            equals(singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
-                            withinSingleLineComment = true;
-                        } else if (!startStr.empty() && !withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
-                                   equals(startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
-                            commentStartLine  = currentLine;
-                            commentStartIndex = currentIndex;
+                        auto compareForth    = [&](const std::string &a, const std::vector<Glyph> &b) {
+                            return !a.empty() && currentIndex + a.size() <= b.size() && equals(a.begin(), a.end(),
+                                    b.begin() + currentIndex, b.begin() + currentIndex + a.size(), pred);
+                        };
+
+                        auto compareBack     = [&](const std::string &a, const std::vector<Glyph> &b) {
+                            return !a.empty() && currentIndex + 1 >= (int)a.size() && equals(a.begin(), a.end(),
+                                    b.begin() + currentIndex + 1 - a.size(), b.begin() + currentIndex + 1, pred);
+                        };
+
+                        if (!inComment && !withinSingleLineComment) {
+                            if (compareForth(singleStartStr, line)) {
+                                withinSingleLineComment = !inComment;
+                            } else {
+                                bool isGlobalDocComment = compareForth(globalStartStr, line);
+                                bool isDocComment = compareForth(docStartStr, line);
+                                bool isComment = compareForth(startStr, line);
+                                if (isGlobalDocComment || isDocComment || isComment) {
+                                    commentStartLine = currentLine;
+                                    commentStartIndex = currentIndex;
+                                    if (isGlobalDocComment)
+                                        withinGlobalDocComment = true;
+                                    else if (isDocComment)
+                                        withinDocComment = true;
+                                    else
+                                        withinComment = true;
+                                }
+                            }
+                            inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
                         }
-
-                        inComment = inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
-
-                        line[currentIndex].mMultiLineComment = inComment;
+                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                        line[currentIndex].mDocComment       = withinDocComment;
+                        line[currentIndex].mMultiLineComment = withinComment;
                         line[currentIndex].mComment          = withinSingleLineComment;
+                        line[currentIndex].mDeactivated      = withinNotDef;
 
                         auto &endStr = mLanguageDefinition.mCommentEnd;
-                        if (currentIndex + 1 >= (int)endStr.size() &&
-                            equals(endStr.begin(), endStr.end(), from + 1 - endStr.size(), from + 1, pred)) {
-                            commentStartIndex = endIndex;
+                        if (compareBack(endStr, line)) {
+                            withinComment = false;
+                            withinDocComment = false;
+                            withinGlobalDocComment = false;
                             commentStartLine  = endLine;
+                            commentStartIndex = endIndex;
                         }
                     }
                 }
@@ -2574,6 +2693,7 @@ void TextEditor::ColorizeInternal() {
                 ++currentLine;
             }
         }
+        mDefines.clear();
         mCheckComments = false;
     }
 
@@ -2716,7 +2836,9 @@ bool TokenizeCStyleString(const char *in_begin, const char *in_end, const char *
             }
 
             // handle escape character for "
-            if (*p == '\\' && p + 1 < in_end && p[1] == '"')
+            if (*p == '\\' && p + 1 < in_end && p[1] == '\\')
+                p++;
+            else if (*p == '\\' && p + 1 < in_end && p[1] == '"')
                 p++;
 
             p++;

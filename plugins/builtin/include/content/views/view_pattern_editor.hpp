@@ -170,7 +170,7 @@ namespace hex::plugin::builtin {
             u32 color;
         };
 
-        std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
+        std::unique_ptr<pl::PatternLanguage>  m_editorRuntime;
 
         PerProvider<std::vector<std::fs::path>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;

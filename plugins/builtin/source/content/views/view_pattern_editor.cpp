@@ -174,8 +174,8 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternEditor::ViewPatternEditor() : View::Window("hex.builtin.view.pattern_editor.name", ICON_VS_SYMBOL_NAMESPACE) {
-        m_parserRuntime = std::make_unique<pl::PatternLanguage>();
-        ContentRegistry::PatternLanguage::configureRuntime(*m_parserRuntime, nullptr);
+        m_editorRuntime = std::make_unique<pl::PatternLanguage>();
+        ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
 
         m_textEditor.SetLanguageDefinition(PatternLanguage());
         m_textEditor.SetShowWhitespaces(false);
@@ -691,7 +691,7 @@ namespace hex::plugin::builtin {
                     requestFocusFind = true;
                 }
 
-                static std::string indexOfCount;
+                static std::string counterString;
 
                 auto totalSize = ImGui::CalcTextSize("2000 of 2000");
                 ImVec2 buttonSize;
@@ -700,27 +700,27 @@ namespace hex::plugin::builtin {
                     updateCount = false;
 
                     if (count == 0 || position == -1u)
-                        indexOfCount = "hex.builtin.view.pattern_editor.no_results"_lang.operator std::string();
+                        counterString = "hex.builtin.view.pattern_editor.no_results"_lang.operator std::string();
                     else {
                         if (position > 1999)
-                            indexOfCount = "?";
+                            counterString = "?";
                         else
-                            indexOfCount = hex::format("{} ", position);
-                        indexOfCount += "hex.builtin.view.pattern_editor.of"_lang.operator const char *();
+                            counterString = hex::format("{} ", position);
+                        counterString += "hex.builtin.view.pattern_editor.of"_lang.operator const char *();
                         if (count > 1999)
-                            indexOfCount += "1999+";
+                            counterString += "1999+";
                         else
-                            indexOfCount += hex::format(" {}", count);
+                            counterString += hex::format(" {}", count);
                     }
                 }
-                auto resultSize = ImGui::CalcTextSize(indexOfCount.c_str());
+                auto resultSize = ImGui::CalcTextSize(counterString.c_str());
                 if (totalSize.x > resultSize.x)
                     buttonSize = ImVec2(totalSize.x + 2 - resultSize.x, resultSize.y);
                 else
                     buttonSize = ImVec2(2, resultSize.y);
 
                 ImGui::SameLine();
-                ImGui::TextUnformatted(indexOfCount.c_str());
+                ImGui::TextUnformatted(counterString.c_str());
 
                 ImGui::SameLine();
                 ImGui::InvisibleButton("##find_result_padding", buttonSize);
@@ -1464,8 +1464,8 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::parsePattern(const std::string &code, prv::Provider *provider) {
         m_runningParsers += 1;
 
-        ContentRegistry::PatternLanguage::configureRuntime(*m_parserRuntime, nullptr);
-        const auto &ast = m_parserRuntime->parseString(code);
+        ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
+        const auto &ast = m_editorRuntime->parseString(code);
 
         auto &patternVariables = m_patternVariables.get(provider);
 
@@ -1760,7 +1760,7 @@ namespace hex::plugin::builtin {
                     ImGui::EndMenu();
                 }
 
-                const auto &types = m_parserRuntime->getInternals().parser->getTypes();
+                const auto &types = m_editorRuntime->getInternals().parser->getTypes();
                 const bool hasPlaceableTypes = std::ranges::any_of(types, [](const auto &type) { return !type.second->isTemplateType(); });
 
                 if (ImGui::BeginMenu("hex.builtin.view.pattern_editor.menu.edit.place_pattern.custom"_lang, hasPlaceableTypes)) {
