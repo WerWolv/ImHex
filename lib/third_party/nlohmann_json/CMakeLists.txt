@@ -6,3 +6,4 @@ set(CMAKE_CXX_STANDARD 17)
 add_library(nlohmann_json INTERFACE)
 
 target_include_directories(nlohmann_json INTERFACE include)
+add_library(nlohmann_json::nlohmann_json ALIAS nlohmann_json)
