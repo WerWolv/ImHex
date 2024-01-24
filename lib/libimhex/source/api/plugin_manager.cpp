@@ -268,9 +268,6 @@ namespace hex {
             return !plugin.isValid();
         });
 
-        if (getPlugins().empty())
-            return false;
-
         return true;
     }
 
