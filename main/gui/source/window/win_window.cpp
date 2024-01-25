@@ -332,7 +332,7 @@ namespace hex {
         {
             EventFileDragged::post(true);
 
-            *pdwEffect = DROPEFFECT_NONE;
+            *pdwEffect = DROPEFFECT_COPY;
             return S_OK;
         }
 
@@ -341,7 +341,7 @@ namespace hex {
             POINTL,
             DWORD *pdwEffect) override
         {
-            *pdwEffect = DROPEFFECT_NONE;
+            *pdwEffect = DROPEFFECT_COPY;
             return S_OK;
         }
 
@@ -377,7 +377,7 @@ namespace hex {
 
             EventFileDragged::post(false);
 
-            *pdwEffect &= DROPEFFECT_NONE;
+            *pdwEffect &= DROPEFFECT_COPY;
             return S_OK;
         }
     };
