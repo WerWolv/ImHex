@@ -148,6 +148,7 @@
         "hex.builtin.menu.file.import.pattern": "Pattern File",
         "hex.builtin.menu.file.import.data_processor": "Data Processor Workspace",
         "hex.builtin.menu.file.import.custom_encoding": "Custom Encoding File",
+        "hex.builtin.menu.file.import.modified_file.popup.invalid_size": "File selected do not have the same size as the current file. Both sizes must match",
         "hex.builtin.menu.file.open_file": "Open File...",
         "hex.builtin.menu.file.open_other": "Open Other...",
         "hex.builtin.menu.file.project": "Project",
