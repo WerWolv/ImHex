@@ -7,7 +7,7 @@ if (NOT USE_SYSTEM_YARA)
     set_target_properties(libyara PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set(YARA_LIBRARIES libyara)
 else()
-    find_package(YARA REQUIRED)
+    find_package(Yara REQUIRED)
 endif()
 
 add_imhex_plugin(

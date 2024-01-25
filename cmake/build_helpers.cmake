@@ -555,7 +555,7 @@ macro(addBundledLibraries)
         set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
         set(FMT_LIBRARIES fmt::fmt-header-only)
     else()
-        find_package(fmt 8.0.0 REQUIRED)
+        find_package(fmt REQUIRED)
         set(FMT_LIBRARIES fmt::fmt)
     endif()
 

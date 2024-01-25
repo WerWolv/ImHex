@@ -12,7 +12,7 @@ if (NOT USE_SYSTEM_CAPSTONE)
     set(CAPSTONE_LIBRARIES "capstone")
     set(CAPSTONE_INCLUDE_DIRS ${THIRD_PARTY_LIBS_FOLDER}/capstone/include)
 else()
-    find_package(Capstone REQUIRED)
+    find_package(capstone QUIET)
 endif()
 
 add_imhex_plugin(
