@@ -1,4 +1,4 @@
-find_path(CAPSTONE_INCLUDE_DIR capstone.h)
+find_path(CAPSTONE_INCLUDE_DIR capstone.h PATH_SUFFIXES capstone)
 find_library(CAPSTONE_LIBRARY NAMES capstone)
 
 include(FindPackageHandleStandardArgs)
