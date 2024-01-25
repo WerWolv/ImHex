@@ -9,10 +9,10 @@ if (NOT USE_SYSTEM_CAPSTONE)
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/capstone ${CMAKE_CURRENT_BINARY_DIR}/capstone EXCLUDE_FROM_ALL)
     set_target_properties(capstone PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_compile_options(capstone PRIVATE -Wno-unused-function)
-    set(CAPSTONE_LIBRARIES "capstone")
-    set(CAPSTONE_INCLUDE_DIRS ${THIRD_PARTY_LIBS_FOLDER}/capstone/include)
+    set(CAPSTONE_LIBRARY "capstone")
+    set(CAPSTONE_INCLUDE_DIR ${THIRD_PARTY_LIBS_FOLDER}/capstone/include)
 else()
-    find_package(capstone QUIET)
+    find_package(Capstone REQUIRED)
 endif()
 
 add_imhex_plugin(
@@ -26,7 +26,8 @@ add_imhex_plugin(
         source/content/pl_visualizers/disassembler.cpp
     INCLUDES
         include
+        ${CAPSTONE_INCLUDE_DIR}
     LIBRARIES
-        ${CAPSTONE_LIBRARIES}
+        ${CAPSTONE_LIBRARY}
         ui
 )

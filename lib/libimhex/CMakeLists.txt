@@ -89,7 +89,7 @@ target_link_directories(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${MBEDTLS_LIBRARY_DIR}
 
 if (NOT EMSCRIPTEN)
     # curl is only used in non-emscripten builds
-    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} curl)
+    target_link_libraries(libimhex ${LIBIMHEX_LIBRARY_TYPE} ${CURL_LIBRARY})
 endif()
 
 
