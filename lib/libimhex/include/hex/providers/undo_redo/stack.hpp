@@ -2,12 +2,12 @@
 
 #include <hex.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/api/event_manager.hpp>
 
 #include <hex/providers/undo_redo/operations/operation.hpp>
 
 #include <map>
 #include <memory>
-#include <mutex>
 #include <vector>
 
 namespace hex::prv {
@@ -33,6 +33,7 @@ namespace hex::prv::undo {
 
         template<std::derived_from<Operation> T>
         bool add(auto && ... args) {
+            EventDataChanged::post(m_provider);
             return this->add(std::make_unique<T>(std::forward<decltype(args)>(args)...));
         }
 
