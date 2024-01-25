@@ -19,8 +19,19 @@ target_include_directories(imgui_all_includes INTERFACE include)
 
 find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(GLFW REQUIRED)
+
+find_package(GLFW QUIET)
+if (NOT GLFW_FOUND)
+    find_package(glfw3 QUIET)
+    set(GLFW_INCLUDE_DIRS ${glfw3_INCLUDE_DIRS})
+    set(GLFW_LIBRARIES ${glfw3_LIBRARIES})
+
+    if (NOT glfw3_FOUND)
+        find_package(PkgConfig REQUIRED)
+        pkg_search_module(GLFW REQUIRED glfw3)
+    endif ()
+endif()
 
 target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
 target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
-target_link_libraries(imgui_custom PUBLIC GLFW::GLFW ${OPENGL_LIBRARIES})
+target_link_libraries(imgui_custom PUBLIC ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})
