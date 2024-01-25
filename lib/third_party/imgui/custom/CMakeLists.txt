@@ -21,6 +21,6 @@ find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(GLFW REQUIRED)
 
-target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIR} ${OpenGL_INCLUDE_DIRS})
+target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
 target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
-target_link_libraries(imgui_custom PUBLIC ${GLFW_LIBRARY} ${OPENGL_LIBRARIES})
+target_link_libraries(imgui_custom PUBLIC GLFW::GLFW ${OPENGL_LIBRARIES})
