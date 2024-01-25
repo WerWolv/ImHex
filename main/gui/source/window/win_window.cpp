@@ -379,8 +379,6 @@ namespace hex {
 
             *pdwEffect &= DROPEFFECT_NONE;
             return S_OK;
-
-            return S_OK;
         }
     };
 
@@ -388,10 +386,20 @@ namespace hex {
         // Setup borderless window
         auto hwnd = glfwGetWin32Window(m_window);
 
+        CoInitialize(nullptr);
         OleInitialize(nullptr);
 
         static DropManager dm;
-        RegisterDragDrop(hwnd, &dm);
+        if (RegisterDragDrop(hwnd, &dm) != S_OK) {
+            log::warn("Failed to register drop target");
+
+            // Register fallback drop target using glfw
+            glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
+                for (int i = 0; i < count; i++) {
+                    EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
+                }
+            });
+        }
 
         bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
 
