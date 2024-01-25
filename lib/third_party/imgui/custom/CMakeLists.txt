@@ -17,11 +17,9 @@ target_link_libraries(imgui_custom PRIVATE imgui_includes)
 set_property(TARGET imgui_custom PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(imgui_all_includes INTERFACE include)
 
-find_package(PkgConfig REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
-
+find_package(GLFW3 REQUIRED)
 # pkgsearch somehow reports the glfw3 library as glfw3dll in Release builds on MinGW which is not correct
 if ("${GLFW_LIBRARIES}" MATCHES ".+dll")
     set(GLFW_LIBRARIES "glfw3")
