@@ -63,7 +63,7 @@ namespace hex::plugin::builtin {
             auto read = process_vm_readv(m_processId, &local, 1, &remote, 1, 0);
 
             if (read == -1) {
-                // TODO error handling strerror(errno)
+                log::error("Process memory provider failed to read data: {}", strerror(errno));
             }
         #endif
     }
@@ -82,7 +82,7 @@ namespace hex::plugin::builtin {
 
             auto read = process_vm_writev(m_processId, &local, 1, &remote, 1, 0);
             if (read == -1) {
-                // TODO error handling strerror(errno)
+                log::error("Process memory provider failed to write data: {}", strerror(errno));
             }
         #endif
     }
