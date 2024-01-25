@@ -37,6 +37,8 @@ namespace hex::plugin::builtin {
 
         std::string m_dataDescription;
         std::string m_dataMimeType;
+        std::string m_dataAppleCreatorType;
+        std::string m_dataExtensions;
 
         DiagramDigram m_digram;
         DiagramLayeredDistribution m_layeredDistribution;

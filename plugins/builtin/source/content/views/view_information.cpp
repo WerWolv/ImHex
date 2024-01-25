@@ -29,6 +29,8 @@ namespace hex::plugin::builtin {
             m_blockSize = 0;
             m_dataMimeType.clear();
             m_dataDescription.clear();
+            m_dataAppleCreatorType.clear();
+            m_dataExtensions.clear();
             m_analyzedRegion = { 0, 0 };
         });
 
@@ -87,8 +89,10 @@ namespace hex::plugin::builtin {
             {
                 magic::compile();
 
-                m_dataDescription = magic::getDescription(provider);
-                m_dataMimeType    = magic::getMIMEType(provider);
+                m_dataDescription       = magic::getDescription(provider);
+                m_dataMimeType          = magic::getMIMEType(provider);
+                m_dataAppleCreatorType  = magic::getAppleCreatorType(provider);
+                m_dataExtensions        = magic::getExtensions(provider);
             }
 
             {
@@ -228,8 +232,8 @@ namespace hex::plugin::builtin {
                                 ImGui::TextUnformatted("hex.builtin.view.information.mime"_lang);
                                 ImGui::TableNextColumn();
 
-                                if (m_dataMimeType == "application/octet-stream") {
-                                    ImGuiExt::TextFormattedColored(ImVec4(0.92F, 0.25F, 0.2F, 1.0F), "{} ({})", "hex.builtin.view.information.octet_stream_text"_lang, m_dataMimeType);
+                                if (m_dataMimeType.contains("application/octet-stream")) {
+                                    ImGuiExt::TextFormatted("{}", m_dataMimeType);
                                     ImGui::SameLine();
                                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                                     ImGuiExt::HelpHover("hex.builtin.view.information.octet_stream_warning"_lang);
@@ -237,6 +241,20 @@ namespace hex::plugin::builtin {
                                 } else {
                                     ImGuiExt::TextFormatted("{}", m_dataMimeType);
                                 }
+                            }
+
+                            if (!m_dataAppleCreatorType.empty()) {
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted("hex.builtin.view.information.apple_type"_lang);
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("{}", m_dataAppleCreatorType);
+                            }
+
+                            if (!m_dataExtensions.empty()) {
+                                ImGui::TableNextColumn();
+                                ImGui::TextUnformatted("hex.builtin.view.information.extension"_lang);
+                                ImGui::TableNextColumn();
+                                ImGuiExt::TextFormatted("{}", m_dataExtensions);
                             }
 
                             ImGui::EndTable();

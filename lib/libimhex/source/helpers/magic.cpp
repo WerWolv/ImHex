@@ -95,50 +95,96 @@ namespace hex::magic {
         return result;
     }
 
-    std::string getDescription(const std::vector<u8> &data) {
+    std::string getDescription(const std::vector<u8> &data, bool firstEntryOnly) {
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
-            magic_t ctx = magic_open(MAGIC_NONE);
+            magic_t ctx = magic_open(MAGIC_COMPRESS | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
                 if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
-                    return result;
+                    return wolv::util::replaceStrings(result, "\\012-", "\n-");
             }
         }
 
         return "";
     }
 
-    std::string getDescription(prv::Provider *provider, size_t size) {
+    std::string getDescription(prv::Provider *provider, size_t size, bool firstEntryOnly) {
         std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
         provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
 
-        return getDescription(buffer);
+        return getDescription(buffer, firstEntryOnly);
     }
 
-    std::string getMIMEType(const std::vector<u8> &data) {
+    std::string getMIMEType(const std::vector<u8> &data, bool firstEntryOnly) {
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
-            magic_t ctx = magic_open(MAGIC_MIME_TYPE);
+            magic_t ctx = magic_open(MAGIC_COMPRESS | MAGIC_MIME_TYPE | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
                 if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
-                    return result;
+                    return wolv::util::replaceStrings(result, "\\012-", "\n-");
             }
         }
 
         return "";
     }
 
-    std::string getMIMEType(prv::Provider *provider, size_t size) {
+    std::string getExtensions(prv::Provider *provider, size_t size, bool firstEntryOnly) {
         std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
         provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
 
-        return getMIMEType(buffer);
+        return getExtensions(buffer, firstEntryOnly);
+    }
+
+    std::string getExtensions(const std::vector<u8> &data, bool firstEntryOnly) {
+        auto magicFiles = getMagicFiles();
+
+        if (magicFiles.has_value()) {
+            magic_t ctx = magic_open(MAGIC_EXTENSION | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
+            ON_SCOPE_EXIT { magic_close(ctx); };
+
+            if (magic_load(ctx, magicFiles->c_str()) == 0) {
+                if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
+                    return wolv::util::replaceStrings(result, "\\012-", "\n-");
+            }
+        }
+
+        return "";
+    }
+
+    std::string getAppleCreatorType(prv::Provider *provider, size_t size, bool firstEntryOnly) {
+        std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
+        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
+
+        return getAppleCreatorType(buffer, firstEntryOnly);
+    }
+
+    std::string getAppleCreatorType(const std::vector<u8> &data, bool firstEntryOnly) {
+        auto magicFiles = getMagicFiles();
+
+        if (magicFiles.has_value()) {
+            magic_t ctx = magic_open(MAGIC_APPLE | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
+            ON_SCOPE_EXIT { magic_close(ctx); };
+
+            if (magic_load(ctx, magicFiles->c_str()) == 0) {
+                if (auto result = magic_buffer(ctx, data.data(), data.size()); result != nullptr)
+                    return wolv::util::replaceStrings(result, "\\012-", "\n-");
+            }
+        }
+
+        return {};
+    }
+
+    std::string getMIMEType(prv::Provider *provider, size_t size, bool firstEntryOnly) {
+        std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
+        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
+
+        return getMIMEType(buffer, firstEntryOnly);
     }
 
     bool isValidMIMEType(const std::string &mimeType) {
