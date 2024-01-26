@@ -7,8 +7,7 @@ if (NOT USE_SYSTEM_MINIAUDIO)
     set_target_properties(miniaudio PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set(MINIAUDIO_LIBRARIES miniaudio)
 else()
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(miniaudio REQUIRED IMPORTED_TARGET miniaudio)
+    find_package(miniaudio REQUIRED)
 endif()
 
 add_imhex_plugin(
