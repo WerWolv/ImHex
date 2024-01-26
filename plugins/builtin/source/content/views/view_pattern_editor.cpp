@@ -579,27 +579,33 @@ namespace hex::plugin::builtin {
 
                             if (pl::core::Token::isSigned(variable.type)) {
                                 i64 value = hex::get_or<i128>(variable.value, 0);
-                                ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value);
+                                if (ImGui::InputScalar(label.c_str(), ImGuiDataType_S64, &value))
+                                    m_hasUnevaluatedChanges = true;
                                 variable.value = i128(value);
                             } else if (pl::core::Token::isUnsigned(variable.type)) {
                                 u64 value = hex::get_or<u128>(variable.value, 0);
-                                ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value);
+                                if (ImGui::InputScalar(label.c_str(), ImGuiDataType_U64, &value))
+                                    m_hasUnevaluatedChanges = true;
                                 variable.value = u128(value);
                             } else if (pl::core::Token::isFloatingPoint(variable.type)) {
                                 auto value = hex::get_or<double>(variable.value, 0.0);
-                                ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value);
+                                if (ImGui::InputScalar(label.c_str(), ImGuiDataType_Double, &value))
+                                    m_hasUnevaluatedChanges = true;
                                 variable.value = value;
                             } else if (variable.type == pl::core::Token::ValueType::Boolean) {
                                 auto value = hex::get_or<bool>(variable.value, false);
-                                ImGui::Checkbox(label.c_str(), &value);
+                                if (ImGui::Checkbox(label.c_str(), &value))
+                                    m_hasUnevaluatedChanges = true;
                                 variable.value = value;
                             } else if (variable.type == pl::core::Token::ValueType::Character) {
                                 std::array<char, 2> buffer = { hex::get_or<char>(variable.value, '\x00') };
-                                ImGui::InputText(label.c_str(), buffer.data(), buffer.size());
+                                if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
+                                    m_hasUnevaluatedChanges = true;
                                 variable.value = buffer[0];
                             } else if (variable.type == pl::core::Token::ValueType::String) {
                                 std::string buffer = hex::get_or<std::string>(variable.value, "");
-                                ImGui::InputText(label.c_str(), buffer);
+                                if (ImGui::InputText(label.c_str(), buffer))
+                                    m_hasUnevaluatedChanges = true;
                                 variable.value = buffer;
                             }
                         }
