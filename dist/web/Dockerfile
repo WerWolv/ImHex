@@ -73,7 +73,7 @@ cp /imhex/dist/web/source/* /build
 ccache -s
 EOF
 
-FROM scratch
+FROM scratch as raw
 COPY --from=build [             \
     # ImHex                     \
     "/build/imhex.wasm",        \
@@ -94,3 +94,6 @@ COPY --from=build [             \
     # Destination               \
     "./"                        \
 ]
+
+FROM nginx
+COPY --from=raw . /usr/share/nginx/html

@@ -39,7 +39,7 @@ jobs:
 
     - name: 🛠️ Build using docker
       run: |
-        docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out
+        docker buildx build . -f dist/web/Dockerfile --progress=plain --build-arg 'JOBS=4' --output out --target raw
 
     - name: 🔨 Fix permissions
       run: |
