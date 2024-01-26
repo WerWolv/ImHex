@@ -2552,7 +2552,7 @@ void TextEditor::ColorizeInternal() {
                     }
                 } else {
                     if (firstChar && c == mLanguageDefinition.mPreprocChar) {
-                        withinPreproc = ifDefs.back();
+                        withinPreproc = true;
                         std::string directive;
                         auto start = currentIndex + 1;
                         while (start < (int) line.size() && !isspace(line[start].mChar)) {
@@ -2619,7 +2619,6 @@ void TextEditor::ColorizeInternal() {
                                 if (ifDefs.size() > 1)
                                     ifDefs.pop_back();
                                 withinNotDef = !ifDefs.back();
-                                withinPreproc = ifDefs.back();
                             }
                         }
                     }
@@ -2644,7 +2643,7 @@ void TextEditor::ColorizeInternal() {
                                     b.begin() + currentIndex + 1 - a.size(), b.begin() + currentIndex + 1, pred);
                         };
 
-                        if (!inComment && !withinSingleLineComment) {
+                        if (!inComment && !withinSingleLineComment && !withinPreproc) {
                             if (compareForth(singleStartStr, line)) {
                                 withinSingleLineComment = !inComment;
                             } else {
