@@ -18,36 +18,47 @@ namespace hex::plugin::builtin {
         void drawContent() override;
 
     private:
-        bool m_dataValid = false;
-        u32 m_blockSize = 0;
-        double m_averageEntropy = -1.0;
+        struct AnalysisData {
+            AnalysisData() = default;
+            AnalysisData(const AnalysisData&) = default;
 
-        double m_highestBlockEntropy = -1.0;
-        u64 m_highestBlockEntropyAddress = 0x00;
-        double m_lowestBlockEntropy = -1.0;
-        u64 m_lowestBlockEntropyAddress = 0x00;
+            TaskHolder analyzerTask;
 
-        double m_plainTextCharacterPercentage = -1.0;
+            bool dataValid = false;
+            u32 blockSize = 0;
+            double averageEntropy = -1.0;
 
-        TaskHolder m_analyzerTask;
+            double highestBlockEntropy = -1.0;
+            u64 highestBlockEntropyAddress = 0x00;
+            double lowestBlockEntropy = -1.0;
+            u64 lowestBlockEntropyAddress = 0x00;
 
-        Region m_analysisRegion = { 0, 0 };
-        Region m_analyzedRegion = { 0, 0 };
-        prv::Provider *m_analyzedProvider = nullptr;
+            double plainTextCharacterPercentage = -1.0;
 
-        std::string m_dataDescription;
-        std::string m_dataMimeType;
+            Region analysisRegion = { 0, 0 };
+            Region analyzedRegion = { 0, 0 };
+            prv::Provider *analyzedProvider = nullptr;
 
-        DiagramDigram m_digram;
-        DiagramLayeredDistribution m_layeredDistribution;
-        DiagramByteDistribution m_byteDistribution;
-        DiagramByteTypesDistribution m_byteTypesDistribution;
-        DiagramChunkBasedEntropyAnalysis m_chunkBasedEntropy;
+            std::string dataDescription;
+            std::string dataMimeType;
+            std::string dataAppleCreatorType;
+            std::string dataExtensions;
+
+            std::shared_ptr<DiagramDigram> digram;
+            std::shared_ptr<DiagramLayeredDistribution> layeredDistribution;
+            std::shared_ptr<DiagramByteDistribution> byteDistribution;
+            std::shared_ptr<DiagramByteTypesDistribution> byteTypesDistribution;
+            std::shared_ptr<DiagramChunkBasedEntropyAnalysis> chunkBasedEntropy;
+
+            u32 inputChunkSize    = 0;
+            ui::RegionType selectionType  = ui::RegionType::EntireData;
+        };
+
+        PerProvider<AnalysisData> m_analysis;
+
 
         void analyze();
 
-        u32 m_inputChunkSize    = 0;
-        ui::RegionType m_selectionType  = ui::RegionType::EntireData;
     };
 
 }

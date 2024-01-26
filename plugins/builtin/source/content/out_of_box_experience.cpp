@@ -205,7 +205,7 @@ namespace hex::plugin::builtin {
 
                             // Draw table containing everything that's being reported
                             if (ImGui::CollapsingHeader("hex.builtin.oobe.server_contact.data_collected_title"_lang)) {
-                                if (ImGui::BeginTable("hex.builtin.oobe.server_contact.data_collected_table"_lang, 2,
+                                if (ImGui::BeginTable("hex.builtin.oobe.server_contact.data_collected_table", 2,
                                                      ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_NoHostExtendY,
                                                      ImVec2(ImGui::GetContentRegionAvail().x, 150_scaled))) {
                                     ImGui::TableSetupColumn("hex.builtin.oobe.server_contact.data_collected_table.key"_lang);

@@ -388,8 +388,8 @@ namespace hex::plugin::builtin {
             m_updateNodePositions = true;
         });
 
-        EventDataChanged::subscribe(this, [this] {
-            ViewDataProcessor::processNodes(*m_workspaceStack->back());
+        EventDataChanged::subscribe(this, [this](prv::Provider *provider) {
+            ViewDataProcessor::processNodes(*m_workspaceStack.get(provider).back());
         });
 
         /* Import Nodes */

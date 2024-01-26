@@ -73,7 +73,8 @@ namespace hex {
             std::array<char, 128> buffer = { 0 };
             std::string result;
 
-            // Ask dbus for the current theme. 0 for Light, 1 for Dark
+            // Ask dbus for the current theme. 1 for Dark, 2 for Light, 0 for default (Dark for ImHex)
+            // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html
             FILE *pipe = popen("dbus-send --session --print-reply --dest=org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop org.freedesktop.portal.Settings.Read string:'org.freedesktop.appearance' string:'color-scheme' 2>&1", "r");
             if (pipe == nullptr) return;
 
@@ -83,7 +84,7 @@ namespace hex {
             auto exitCode = WEXITSTATUS(pclose(pipe));
             if (exitCode != 0) return;
 
-            RequestChangeTheme::post(hex::containsIgnoreCase(result, "uint32 1") ? "Light" : "Dark");
+            RequestChangeTheme::post(hex::containsIgnoreCase(result, "uint32 2") ? "Light" : "Dark");
         });
 
         // Register file drop callback

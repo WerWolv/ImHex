@@ -58,6 +58,11 @@ macro(add_imhex_plugin)
             SUFFIX ${IMHEX_PLUGIN_SUFFIX}
     )
 
+    # Set rpath of plugin libraries to the plugins folder
+    if (APPLE)
+        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES BUILD_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
+    endif()
+
     # Setup a romfs for the plugin
     list(APPEND LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/romfs)
     set(LIBROMFS_PROJECT_NAME ${IMHEX_PLUGIN_NAME})
@@ -77,11 +82,11 @@ macro(add_imhex_plugin)
 
     if (IMHEX_EXTERNAL_PLUGIN_BUILD)
         install(TARGETS ${IMHEX_PLUGIN_NAME} DESTINATION ".")
+    endif()
 
-        # Fix rpath
-        if (APPLE)
-            set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks")
-        endif()
+    # Fix rpath
+    if (APPLE)
+        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
     endif()
 endmacro()
 
