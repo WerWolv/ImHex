@@ -19,18 +19,6 @@
         "hex.hashes.hash.common.poly": "Polinomio",
         "hex.hashes.hash.common.refl_in": "",
         "hex.hashes.hash.common.refl_out": "",
-        "hex.hashes.hash.common.xor_out": "",
-        "hex.hashes.hash.crc16": "CRC16",
-        "hex.hashes.hash.crc32": "CRC32",
-        "hex.hashes.hash.crc32c": "",
-        "hex.hashes.hash.crc32mpeg": "",
-        "hex.hashes.hash.crc32posix": "",
-        "hex.hashes.hash.crc8": "CRC8",
-        "hex.hashes.hash.md5": "MD5",
-        "hex.hashes.hash.sha1": "SHA1",
-        "hex.hashes.hash.sha224": "SHA224",
-        "hex.hashes.hash.sha256": "SHA256",
-        "hex.hashes.hash.sha384": "SHA384",
-        "hex.hashes.hash.sha512": "SHA512"
+        "hex.hashes.hash.common.xor_out": ""
     }
 }
