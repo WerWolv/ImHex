@@ -8,6 +8,7 @@
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"    // for imGui::GetCurrentWindow()
+#include "imgui_internal.h"
 
 // TODO
 // - multiline comments vs single-line: latter is blocking start of a ML
@@ -23,8 +24,10 @@ bool equals(InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2, Bi
 
 TextEditor::Palette TextEditor::sPaletteBase = TextEditor::GetDarkPalette();
 
+TextEditor::FindReplaceHandler::FindReplaceHandler() : mWholeWord(false),mFindRegEx(false),mMatchCase(false)  {}
+
 TextEditor::TextEditor()
-    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true), mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {
+    : mLineSpacing(1.0f), mUndoIndex(0), mTabSize(4), mOverwrite(false), mReadOnly(false), mWithinRender(false), mScrollToCursor(false), mScrollToTop(false), mScrollToBottom(false), mTextChanged(false), mColorizerEnabled(true), mTextStart(20.0f), mLeftMargin(10), mTopMargin(0), mCursorPositionChanged(false), mColorRangeMin(0), mColorRangeMax(0), mSelectionMode(SelectionMode::Normal), mCheckComments(true), mLastClick(-1.0f), mHandleKeyboardInputs(true), mHandleMouseInputs(true), mIgnoreImGuiChild(false), mShowWhitespaces(true), mShowCursor(true), mShowLineNumbers(true),mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) {
     SetLanguageDefinition(LanguageDefinition::HLSL());
     mLines.push_back(Line());
 }
@@ -442,6 +445,15 @@ int TextEditor::GetCharacterColumn(int aLine, int aIndex) const {
     return col;
 }
 
+int TextEditor::GetStringCharacterCount(std::string str) const {
+    if (str.empty())
+        return 0;
+    int c      = 0;
+    for (unsigned i = 0; i < str.size(); c++)
+        i += UTF8CharLength(str[i]);
+    return c;
+}
+
 int TextEditor::GetLineCharacterCount(int aLine) const {
     if (aLine >= mLines.size())
         return 0;
@@ -450,6 +462,13 @@ int TextEditor::GetLineCharacterCount(int aLine) const {
     for (unsigned i = 0; i < line.size(); c++)
         i += UTF8CharLength(line[i].mChar);
     return c;
+}
+
+unsigned long long TextEditor::GetLineByteCount(int aLine) const {
+    if (aLine >= mLines.size())
+        return 0;
+    auto &line = mLines[aLine];
+    return line.size();
 }
 
 int TextEditor::GetLineMaxColumn(int aLine) const {
@@ -577,10 +596,16 @@ std::string TextEditor::GetWordAt(const Coordinates &aCoords) const {
 ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
     if (!mColorizerEnabled)
         return mPalette[(int)PaletteIndex::Default];
+    if (aGlyph.mGlobalDocComment)
+        return mPalette[(int)PaletteIndex::GlobalDocComment];
+    if (aGlyph.mDocComment)
+        return mPalette[(int)PaletteIndex::DocComment];
     if (aGlyph.mComment)
         return mPalette[(int)PaletteIndex::Comment];
     if (aGlyph.mMultiLineComment)
         return mPalette[(int)PaletteIndex::MultiLineComment];
+    if (aGlyph.mDeactivated && !aGlyph.mPreprocessor)
+        return mPalette[(int)PaletteIndex::PreprocessorDeactivated];
     auto const color = mPalette[(int)aGlyph.mColorIndex];
     if (aGlyph.mPreprocessor) {
         const auto ppcolor = mPalette[(int)PaletteIndex::Preprocessor];
@@ -671,6 +696,16 @@ void TextEditor::HandleKeyboardInputs() {
             EnterCharacter('\n', false);
         else if (!IsReadOnly() && !ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Tab)))
             EnterCharacter('\t', shift);
+        else if (!ctrl && !alt && !shift && ImGui::IsKeyPressed(ImGuiKey_F3))
+            mFindReplaceHandler.FindMatch(this, true);
+        else if (!ctrl && !alt && shift && ImGui::IsKeyPressed(ImGuiKey_F3))
+            mFindReplaceHandler.FindMatch(this, false);
+        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_C))
+            mFindReplaceHandler.SetMatchCase(this,!mFindReplaceHandler.GetMatchCase());
+        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_R))
+            mFindReplaceHandler.SetFindRegEx(this,!mFindReplaceHandler.GetFindRegEx());
+        else if (!ctrl && alt && !shift && ImGui::IsKeyPressed(ImGuiKey_W))
+            mFindReplaceHandler.SetWholeWord(this,!mFindReplaceHandler.GetWholeWord());
 
         if (!IsReadOnly() && !io.InputQueueCharacters.empty()) {
             for (int i = 0; i < io.InputQueueCharacters.Size; i++) {
@@ -691,7 +726,7 @@ void TextEditor::HandleMouseInputs() {
     auto alt    = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
     if (ImGui::IsWindowHovered()) {
-        if (!shift && !alt) {
+        if (!alt) {
             auto click       = ImGui::IsMouseClicked(0);
             auto doubleClick = ImGui::IsMouseDoubleClicked(0);
             auto t           = ImGui::GetTime();
@@ -732,11 +767,16 @@ void TextEditor::HandleMouseInputs() {
             Left mouse button click
             */
             else if (click) {
-                mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-                if (ctrl)
+                if (ctrl) {
+                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
                     mSelectionMode = SelectionMode::Word;
-                else
+                } else if (shift) {
                     mSelectionMode = SelectionMode::Normal;
+                    mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+                } else {
+                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
+                    mSelectionMode = SelectionMode::Normal;
+                }
                 SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
 
                 mLastClick = (float)ImGui::GetTime();
@@ -752,7 +792,7 @@ void TextEditor::HandleMouseInputs() {
 }
 
 void TextEditor::Render() {
-    /* Compute mCharAdvance regarding to scaled font size (Ctrl + mouse wheel)*/
+    /* Compute mCharAdvance regarding scaled font size (Ctrl + mouse wheel)*/
     const float fontSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, "#", nullptr, nullptr).x;
     mCharAdvance         = ImVec2(fontSize, ImGui::GetTextLineHeightWithSpacing() * mLineSpacing);
 
@@ -765,7 +805,7 @@ void TextEditor::Render() {
 
     assert(mLineBuffer.empty());
 
-    auto contentSize = ImGui::GetWindowContentRegionMax();
+    auto contentSize = ImGui::GetWindowContentRegionMax() - ImVec2(0,mTopMargin);
     auto drawList    = ImGui::GetWindowDrawList();
     float longest(mTextStart);
 
@@ -774,13 +814,18 @@ void TextEditor::Render() {
         ImGui::SetScrollY(0.f);
     }
 
-    ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
+    if ( mScrollToBottom && ImGui::GetScrollMaxY() > ImGui::GetScrollY()) {
+        mScrollToBottom = false;
+        ImGui::SetScrollY(ImGui::GetScrollMaxY());
+    }
+
+    ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos() + ImVec2(0, mTopMargin);
     auto scrollX           = ImGui::GetScrollX();
     auto scrollY           = ImGui::GetScrollY();
 
-    auto lineNo        = (int)floor(scrollY / mCharAdvance.y);
+    auto lineNo        = (int)(std::floor(scrollY / mCharAdvance.y));// + linesAdded);
     auto globalLineMax = (int)mLines.size();
-    auto lineMax       = std::max(0, std::min((int)mLines.size() - 1, lineNo + (int)floor((scrollY + contentSize.y) / mCharAdvance.y)));
+    auto lineMax       = std::max(0, std::min((int)mLines.size() - 1, lineNo + (int)std::ceil((scrollY + contentSize.y) / mCharAdvance.y)));
 
     // Deduce mTextStart by evaluating mLines size (global lineMax) plus two spaces as text width
     char buf[16];
@@ -959,6 +1004,8 @@ void TextEditor::Render() {
 
             ++lineNo;
         }
+        if (lineNo < mLines.size() && ImGui::GetScrollMaxX() > 0.0f)
+            longest       = std::max(mTextStart + TextDistanceToLineStart(Coordinates(lineNo, GetLineMaxColumn(lineNo))), longest);
 
         // Draw a tooltip on known identifiers/preprocessor symbols
         if (ImGui::IsMousePosValid()) {
@@ -981,12 +1028,95 @@ void TextEditor::Render() {
         }
     }
 
-
     ImGui::Dummy(ImVec2((longest + 2), mLines.size() * mCharAdvance.y));
 
     if (mScrollToCursor) {
         EnsureCursorVisible();
         mScrollToCursor = false;
+    }
+
+    ImGuiPopupFlags_ popup_flags = ImGuiPopupFlags_None;
+    ImGuiContext& g = *GImGui;
+    auto oldTopMargin = mTopMargin;
+    auto popupStack = g.OpenPopupStack;
+    if (popupStack.Size > 0) {
+        for (int n = 0; n < popupStack.Size; n++){
+            auto window = popupStack[n].Window;
+            if (window != nullptr) {
+                if (window->Size.x == mFindReplaceHandler.GetFindWindowSize().x &&
+                    window->Size.y == mFindReplaceHandler.GetFindWindowSize().y &&
+                    window->Pos.x == mFindReplaceHandler.GetFindWindowPos().x &&
+                    window->Pos.y == mFindReplaceHandler.GetFindWindowPos().y) {
+                    mTopMargin = mFindReplaceHandler.GetFindWindowSize().y;
+                }
+            }
+        }
+    } else {
+        mTopMargin = 0;
+    }
+
+    static float linesAdded = 0;
+    static float pixelsAdded = 0;
+    static float savedScrollY = 0;
+    static float shiftedScrollY = 0;
+    if (mTopMargin != oldTopMargin) {
+        if (oldTopMargin == 0)
+            savedScrollY = ImGui::GetScrollY();
+        auto window = ImGui::GetCurrentWindow();
+        auto maxScroll = window->ScrollMax.y;
+        if (maxScroll > 0) {
+            float lineCount;
+            float pixelCount;
+            if (mTopMargin > oldTopMargin) {
+                pixelCount = mTopMargin - oldTopMargin;
+                lineCount = pixelCount / mCharAdvance.y;
+            } else if (mTopMargin > 0) {
+                pixelCount = oldTopMargin - mTopMargin;
+                lineCount = pixelCount / mCharAdvance.y;
+            } else {
+                pixelCount = oldTopMargin;
+                lineCount = std::round(linesAdded);
+            }
+            auto state = mState;
+            auto oldScrollY = ImGui::GetScrollY();
+            int lineCountInt;
+
+            if (mTopMargin > oldTopMargin) {
+                lineCountInt = std::round(lineCount + linesAdded - std::floor(linesAdded));
+            } else
+                lineCountInt = std::round(lineCount);
+            for (int i = 0; i < lineCountInt; i++) {
+                if (mTopMargin > oldTopMargin)
+                    mLines.insert(mLines.begin() + mLines.size(), Line());
+                else
+                    mLines.erase(mLines.begin() + mLines.size() - 1);
+            }
+            if (mTopMargin > oldTopMargin) {
+                linesAdded += lineCount;
+                pixelsAdded += pixelCount;
+            } else if (mTopMargin > 0) {
+                linesAdded -= lineCount;
+                pixelsAdded -= pixelCount;
+            } else {
+                linesAdded = 0;
+                pixelsAdded = 0;
+            }
+            if (oldScrollY + pixelCount < maxScroll) {
+                if (mTopMargin > oldTopMargin)
+                    shiftedScrollY = oldScrollY + pixelCount;
+                else if (mTopMargin > 0)
+                    shiftedScrollY = oldScrollY - pixelCount;
+                else if (ImGui::GetScrollY() == shiftedScrollY)
+                    shiftedScrollY = savedScrollY;
+                else
+                    shiftedScrollY = ImGui::GetScrollY() - pixelCount;
+                ImGui::SetScrollY(shiftedScrollY);
+            } else {
+                if (mTopMargin > oldTopMargin)
+                    mScrollToBottom = true;
+            }
+            mState = state;
+        }
     }
 }
 
@@ -1088,15 +1218,12 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
             if (start > end)
                 std::swap(start, end);
             start.mColumn = 0;
-            //			end.mColumn = end.mLine < mLines.size() ? mLines[end.mLine].size() : 0;
+
             if (end.mColumn == 0 && end.mLine > 0)
                 --end.mLine;
             if (end.mLine >= (int)mLines.size())
                 end.mLine = mLines.empty() ? 0 : (int)mLines.size() - 1;
             end.mColumn = GetLineMaxColumn(end.mLine);
-
-            // if (end.mColumn >= GetLineMaxColumn(end.mLine))
-            //	end.mColumn = GetLineMaxColumn(end.mLine) - 1;
 
             u.mRemovedStart = start;
             u.mRemovedEnd   = end;
@@ -1176,10 +1303,19 @@ void TextEditor::EnterCharacter(ImWchar aChar, bool aShift) {
                 newLine.push_back(line[it]);
 
         const size_t whitespaceSize = newLine.size();
+        int cstart                  = 0;
+        int cpos                    = 0;
         auto cindex                 = GetCharacterIndex(coord);
-        newLine.insert(newLine.end(), line.begin() + cindex, line.end());
-        line.erase(line.begin() + cindex, line.begin() + line.size());
-        SetCursorPosition(Coordinates(coord.mLine + 1, GetCharacterColumn(coord.mLine + 1, (int)whitespaceSize)));
+        if (cindex < whitespaceSize && mLanguageDefinition.mAutoIndentation) {
+            cstart = (int) whitespaceSize;
+            cpos = cindex;
+        } else {
+            cstart = cindex;
+            cpos = (int) whitespaceSize;
+        }
+        newLine.insert(newLine.end(), line.begin() + cstart, line.end());
+        line.erase(line.begin() + cstart, line.begin() + line.size());
+        SetCursorPosition(Coordinates(coord.mLine + 1, GetCharacterColumn(coord.mLine + 1, cpos)));
         u.mAdded = (char)aChar;
     } else if (aChar == '\t') {
         auto &line  = mLines[coord.mLine];
@@ -1651,9 +1787,6 @@ void TextEditor::Backspace() {
             while (cindex > 0 && IsUTFSequence(line[cindex].mChar))
                 --cindex;
 
-            // if (cindex > 0 && UTF8CharLength(line[cindex].mChar) > 1)
-            //	--cindex;
-
             u.mRemovedStart = u.mRemovedEnd = GetActualCursorCoordinates();
             --u.mRemovedStart.mColumn;
             mState.mCursorPosition.mColumn = GetCharacterColumn(mState.mCursorPosition.mLine, cindex);
@@ -1766,6 +1899,360 @@ void TextEditor::Redo(int aSteps) {
         mUndoBuffer[mUndoIndex++].Redo(this);
 }
 
+// the index here is array index so zero based
+void TextEditor::FindReplaceHandler::SelectFound(TextEditor *editor, int index) {
+    assert(index >= 0 && index < mMatches.size());
+    auto selectionStart = mMatches[index].mSelectionStart;
+    auto selectionEnd = mMatches[index].mSelectionEnd;
+    editor->SetSelection(selectionStart, selectionEnd);
+    editor->SetCursorPosition(selectionEnd);
+    editor->mScrollToCursor = true;
+}
+
+// The returned index is shown in the form
+//  'index of count' so 1 based
+unsigned TextEditor::FindReplaceHandler::FindMatch(TextEditor *editor, bool isNext) {
+
+    if ( editor->mTextChanged || mOptionsChanged) {
+        std::string findWord = GetFindWord();
+        if (findWord.empty())
+            return 0;
+        resetMatches();
+        FindAllMatches(editor, findWord);
+    }
+
+    auto targetPos = editor->mState.mCursorPosition;
+    auto count = mMatches.size();
+
+    if (count == 0) {
+        editor->SetCursorPosition(targetPos);
+        return 0;
+    }
+
+    for (unsigned i=0; i < count; i++) {
+        if (targetPos >= mMatches[i].mSelectionStart && targetPos <= mMatches[i].mSelectionEnd) {
+            if (isNext) {
+                if (i == count - 1) {
+                    SelectFound(editor, 0);
+                    return 1;
+                } else {
+                    SelectFound(editor, i + 1);
+                    return (i + 2);
+                }
+            } else {
+                if (i == 0) {
+                    SelectFound(editor, count - 1);
+                    return count;
+                } else {
+                    SelectFound(editor, i - 1);
+                    return i;
+                }
+            }
+        }
+    }
+
+    if ((targetPos > mMatches[count - 1].mSelectionEnd) || (targetPos < mMatches[0].mSelectionStart)) {
+        if (isNext) {
+            SelectFound(editor,0);
+            return 1;
+        } else {
+            SelectFound(editor,count - 1);
+            return count;
+        }
+    }
+
+    for (unsigned i=1;i < count;i++) {
+
+        if (mMatches[i - 1].mSelectionEnd <= targetPos &&
+            mMatches[i].mSelectionStart >= targetPos ) {
+            if (isNext) {
+                SelectFound(editor,i);
+                return i + 1;
+            } else {
+                SelectFound(editor,i - 1);
+                return i;
+            }
+        }
+    }
+
+    return 0;
+}
+
+// returns 1 based index
+unsigned TextEditor::FindReplaceHandler::FindPosition( TextEditor *editor, TextEditor::Coordinates targetPos, bool isNext) {
+    if ( editor->mTextChanged || mOptionsChanged) {
+        std::string findWord = GetFindWord();
+        if (findWord.empty())
+            return 0;
+        resetMatches();
+        FindAllMatches(editor,findWord);
+    }
+
+    int count = mMatches.size();
+    if (count == 0)
+        return 0;
+    if( isNext) {
+        if (targetPos > mMatches[count - 1].mSelectionEnd || targetPos <= mMatches[0].mSelectionEnd)
+            return 1;
+        for (unsigned i = 1; i < count; i++) {
+            if (targetPos > mMatches[i-1].mSelectionEnd && targetPos <= mMatches[i].mSelectionEnd)
+                return i+1;
+        }
+    } else {
+        if (targetPos >= mMatches[count - 1].mSelectionStart || targetPos < mMatches[0].mSelectionStart)
+            return count;
+        for (unsigned i = 1; i < count; i++) {
+            if (targetPos >= mMatches[i-1].mSelectionStart && targetPos < mMatches[i].mSelectionStart)
+                return i ;
+        }
+    }
+    return 0;
+}
+
+// Create a string that escapes special characters
+// and separate word from non word
+std::string make_wholeWord(const std::string &s) {
+    static const char metacharacters[] = R"(\.^$-+()[]{}|?*)";
+    std::string out;
+    out.reserve(s.size());
+    if (s[0] == '#')
+        out.push_back('#');
+    out.push_back('\\');
+    out.push_back('b');
+    for (auto ch : s) {
+        if (strchr(metacharacters, ch))
+            out.push_back('\\');
+        out.push_back(ch);
+    }
+    out.push_back('\\');
+    out.push_back('b');
+    return out;
+}
+
+// Performs actual search to fill mMatches
+bool TextEditor::FindReplaceHandler::FindNext(TextEditor *editor, bool wrapAround) {
+    auto curPos = editor->mState.mCursorPosition;
+    unsigned long selectionLength = editor->GetStringCharacterCount(mFindWord);
+    size_t byteIndex = 0;
+
+    for (size_t ln = 0; ln < curPos.mLine; ln++)
+        byteIndex += editor->GetLineByteCount(ln) + 1;
+    byteIndex += curPos.mColumn;
+
+    std::string wordLower = mFindWord;
+    if (!GetMatchCase())
+        std::transform(wordLower.begin(), wordLower.end(), wordLower.begin(), ::tolower);
+
+    std::string textSrc = editor->GetText();
+    if (!GetMatchCase())
+        std::transform(textSrc.begin(), textSrc.end(), textSrc.begin(), ::tolower);
+
+    size_t textLoc;
+    // TODO: use regexp find iterator in all cases
+    //  to find all matches for FindAllMatches.
+    //  That should make things faster (no need
+    //  to call FindNext many times) and remove
+    //  clunky match case code
+    if (GetWholeWord() || GetFindRegEx()) {
+        std::regex regularExpression;
+        if (GetFindRegEx()) {
+            try {
+                regularExpression.assign(wordLower);
+            } catch (std::regex_error &e) {
+                return false;
+            }
+        } else {
+            try {
+                regularExpression.assign(make_wholeWord(wordLower));
+            } catch (std::regex_error &e) {
+                return false;
+            }
+        }
+
+        size_t pos=0;
+        std::sregex_iterator iter = std::sregex_iterator(textSrc.begin(), textSrc.end(), regularExpression);
+        std::sregex_iterator end;
+        if (!iter->ready())
+            return false;
+        size_t firstLoc = iter->position();
+        unsigned long firstLength = iter->length();
+
+        if(firstLoc > byteIndex) {
+            pos = firstLoc;
+            selectionLength = firstLength;
+        }  else {
+
+            while (iter != end) {
+                iter++;
+                if (((pos = iter->position()) > byteIndex) && ((selectionLength = iter->length()) > 0))
+                    break;
+            }
+        }
+
+        if (iter == end && !wrapAround)
+            return false;
+
+        textLoc = pos;
+        if (wrapAround) {
+            if (iter == end) {
+                pos = firstLoc;
+                selectionLength = firstLength;
+            }
+        }
+    } else {
+        // non regex search
+        textLoc = textSrc.find(wordLower, byteIndex);
+        if (textLoc == std::string::npos) {
+            if (wrapAround)
+                textLoc = textSrc.find(wordLower, 0);
+            else
+                return false;
+        }
+    }
+    if (textLoc != std::string::npos) {
+        curPos.mLine = curPos.mColumn = 0;
+        byteIndex = 0;
+
+        for (size_t ln = 0; ln < editor->mLines.size(); ln++) {
+            auto byteCount = editor->GetLineByteCount(ln) + 1;
+
+            if (byteIndex + byteCount > textLoc) {
+                curPos.mLine = ln;
+                curPos.mColumn = textLoc - byteIndex;
+
+                auto &line = editor->mLines[curPos.mLine];
+                for (int i = 0; i < line.size(); i++)
+                    if (line[i].mChar == '\t')
+                        curPos.mColumn += (editor->mTabSize - 1);
+                break;
+            } else {// just keep adding
+                byteIndex += byteCount;
+            }
+        }
+    } else
+        return false;
+
+    auto selStart = curPos, selEnd = curPos;
+    selEnd.mColumn += selectionLength;
+    editor->SetSelection(selStart, selEnd);
+    editor->SetCursorPosition(selEnd);
+    editor->mScrollToCursor = true;
+    return true;
+}
+
+void TextEditor::FindReplaceHandler::FindAllMatches(TextEditor *editor,std::string findWord) {
+
+    if (findWord.empty()) {
+        editor->mScrollToCursor = true;
+        mFindWord = "";
+        mMatches.clear();
+        return;
+    }
+
+    if(findWord == mFindWord && !editor->mTextChanged && !mOptionsChanged)
+        return;
+
+    if (mOptionsChanged)
+        mOptionsChanged = false;
+
+    mMatches.clear();
+    mFindWord = findWord;
+    auto startingPos = editor->mState.mCursorPosition;
+    auto state = editor->mState;
+    Coordinates begin = Coordinates(0,0);
+    editor->mState.mCursorPosition = begin;
+
+    if (!FindNext(editor,false)) {
+        editor->mState = state;
+        editor->mScrollToCursor = true;
+        return;
+    }
+    auto initialPos = editor->mState.mCursorPosition;
+    mMatches.push_back(editor->mState);
+
+    while( editor->mState.mCursorPosition < startingPos) {
+        if (!FindNext(editor,false)) {
+            editor->mState = state;
+            editor->mScrollToCursor = true;
+            return;
+        }
+        mMatches.push_back(editor->mState);
+    }
+
+    while (FindNext(editor,false))
+        mMatches.push_back(editor->mState);
+
+    editor->mState = state;
+    editor->mScrollToCursor = true;
+    return;
+}
+
+
+bool TextEditor::FindReplaceHandler::Replace(TextEditor *editor, bool next) {
+
+    if (mMatches.empty() || mFindWord == mReplaceWord || mFindWord.empty())
+        return false;
+
+
+    auto state = editor->mState;
+
+    if (editor->mState.mCursorPosition <= editor->mState.mSelectionEnd && editor->mState.mSelectionEnd > editor->mState.mSelectionStart && editor->mState.mCursorPosition > editor->mState.mSelectionStart) {
+
+        editor->mState.mCursorPosition = editor->mState.mSelectionStart;
+        if(editor->mState.mCursorPosition.mColumn == 0) {
+            editor->mState.mCursorPosition.mLine--;
+            editor->mState.mCursorPosition.mColumn = editor->GetLineMaxColumn(editor->mState.mCursorPosition.mLine);
+        } else
+            editor->mState.mCursorPosition.mColumn--;
+    }
+    auto matchIndex = FindMatch(editor,next);
+    if(matchIndex != 0) {
+        UndoRecord u;
+        u.mBefore = editor->mState;
+
+        auto selectionEnd = editor->mState.mSelectionEnd;
+
+        u.mRemoved = editor->GetSelectedText();
+        u.mRemovedStart = editor->mState.mSelectionStart;
+        u.mRemovedEnd = editor->mState.mSelectionEnd;
+
+        editor->DeleteSelection();
+        if (GetFindRegEx()) {
+            std::string replacedText = std::regex_replace(editor->GetText(), std::regex(mFindWord), mReplaceWord, std::regex_constants::format_first_only | std::regex_constants::format_no_copy);
+            u.mAdded = replacedText;
+        } else
+            u.mAdded = mReplaceWord;
+
+        u.mAddedStart = editor->GetActualCursorCoordinates();
+
+        editor->InsertText(u.mAdded);
+        editor->SetCursorPosition(editor->mState.mSelectionEnd);
+
+        u.mAddedEnd = editor->GetActualCursorCoordinates();
+
+        editor->mScrollToCursor = true;
+        ImGui::SetKeyboardFocusHere(0);
+
+        u.mAfter = editor->mState;
+        editor->AddUndo(u);
+        editor->mTextChanged = true;
+        mMatches.erase(mMatches.begin() + matchIndex - 1);
+
+        return true;
+    }
+    editor->mState = state;
+    return false;
+}
+
+bool TextEditor::FindReplaceHandler::ReplaceAll(TextEditor *editor) {
+    unsigned count = mMatches.size();
+
+    for (unsigned i = 0; i < count; i++)
+        Replace(editor,true);
+
+    return true;
+}
+
 const TextEditor::Palette &TextEditor::GetDarkPalette() {
     const static Palette p = {
         {
@@ -1779,8 +2266,11 @@ const TextEditor::Palette &TextEditor::GetDarkPalette() {
             0xffaaaaaa, // Identifier
             0xff9bc64d, // Known identifier
             0xffc040a0, // Preproc identifier
+            0xff708020, // Global Doc Comment
+            0xff586820, // Doc Comment
             0xff206020, // Comment (single line)
             0xff406020, // Comment (multi line)
+            0xff004545, // Preprocessor deactivated
             0xff101010, // Background
             0xffe0e0e0, // Cursor
             0x80a06020, // Selection
@@ -1808,8 +2298,11 @@ const TextEditor::Palette &TextEditor::GetLightPalette() {
             0xff404040, // Identifier
             0xff606010, // Known identifier
             0xffc040a0, // Preproc identifier
+            0xff707820, // Global Doc Comment
+            0xff586020, // Doc Comment
             0xff205020, // Comment (single line)
             0xff405020, // Comment (multi line)
+            0xffa7cccc, // Preprocessor deactivated
             0xffffffff, // Background
             0xff000000, // Cursor
             0x80600000, // Selection
@@ -1837,8 +2330,11 @@ const TextEditor::Palette &TextEditor::GetRetroBluePalette() {
             0xff00ffff, // Identifier
             0xffffffff, // Known identifier
             0xffff00ff, // Preproc identifier
+            0xff101010, // Global Doc Comment
+            0xff202020, // Doc Comment
             0xff808080, // Comment (single line)
             0xff404040, // Comment (multi line)
+            0xff004000, // Preprocessor deactivated
             0xff800000, // Background
             0xff0080ff, // Cursor
             0x80ffff00, // Selection
@@ -1999,23 +2495,32 @@ void TextEditor::ColorizeInternal() {
         auto endIndex                = 0;
         auto commentStartLine        = endLine;
         auto commentStartIndex       = endIndex;
+        auto withinGlobalDocComment  = false;
+        auto withinDocComment        = false;
+        auto withinComment           = false;
         auto withinString            = false;
         auto withinSingleLineComment = false;
         auto withinPreproc           = false;
+        auto withinNotDef            = false;
         auto firstChar               = true;     // there is no other non-whitespace characters in the line before
-        auto concatenate             = false;    // '\' on the very end of the line
         auto currentLine             = 0;
         auto currentIndex            = 0;
+        auto &startStr               = mLanguageDefinition.mCommentStart;
+        auto &singleStartStr         = mLanguageDefinition.mSingleLineComment;
+        auto &docStartStr            = mLanguageDefinition.mDocComment;
+        auto &globalStartStr         = mLanguageDefinition.mGlobalDocComment;
+
+        std::vector<bool> ifDefs;
+        ifDefs.push_back(true);
+
         while (currentLine < endLine || currentIndex < endIndex) {
             auto &line = mLines[currentLine];
 
-            if (currentIndex == 0 && !concatenate) {
+            if (currentIndex == 0) {
                 withinSingleLineComment = false;
                 withinPreproc           = false;
                 firstChar               = true;
             }
-
-            concatenate = false;
 
             if (!line.empty()) {
                 auto &g = line[currentIndex];
@@ -2024,59 +2529,153 @@ void TextEditor::ColorizeInternal() {
                 if (c != mLanguageDefinition.mPreprocChar && !isspace(c))
                     firstChar = false;
 
-                if (currentIndex == (int)line.size() - 1 && line[line.size() - 1].mChar == '\\')
-                    concatenate = true;
-
                 bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
                 if (withinString) {
-                    line[currentIndex].mMultiLineComment = inComment;
-
+                    line[currentIndex].mMultiLineComment = withinComment;
+                    line[currentIndex].mComment          = withinSingleLineComment;
+                    line[currentIndex].mDocComment       = withinDocComment;
+                    line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                    line[currentIndex].mDeactivated      = withinNotDef;
                     if (c == '\"') {
-                        if (currentIndex + 1 < (int)line.size() && line[currentIndex + 1].mChar == '\"') {
+                        if (currentIndex > 2 && line[currentIndex - 1].mChar == '\\'  && line[currentIndex - 2].mChar != '\\') {
                             currentIndex += 1;
-                            if (currentIndex < (int)line.size())
-                                line[currentIndex].mMultiLineComment = inComment;
+                            if (currentIndex < (int)line.size()) {
+                                line[currentIndex].mMultiLineComment = withinComment;
+                                line[currentIndex].mComment          = withinSingleLineComment;
+                                line[currentIndex].mDocComment       = withinDocComment;
+                                line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                                line[currentIndex].mDeactivated      = withinNotDef;
+                            }
                         } else
                             withinString = false;
-                    } else if (c == '\\') {
-                        currentIndex += 1;
-                        if (currentIndex < (int)line.size())
-                            line[currentIndex].mMultiLineComment = inComment;
                     }
                 } else {
-                    if (firstChar && c == mLanguageDefinition.mPreprocChar)
+                    if (firstChar && c == mLanguageDefinition.mPreprocChar) {
                         withinPreproc = true;
+                        std::string directive;
+                        auto start = currentIndex + 1;
+                        while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                            directive += line[start].mChar;
+                            start++;
+                        }
+
+                        if (start < (int) line.size()) {
+
+                            if (isspace(line[start].mChar)) {
+                                start += 1;
+                                 if (directive == "define") {
+                                     while (start < (int) line.size() && isspace(line[start].mChar))
+                                         start++;
+                                     std::string identifier;
+                                     while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                         identifier += line[start].mChar;
+                                         start++;
+                                     }
+                                     if (identifier.size() > 0 && !withinNotDef && std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end())
+                                         mDefines.push_back(identifier);
+                                    } else if (directive == "undef") {
+                                         while (start < (int) line.size() && isspace(line[start].mChar))
+                                             start++;
+                                         std::string identifier;
+                                         while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                             identifier += line[start].mChar;
+                                             start++;
+                                         }
+                                         if (identifier.size() > 0  && !withinNotDef)
+                                             mDefines.erase(std::remove(mDefines.begin(), mDefines.end(), identifier), mDefines.end());
+                                } else if (directive == "ifdef") {
+                                    while (start < (int) line.size() && isspace(line[start].mChar))
+                                        start++;
+                                    std::string identifier;
+                                    while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                        identifier += line[start].mChar;
+                                        start++;
+                                    }
+                                    if (!withinNotDef) {
+                                        bool isConditionMet = std::find(mDefines.begin(),mDefines.end(),identifier) != mDefines.end();
+                                        withinNotDef = !isConditionMet;
+                                        ifDefs.push_back(isConditionMet);
+                                    } else
+                                        ifDefs.push_back(false);
+                                } else if (directive == "ifndef") {
+                                    while (start < (int) line.size() && isspace(line[start].mChar))
+                                        start++;
+                                    std::string identifier;
+                                    while (start < (int) line.size() && !isspace(line[start].mChar)) {
+                                        identifier += line[start].mChar;
+                                        start++;
+                                    }
+                                    if (!withinNotDef) {
+                                        bool isConditionMet =  std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end();
+                                        withinNotDef = !isConditionMet;
+                                        ifDefs.push_back(isConditionMet);
+                                    } else
+                                        ifDefs.push_back(false);
+                                }
+                            }
+                        } else {
+                            if (directive == "endif") {
+                                if (ifDefs.size() > 1)
+                                    ifDefs.pop_back();
+                                withinNotDef = !ifDefs.back();
+                            }
+                        }
+                    }
 
                     if (c == '\"') {
                         withinString                         = true;
-                        line[currentIndex].mMultiLineComment = inComment;
+                        line[currentIndex].mMultiLineComment = withinComment;
+                        line[currentIndex].mComment          = withinSingleLineComment;
+                        line[currentIndex].mDocComment       = withinDocComment;
+                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                        line[currentIndex].mDeactivated      = withinNotDef;
                     } else {
                         auto pred            = [](const char &a, const Glyph &b) { return a == b.mChar; };
-                        auto from            = line.begin() + currentIndex;
-                        auto &startStr       = mLanguageDefinition.mCommentStart;
-                        auto &singleStartStr = mLanguageDefinition.mSingleLineComment;
 
-                        if (!singleStartStr.empty() &&
-                            currentIndex + singleStartStr.size() <= line.size() &&
-                            equals(singleStartStr.begin(), singleStartStr.end(), from, from + singleStartStr.size(), pred)) {
-                            withinSingleLineComment = true;
-                        } else if (!startStr.empty() && !withinSingleLineComment && currentIndex + startStr.size() <= line.size() &&
-                                   equals(startStr.begin(), startStr.end(), from, from + startStr.size(), pred)) {
-                            commentStartLine  = currentLine;
-                            commentStartIndex = currentIndex;
+                        auto compareForth    = [&](const std::string &a, const std::vector<Glyph> &b) {
+                            return !a.empty() && currentIndex + a.size() <= b.size() && equals(a.begin(), a.end(),
+                                    b.begin() + currentIndex, b.begin() + currentIndex + a.size(), pred);
+                        };
+
+                        auto compareBack     = [&](const std::string &a, const std::vector<Glyph> &b) {
+                            return !a.empty() && currentIndex + 1 >= (int)a.size() && equals(a.begin(), a.end(),
+                                    b.begin() + currentIndex + 1 - a.size(), b.begin() + currentIndex + 1, pred);
+                        };
+
+                        if (!inComment && !withinSingleLineComment && !withinPreproc) {
+                            if (compareForth(singleStartStr, line)) {
+                                withinSingleLineComment = !inComment;
+                            } else {
+                                bool isGlobalDocComment = compareForth(globalStartStr, line);
+                                bool isDocComment = compareForth(docStartStr, line);
+                                bool isComment = compareForth(startStr, line);
+                                if (isGlobalDocComment || isDocComment || isComment) {
+                                    commentStartLine = currentLine;
+                                    commentStartIndex = currentIndex;
+                                    if (isGlobalDocComment)
+                                        withinGlobalDocComment = true;
+                                    else if (isDocComment)
+                                        withinDocComment = true;
+                                    else
+                                        withinComment = true;
+                                }
+                            }
+                            inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
                         }
-
-                        inComment = inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
-
-                        line[currentIndex].mMultiLineComment = inComment;
+                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
+                        line[currentIndex].mDocComment       = withinDocComment;
+                        line[currentIndex].mMultiLineComment = withinComment;
                         line[currentIndex].mComment          = withinSingleLineComment;
+                        line[currentIndex].mDeactivated      = withinNotDef;
 
                         auto &endStr = mLanguageDefinition.mCommentEnd;
-                        if (currentIndex + 1 >= (int)endStr.size() &&
-                            equals(endStr.begin(), endStr.end(), from + 1 - endStr.size(), from + 1, pred)) {
-                            commentStartIndex = endIndex;
+                        if (compareBack(endStr, line)) {
+                            withinComment = false;
+                            withinDocComment = false;
+                            withinGlobalDocComment = false;
                             commentStartLine  = endLine;
+                            commentStartIndex = endIndex;
                         }
                     }
                 }
@@ -2093,6 +2692,7 @@ void TextEditor::ColorizeInternal() {
                 ++currentLine;
             }
         }
+        mDefines.clear();
         mCheckComments = false;
     }
 
@@ -2143,30 +2743,34 @@ void TextEditor::EnsureCursorVisible() {
     float scrollX = ImGui::GetScrollX();
     float scrollY = ImGui::GetScrollY();
 
-    auto height = ImGui::GetWindowHeight();
-    auto width  = ImGui::GetWindowWidth();
+    auto windowPadding = ImGui::GetStyle().WindowPadding * 2.0f;
 
-    auto top    = 1 + (int)ceil(scrollY / mCharAdvance.y);
+    auto height = ImGui::GetWindowHeight() - mTopMargin - windowPadding.y;
+    auto width  = ImGui::GetWindowWidth() - windowPadding.x;
+
+    auto top    = (int)ceil(scrollY / mCharAdvance.y);
     auto bottom = (int)ceil((scrollY + height) / mCharAdvance.y);
 
-    auto left  = (int)ceil(scrollX / mCharAdvance.x);
-    auto right = (int)ceil((scrollX + width) / mCharAdvance.x);
+    auto left  = scrollX;
+    auto right = scrollX + width;
 
     auto pos = GetActualCursorCoordinates();
     auto len = TextDistanceToLineStart(pos);
 
-    if (pos.mLine < top)
+    if (pos.mLine <= top + 1)
         ImGui::SetScrollY(std::max(0.0f, (pos.mLine - 1) * mCharAdvance.y));
-    if (pos.mLine > bottom - 4)
-        ImGui::SetScrollY(std::max(0.0f, (pos.mLine + 4) * mCharAdvance.y - height));
-    if (len + mTextStart < left + 4)
+    if (pos.mLine >= bottom - 2)
+        ImGui::SetScrollY(std::max(0.0f, (pos.mLine + 2) * mCharAdvance.y - height));
+    if (len == 0)
+        ImGui::SetScrollX(0);
+    else if (len + mTextStart <= left + 4)
         ImGui::SetScrollX(std::max(0.0f, len + mTextStart - 4));
-    if (len + mTextStart > right - 4)
+    if (len + mTextStart + mCharAdvance.x * 2 >= right - 4)
         ImGui::SetScrollX(std::max(0.0f, len + mTextStart + 4 - width + mCharAdvance.x * 2));
 }
 
 int TextEditor::GetPageSize() const {
-    auto height = ImGui::GetWindowHeight() - 20.0f;
+    auto height = ImGui::GetWindowHeight() - 20.0f - mTopMargin;
     return (int)floor(height / mCharAdvance.y);
 }
 
@@ -2231,7 +2835,9 @@ bool TokenizeCStyleString(const char *in_begin, const char *in_end, const char *
             }
 
             // handle escape character for "
-            if (*p == '\\' && p + 1 < in_end && p[1] == '"')
+            if (*p == '\\' && p + 1 < in_end && p[1] == '\\')
+                p++;
+            else if (*p == '\\' && p + 1 < in_end && p[1] == '"')
                 p++;
 
             p++;
