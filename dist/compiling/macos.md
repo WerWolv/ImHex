@@ -9,23 +9,14 @@ On macOS, ImHex is built through regular GCC and LLVM clang.
 cd ImHex
 mkdir -p build
 cd build
-CC=$(brew --prefix gcc@12)/bin/gcc-12     \
-CXX=$(brew --prefix gcc@12)/bin/g++-12    \
+CC=$(brew --prefix llvm)/bin/clang        \
+CXX=$(brew --prefix llvm)/bin/clang++     \
 OBJC=$(brew --prefix llvm)/bin/clang      \
 OBJCXX=$(brew --prefix llvm)/bin/clang++  \
-PKG_CONFIG_PATH="$(brew --prefix openssl)/lib/pkgconfig":"$(brew --prefix)/lib/pkgconfig" \
-MACOSX_DEPLOYMENT_TARGET="10.15"          \
 cmake                                     \
   -DCMAKE_BUILD_TYPE=Release              \
+  -DCMAKE_INSTALL_PREFIX=./install        \
   -DIMHEX_GENERATE_PACKAGE=ON             \
-  -DCMAKE_C_COMPILER_LAUNCHER=ccache      \
-  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache    \
-  -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache   \
-  -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache \
   ..
-make -j4 package
+make -j4 install
 ```
-
-If the build fails while trying to find the macOS libraries, make sure you have
-Xcode installed with `xcode-select --install`. Homebrew will also help get the
-most recent SDK installed and configured with `brew doctor`.
