@@ -13,6 +13,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <GLFW/glfw3.h>
 
 #if defined(OS_WINDOWS)
     #define WIN32_LEAN_AND_MEAN
@@ -403,6 +404,11 @@ namespace hex {
                 s_mainDockSpaceId = id;
             }
 
+            static GLFWwindow *s_mainWindowHandle;
+            void setMainWindowHandle(GLFWwindow *window) {
+                s_mainWindowHandle = window;
+            }
+
 
             static float s_globalScale = 1.0;
             void setGlobalScale(float scale) {
@@ -441,6 +447,11 @@ namespace hex {
             static double s_lastFrameTime;
             void setLastFrameTime(double time) {
                 s_lastFrameTime = time;
+            }
+
+            static bool s_windowResizable = true;
+            bool isWindowResizable() {
+                return s_windowResizable;
             }
 
 
@@ -497,6 +508,10 @@ namespace hex {
 
         ImGuiID getMainDockSpaceId() {
             return impl::s_mainDockSpaceId;
+        }
+
+        GLFWwindow* getMainWindowHandle() {
+            return impl::s_mainWindowHandle;
         }
 
         bool isBorderlessWindowModeEnabled() {
@@ -698,6 +713,12 @@ namespace hex {
         double getLastFrameTime() {
             return impl::s_lastFrameTime;
         }
+
+        void setWindowResizable(bool resizable) {
+            glfwSetWindowAttrib(impl::s_mainWindowHandle, GLFW_RESIZABLE, resizable);
+            impl::s_windowResizable = resizable;
+        }
+
 
 
     }

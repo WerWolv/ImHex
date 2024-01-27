@@ -210,7 +210,7 @@ namespace hex {
     EVENT_DEF(EventImHexStartupFinished);
 
     EVENT_DEF(EventFileLoaded, std::fs::path);
-    EVENT_DEF(EventDataChanged);
+    EVENT_DEF(EventDataChanged, prv::Provider *);
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
@@ -252,6 +252,7 @@ namespace hex {
     EVENT_DEF(EventAchievementUnlocked, const Achievement&);
     EVENT_DEF(EventSearchBoxClicked, u32);
     EVENT_DEF(EventViewOpened, View*);
+    EVENT_DEF(EventFirstLaunch);
 
     EVENT_DEF(EventFileDragged, bool);
     EVENT_DEF(EventFileDropped, std::fs::path);

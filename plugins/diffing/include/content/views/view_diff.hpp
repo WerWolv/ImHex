@@ -10,7 +10,7 @@
 
 #include "ui/hex_editor.hpp"
 
-namespace hex::plugin::builtin {
+namespace hex::plugin::diffing {
 
     class ViewDiff : public View::Window {
     public:
@@ -23,19 +23,10 @@ namespace hex::plugin::builtin {
     public:
         struct Column {
             ui::HexEditor hexEditor;
+            ContentRegistry::Diffing::DiffTree diffTree;
+
             int provider = -1;
             i32 scrollLock = 0;
-        };
-
-        enum class DifferenceType : u8 {
-            Added,
-            Removed,
-            Modified
-        };
-
-        struct Diff {
-            Region region;
-            DifferenceType type;
         };
 
     private:
@@ -45,9 +36,9 @@ namespace hex::plugin::builtin {
     private:
         std::array<Column, 2> m_columns;
 
-        std::vector<Diff> m_diffs;
         TaskHolder m_diffTask;
         std::atomic<bool> m_analyzed = false;
+        ContentRegistry::Diffing::Algorithm *m_algorithm = nullptr;
     };
 
 }

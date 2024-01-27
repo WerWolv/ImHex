@@ -18,7 +18,7 @@ namespace hex::plugin::hashes {
 
         using namespace wolv::literals;
 
-        std::vector<u8> hashProviderRegion(const Region& region, prv::Provider *provider, auto &hashFunction) {
+        std::vector<u8> hashProviderRegionWithHashLib(const Region& region, prv::Provider *provider, auto &hashFunction) {
             auto reader = prv::ProviderReader(provider);
             reader.seek(region.getStartAddress());
             reader.setEndAddress(region.getEndAddress());
@@ -142,14 +142,14 @@ namespace hex::plugin::hashes {
             : Hash(name), m_crcFunction(crcFunction), m_polynomial(polynomial), m_initialValue(initialValue), m_xorOut(xorOut), m_reflectIn(reflectIn), m_reflectOut(reflectOut) {}
 
         void draw() override {
-            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.poly"_lang, &this->m_polynomial);
-            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &this->m_initialValue);
-            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.xor_out"_lang, &this->m_xorOut);
+            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.poly"_lang, &m_polynomial);
+            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
+            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.xor_out"_lang, &m_xorOut);
 
             ImGui::NewLine();
 
-            ImGui::Checkbox("hex.hashes.hash.common.refl_in"_lang, &this->m_reflectIn);
-            ImGui::Checkbox("hex.hashes.hash.common.refl_out"_lang, &this->m_reflectOut);
+            ImGui::Checkbox("hex.hashes.hash.common.refl_in"_lang, &m_reflectIn);
+            ImGui::Checkbox("hex.hashes.hash.common.refl_out"_lang, &m_reflectOut);
         }
 
         Function create(std::string name) override {
@@ -169,22 +169,22 @@ namespace hex::plugin::hashes {
         [[nodiscard]] nlohmann::json store() const override {
             nlohmann::json result;
 
-            result["polynomial"] = this->m_polynomial;
-            result["initialValue"] = this->m_initialValue;
-            result["xorOut"] = this->m_xorOut;
-            result["reflectIn"] = this->m_reflectIn;
-            result["reflectOut"] = this->m_reflectOut;
+            result["polynomial"] = m_polynomial;
+            result["initialValue"] = m_initialValue;
+            result["xorOut"] = m_xorOut;
+            result["reflectIn"] = m_reflectIn;
+            result["reflectOut"] = m_reflectOut;
 
             return result;
         }
 
         void load(const nlohmann::json &json) override {
             try {
-                this->m_polynomial      = json.at("polynomial");
-                this->m_initialValue    = json.at("initialValue");
-                this->m_xorOut          = json.at("xorOut");
-                this->m_reflectIn       = json.at("reflectIn");
-                this->m_reflectOut      = json.at("reflectOut");
+                m_polynomial      = json.at("polynomial");
+                m_initialValue    = json.at("initialValue");
+                m_xorOut          = json.at("xorOut");
+                m_reflectIn       = json.at("reflectIn");
+                m_reflectOut      = json.at("reflectOut");
             } catch (std::exception&) { }
         }
 
@@ -209,7 +209,7 @@ namespace hex::plugin::hashes {
 
                 hashFunction->Initialize();
 
-                return hashProviderRegion(region, provider, hashFunction);
+                return hashProviderRegionWithHashLib(region, provider, hashFunction);
             });
 
         }
@@ -228,23 +228,34 @@ namespace hex::plugin::hashes {
         explicit HashWithKey(FactoryFunction function) : Hash(function()->GetName()), m_factoryFunction(function) {}
 
         void draw() override {
-            ImGui::InputText("hex.hashes.hash.common.key"_lang, this->m_key, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputText("hex.hashes.hash.common.key"_lang, m_key, ImGuiInputTextFlags_CharsHexadecimal);
         }
 
         Function create(std::string name) override {
-            return Hash::create(name, [hash = *this, key = hex::parseByteString(this->m_key)](const Region& region, prv::Provider *provider) -> std::vector<u8> {
+            return Hash::create(name, [hash = *this, key = hex::parseByteString(m_key)](const Region& region, prv::Provider *provider) -> std::vector<u8> {
                 IHashWithKey hashFunction = hash.m_factoryFunction();
 
                 hashFunction->Initialize();
                 hashFunction->SetKey(key);
 
-                return hashProviderRegion(region, provider, hashFunction);
+                return hashProviderRegionWithHashLib(region, provider, hashFunction);
             });
 
         }
 
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["key"] = m_key;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_key = data.at("key").get<std::string>();
+            } catch (std::exception&) { }
+        }
 
     private:
         FactoryFunction m_factoryFunction;
@@ -259,7 +270,7 @@ namespace hex::plugin::hashes {
         explicit HashInitialValue(FactoryFunction function) : Hash(function(0)->GetName()), m_factoryFunction(function) {}
 
         void draw() override {
-            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &this->m_initialValue);
+            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
         }
 
         Function create(std::string name) override {
@@ -268,13 +279,24 @@ namespace hex::plugin::hashes {
 
                 hashFunction->Initialize();
 
-                return hashProviderRegion(region, provider, hashFunction);
+                return hashProviderRegionWithHashLib(region, provider, hashFunction);
             });
 
         }
 
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["iv"] = m_initialValue;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_initialValue = data.at("iv").get<u32>();
+            } catch (std::exception&) { }
+        }
 
     private:
         FactoryFunction m_factoryFunction;
@@ -287,8 +309,8 @@ namespace hex::plugin::hashes {
 
         explicit HashTiger(std::string name, FactoryFunction function) : Hash(std::move(name)), m_factoryFunction(function) {}
         void draw() override {
-            ImGui::Combo("hex.hashes.hash.common.size"_lang, &this->m_hashSize, "128 Bits\0" "160 Bits\0" "192 Bits\0");
-            ImGui::Combo("hex.hashes.hash.common.rounds"_lang, &this->m_hashRounds, "3 Rounds\0" "4 Rounds\0" "5 Rounds\0" "8 Rounds\0");
+            ImGui::Combo("hex.hashes.hash.common.size"_lang, &m_hashSize, "128 Bits\0" "160 Bits\0" "192 Bits\0");
+            ImGui::Combo("hex.hashes.hash.common.rounds"_lang, &m_hashRounds, "3 Rounds\0" "4 Rounds\0" "5 Rounds\0" "8 Rounds\0");
         }
 
         Function create(std::string name) override {
@@ -312,13 +334,26 @@ namespace hex::plugin::hashes {
 
                 hashFunction->Initialize();
 
-                return hashProviderRegion(region, provider, hashFunction);
+                return hashProviderRegionWithHashLib(region, provider, hashFunction);
             });
 
         }
 
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["size"] = m_hashSize;
+            result["rounds"] = m_hashRounds;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_hashSize = data.at("size").get<int>();
+                m_hashRounds = data.at("rounds").get<int>();
+            } catch (std::exception&) { }
+        }
 
     private:
         FactoryFunction m_factoryFunction;
@@ -333,15 +368,15 @@ namespace hex::plugin::hashes {
 
         explicit HashBlake2(std::string name, FactoryFunction function) : Hash(std::move(name)), m_factoryFunction(function) {}
         void draw() override {
-            ImGui::InputText("hex.hashes.hash.common.salt"_lang, this->m_salt, ImGuiInputTextFlags_CharsHexadecimal);
-            ImGui::InputText("hex.hashes.hash.common.key"_lang, this->m_key, ImGuiInputTextFlags_CharsHexadecimal);
-            ImGui::InputText("hex.hashes.hash.common.personalization"_lang, this->m_personalization, ImGuiInputTextFlags_CharsHexadecimal);
-            ImGui::Combo("hex.hashes.hash.common.size"_lang, &this->m_hashSize, "128 Bits\0" "160 Bits\0" "192 Bits\0" "224 Bits\0" "256 Bits\0" "288 Bits\0" "384 Bits\0" "512 Bits\0");
+            ImGui::InputText("hex.hashes.hash.common.salt"_lang, m_salt, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputText("hex.hashes.hash.common.key"_lang, m_key, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::InputText("hex.hashes.hash.common.personalization"_lang, m_personalization, ImGuiInputTextFlags_CharsHexadecimal);
+            ImGui::Combo("hex.hashes.hash.common.size"_lang, &m_hashSize, "128 Bits\0" "160 Bits\0" "192 Bits\0" "224 Bits\0" "256 Bits\0" "288 Bits\0" "384 Bits\0" "512 Bits\0");
 
         }
 
         Function create(std::string name) override {
-            return Hash::create(name, [hash = *this, key = hex::parseByteString(this->m_key), salt = hex::parseByteString(this->m_salt), personalization = hex::parseByteString(this->m_personalization)](const Region& region, prv::Provider *provider) -> std::vector<u8> {
+            return Hash::create(name, [hash = *this, key = hex::parseByteString(m_key), salt = hex::parseByteString(m_salt), personalization = hex::parseByteString(m_personalization)](const Region& region, prv::Provider *provider) -> std::vector<u8> {
                 u32 hashSize = 16;
                 switch (hash.m_hashSize) {
                     case 0: hashSize = 16; break;
@@ -363,18 +398,84 @@ namespace hex::plugin::hashes {
 
                 hashFunction->Initialize();
 
-                return hashProviderRegion(region, provider, hashFunction);
+                return hashProviderRegionWithHashLib(region, provider, hashFunction);
             });
 
         }
 
-        [[nodiscard]] nlohmann::json store() const override { return { }; }
-        void load(const nlohmann::json &) override {}
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["salt"] = m_salt;
+            result["key"] = m_key;
+            result["personalization"] = m_personalization;
+            result["size"] = m_hashSize;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_hashSize = data.at("size").get<int>();
+                m_salt = data.at("salt").get<std::string>();
+                m_key = data.at("key").get<std::string>();
+                m_personalization = data.at("personalization").get<std::string>();
+            } catch (std::exception&) { }
+        }
 
     private:
         FactoryFunction m_factoryFunction;
         std::string m_salt, m_key, m_personalization;
         int m_hashSize = 0;
+    };
+
+    class HashSum : public ContentRegistry::Hashes::Hash {
+    public:
+        HashSum() : Hash("hex.hashes.hash.sum") {}
+
+        Function create(std::string name) override {
+            return Hash::create(name, [this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
+                std::array<u8, 8> result = { 0x00 };
+
+                auto reader = prv::ProviderReader(provider);
+                reader.seek(region.getStartAddress());
+                reader.setEndAddress(region.getEndAddress());
+
+                u64 sum = m_initialValue;
+                for (u8 byte : reader) {
+                    sum += byte;
+                }
+
+                std::memcpy(result.data(), &sum, m_size);
+
+                return { result.begin(), result.begin() + m_size };
+            });
+        }
+
+        void draw() override {
+            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
+            ImGui::SliderInt("hex.hashes.hash.common.size"_lang, &m_size, 1, 8, "%d", ImGuiSliderFlags_AlwaysClamp);
+        }
+
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["iv"] = m_initialValue;
+            result["size"] = m_size;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_initialValue = data.at("iv").get<int>();
+                m_size = data.at("size").get<int>();
+            } catch (std::exception&) { }
+        }
+
+    private:
+        u64 m_initialValue = 0x00;
+        int m_size = 1;
     };
 
     void registerHashes() {
@@ -385,6 +486,8 @@ namespace hex::plugin::hashes {
         ContentRegistry::Hashes::add<HashSHA256>();
         ContentRegistry::Hashes::add<HashSHA384>();
         ContentRegistry::Hashes::add<HashSHA512>();
+
+        ContentRegistry::Hashes::add<HashSum>();
 
         ContentRegistry::Hashes::add<HashCRC<u8>>("hex.hashes.hash.crc8",        crypt::crc8,  0x07,        0x0000,      0x0000);
         ContentRegistry::Hashes::add<HashCRC<u16>>("hex.hashes.hash.crc16",      crypt::crc16, 0x8005,      0x0000,      0x0000);

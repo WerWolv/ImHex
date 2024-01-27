@@ -148,8 +148,6 @@ namespace hex {
                 const auto entry       = insertOrGetEntry(subCategory->entries,    unlocalizedName);
 
                 entry->widget = std::move(widget);
-                entry->widget->load(getSetting(unlocalizedCategory, unlocalizedName, entry->widget->store()));
-                entry->widget->onChanged();
 
                 return entry->widget.get();
             }
@@ -722,15 +720,27 @@ namespace hex {
             impl::getMainMenuItems().insert({ priority, { unlocalizedName } });
         }
 
-        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
-            addMenuItem(unlocalizedMainMenuNames, nullptr, priority, shortcut, function, enabledCallback, view);
+        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, const impl::SelectedCallback &selectedCallback, View *view) {
+            addMenuItem(unlocalizedMainMenuNames, "", priority, shortcut, function, enabledCallback, selectedCallback, view);
         }
 
-        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const char *icon, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
+        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const Icon &icon, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
+            addMenuItem(unlocalizedMainMenuNames, icon, priority, shortcut, function, enabledCallback, []{ return false; }, view);
+        }
+
+        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, View *view) {
+            addMenuItem(unlocalizedMainMenuNames, "", priority, shortcut, function, enabledCallback, []{ return false; }, view);
+        }
+
+        void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const Icon &icon, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback, const impl::SelectedCallback &selectedCallback, View *view) {
             log::debug("Added new menu item to menu {} with priority {}", unlocalizedMainMenuNames[0].get(), priority);
 
+            Icon coloredIcon = icon;
+            if (coloredIcon.color == 0x00)
+                coloredIcon.color = ImGuiCustomCol_ToolbarGray;
+
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, coloredIcon, std::make_unique<Shortcut>(shortcut), view, function, enabledCallback, selectedCallback, -1 }
             });
 
             if (shortcut != Shortcut::None) {
@@ -742,7 +752,7 @@ namespace hex {
         }
 
         void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
-            addMenuItemSubMenu(std::move(unlocalizedMainMenuNames), nullptr, priority, function, enabledCallback);
+            addMenuItemSubMenu(std::move(unlocalizedMainMenuNames), "", priority, function, enabledCallback);
         }
 
         void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, const char *icon, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback) {
@@ -750,14 +760,14 @@ namespace hex {
 
             unlocalizedMainMenuNames.emplace_back(impl::SubMenuValue);
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, icon, std::make_unique<Shortcut>(), nullptr, function, enabledCallback, []{ return false; }, -1 }
             });
         }
 
         void addMenuItemSeparator(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority) {
             unlocalizedMainMenuNames.emplace_back(impl::SeparatorValue);
             impl::getMenuItems().insert({
-                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; } }
+                priority, impl::MenuItem { unlocalizedMainMenuNames, "", std::make_unique<Shortcut>(), nullptr, []{}, []{ return true; }, []{ return false; }, -1 }
             });
         }
 
@@ -772,6 +782,21 @@ namespace hex {
         void addToolbarItem(const impl::DrawCallback &function) {
             impl::getToolbarItems().push_back(function);
         }
+
+        void addMenuItemToToolbar(const UnlocalizedString& unlocalizedName, ImGuiCustomCol color) {
+            auto maxIndex = std::ranges::max_element(impl::getMenuItems(), [](const auto &a, const auto &b) {
+                return a.second.toolbarIndex < b.second.toolbarIndex;
+            })->second.toolbarIndex;
+
+            for (auto &[priority, menuItem] : impl::getMenuItems()) {
+                if (menuItem.unlocalizedNames.back() == unlocalizedName) {
+                    menuItem.toolbarIndex = maxIndex + 1;
+                    menuItem.icon.color = color;
+                    break;
+                }
+            }
+        }
+
 
         void addSidebarItem(const std::string &icon, const impl::DrawCallback &function, const impl::EnabledCallback &enabledCallback) {
             impl::getSidebarItems().push_back({ icon, function, enabledCallback });
@@ -987,6 +1012,23 @@ namespace hex {
             return nullptr;
         }
 
+    }
+
+    namespace ContentRegistry::Diffing {
+
+        namespace impl {
+
+            std::vector<std::unique_ptr<Algorithm>>& getAlgorithms() {
+                static std::vector<std::unique_ptr<Algorithm>> algorithms;
+
+                return algorithms;
+            }
+
+            void addAlgorithm(std::unique_ptr<Algorithm> &&hash) {
+                getAlgorithms().emplace_back(std::move(hash));
+            }
+
+        }
 
     }
 

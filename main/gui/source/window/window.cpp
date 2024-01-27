@@ -159,6 +159,14 @@ namespace hex {
 
         glfwPollEvents();
 
+        static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
+        if (ImHexApi::System::impl::isWindowResizable()) {
+            glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+            lastWindowSize = ImHexApi::System::getMainWindowSize();
+        } else {
+            glfwSetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
+        }
+
         // Render frame
         this->frameBegin();
         this->frame();
@@ -230,7 +238,7 @@ namespace hex {
         }
     }
 
-    static void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const std::function<void()> &callback, const std::function<bool()> &enabledCallback) {
+    static void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
         const auto &name = menuItems.front();
 
         if (name.get() == ContentRegistry::Interface::impl::SeparatorValue) {
@@ -241,13 +249,13 @@ namespace hex {
         if (name.get() == ContentRegistry::Interface::impl::SubMenuValue) {
             callback();
         } else if (menuItems.size() == 1) {
-            if (ImGui::MenuItemEx(Lang(name), icon, shortcut.toString().c_str(), false, enabledCallback()))
+            if (ImGui::MenuItemEx(Lang(name), icon, shortcut.toString().c_str(), selectedCallback(), enabledCallback()))
                 callback();
         } else {
             bool isSubmenu = (menuItems.begin() + 1)->get() == ContentRegistry::Interface::impl::SubMenuValue;
 
             if (ImGui::BeginMenuEx(Lang(name), std::next(menuItems.begin())->get() == ContentRegistry::Interface::impl::SubMenuValue ? icon : nullptr, isSubmenu ? enabledCallback() : true)) {
-                createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback);
+                createNestedMenu({ std::next(menuItems.begin()), menuItems.end() }, icon, shortcut, callback, enabledCallback, selectedCallback);
                 ImGui::EndMenu();
             }
         }
@@ -285,7 +293,7 @@ namespace hex {
             }
         }
 
-        if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
+        if (ImHexApi::System::isBorderlessWindowModeEnabled() && glfwGetWindowMonitor(m_window) == nullptr) {
             // Draw minimize, restore and maximize buttons
             ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
             if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
@@ -519,9 +527,9 @@ namespace hex {
                     }
 
                     for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback] = menuItem;
+                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallack, toolbarIndex] = menuItem;
 
-                        createNestedMenu(unlocalizedNames, icon, *shortcut, callback, enabledCallback);
+                        createNestedMenu(unlocalizedNames, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
                     }
                 };
 
@@ -738,7 +746,7 @@ namespace hex {
                 else
                     createPopup(ImGui::BeginPopup(name, flags));
 
-                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 10) {
+                if (!ImGui::IsPopupOpen(name) && displayFrameCount < 100) {
                     ImGui::OpenPopup(name);
                 }
 
@@ -792,10 +800,10 @@ namespace hex {
 
         // Draw main menu popups
         for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback] = menuItem;
+            const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallback, toolbarIndex] = menuItem;
 
             if (ImGui::BeginPopup(unlocalizedNames.front().get().c_str())) {
-                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon, *shortcut, callback, enabledCallback);
+                createNestedMenu({ unlocalizedNames.begin() + 1, unlocalizedNames.end() }, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallback);
                 ImGui::EndPopup();
             }
         }
@@ -983,6 +991,8 @@ namespace hex {
         m_windowTitle = "ImHex";
         m_window      = glfwCreateWindow(1280_scaled, 720_scaled, m_windowTitle.c_str(), nullptr, nullptr);
 
+        ImHexApi::System::impl::setMainWindowHandle(m_window);
+
         glfwSetWindowUserPointer(m_window, this);
 
         if (m_window == nullptr) {
@@ -1127,13 +1137,6 @@ namespace hex {
         // Register window close callback
         glfwSetWindowCloseCallback(m_window, [](GLFWwindow *window) {
             EventWindowClosing::post(window);
-        });
-
-        // Register file drop callback
-        glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
-            for (int i = 0; i < count; i++) {
-                EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
-            }
         });
 
         glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);

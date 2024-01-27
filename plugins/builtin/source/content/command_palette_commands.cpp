@@ -1,12 +1,15 @@
 #include <hex/api/content_registry.hpp>
+#include <hex/api/imhex_api.hpp>
 
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/shortcut_manager.hpp>
 
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/providers/provider.hpp>
 
 #include <wolv/math_eval/math_evaluator.hpp>
+#include <wolv/utils/guards.hpp>
 #include <wolv/utils/string.hpp>
 
 namespace hex::plugin::builtin {
@@ -47,7 +50,7 @@ namespace hex::plugin::builtin {
                         m_value = std::stod(value) * m_multiplier;
                     }
                 } catch (const std::exception &) {
-                    m_value = 0;
+                    m_value = i128(0);
                     m_unit = Unit::Invalid;
                     m_unitString.clear();
                     m_multiplier = 1;
@@ -311,6 +314,32 @@ namespace hex::plugin::builtin {
                 [](auto input) {
                     return hex::format("Menu Item: {}", input.data());
                 });
+
+        ContentRegistry::CommandPaletteCommands::addHandler(
+        ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,
+        ".",
+        [](const auto &input) {
+            std::vector<ContentRegistry::CommandPaletteCommands::impl::QueryResult> result;
+
+            u32 index = 0;
+            for (const auto &provider : ImHexApi::Provider::getProviders()) {
+                ON_SCOPE_EXIT { index += 1; };
+
+                auto name = provider->getName();
+                if (!hex::containsIgnoreCase(name, input))
+                    continue;
+
+                result.emplace_back(ContentRegistry::CommandPaletteCommands::impl::QueryResult {
+                    provider->getName(),
+                    [index](const auto&) { ImHexApi::Provider::setCurrentProvider(index); }
+                });
+            }
+
+            return result;
+        },
+        [](auto input) {
+            return hex::format("Provider: {}", input.data());
+        });
 
         ContentRegistry::CommandPaletteCommands::add(
                     ContentRegistry::CommandPaletteCommands::Type::SymbolCommand,

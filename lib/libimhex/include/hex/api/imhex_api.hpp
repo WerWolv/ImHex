@@ -15,6 +15,7 @@ using ImGuiID = unsigned int;
 struct ImVec2;
 struct ImFontAtlas;
 struct ImFont;
+struct GLFWwindow;
 
 namespace hex {
 
@@ -347,7 +348,11 @@ namespace hex {
              * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
              * @param select Whether to select the provider after adding it
              */
-            prv::Provider* createProvider(const UnlocalizedString &unlocalizedName, bool skipLoadInterface = false, bool select = true);
+            prv::Provider* createProvider(
+                const UnlocalizedString &unlocalizedName,
+                bool skipLoadInterface = false,
+                bool select = true
+            );
 
         }
 
@@ -362,6 +367,7 @@ namespace hex {
                 void setMainWindowPosition(i32 x, i32 y);
                 void setMainWindowSize(u32 width, u32 height);
                 void setMainDockSpaceId(ImGuiID id);
+                void setMainWindowHandle(GLFWwindow *window);
 
                 void setGlobalScale(float scale);
                 void setNativeScale(float scale);
@@ -375,6 +381,8 @@ namespace hex {
                 void addInitArgument(const std::string &key, const std::string &value = { });
 
                 void setLastFrameTime(double time);
+
+                bool isWindowResizable();
             }
 
             struct ProgramArguments {
@@ -459,6 +467,11 @@ namespace hex {
              */
             ImGuiID getMainDockSpaceId();
 
+            /**
+             * @brief Gets the main window's GLFW window handle
+             * @return GLFW window handle
+             */
+            GLFWwindow* getMainWindowHandle();
 
             /**
              * @brief Checks if borderless window mode is enabled currently
@@ -568,6 +581,8 @@ namespace hex {
             void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function);
 
             double getLastFrameTime();
+
+            void setWindowResizable(bool resizable);
         }
 
         /**

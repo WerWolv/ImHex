@@ -391,3 +391,12 @@ To develop plugins for ImHex, use the following template project to get started.
 - Thanks to btzy for [nativefiledialog-extended](https://github.com/btzy/nativefiledialog-extended)
 - Thanks to danyspin97 for [xdgpp](https://sr.ht/~danyspin97/xdgpp)
 - Thanks to all other groups and organizations whose libraries are used in ImHex
+
+### License
+
+The biggest part of ImHex is under the GPLv2-only license. 
+Notable exceptions to this are the following parts which are under the LGPLv2.1 license:
+- **/lib/libimhex**: The library that allows Plugins to interact with ImHex.
+- **/plugins/ui**: The UI plugin library that contains some common UI elements that can be used by other plugins
+
+The reason for this is to allow for proprietary plugins to be developed for ImHex.

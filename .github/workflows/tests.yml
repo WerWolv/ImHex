@@ -61,3 +61,17 @@ jobs:
       run: |
         cd build
         ctest --output-on-failure
+
+  langs:
+    name: 🧪 Langs
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: 🧰 Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Check langs
+      run:
+        python3 tests/check_langs.py

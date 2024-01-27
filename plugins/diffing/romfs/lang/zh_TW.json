@@ -1,0 +1,14 @@
+{
+    "code": "zh-TW",
+    "language": "Chinese (Traditional)",
+    "country": "Taiwan",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.view.diff.name": "差異",
+        "hex.diffing.view.diff.added": "已新增",
+        "hex.diffing.view.diff.modified": "已修改",
+        "hex.diffing.view.diff.provider_a": "提供者 A",
+        "hex.diffing.view.diff.provider_b": "提供者 B",
+        "hex.diffing.view.diff.removed": "已移除"
+    }
+}

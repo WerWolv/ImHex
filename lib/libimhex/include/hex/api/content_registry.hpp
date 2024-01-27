@@ -18,6 +18,7 @@
 using ImGuiDataType = int;
 using ImGuiInputTextFlags = int;
 struct ImColor;
+enum ImGuiCustomCol : int;
 
 namespace hex {
 
@@ -424,7 +425,12 @@ namespace hex {
              * @param parameterCount The amount of parameters the function takes
              * @param func The function callback
              */
-            void addFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
+            void addFunction(
+                const pl::api::Namespace &ns,
+                const std::string &name,
+                pl::api::FunctionParameterCount parameterCount,
+                const pl::api::FunctionCallback &func
+            );
 
             /**
              * @brief Adds a new dangerous function to the pattern language
@@ -434,7 +440,12 @@ namespace hex {
              * @param parameterCount The amount of parameters the function takes
              * @param func The function callback
              */
-            void addDangerousFunction(const pl::api::Namespace &ns, const std::string &name, pl::api::FunctionParameterCount parameterCount, const pl::api::FunctionCallback &func);
+            void addDangerousFunction(
+                const pl::api::Namespace &ns,
+                const std::string &name,
+                pl::api::FunctionParameterCount parameterCount,
+                const pl::api::FunctionCallback &func
+            );
 
             /**
              * @brief Adds a new visualizer to the pattern language
@@ -443,7 +454,11 @@ namespace hex {
              * @param function The function callback
              * @param parameterCount The amount of parameters the function takes
              */
-            void addVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount);
+            void addVisualizer(
+                const std::string &name,
+                const impl::VisualizerFunctionCallback &function,
+                pl::api::FunctionParameterCount parameterCount
+            );
 
             /**
              * @brief Adds a new inline visualizer to the pattern language
@@ -452,7 +467,11 @@ namespace hex {
              * @param function The function callback
              * @param parameterCount The amount of parameters the function takes
              */
-            void addInlineVisualizer(const std::string &name, const impl::VisualizerFunctionCallback &function, pl::api::FunctionParameterCount parameterCount);
+            void addInlineVisualizer(
+                const std::string &name,
+                const impl::VisualizerFunctionCallback &function,
+                pl::api::FunctionParameterCount parameterCount
+            );
 
         }
 
@@ -545,7 +564,12 @@ namespace hex {
              * @param displayGeneratorFunction The function that will be called to generate the display function
              * @param editingFunction The function that will be called to edit the data
              */
-            void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
+            void add(
+                const UnlocalizedString &unlocalizedName,
+                size_t requiredSize,
+                impl::GeneratorFunction displayGeneratorFunction,
+                std::optional<impl::EditingFunction> editingFunction = std::nullopt
+            );
 
             /**
              * @brief Adds a new entry to the data inspector
@@ -555,7 +579,14 @@ namespace hex {
              * @param displayGeneratorFunction The function that will be called to generate the display function
              * @param editingFunction The function that will be called to edit the data
              */
-            void add(const UnlocalizedString &unlocalizedName, size_t requiredSize, size_t maxSize, impl::GeneratorFunction displayGeneratorFunction, std::optional<impl::EditingFunction> editingFunction = std::nullopt);
+            void add(
+                const UnlocalizedString &unlocalizedName,
+                size_t requiredSize,
+                size_t maxSize,
+                impl::GeneratorFunction displayGeneratorFunction,
+                std::optional<impl::EditingFunction> editingFunction = std::nullopt
+            );
+
         }
 
         /* Data Processor Node Registry. Allows adding new processor nodes to be used in the data processor */
@@ -626,11 +657,19 @@ namespace hex {
         /* Interface Registry. Allows adding new items to various interfaces */
         namespace Interface {
 
+            struct Icon {
+                Icon(const char *glyph, ImGuiCustomCol color = ImGuiCustomCol(0x00)) : glyph(glyph), color(color) {}
+
+                std::string glyph;
+                ImGuiCustomCol color;
+            };
+
             namespace impl {
 
                 using DrawCallback      = std::function<void()>;
                 using MenuCallback      = std::function<void()>;
                 using EnabledCallback   = std::function<bool()>;
+                using SelectedCallback  = std::function<bool()>;
                 using ClickCallback     = std::function<void()>;
 
                 struct MainMenuItem {
@@ -639,11 +678,13 @@ namespace hex {
 
                 struct MenuItem {
                     std::vector<UnlocalizedString> unlocalizedNames;
-                    const char *icon;
+                    Icon icon;
                     std::unique_ptr<Shortcut> shortcut;
                     View *view;
                     MenuCallback callback;
                     EnabledCallback enabledCallback;
+                    SelectedCallback selectedCallback;
+                    i32 toolbarIndex;
                 };
 
                 struct SidebarItem {
@@ -689,8 +730,36 @@ namespace hex {
              * @param enabledCallback The function to call to determine if the entry is enabled
              * @param view The view to use for the entry. If nullptr, the shortcut will work globally
              */
-            void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, const char *icon, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; }, View *view = nullptr);
+            void addMenuItem(
+                const std::vector<UnlocalizedString> &unlocalizedMainMenuNames,
+                const Icon &icon,
+                u32 priority,
+                const Shortcut &shortcut,
+                const impl::MenuCallback &function,
+                const impl::EnabledCallback& enabledCallback, View *view
+            );
 
+            /**
+             * @brief Adds a new main menu entry
+             * @param unlocalizedMainMenuNames The unlocalized names of the main menu entries
+             * @param icon The icon to use for the entry
+             * @param priority The priority of the entry. Lower values are displayed first
+             * @param shortcut The shortcut to use for the entry
+             * @param function The function to call when the entry is clicked
+             * @param enabledCallback The function to call to determine if the entry is enabled
+             * @param selectedCallback The function to call to determine if the entry is selected
+             * @param view The view to use for the entry. If nullptr, the shortcut will work globally
+             */
+            void addMenuItem(
+                const std::vector<UnlocalizedString> &unlocalizedMainMenuNames,
+                const Icon &icon,
+                u32 priority,
+                const Shortcut &shortcut,
+                const impl::MenuCallback &function,
+                const impl::EnabledCallback& enabledCallback = []{ return true; },
+                const impl::SelectedCallback &selectedCallback = []{ return false; },
+                View *view = nullptr
+            );
 
             /**
              * @brief Adds a new main menu entry
@@ -699,9 +768,18 @@ namespace hex {
              * @param shortcut The shortcut to use for the entry
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
+             * @param selectedCallback The function to call to determine if the entry is selected
              * @param view The view to use for the entry. If nullptr, the shortcut will work globally
              */
-            void addMenuItem(const std::vector<UnlocalizedString> &unlocalizedMainMenuNames, u32 priority, const Shortcut &shortcut, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; }, View *view = nullptr);
+            void addMenuItem(
+                const std::vector<UnlocalizedString> &unlocalizedMainMenuNames,
+                u32 priority,
+                const Shortcut &shortcut,
+                const impl::MenuCallback &function,
+                const impl::EnabledCallback& enabledCallback = []{ return true; },
+                const impl::SelectedCallback &selectedCallback = []{ return false; },
+                View *view = nullptr
+            );
 
             /**
              * @brief Adds a new main menu sub-menu entry
@@ -710,7 +788,12 @@ namespace hex {
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
              */
-            void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+            void addMenuItemSubMenu(
+                std::vector<UnlocalizedString> unlocalizedMainMenuNames,
+                u32 priority,
+                const impl::MenuCallback &function,
+                const impl::EnabledCallback& enabledCallback = []{ return true; }
+            );
 
             /**
              * @brief Adds a new main menu sub-menu entry
@@ -720,7 +803,13 @@ namespace hex {
              * @param function The function to call when the entry is clicked
              * @param enabledCallback The function to call to determine if the entry is enabled
              */
-            void addMenuItemSubMenu(std::vector<UnlocalizedString> unlocalizedMainMenuNames, const char *icon, u32 priority, const impl::MenuCallback &function, const impl::EnabledCallback& enabledCallback = []{ return true; });
+            void addMenuItemSubMenu(
+                std::vector<UnlocalizedString> unlocalizedMainMenuNames,
+                const char *icon,
+                u32 priority,
+                const impl::MenuCallback &function,
+                const impl::EnabledCallback& enabledCallback = []{ return true; }
+            );
 
 
             /**
@@ -750,12 +839,23 @@ namespace hex {
             void addToolbarItem(const impl::DrawCallback &function);
 
             /**
+             * @brief Adds a menu item to the toolbar
+             * @param unlocalizedName Unlocalized name of the menu item
+             * @param color Color of the toolbar icon
+             */
+            void addMenuItemToToolbar(const UnlocalizedString &unlocalizedName, ImGuiCustomCol color);
+
+            /**
              * @brief Adds a new sidebar item
              * @param icon The icon to use for the item
              * @param function The function to call to draw the item
              * @param enabledCallback The function
              */
-            void addSidebarItem(const std::string &icon, const impl::DrawCallback &function, const impl::EnabledCallback &enabledCallback = []{ return true; });
+            void addSidebarItem(
+                const std::string &icon,
+                const impl::DrawCallback &function,
+                const impl::EnabledCallback &enabledCallback = []{ return true; }
+            );
 
             /**
              * @brief Adds a new title bar button
@@ -763,7 +863,11 @@ namespace hex {
              * @param unlocalizedTooltip The unlocalized tooltip to use for the button
              * @param function The function to call when the button is clicked
              */
-            void addTitleBarButton(const std::string &icon, const UnlocalizedString &unlocalizedTooltip, const impl::ClickCallback &function);
+            void addTitleBarButton(
+                const std::string &icon,
+                const UnlocalizedString &unlocalizedTooltip,
+                const impl::ClickCallback &function
+            );
 
         }
 
@@ -908,6 +1012,56 @@ namespace hex {
 
         }
 
+        /* Diffing Registry. Allows adding new diffing algorithms */
+        namespace Diffing {
+
+            enum class DifferenceType : u8 {
+                Match       = 0,
+                Insertion   = 1,
+                Deletion    = 2,
+                Mismatch    = 3
+            };
+
+            using DiffTree = wolv::container::IntervalTree<DifferenceType>;
+
+            class Algorithm {
+            public:
+                explicit Algorithm(UnlocalizedString unlocalizedName, UnlocalizedString unlocalizedDescription)
+                    : m_unlocalizedName(std::move(unlocalizedName)),
+                      m_unlocalizedDescription(std::move(unlocalizedDescription)) { }
+
+                virtual ~Algorithm() = default;
+
+                virtual std::vector<DiffTree> analyze(prv::Provider *providerA, prv::Provider *providerB) const = 0;
+                virtual void drawSettings() { }
+
+                const UnlocalizedString& getUnlocalizedName() const { return m_unlocalizedName; }
+                const UnlocalizedString& getUnlocalizedDescription() const { return m_unlocalizedDescription; }
+
+            private:
+                UnlocalizedString m_unlocalizedName, m_unlocalizedDescription;
+            };
+
+            namespace impl {
+
+                std::vector<std::unique_ptr<Algorithm>> &getAlgorithms();
+
+                void addAlgorithm(std::unique_ptr<Algorithm> &&hash);
+
+            }
+
+            /**
+             * @brief Adds a new hash
+             * @tparam T The hash type that extends hex::Hash
+             * @param args The arguments to pass to the constructor of the hash
+             */
+            template<typename T, typename ... Args>
+            void addAlgorithm(Args && ... args) {
+                impl::addAlgorithm(std::make_unique<T>(std::forward<Args>(args)...));
+            }
+
+        }
+
         /* Hash Registry. Allows adding new hashes to the Hash view */
         namespace Hashes {
 
@@ -973,6 +1127,7 @@ namespace hex {
                 std::vector<std::unique_ptr<Hash>> &getHashes();
 
                 void add(std::unique_ptr<Hash> &&hash);
+
             }
 
 
@@ -1026,7 +1181,12 @@ namespace hex {
                 std::map<std::string, Experiment> &getExperiments();
             }
 
-            void addExperiment(const std::string &experimentName, const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription = "");
+            void addExperiment(
+                const std::string &experimentName,
+                const UnlocalizedString &unlocalizedName,
+                const UnlocalizedString &unlocalizedDescription = ""
+            );
+
             void enableExperiement(const std::string &experimentName, bool enabled);
 
             [[nodiscard]] bool isExperimentEnabled(const std::string &experimentName);

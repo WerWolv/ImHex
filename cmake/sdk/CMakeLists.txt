@@ -22,13 +22,21 @@ add_subdirectory(lib/third_party/imgui EXCLUDE_FROM_ALL)
 set(FMT_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory_if_exists(lib/third_party/fmt)
 set(FMT_LIBRARIES fmt::fmt-header-only PARENT_SCOPE)
+set(FMT_LIBRARIES fmt::fmt-header-only)
 
 add_subdirectory_if_exists(lib/third_party/nlohmann_json)
+set(NLOHMANN_JSON_LIBRARIES nlohmann_json PARENT_SCOPE)
+set(NLOHMANN_JSON_LIBRARIES nlohmann_json)
 
 add_subdirectory(lib/external/libwolv EXCLUDE_FROM_ALL)
 
 set(LIBPL_ENABLE_CLI OFF CACHE BOOL "" FORCE)
 add_subdirectory(lib/external/pattern_language EXCLUDE_FROM_ALL)
+
+find_package(CURL REQUIRED)
+find_package(mbedTLS 3.4.0 REQUIRED)
+set(CURL_LIBRARIES ${CURL_LIBRARIES} PARENT_SCOPE)
+set(MBEDTLS_LIBRARIES ${MBEDTLS_LIBRARIES} PARENT_SCOPE)
 
 add_subdirectory(lib/libimhex)
 

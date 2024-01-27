@@ -351,7 +351,7 @@ namespace hex::plugin::builtin {
         }, noRunningTasks);
 
         /* Open File */
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ICON_VS_OPEN_PREVIEW, 1100, CTRLCMD + Keys::O, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.open_file" }, ICON_VS_FOLDER_OPENED, 1100, CTRLCMD + Keys::O, [] {
             RequestOpenWindow::post("Open File");
         }, noRunningTasks);
 
@@ -484,7 +484,38 @@ namespace hex::plugin::builtin {
     static void createViewMenu() {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.view", 3000);
 
-        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 1000, [] {
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.always_on_top" }, ICON_VS_PINNED, 1000, Keys::F10, [] {
+            static bool state = false;
+
+            state = !state;
+            glfwSetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING, state);
+        }, []{ return true; }, []{ return glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING); });
+
+        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.fullscreen" }, ICON_VS_SCREEN_FULL, 2000, Keys::F11, [] {
+            static bool state = false;
+            static ImVec2 position, size;
+
+            state = !state;
+
+
+            const auto window = ImHexApi::System::getMainWindowHandle();
+            if (state) {
+                position = ImHexApi::System::getMainWindowPosition();
+                size     = ImHexApi::System::getMainWindowSize();
+
+                const auto monitor = glfwGetPrimaryMonitor();
+                const auto videoMode = glfwGetVideoMode(monitor);
+
+                glfwSetWindowMonitor(window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
+            } else {
+                glfwSetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
+            }
+
+        }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
+
+        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
+
+        ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 4000, [] {
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
                 if (view->hasViewMenuItemEntry()) {
                     auto &state = view->getWindowOpenState();
