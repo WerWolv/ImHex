@@ -38,6 +38,7 @@ namespace hex::plugin::builtin {
                 this->drawTabContents();
                 ImGui::EndTabItem();
             }
+
             ImGui::EndTabBar();
         }
 
@@ -101,24 +102,18 @@ namespace hex::plugin::builtin {
                 m_requestSearch = true;
                 m_searchBackwards = false;
             }
-
-            if (m_reachedEnd) {
-                auto statusString = "hex.builtin.view.hex_editor.search.no_more_results"_lang;
-                ImGui::SameLine();
-                ImGui::TextUnformatted(statusString);
-            }
         }
         ImGui::EndDisabled();
     }
 
     void PopupFind::drawTabContents() {
-        static std::array EncodingNames = {
+        constexpr static std::array EncodingNames = {
                 "hex.builtin.view.hex_editor.search.string.encoding.utf8",
                 "hex.builtin.view.hex_editor.search.string.encoding.utf16",
                 "hex.builtin.view.hex_editor.search.string.encoding.utf32"
         };
 
-        static std::array EndiannessNames = {
+        constexpr static std::array EndiannessNames = {
                 "hex.builtin.view.hex_editor.search.string.endianness.little",
                 "hex.builtin.view.hex_editor.search.string.endianness.big"
         };
@@ -148,7 +143,9 @@ namespace hex::plugin::builtin {
         }
 
         // Draw search direction buttons
+        ImGui::BeginDisabled(m_inputString.empty());
         this->drawSearchDirectionButtons();
+        ImGui::EndDisabled();
 
         // Draw search options for string search
         if (m_searchMode == SearchMode::String) {
@@ -183,6 +180,12 @@ namespace hex::plugin::builtin {
                 }
             }
             ImGui::EndDisabled();
+        }
+
+        if (m_reachedEnd) {
+            ImGui::TextUnformatted("hex.builtin.view.hex_editor.search.no_more_results"_lang);
+        } else {
+            ImGui::NewLine();
         }
     }
 
