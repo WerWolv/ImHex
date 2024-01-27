@@ -102,7 +102,7 @@ namespace hex {
         return { ".", 1 };
     }
 
-    size_t EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
+    u64 EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
         for (auto riter = m_mapping->crbegin(); riter != m_mapping->crend(); ++riter) {
             const auto &[size, mapping] = *riter;
 
@@ -144,7 +144,7 @@ namespace hex {
             if (!m_mapping->contains(fromBytes.size()))
                 m_mapping->insert({ fromBytes.size(), {} });
 
-            auto keySize = fromBytes.size();
+            u64 keySize = fromBytes.size();
             (*m_mapping)[keySize].insert({ std::move(fromBytes), to });
 
             m_longestSequence = std::max(m_longestSequence, keySize);
