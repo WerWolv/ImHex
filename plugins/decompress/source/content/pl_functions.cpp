@@ -46,13 +46,14 @@ namespace hex::plugin::decompress {
         const pl::api::Namespace nsHexDec = { "builtin", "hex", "dec" };
 
         /* zlib_decompress(compressed_pattern, section_id) */
-        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zlib_decompress", FunctionParameterCount::exactly(2), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
+        ContentRegistry::PatternLanguage::addFunction(nsHexDec, "zlib_decompress", FunctionParameterCount::exactly(3), [](Evaluator *evaluator, auto params) -> std::optional<Token::Literal> {
             #if IMHEX_FEATURE_ENABLED(ZLIB)
                 auto compressedData = getCompressedData(evaluator, params[0]);
                 auto &section = evaluator->getSection(params[1].toUnsigned());
+                auto windowSize = params[2].toUnsigned();
 
                 z_stream stream = { };
-                if (inflateInit(&stream) != Z_OK) {
+                if (inflateInit2(&stream, windowSize) != Z_OK) {
                     return false;
                 }
 
