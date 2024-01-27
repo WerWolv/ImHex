@@ -4,6 +4,7 @@
     "language": "German",
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "Windows Kontextmenu-Eintrag",
+        "hex.builtin.setting.interface.show_resource_usage": "Resourcenverbrauch anzeigen",
         "hex.windows.view.tty_console.auto_scroll": "Auto scroll",
         "hex.windows.view.tty_console.baud": "Baudrate",
         "hex.windows.view.tty_console.clear": "Löschen",

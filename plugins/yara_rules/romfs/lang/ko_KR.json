@@ -1,8 +1,8 @@
 {
     "code": "ko-KR",
-    "language": "Korean",
     "country": "Korea",
     "fallback": false,
+    "language": "Korean",
     "translations": {
         "hex.yara_rules.view.yara.error": "Yara 컴파일러 오류: {0}",
         "hex.yara_rules.view.yara.header.matches": "일치",

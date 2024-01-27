@@ -4,6 +4,7 @@
     "language": "Korean",
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "Windows 컨텍스트 메뉴 항목",
+        "hex.builtin.setting.interface.show_resource_usage": "하단에 리소스 사용량 표시",
         "hex.windows.view.tty_console.auto_scroll": "자동 스크롤",
         "hex.windows.view.tty_console.baud": "보 레이트",
         "hex.windows.view.tty_console.clear": "지우기",
@@ -22,7 +23,6 @@
         "hex.windows.view.tty_console.send_eot": "EOT 보내기",
         "hex.windows.view.tty_console.send_etx": "ETX 보내기",
         "hex.windows.view.tty_console.send_sub": "SUB 보내기",
-        "hex.windows.view.tty_console.stop_bits": "스톱 비트",
-        "hex.builtin.setting.interface.show_resource_usage": "하단에 리소스 사용량 표시"
+        "hex.windows.view.tty_console.stop_bits": "스톱 비트"
     }
 }

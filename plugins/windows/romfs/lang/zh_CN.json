@@ -4,6 +4,7 @@
     "language": "Chinese (Simplified)",
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "窗口上下文菜单项",
+        "hex.builtin.setting.interface.show_resource_usage": "",
         "hex.windows.view.tty_console.auto_scroll": "自动滚动",
         "hex.windows.view.tty_console.baud": "波特率",
         "hex.windows.view.tty_console.clear": "清除",

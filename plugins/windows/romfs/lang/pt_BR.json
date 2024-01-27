@@ -4,6 +4,7 @@
     "language": "Portuguese",
     "translations": {
         "hex.builtin.setting.general.context_menu_entry": "Entrada do menu de contexto do Windows",
+        "hex.builtin.setting.interface.show_resource_usage": "",
         "hex.windows.view.tty_console.auto_scroll": "Auto rolagem",
         "hex.windows.view.tty_console.baud": "Baud rate",
         "hex.windows.view.tty_console.clear": "Limpar",
