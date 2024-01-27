@@ -592,14 +592,12 @@ namespace hex::ui {
                                 m_encodingLineStartAddresses.push_back(0);
                             }
 
-                            if (size_t(y) < m_encodingLineStartAddresses.size()) {
+                            const bool singleByteEncoding = m_currCustomEncoding->getLongestSequence() == 1 && m_currCustomEncoding->getShortestSequence() == 1;
+                            if (size_t(y) < m_encodingLineStartAddresses.size() || singleByteEncoding) {
                                 std::vector<std::pair<u64, CustomEncodingData>> encodingData;
 
-                                if (m_encodingLineStartAddresses[y] >= m_bytesPerRow) {
-                                    encodingData.emplace_back(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
-                                    m_encodingLineStartAddresses.push_back(0);
-                                } else {
-                                    u32 offset = m_encodingLineStartAddresses[y];
+                                if (singleByteEncoding) {
+                                    u64 offset = 0;
                                     do {
                                         const u64 address = y * m_bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
@@ -608,8 +606,23 @@ namespace hex::ui {
                                         offset += result.advance;
                                         encodingData.emplace_back(address, result);
                                     } while (offset < m_bytesPerRow);
+                                } else {
+                                    if (m_encodingLineStartAddresses[y] >= m_bytesPerRow) {
+                                        encodingData.emplace_back(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
+                                        m_encodingLineStartAddresses.push_back(0);
+                                    } else {
+                                        u64 offset = m_encodingLineStartAddresses[y];
+                                        do {
+                                            const u64 address = y * m_bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
-                                    m_encodingLineStartAddresses.push_back(offset - m_bytesPerRow);
+                                            auto result = queryCustomEncodingData(m_provider, *m_currCustomEncoding, address);
+
+                                            offset += result.advance;
+                                            encodingData.emplace_back(address, result);
+                                        } while (offset < m_bytesPerRow);
+
+                                        m_encodingLineStartAddresses.push_back(offset - m_bytesPerRow);
+                                    }
                                 }
 
                                 ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
