@@ -212,6 +212,11 @@ namespace hex::ui {
                 ImGui::SetNextFrameWantCaptureKeyboard(true);
             }
 
+            const auto anyMouseButtonClicked =
+                ImGui::IsMouseClicked(ImGuiMouseButton_Left)   ||
+                ImGui::IsMouseClicked(ImGuiMouseButton_Middle) ||
+                ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+
             if (shouldExitEditingMode || m_shouldModifyValue) {
                 {
                     std::vector<u8> oldData(m_editingBytes.size());
@@ -228,8 +233,7 @@ namespace hex::ui {
                     m_provider->getUndoStack().groupOperations(writtenBytes, "hex.builtin.undo_operation.modification");
                 }
 
-
-                if (!m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsKeyDown(ImGuiKey_Escape)) {
+                if (!m_selectionChanged && !ImGui::IsMouseDown(ImGuiMouseButton_Left) && !anyMouseButtonClicked && !ImGui::IsKeyDown(ImGuiKey_Escape)) {
                     auto nextEditingAddress = *m_editingAddress + m_currDataVisualizer->getBytesPerCell();
                     this->setSelection(nextEditingAddress, nextEditingAddress);
 
@@ -245,9 +249,11 @@ namespace hex::ui {
                 m_shouldUpdateEditingValue = true;
             }
 
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !hovered && !m_enteredEditingMode && !ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup)) {
-                m_editingAddress = std::nullopt;
-                m_shouldModifyValue = false;
+            if (anyMouseButtonClicked && !m_enteredEditingMode && !ImGui::IsPopupOpen("", ImGuiPopupFlags_AnyPopup)) {
+                if (!(ImGui::IsMouseClicked(ImGuiMouseButton_Left) && hovered)) {
+                    m_editingAddress = std::nullopt;
+                    m_shouldModifyValue = false;
+                }
             }
 
             if (!m_editingAddress.has_value())
