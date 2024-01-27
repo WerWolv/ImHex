@@ -187,7 +187,7 @@ namespace hex::plugin::builtin {
                 if (progress < 0)
                     progressString = "";
                 else
-                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue() / frontTask->getMaxValue(), progress * 100.0F);
+                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), progress * 100.0F);
 
                 ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
 
