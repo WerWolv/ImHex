@@ -45,8 +45,6 @@ namespace hex::messaging {
         HWND imHexWindow = *getImHexWindow();
 
         // Create the message
-        // TODO actually send all arguments and not just the eventName
-        
         std::vector<u8> fulleventData(eventName.begin(), eventName.end());
         fulleventData.push_back('\0');
 

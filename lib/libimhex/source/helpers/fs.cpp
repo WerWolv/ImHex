@@ -153,12 +153,14 @@ namespace hex::fs {
                 for (let file of selector.files) {
                     const fr = new FileReader();
                     fr.onload = () => {
-                        let path = "/openedFiles/"+file.name;
-                        if (FS.analyzePath(path).exists) {
-                            FS.unlink(path);
+                        let folder = "/openedFiles/"+Math.random().toString(36).substring(2)+"/";
+                        FS.createPath("/", folder);
+                        if (FS.analyzePath(folder+file.name).exists) {
+                            console.log(`Error: ${folder+file.name} already exist`);
+                        } else {
+                            FS.createDataFile(folder, file.name, fr.result, true, true);
+                            Module._fileBrowserCallback(stringToNewUTF8(folder+file.name));
                         }
-                        FS.createDataFile("/openedFiles/", file.name, fr.result, true, true);
-                        Module._fileBrowserCallback(stringToNewUTF8(path));
                     };
 
                     fr.readAsBinaryString(file);

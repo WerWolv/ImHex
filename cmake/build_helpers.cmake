@@ -22,7 +22,7 @@ macro(addDefines)
         add_compile_definitions(NDEBUG)
     elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(IMHEX_VERSION_STRING ${IMHEX_VERSION_STRING}-Debug)
-        add_compile_definitions(DEBUG _GLIBCXX_DEBUG _GLIBCXX_VERBOSE)
+        add_compile_definitions(DEBUG)
     elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         set(IMHEX_VERSION_STRING ${IMHEX_VERSION_STRING})
         add_compile_definitions(NDEBUG)
@@ -30,6 +30,10 @@ macro(addDefines)
         set(IMHEX_VERSION_STRING ${IMHEX_VERSION_STRING}-MinSizeRel)
         add_compile_definitions(NDEBUG)
     endif ()
+
+    if (IMHEX_ENABLE_STD_ASSERTS)
+        add_compile_definitions(_GLIBCXX_DEBUG _GLIBCXX_VERBOSE)
+    endif()
 
     if (IMHEX_STATIC_LINK_PLUGINS)
         add_compile_definitions(IMHEX_STATIC_LINK_PLUGINS)
@@ -529,8 +533,6 @@ macro(setUninstallTarget)
 endmacro()
 
 macro(addBundledLibraries)
-    find_package(PkgConfig REQUIRED)
-
     set(EXTERNAL_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
     set(THIRD_PARTY_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/third_party")
 
@@ -552,14 +554,12 @@ macro(addBundledLibraries)
     set(XDGPP_INCLUDE_DIRS "${THIRD_PARTY_LIBS_FOLDER}/xdgpp")
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
-    find_package(PkgConfig REQUIRED)
-
     if(NOT USE_SYSTEM_FMT)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/fmt EXCLUDE_FROM_ALL)
         set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
         set(FMT_LIBRARIES fmt::fmt-header-only)
     else()
-        find_package(fmt 8.0.0 REQUIRED)
+        find_package(fmt REQUIRED)
         set(FMT_LIBRARIES fmt::fmt)
     endif()
 
@@ -571,8 +571,7 @@ macro(addBundledLibraries)
 
     if (NOT EMSCRIPTEN)
         # curl
-        find_package(PkgConfig REQUIRED)
-        pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.60.0)
+        find_package(CURL REQUIRED)
 
         # nfd
         if (NOT USE_SYSTEM_NFD)
@@ -617,13 +616,7 @@ macro(addBundledLibraries)
     set_target_properties(libpl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     find_package(mbedTLS 3.4.0 REQUIRED)
-
-    pkg_search_module(MAGIC libmagic>=5.39)
-    if(NOT MAGIC_FOUND)
-        find_library(MAGIC 5.39 magic REQUIRED)
-    else()
-        set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
-    endif()
+    find_library(MAGIC 5.39 magic REQUIRED)
 
     if (NOT IMHEX_DISABLE_STACKTRACE)
         if (WIN32)
@@ -722,7 +715,7 @@ function(generateSDKDirectory)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
     endif()
 
-    install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/modules DESTINATION "${SDK_PATH}/cmake")
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/sdk/ DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")

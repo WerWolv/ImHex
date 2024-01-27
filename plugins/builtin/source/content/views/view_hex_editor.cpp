@@ -18,6 +18,8 @@
 #include <imgui_internal.h>
 #include <content/popups/popup_blocking_task.hpp>
 
+#include "content/popups/hex_editor/popup_hex_editor_find.hpp"
+
 using namespace std::literals::string_literals;
 
 namespace hex::plugin::builtin {
@@ -152,188 +154,6 @@ namespace hex::plugin::builtin {
 
     private:
         Region m_region = { 0, 1 };
-    };
-
-    class PopupFind : public ViewHexEditor::Popup {
-    public:
-        PopupFind() {
-            EventRegionSelected::subscribe(this, [this](Region region) {
-                m_searchPosition = m_nextSearchPosition.value_or(region.getStartAddress());
-                m_nextSearchPosition.reset();
-            });
-        }
-
-        ~PopupFind() override {
-            EventRegionSelected::unsubscribe(this);
-        }
-
-        void draw(ViewHexEditor *editor) override {
-            std::vector<u8> searchSequence;
-
-            ImGui::TextUnformatted("hex.builtin.view.hex_editor.menu.file.search"_lang);
-            if (ImGui::BeginTabBar("##find_tabs")) {
-                if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.hex"_lang)) {
-                    if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_NUMERIC, m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsHexadecimal)) {
-                        if (!m_input.empty()) {
-                            m_shouldSearch = true;
-                            m_backwards = false;
-                        }
-                    }
-
-                    this->drawButtons();
-
-                    if (m_shouldSearch) {
-                        searchSequence = crypt::decode16(m_input);
-                    }
-
-                    ImGui::EndTabItem();
-                }
-
-                if (ImGui::BeginTabItem("hex.builtin.view.hex_editor.search.string"_lang)) {
-                    if (ImGuiExt::InputTextIcon("##input", ICON_VS_SYMBOL_KEY, m_input, ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll)) {
-                        if (!m_input.empty()) {
-                            m_shouldSearch = true;
-                            m_backwards = false;
-                        }
-                    }
-
-                    this->drawButtons();
-
-                    if (m_shouldSearch) {
-                        searchSequence.clear();
-                        std::copy(m_input.begin(), m_input.end(), std::back_inserter(searchSequence));
-
-                        if (!searchSequence.empty() && searchSequence.back() == 0x00)
-                            searchSequence.pop_back();
-                    }
-
-                    ImGui::EndTabItem();
-                }
-
-                ImGui::EndTabBar();
-            }
-
-            if (!m_searchTask.isRunning() && !searchSequence.empty() && m_shouldSearch) {
-                m_searchTask = TaskManager::createTask("hex.ui.common.processing", ImHexApi::Provider::get()->getActualSize(), [this, editor, searchSequence](auto &) {
-                    for (u8 retry = 0; retry < 2; retry++) {
-                        auto region = this->findSequence(searchSequence, m_backwards);
-
-                        if (region.has_value()) {
-                            if (editor->getSelection() == region) {
-                                if (m_nextSearchPosition.has_value())
-                                    m_searchPosition = m_nextSearchPosition.value();
-                                m_nextSearchPosition.reset();
-                            } else {
-                                TaskManager::doLater([editor, region]{
-                                    editor->setSelection(region->getStartAddress(), region->getEndAddress());
-                                    editor->jumpToSelection();
-                                });
-
-                                break;
-                            }
-                        } else {
-                            m_reachedEnd = true;
-                        }
-                    }
-
-                    m_shouldSearch = false;
-                    m_requestFocus = true;
-                });
-            }
-        }
-
-    private:
-        void drawButtons() {
-            const auto ButtonSize = ImVec2(ImGui::CalcTextSize(ICON_VS_SEARCH).x, ImGui::GetTextLineHeight()) + ImGui::GetStyle().CellPadding * 2;
-            const auto ButtonColor = ImGui::GetStyleColorVec4(ImGuiCol_Text);
-
-            if (m_requestFocus) {
-                ImGui::SetKeyboardFocusHere(-1);
-                m_requestFocus = false;
-            }
-
-            ImGui::BeginDisabled(m_searchTask.isRunning());
-            {
-                ImGui::SameLine();
-                if (ImGuiExt::IconButton(ICON_VS_SEARCH "##search", ButtonColor, ButtonSize)) {
-                    m_shouldSearch = true;
-                    m_backwards = false;
-                    m_reachedEnd = false;
-                    m_searchPosition.reset();
-                    m_nextSearchPosition.reset();
-                }
-
-                ImGui::BeginDisabled(!m_searchPosition.has_value());
-                {
-                    ImGui::BeginDisabled(m_reachedEnd && m_backwards);
-                    {
-                        if (ImGuiExt::IconButton(ICON_VS_ARROW_UP "##up", ButtonColor, ButtonSize)) {
-                            m_shouldSearch = true;
-                            m_backwards = true;
-                            m_reachedEnd = false;
-                        }
-                    }
-                    ImGui::EndDisabled();
-
-                    ImGui::SameLine();
-
-                    ImGui::BeginDisabled(m_reachedEnd && !m_backwards);
-                    {
-                        if (ImGuiExt::IconButton(ICON_VS_ARROW_DOWN "##down", ButtonColor, ButtonSize)) {
-                            m_shouldSearch = true;
-                            m_backwards = false;
-                            m_reachedEnd = false;
-                        }
-                    }
-                    ImGui::EndDisabled();
-                }
-
-                ImGui::EndDisabled();
-            }
-            ImGui::EndDisabled();
-        }
-
-        std::optional<Region> findSequence(const std::vector<u8> &sequence, bool backwards) {
-            auto provider = ImHexApi::Provider::get();
-
-            prv::ProviderReader reader(provider);
-
-            reader.seek(m_searchPosition.value_or(provider->getBaseAddress()));
-
-            constexpr static auto searchFunction = [](const auto &haystackBegin, const auto &haystackEnd, const auto &needleBegin, const auto &needleEnd) {
-                return std::search(haystackBegin, haystackEnd, std::boyer_moore_horspool_searcher(needleBegin, needleEnd));
-            };
-
-            if (!backwards) {
-                auto occurrence = searchFunction(reader.begin(), reader.end(), sequence.begin(), sequence.end());
-                if (occurrence != reader.end()) {
-                    m_nextSearchPosition = occurrence.getAddress() + sequence.size();
-                    return Region { occurrence.getAddress(), sequence.size() };
-                }
-            } else {
-                auto occurrence = searchFunction(reader.rbegin(), reader.rend(), sequence.rbegin(), sequence.rend());
-                if (occurrence != reader.rend()) {
-                    if (occurrence.getAddress() < sequence.size())
-                        m_nextSearchPosition = 0x00;
-                    else
-                        m_nextSearchPosition = occurrence.getAddress() - sequence.size();
-
-                    return Region { occurrence.getAddress() - (sequence.size() - 1), sequence.size() };
-                }
-            }
-
-            return std::nullopt;
-        }
-
-        std::string m_input;
-        std::optional<u64> m_searchPosition, m_nextSearchPosition;
-
-        bool m_requestFocus = true;
-        std::atomic<bool> m_shouldSearch = false;
-        std::atomic<bool> m_backwards    = false;
-        std::atomic<bool> m_reachedEnd   = false;
-
-        TaskHolder m_searchTask;
     };
 
     class PopupBaseAddress : public ViewHexEditor::Popup {
@@ -1126,7 +946,7 @@ namespace hex::plugin::builtin {
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.view.hex_editor.menu.file.search" }, ICON_VS_SEARCH, 1550,
                                                 CTRLCMD + Keys::F,
                                                 [this] {
-                                                    this->openPopup<PopupFind>();
+                                                    this->openPopup<PopupFind>(this);
                                                 },
                                                 ImHexApi::Provider::isValid);
 

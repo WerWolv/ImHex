@@ -345,6 +345,11 @@ namespace hex::plugin::builtin {
     }
 
     void setupOutOfBoxExperience() {
+        // Don't show the out of box experience in the web version
+        #if defined(OS_WEB)
+            return;
+        #endif
+
         // Check if there is a telemetry uuid
         s_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
 

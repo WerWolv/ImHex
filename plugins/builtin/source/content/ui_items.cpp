@@ -183,7 +183,13 @@ namespace hex::plugin::builtin {
                 ImGui::InvisibleButton("RestTasks", ImVec2(widgetEnd.x - widgetStart.x, ImGui::GetCurrentWindowRead()->MenuBarHeight()));
                 ImGui::SetCursorPos(widgetEnd);
 
-                ImGuiExt::InfoTooltip(hex::format("[{:.1f}%] {}", progress * 100.0F, Lang(frontTask->getUnlocalizedName())).c_str());
+                std::string progressString;
+                if (progress < 0)
+                    progressString = "";
+                else
+                    progressString = hex::format("[ {}/{} ({:.1f}%) ] ", frontTask->getValue(), frontTask->getMaxValue(), progress * 100.0F);
+
+                ImGuiExt::InfoTooltip(hex::format("{}{}", progressString, Lang(frontTask->getUnlocalizedName())).c_str());
 
                 if (ImGui::BeginPopupContextItem("RestTasks", ImGuiPopupFlags_MouseButtonLeft)) {
                     for (const auto &task : tasks) {
