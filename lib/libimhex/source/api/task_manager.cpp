@@ -31,6 +31,7 @@ namespace hex {
         std::vector<std::jthread> s_workers;
 
         thread_local std::array<char, 256> s_currentThreadName;
+        thread_local Task* s_currentTask = nullptr;
 
     }
 
@@ -228,6 +229,8 @@ namespace hex {
                         // Grab the next task from the queue
                         task = std::move(s_taskQueue.front());
                         s_taskQueue.pop_front();
+
+                        s_currentTask = task.get();
                     }
 
                     try {
@@ -253,6 +256,7 @@ namespace hex {
                         task->exception("Unknown Exception");
                     }
 
+                    s_currentTask = nullptr;
                     task->finish();
                 }
             });
@@ -325,6 +329,11 @@ namespace hex {
         }
 
     }
+
+    Task& TaskManager::getCurrentTask() {
+        return *s_currentTask;
+    }
+
 
     std::list<std::shared_ptr<Task>> &TaskManager::getRunningTasks() {
         return s_tasks;

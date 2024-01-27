@@ -170,7 +170,7 @@ namespace hex::plugin::builtin {
             u32 color;
         };
 
-        std::unique_ptr<pl::PatternLanguage> m_parserRuntime;
+        std::unique_ptr<pl::PatternLanguage>  m_editorRuntime;
 
         PerProvider<std::vector<std::fs::path>> m_possiblePatternFiles;
         bool m_runAutomatically   = false;
@@ -199,7 +199,7 @@ namespace hex::plugin::builtin {
 
         PatternSourceCode m_sourceCode;
         PerProvider<std::vector<std::string>> m_console;
-        PerProvider<bool> m_executionDone = true;
+        PerProvider<bool> m_executionDone;
 
         std::mutex m_logMutex;
 
@@ -220,6 +220,13 @@ namespace hex::plugin::builtin {
 
         std::array<AccessData, 512> m_accessHistory = {};
         u32 m_accessHistoryIndex = 0;
+        bool replace = false;
+        static inline std::array<std::string,256> m_findHistory;
+        static inline u32 m_findHistorySize = 0;
+        static inline u32 m_findHistoryIndex = 0;
+        static inline std::array<std::string,256> m_replaceHistory;
+        static inline u32 m_replaceHistorySize = 0;
+        static inline u32 m_replaceHistoryIndex = 0;
 
     private:
         void drawConsole(ImVec2 size);
@@ -230,6 +237,10 @@ namespace hex::plugin::builtin {
         void drawDebugger(ImVec2 size);
 
         void drawPatternTooltip(pl::ptrn::Pattern *pattern);
+
+        void drawFindReplaceDialog(std::string &findWord, bool &requestFocus, u64 &position, u64 &count, bool &updateCount);
+
+        void historyInsert(std::array<std::string,256> &history,u32 &size,  u32 &index, const std::string &value);
 
         void loadPatternFile(const std::fs::path &path, prv::Provider *provider);
 

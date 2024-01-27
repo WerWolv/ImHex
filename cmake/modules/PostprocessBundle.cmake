@@ -55,7 +55,8 @@ message(STATUS "Fixing up application bundle: ${extra_dirs}")
 
 include(BundleUtilities)
 set(BU_CHMOD_BUNDLE_ITEMS ON)
-fixup_bundle("${BUNDLE_PATH}" "${plugins};${plugin_libs}" "${extra_dirs}")
+
+fixup_bundle("${BUNDLE_PATH}" "${plugins}" "${extra_dirs}")
 
 if (CODE_SIGN_CERTIFICATE_ID)
 	# Hack around Apple Silicon signing bugs by copying the real app, signing it and moving it back.

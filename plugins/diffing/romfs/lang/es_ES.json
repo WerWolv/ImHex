@@ -1,0 +1,14 @@
+{
+    "code": "es_ES",
+    "language": "Spanish",
+    "country": "Spain",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.view.diff.name": "Análisis de diferencias",
+        "hex.diffing.view.diff.added": "Añadidas",
+        "hex.diffing.view.diff.modified": "Modificadas",
+        "hex.diffing.view.diff.provider_a": "Proveedor A",
+        "hex.diffing.view.diff.provider_b": "Proveedor B",
+        "hex.diffing.view.diff.removed": "Eliminados"
+    }
+}

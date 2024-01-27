@@ -36,3 +36,6 @@
 [submodule "lib/third_party/HashLibPlus"]
 	path = lib/third_party/HashLibPlus
 	url = https://github.com/WerWolv/HashLibPlus
+[submodule "lib/third_party/edlib"]
+	path = lib/third_party/edlib
+	url = https://github.com/Martinsos/edlib

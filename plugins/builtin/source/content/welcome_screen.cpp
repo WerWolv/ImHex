@@ -24,13 +24,11 @@
 
 #include <fonts/codicons_font.h>
 
-#include <content/popups/popup_telemetry_request.hpp>
 #include <content/recent.hpp>
 
 #include <string>
 #include <random>
 #include <popups/popup_question.hpp>
-#include <hex/api/tutorial_manager.hpp>
 #include <hex/api/workspace_manager.hpp>
 
 namespace hex::plugin::builtin {
@@ -494,29 +492,6 @@ namespace hex::plugin::builtin {
 
             if (!s_bannerTexture.isValid()) {
                 log::error("Failed to load banner texture!");
-            }
-        });
-
-        EventWindowInitialized::subscribe([] {
-            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
-                ui::PopupQuestion::open("hex.builtin.popup.play_tutorial.desc"_lang,
-                    []{
-                        TutorialManager::startTutorial("hex.builtin.tutorial.introduction");
-                    },
-                    []{ });
-            }
-
-            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
-
-            // Documentation of the value above the setting definition
-            auto allowServerContact = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
-            if (allowServerContact == 2) {
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
-
-                // Open the telemetry popup but only on desktop versions
-                #if !defined(OS_WEB)
-                    PopupTelemetryRequest::open();
-                #endif
             }
         });
 

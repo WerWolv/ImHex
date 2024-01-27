@@ -134,6 +134,8 @@ namespace hex::init {
         ContentRegistry::Experiments::impl::getExperiments().clear();
         ContentRegistry::Reports::impl::getGenerators().clear();
 
+        ContentRegistry::Diffing::impl::getAlgorithms().clear();
+
         WorkspaceManager::reset();
         LayoutManager::reset();
 
@@ -157,10 +159,13 @@ namespace hex::init {
 
     bool loadPlugins() {
         // Load all plugins
+        bool hasExtraPluginFolders = !PluginManager::getPluginLoadPaths().empty();
         #if !defined(IMHEX_STATIC_LINK_PLUGINS)
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
-                PluginManager::load(dir);
+                PluginManager::addLoadPath(dir);
             }
+
+            PluginManager::load();
         #endif
 
         // Get loaded plugins
@@ -174,13 +179,16 @@ namespace hex::init {
             return false;
         }
 
-        const auto shouldLoadPlugin = [executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
+        const auto shouldLoadPlugin = [hasExtraPluginFolders, executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
             // In debug builds, ignore all plugins that are not part of the executable directory
             #if !defined(DEBUG)
                 return true;
             #endif
 
             if (!executablePath.has_value())
+                return true;
+
+            if (hasExtraPluginFolders)
                 return true;
 
             // Check if the plugin is somewhere in the same directory tree as the executable
@@ -274,6 +282,7 @@ namespace hex::init {
 
     bool unloadPlugins() {
         PluginManager::unload();
+        PluginManager::getPluginLoadPaths().clear();
 
         return true;
     }

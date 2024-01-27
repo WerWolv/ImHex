@@ -13,6 +13,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <GLFW/glfw3.h>
 
 #if defined(OS_WINDOWS)
     #define WIN32_LEAN_AND_MEAN
@@ -448,6 +449,11 @@ namespace hex {
                 s_lastFrameTime = time;
             }
 
+            static bool s_windowResizable = true;
+            bool isWindowResizable() {
+                return s_windowResizable;
+            }
+
 
         }
 
@@ -707,6 +713,12 @@ namespace hex {
         double getLastFrameTime() {
             return impl::s_lastFrameTime;
         }
+
+        void setWindowResizable(bool resizable) {
+            glfwSetWindowAttrib(impl::s_mainWindowHandle, GLFW_RESIZABLE, resizable);
+            impl::s_windowResizable = resizable;
+        }
+
 
 
     }

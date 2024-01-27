@@ -78,6 +78,10 @@ namespace hex {
     }
 
     Plugin::~Plugin() {
+        if (isLoaded()) {
+            log::debug("Trying to unload plugin '{}'", getPluginName());
+        }
+
         #if defined(OS_WINDOWS)
             if (m_handle != 0)
                 if (FreeLibrary(HMODULE(m_handle)) == FALSE) {
@@ -103,7 +107,8 @@ namespace hex {
 
 
         const auto requestedVersion = getCompatibleVersion();
-        if (requestedVersion != ImHexApi::System::getImHexVersion()) {
+        const auto imhexVersion = ImHexApi::System::getImHexVersion();
+        if (!imhexVersion.starts_with(requestedVersion)) {
             if (requestedVersion.empty()) {
                 log::warn("Plugin '{}' did not specify a compatible version, assuming it is compatible with the current version of ImHex.", wolv::util::toUTF8String(m_path.filename()));
             } else {
@@ -222,6 +227,18 @@ namespace hex {
         #endif
     }
 
+    void PluginManager::addLoadPath(const std::fs::path& path) {
+        getPluginLoadPaths().emplace_back(path);
+    }
+
+
+    bool PluginManager::load() {
+        bool success = true;
+        for (const auto &loadPath : getPluginLoadPaths())
+            success = PluginManager::load(loadPath) && success;
+
+        return success;
+    }
 
 
     bool PluginManager::load(const std::fs::path &pluginFolder) {
@@ -252,10 +269,14 @@ namespace hex {
             return !plugin.isValid();
         });
 
-        if (getPlugins().empty())
-            return false;
-
         return true;
+    }
+
+    void PluginManager::initializeNewPlugins() {
+        for (const auto &plugin : getPlugins()) {
+            if (!plugin.isLoaded())
+                hex::unused(plugin.initializePlugin());
+        }
     }
 
     void PluginManager::unload() {
@@ -263,13 +284,7 @@ namespace hex {
 
         // Unload plugins in reverse order
         auto &plugins = getPlugins();
-        const auto pluginCount = plugins.size();
-        for (size_t i = 0; i < pluginCount; i++) {
-            auto &plugin = plugins[pluginCount - 1 - i];
-            if (plugin.isLoaded()) {
-                log::info("Trying to unload plugin '{}'", plugin.getPluginName());
-            }
-
+        while (!plugins.empty()) {
             plugins.pop_back();
         }
     }
@@ -278,13 +293,19 @@ namespace hex {
         getPlugins().emplace_back(name, functions);
     }
 
-    std::vector<Plugin> &PluginManager::getPlugins() {
-        static std::vector<Plugin> plugins;
+    std::list<Plugin> &PluginManager::getPlugins() {
+        static std::list<Plugin> plugins;
 
         return plugins;
     }
 
     std::vector<std::fs::path> &PluginManager::getPluginPaths() {
+        static std::vector<std::fs::path> pluginPaths;
+
+        return pluginPaths;
+    }
+
+    std::vector<std::fs::path> &PluginManager::getPluginLoadPaths() {
         static std::vector<std::fs::path> pluginPaths;
 
         return pluginPaths;

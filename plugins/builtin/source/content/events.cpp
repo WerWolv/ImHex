@@ -194,6 +194,14 @@ namespace hex::plugin::builtin {
                  RequestOpenFile::post(path);
         });
 
+        EventWindowInitialized::subscribe([] {
+            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
+                EventFirstLaunch::post();
+            }
+
+            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+        });
+
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){
             #if defined(NFD_PORTAL)
                 ui::PopupError::open(hex::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));

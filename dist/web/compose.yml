@@ -1,0 +1,10 @@
+# docker compose -f dist/web/compose.yml --build up
+version: '3'
+services:
+  imhex_web:
+    image: imhex_web:latest
+    build:
+      context: ../../ # ImHex folder
+      dockerfile: ./dist/web/Dockerfile
+    ports:
+      - 8080:80

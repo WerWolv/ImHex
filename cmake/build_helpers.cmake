@@ -22,7 +22,7 @@ macro(addDefines)
         add_compile_definitions(NDEBUG)
     elseif (CMAKE_BUILD_TYPE STREQUAL "Debug")
         set(IMHEX_VERSION_STRING ${IMHEX_VERSION_STRING}-Debug)
-        add_compile_definitions(DEBUG _GLIBCXX_DEBUG _GLIBCXX_VERBOSE)
+        add_compile_definitions(DEBUG)
     elseif (CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
         set(IMHEX_VERSION_STRING ${IMHEX_VERSION_STRING})
         add_compile_definitions(NDEBUG)
@@ -30,6 +30,10 @@ macro(addDefines)
         set(IMHEX_VERSION_STRING ${IMHEX_VERSION_STRING}-MinSizeRel)
         add_compile_definitions(NDEBUG)
     endif ()
+
+    if (IMHEX_ENABLE_STD_ASSERTS)
+        add_compile_definitions(_GLIBCXX_DEBUG _GLIBCXX_VERBOSE)
+    endif()
 
     if (IMHEX_STATIC_LINK_PLUGINS)
         add_compile_definitions(IMHEX_STATIC_LINK_PLUGINS)
@@ -237,7 +241,7 @@ macro(createPackage)
             set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
 
             # Fix rpath
-            add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
+            add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main> || true)
 
             add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
             add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
@@ -255,6 +259,11 @@ macro(createPackage)
 
             set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns")
             set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}/Contents/Info.plist")
+
+            find_program(CODESIGN_PATH codesign)
+            if (CODESIGN_PATH)
+                add_custom_command(TARGET imhex_all POST_BUILD COMMAND "codesign" ARGS "--force" "--deep" "--sign" "-" "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
+            endif()
         endif()
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -350,6 +359,10 @@ macro(configureCMake)
     # display a warning about options being set using set() instead of option().
     # Explicitly set the policy to NEW to suppress the warning.
     set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
+
+    set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+
+    set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "Disable deprecated warnings" FORCE)
 endmacro()
 
 macro(setDefaultBuiltTypeIfUnset)
@@ -520,8 +533,6 @@ macro(setUninstallTarget)
 endmacro()
 
 macro(addBundledLibraries)
-    find_package(PkgConfig REQUIRED)
-
     set(EXTERNAL_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/external")
     set(THIRD_PARTY_LIBS_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/lib/third_party")
 
@@ -543,14 +554,12 @@ macro(addBundledLibraries)
     set(XDGPP_INCLUDE_DIRS "${THIRD_PARTY_LIBS_FOLDER}/xdgpp")
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
-    find_package(PkgConfig REQUIRED)
-
     if(NOT USE_SYSTEM_FMT)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/fmt EXCLUDE_FROM_ALL)
         set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
         set(FMT_LIBRARIES fmt::fmt-header-only)
     else()
-        find_package(fmt 8.0.0 REQUIRED)
+        find_package(fmt REQUIRED)
         set(FMT_LIBRARIES fmt::fmt)
     endif()
 
@@ -562,8 +571,7 @@ macro(addBundledLibraries)
 
     if (NOT EMSCRIPTEN)
         # curl
-        find_package(PkgConfig REQUIRED)
-        pkg_check_modules(LIBCURL REQUIRED IMPORTED_TARGET libcurl>=7.60.0)
+        find_package(CURL REQUIRED)
 
         # nfd
         if (NOT USE_SYSTEM_NFD)
@@ -608,13 +616,7 @@ macro(addBundledLibraries)
     set_target_properties(libpl PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     find_package(mbedTLS 3.4.0 REQUIRED)
-
-    pkg_search_module(MAGIC libmagic>=5.39)
-    if(NOT MAGIC_FOUND)
-        find_library(MAGIC 5.39 magic REQUIRED)
-    else()
-        set(MAGIC_INCLUDE_DIRS ${MAGIC_INCLUDEDIR})
-    endif()
+    find_library(MAGIC 5.39 magic REQUIRED)
 
     if (NOT IMHEX_DISABLE_STACKTRACE)
         if (WIN32)
@@ -713,7 +715,7 @@ function(generateSDKDirectory)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/nlohmann_json DESTINATION "${SDK_PATH}/lib/third_party")
     endif()
 
-    install(FILES ${CMAKE_SOURCE_DIR}/cmake/modules/ImHexPlugin.cmake DESTINATION "${SDK_PATH}/cmake/modules")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/modules DESTINATION "${SDK_PATH}/cmake")
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/sdk/ DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")

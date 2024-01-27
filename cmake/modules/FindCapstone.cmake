@@ -1,0 +1,8 @@
+find_path(CAPSTONE_INCLUDE_DIR capstone.h PATH_SUFFIXES capstone)
+find_library(CAPSTONE_LIBRARY NAMES capstone)
+
+include(FindPackageHandleStandardArgs)
+
+find_package_handle_standard_args(Capstone DEFAULT_MSG CAPSTONE_LIBRARY CAPSTONE_INCLUDE_DIR)
+
+mark_as_advanced(CAPSTONE_INCLUDE_DIR CAPSTONE_LIBRARY)

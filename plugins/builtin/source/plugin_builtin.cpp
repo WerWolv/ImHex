@@ -48,6 +48,7 @@ namespace hex::plugin::builtin {
     void loadFonts();
 
     void handleBorderlessWindowMode();
+    void setupOutOfBoxExperience();
 
     void extractBundledFiles();
 
@@ -71,7 +72,6 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
-
     using namespace hex::plugin::builtin;
 
     hex::log::debug("Using romfs: '{}'", romfs::name());
@@ -81,6 +81,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     addInitTasks();
     loadFonts();
     extractBundledFiles();
+
+    registerMainMenuEntries();
 
     registerEventHandlers();
     registerDataVisualizers();
@@ -115,7 +117,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     addToolbarItems();
     addGlobalUIItems();
 
-    registerMainMenuEntries();
-
     handleBorderlessWindowMode();
+    setupOutOfBoxExperience();
 }

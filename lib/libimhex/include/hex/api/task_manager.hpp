@@ -154,10 +154,24 @@ namespace hex {
          */
         static void runWhenTasksFinished(const std::function<void()> &function);
 
+        /**
+         * @brief Sets the name of the current thread
+         * @param name Name of the thread
+         */
         static void setCurrentThreadName(const std::string &name);
+
+        /**
+         * @brief Gets the name of the current thread
+         * @return Name of the thread
+         */
         static std::string getCurrentThreadName();
 
+        /**
+         * @brief Cleans up finished tasks
+         */
         static void collectGarbage();
+
+        static Task& getCurrentTask();
 
         static size_t getRunningTaskCount();
         static size_t getRunningBackgroundTaskCount();

@@ -1,0 +1,14 @@
+{
+    "code": "ko-KR",
+    "language": "Korean",
+    "country": "Korea",
+    "fallback": false,
+    "translations": {
+        "hex.diffing.view.diff.name": "파일 비교",
+        "hex.diffing.view.diff.added": "추가됨",
+        "hex.diffing.view.diff.modified": "수정됨",
+        "hex.diffing.view.diff.provider_a": "공급자 A",
+        "hex.diffing.view.diff.provider_b": "공급자 B",
+        "hex.diffing.view.diff.removed": "제거됨"
+    }
+}

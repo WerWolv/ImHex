@@ -197,6 +197,12 @@ namespace hex {
 
                 std::string_view hoveredWindowName = GImGui->HoveredWindow == nullptr ? "" : GImGui->HoveredWindow->Name;
 
+                if (!ImHexApi::System::impl::isWindowResizable()) {
+                    if (result != RegionClient) {
+                        return HTCAPTION;
+                    }
+                }
+
                 switch (result) {
                     case RegionLeft:
                         return HTLEFT;
@@ -326,7 +332,7 @@ namespace hex {
         {
             EventFileDragged::post(true);
 
-            *pdwEffect = DROPEFFECT_NONE;
+            *pdwEffect = DROPEFFECT_COPY;
             return S_OK;
         }
 
@@ -335,7 +341,7 @@ namespace hex {
             POINTL,
             DWORD *pdwEffect) override
         {
-            *pdwEffect = DROPEFFECT_NONE;
+            *pdwEffect = DROPEFFECT_COPY;
             return S_OK;
         }
 
@@ -371,9 +377,7 @@ namespace hex {
 
             EventFileDragged::post(false);
 
-            *pdwEffect &= DROPEFFECT_NONE;
-            return S_OK;
-
+            *pdwEffect &= DROPEFFECT_COPY;
             return S_OK;
         }
     };
@@ -382,10 +386,20 @@ namespace hex {
         // Setup borderless window
         auto hwnd = glfwGetWin32Window(m_window);
 
+        CoInitialize(nullptr);
         OleInitialize(nullptr);
 
         static DropManager dm;
-        RegisterDragDrop(hwnd, &dm);
+        if (RegisterDragDrop(hwnd, &dm) != S_OK) {
+            log::warn("Failed to register drop target");
+
+            // Register fallback drop target using glfw
+            glfwSetDropCallback(m_window, [](GLFWwindow *, int count, const char **paths) {
+                for (int i = 0; i < count; i++) {
+                    EventFileDropped::post(reinterpret_cast<const char8_t *>(paths[i]));
+                }
+            });
+        }
 
         bool borderlessWindowMode = ImHexApi::System::isBorderlessWindowModeEnabled();
 
@@ -481,6 +495,13 @@ namespace hex {
         // Remove WS_POPUP style from the window to make various window management tools work
         auto hwnd = glfwGetWin32Window(m_window);
         ::SetWindowLong(hwnd, GWL_STYLE, (GetWindowLong(hwnd, GWL_STYLE) | WS_OVERLAPPEDWINDOW) & ~WS_POPUP);
+
+        if (!ImHexApi::System::impl::isWindowResizable()) {
+            if (glfwGetWindowAttrib(m_window, GLFW_MAXIMIZED)) {
+                glfwRestoreWindow(m_window);
+            }
+        }
+
     }
 
     void Window::endNativeWindowFrame() {

@@ -17,16 +17,25 @@ target_link_libraries(imgui_custom PRIVATE imgui_includes)
 set_property(TARGET imgui_custom PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_include_directories(imgui_all_includes INTERFACE include)
 
-find_package(PkgConfig REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Freetype REQUIRED)
-pkg_search_module(GLFW REQUIRED glfw3)
 
-# pkgsearch somehow reports the glfw3 library as glfw3dll in Release builds on MinGW which is not correct
+find_package(GLFW QUIET)
+if (NOT GLFW_FOUND OR "${GLFW_LIBRARIES}" STREQUAL "")
+    find_package(glfw3 QUIET)
+    set(GLFW_INCLUDE_DIRS ${glfw3_INCLUDE_DIRS})
+    set(GLFW_LIBRARIES ${glfw3_LIBRARIES})
+
+    if (NOT glfw3_FOUND OR "${GLFW_LIBRARIES}" STREQUAL "")
+        find_package(PkgConfig REQUIRED)
+        pkg_search_module(GLFW REQUIRED glfw3)
+    endif ()
+endif()
+
 if ("${GLFW_LIBRARIES}" MATCHES ".+dll")
     set(GLFW_LIBRARIES "glfw3")
 endif ()
 
-target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${GLFW_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
-target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS} ${GLFW_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
+target_include_directories(imgui_custom PUBLIC ${FREETYPE_INCLUDE_DIRS} ${OpenGL_INCLUDE_DIRS})
+target_link_directories(imgui_custom PUBLIC ${FREETYPE_LIBRARY_DIRS} ${OpenGL_LIBRARY_DIRS})
 target_link_libraries(imgui_custom PUBLIC ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES})

@@ -44,6 +44,7 @@ add_imhex_plugin(
         source/content/fonts.cpp
         source/content/workspaces.cpp
         source/content/pl_visualizers.cpp
+        source/content/out_of_box_experience.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp
@@ -88,6 +89,8 @@ add_imhex_plugin(
         source/content/tutorials/tutorials.cpp
         source/content/tutorials/introduction.cpp
 
+        source/content/popups/hex_editor/popup_hex_editor_find.cpp
+
         source/content/views/view_hex_editor.cpp
         source/content/views/view_pattern_editor.cpp
         source/content/views/view_pattern_data.cpp
@@ -102,7 +105,6 @@ add_imhex_plugin(
         source/content/views/view_data_processor.cpp
         source/content/views/view_constants.cpp
         source/content/views/view_store.cpp
-        source/content/views/view_diff.cpp
         source/content/views/view_provider_settings.cpp
         source/content/views/view_find.cpp
         source/content/views/view_theme_manager.cpp

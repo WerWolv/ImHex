@@ -25,8 +25,11 @@ public:
 		Identifier,
 		KnownIdentifier,
 		PreprocIdentifier,
+        GlobalDocComment,
+		DocComment,
 		Comment,
 		MultiLineComment,
+		PreprocessorDeactivated,
 		Background,
 		Cursor,
 		Selection,
@@ -140,9 +143,12 @@ public:
 		bool mComment : 1;
 		bool mMultiLineComment : 1;
 		bool mPreprocessor : 1;
+		bool mDocComment : 1;
+        bool mGlobalDocComment : 1;
+		bool mDeactivated : 1;
 
-		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
-			mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
+		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex), mComment(false),
+        mMultiLineComment(false), mPreprocessor(false), mDocComment(false), mGlobalDocComment(false), mDeactivated(false) {}
 	};
 
 	typedef std::vector<Glyph> Line;
@@ -158,7 +164,7 @@ public:
 		Keywords mKeywords;
 		Identifiers mIdentifiers;
 		Identifiers mPreprocIdentifiers;
-		std::string mCommentStart, mCommentEnd, mSingleLineComment;
+		std::string mCommentStart, mCommentEnd, mSingleLineComment, mGlobalDocComment, mDocComment;
 		char mPreprocChar;
 		bool mAutoIndentation;
 
@@ -169,7 +175,7 @@ public:
 		bool mCaseSensitive;
 
 		LanguageDefinition()
-			: mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
+			:  mGlobalDocComment("/*!"), mDocComment("/**"), mPreprocChar('#'), mAutoIndentation(true), mTokenize(nullptr), mCaseSensitive(true)
 		{
 		}
 
@@ -203,7 +209,10 @@ public:
 
 	std::string GetSelectedText() const;
 	std::string GetCurrentLineText()const;
+    class FindReplaceHandler;
 
+public:
+    FindReplaceHandler *GetFindReplaceHandler() { return &mFindReplaceHandler; }
 	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
 
@@ -260,6 +269,8 @@ public:
 	void Paste();
 	void Delete();
 
+	ImVec2 &GetCharAdvance() { return mCharAdvance; }
+
 	bool CanUndo() const;
 	bool CanRedo() const;
 	void Undo(int aSteps = 1);
@@ -279,6 +290,75 @@ private:
 		Coordinates mCursorPosition;
 	};
 
+
+public:
+    class FindReplaceHandler {
+    public:
+        FindReplaceHandler();
+        typedef std::vector<EditorState> Matches;
+        Matches &GetMatches() { return mMatches; }
+        bool FindNext(TextEditor *editor,bool wrapAround);
+        unsigned FindMatch(TextEditor *editor,bool isNex);
+        bool Replace(TextEditor *editor,bool right);
+        bool ReplaceAll(TextEditor *editor);
+        std::string &GetFindWord()  { return mFindWord; }
+        void SetFindWord(TextEditor *editor, const std::string &aFindWord) {
+            if (aFindWord != mFindWord) {
+                FindAllMatches(editor, aFindWord);
+                mFindWord = aFindWord;
+            }
+        }
+        std::string &GetReplaceWord()  { return mReplaceWord; }
+        void SetReplaceWord(const std::string &aReplaceWord) { mReplaceWord = aReplaceWord; }
+        void SelectFound(TextEditor *editor, int found);
+        void FindAllMatches(TextEditor *editor,std::string findWord);
+        unsigned FindPosition( TextEditor *editor, Coordinates pos, bool isNext);
+        bool GetMatchCase() const { return mMatchCase; }
+        void SetMatchCase(TextEditor *editor, bool matchCase)  {
+            if (matchCase != mMatchCase) {
+                mMatchCase = matchCase;
+                mOptionsChanged = true;
+                FindAllMatches(editor, mFindWord);
+            }
+        }
+        bool GetWholeWord()  const { return mWholeWord; }
+        void SetWholeWord(TextEditor *editor, bool wholeWord)  {
+            if (wholeWord != mWholeWord) {
+                mWholeWord = wholeWord;
+                mOptionsChanged = true;
+                FindAllMatches(editor, mFindWord);
+            }
+        }
+        bool GetFindRegEx()  const { return mFindRegEx; }
+        void SetFindRegEx(TextEditor *editor, bool findRegEx)  {
+            if (findRegEx != mFindRegEx) {
+                mFindRegEx = findRegEx;
+                mOptionsChanged = true;
+                FindAllMatches(editor, mFindWord);
+            }
+        }
+        void resetMatches() {
+            mMatches.clear();
+            mFindWord = "";
+        }
+
+        void SetFindWindowPos(const ImVec2 &pos) { mFindWindowPos = pos; }
+        void SetFindWindowSize(const ImVec2 &size) { mFindWindowSize = size; }
+        ImVec2 GetFindWindowPos() const { return mFindWindowPos; }
+        ImVec2 GetFindWindowSize() const { return mFindWindowSize; }
+    private:
+        std::string mFindWord;
+        std::string mReplaceWord;
+        bool mMatchCase;
+        bool mWholeWord;
+        bool mFindRegEx;
+        bool mOptionsChanged;
+        Matches mMatches;
+        ImVec2 mFindWindowPos;
+        ImVec2 mFindWindowSize;
+    };
+    FindReplaceHandler mFindReplaceHandler;
+private:
 	class UndoRecord
 	{
 	public:
@@ -335,6 +415,8 @@ private:
 	int GetCharacterIndex(const Coordinates& aCoordinates) const;
 	int GetCharacterColumn(int aLine, int aIndex) const;
 	int GetLineCharacterCount(int aLine) const;
+	unsigned long long GetLineByteCount(int aLine) const;
+	int GetStringCharacterCount(std::string str) const;
 	int GetLineMaxColumn(int aLine) const;
 	bool IsOnWordBoundary(const Coordinates& aAt) const;
 	void RemoveLine(int aStart, int aEnd);
@@ -356,6 +438,8 @@ private:
 	EditorState mState;
 	UndoBuffer mUndoBuffer;
 	int mUndoIndex;
+    bool mScrollToBottom;
+    float mTopMargin;
 
 	int mTabSize;
 	bool mOverwrite;
@@ -379,14 +463,14 @@ private:
 	Palette mPalette;
 	LanguageDefinition mLanguageDefinition;
 	RegexList mRegexList;
-
-	bool mCheckComments;
+    bool mCheckComments;
 	Breakpoints mBreakpoints;
 	ErrorMarkers mErrorMarkers;
 	ImVec2 mCharAdvance;
 	Coordinates mInteractiveStart, mInteractiveEnd;
 	std::string mLineBuffer;
 	uint64_t mStartTime;
+	std::vector<std::string> mDefines;
 
 	float mLastClick;
     bool mShowCursor;
