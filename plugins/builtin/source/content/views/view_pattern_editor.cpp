@@ -1053,8 +1053,7 @@ namespace hex::plugin::builtin {
         const auto &ast = m_parserRuntime->parseString(code);
 
         auto &patternVariables = m_patternVariables.get(provider);
-
-        patternVariables.clear();
+        auto oldPatternVariables = std::move(patternVariables);
 
         if (ast.has_value()) {
             for (auto &node : *ast) {
@@ -1070,7 +1069,7 @@ namespace hex::plugin::builtin {
                         .inVariable  = variableDecl->isInVariable(),
                         .outVariable = variableDecl->isOutVariable(),
                         .type        = builtinType->getType(),
-                        .value       = { }
+                        .value       = oldPatternVariables.contains(variableDecl->getName()) ? oldPatternVariables[variableDecl->getName()].value : pl::core::Token::Literal()
                     };
 
                     if (variable.inVariable || variable.outVariable) {
