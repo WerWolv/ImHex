@@ -611,9 +611,16 @@ macro(addBundledLibraries)
         set(JTHREAD_LIBRARIES jthread)
     endif()
 
-    set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
+    set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "")
+    set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "")
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
-    set_target_properties(libpl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(
+            libpl
+            PROPERTIES
+                POSITION_INDEPENDENT_CODE ON
+                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+                LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
 
     find_package(mbedTLS 3.4.0 REQUIRED)
     find_library(MAGIC 5.39 magic REQUIRED)
