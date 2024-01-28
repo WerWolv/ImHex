@@ -100,6 +100,8 @@ namespace hex::ui {
         void drawEditor(const ImVec2 &size);
         void drawFooter(const ImVec2 &size);
         void drawTooltip(u64 address, const u8 *data, size_t size) const;
+        void drawScrollbar(ImVec2 characterSize);
+        void drawMinimap(ImVec2 characterSize);
 
         void handleSelection(u64 address, u32 bytesPerCell, const u8 *data, bool cellHovered);
         std::optional<color_t> applySelectionColor(u64 byteAddress, std::optional<color_t> color);
@@ -324,11 +326,15 @@ namespace hex::ui {
         bool m_shouldUpdateEditingValue = false;
         std::vector<u8> m_editingBytes;
 
+        std::shared_ptr<ContentRegistry::HexEditor::MiniMapVisualizer> m_miniMapVisualizer;
+
         color_t m_selectionColor = 0x60C08080;
         bool m_upperCaseHex = true;
         bool m_grayOutZero = true;
         bool m_showAscii = true;
         bool m_showCustomEncoding = true;
+        bool m_showMiniMap = false;
+        int m_miniMapWidth = 5;
         bool m_showHumanReadableUnits = true;
         u32 m_byteCellPadding = 0, m_characterCellPadding = 0;
         bool m_footerCollapsed = true;

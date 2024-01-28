@@ -45,6 +45,7 @@ add_imhex_plugin(
         source/content/workspaces.cpp
         source/content/pl_visualizers.cpp
         source/content/out_of_box_experience.cpp
+        source/content/minimap_visualizers.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp

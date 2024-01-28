@@ -171,6 +171,8 @@
         "hex.builtin.menu.view.debug": "Show Debugging View",
         "hex.builtin.menu.view.demo": "Show ImGui Demo",
         "hex.builtin.menu.view.fps": "Display FPS",
+        "hex.builtin.minimap_visualizer.entropy": "Local Entropy",
+        "hex.builtin.minimap_visualizer.zeros": "Zeros Count",
         "hex.builtin.nodes.arithmetic": "Arithmetic",
         "hex.builtin.nodes.arithmetic.add": "Addition",
         "hex.builtin.nodes.arithmetic.add.header": "Add",
