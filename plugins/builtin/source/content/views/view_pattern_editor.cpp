@@ -1254,26 +1254,31 @@ namespace hex::plugin::builtin {
 
         if (!m_lastEvaluationProcessed) {
             if (!m_lastEvaluationResult) {
+                const auto processMessage = [this](const auto &message) {
+                    auto lines = wolv::util::splitString(message, "\n");
+
+                    std::ranges::transform(lines, lines.begin(), [](auto line) {
+                        if (line.size() >= 128)
+                            line = wolv::util::trim(line);
+
+                        return hex::limitStringLength(line, 128);
+                    });
+
+                    return wolv::util::combineStrings(lines, "\n");
+                };
+
+                TextEditor::ErrorMarkers errorMarkers;
                 if (m_lastEvaluationError->has_value()) {
-                    const auto message = [this]{
-                        const auto &message = (*m_lastEvaluationError)->message;
-                        auto lines = wolv::util::splitString(message, "\n");
-
-                        std::ranges::transform(lines, lines.begin(), [](auto line) {
-                            if (line.size() >= 128)
-                                line = wolv::util::trim(line);
-
-                            return hex::limitStringLength(line, 128);
-                        });
-
-                        return wolv::util::combineStrings(lines, "\n");
-                    }();
-
-                    const TextEditor::ErrorMarkers errorMarkers = {
-                            { (*m_lastEvaluationError)->line, message }
-                    };
-                    m_textEditor.SetErrorMarkers(errorMarkers);
+                    errorMarkers[(*m_lastEvaluationError)->line] = processMessage((*m_lastEvaluationError)->message);
                 }
+
+                if (!m_lastCompileError->empty()) {
+                    for (const auto &error : *m_lastCompileError) {
+                        errorMarkers[error.getLocation().line] = processMessage(error.getMessage());
+                    }
+                }
+
+                m_textEditor.SetErrorMarkers(errorMarkers);
             } else {
                 for (auto &[name, variable] : *m_patternVariables) {
                     if (variable.outVariable && m_lastEvaluationOutVars->contains(name))
@@ -1620,6 +1625,7 @@ namespace hex::plugin::builtin {
             m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
             if (!m_lastEvaluationResult) {
                 *m_lastEvaluationError = runtime.getError();
+                *m_lastCompileError    = runtime.getCompileErrors();
             }
 
             TaskManager::doLater([code] {
