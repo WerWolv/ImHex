@@ -3,6 +3,8 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/tutorial_manager.hpp>
 
+#include <fonts/codicons_font.h>
+
 #include <ranges>
 
 namespace hex::plugin::builtin {

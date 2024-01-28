@@ -352,7 +352,7 @@ namespace hex {
 
                 ImGui::SameLine();
 
-                if (ImGuiExt::IconButton(ICON_VS_FOLDER_OPENED, ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
+                if (ImGuiExt::IconButton("...", ImGui::GetStyleColorVec4(ImGuiCol_Text))) {
                     return fs::openFileBrowser(fs::DialogMode::Open, { { "TTF Font", "ttf" }, { "OTF Font", "otf" } },
                                                [&](const std::fs::path &path) {
                                                    m_value = wolv::util::toUTF8String(path);

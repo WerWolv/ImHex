@@ -1,6 +1,7 @@
 #include <hex/plugin.hpp>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/task_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <romfs/romfs.hpp>
@@ -41,12 +42,12 @@ namespace hex::plugin::builtin {
     void registerTutorials();
     void loadWorkspaces();
 
+    void addWindowDecoration();
     void addFooterItems();
     void addTitleBarButtons();
     void addToolbarItems();
     void addGlobalUIItems();
     void addInitTasks();
-    void loadFonts();
 
     void handleBorderlessWindowMode();
     void setupOutOfBoxExperience();
@@ -80,7 +81,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
         hex::ContentRegistry::Language::addLocalization(nlohmann::json::parse(romfs::get(path).string()));
 
     addInitTasks();
-    loadFonts();
     extractBundledFiles();
 
     registerMainMenuEntries();
@@ -100,7 +100,6 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerDataProcessorNodes();
     registerProviders();
     registerDataFormatters();
-    createWelcomeScreen();
     registerViews();
     registerThemeHandlers();
     registerStyleHandlers();
@@ -113,6 +112,8 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     registerReportGenerators();
     registerTutorials();
     loadWorkspaces();
+    addWindowDecoration();
+    createWelcomeScreen();
 
     addFooterItems();
     addTitleBarButtons();

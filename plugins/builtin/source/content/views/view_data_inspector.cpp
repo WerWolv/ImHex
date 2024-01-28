@@ -7,6 +7,8 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <fonts/codicons_font.h>
+
 #include <pl/pattern_language.hpp>
 #include <pl/patterns/pattern.hpp>
 

@@ -10,6 +10,8 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 
+#include <fonts/codicons_font.h>
+
 namespace hex::plugin::builtin {
 
     ViewConstants::ViewConstants() : View::Window("hex.builtin.view.constants.name", ICON_VS_SYMBOL_CONSTANT) {

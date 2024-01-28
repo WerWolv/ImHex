@@ -126,6 +126,7 @@ namespace hex::init {
         ContentRegistry::FileHandler::impl::getEntries().clear();
         ContentRegistry::Hashes::impl::getHashes().clear();
         ContentRegistry::HexEditor::impl::getVisualizers().clear();
+        ContentRegistry::HexEditor::impl::getMiniMapVisualizers().clear();
 
         ContentRegistry::BackgroundServices::impl::stopServices();
 

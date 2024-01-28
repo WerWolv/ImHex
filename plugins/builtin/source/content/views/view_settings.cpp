@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include <popups/popup_question.hpp>
+#include <fonts/codicons_font.h>
 
 namespace hex::plugin::builtin {
 

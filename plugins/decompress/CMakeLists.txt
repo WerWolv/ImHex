@@ -25,6 +25,7 @@ add_imhex_plugin(
         include
     LIBRARIES
         ui
+        fonts
     FEATURES
         ZLIB
         BZIP2

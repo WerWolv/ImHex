@@ -5,7 +5,10 @@
 
 #include <hex/helpers/encoding_file.hpp>
 #include <hex/helpers/utils.hpp>
+
 #include <wolv/utils/guards.hpp>
+
+#include <fonts/codicons_font.h>
 
 namespace hex::ui {
 

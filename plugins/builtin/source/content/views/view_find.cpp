@@ -5,6 +5,8 @@
 
 #include <hex/providers/buffered_reader.hpp>
 
+#include <fonts/codicons_font.h>
+
 #include <array>
 #include <ranges>
 #include <regex>

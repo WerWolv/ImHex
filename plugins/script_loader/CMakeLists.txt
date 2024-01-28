@@ -14,6 +14,7 @@ add_imhex_plugin(
         include
 
     LIBRARIES
+        fonts
         ui
 )
 
