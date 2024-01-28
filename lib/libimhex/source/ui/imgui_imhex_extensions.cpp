@@ -17,7 +17,6 @@
 
 #include <hex/api/imhex_api.hpp>
 
-#include <fonts/codicons_font.h>
 #include <hex/api/task_manager.hpp>
 #include <hex/api/theme_manager.hpp>
 
@@ -366,7 +365,7 @@ namespace ImGuiExt {
         PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, GetStyle().FramePadding.y));
 
         PushStyleColor(ImGuiCol_Text, iconColor);
-        Button(ICON_VS_INFO);
+        Button("(?)");
         PopStyleColor();
 
         if (IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
@@ -1010,7 +1009,7 @@ namespace ImGuiExt {
 
         ImGui::PushID(label);
 
-        const auto buttonSize = ImGui::CalcTextSize(ICON_VS_FOLDER) + ImGui::GetStyle().FramePadding * 2;
+        const auto buttonSize = ImGui::CalcTextSize("...") + ImGui::GetStyle().FramePadding * 2;
         ImGui::PushItemWidth(ImGui::CalcItemWidth() - buttonSize.x - ImGui::GetStyle().FramePadding.x);
         std::string string = wolv::util::toUTF8String(path);
         if (ImGui::InputText("##pathInput", string, ImGuiInputTextFlags_AutoSelectAll)) {
@@ -1021,7 +1020,7 @@ namespace ImGuiExt {
 
         ImGui::SameLine();
 
-        if (ImGui::Button(ICON_VS_FOLDER, buttonSize)) {
+        if (ImGui::Button("...", buttonSize)) {
             hex::fs::openFileBrowser(hex::fs::DialogMode::Open, validExtensions, [&](const std::fs::path &pickedPath) {
                 path = pickedPath;
                 picked = true;

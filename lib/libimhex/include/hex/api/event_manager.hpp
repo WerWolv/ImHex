@@ -241,6 +241,7 @@ namespace hex {
     EVENT_DEF(EventProviderDeleted, prv::Provider *);
     EVENT_DEF(EventProviderSaved,   prv::Provider *);
     EVENT_DEF(EventWindowInitialized);
+    EVENT_DEF(EventWindowDeinitializing, GLFWwindow *);
     EVENT_DEF(EventBookmarkCreated, ImHexApi::Bookmarks::Entry&);
     EVENT_DEF(EventPatchCreated, u64, u8, u8);
     EVENT_DEF(EventPatternEvaluating);

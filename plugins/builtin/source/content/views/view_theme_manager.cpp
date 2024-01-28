@@ -4,6 +4,7 @@
 #include <hex/api/theme_manager.hpp>
 
 #include <wolv/io/file.hpp>
+#include <fonts/codicons_font.h>
 
 namespace hex::plugin::builtin {
 

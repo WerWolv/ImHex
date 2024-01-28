@@ -3,6 +3,8 @@
 
 #include <hex/api/content_registry.hpp>
 
+#include <fonts/codicons_font.h>
+
 namespace hex::plugin::builtin {
 
     ViewTools::ViewTools() : View::Window("hex.builtin.view.tools.name", ICON_VS_TOOLS) {

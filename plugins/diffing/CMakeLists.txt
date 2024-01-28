@@ -24,5 +24,6 @@ add_imhex_plugin(
         include
     LIBRARIES
         ui
+        fonts
         edlib
 )

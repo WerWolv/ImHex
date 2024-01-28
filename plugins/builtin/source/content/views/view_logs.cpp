@@ -3,6 +3,8 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/helpers/logger.hpp>
 
+#include <fonts/codicons_font.h>
+
 namespace hex::plugin::builtin {
 
     ViewLogs::ViewLogs() : View::Floating("hex.builtin.view.logs.name") {

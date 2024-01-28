@@ -3,6 +3,8 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 
+#include <fonts/codicons_font.h>
+
 #include <cstring>
 
 using namespace std::literals::string_literals;

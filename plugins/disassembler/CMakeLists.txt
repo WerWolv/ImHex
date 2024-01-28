@@ -28,6 +28,7 @@ add_imhex_plugin(
         include
         ${CAPSTONE_INCLUDE_DIR}
     LIBRARIES
-        ${CAPSTONE_LIBRARY}
         ui
+        fonts
+        ${CAPSTONE_LIBRARY}
 )

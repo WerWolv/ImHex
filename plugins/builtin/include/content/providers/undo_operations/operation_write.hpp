@@ -6,6 +6,8 @@
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
 
+#include <fonts/codicons_font.h>
+
 namespace hex::plugin::builtin::undo {
 
     class OperationWrite : public prv::undo::Operation {

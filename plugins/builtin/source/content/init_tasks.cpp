@@ -348,9 +348,31 @@ namespace hex::plugin::builtin {
             return loadFontsImpl(shouldLoadUnicode);
         }
 
+        bool loadWindowSettings() {
+            bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", false);
+            ImHexApi::System::impl::setMultiWindowMode(multiWindowEnabled);
+
+            bool restoreWindowPos = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.restore_window_pos", false);
+
+            if (restoreWindowPos) {
+                ImHexApi::System::InitialWindowProperties properties = {};
+
+                properties.maximized = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", 0).get<int>();
+                properties.x       = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", 0);
+                properties.y       = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", 0);
+                properties.width   = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", 0);
+                properties.height  = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", 0);
+
+                ImHexApi::System::impl::setInitialWindowProperties(properties);
+            }
+
+            return true;
+        }
+
     }
 
     void addInitTasks() {
+        ImHexApi::System::addStartupTask("Load Window Settings", false, loadWindowSettings);
         ImHexApi::System::addStartupTask("Configuring UI scale", true, configureUIScale);
         ImHexApi::System::addStartupTask("Loading fonts", true, loadFonts);
         ImHexApi::System::addStartupTask("Checking for updates", true, checkForUpdates);

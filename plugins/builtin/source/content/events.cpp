@@ -4,6 +4,7 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
+#include <hex/api/workspace_manager.hpp>
 
 #include <hex/providers/provider.hpp>
 #include <hex/ui/view.hpp>
@@ -200,6 +201,25 @@ namespace hex::plugin::builtin {
             }
 
             ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+        });
+
+        EventWindowDeinitializing::subscribe([](GLFWwindow *window) {
+            WorkspaceManager::exportToFile();
+            if (auto workspace = WorkspaceManager::getCurrentWorkspace(); workspace != WorkspaceManager::getWorkspaces().end())
+                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
+
+            {
+                int x = 0, y = 0, width = 0, height = 0, maximized = 0;
+                glfwGetWindowPos(window, &x, &y);
+                glfwGetWindowSize(window, &width, &height);
+                maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
+
+                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
+                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
+                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
+                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
+                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
+            }
         });
 
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){

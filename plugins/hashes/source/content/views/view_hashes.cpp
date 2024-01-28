@@ -4,8 +4,10 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/providers/memory_provider.hpp>
 
-#include <hex/ui/popup.hpp>
 #include <hex/helpers/crypto.hpp>
+
+#include <hex/ui/popup.hpp>
+#include <fonts/codicons_font.h>
 
 #include <vector>
 
