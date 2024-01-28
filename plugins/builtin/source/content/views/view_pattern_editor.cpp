@@ -1889,6 +1889,8 @@ namespace hex::plugin::builtin {
                 if (provider == ImHexApi::Provider::get())
                     m_textEditor.SetText(sourceCode);
 
+                m_hasUnevaluatedChanges = true;
+
                 return true;
             },
             .store = [this](prv::Provider *provider, const std::fs::path &basePath, const Tar &tar) {

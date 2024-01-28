@@ -985,11 +985,19 @@ namespace hex {
                 u16 m_maxCharsPerCell;
             };
 
+            struct MiniMapVisualizer {
+                using Callback = std::function<ImColor(const std::vector<u8>&)>;
+
+                UnlocalizedString unlocalizedName;
+                Callback callback;
+            };
+
             namespace impl {
 
                 void addDataVisualizer(std::shared_ptr<DataVisualizer> &&visualizer);
 
                 std::vector<std::shared_ptr<DataVisualizer>> &getVisualizers();
+                std::vector<std::shared_ptr<MiniMapVisualizer>> &getMiniMapVisualizers();
 
             }
 
@@ -1009,6 +1017,13 @@ namespace hex {
              * @return The data visualizer, or nullptr if it doesn't exist
              */
             std::shared_ptr<DataVisualizer> getVisualizerByName(const UnlocalizedString &unlocalizedName);
+
+            /**
+             * @brief Adds a new minimap visualizer
+             * @param unlocalizedName Unlocalized name of the minimap visualizer
+             * @param callback The callback that will be called to get the color of a line
+             */
+            void addMiniMapVisualizer(UnlocalizedString unlocalizedName, MiniMapVisualizer::Callback callback);
 
         }
 

@@ -88,6 +88,8 @@
         "hex.ui.hex_editor.human_readable_units_footer": "Convert sizes to human-readable units",
         "hex.ui.hex_editor.data_size": "Data Size",
         "hex.ui.hex_editor.gray_out_zero": "Grey out zeros",
+        "hex.ui.hex_editor.minimap": "Mini Map",
+        "hex.ui.hex_editor.minimap.width": "Width",
         "hex.ui.hex_editor.no_bytes": "No bytes available",
         "hex.ui.hex_editor.page": "Page",
         "hex.ui.hex_editor.region": "Region",

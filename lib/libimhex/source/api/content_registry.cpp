@@ -1001,6 +1001,12 @@ namespace hex {
                 return visualizers;
             }
 
+            std::vector<std::shared_ptr<MiniMapVisualizer>> &getMiniMapVisualizers() {
+                static std::vector<std::shared_ptr<MiniMapVisualizer>> visualizers;
+
+                return visualizers;
+            }
+
         }
 
         std::shared_ptr<DataVisualizer> getVisualizerByName(const UnlocalizedString &unlocalizedName) {
@@ -1010,6 +1016,10 @@ namespace hex {
             }
 
             return nullptr;
+        }
+
+        void addMiniMapVisualizer(UnlocalizedString unlocalizedName, MiniMapVisualizer::Callback callback) {
+            impl::getMiniMapVisualizers().emplace_back(std::make_shared<MiniMapVisualizer>(std::move(unlocalizedName), std::move(callback)));
         }
 
     }

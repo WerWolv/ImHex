@@ -1,8 +1,8 @@
 {
     "code": "es_ES",
-    "language": "Spanish",
     "country": "Spain",
     "fallback": false,
+    "language": "Spanish",
     "translations": {
         "hex.yara_rules.view.yara.error": "Error del compilador de Yara: ",
         "hex.yara_rules.view.yara.header.matches": "Coincidenciasç",

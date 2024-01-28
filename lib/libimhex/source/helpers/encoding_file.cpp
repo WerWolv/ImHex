@@ -15,6 +15,7 @@ namespace hex {
         m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
         m_tableContent = other.m_tableContent;
         m_longestSequence = other.m_longestSequence;
+        m_shortestSequence = other.m_shortestSequence;
         m_valid = other.m_valid;
         m_name = other.m_name;
     }
@@ -23,6 +24,7 @@ namespace hex {
         m_mapping = std::move(other.m_mapping);
         m_tableContent = std::move(other.m_tableContent);
         m_longestSequence = other.m_longestSequence;
+        m_shortestSequence = other.m_shortestSequence;
         m_valid = other.m_valid;
         m_name = std::move(other.m_name);
     }
@@ -66,6 +68,7 @@ namespace hex {
         m_mapping = std::make_unique<std::map<size_t, std::map<std::vector<u8>, std::string>>>(*other.m_mapping);
         m_tableContent = other.m_tableContent;
         m_longestSequence = other.m_longestSequence;
+        m_shortestSequence = other.m_shortestSequence;
         m_valid = other.m_valid;
         m_name = other.m_name;
 
@@ -76,6 +79,7 @@ namespace hex {
         m_mapping = std::move(other.m_mapping);
         m_tableContent = std::move(other.m_tableContent);
         m_longestSequence = other.m_longestSequence;
+        m_shortestSequence = other.m_shortestSequence;
         m_valid = other.m_valid;
         m_name = std::move(other.m_name);
 
@@ -98,7 +102,7 @@ namespace hex {
         return { ".", 1 };
     }
 
-    size_t EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
+    u64 EncodingFile::getEncodingLengthFor(std::span<u8> buffer) const {
         for (auto riter = m_mapping->crbegin(); riter != m_mapping->crend(); ++riter) {
             const auto &[size, mapping] = *riter;
 
@@ -140,10 +144,11 @@ namespace hex {
             if (!m_mapping->contains(fromBytes.size()))
                 m_mapping->insert({ fromBytes.size(), {} });
 
-            auto keySize = fromBytes.size();
+            u64 keySize = fromBytes.size();
             (*m_mapping)[keySize].insert({ std::move(fromBytes), to });
 
             m_longestSequence = std::max(m_longestSequence, keySize);
+            m_shortestSequence = std::min(m_shortestSequence, keySize);
         }
     }
 

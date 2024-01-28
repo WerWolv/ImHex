@@ -1,8 +1,8 @@
 {
     "code": "pt-BR",
-    "language": "Portuguese",
     "country": "Brazil",
     "fallback": false,
+    "language": "Portuguese",
     "translations": {
         "hex.yara_rules.view.yara.error": "Erro do compilador Yara: {0}",
         "hex.yara_rules.view.yara.header.matches": "Combinações",

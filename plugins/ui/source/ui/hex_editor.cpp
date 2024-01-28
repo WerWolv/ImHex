@@ -72,6 +72,7 @@ namespace hex::ui {
 
     HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
         m_currDataVisualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit");
+        m_miniMapVisualizer  = ContentRegistry::HexEditor::impl::getMiniMapVisualizers().front();
     }
 
     HexEditor::~HexEditor() {
@@ -149,6 +150,105 @@ namespace hex::ui {
 
         ImGui::PopStyleVar();
     }
+
+    void HexEditor::drawScrollbar(ImVec2 characterSize) {
+        ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+
+        auto window = ImGui::GetCurrentWindowRead();
+        const auto outerRect = window->Rect();
+        const auto innerRect = window->InnerRect;
+        const auto borderSize = window->WindowBorderSize;
+        const auto scrollbarWidth = ImGui::GetStyle().ScrollbarSize;
+        const auto bb = ImRect(ImMax(outerRect.Min.x, outerRect.Max.x - borderSize - scrollbarWidth), innerRect.Min.y, outerRect.Max.x, innerRect.Max.y);
+
+        constexpr auto roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
+        constexpr auto axis = ImGuiAxis_Y;
+
+        if (numRows > 0) {
+            ImGui::PushID("MainScrollBar");
+            ImGui::ScrollbarEx(
+                bb,
+                ImGui::GetWindowScrollbarID(window, axis),
+                axis,
+                &m_scrollPosition.get(),
+                (std::ceil(innerRect.Max.y - innerRect.Min.y) / characterSize.y),
+                std::nextafterf(numRows + ImGui::GetWindowSize().y / characterSize.y, std::numeric_limits<float>::max()),
+                roundingCorners);
+            ImGui::PopID();
+        }
+
+        if (m_showMiniMap && m_miniMapVisualizer != nullptr)
+            this->drawMinimap(characterSize);
+
+        if (ImGui::IsWindowHovered()) {
+            m_scrollPosition += ImS64(ImGui::GetIO().MouseWheel * -5);
+        }
+
+        if (m_scrollPosition < 0)
+            m_scrollPosition = 0;
+        if (m_scrollPosition > (numRows - 1))
+            m_scrollPosition = numRows - 1;
+    }
+
+    void HexEditor::drawMinimap(ImVec2 characterSize) {
+        ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
+
+        auto window = ImGui::GetCurrentWindowRead();
+        const auto outerRect = window->Rect();
+        const auto innerRect = window->InnerRect;
+        const auto borderSize = window->WindowBorderSize;
+        const auto scrollbarWidth = ImGui::GetStyle().ScrollbarSize;
+        const auto bb = ImRect(ImMax(outerRect.Min.x, outerRect.Max.x - borderSize - scrollbarWidth) - scrollbarWidth * (1 + m_miniMapWidth), innerRect.Min.y, outerRect.Max.x - scrollbarWidth, innerRect.Max.y);
+
+        constexpr auto roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
+        constexpr auto axis = ImGuiAxis_Y;
+
+        constexpr static u64 RowCount = 256;
+        const auto rowHeight = innerRect.GetSize().y / RowCount;
+        const auto scrollPos = m_scrollPosition.get();
+        const auto grabSize = rowHeight * m_visibleRowCount;
+        const auto grabPos = (RowCount - m_visibleRowCount) * (double(scrollPos) / numRows);
+
+        auto drawList = ImGui::GetWindowDrawList();
+
+        drawList->ChannelsSplit(2);
+        drawList->ChannelsSetCurrent(1);
+        if (numRows > 0) {
+            ImGui::PushID("MiniMapScrollBar");
+            ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, grabSize);
+            ImGui::PushStyleVar(ImGuiStyleVar_ScrollbarRounding, 0);
+            ImGui::PushStyleColor(ImGuiCol_ScrollbarGrab, ImGui::GetColorU32(ImGuiCol_ScrollbarGrab, 0.4F));
+            ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive, 0.5F));
+            ImGui::PushStyleColor(ImGuiCol_ScrollbarGrabHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered, 0.5F));
+            ImGui::ScrollbarEx(
+                bb,
+                ImGui::GetWindowScrollbarID(window, axis),
+                axis,
+                &m_scrollPosition.get(),
+                (std::ceil(innerRect.Max.y - innerRect.Min.y) / characterSize.y),
+                std::nextafterf((numRows - m_visibleRowCount) + ImGui::GetWindowSize().y / characterSize.y, std::numeric_limits<float>::max()),
+                roundingCorners);
+            ImGui::PopStyleVar(2);
+            ImGui::PopStyleColor(3);
+            ImGui::PopID();
+        }
+        drawList->ChannelsSetCurrent(0);
+
+        std::vector<u8> rowData(m_bytesPerRow);
+        const auto drawStart = scrollPos - grabPos;
+        for (u64 y = drawStart; y < std::min<u64>(drawStart + RowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
+            const auto rowStart = bb.Min + ImVec2(0, (y - drawStart) * rowHeight);
+            const auto rowEnd = rowStart + ImVec2(bb.GetSize().x, rowHeight);
+
+            m_provider->read(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), rowData.data(), rowData.size());
+
+            drawList->AddRectFilled(rowStart, rowEnd, m_miniMapVisualizer->callback(rowData));
+        }
+
+        drawList->ChannelsMerge();
+    }
+
+
 
     void HexEditor::drawCell(u64 address, const u8 *data, size_t size, bool hovered, CellType cellType) {
         static DataVisualizerAscii asciiVisualizer;
@@ -313,39 +413,7 @@ namespace hex::ui {
         }
 
         if (ImGui::BeginChild("Hex View", size, ImGuiChildFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-            // Draw scrollbar
-            {
-                const auto window = ImGui::GetCurrentWindowRead();
-                const auto axis = ImGuiAxis_Y;
-                ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
-
-                const auto outerRect = window->Rect();
-                const auto innerRect = window->InnerRect;
-                const auto borderSize = window->WindowBorderSize;
-                const auto scrollbarWidth = ImGui::GetStyle().ScrollbarSize;
-                const auto bb = ImRect(ImMax(outerRect.Min.x, outerRect.Max.x - borderSize - scrollbarWidth), innerRect.Min.y, outerRect.Max.x, innerRect.Max.y);
-                const auto roundingCorners = ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight;
-
-                if (numRows > 0) {
-                    ImGui::ScrollbarEx(
-                        bb,
-                        ImGui::GetWindowScrollbarID(window, axis),
-                        axis,
-                        &m_scrollPosition.get(),
-                        (std::ceil(innerRect.Max.y - innerRect.Min.y) / CharacterSize.y),
-                        std::nextafterf(numRows + ImGui::GetWindowSize().y / CharacterSize.y, std::numeric_limits<float>::max()),
-                        roundingCorners);
-                }
-
-                if (ImGui::IsWindowHovered()) {
-                    m_scrollPosition += ImS64(ImGui::GetIO().MouseWheel * -5);
-                }
-
-                if (m_scrollPosition < 0)
-                    m_scrollPosition = 0;
-                if (m_scrollPosition > (numRows - 1))
-                    m_scrollPosition = numRows - 1;
-            }
+            this->drawScrollbar(CharacterSize);
 
             ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.5, 0));
             if (ImGui::BeginTable("##hex", byteColumnCount, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoKeepColumnsVisible, size)) {
@@ -592,14 +660,12 @@ namespace hex::ui {
                                 m_encodingLineStartAddresses.push_back(0);
                             }
 
-                            if (size_t(y) < m_encodingLineStartAddresses.size()) {
+                            const bool singleByteEncoding = m_currCustomEncoding->getLongestSequence() == 1 && m_currCustomEncoding->getShortestSequence() == 1;
+                            if (size_t(y) < m_encodingLineStartAddresses.size() || singleByteEncoding) {
                                 std::vector<std::pair<u64, CustomEncodingData>> encodingData;
 
-                                if (m_encodingLineStartAddresses[y] >= m_bytesPerRow) {
-                                    encodingData.emplace_back(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
-                                    m_encodingLineStartAddresses.push_back(0);
-                                } else {
-                                    u32 offset = m_encodingLineStartAddresses[y];
+                                if (singleByteEncoding) {
+                                    u64 offset = 0;
                                     do {
                                         const u64 address = y * m_bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
@@ -608,8 +674,23 @@ namespace hex::ui {
                                         offset += result.advance;
                                         encodingData.emplace_back(address, result);
                                     } while (offset < m_bytesPerRow);
+                                } else {
+                                    if (m_encodingLineStartAddresses[y] >= m_bytesPerRow) {
+                                        encodingData.emplace_back(y * m_bytesPerRow + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress(), CustomEncodingData(".", 1, ImGuiExt::GetCustomColorU32(ImGuiCustomCol_AdvancedEncodingUnknown)));
+                                        m_encodingLineStartAddresses.push_back(0);
+                                    } else {
+                                        u64 offset = m_encodingLineStartAddresses[y];
+                                        do {
+                                            const u64 address = y * m_bytesPerRow + offset + m_provider->getBaseAddress() + m_provider->getCurrentPageAddress();
 
-                                    m_encodingLineStartAddresses.push_back(offset - m_bytesPerRow);
+                                            auto result = queryCustomEncodingData(m_provider, *m_currCustomEncoding, address);
+
+                                            offset += result.advance;
+                                            encodingData.emplace_back(address, result);
+                                        } while (offset < m_bytesPerRow);
+
+                                        m_encodingLineStartAddresses.push_back(offset - m_bytesPerRow);
+                                    }
                                 }
 
                                 ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, 0));
@@ -837,9 +918,33 @@ namespace hex::ui {
                             // Custom encoding view
                             ImGui::BeginDisabled(!m_currCustomEncoding.has_value());
                             ImGuiExt::DimmedIconToggle(ICON_VS_WHITESPACE, &m_showCustomEncoding);
+                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.custom_encoding_view"_lang);
                             ImGui::EndDisabled();
 
-                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.custom_encoding_view"_lang);
+                            ImGui::SameLine(0, 1_scaled);
+
+                            // Minimap
+                            ImGuiExt::DimmedIconToggle(ICON_VS_MAP, &m_showMiniMap);
+                            ImGuiExt::InfoTooltip("hex.ui.hex_editor.minimap"_lang);
+                            if (ImGui::IsItemClicked(ImGuiMouseButton_Right) && m_miniMapVisualizer != nullptr)
+                                ImGui::OpenPopup("MiniMapOptions");
+
+                            if (ImGui::BeginPopup("MiniMapOptions")) {
+                                ImGui::SliderInt("hex.ui.hex_editor.minimap.width"_lang, &m_miniMapWidth, 1, 25, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+                                if (ImGui::BeginCombo("##minimap_visualizer", Lang(m_miniMapVisualizer->unlocalizedName))) {
+
+                                    for (const auto &visualizer : ContentRegistry::HexEditor::impl::getMiniMapVisualizers()) {
+                                        if (ImGui::Selectable(Lang(visualizer->unlocalizedName))) {
+                                            m_miniMapVisualizer = visualizer;
+                                        }
+                                    }
+
+                                    ImGui::EndCombo();
+                                }
+
+                                ImGui::EndPopup();
+                            }
 
                             ImGui::SameLine();
 

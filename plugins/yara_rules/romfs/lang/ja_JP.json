@@ -1,8 +1,8 @@
 {
     "code": "ja-JP",
-    "language": "Japanese",
     "country": "Japan",
     "fallback": false,
+    "language": "Japanese",
     "translations": {
         "hex.yara_rules.view.yara.error": "Yaraコンパイルエラー: {0}",
         "hex.yara_rules.view.yara.header.matches": "マッチ結果",

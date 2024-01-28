@@ -1,8 +1,8 @@
 {
     "code": "it-IT",
-    "language": "Italian",
     "country": "Italy",
     "fallback": false,
+    "language": "Italian",
     "translations": {
         "hex.yara_rules.view.yara.error": "Errore compilazione Yara: {0}",
         "hex.yara_rules.view.yara.header.matches": "Abbinamenti",

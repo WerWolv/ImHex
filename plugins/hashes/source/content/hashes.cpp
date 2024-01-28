@@ -134,14 +134,41 @@ namespace hex::plugin::hashes {
         void load(const nlohmann::json &) override {}
     };
 
-    template<typename T>
     class HashCRC : public ContentRegistry::Hashes::Hash {
     public:
-        using CRCFunction = T(*)(prv::Provider*&, u64, size_t, u32, u32, u32, bool, bool);
-        HashCRC(const std::string &name, const CRCFunction &crcFunction, u32 polynomial, u32 initialValue, u32 xorOut, bool reflectIn = false, bool reflectOut = false)
-            : Hash(name), m_crcFunction(crcFunction), m_polynomial(polynomial), m_initialValue(initialValue), m_xorOut(xorOut), m_reflectIn(reflectIn), m_reflectOut(reflectOut) {}
+        HashCRC() : Hash("Cyclic Redundancy Check (CRC)") {
+            m_crcs.push_back(HashFactory::Checksum::CreateCRC(3, 0, 0, false, false, 0, 0, { "hex.hashes.hash.common.standard.custom"_lang }));
+
+            for (CRCStandard standard = CRC3_GSM; standard < CRC64_XZ; standard = CRCStandard(int(standard) + 1)) {
+                m_crcs.push_back(HashFactory::Checksum::CreateCRC(standard));
+            }
+        }
 
         void draw() override {
+            if (ImGui::BeginCombo("hex.hashes.hash.common.standard"_lang, m_crcs[m_selectedCrc]->GetName().c_str())) {
+                for (size_t i = 0; i < m_crcs.size(); i++) {
+                    const bool selected = m_selectedCrc == i;
+                    if (ImGui::Selectable(m_crcs[i]->GetName().c_str(), selected))
+                        m_selectedCrc = i;
+                    if (selected)
+                        ImGui::SetItemDefaultFocus();
+                }
+
+                ImGui::EndCombo();
+            }
+
+            if (m_selectedCrc != 0) {
+                const auto crc = dynamic_cast<const IICRC*>(m_crcs[m_selectedCrc].get());
+                m_width = crc->GetWidth();
+                m_polynomial = crc->GetPolynomial();
+                m_initialValue = crc->GetInit();
+                m_xorOut = crc->GetXOROut();
+                m_reflectIn = crc->GetReflectIn();
+                m_reflectOut = crc->GetReflectOut();
+            }
+
+            ImGui::BeginDisabled(m_selectedCrc != 0);
+            ImGuiExt::InputHexadecimal("hex.hashes.hash.common.size"_lang, &m_width);
             ImGuiExt::InputHexadecimal("hex.hashes.hash.common.poly"_lang, &m_polynomial);
             ImGuiExt::InputHexadecimal("hex.hashes.hash.common.iv"_lang, &m_initialValue);
             ImGuiExt::InputHexadecimal("hex.hashes.hash.common.xor_out"_lang, &m_xorOut);
@@ -150,17 +177,13 @@ namespace hex::plugin::hashes {
 
             ImGui::Checkbox("hex.hashes.hash.common.refl_in"_lang, &m_reflectIn);
             ImGui::Checkbox("hex.hashes.hash.common.refl_out"_lang, &m_reflectOut);
+            ImGui::EndDisabled();
         }
 
         Function create(std::string name) override {
             return Hash::create(name, [hash = *this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
-                auto result = hash.m_crcFunction(provider, region.address, region.size, hash.m_polynomial, hash.m_initialValue, hash.m_xorOut, hash.m_reflectIn, hash.m_reflectOut);
-
-                std::vector<u8> bytes(sizeof(result), 0x00);
-                std::memcpy(bytes.data(), &result, bytes.size());
-
-                if constexpr (std::endian::native == std::endian::little)
-                    std::reverse(bytes.begin(), bytes.end());
+                auto crc = HashFactory::Checksum::CreateCRC(hash.m_width, hash.m_polynomial, hash.m_initialValue, hash.m_reflectIn, hash.m_reflectOut, hash.m_xorOut, 0, { "CRC" });
+                auto bytes = hashProviderRegionWithHashLib(region, provider, crc);
 
                 return bytes;
             });
@@ -189,11 +212,13 @@ namespace hex::plugin::hashes {
         }
 
     private:
-        CRCFunction m_crcFunction;
+        std::vector<IHash> m_crcs;
+        size_t m_selectedCrc = 0;
 
-        u32 m_polynomial;
-        u32 m_initialValue;
-        u32 m_xorOut;
+        u32 m_width = 3;
+        u32 m_polynomial = 0;
+        u32 m_initialValue = 0;
+        u32 m_xorOut = 0;
         bool m_reflectIn = false, m_reflectOut = false;
     };
 
@@ -478,66 +503,207 @@ namespace hex::plugin::hashes {
         int m_size = 1;
     };
 
+    class HashSnefru : public ContentRegistry::Hashes::Hash {
+    public:
+        using FactoryFunction = IHash(*)(Int32 a_security_level, const HashSize &a_hash_size);
+
+        explicit HashSnefru(FactoryFunction function) : Hash("Snefru"), m_factoryFunction(function) {}
+        void draw() override {
+            ImGui::SliderInt("hex.hashes.hash.common.security_level"_lang, &m_securityLevel, 1, 1024);
+            ImGui::Combo("hex.hashes.hash.common.size"_lang, &m_hashSize, "128 Bits\0" "256 Bits\0");
+
+        }
+
+        Function create(std::string name) override {
+            return Hash::create(name, [hash = *this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
+                u32 hashSize = 16;
+                switch (hash.m_hashSize) {
+                    case 0: hashSize = 16; break;
+                    case 1: hashSize = 32; break;
+                }
+
+                IHash hashFunction = hash.m_factoryFunction(hash.m_securityLevel, HashSize(hashSize));
+
+                hashFunction->Initialize();
+
+                return hashProviderRegionWithHashLib(region, provider, hashFunction);
+            });
+
+        }
+
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["securityLevel"] = m_securityLevel;
+            result["size"] = m_hashSize;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_securityLevel = data.at("securityLevel").get<int>();
+                m_hashSize = data.at("size").get<int>();
+            } catch (std::exception&) { }
+        }
+
+    private:
+        FactoryFunction m_factoryFunction;
+        int m_securityLevel = 8;
+        int m_hashSize = 0;
+    };
+
+    class HashHaval : public ContentRegistry::Hashes::Hash {
+    public:
+        using FactoryFunction = IHash(*)(const HashRounds& a_rounds, const HashSize& a_hash_size);
+
+        explicit HashHaval(FactoryFunction function) : Hash("Haval"), m_factoryFunction(function) {}
+        void draw() override {
+            ImGui::Combo("hex.hashes.hash.common.rounds"_lang, &m_hashRounds, "3 Rounds\0" "4 Rounds\0" "5 Rounds\0");
+            ImGui::Combo("hex.hashes.hash.common.size"_lang, &m_hashSize, "128 Bits\0" "160 Bits\0" "192 Bits\0" "224 Bits\0" "256 Bits\0");
+
+        }
+
+        Function create(std::string name) override {
+            return Hash::create(name, [hash = *this](const Region& region, prv::Provider *provider) -> std::vector<u8> {
+                u32 hashSize = 16;
+                switch (hash.m_hashSize) {
+                    case 0: hashSize = 16; break;
+                    case 1: hashSize = 32; break;
+                }
+
+                u32 hashRounds = 3;
+                switch (hash.m_hashRounds) {
+                    case 0: hashRounds = 3; break;
+                    case 1: hashRounds = 4; break;
+                    case 2: hashRounds = 5; break;
+                }
+
+                IHash hashFunction = hash.m_factoryFunction(HashRounds(hashRounds), HashSize(hashSize));
+
+                hashFunction->Initialize();
+
+                return hashProviderRegionWithHashLib(region, provider, hashFunction);
+            });
+
+        }
+
+        [[nodiscard]] nlohmann::json store() const override {
+            nlohmann::json result;
+
+            result["rounds"] = m_hashRounds;
+            result["size"] = m_hashSize;
+
+            return result;
+        }
+
+        void load(const nlohmann::json &data) override {
+            try {
+                m_hashRounds = data.at("rounds").get<int>();
+                m_hashSize = data.at("size").get<int>();
+            } catch (std::exception&) { }
+        }
+
+    private:
+        FactoryFunction m_factoryFunction;
+        int m_hashRounds = 0;
+        int m_hashSize = 0;
+    };
+
     void registerHashes() {
-        ContentRegistry::Hashes::add<HashMD5>();
-
-        ContentRegistry::Hashes::add<HashSHA1>();
-        ContentRegistry::Hashes::add<HashSHA224>();
-        ContentRegistry::Hashes::add<HashSHA256>();
-        ContentRegistry::Hashes::add<HashSHA384>();
-        ContentRegistry::Hashes::add<HashSHA512>();
-
         ContentRegistry::Hashes::add<HashSum>();
 
-        ContentRegistry::Hashes::add<HashCRC<u8>>("hex.hashes.hash.crc8",        crypt::crc8,  0x07,        0x0000,      0x0000);
-        ContentRegistry::Hashes::add<HashCRC<u16>>("hex.hashes.hash.crc16",      crypt::crc16, 0x8005,      0x0000,      0x0000);
-        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.hashes.hash.crc32",      crypt::crc32, 0x04C1'1DB7, 0xFFFF'FFFF, 0xFFFF'FFFF, true, true);
-        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.hashes.hash.crc32mpeg",  crypt::crc32, 0x04C1'1DB7, 0xFFFF'FFFF, 0x0000'0000, false, false);
-        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.hashes.hash.crc32posix", crypt::crc32, 0x04C1'1DB7, 0x0000'0000, 0xFFFF'FFFF, false, false);
-        ContentRegistry::Hashes::add<HashCRC<u32>>("hex.hashes.hash.crc32c",     crypt::crc32, 0x1EDC'6F41, 0xFFFF'FFFF, 0xFFFF'FFFF, true,  true);
+        ContentRegistry::Hashes::add<HashCRC>();
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Checksum::CreateAdler32);
 
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Checksum::CreateAdler32);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateMD2);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateMD4);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateMD5);
 
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateAP);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateBKDR);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateBernstein);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateBernstein1);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateDEK);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateDJB);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateELF);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateFNV1a_32);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateFNV32);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateJS);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateOneAtTime);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreatePJW);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateRotating);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateRS);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateSDBM);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateShiftAndXor);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateSuperFast);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA0);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA1);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA2_224);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA2_256);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA2_384);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA2_512);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA2_512_224);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA2_512_256);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA3_224);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA3_256);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA3_384);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateSHA3_512);
 
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash32::CreateMurmur2_32);
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash32::CreateMurmurHash3_x86_32);
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash32::CreateXXHash32);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateKeccak_224);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateKeccak_256);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateKeccak_288);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateKeccak_384);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateKeccak_512);
 
-        hex::ContentRegistry::Hashes::add<HashInitialValue>(HashFactory::Hash32::CreateJenkins3);
 
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash64::CreateFNV64);
-        hex::ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash64::CreateFNV1a_64);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateGrindahl256);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateGrindahl512);
 
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash64::CreateMurmur2_64);
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash64::CreateSipHash64_2_4);
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash64::CreateXXHash64);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreatePanama);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateWhirlPool);
 
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash128::CreateSipHash128_2_4);
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash128::CreateMurmurHash3_x86_128);
-        hex::ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash128::CreateMurmurHash3_x64_128);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateRadioGatun32);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateRadioGatun64);
 
-        hex::ContentRegistry::Hashes::add<HashTiger>("hex.hashes.hash.tiger", HashFactory::Crypto::CreateTiger);
-        hex::ContentRegistry::Hashes::add<HashTiger>("hex.hashes.hash.tiger2", HashFactory::Crypto::CreateTiger2);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateGost);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateGOST3411_2012_256);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateGOST3411_2012_512);
 
-        hex::ContentRegistry::Hashes::add<HashBlake2<Blake2BConfig, IBlake2BConfig, IBlake2BTreeConfig>>("hex.hashes.hash.blake2b", HashFactory::Crypto::CreateBlake2B);
-        hex::ContentRegistry::Hashes::add<HashBlake2<Blake2SConfig, IBlake2SConfig, IBlake2STreeConfig>>("hex.hashes.hash.blake2s", HashFactory::Crypto::CreateBlake2S);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateHAS160);
+
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateRIPEMD);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateRIPEMD128);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateRIPEMD160);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateRIPEMD256);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Crypto::CreateRIPEMD320);
+
+        ContentRegistry::Hashes::add<HashSnefru>(HashFactory::Crypto::CreateSnefru);
+        ContentRegistry::Hashes::add<HashHaval>(HashFactory::Crypto::CreateHaval);
+
+        ContentRegistry::Hashes::add<HashTiger>("Tiger", HashFactory::Crypto::CreateTiger);
+        ContentRegistry::Hashes::add<HashTiger>("Tiger2", HashFactory::Crypto::CreateTiger2);
+
+        ContentRegistry::Hashes::add<HashBlake2<Blake2BConfig, IBlake2BConfig, IBlake2BTreeConfig>>("Blake2b", HashFactory::Crypto::CreateBlake2B);
+        ContentRegistry::Hashes::add<HashBlake2<Blake2SConfig, IBlake2SConfig, IBlake2STreeConfig>>("Blake2s", HashFactory::Crypto::CreateBlake2S);
+
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateAP);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateBKDR);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateBernstein);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateBernstein1);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateDEK);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateDJB);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateELF);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateFNV1a_32);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateFNV32);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateJS);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateOneAtTime);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreatePJW);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateRotating);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateRS);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateSDBM);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateShiftAndXor);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash32::CreateSuperFast);
+
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash32::CreateMurmur2_32);
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash32::CreateMurmurHash3_x86_32);
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash32::CreateXXHash32);
+
+        ContentRegistry::Hashes::add<HashInitialValue>(HashFactory::Hash32::CreateJenkins3);
+
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash64::CreateFNV64);
+        ContentRegistry::Hashes::add<HashBasic>(HashFactory::Hash64::CreateFNV1a_64);
+
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash64::CreateMurmur2_64);
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash64::CreateSipHash64_2_4);
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash64::CreateXXHash64);
+
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash128::CreateSipHash128_2_4);
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash128::CreateMurmurHash3_x86_128);
+        ContentRegistry::Hashes::add<HashWithKey>(HashFactory::Hash128::CreateMurmurHash3_x64_128);
     }
 
 }
