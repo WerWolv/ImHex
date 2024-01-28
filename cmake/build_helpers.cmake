@@ -611,8 +611,8 @@ macro(addBundledLibraries)
         set(JTHREAD_LIBRARIES jthread)
     endif()
 
-    set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "")
-    set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "")
+    set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
+    set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
     set_target_properties(
             libpl
