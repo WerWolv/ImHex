@@ -22,7 +22,7 @@ jobs:
       CCACHE_DIR:      "${{ github.workspace }}/.ccache"
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -45,7 +45,7 @@ jobs:
         dist/get_deps_msys2.sh
 
     - name: ⬇️ Install .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.100'
 
@@ -132,7 +132,7 @@ jobs:
 
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -160,13 +160,13 @@ jobs:
         brew install glfw
 
     - name: ⬇️ Install .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.100'
 
     - name: 🧰 Checkout glfw
       if: ${{matrix.custom_glfw}}
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         repository: glfw/glfw
         path: glfw
@@ -234,7 +234,7 @@ jobs:
       IMHEX_VERSION: ${{ steps.build.outputs.IMHEX_VERSION }}
     steps:
     - name: 🧰 Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: recursive
     
@@ -343,7 +343,7 @@ jobs:
         run: apt update && apt install -y git curl
 
       - name: 🧰 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -360,7 +360,7 @@ jobs:
           bash dist/get_deps_debian.sh
 
       - name: ⬇️ Install .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.100'
 
@@ -412,7 +412,7 @@ jobs:
     name: ⬇️ AppImage
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -467,7 +467,7 @@ jobs:
           pacman -Syu git ccache --noconfirm
 
       - name: 🧰 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -476,7 +476,7 @@ jobs:
           dist/get_deps_archlinux.sh --noconfirm
 
       - name: ⬇️ Install .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.100'
 
@@ -583,7 +583,7 @@ jobs:
         run: dnf install --disablerepo="*" --enablerepo="fedora" git-core -y
 
       - name: 🧰 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ImHex
           submodules: recursive
@@ -605,7 +605,7 @@ jobs:
           ccache
 
       - name: ⬇️ Install .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.100'
 

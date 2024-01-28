@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ImHex
 
@@ -68,7 +68,7 @@ jobs:
 
     steps:
       - name: 🧰 Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: ImHex
           submodules: recursive
