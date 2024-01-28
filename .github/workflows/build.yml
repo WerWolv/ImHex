@@ -34,13 +34,6 @@ jobs:
         restore-keys: ${{ runner.os }}-ccache
         max-size: 1G
 
-    - name: 📜 Restore CMakeCache
-      uses:  actions/cache@v3
-      with:
-        path: |
-          build/CMakeCache.txt
-        key: ${{ runner.os }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
-
     - name: 🟦 Install msys2
       uses: msys2/setup-msys2@v2
       with:
@@ -153,13 +146,6 @@ jobs:
         key: ${{ runner.os }}${{ matrix.suffix }}-ccache-${{ github.run_id }}
         restore-keys: ${{ runner.os }}${{ matrix.suffix }}-ccache
         max-size: 1G
-
-    - name: 📜 Restore CMakeCache
-      uses: actions/cache@v3
-      with:
-        path: |
-          build/CMakeCache.txt
-        key: ${{ runner.os }}-${{ matrix.suffix }}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
     - name: ⬇️ Install dependencies
       run: |
@@ -368,13 +354,6 @@ jobs:
           restore-keys: Ubuntu-${{matrix.release_num}}-ccache
           max-size: 1G
 
-      - name: 📜 Restore CMakeCache
-        uses: actions/cache@v3
-        with:
-          path: |
-            build/CMakeCache.txt
-          key: Ubuntu-${{matrix.release_num}}-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
-
       - name: ⬇️ Install dependencies
         run: |
           apt update
@@ -507,13 +486,6 @@ jobs:
           key: archlinux-ccache-${{ github.run_id }}
           restore-keys: archlinux-ccache
           max-size: 1G
-
-      - name: 📜 Restore CMakeCache
-        uses: actions/cache@v3
-        with:
-          path: |
-            build/CMakeCache.txt
-          key: archlinux-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
       # ArchLinux cmake build
       - name: 🛠️ Configure CMake
