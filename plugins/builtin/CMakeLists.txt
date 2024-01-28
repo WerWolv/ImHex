@@ -121,6 +121,7 @@ add_imhex_plugin(
         ui
         ${JTHREAD_LIBRARIES}
         plcli
+        libpl-gen
         LLVMDemangle
 )
 
