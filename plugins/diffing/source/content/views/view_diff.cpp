@@ -4,6 +4,8 @@
 
 #include <hex/helpers/fmt.hpp>
 #include <hex/providers/buffered_reader.hpp>
+
+#include <fonts/codicons_font.h>
 #include <wolv/utils/guards.hpp>
 
 namespace hex::plugin::diffing {

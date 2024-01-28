@@ -3,9 +3,9 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/task_manager.hpp>
 
-#include <cmath>
+#include <fonts/codicons_font.h>
 
-#include <imgui_internal.h>
+#include <cmath>
 
 namespace hex::plugin::builtin {
 

@@ -16,7 +16,7 @@ add_imhex_plugin(
         source/content/views/view_hashes.cpp
     INCLUDES
         include
-
     LIBRARIES
+        fonts
         hashplus
 )

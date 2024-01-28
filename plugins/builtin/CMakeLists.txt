@@ -41,11 +41,11 @@ add_imhex_plugin(
         source/content/file_extraction.cpp
         source/content/report_generators.cpp
         source/content/init_tasks.cpp
-        source/content/fonts.cpp
         source/content/workspaces.cpp
         source/content/pl_visualizers.cpp
         source/content/out_of_box_experience.cpp
         source/content/minimap_visualizers.cpp
+        source/content/window_decoration.cpp
 
         source/content/data_processor_nodes/basic_nodes.cpp
         source/content/data_processor_nodes/control_nodes.cpp
@@ -120,6 +120,7 @@ add_imhex_plugin(
 
     LIBRARIES
         ui
+        fonts
         ${JTHREAD_LIBRARIES}
         plcli
         libpl-gen

@@ -13,12 +13,12 @@
 #include <wolv/math_eval/math_evaluator.hpp>
 
 #include <content/providers/view_provider.hpp>
+
+#include <fonts/codicons_font.h>
+
 #include <popups/popup_file_chooser.hpp>
-
-#include <imgui_internal.h>
 #include <content/popups/popup_blocking_task.hpp>
-
-#include "content/popups/hex_editor/popup_hex_editor_find.hpp"
+#include <content/popups/hex_editor/popup_hex_editor_find.hpp>
 
 using namespace std::literals::string_literals;
 

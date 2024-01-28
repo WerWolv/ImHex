@@ -426,6 +426,16 @@ namespace hex {
                 s_borderlessWindowMode = enabled;
             }
 
+            static bool s_multiWindowMode = false;
+            void setMultiWindowMode(bool enabled) {
+                s_multiWindowMode = enabled;
+            }
+
+            static std::optional<InitialWindowProperties> s_initialWindowProperties;
+            void setInitialWindowProperties(InitialWindowProperties properties) {
+                s_initialWindowProperties = properties;
+            }
+
 
             static std::string s_gpuVendor;
             void setGPUVendor(const std::string &vendor) {
@@ -516,6 +526,14 @@ namespace hex {
 
         bool isBorderlessWindowModeEnabled() {
             return impl::s_borderlessWindowMode;
+        }
+
+        bool isMutliWindowModeEnabled() {
+            return impl::s_multiWindowMode;
+        }
+
+        std::optional<InitialWindowProperties> getInitialWindowProperties() {
+            return impl::s_initialWindowProperties;
         }
 
         std::map<std::string, std::string> &getInitArguments() {

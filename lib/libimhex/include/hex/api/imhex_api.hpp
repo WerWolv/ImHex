@@ -359,36 +359,16 @@ namespace hex {
         /* Functions to interact with various ImHex system settings */
         namespace System {
 
-            bool isMainInstance();
-
-            namespace impl {
-                void setMainInstanceStatus(bool status);
-
-                void setMainWindowPosition(i32 x, i32 y);
-                void setMainWindowSize(u32 width, u32 height);
-                void setMainDockSpaceId(ImGuiID id);
-                void setMainWindowHandle(GLFWwindow *window);
-
-                void setGlobalScale(float scale);
-                void setNativeScale(float scale);
-
-                void setBorderlessWindowMode(bool enabled);
-
-                void setGPUVendor(const std::string &vendor);
-
-                void setPortableVersion(bool enabled);
-
-                void addInitArgument(const std::string &key, const std::string &value = { });
-
-                void setLastFrameTime(double time);
-
-                bool isWindowResizable();
-            }
-
             struct ProgramArguments {
                 int argc;
                 char **argv;
                 char **envp;
+            };
+
+            struct InitialWindowProperties {
+                i32 x, y;
+                u32 width, height;
+                bool maximized;
             };
 
             enum class TaskProgressState {
@@ -402,6 +382,34 @@ namespace hex {
                 Warning,
                 Error
             };
+
+            namespace impl {
+
+                void setMainInstanceStatus(bool status);
+
+                void setMainWindowPosition(i32 x, i32 y);
+                void setMainWindowSize(u32 width, u32 height);
+                void setMainDockSpaceId(ImGuiID id);
+                void setMainWindowHandle(GLFWwindow *window);
+
+                void setGlobalScale(float scale);
+                void setNativeScale(float scale);
+
+                void setBorderlessWindowMode(bool enabled);
+                void setMultiWindowMode(bool enabled);
+                void setInitialWindowProperties(InitialWindowProperties properties);
+
+                void setGPUVendor(const std::string &vendor);
+
+                void setPortableVersion(bool enabled);
+
+                void addInitArgument(const std::string &key, const std::string &value = { });
+
+                void setLastFrameTime(double time);
+
+                bool isWindowResizable();
+
+            }
 
             /**
              * @brief Closes ImHex
@@ -478,6 +486,12 @@ namespace hex {
              * @return Whether borderless window mode is enabled
              */
             bool isBorderlessWindowModeEnabled();
+
+            /**
+             * @brief Checks if multi-window mode is enabled currently
+             * @return Whether multi-window mode is enabled
+             */
+            bool isMutliWindowModeEnabled();
 
             /**
              * @brief Gets the init arguments passed to ImHex from the splash screen
@@ -578,11 +592,38 @@ namespace hex {
              */
             bool updateImHex(UpdateType updateType);
 
+            /**
+             * @brief Add a new startup task that will be run while ImHex's splash screen is shown
+             * @param name Name to be shown in the UI
+             * @param async Whether to run the task asynchronously
+             * @param function The function to run
+             */
             void addStartupTask(const std::string &name, bool async, const std::function<bool()> &function);
 
+            /**
+             * @brief Gets the time the previous frame took
+             * @return Previous frame time
+             */
             double getLastFrameTime();
 
+            /**
+             * @brief Sets the window resizable
+             * @param resizable Whether the window should be resizable
+             */
             void setWindowResizable(bool resizable);
+
+            /**
+             * @brief Checks if this window is the main instance of ImHex
+             * @return True if this is the main instance, false if another instance is already running
+             */
+            bool isMainInstance();
+
+            /**
+             * @brief Gets the initial window properties
+             * @return Initial window properties
+             */
+            std::optional<InitialWindowProperties> getInitialWindowProperties();
+
         }
 
         /**

@@ -9,7 +9,6 @@ add_subdirectory(imgui)
 add_subdirectory(implot)
 add_subdirectory(imnodes)
 add_subdirectory(custom)
-add_subdirectory(fonts)
 add_subdirectory(ColorTextEditor)
 
-set(IMGUI_LIBRARIES imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_fonts imgui_color_text_editor PARENT_SCOPE)
+set(IMGUI_LIBRARIES imgui_imgui imgui_implot imgui_imnodes imgui_custom imgui_color_text_editor PARENT_SCOPE)

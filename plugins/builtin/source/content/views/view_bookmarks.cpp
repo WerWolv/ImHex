@@ -6,9 +6,11 @@
 #include <hex/api/task_manager.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
-
 #include <hex/providers/provider.hpp>
+
 #include <content/providers/view_provider.hpp>
+
+#include <fonts/codicons_font.h>
 
 #include <nlohmann/json.hpp>
 

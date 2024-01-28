@@ -12,6 +12,8 @@
 
 #include <content/popups/popup_docs_question.hpp>
 
+#include <fonts/codicons_font.h>
+
 #include <romfs/romfs.hpp>
 #include <wolv/utils/string.hpp>
 

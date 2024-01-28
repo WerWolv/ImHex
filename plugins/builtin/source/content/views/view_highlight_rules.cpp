@@ -4,6 +4,8 @@
 #include <hex/api/project_file_manager.hpp>
 #include <wolv/utils/guards.hpp>
 
+#include <fonts/codicons_font.h>
+
 namespace hex::plugin::builtin {
 
     wolv::math_eval::MathEvaluator<i128> ViewHighlightRules::Rule::Expression::s_evaluator;

@@ -7,7 +7,7 @@
 #include <fonts/codicons_font.h>
 #include <fonts/blendericons_font.h>
 
-namespace hex::plugin::builtin {
+namespace hex::fonts {
 
     void loadFonts() {
         using namespace ImHexApi::Fonts;
