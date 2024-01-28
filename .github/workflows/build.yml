@@ -61,7 +61,7 @@ jobs:
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
     # Windows cmake build
-    - name: 🛠️ Build
+    - name: 🛠️ Configure CMake
       run: |
         set -x
         mkdir -p build
@@ -79,6 +79,10 @@ jobs:
           -DUSE_SYSTEM_CAPSTONE=ON                      \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
           ..
+    
+    - name: 🛠️ Build
+      run: |
+        cd build
         ninja install
         cpack
         mv ImHex-*.msi ../imhex-${{env.IMHEX_VERSION}}-Windows-x86_64.msi
@@ -203,7 +207,7 @@ jobs:
         ninja install
 
     # MacOS cmake build
-    - name: 🛠️ Build
+    - name: 🛠️ Configure CMake
       run: |
         set -x
         mkdir -p build
@@ -226,7 +230,9 @@ jobs:
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"   \
           ..
-        ninja package
+      
+    - name: 🛠️ Build
+      run: cd build && ninja package
 
     - name: ⬆️ Upload DMG
       uses: actions/upload-artifact@v4
@@ -380,7 +386,7 @@ jobs:
           dotnet-version: '8.0.100'
 
       # Ubuntu cmake build
-      - name: 🛠️ Build
+      - name: 🛠️ Configure CMake
         shell: bash
         run: |
           set -x
@@ -400,7 +406,9 @@ jobs:
             -DIMHEX_USE_GTK_FILE_PICKER=ON                            \
             -DDOTNET_EXECUTABLE="dotnet"                              \
             ..
-          DESTDIR=DebDir ninja install 
+      
+      - name: 🛠️ Build
+        run: cd build && DESTDIR=DebDir ninja install 
 
       - name: 📜 Set version variable
         run: |
@@ -508,7 +516,7 @@ jobs:
           key: archlinux-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
 
       # ArchLinux cmake build
-      - name: 🛠️ Build
+      - name: 🛠️ Configure CMake
         run: |
           set -x
           mkdir -p build
@@ -529,7 +537,9 @@ jobs:
           -DIMHEX_ENABLE_LTO=ON                         \
           -DIMHEX_USE_GTK_FILE_PICKER=ON                \
           ..
-          DESTDIR=installDir ninja install 
+      
+      - name: 🛠️ Build
+        run: cd build && DESTDIR=installDir ninja install 
 
       - name: 📜 Set version variable
         run: |
