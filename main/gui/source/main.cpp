@@ -21,6 +21,7 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+    #include <shellapi.h>
     #include <codecvt>
 #elif defined(OS_WEB)
     #include <emscripten.h>

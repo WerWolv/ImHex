@@ -21,7 +21,7 @@
     #include <shobjidl.h>
     #include <wrl/client.h>
     #include <fcntl.h>
-    #include <oleidl.h>
+    #include <shellapi.h>
 
     #include <cstdio>
 

@@ -4,6 +4,7 @@ include(ImHexPlugin)
 
 add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/HashLibPlus ${CMAKE_CURRENT_BINARY_DIR}/HashLibPlus)
 set_target_properties(hashplus PROPERTIES POSITION_INDEPENDENT_CODE ON)
+enableUnityBuild(hashplus)
 
 add_imhex_plugin(
     NAME

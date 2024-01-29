@@ -55,6 +55,7 @@ macro(detectOS)
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
+        add_compile_definitions(WIN32_LEAN_AND_MEAN)
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -611,9 +612,17 @@ macro(addBundledLibraries)
         set(JTHREAD_LIBRARIES jthread)
     endif()
 
-    set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF)
+    set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
+    set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
-    set_target_properties(libpl PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(
+            libpl
+            PROPERTIES
+                POSITION_INDEPENDENT_CODE ON
+                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+                LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+    enableUnityBuild(libpl)
 
     find_package(mbedTLS 3.4.0 REQUIRED)
     find_library(MAGIC 5.39 magic REQUIRED)

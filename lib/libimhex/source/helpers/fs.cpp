@@ -11,6 +11,7 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shlobj.h>
+    #include <shellapi.h>
 #elif defined(OS_LINUX) || defined(OS_WEB)
     #include <xdg.hpp>
     #include <limits.h>
