@@ -45,7 +45,6 @@ macro(add_imhex_plugin)
     target_compile_definitions(${IMHEX_PLUGIN_NAME} PRIVATE IMHEX_PLUGIN_NAME=${IMHEX_PLUGIN_NAME})
 
     # Enable required compiler flags
-    set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     enableUnityBuild(${IMHEX_PLUGIN_NAME})
     setupCompilerFlags(${IMHEX_PLUGIN_NAME})
 
@@ -67,7 +66,6 @@ macro(add_imhex_plugin)
     list(APPEND LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/romfs)
     set(LIBROMFS_PROJECT_NAME ${IMHEX_PLUGIN_NAME})
     add_subdirectory(${IMHEX_BASE_FOLDER}/lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/libromfs)
-    set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_link_libraries(${IMHEX_PLUGIN_NAME} PRIVATE ${LIBROMFS_LIBRARY})
 
     foreach(feature ${IMHEX_PLUGIN_FEATURES})

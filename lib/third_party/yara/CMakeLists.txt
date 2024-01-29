@@ -107,7 +107,6 @@ set(LIBYARA_MODULES
 find_package(mbedTLS 2.26.0 REQUIRED)
 
 add_library(libyara STATIC ${LIBYARA_SOURCE} ${LIBYARA_INCLUDES} ${LIBYARA_MODULES})
-set_property(TARGET libyara PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # Add mbedtls crypto wrappers
 target_compile_definitions(libyara PRIVATE

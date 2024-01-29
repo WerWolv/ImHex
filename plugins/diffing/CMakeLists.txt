@@ -8,9 +8,6 @@ else()
     set(BUILD_TESTING OFF CACHE BOOL "" FORCE)
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/edlib ${CMAKE_CURRENT_BINARY_DIR}/edlib EXCLUDE_FROM_ALL)
     enableUnityBuild(edlib)
-    set_target_properties(edlib
-        PROPERTIES POSITION_INDEPENDENT_CODE ON
-    )
 endif()
 
 add_imhex_plugin(

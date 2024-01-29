@@ -74,8 +74,7 @@ namespace hex::ui {
     /* Hex Editor */
 
     HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
-        m_currDataVisualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit");
-        m_miniMapVisualizer  = ContentRegistry::HexEditor::impl::getMiniMapVisualizers().front();
+
     }
 
     HexEditor::~HexEditor() {
@@ -194,6 +193,10 @@ namespace hex::ui {
     }
 
     void HexEditor::drawMinimap(ImVec2 characterSize) {
+        if (const auto &visualizers = ContentRegistry::HexEditor::impl::getMiniMapVisualizers(); m_miniMapVisualizer == nullptr && !visualizers.empty())
+            m_miniMapVisualizer = visualizers.front();
+
+
         ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
 
         auto window = ImGui::GetCurrentWindowRead();
@@ -399,6 +402,11 @@ namespace hex::ui {
     void HexEditor::drawEditor(const ImVec2 &size) {
         const float SeparatorColumWidth   = 6_scaled;
         const auto CharacterSize          = ImGui::CalcTextSize("0");
+
+        if (const auto &visualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit"); m_currDataVisualizer == nullptr && visualizer != nullptr) {
+            m_currDataVisualizer = visualizer;
+            return;
+        }
 
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
         const u16 columnCount      = m_bytesPerRow / bytesPerCell;

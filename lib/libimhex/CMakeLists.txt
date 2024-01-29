@@ -77,7 +77,6 @@ else()
     target_compile_definitions(libimhex PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 endif()
 
-set_target_properties(libimhex PROPERTIES POSITION_INDEPENDENT_CODE ON)
 enableUnityBuild(libimhex)
 setupCompilerFlags(libimhex)
 

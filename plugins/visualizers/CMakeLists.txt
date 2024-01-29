@@ -4,7 +4,6 @@ include(ImHexPlugin)
 
 if (NOT USE_SYSTEM_MINIAUDIO)
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/miniaudio ${CMAKE_CURRENT_BINARY_DIR}/miniaudio EXCLUDE_FROM_ALL)
-    set_target_properties(miniaudio PROPERTIES POSITION_INDEPENDENT_CODE ON)
     set(MINIAUDIO_LIBRARIES miniaudio)
 else()
     find_package(miniaudio REQUIRED)
