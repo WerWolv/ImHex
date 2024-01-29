@@ -467,6 +467,7 @@
         "hex.builtin.setting.imhex": "ImHex",
         "hex.builtin.setting.imhex.recent_files": "Recent Files",
         "hex.builtin.setting.interface": "Interface",
+        "hex.builtin.setting.interface.always_show_provider_tabs": "Always show Provider Tabs",
         "hex.builtin.setting.interface.color": "Color theme",
         "hex.builtin.setting.interface.fps": "FPS Limit",
         "hex.builtin.setting.interface.fps.unlocked": "Unlocked",
