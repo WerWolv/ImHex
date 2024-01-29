@@ -181,11 +181,9 @@ namespace hex::ui {
             return m_selectionStart.has_value() && m_selectionEnd.has_value();
         }
 
-        void jumpToSelection(bool center = true) {
+        void jumpToSelection(float pivot = 0.0F) {
             m_shouldJumpToSelection = true;
-
-            if (center)
-                m_centerOnJump = true;
+            m_jumpPivot = pivot;
         }
 
         void scrollToSelection() {
@@ -310,7 +308,7 @@ namespace hex::ui {
         char m_unknownDataCharacter = '?';
 
         bool m_shouldJumpToSelection = false;
-        bool m_centerOnJump = false;
+        float m_jumpPivot = 0.0F;
         bool m_shouldScrollToSelection = false;
         bool m_shouldJumpWhenOffScreen = false;
         bool m_shouldUpdateScrollPosition = false;
