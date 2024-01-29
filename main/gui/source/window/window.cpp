@@ -198,6 +198,8 @@ namespace hex {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        EventFrameBegin::post();
+
         // Handle all undocked floating windows
         ImGuiViewport *viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
@@ -219,8 +221,6 @@ namespace hex {
         }
         ImGui::End();
         ImGui::PopStyleVar(2);
-
-        EventFrameBegin::post();
 
         // Plugin load error popups. These are not translated because they should always be readable, no matter if any localization could be loaded or not
         {

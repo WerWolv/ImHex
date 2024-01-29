@@ -38,11 +38,12 @@ namespace hex {
         InitializePluginFunc        initializePluginFunction        = nullptr;
         InitializeLibraryFunc       initializeLibraryFunction       = nullptr;
         GetPluginNameFunc           getPluginNameFunction           = nullptr;
-        GetLibraryNameFunc          getLibraryNameFunction           = nullptr;
+        GetLibraryNameFunc          getLibraryNameFunction          = nullptr;
         GetPluginAuthorFunc         getPluginAuthorFunction         = nullptr;
         GetPluginDescriptionFunc    getPluginDescriptionFunction    = nullptr;
         GetCompatibleVersionFunc    getCompatibleVersionFunction    = nullptr;
         SetImGuiContextFunc         setImGuiContextFunction         = nullptr;
+        SetImGuiContextFunc         setImGuiContextLibraryFunction  = nullptr;
         GetSubCommandsFunc          getSubCommandsFunction          = nullptr;
         GetFeaturesFunc             getFeaturesFunction             = nullptr;
     };

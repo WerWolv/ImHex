@@ -52,27 +52,28 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
 
 #define IMHEX_LIBRARY_SETUP_IMPL(name)                                                                                          \
     namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::debug("Unloaded library '{}'", name); } } HANDLER; }   \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary();                                                                    \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *getLibraryName() { return name; }                                                \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void setImGuiContext(ImGuiContext *ctx) {                                                    \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)();                             \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX const char *WOLV_TOKEN_CONCAT(getLibraryName_, IMHEX_PLUGIN_NAME)() { return name; }         \
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(setImGuiContext_, IMHEX_PLUGIN_NAME)(ImGuiContext *ctx) {             \
         ImGui::SetCurrentContext(ctx);                                                                                          \
         GImGui = ctx;                                                                                                           \
     }                                                                                                                           \
     extern "C" [[gnu::visibility("default")]] void WOLV_TOKEN_CONCAT(forceLinkPlugin_, IMHEX_PLUGIN_NAME)() {                   \
         hex::PluginManager::addPlugin(name, hex::PluginFunctions {                                                              \
             nullptr,                                                                                                            \
-            initializeLibrary,                                                                                                  \
+            WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME),                                                           \
             nullptr,                                                                                                            \
-            getLibraryName,                                                                                                     \
+            WOLV_TOKEN_CONCAT(getLibraryName_, IMHEX_PLUGIN_NAME),                                                              \
             nullptr,                                                                                                            \
             nullptr,                                                                                                            \
             nullptr,                                                                                                            \
-            setImGuiContext,                                                                                                    \
+            WOLV_TOKEN_CONCAT(setImGuiContext_, IMHEX_PLUGIN_NAME),                                                             \
+            nullptr,                                                                                                            \
             nullptr,                                                                                                            \
             nullptr                                                                                                             \
         });                                                                                                                     \
     }                                                                                                                           \
-    IMHEX_PLUGIN_VISIBILITY_PREFIX void initializeLibrary()
+    IMHEX_PLUGIN_VISIBILITY_PREFIX void WOLV_TOKEN_CONCAT(initializeLibrary_, IMHEX_PLUGIN_NAME)()
 
 #define IMHEX_PLUGIN_SETUP_IMPL(name, author, description)                                                                      \
     namespace { static struct EXIT_HANDLER { ~EXIT_HANDLER() { hex::log::debug("Unloaded plugin '{}'", name); } } HANDLER; }    \
@@ -101,6 +102,7 @@ void* PluginSubCommandsFunctionHelper<T>::getSubCommands() {
             getPluginDescription,                                                                                               \
             getCompatibleVersion,                                                                                               \
             setImGuiContext,                                                                                                    \
+            nullptr,                                                                                                            \
             getSubCommands,                                                                                                     \
             getFeatures                                                                                                         \
         });                                                                                                                     \

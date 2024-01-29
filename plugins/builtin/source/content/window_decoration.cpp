@@ -258,13 +258,22 @@ namespace hex::plugin::builtin {
                     }
 
                     for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
-                        const auto &[unlocalizedNames, icon, shortcut, view, callback, enabledCallback, selectedCallack, toolbarIndex] = menuItem;
+                        const auto &[
+                            unlocalizedNames,
+                            icon,
+                            shortcut,
+                            view,
+                            callback,
+                            enabledCallback,
+                            selectedCallack,
+                            toolbarIndex
+                        ] = menuItem;
 
                         createNestedMenu(unlocalizedNames, icon.glyph.c_str(), *shortcut, callback, enabledCallback, selectedCallack);
                     }
                 };
 
-                if (ImHexApi::System::getLastFrameTime() > 0) {
+                if (ImGui::GetTime() > 0.2F) {
                     static u32 menuEndPos = 0;
                     if (menuEndPos < s_searchBarPosition) {
                         drawMenu();

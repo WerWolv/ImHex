@@ -36,16 +36,19 @@ namespace hex {
             }
         #endif
 
-        m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
-        m_functions.initializeLibraryFunction    = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializeLibrary");
-        m_functions.getPluginNameFunction        = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
-        m_functions.getLibraryNameFunction       = getPluginFunction<PluginFunctions::GetLibraryNameFunc>("getLibraryName");
-        m_functions.getPluginAuthorFunction      = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
-        m_functions.getPluginDescriptionFunction = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
-        m_functions.getCompatibleVersionFunction = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
-        m_functions.setImGuiContextFunction      = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
-        m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
-        m_functions.getFeaturesFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
+        const auto fileName = path.stem().string();
+
+        m_functions.initializePluginFunction        = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
+        m_functions.initializeLibraryFunction       = getPluginFunction<PluginFunctions::InitializePluginFunc>(hex::format("initializeLibrary_{}", fileName));
+        m_functions.getPluginNameFunction           = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
+        m_functions.getLibraryNameFunction          = getPluginFunction<PluginFunctions::GetLibraryNameFunc>(hex::format("getLibraryName_{}", fileName));
+        m_functions.getPluginAuthorFunction         = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
+        m_functions.getPluginDescriptionFunction    = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
+        m_functions.getCompatibleVersionFunction    = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
+        m_functions.setImGuiContextFunction         = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
+        m_functions.setImGuiContextLibraryFunction  = getPluginFunction<PluginFunctions::SetImGuiContextFunc>(hex::format("setImGuiContext_{}", fileName));
+        m_functions.getSubCommandsFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
+        m_functions.getFeaturesFunction             = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
     }
 
     Plugin::Plugin(const std::string &name, const hex::PluginFunctions &functions) {
