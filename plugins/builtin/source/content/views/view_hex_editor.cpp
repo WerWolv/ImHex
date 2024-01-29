@@ -500,7 +500,7 @@ namespace hex::plugin::builtin {
         }
 
         // Right click menu
-        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
+        if (ImGui::IsMouseReleased(ImGuiMouseButton_Right) && ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) && !ImGui::IsAnyItemHovered())
             RequestOpenPopup::post("hex.builtin.menu.edit");
     }
 

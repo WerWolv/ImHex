@@ -193,10 +193,6 @@ namespace hex::ui {
     }
 
     void HexEditor::drawMinimap(ImVec2 characterSize) {
-        if (const auto &visualizers = ContentRegistry::HexEditor::impl::getMiniMapVisualizers(); m_miniMapVisualizer == nullptr && !visualizers.empty())
-            m_miniMapVisualizer = visualizers.front();
-
-
         ImS64 numRows = m_provider == nullptr ? 0 : (m_provider->getSize() / m_bytesPerRow) + ((m_provider->getSize() % m_bytesPerRow) == 0 ? 0 : 1);
 
         auto window = ImGui::GetCurrentWindowRead();
@@ -211,9 +207,9 @@ namespace hex::ui {
 
         constexpr static u64 RowCount = 256;
         const auto rowHeight = innerRect.GetSize().y / RowCount;
-        const auto scrollPos = m_scrollPosition.get();
+        const ImS64 scrollPos = m_scrollPosition.get();
         const auto grabSize = rowHeight * m_visibleRowCount;
-        const auto grabPos = (RowCount - m_visibleRowCount) * (double(scrollPos) / numRows);
+        const ImS64 grabPos = (RowCount - m_visibleRowCount) * (double(scrollPos) / numRows);
 
         auto drawList = ImGui::GetWindowDrawList();
 
@@ -241,8 +237,8 @@ namespace hex::ui {
         drawList->ChannelsSetCurrent(0);
 
         std::vector<u8> rowData(m_bytesPerRow);
-        const auto drawStart = scrollPos - grabPos;
-        for (u64 y = drawStart; y < std::min<u64>(drawStart + RowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
+        const auto drawStart = std::max<ImS64>(0, scrollPos - grabPos);
+        for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + RowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
             const auto rowStart = bb.Min + ImVec2(0, (y - drawStart) * rowHeight);
             const auto rowEnd = rowStart + ImVec2(bb.GetSize().x, rowHeight);
 
@@ -407,6 +403,8 @@ namespace hex::ui {
             m_currDataVisualizer = visualizer;
             return;
         }
+        if (const auto &visualizers = ContentRegistry::HexEditor::impl::getMiniMapVisualizers(); m_miniMapVisualizer == nullptr && !visualizers.empty())
+            m_miniMapVisualizer = visualizers.front();
 
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
         const u16 columnCount      = m_bytesPerRow / bytesPerCell;
