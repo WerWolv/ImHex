@@ -16,10 +16,10 @@ namespace hex {
     decltype(WorkspaceManager::s_workspaces)::iterator WorkspaceManager::s_previousWorkspace = s_workspaces.end();
 
     void WorkspaceManager::createWorkspace(const std::string& name, const std::string &layout) {
-        s_workspaces[name] = Workspace {
+        s_currentWorkspace = s_workspaces.insert_or_assign(name, Workspace {
             .layout = layout.empty() ? LayoutManager::saveToString() : layout,
             .path = {}
-        };
+        }).first;
 
         for (const auto &path : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
             if (exportToFile(path / (name + ".hexws")))
