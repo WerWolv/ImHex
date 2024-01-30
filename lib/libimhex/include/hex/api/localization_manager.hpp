@@ -27,6 +27,7 @@ namespace hex {
         }
 
         void loadLanguage(const std::string &language);
+        std::string getLocalizedString(const std::string &unlocalizedString, const std::string &language = "");
 
         [[nodiscard]] const std::map<std::string, std::string> &getSupportedLanguages();
         [[nodiscard]] const std::string &getFallbackLanguage();

@@ -60,6 +60,29 @@ namespace hex {
             s_selectedLanguage = language;
         }
 
+        std::string getLocalizedString(const std::string& unlocalizedString, const std::string& language) {
+            if (language.empty())
+                return getLocalizedString(unlocalizedString, getSelectedLanguage());
+
+            auto &languageDefinitions = ContentRegistry::Language::impl::getLanguageDefinitions();
+            if (!languageDefinitions.contains(language))
+                return "";
+
+            std::string localizedString;
+            for (const auto &definition : languageDefinitions[language]) {
+                if (definition.getEntries().contains(unlocalizedString)) {
+                    localizedString = definition.getEntries().at(unlocalizedString);
+                    break;
+                }
+            }
+
+            if (localizedString.empty())
+                return getLocalizedString(unlocalizedString, getFallbackLanguage());
+
+            return localizedString;
+        }
+
+
         const std::map<std::string, std::string> &getSupportedLanguages() {
             return ContentRegistry::Language::impl::getLanguages();
         }

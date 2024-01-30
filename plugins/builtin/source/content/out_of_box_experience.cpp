@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
     namespace {
 
         ImGuiExt::Texture s_imhexBanner;
-        ImGuiExt::Texture s_compassTexture;
+        ImGuiExt::Texture s_compassTexture, s_globeTexture;
         std::list<std::pair<std::fs::path, ImGuiExt::Texture>> s_screenshots;
         nlohmann::json s_screenshotDescriptions;
 
@@ -188,8 +188,71 @@ namespace hex::plugin::builtin {
                         break;
                     }
 
-                    // Server contact page
+                    // Language selection page
                     case 1: {
+                        static const auto &languages = LocalizationManager::getSupportedLanguages();
+                        static auto currLanguage = languages.begin();
+                        static float prevTime = 0;
+
+                        ImGui::NewLine();
+
+                        ImGui::NewLine();
+                        ImGui::NewLine();
+                        ImGui::NewLine();
+
+                        auto currTime = ImGui::GetTime();
+                        if ((currTime - prevTime) > 3) {
+                            prevTime = currTime;
+                            ++currLanguage;
+                        }
+
+                        if (currLanguage == languages.end())
+                            currLanguage = languages.begin();
+
+                        // Draw globe image
+                        const auto imageSize = s_compassTexture.getSize() / (1.5F * (1.0F / ImHexApi::System::getGlobalScale()));
+                        ImGui::SetCursorPos((ImGui::GetWindowSize() / 2 - imageSize / 2) - ImVec2(0, 50_scaled));
+                        ImGui::Image(s_globeTexture, imageSize);
+
+                        ImGui::NewLine();
+                        ImGui::NewLine();
+
+
+                        // Draw information text
+                        ImGui::SetCursorPosX(0);
+
+                        const auto availableWidth = ImGui::GetContentRegionAvail().x;
+                        if (ImGui::BeginChild("##language_text", ImVec2(availableWidth, 30_scaled))) {
+                            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetColorU32(ImGuiCol_Text, std::cos((currTime / 3) * 2 * std::numbers::pi) * 3 + 2));
+                            ImGuiExt::TextFormattedCentered("{}", LocalizationManager::getLocalizedString("hex.builtin.setting.interface.language", currLanguage->first));
+                            ImGui::PopStyleColor();
+                        }
+                        ImGui::EndChild();
+
+                        ImGui::NewLine();
+
+                        // Draw language selection list
+                        ImGui::SetCursorPosX(availableWidth / 3);
+                        if (ImGui::BeginListBox("##language", ImVec2(availableWidth / 3, 0))) {
+                            for (const auto &[langId, language] : LocalizationManager::getSupportedLanguages()) {
+                                if (ImGui::Selectable(language.c_str(), langId == LocalizationManager::getSelectedLanguage())) {
+                                    LocalizationManager::loadLanguage(langId);
+                                }
+                            }
+                            ImGui::EndListBox();
+                        }
+
+                        // Continue button
+                        const auto buttonSize = scaled({ 100, 50 });
+                        ImGui::SetCursorPos(ImHexApi::System::getMainWindowSize() - buttonSize - scaled({ 10, 10 }));
+                        if (ImGuiExt::DimmedButton(hex::format("{} {}", "hex.ui.common.continue"_lang, ICON_VS_ARROW_RIGHT).c_str(), buttonSize))
+                            page += 1;
+
+                        break;
+                    }
+
+                    // Server contact page
+                    case 2: {
                         static ImVec2 subWindowSize = { 0, 0 };
                         const auto windowSize = ImHexApi::System::getMainWindowSize();
 
@@ -287,7 +350,7 @@ namespace hex::plugin::builtin {
                     }
 
                     // Tutorial page
-                    case 2: {
+                    case 3: {
                         ImGui::NewLine();
 
                         ImGui::NewLine();
@@ -365,8 +428,9 @@ namespace hex::plugin::builtin {
             ImHexApi::System::setWindowResizable(false);
 
             const auto imageTheme = ThemeManager::getImageTheme();
-            s_imhexBanner = ImGuiExt::Texture(romfs::get(hex::format("assets/{}/banner.png", imageTheme)).span<std::byte>());
+            s_imhexBanner    = ImGuiExt::Texture(romfs::get(hex::format("assets/{}/banner.png", imageTheme)).span<std::byte>());
             s_compassTexture = ImGuiExt::Texture(romfs::get("assets/common/compass.png").span<std::byte>());
+            s_globeTexture   = ImGuiExt::Texture(romfs::get("assets/common/globe.png").span<std::byte>());
             s_screenshotDescriptions = nlohmann::json::parse(romfs::get("assets/screenshot_descriptions.json").string());
 
             for (const auto &path : romfs::list("assets/screenshots")) {
