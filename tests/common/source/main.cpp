@@ -1,6 +1,9 @@
 #include <hex.hpp>
+
+#include <hex/api/event_manager.hpp>
 #include <hex/helpers/utils.hpp>
 #include <hex/helpers/logger.hpp>
+
 #include <hex/test/tests.hpp>
 
 #include <cstdlib>
@@ -44,6 +47,8 @@ int main(int argc, char **argv) {
         hex::log::info("Success!");
     else
         hex::log::info("Failed!");
+
+    hex::EventManager::clear();
 
     return result;
 }
