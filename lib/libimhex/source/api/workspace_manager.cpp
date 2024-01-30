@@ -2,6 +2,7 @@
 #include <hex/api/layout_manager.hpp>
 
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/io/file.hpp>
 

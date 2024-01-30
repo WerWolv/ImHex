@@ -2,12 +2,12 @@
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/auto_reset.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <imgui.h>
 #include <hex/api/content_registry.hpp>
 #include <hex/ui/view.hpp>
-#include <hex/helpers/auto_reset.hpp>
 
 namespace hex {
 

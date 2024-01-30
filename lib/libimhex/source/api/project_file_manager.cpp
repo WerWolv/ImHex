@@ -1,5 +1,7 @@
 #include <hex/api/project_file_manager.hpp>
 
+#include <hex/helpers/auto_reset.hpp>
+
 #include <wolv/io/fs.hpp>
 
 namespace hex {

@@ -3,6 +3,7 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <nlohmann/json.hpp>
 

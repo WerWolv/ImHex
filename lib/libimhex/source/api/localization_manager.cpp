@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 namespace hex {
 

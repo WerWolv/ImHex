@@ -3,6 +3,7 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/utils/string.hpp>
 

@@ -3,6 +3,8 @@
 #include <hex/api/localization_manager.hpp>
 #include <hex/api/task_manager.hpp>
 
+#include <hex/helpers/auto_reset.hpp>
+
 #include <imgui_internal.h>
 #include <hex/helpers/utils.hpp>
 #include <wolv/utils/core.hpp>

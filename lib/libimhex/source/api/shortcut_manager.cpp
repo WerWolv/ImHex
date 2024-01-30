@@ -1,6 +1,7 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <imgui.h>
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <hex/ui/view.hpp>
 
