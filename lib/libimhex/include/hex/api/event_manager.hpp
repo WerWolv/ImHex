@@ -8,7 +8,6 @@
 #include <functional>
 
 #include <hex/api/imhex_api.hpp>
-#include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
 
 #include <wolv/types/type_name.hpp>
@@ -46,7 +45,7 @@ namespace hex {
         public:
             explicit constexpr EventId(const char *eventName) {
                 m_hash = 0x811C'9DC5;
-                for (auto c : std::string_view(eventName)) {
+                for (const char c : std::string_view(eventName)) {
                     m_hash = (m_hash >> 5) | (m_hash << 27);
                     m_hash ^= c;
                 }
@@ -62,6 +61,7 @@ namespace hex {
 
         struct EventBase {
             EventBase() noexcept = default;
+            virtual ~EventBase() = default;
         };
 
         template<typename... Params>
@@ -118,7 +118,7 @@ namespace hex {
 
             if (getTokenStore().contains(token)) {
                 auto&& [begin, end] = getTokenStore().equal_range(token);
-                auto eventRegistered = std::any_of(begin, end, [&](auto &item) {
+                const auto eventRegistered = std::any_of(begin, end, [&](auto &item) {
                     return item.second->first == E::Id;
                 });
                 if (eventRegistered) {
