@@ -23,7 +23,7 @@ jobs:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+      uses: hendrikmuhs/ccache-action@v1
       with:
         key: ${{ runner.os }}-tests-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-tests-build
@@ -31,7 +31,7 @@ jobs:
 
 
     - name: 📜 Restore CMakeCache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           build/CMakeCache.txt
