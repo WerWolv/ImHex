@@ -60,16 +60,18 @@ jobs:
         mkdir -p build
         cd build
 
-        cmake -G "Ninja"                                \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
-          -DIMHEX_GENERATE_PACKAGE=ON                   \
-          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON         \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON               \
-          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
-          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-          -DUSE_SYSTEM_CAPSTONE=ON                      \
+        cmake -G "Ninja"                                            \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"                     \
+          -DIMHEX_GENERATE_PACKAGE=ON                               \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
+          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"              \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
+          -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          -DIMHEX_GENERATE_PDBS=ON                                  \
+          -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                         \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
           ..
     
