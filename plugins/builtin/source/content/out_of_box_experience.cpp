@@ -15,6 +15,7 @@
 #include <wolv/utils/guards.hpp>
 
 #include <list>
+#include <numbers>
 #include <ranges>
 #include <string>
 
