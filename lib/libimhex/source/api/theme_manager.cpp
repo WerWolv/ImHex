@@ -10,21 +10,21 @@ namespace hex {
 
     namespace {
 
-        std::map<std::string, nlohmann::json> s_themes;
-        std::map<std::string, ThemeManager::ThemeHandler> s_themeHandlers;
-        std::map<std::string, ThemeManager::StyleHandler> s_styleHandlers;
-        std::string s_imageTheme;
-        std::string s_currTheme;
+        AutoReset<std::map<std::string, nlohmann::json>> s_themes;
+        AutoReset<std::map<std::string, ThemeManager::ThemeHandler>> s_themeHandlers;
+        AutoReset<std::map<std::string, ThemeManager::StyleHandler>> s_styleHandlers;
+        AutoReset<std::string> s_imageTheme;
+        AutoReset<std::string> s_currTheme;
 
     }
 
 
     void ThemeManager::addThemeHandler(const std::string &name, const ColorMap &colorMap, const std::function<ImColor(u32)> &getFunction, const std::function<void(u32, ImColor)> &setFunction) {
-        s_themeHandlers[name] = { colorMap, getFunction, setFunction };
+        (*s_themeHandlers)[name] = { colorMap, getFunction, setFunction };
     }
 
     void ThemeManager::addStyleHandler(const std::string &name, const StyleMap &styleMap) {
-        s_styleHandlers[name] = { styleMap };
+        (*s_styleHandlers)[name] = { styleMap };
     }
 
     void ThemeManager::addTheme(const std::string &content) {
@@ -32,7 +32,7 @@ namespace hex {
             auto theme = nlohmann::json::parse(content);
 
             if (theme.contains("name") && theme.contains("colors")) {
-                s_themes[theme["name"].get<std::string>()] = theme;
+                (*s_themes)[theme["name"].get<std::string>()] = theme;
             } else {
                 hex::log::error("Invalid theme file");
             }
@@ -77,7 +77,7 @@ namespace hex {
                 { "base", s_currTheme }
         };
 
-        for (const auto &[type, handler] : s_themeHandlers) {
+        for (const auto &[type, handler] : *s_themeHandlers) {
             theme["colors"][type] = {};
 
             for (const auto &[key, value] : handler.colorMap) {
@@ -86,7 +86,7 @@ namespace hex {
             }
         }
 
-        for (const auto &[type, handler] : s_styleHandlers) {
+        for (const auto &[type, handler] : *s_styleHandlers) {
             theme["styles"][type] = {};
 
             for (const auto &[key, style] : handler.styleMap) {
@@ -105,17 +105,17 @@ namespace hex {
     }
 
     void ThemeManager::changeTheme(std::string name) {
-        if (!s_themes.contains(name)) {
-            if (s_themes.empty()) {
+        if (!s_themes->contains(name)) {
+            if (s_themes->empty()) {
                 return;
             } else {
-                const std::string &defaultTheme = s_themes.begin()->first;
+                const std::string &defaultTheme = s_themes->begin()->first;
                 hex::log::error("Theme '{}' does not exist, using default theme '{}' instead!", name, defaultTheme);
                 name = defaultTheme;
             }
         }
 
-        const auto &theme = s_themes[name];
+        const auto &theme = (*s_themes)[name];
 
         if (theme.contains("base")) {
             if (theme["base"].is_string()) {
@@ -126,14 +126,14 @@ namespace hex {
             }
         }
 
-        if (theme.contains("colors") && !s_themeHandlers.empty()) {
+        if (theme.contains("colors") && !s_themeHandlers->empty()) {
             for (const auto&[type, content] : theme["colors"].items()) {
-                if (!s_themeHandlers.contains(type)) {
+                if (!s_themeHandlers->contains(type)) {
                     log::warn("No theme handler found for '{}'", type);
                     continue;
                 }
 
-                const auto &handler = s_themeHandlers[type];
+                const auto &handler = (*s_themeHandlers)[type];
                 for (const auto &[key, value] : content.items()) {
                     if (!handler.colorMap.contains(key)) {
                         log::warn("No color found for '{}.{}'", type, key);
@@ -146,19 +146,19 @@ namespace hex {
                         continue;
                     }
 
-                    s_themeHandlers[type].setFunction(s_themeHandlers[type].colorMap.at(key), color.value());
+                    (*s_themeHandlers)[type].setFunction((*s_themeHandlers)[type].colorMap.at(key), color.value());
                 }
             }
         }
 
-        if (theme.contains("styles") && !s_styleHandlers.empty()) {
+        if (theme.contains("styles") && !s_styleHandlers->empty()) {
             for (const auto&[type, content] : theme["styles"].items()) {
-                if (!s_styleHandlers.contains(type)) {
+                if (!s_styleHandlers->contains(type)) {
                     log::warn("No style handler found for '{}'", type);
                     continue;
                 }
 
-                auto &handler = s_styleHandlers[type];
+                auto &handler = (*s_styleHandlers)[type];
                 for (const auto &[key, value] : content.items()) {
                     if (!handler.styleMap.contains(key))
                         continue;
@@ -167,12 +167,12 @@ namespace hex {
                     const float scale = style.needsScaling ? 1_scaled : 1.0F;
 
                     if (value.is_number_float()) {
-                        if (auto newValue = std::get_if<float*>(&style.value); newValue != nullptr)
+                        if (const auto newValue = std::get_if<float*>(&style.value); newValue != nullptr)
                             **newValue = value.get<float>() * scale;
                         else
                             log::warn("Style variable '{}' was of type ImVec2 but a float was expected.", name);
                     } else if (value.is_array() && value.size() == 2 && value[0].is_number_float() && value[1].is_number_float()) {
-                        if (auto newValue = std::get_if<ImVec2*>(&style.value); newValue != nullptr)
+                        if (const auto newValue = std::get_if<ImVec2*>(&style.value); newValue != nullptr)
                             **newValue = ImVec2(value[0].get<float>() * scale, value[1].get<float>() * scale);
                         else
                             log::warn("Style variable '{}' was of type float but a ImVec2 was expected.", name);
@@ -203,18 +203,18 @@ namespace hex {
 
     std::vector<std::string> ThemeManager::getThemeNames() {
         std::vector<std::string> themeNames;
-        for (const auto &[name, theme] : s_themes)
+        for (const auto &[name, theme] : *s_themes)
             themeNames.push_back(name);
 
         return themeNames;
     }
 
     void ThemeManager::reset() {
-        s_themes.clear();
-        s_styleHandlers.clear();
-        s_themeHandlers.clear();
-        s_imageTheme.clear();
-        s_currTheme.clear();
+        s_themes->clear();
+        s_styleHandlers->clear();
+        s_themeHandlers->clear();
+        s_imageTheme->clear();
+        s_currTheme->clear();
     }
 
 

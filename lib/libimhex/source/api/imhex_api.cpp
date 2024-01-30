@@ -5,11 +5,11 @@
 #include <hex/providers/provider.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/utils/string.hpp>
 
 #include <utility>
-#include <unistd.h>
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -19,6 +19,7 @@
     #include <windows.h>
 #else
     #include <sys/utsname.h>
+    #include <unistd.h>
 #endif
 
 namespace hex {
@@ -36,39 +37,39 @@ namespace hex {
 
         namespace impl {
 
-            static std::map<u32, Highlighting> s_backgroundHighlights;
             std::map<u32, Highlighting> &getBackgroundHighlights() {
-                return s_backgroundHighlights;
+                static AutoReset<std::map<u32, Highlighting>> backgroundHighlights;
+                return backgroundHighlights;
             }
 
-            static std::map<u32, HighlightingFunction> s_backgroundHighlightingFunctions;
             std::map<u32, HighlightingFunction> &getBackgroundHighlightingFunctions() {
-                return s_backgroundHighlightingFunctions;
+                static AutoReset<std::map<u32, HighlightingFunction>> backgroundHighlightingFunctions;
+                return backgroundHighlightingFunctions;
             }
 
-            static std::map<u32, Highlighting> s_foregroundHighlights;
             std::map<u32, Highlighting> &getForegroundHighlights() {
-                return s_foregroundHighlights;
+                static AutoReset<std::map<u32, Highlighting>> foregroundHighlights;
+                return foregroundHighlights;
             }
 
-            static std::map<u32, HighlightingFunction> s_foregroundHighlightingFunctions;
             std::map<u32, HighlightingFunction> &getForegroundHighlightingFunctions() {
-                return s_foregroundHighlightingFunctions;
+                static AutoReset<std::map<u32, HighlightingFunction>> foregroundHighlightingFunctions;
+                return foregroundHighlightingFunctions;
             }
 
-            static std::map<u32, Tooltip> s_tooltips;
             std::map<u32, Tooltip> &getTooltips() {
-                return s_tooltips;
+                static AutoReset<std::map<u32, Tooltip>> tooltips;
+                return tooltips;
             }
 
-            static std::map<u32, TooltipFunction> s_tooltipFunctions;
             std::map<u32, TooltipFunction> &getTooltipFunctions() {
-                return s_tooltipFunctions;
+                static AutoReset<std::map<u32, TooltipFunction>> tooltipFunctions;
+                return tooltipFunctions;
             }
 
-            static std::optional<ProviderRegion> s_currentSelection;
+            static AutoReset<std::optional<ProviderRegion>> s_currentSelection;
             void setCurrentSelection(const std::optional<ProviderRegion> &region) {
-                s_currentSelection = region;
+                *s_currentSelection = region;
             }
 
         }
@@ -226,7 +227,7 @@ namespace hex {
     namespace ImHexApi::Provider {
 
         static i64 s_currentProvider = -1;
-        static std::vector<prv::Provider *> s_providers;
+        static AutoReset<std::vector<prv::Provider *>> s_providers;
 
         namespace impl {
 
@@ -245,7 +246,7 @@ namespace hex {
             if (!ImHexApi::Provider::isValid())
                 return nullptr;
 
-            return s_providers[s_currentProvider];
+            return (*s_providers)[s_currentProvider];
         }
 
         const std::vector<prv::Provider *> &getProviders() {
@@ -256,7 +257,7 @@ namespace hex {
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
-            if (index < s_providers.size() && s_currentProvider != index) {
+            if (index < s_providers->size() && s_currentProvider != index) {
                 auto oldProvider  = get();
                 s_currentProvider = index;
                 EventProviderChanged::post(oldProvider, get());
@@ -268,7 +269,7 @@ namespace hex {
         }
 
         bool isValid() {
-            return !s_providers.empty() && s_currentProvider >= 0 && s_currentProvider < i64(s_providers.size());
+            return !s_providers->empty() && s_currentProvider >= 0 && s_currentProvider < i64(s_providers->size());
         }
 
         void markDirty() {
@@ -276,12 +277,12 @@ namespace hex {
         }
 
         void resetDirty() {
-            for (auto &provider : s_providers)
+            for (const auto &provider : *s_providers)
                 provider->markDirty(false);
         }
 
         bool isDirty() {
-            return std::ranges::any_of(s_providers, [](const auto &provider) {
+            return std::ranges::any_of(*s_providers, [](const auto &provider) {
                 return provider->isDirty();
             });
         }
@@ -293,11 +294,11 @@ namespace hex {
             if (skipLoadInterface)
                 provider->skipLoadInterface();
 
-            s_providers.push_back(provider);
+            s_providers->push_back(provider);
             EventProviderCreated::post(provider);
 
-            if (select || s_providers.size() == 1)
-                setCurrentProvider(s_providers.size() - 1);
+            if (select || s_providers->size() == 1)
+                setCurrentProvider(s_providers->size() - 1);
         }
 
         void remove(prv::Provider *provider, bool noQuestions) {
@@ -316,29 +317,29 @@ namespace hex {
                     return;
             }
 
-            auto it = std::find(s_providers.begin(), s_providers.end(), provider);
-            if (it == s_providers.end())
+            const auto it = std::ranges::find(*s_providers, provider);
+            if (it == s_providers->end())
                 return;
 
-            if (!s_providers.empty()) {
-                if (it == s_providers.begin()) {
+            if (!s_providers->empty()) {
+                if (it == s_providers->begin()) {
                     // If the first provider is being closed, select the one that's the first one now
                     setCurrentProvider(0);
 
-                    if (s_providers.size() > 1)
-                        EventProviderChanged::post(s_providers[0], s_providers[1]);
+                    if (s_providers->size() > 1)
+                        EventProviderChanged::post(s_providers->at(0), s_providers->at(1));
                 }
-                else if (std::distance(s_providers.begin(), it) == s_currentProvider) {
+                else if (std::distance(s_providers->begin(), it) == s_currentProvider) {
                     // If the current provider is being closed, select the one that's before it
                     setCurrentProvider(s_currentProvider - 1);
                 }
                 else {
                     // If any other provider is being closed, find the current provider in the list again and select it again
-                    auto currentProvider = get();
-                    auto currentIt = std::find(s_providers.begin(), s_providers.end(), currentProvider);
+                    const auto currentProvider = get();
+                    const auto currentIt = std::ranges::find(*s_providers, currentProvider);
 
-                    if (currentIt != s_providers.end()) {
-                        auto newIndex = std::distance(s_providers.begin(), currentIt);
+                    if (currentIt != s_providers->end()) {
+                        auto newIndex = std::distance(s_providers->begin(), currentIt);
 
                         if (s_currentProvider == newIndex)
                             newIndex -= 1;
@@ -351,11 +352,11 @@ namespace hex {
                 }
             }
 
-            s_providers.erase(it);
-            if (s_currentProvider >= i64(s_providers.size()))
+            s_providers->erase(it);
+            if (s_currentProvider >= i64(s_providers->size()))
                 setCurrentProvider(0);
 
-            if (s_providers.empty())
+            if (s_providers->empty())
                 EventProviderChanged::post(provider, nullptr);
 
             provider->close();
@@ -391,11 +392,11 @@ namespace hex {
             static ImVec2 s_mainWindowPos;
             static ImVec2 s_mainWindowSize;
             void setMainWindowPosition(i32 x, i32 y) {
-                s_mainWindowPos = ImVec2(x, y);
+                s_mainWindowPos = ImVec2(float(x), float(y));
             }
 
             void setMainWindowSize(u32 width, u32 height) {
-                s_mainWindowSize = ImVec2(width, height);
+                s_mainWindowSize = ImVec2(float(width), float(height));
             }
 
             static ImGuiID s_mainDockSpaceId;
@@ -436,7 +437,7 @@ namespace hex {
             }
 
 
-            static std::string s_gpuVendor;
+            static AutoReset<std::string> s_gpuVendor;
             void setGPUVendor(const std::string &vendor) {
                 s_gpuVendor = vendor;
             }
@@ -536,7 +537,7 @@ namespace hex {
         }
 
         std::map<std::string, std::string> &getInitArguments() {
-            static std::map<std::string, std::string> initArgs;
+            static AutoReset<std::map<std::string, std::string>> initArgs;
 
             return initArgs;
         }
@@ -556,7 +557,7 @@ namespace hex {
 
 
         std::vector<std::fs::path> &getAdditionalFolderPaths() {
-            static std::vector<std::fs::path> additionalFolderPaths;
+            static AutoReset<std::vector<std::fs::path>> additionalFolderPaths;
             return additionalFolderPaths;
         }
 
@@ -595,7 +596,7 @@ namespace hex {
 
                 return hex::format("{}.{}.{}", info.dwMajorVersion, info.dwMinorVersion, info.dwBuildNumber);
             #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_WEB)
-                struct utsname details;
+                struct utsname details = { };
 
                 if (uname(&details) != 0) {
                     return "Unknown";
@@ -627,13 +628,13 @@ namespace hex {
                         return "Unknown";
                 }
             #elif defined(OS_LINUX) || defined(OS_MACOS) || defined(OS_WEB)
-                struct utsname details;
+                struct utsname details = { };
 
                 if (uname(&details) != 0) {
                     return "Unknown";
                 }
 
-                return std::string(details.machine);
+                return { details.machine };
             #else
                 return "Unknown";
             #endif
@@ -732,7 +733,7 @@ namespace hex {
         }
 
         void setWindowResizable(bool resizable) {
-            glfwSetWindowAttrib(impl::s_mainWindowHandle, GLFW_RESIZABLE, resizable);
+            glfwSetWindowAttrib(impl::s_mainWindowHandle, GLFW_RESIZABLE, int(resizable));
             impl::s_windowResizable = resizable;
         }
 
@@ -745,14 +746,14 @@ namespace hex {
         namespace impl {
 
             std::map<std::string, MessagingHandler> &getHandlers() {
-                static std::map<std::string, MessagingHandler> handlers;
+                static AutoReset<std::map<std::string, MessagingHandler>> handlers;
 
                 return handlers;
             }
 
             void runHandler(const std::string &eventName, const std::vector<u8> &args) {
                 const auto& handlers = impl::getHandlers();
-                auto matchHandler = handlers.find(eventName);
+                const auto matchHandler = handlers.find(eventName);
                 
                 if (matchHandler == handlers.end()) {
                     log::error("Forward event handler {} not found", eventName);
@@ -777,12 +778,12 @@ namespace hex {
         namespace impl {
 
             std::vector<Font>& getFonts() {
-                static std::vector<Font> fonts;
+                static AutoReset<std::vector<Font>> fonts;
 
                 return fonts;
             }
 
-            static std::fs::path s_customFontPath;
+            static AutoReset<std::fs::path> s_customFontPath;
             void setCustomFontPath(const std::fs::path &path) {
                 s_customFontPath = path;
             }
@@ -792,7 +793,7 @@ namespace hex {
                 s_fontSize = size;
             }
 
-            static std::unique_ptr<ImFontAtlas> s_fontAtlas;
+            static AutoReset<std::unique_ptr<ImFontAtlas>> s_fontAtlas;
             void setFontAtlas(ImFontAtlas* fontAtlas) {
                 s_fontAtlas = std::unique_ptr<ImFontAtlas>(fontAtlas);
             }
@@ -875,7 +876,7 @@ namespace hex {
         }
 
         ImFontAtlas* getFontAtlas() {
-            return impl::s_fontAtlas.get();
+            return impl::s_fontAtlas->get();
         }
 
         ImFont* Bold() {

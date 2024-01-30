@@ -1,10 +1,11 @@
 #include <hex/ui/popup.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 namespace hex::impl {
 
 
     [[nodiscard]] std::vector<std::unique_ptr<PopupBase>> &PopupBase::getOpenPopups() {
-        static std::vector<std::unique_ptr<PopupBase>> openPopups;
+        static AutoReset<std::vector<std::unique_ptr<PopupBase>>> openPopups;
 
         return openPopups;
     }

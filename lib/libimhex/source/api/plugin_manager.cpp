@@ -3,7 +3,6 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -303,13 +302,13 @@ namespace hex {
     }
 
     std::vector<std::fs::path> &PluginManager::getPluginPaths() {
-        static std::vector<std::fs::path> pluginPaths;
+        static AutoReset<std::vector<std::fs::path>> pluginPaths;
 
         return pluginPaths;
     }
 
     std::vector<std::fs::path> &PluginManager::getPluginLoadPaths() {
-        static std::vector<std::fs::path> pluginPaths;
+        static AutoReset<std::vector<std::fs::path>> pluginPaths;
 
         return pluginPaths;
     }

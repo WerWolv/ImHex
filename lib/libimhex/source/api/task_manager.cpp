@@ -7,7 +7,6 @@
 #include <ranges>
 
 #include <jthread.hpp>
-#include <hex/helpers/utils.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
@@ -149,7 +148,7 @@ namespace hex {
 
 
     bool TaskHolder::isRunning() const {
-        auto task = m_task.lock();
+        const auto &task = m_task.lock();
         if (!task)
             return false;
 
@@ -157,7 +156,7 @@ namespace hex {
     }
 
     bool TaskHolder::hadException() const {
-        auto task = m_task.lock();
+        const auto &task = m_task.lock();
         if (!task)
             return false;
 
@@ -165,7 +164,7 @@ namespace hex {
     }
 
     bool TaskHolder::shouldInterrupt() const {
-        auto task = m_task.lock();
+        const auto &task = m_task.lock();
         if (!task)
             return false;
 
@@ -173,7 +172,7 @@ namespace hex {
     }
 
     bool TaskHolder::wasInterrupted() const {
-        auto task = m_task.lock();
+        const auto &task = m_task.lock();
         if (!task)
             return false;
 
@@ -181,7 +180,7 @@ namespace hex {
     }
 
     void TaskHolder::interrupt() const {
-        auto task = m_task.lock();
+        const auto &task = m_task.lock();
         if (!task)
             return;
 
@@ -189,9 +188,9 @@ namespace hex {
     }
 
     u32 TaskHolder::getProgress() const {
-        auto task = m_task.lock();
+        const auto &task = m_task.lock();
         if (!task)
-            return false;
+            return 0;
 
         // If the max value is 0, the task has no progress
         if (task->getMaxValue() == 0)
@@ -265,7 +264,7 @@ namespace hex {
 
     void TaskManager::exit() {
         // Interrupt all tasks
-        for (auto &task : s_tasks) {
+        for (const auto &task : s_tasks) {
             task->interrupt();
         }
 
@@ -342,7 +341,7 @@ namespace hex {
     size_t TaskManager::getRunningTaskCount() {
         std::scoped_lock lock(s_queueMutex);
 
-        return std::count_if(s_tasks.begin(), s_tasks.end(), [](const auto &task){
+        return std::ranges::count_if(s_tasks, [](const auto &task){
             return !task->isBackgroundTask();
         });
     }
@@ -350,7 +349,7 @@ namespace hex {
     size_t TaskManager::getRunningBackgroundTaskCount() {
         std::scoped_lock lock(s_queueMutex);
 
-        return std::count_if(s_tasks.begin(), s_tasks.end(), [](const auto &task){
+        return std::ranges::count_if(s_tasks, [](const auto &task){
             return task->isBackgroundTask();
         });
     }

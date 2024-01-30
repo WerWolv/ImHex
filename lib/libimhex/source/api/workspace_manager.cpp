@@ -11,12 +11,12 @@
 
 namespace hex {
 
-    std::map<std::string, WorkspaceManager::Workspace> WorkspaceManager::s_workspaces;
-    decltype(WorkspaceManager::s_workspaces)::iterator WorkspaceManager::s_currentWorkspace  = s_workspaces.end();
-    decltype(WorkspaceManager::s_workspaces)::iterator WorkspaceManager::s_previousWorkspace = s_workspaces.end();
+    AutoReset<std::map<std::string, WorkspaceManager::Workspace>> WorkspaceManager::s_workspaces;
+    decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_currentWorkspace  = s_workspaces->end();
+    decltype(WorkspaceManager::s_workspaces)::Type::iterator WorkspaceManager::s_previousWorkspace = s_workspaces->end();
 
     void WorkspaceManager::createWorkspace(const std::string& name, const std::string &layout) {
-        s_currentWorkspace = s_workspaces.insert_or_assign(name, Workspace {
+        s_currentWorkspace = s_workspaces->insert_or_assign(name, Workspace {
             .layout = layout.empty() ? LayoutManager::saveToString() : layout,
             .path = {}
         }).first;
@@ -28,8 +28,8 @@ namespace hex {
     }
 
     void WorkspaceManager::switchWorkspace(const std::string& name) {
-        const auto newWorkspace = s_workspaces.find(name);
-        if (newWorkspace != s_workspaces.end()) {
+        const auto newWorkspace = s_workspaces->find(name);
+        if (newWorkspace != s_workspaces->end()) {
             s_currentWorkspace = newWorkspace;
             log::info("Switching to workspace '{}'", name);
         }
@@ -46,10 +46,10 @@ namespace hex {
         try {
             auto json = nlohmann::json::parse(content.begin(), content.end());
 
-            std::string name = json["name"];
+            const std::string name = json["name"];
             std::string layout = json["layout"];
 
-            s_workspaces[name] = Workspace {
+            (*s_workspaces)[name] = Workspace {
                 .layout = std::move(layout),
                 .path = path
             };
@@ -60,7 +60,7 @@ namespace hex {
 
     bool WorkspaceManager::exportToFile(std::fs::path path, std::string workspaceName) {
         if (path.empty()) {
-            if (s_currentWorkspace == s_workspaces.end())
+            if (s_currentWorkspace == s_workspaces->end())
                 return false;
 
             path = s_currentWorkspace->second.path;
@@ -86,7 +86,7 @@ namespace hex {
 
     void WorkspaceManager::process() {
         if (s_previousWorkspace != s_currentWorkspace) {
-            if (s_previousWorkspace != s_workspaces.end())
+            if (s_previousWorkspace != s_workspaces->end())
                 exportToFile(s_previousWorkspace->second.path, s_previousWorkspace->first);
 
             LayoutManager::closeAllViews();
@@ -98,9 +98,9 @@ namespace hex {
 
 
     void WorkspaceManager::reset() {
-        s_workspaces.clear();
-        s_currentWorkspace  = s_workspaces.end();
-        s_previousWorkspace = s_workspaces.end();
+        s_workspaces->clear();
+        s_currentWorkspace  = s_workspaces->end();
+        s_previousWorkspace = s_workspaces->end();
     }
 
 

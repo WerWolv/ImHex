@@ -47,6 +47,12 @@
     void setupMacosWindowStyle(GLFWwindow *window) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
         cocoaWindow.titleVisibility = NSWindowTitleHidden;
+
+        NSVisualEffectView *visualEffectView = [[NSVisualEffectView alloc] init];
+        [visualEffectView setMaterial:NSVisualEffectMaterialAppearanceBased];
+        [visualEffectView setBlendingMode:NSVisualEffectBlendingModeBehindWindow];
+
+        [cocoaWindow.contentView addSubview:visualEffectView positioned:NSWindowBelow relativeTo:nil];
     }
 
     @interface HexDocument : NSDocument

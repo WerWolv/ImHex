@@ -9,17 +9,11 @@
 #include <hex/helpers/logger.hpp>
 
 #include <hex/api/content_registry.hpp>
-#include <hex/api/project_file_manager.hpp>
-#include <hex/api/theme_manager.hpp>
 #include <hex/api/plugin_manager.hpp>
-#include <hex/api/layout_manager.hpp>
 #include <hex/api/achievement_manager.hpp>
-#include <hex/api/tutorial_manager.hpp>
-#include <hex/api/workspace_manager.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/ui/popup.hpp>
-#include <hex/ui/toast.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -59,108 +53,41 @@ namespace hex::init {
         return result;
     }
 
-    bool deleteSharedData() {
-        // This function is called when ImHex is closed. It deletes all shared data that was created by plugins
-        // This is a bit of a hack but necessary because when ImHex gets closed, all plugins are unloaded in order for
-        // destructors to be called correctly. To prevent crashes when ImHex exits, we need to delete all shared data
-
-        EventImHexClosing::post();
-        EventManager::clear();
-
-        while (ImHexApi::Provider::isValid())
-            ImHexApi::Provider::remove(ImHexApi::Provider::get());
-
+    bool prepareExit() {
         // Terminate all asynchronous tasks
         TaskManager::exit();
-
-        ContentRegistry::Provider::impl::getEntries().clear();
-
-        ImHexApi::System::getInitArguments().clear();
-        ImHexApi::HexEditor::impl::getBackgroundHighlights().clear();
-        ImHexApi::HexEditor::impl::getForegroundHighlights().clear();
-        ImHexApi::HexEditor::impl::getBackgroundHighlightingFunctions().clear();
-        ImHexApi::HexEditor::impl::getForegroundHighlightingFunctions().clear();
-        ImHexApi::HexEditor::impl::getTooltips().clear();
-        ImHexApi::HexEditor::impl::getTooltipFunctions().clear();
-        ImHexApi::System::getAdditionalFolderPaths().clear();
-        ImHexApi::Messaging::impl::getHandlers().clear();
-        ImHexApi::Fonts::getCustomFontPath().clear();
-        ImHexApi::Fonts::impl::getFonts().clear();
-
-        ContentRegistry::Settings::impl::getSettings().clear();
-        ContentRegistry::Settings::impl::getSettingsData().clear();
-
-        ContentRegistry::CommandPaletteCommands::impl::getEntries().clear();
-        ContentRegistry::CommandPaletteCommands::impl::getHandlers().clear();
-
-        ContentRegistry::PatternLanguage::impl::getFunctions().clear();
-        ContentRegistry::PatternLanguage::impl::getPragmas().clear();
-        ContentRegistry::PatternLanguage::impl::getVisualizers().clear();
-        ContentRegistry::PatternLanguage::impl::getInlineVisualizers().clear();
-
-        ContentRegistry::Views::impl::getEntries().clear();
-        impl::PopupBase::getOpenPopups().clear();
-        impl::ToastBase::getQueuedToasts().clear();
-
-
-        ContentRegistry::Tools::impl::getEntries().clear();
-        ContentRegistry::DataInspector::impl::getEntries().clear();
-
-        ContentRegistry::Language::impl::getLanguages().clear();
-        ContentRegistry::Language::impl::getLanguageDefinitions().clear();
-        LocalizationManager::impl::resetLanguageStrings();
-
-        ContentRegistry::Interface::impl::getWelcomeScreenEntries().clear();
-        ContentRegistry::Interface::impl::getFooterItems().clear();
-        ContentRegistry::Interface::impl::getToolbarItems().clear();
-        ContentRegistry::Interface::impl::getMainMenuItems().clear();
-        ContentRegistry::Interface::impl::getMenuItems().clear();
-        ContentRegistry::Interface::impl::getSidebarItems().clear();
-        ContentRegistry::Interface::impl::getTitleBarButtons().clear();
-
-        ShortcutManager::clearShortcuts();
-
-        ContentRegistry::DataProcessorNode::impl::getEntries().clear();
-
-        ContentRegistry::DataFormatter::impl::getEntries().clear();
-        ContentRegistry::FileHandler::impl::getEntries().clear();
-        ContentRegistry::Hashes::impl::getHashes().clear();
-        ContentRegistry::HexEditor::impl::getVisualizers().clear();
-        ContentRegistry::HexEditor::impl::getMiniMapVisualizers().clear();
-
-        ContentRegistry::BackgroundServices::impl::stopServices();
-
-        ContentRegistry::CommunicationInterface::impl::getNetworkEndpoints().clear();
-
-        ContentRegistry::Experiments::impl::getExperiments().clear();
-        ContentRegistry::Reports::impl::getGenerators().clear();
-
-        ContentRegistry::Diffing::impl::getAlgorithms().clear();
-
-        WorkspaceManager::reset();
-        LayoutManager::reset();
-
-        ThemeManager::reset();
-
-        AchievementManager::getAchievements().clear();
-        TutorialManager::reset();
-
-        ProjectFile::getHandlers().clear();
-        ProjectFile::getProviderHandlers().clear();
-        ProjectFile::setProjectFunctions(nullptr, nullptr);
-
-        fs::setFileBrowserErrorCallback(nullptr);
 
         // Unlock font atlas so it can be deleted in case of a crash
         if (ImGui::GetCurrentContext() != nullptr)
             ImGui::GetIO().Fonts->Locked = false;
+
+        // Print a nice message if a crash happened while cleaning up resources
+        // To the person fixing this:
+        //     ALWAYS wrap static heap allocated objects inside libimhex such as std::vector, std::string, std::function, etc. in a AutoReset<T>
+        //     e.g `AutoReset<std::vector<MyStruct>> m_structs;`
+        //
+        //     The reason this is necessary is because each plugin / dynamic library gets its own instance of `std::allocator`
+        //     which will try to free the allocated memory when the object is destroyed. However since the storage is static, this
+        //     will happen only when libimhex is unloaded after main() returns. At this point all plugins have been unloaded already so
+        //     the std::allocator will try to free memory in a heap that does not exist anymore which will cause a crash.
+        //     By wrapping the object in a AutoReset<T>, the `EventImHexClosing` event will automatically handle clearing the object
+        //     while the heap is still valid.
+        //     The heap stays valid right up to the point where `PluginManager::unload()` is called.
+        EventAbnormalTermination::post([] {
+            log::fatal("A crash happened while cleaning up resources during exit!");
+            log::fatal("This is most certainly because WerWolv again forgot to mark a heap allocated object as 'AutoReset'.");
+            log::fatal("Please report this issue on the ImHex GitHub page!");
+            log::fatal("To the person fixing this, read the comment above this message for more information.");
+        });
+
+        EventImHexClosing::post();
+        EventManager::clear();
 
         return true;
     }
 
     bool loadPlugins() {
         // Load all plugins
-        bool hasExtraPluginFolders = !PluginManager::getPluginLoadPaths().empty();
         #if !defined(IMHEX_STATIC_LINK_PLUGINS)
             for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Plugins)) {
                 PluginManager::addLoadPath(dir);
@@ -170,7 +97,7 @@ namespace hex::init {
         #endif
 
         // Get loaded plugins
-        auto &plugins = PluginManager::getPlugins();
+        const auto &plugins = PluginManager::getPlugins();
 
         // If no plugins were loaded, ImHex wasn't installed properly. This will trigger an error popup later on
         if (plugins.empty()) {
@@ -180,7 +107,7 @@ namespace hex::init {
             return false;
         }
 
-        const auto shouldLoadPlugin = [hasExtraPluginFolders, executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
+        const auto shouldLoadPlugin = [executablePath = wolv::io::fs::getExecutablePath()](const Plugin &plugin) {
             // In debug builds, ignore all plugins that are not part of the executable directory
             #if !defined(DEBUG)
                 return true;
@@ -189,7 +116,7 @@ namespace hex::init {
             if (!executablePath.has_value())
                 return true;
 
-            if (hasExtraPluginFolders)
+            if (!PluginManager::getPluginLoadPaths().empty())
                 return true;
 
             // Check if the plugin is somewhere in the same directory tree as the executable
@@ -283,7 +210,6 @@ namespace hex::init {
 
     bool unloadPlugins() {
         PluginManager::unload();
-        PluginManager::getPluginLoadPaths().clear();
 
         return true;
     }
@@ -320,7 +246,7 @@ namespace hex::init {
     // Run all exit tasks, and print to console
     void runExitTasks() {
         for (const auto &[name, task, async] : init::getExitTasks()) {
-            bool result = task();
+            const bool result = task();
             log::info("Exit task '{0}' finished {1}", name, result ? "successfully" : "unsuccessfully");
         }
     }
@@ -337,7 +263,7 @@ namespace hex::init {
     std::vector<Task> getExitTasks() {
         return {
             { "Saving settings",         storeSettings,    false },
-            { "Cleaning up shared data", deleteSharedData, false },
+            { "Prepare exit",            prepareExit,      false },
             { "Unloading plugins",       unloadPlugins,    false },
             { "Deleting old files",      deleteOldFiles,   false },
         };

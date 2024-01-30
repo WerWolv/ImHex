@@ -13,11 +13,11 @@ namespace hex {
 
     namespace {
 
-        std::map<std::string, TutorialManager::Tutorial> s_tutorials;
-        decltype(s_tutorials)::iterator s_currentTutorial = s_tutorials.end();
+        AutoReset<std::map<std::string, TutorialManager::Tutorial>> s_tutorials;
+        auto s_currentTutorial = s_tutorials->end();
 
-        std::map<ImGuiID, std::string> s_highlights;
-        std::vector<std::pair<ImRect, std::string>> s_highlightDisplays;
+        AutoReset<std::map<ImGuiID, std::string>> s_highlights;
+        AutoReset<std::vector<std::pair<ImRect, std::string>>> s_highlightDisplays;
 
 
         class IDStack {
@@ -67,19 +67,19 @@ namespace hex {
 
 
     TutorialManager::Tutorial& TutorialManager::createTutorial(const UnlocalizedString &unlocalizedName, const UnlocalizedString &unlocalizedDescription) {
-        return s_tutorials.try_emplace(unlocalizedName, Tutorial(unlocalizedName, unlocalizedDescription)).first->second;
+        return s_tutorials->try_emplace(unlocalizedName, Tutorial(unlocalizedName, unlocalizedDescription)).first->second;
     }
 
     void TutorialManager::startTutorial(const UnlocalizedString &unlocalizedName) {
-        s_currentTutorial = s_tutorials.find(unlocalizedName);
-        if (s_currentTutorial == s_tutorials.end())
+        s_currentTutorial = s_tutorials->find(unlocalizedName);
+        if (s_currentTutorial == s_tutorials->end())
             return;
 
         s_currentTutorial->second.start();
     }
 
     void TutorialManager::drawHighlights() {
-        for (const auto &[rect, unlocalizedText] : s_highlightDisplays) {
+        for (const auto &[rect, unlocalizedText] : *s_highlightDisplays) {
             const auto drawList = ImGui::GetForegroundDrawList();
 
             drawList->PushClipRectFullScreen();
@@ -122,7 +122,7 @@ namespace hex {
             drawList->PopClipRect();
 
         }
-        s_highlightDisplays.clear();
+        s_highlightDisplays->clear();
     }
 
     void TutorialManager::drawMessageBox(std::optional<Tutorial::Step::Message> message) {
@@ -196,7 +196,7 @@ namespace hex {
     void TutorialManager::drawTutorial() {
         drawHighlights();
 
-        if (s_currentTutorial == s_tutorials.end())
+        if (s_currentTutorial == s_tutorials->end())
             return;
 
         const auto &currentStep = s_currentTutorial->second.m_currentStep;
@@ -210,11 +210,11 @@ namespace hex {
 
 
     void TutorialManager::reset() {
-        s_tutorials.clear();
-        s_currentTutorial = s_tutorials.end();
+        s_tutorials->clear();
+        s_currentTutorial = s_tutorials->end();
 
-        s_highlights.clear();
-        s_highlightDisplays.clear();
+        s_highlights->clear();
+        s_highlightDisplays->clear();
     }
 
     TutorialManager::Tutorial::Step& TutorialManager::Tutorial::addStep() {
@@ -252,7 +252,7 @@ namespace hex {
                 }, id);
             }
 
-            s_highlights.emplace(idStack.get(), text);
+            s_highlights->emplace(idStack.get(), text);
         }
     }
 
@@ -271,7 +271,7 @@ namespace hex {
                 }, id);
             }
 
-            s_highlights.erase(idStack.get());
+            s_highlights->erase(idStack.get());
         }
     }
 
@@ -285,7 +285,7 @@ namespace hex {
         if (m_parent->m_currentStep != m_parent->m_steps.end())
             m_parent->m_currentStep->addHighlights();
         else
-            s_currentTutorial = s_tutorials.end();
+            s_currentTutorial = s_tutorials->end();
     }
 
 
@@ -369,9 +369,9 @@ namespace hex {
 }
 
 void ImGuiTestEngineHook_ItemAdd(ImGuiContext*, ImGuiID id, const ImRect& bb, const ImGuiLastItemData*) {
-    const auto element = hex::s_highlights.find(id);
-    if (element != hex::s_highlights.end()) {
-        hex::s_highlightDisplays.emplace_back(bb, element->second);
+    const auto element = hex::s_highlights->find(id);
+    if (element != hex::s_highlights->end()) {
+        hex::s_highlightDisplays->emplace_back(bb, element->second);
     }
 }
 
