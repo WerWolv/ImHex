@@ -616,7 +616,7 @@ macro(addBundledLibraries)
     enableUnityBuild(libpl)
 
     find_package(mbedTLS 3.4.0 REQUIRED)
-    find_library(MAGIC 5.39 magic REQUIRED)
+    find_package(Magic 5.39 REQUIRED)
 
     if (NOT IMHEX_DISABLE_STACKTRACE)
         if (WIN32)

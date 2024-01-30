@@ -3,6 +3,8 @@
 #include <wolv/io/file.hpp>
 #include <romfs/romfs.hpp>
 
+#include <hex/helpers/logger.hpp>
+
 namespace hex::plugin::builtin {
 
     void extractBundledFiles() {
@@ -17,6 +19,7 @@ namespace hex::plugin::builtin {
             for (const auto &romfsPath : romfs::list(extractFolder)) {
                 for (const auto &imhexPath : fs::getDataPaths()) {
                     const auto path = imhexPath / std::fs::relative(romfsPath, extractFolder);
+                    log::info("Extracting {} to {}", romfsPath.string(), path.string());
                     if (!alwaysExtract && wolv::io::fs::exists(path))
                         continue;
 

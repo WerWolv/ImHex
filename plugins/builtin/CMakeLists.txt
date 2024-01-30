@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 include(ImHexPlugin)
 
-find_file(DEFAULT_MAGIC_FILE_PATH magic.mgc HINTS ${MAGIC_INCLUDE_DIRS}/../share/misc)
+find_file(DEFAULT_MAGIC_FILE_PATH magic.mgc HINTS ${LIBMAGIC_INCLUDE_DIR}/../share/misc)
 if (DEFAULT_MAGIC_FILE_PATH)
     add_romfs_resource(${DEFAULT_MAGIC_FILE_PATH} always_auto_extract/magic/magic.mgc)
 endif ()
