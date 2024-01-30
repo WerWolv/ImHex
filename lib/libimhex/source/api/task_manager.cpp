@@ -11,6 +11,7 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <processthreadsapi.h>
+    #include <hex/helpers/utils.hpp>
 #else
     #include <pthread.h>
 #endif

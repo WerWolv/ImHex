@@ -73,7 +73,7 @@ namespace hex::init {
         //     By wrapping the object in a AutoReset<T>, the `EventImHexClosing` event will automatically handle clearing the object
         //     while the heap is still valid.
         //     The heap stays valid right up to the point where `PluginManager::unload()` is called.
-        EventAbnormalTermination::post([] {
+        EventAbnormalTermination::subscribe([](int) {
             log::fatal("A crash happened while cleaning up resources during exit!");
             log::fatal("This is most certainly because WerWolv again forgot to mark a heap allocated object as 'AutoReset'.");
             log::fatal("Please report this issue on the ImHex GitHub page!");
