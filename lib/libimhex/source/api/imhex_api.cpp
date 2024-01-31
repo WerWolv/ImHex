@@ -175,7 +175,8 @@ namespace hex {
         }
 
         bool isSelectionValid() {
-            return getSelection().has_value();
+            auto selection = getSelection();
+            return selection.has_value() && selection->provider != nullptr;
         }
 
         std::optional<ProviderRegion> getSelection() {
