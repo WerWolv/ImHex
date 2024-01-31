@@ -511,7 +511,7 @@ namespace hex::plugin::builtin {
                     ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
                     ImGui::SameLine();
 
-                    if (const auto max = runtime.getMaximumPatternCount(); max >= std::numeric_limits<u32>::max()) {
+                    if (const auto max = runtime.getMaximumPatternCount(); max >= std::numeric_limits<u64>::max()) {
                         ImGuiExt::TextFormatted("{}", runtime.getCreatedPatternCount());
                     } else {
                         ImGuiExt::TextFormatted("{} / {}",
