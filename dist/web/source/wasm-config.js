@@ -40,10 +40,9 @@ function monkeyPatch(progressFun) {
     }
 }
 monkeyPatch((file, done, total) => {
-    if (file=="imhex.wasm") {
-        let percent = ((done/total)*100).toFixed(2);
-        document.getElementById("progress").innerHTML = `Downloading: ${percent}%`;
-    }
+    let percent = ((done/total)*100).toFixed(2);
+    let mib = (done/1024**2).toFixed(2);
+    document.getElementById("progress").innerHTML = `Downloading: ${percent}% (${mib}MiB)`;
 });
 
 function glfwSetCursorCustom(wnd, shape) {
