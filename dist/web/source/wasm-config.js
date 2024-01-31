@@ -1,3 +1,48 @@
+// Monkeypatch WebAssembly to have a progress bar
+// inspired from: https://github.com/WordPress/wordpress-playground/pull/46 (but had to be modified)
+function monkeyPatch(progressFun) {
+    const _instantiateStreaming = WebAssembly.instantiateStreaming;
+    WebAssembly.instantiateStreaming = (response, ...args) => {
+        const file = response.url.substring(
+            new URL(response.url).origin.length + 1
+        );
+        const reportingResponse = new Response(
+            new ReadableStream({
+                async start(controller) {
+                    const contentLength = response.headers.get("content-length");
+                    const total = parseInt(contentLength, 10);
+                    const reader = response.clone().body.getReader();
+                    let loaded = 0;
+                    for (; ;) {
+                        const { done, value } = await reader.read();
+                        if (done) {
+                            progressFun(file, total, total);
+                            break;
+                        }
+                        loaded += value.byteLength;
+                        progressFun(file, loaded, total);
+                        controller.enqueue(value);
+                    }
+                    controller.close();
+                }
+            },
+                {
+                    status: response.status,
+                    statusText: response.statusText
+                }
+            )
+        );
+        for (const pair of response.headers.entries()) {
+            reportingResponse.headers.set(pair[0], pair[1]);
+        }
+
+        return _instantiateStreaming(reportingResponse, ...args);
+    }
+}
+monkeyPatch((done, total, file) => {
+    console.log(`${done}/${total} for ${file}`);
+});
+
 function glfwSetCursorCustom(wnd, shape) {
     let body = document.getElementsByTagName("body")[0]
     switch (shape) {
@@ -57,11 +102,14 @@ var Module = {
     })(),
     setStatus: function(text) { },
     totalDependencies: 0,
-    monitorRunDependencies: function(left) { },
+    monitorRunDependencies: function(left) {
+    },
     instantiateWasm: function(imports, successCallback) {
         imports.env.glfwSetCursor = glfwSetCursorCustom
         imports.env.glfwCreateStandardCursor = glfwCreateStandardCursorCustom
-        instantiateAsync(wasmBinary, wasmBinaryFile, imports, (result) => successCallback(result.instance, result.module));
+        instantiateAsync(wasmBinary, wasmBinaryFile, imports, (result) => {
+            successCallback(result.instance, result.module)
+        });
     }
 };
 
