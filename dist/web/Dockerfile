@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:latest as build
+FROM emscripten/emsdk:3.1.51 as build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
