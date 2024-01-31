@@ -192,6 +192,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternEditor::~ViewPatternEditor() {
+        RequestPatternEditorSelectionChange::unsubscribe(this);
         RequestSetPatternLanguageCode::unsubscribe(this);
         RequestRunPatternCode::unsubscribe(this);
         EventFileLoaded::unsubscribe(this);
@@ -1111,8 +1112,8 @@ namespace hex::plugin::builtin {
                         m_sectionWindowDrawer[patternProvider] = [this, id, patternProvider, dataProvider, hexEditor, patternDrawer = std::make_shared<ui::PatternDrawer>(), &runtime] mutable {
                             hexEditor.setProvider(dataProvider.get());
                             hexEditor.draw(480_scaled);
-                            patternDrawer->setSelectionCallback([&](const auto &region) {
-                                hexEditor.setSelection(region);
+                            patternDrawer->setSelectionCallback([&](const pl::ptrn::Pattern *pattern) {
+                                hexEditor.setSelection(Region { pattern->getOffset(), pattern->getSize() });
                             });
 
                             const auto &patterns = [&, this] -> const auto& {
@@ -1627,6 +1628,11 @@ namespace hex::plugin::builtin {
     }
 
     void ViewPatternEditor::registerEvents() {
+        RequestPatternEditorSelectionChange::subscribe(this, [this](u32 line, u32 column) {
+            const TextEditor::Coordinates coords = { int(line) - 1, int(column) };
+            m_textEditor.SetCursorPosition(coords);
+        });
+
         RequestLoadPatternLanguageFile::subscribe(this, [this](const std::fs::path &path) {
             this->loadPatternFile(path, ImHexApi::Provider::get());
         });

@@ -191,7 +191,7 @@ namespace hex {
         }
 
         void setSelection(const ProviderRegion &region) {
-            RequestSelectionChange::post(region);
+            RequestHexEditorSelectionChange::post(region);
         }
 
         void setSelection(u64 address, size_t size, prv::Provider *provider) {

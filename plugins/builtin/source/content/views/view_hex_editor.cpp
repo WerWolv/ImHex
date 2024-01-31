@@ -458,7 +458,7 @@ namespace hex::plugin::builtin {
     }
 
     ViewHexEditor::~ViewHexEditor() {
-        RequestSelectionChange::unsubscribe(this);
+        RequestHexEditorSelectionChange::unsubscribe(this);
         EventProviderChanged::unsubscribe(this);
         EventProviderOpened::unsubscribe(this);
         EventHighlightingChanged::unsubscribe(this);
@@ -800,7 +800,7 @@ namespace hex::plugin::builtin {
     }
 
     void ViewHexEditor::registerEvents() {
-        RequestSelectionChange::subscribe(this, [this](Region region) {
+        RequestHexEditorSelectionChange::subscribe(this, [this](Region region) {
             auto provider = ImHexApi::Provider::get();
 
             if (region == Region::Invalid()) {
@@ -1135,6 +1135,13 @@ namespace hex::plugin::builtin {
 
                                                     if (ImGui::MenuItem(hex::format("0x{:08X}", bigEndianValue).c_str(), "hex.ui.common.big_endian"_lang, false, canJumpTo(bigEndianValue))) {
                                                         ImHexApi::HexEditor::setSelection(bigEndianValue, 1);
+                                                    }
+
+                                                    if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.jump_to.curr_pattern"_lang, "", false, selection.has_value() && ContentRegistry::PatternLanguage::getRuntime().getCreatedPatternCount() > 0)) {
+                                                        auto patterns = ContentRegistry::PatternLanguage::getRuntime().getPatternsAtAddress(selection->getStartAddress());
+
+                                                        if (!patterns.empty())
+                                                            RequestJumpToPattern::post(patterns.front());
                                                     }
                                                 },
                                                 [] { return ImHexApi::Provider::isValid() && ImHexApi::HexEditor::isSelectionValid() && ImHexApi::HexEditor::getSelection()->getSize() <= sizeof(u64); });

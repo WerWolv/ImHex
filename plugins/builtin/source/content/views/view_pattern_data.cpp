@@ -30,10 +30,18 @@ namespace hex::plugin::builtin {
             (*m_patternDrawer)->reset();
         });
 
+        RequestJumpToPattern::subscribe(this, [this](const pl::ptrn::Pattern *pattern) {
+           (*m_patternDrawer)->jumpToPattern(pattern);
+        });
+
         m_patternDrawer.setOnCreateCallback([this](prv::Provider *, auto &drawer) {
             drawer = std::make_unique<ui::PatternDrawer>();
 
-            drawer->setSelectionCallback([](Region region){ ImHexApi::HexEditor::setSelection(region); });
+            drawer->setSelectionCallback([](const pl::ptrn::Pattern *pattern) {
+                ImHexApi::HexEditor::setSelection(Region { pattern->getOffset(), pattern->getSize() });
+                RequestPatternEditorSelectionChange::post(pattern->getLine(), 0);
+            });
+
             drawer->setTreeStyle(m_treeStyle);
             drawer->enableRowColoring(m_rowColoring);
         });

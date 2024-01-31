@@ -36,6 +36,7 @@ namespace hex {
     class View;
 }
 
+namespace pl::ptrn { class Pattern; }
 
 namespace hex {
 
@@ -274,7 +275,9 @@ namespace hex {
     EVENT_DEF(RequestAddInitTask, std::string, bool, std::function<bool()>);
     EVENT_DEF(RequestAddExitTask, std::string, std::function<bool()>);
     EVENT_DEF(RequestOpenWindow, std::string);
-    EVENT_DEF(RequestSelectionChange, Region);
+    EVENT_DEF(RequestHexEditorSelectionChange, Region);
+    EVENT_DEF(RequestPatternEditorSelectionChange, u32, u32);
+    EVENT_DEF(RequestJumpToPattern, const pl::ptrn::Pattern*);
     EVENT_DEF(RequestAddBookmark, Region, std::string, std::string, color_t, u64*);
     EVENT_DEF(RequestRemoveBookmark, u64);
     EVENT_DEF(RequestSetPatternLanguageCode, std::string);
