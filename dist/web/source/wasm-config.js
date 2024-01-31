@@ -39,8 +39,11 @@ function monkeyPatch(progressFun) {
         return _instantiateStreaming(reportingResponse, ...args);
     }
 }
-monkeyPatch((done, total, file) => {
-    console.log(`${done}/${total} for ${file}`);
+monkeyPatch((file, done, total) => {
+    if (file=="imhex.wasm") {
+        let percent = ((done/total)*100).toFixed(2);
+        document.getElementById("progress").innerHTML = `Downloading: ${percent}%`;
+    }
 });
 
 function glfwSetCursorCustom(wnd, shape) {
