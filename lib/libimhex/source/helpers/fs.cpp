@@ -204,7 +204,8 @@ namespace hex::fs {
 
         bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
             // Turn the content of the ItemFilter objects into something NFD understands
-            std::vector<nfdfilteritem_t> validExtensionsNfd(validExtensions.size());
+            std::vector<nfdfilteritem_t> validExtensionsNfd;
+            validExtensionsNfd.reserve(validExtensions.size());
             for (const auto &extension : validExtensions) {
                 validExtensionsNfd.emplace_back(nfdfilteritem_t{ extension.name.c_str(), extension.spec.c_str() });
             }
