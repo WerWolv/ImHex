@@ -41,9 +41,12 @@ function monkeyPatch(progressFun) {
     }
 }
 monkeyPatch((file, done, total) =>  {
-    let percent  = ((done / total) * 100).toFixed(0);
-    let mibNow   = (done / 1024**2).toFixed(1);
-    let mibTotal = (total / 1024**2).toFixed(1);
+    if (total === 0 || done > total)
+        return;
+
+    const percent  = ((done / total) * 100).toFixed(0);
+    const mibNow   = (done / 1024**2).toFixed(1);
+    const mibTotal = (total / 1024**2).toFixed(1);
 
     let root = document.querySelector(':root');
     root.style.setProperty("--progress", `${percent}%`)
