@@ -7,25 +7,26 @@ function monkeyPatch(progressFun) {
             new URL(response.url).origin.length + 1
         );
         const reportingResponse = new Response(
-            new ReadableStream({
-                async start(controller) {
-                    const contentLength = response.headers.get("content-length");
-                    const total = parseInt(contentLength, 10);
-                    const reader = response.clone().body.getReader();
-                    let loaded = 0;
-                    for (; ;) {
-                        const { done, value } = await reader.read();
-                        if (done) {
-                            progressFun(file, total, total);
-                            break;
+            new ReadableStream(
+                {
+                    async start(controller) {
+                        const contentLength = response.headers.get("content-length");
+                        const total = parseInt(contentLength, 10);
+                        const reader = response.clone().body.getReader();
+                        let loaded = 0;
+                        for (; ;) {
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                progressFun(file, total, total);
+                                break;
+                            }
+                            loaded += value.byteLength;
+                            progressFun(file, loaded, total);
+                            controller.enqueue(value);
                         }
-                        loaded += value.byteLength;
-                        progressFun(file, loaded, total);
-                        controller.enqueue(value);
+                        controller.close();
                     }
-                    controller.close();
-                }
-            },
+                },
                 {
                     status: response.status,
                     statusText: response.statusText
@@ -39,10 +40,14 @@ function monkeyPatch(progressFun) {
         return _instantiateStreaming(reportingResponse, ...args);
     }
 }
-monkeyPatch((file, done, total) => {
-    let percent = ((done/total)*100).toFixed(2);
-    let mib = (done/1024**2).toFixed(2);
-    document.getElementById("progress").innerHTML = `Downloading: ${percent}% (${mib}MiB)`;
+monkeyPatch((file, done, total) =>  {
+    let percent  = ((done / total) * 100).toFixed(0);
+    let mibNow   = (done / 1024**2).toFixed(1);
+    let mibTotal = (total / 1024**2).toFixed(1);
+
+    let root = document.querySelector(':root');
+    root.style.setProperty("--progress", `${percent}%`)
+    document.getElementById("progress-bar-content").innerHTML = `${percent}% &nbsp;[${mibNow} MiB / ${mibTotal} MiB]`;
 });
 
 function glfwSetCursorCustom(wnd, shape) {

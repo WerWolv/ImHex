@@ -133,3 +133,44 @@ a:hover {
         opacity: 0;
     }
 }
+
+
+:root {
+    --progress: 25%;
+}
+
+.progress-bar-container {
+    margin: 100px auto;
+    width: 600px;
+    text-align: center;
+}
+
+.progress {
+    padding: 6px;
+    border-radius: 30px;
+    background: rgba(0, 0, 0, 0.25);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25),
+    0 1px rgba(255, 255, 255, 0.08);
+}
+
+.progress-bar {
+    color: rgba(240, 240, 240, 0.9);
+    height: 18px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-family: monospace;
+    font-weight: bold;
+    text-wrap: avoid;
+    white-space: nowrap;
+    overflow: hidden;
+    background-image: linear-gradient(
+            to bottom,
+            rgba(255, 255, 255, 0.2),
+            rgba(255, 255, 255, 0.0)
+    );
+}
+
+.progress-moved .progress-bar {
+    width: var(--progress);
+    background-color: #3864cb;
+}
