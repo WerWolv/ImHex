@@ -15,6 +15,7 @@
 namespace hex::log::impl {
 
     static wolv::io::File s_loggerFile;
+    static bool s_colorOutputEnabled = false;
     std::mutex g_loggerMutex;
 
     FILE *getDestination() {
@@ -40,11 +41,16 @@ namespace hex::log::impl {
             s_loggerFile = wolv::io::File(path / hex::format("{0:%Y%m%d_%H%M%S}.log", fmt::localtime(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()))), wolv::io::File::Mode::Create);
             s_loggerFile.disableBuffering();
 
-            if (s_loggerFile.isValid()) break;
+            if (s_loggerFile.isValid()) {
+                s_colorOutputEnabled = true;
+                break;
+            }
         }
     }
 
     void enableColorPrinting() {
+        s_colorOutputEnabled = true;
+
         #if defined(OS_WINDOWS)
             auto hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
             if (hConsole != INVALID_HANDLE_VALUE) {
@@ -73,10 +79,10 @@ namespace hex::log::impl {
 
         fmt::print(dest, "[{0:%H:%M:%S}] ", now);
 
-        if (isRedirected())
-            fmt::print(dest, "{0} ", level);
-        else
+        if (s_colorOutputEnabled)
             fmt::print(dest, ts, "{0} ", level);
+        else
+            fmt::print(dest, "{0} ", level);
 
         std::string projectThreadTag = projectName;
         if (auto threadName = TaskManager::getCurrentThreadName(); !threadName.empty())

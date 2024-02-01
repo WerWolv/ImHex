@@ -21,6 +21,8 @@ namespace hex {
     }
 
     void Window::initNative() {
+        log::impl::enableColorPrinting();
+
         // Add plugin library folders to dll search path
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
             if (std::fs::exists(path))
