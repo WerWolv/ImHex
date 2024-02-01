@@ -43,7 +43,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
