@@ -548,7 +548,6 @@ namespace hex {
         void enableSystemThemeDetection(bool enabled) {
             s_systemThemeDetection = enabled;
 
-            EventSettingsChanged::post();
             EventOSThemeChanged::post();
         }
 

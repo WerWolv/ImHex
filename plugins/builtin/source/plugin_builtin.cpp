@@ -60,6 +60,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "help",       "Print help about this command",                hex::plugin::builtin::handleHelpCommand             },
     { "version",    "Print ImHex version",                          hex::plugin::builtin::handleVersionCommand          },
     { "plugins",    "Lists all plugins that have been installed",   hex::plugin::builtin::handlePluginsCommand          },
+    { "language",   "Changes the language ImHex uses",                hex::plugin::builtin::handleLanguageCommand         },
 
     { "open",       "Open files passed as argument. [default]",     hex::plugin::builtin::handleOpenCommand             },
 
@@ -70,7 +71,7 @@ IMHEX_PLUGIN_SUBCOMMANDS() {
     { "magic",      "Identify file types",                          hex::plugin::builtin::handleMagicCommand            },
     { "pl",         "Interact with the pattern language",           hex::plugin::builtin::handlePatternLanguageCommand  },
     { "hexdump",    "Generate a hex dump of the provided file",     hex::plugin::builtin::handleHexdumpCommand          },
-    { "hexdump",    "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
+    { "demangle",   "Demangle a mangled symbol",                    hex::plugin::builtin::handleDemangleCommand         },
 };
 
 IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {

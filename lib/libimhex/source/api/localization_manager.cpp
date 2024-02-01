@@ -42,12 +42,12 @@ namespace hex {
         }
 
         void loadLanguage(const std::string &language) {
-            s_currStrings->clear();
-
             auto &definitions = ContentRegistry::Language::impl::getLanguageDefinitions();
 
             if (!definitions.contains(language))
                 return;
+
+            s_currStrings->clear();
 
             for (auto &definition : definitions[language])
                 s_currStrings->insert(definition.getEntries().begin(), definition.getEntries().end());
