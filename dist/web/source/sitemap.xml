@@ -5,10 +5,58 @@
       xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
             http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
-<url>
-  <loc>https://web.imhex.werwolv.net/</loc>
-  <lastmod>2023-12-07T22:53:06+00:00</lastmod>
-</url>
+  <url>
+    <loc>https://web.imhex.werwolv.net/</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <title>English</title>
+    <loc>https://web.imhex.werwolv.net?lang=en-US</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <title>Deutsch</title>
+    <loc>https://web.imhex.werwolv.net?lang=de-DE</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+    <priority>1.00</priority>
+  </url>
+  <url>
+    <title>Português</title>
+    <loc>https://web.imhex.werwolv.net?lang=pt-BR</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+  </url>
+  <url>
+    <title>中国</title>
+    <loc>https://web.imhex.werwolv.net?lang=zh-CN</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+  </url>
+  <url>
+    <title>國語</title>
+    <loc>https://web.imhex.werwolv.net?lang=zh-TW</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+  </url>
+  <url>
+    <title>日本語</title>
+    <loc>https://web.imhex.werwolv.net?lang=ja-JP</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+  </url>
+  <url>
+    <title>한국어</title>
+    <loc>https://web.imhex.werwolv.net?lang=ko-KR</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+  </url>
+  <url>
+    <title>Español</title>
+    <loc>https://web.imhex.werwolv.net?lang=es-ES</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+  </url>
+  <url>
+    <title>Italiano</title>
+    <loc>https://web.imhex.werwolv.net?lang=it-IT</loc>
+    <lastmod>2024-01-02T11:44:00+00:00</lastmod>
+  </url>
 
 
 </urlset>

@@ -117,9 +117,17 @@ var Module = {
         instantiateAsync(wasmBinary, wasmBinaryFile, imports, (result) => {
             successCallback(result.instance, result.module)
         });
-    }
+    },
+    arguments: []
 };
 
+// Handle passing arguments to the wasm module
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+if (urlParams.has("lang")) {
+    Module["arguments"].push("--language");
+    Module["arguments"].push(urlParams.get("lang"));
+}
 
 window.addEventListener('resize', js_resizeCanvas, false);
 function js_resizeCanvas() {
