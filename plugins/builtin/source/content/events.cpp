@@ -222,6 +222,12 @@ namespace hex::plugin::builtin {
             }
         });
 
+        EventImHexStartupFinished::subscribe([] {
+            const auto &initArgs = ImHexApi::System::getInitArguments();
+            if (auto it = initArgs.find("language"); it != initArgs.end())
+                LocalizationManager::loadLanguage(it->second);
+        });
+
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){
             #if defined(NFD_PORTAL)
                 ui::PopupError::open(hex::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));

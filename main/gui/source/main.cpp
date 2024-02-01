@@ -21,6 +21,7 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+    #include <shellapi.h>
     #include <codecvt>
 #elif defined(OS_WEB)
     #include <emscripten.h>
@@ -112,7 +113,7 @@ namespace {
 
         // Draw the splash window while tasks are running
         if (!splashWindow.loop())
-            ImHexApi::System::getInitArguments().insert({ "tasks-failed", {} });
+            ImHexApi::System::impl::addInitArgument("tasks-failed");
     }
 
 

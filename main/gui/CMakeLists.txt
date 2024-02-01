@@ -30,7 +30,6 @@ setupCompilerFlags(main)
 set(LIBROMFS_RESOURCE_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/romfs)
 set(LIBROMFS_PROJECT_NAME imhex)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../lib/external/libromfs ${CMAKE_CURRENT_BINARY_DIR}/main/gui/libromfs EXCLUDE_FROM_ALL)
-set_target_properties(${LIBROMFS_LIBRARY} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_dependencies(imhex_all main)
 
 if (EMSCRIPTEN)
@@ -49,8 +48,7 @@ endif ()
 
 set_target_properties(main PROPERTIES
     OUTPUT_NAME ${IMHEX_APPLICATION_NAME}
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../..
-    POSITION_INDEPENDENT_CODE ON)
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../..)
 
 target_compile_definitions(main PRIVATE IMHEX_PROJECT_NAME="${PROJECT_NAME}")
 

@@ -3,6 +3,7 @@
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
@@ -40,7 +41,7 @@ namespace hex {
             }
 
             nlohmann::json &getSettingsData() {
-                static nlohmann::json settings;
+                static AutoReset<nlohmann::json> settings;
 
                 return settings;
             }
@@ -89,19 +90,21 @@ namespace hex {
                 }
 
                 void store() {
-                    auto settingsData = getSettingsData();
+                    const auto &settingsData = getSettingsData();
 
                     // During a crash settings can be empty, causing them to be overwritten.
                     if (settingsData.empty()) {
                         return;
                     }
 
+                    const auto result = settingsData.dump(4);
+                    if (result.empty()) {
+                        return;
+                    }
                     for (const auto &dir : fs::getDefaultPaths(fs::ImHexPath::Config)) {
                         wolv::io::File file(dir / SettingsFile, wolv::io::File::Mode::Write);
 
                         if (file.isValid()) {
-                            auto result = settingsData.dump(4);
-
                             file.setSize(0);
                             file.writeString(result);
                             break;
@@ -137,7 +140,7 @@ namespace hex {
             }
 
             std::vector<Category> &getSettings() {
-                static std::vector<Category> categories;
+                static AutoReset<std::vector<Category>> categories;
 
                 return categories;
             }
@@ -245,7 +248,7 @@ namespace hex {
 
             void ColorPicker::load(const nlohmann::json &data) {
                 if (data.is_number()) {
-                    ImColor color(data.get<u32>());
+                    const ImColor color(data.get<u32>());
                     m_value = { color.Value.x, color.Value.y, color.Value.z, color.Value.w };
                 } else {
                     log::warn("Invalid data type loaded from settings for color picker!");
@@ -264,7 +267,7 @@ namespace hex {
 
 
             bool DropDown::draw(const std::string &name) {
-                const char *preview = "";
+                auto preview = "";
                 if (static_cast<size_t>(m_value) < m_items.size())
                     preview = m_items[m_value].c_str();
 
@@ -408,13 +411,13 @@ namespace hex {
         namespace impl {
 
             std::vector<Entry> &getEntries() {
-                static std::vector<Entry> commands;
+                static AutoReset<std::vector<Entry>> commands;
 
                 return commands;
             }
 
             std::vector<Handler> &getHandlers() {
-                static std::vector<Handler> commands;
+                static AutoReset<std::vector<Handler>> commands;
 
                 return commands;
             }
@@ -521,25 +524,25 @@ namespace hex {
         namespace impl {
 
             std::map<std::string, Visualizer> &getVisualizers() {
-                static std::map<std::string, Visualizer> visualizers;
+                static AutoReset<std::map<std::string, Visualizer>> visualizers;
 
                 return visualizers;
             }
 
             std::map<std::string, Visualizer> &getInlineVisualizers() {
-                static std::map<std::string, Visualizer> visualizers;
+                static AutoReset<std::map<std::string, Visualizer>> visualizers;
 
                 return visualizers;
             }
 
             std::map<std::string, pl::api::PragmaHandler> &getPragmas() {
-                static std::map<std::string, pl::api::PragmaHandler> pragmas;
+                static AutoReset<std::map<std::string, pl::api::PragmaHandler>> pragmas;
 
                 return pragmas;
             }
 
             std::vector<FunctionDefinition> &getFunctions() {
-                static std::vector<FunctionDefinition> functions;
+                static AutoReset<std::vector<FunctionDefinition>> functions;
 
                 return functions;
             }
@@ -555,7 +558,7 @@ namespace hex {
         namespace impl {
 
             std::map<std::string, std::unique_ptr<View>> &getEntries() {
-                static std::map<std::string, std::unique_ptr<View>> views;
+                static AutoReset<std::map<std::string, std::unique_ptr<View>>> views;
 
                 return views;
             }
@@ -590,7 +593,7 @@ namespace hex {
         namespace impl {
 
             std::vector<Entry> &getEntries() {
-                static std::vector<Entry> tools;
+                static AutoReset<std::vector<Entry>> tools;
 
                 return tools;
             }
@@ -616,7 +619,7 @@ namespace hex {
         namespace impl {
 
             std::vector<Entry> &getEntries() {
-                static std::vector<Entry> entries;
+                static AutoReset<std::vector<Entry>> entries;
 
                 return entries;
             }
@@ -641,7 +644,7 @@ namespace hex {
         namespace impl {
 
             std::vector<Entry> &getEntries() {
-                static std::vector<Entry> nodes;
+                static AutoReset<std::vector<Entry>> nodes;
 
                 return nodes;
             }
@@ -696,13 +699,13 @@ namespace hex {
         namespace impl {
 
             std::map<std::string, std::string> &getLanguages() {
-                static std::map<std::string, std::string> languages;
+                static AutoReset<std::map<std::string, std::string>> languages;
 
                 return languages;
             }
 
             std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>> &getLanguageDefinitions() {
-                static std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>> definitions;
+                static AutoReset<std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>>> definitions;
 
                 return definitions;
             }
@@ -784,7 +787,7 @@ namespace hex {
         }
 
         void addMenuItemToToolbar(const UnlocalizedString& unlocalizedName, ImGuiCustomCol color) {
-            auto maxIndex = std::ranges::max_element(impl::getMenuItems(), [](const auto &a, const auto &b) {
+            const auto maxIndex = std::ranges::max_element(impl::getMenuItems(), [](const auto &a, const auto &b) {
                 return a.second.toolbarIndex < b.second.toolbarIndex;
             })->second.toolbarIndex;
 
@@ -809,38 +812,38 @@ namespace hex {
         namespace impl {
 
             std::multimap<u32, MainMenuItem> &getMainMenuItems() {
-                static std::multimap<u32, MainMenuItem> items;
+                static AutoReset<std::multimap<u32, MainMenuItem>> items;
 
                 return items;
             }
             std::multimap<u32, MenuItem> &getMenuItems() {
-                static std::multimap<u32, MenuItem> items;
+                static AutoReset<std::multimap<u32, MenuItem>> items;
 
                 return items;
             }
 
             std::vector<DrawCallback> &getWelcomeScreenEntries() {
-                static std::vector<DrawCallback> entries;
+                static AutoReset<std::vector<DrawCallback>> entries;
 
                 return entries;
             }
             std::vector<DrawCallback> &getFooterItems() {
-                static std::vector<DrawCallback> items;
+                static AutoReset<std::vector<DrawCallback>> items;
 
                 return items;
             }
             std::vector<DrawCallback> &getToolbarItems() {
-                static std::vector<DrawCallback> items;
+                static AutoReset<std::vector<DrawCallback>> items;
 
                 return items;
             }
             std::vector<SidebarItem> &getSidebarItems() {
-                static std::vector<SidebarItem> items;
+                static AutoReset<std::vector<SidebarItem>> items;
 
                 return items;
             }
             std::vector<TitleBarButton> &getTitleBarButtons() {
-                static std::vector<TitleBarButton> buttons;
+                static AutoReset<std::vector<TitleBarButton>> buttons;
 
                 return buttons;
             }
@@ -867,7 +870,7 @@ namespace hex {
             }
 
             std::vector<std::string> &getEntries() {
-                static std::vector<std::string> providerNames;
+                static AutoReset<std::vector<std::string>> providerNames;
 
                 return providerNames;
             }
@@ -894,7 +897,7 @@ namespace hex {
         namespace impl {
 
             std::vector<Entry> &getEntries() {
-                static std::vector<Entry> entries;
+                static AutoReset<std::vector<Entry>> entries;
 
                 return entries;
             }
@@ -915,7 +918,7 @@ namespace hex {
         namespace impl {
 
             std::vector<Entry> &getEntries() {
-                static std::vector<Entry> entries;
+                static AutoReset<std::vector<Entry>> entries;
 
                 return entries;
             }
@@ -996,13 +999,13 @@ namespace hex {
             }
 
             std::vector<std::shared_ptr<DataVisualizer>> &getVisualizers() {
-                static std::vector<std::shared_ptr<DataVisualizer>> visualizers;
+                static AutoReset<std::vector<std::shared_ptr<DataVisualizer>>> visualizers;
 
                 return visualizers;
             }
 
             std::vector<std::shared_ptr<MiniMapVisualizer>> &getMiniMapVisualizers() {
-                static std::vector<std::shared_ptr<MiniMapVisualizer>> visualizers;
+                static AutoReset<std::vector<std::shared_ptr<MiniMapVisualizer>>> visualizers;
 
                 return visualizers;
             }
@@ -1029,7 +1032,7 @@ namespace hex {
         namespace impl {
 
             std::vector<std::unique_ptr<Algorithm>>& getAlgorithms() {
-                static std::vector<std::unique_ptr<Algorithm>> algorithms;
+                static AutoReset<std::vector<std::unique_ptr<Algorithm>>> algorithms;
 
                 return algorithms;
             }
@@ -1047,7 +1050,7 @@ namespace hex {
         namespace impl {
 
             std::vector<std::unique_ptr<Hash>> &getHashes() {
-                static std::vector<std::unique_ptr<Hash>> hashes;
+                static AutoReset<std::vector<std::unique_ptr<Hash>>> hashes;
 
                 return hashes;
             }
@@ -1064,29 +1067,41 @@ namespace hex {
 
         namespace impl {
 
-            struct Service {
-                std::string name;
-                std::jthread thread;
+            class Service {
+            public:
+                Service(std::string name, std::jthread thread) : m_name(std::move(name)), m_thread(std::move(thread)) { }
+                Service(const Service&) = delete;
+                Service(Service &&) = default;
+                ~Service() {
+                    m_thread.request_stop();
+                    if (m_thread.joinable())
+                        m_thread.join();
+                }
+
+                Service& operator=(const Service&) = delete;
+                Service& operator=(Service &&) = default;
+
+                [[nodiscard]] const std::string &getName() const {
+                    return m_name;
+                }
+
+                [[nodiscard]] const std::jthread &getThread() const {
+                    return m_thread;
+                }
+
+            private:
+                std::string m_name;
+                std::jthread m_thread;
             };
 
             std::vector<Service> &getServices() {
-                static std::vector<Service> services;
+                static AutoReset<std::vector<Service>> services;
 
                 return services;
             }
 
             void stopServices() {
                 auto &services = getServices();
-
-                for (auto &service : services) {
-                    service.thread.request_stop();
-                }
-
-                for (auto &service : services) {
-                    if (service.thread.joinable())
-                        service.thread.join();
-                }
-
                 services.clear();
             }
 
@@ -1095,7 +1110,7 @@ namespace hex {
         void registerService(const UnlocalizedString &unlocalizedName, const impl::Callback &callback) {
             log::debug("Registered new background service: {}", unlocalizedName.get());
 
-            impl::getServices().push_back(impl::Service {
+            impl::getServices().emplace_back(
                 unlocalizedName,
                 std::jthread([callback = auto(callback)](const std::stop_token &stopToken){
                     while (!stopToken.stop_requested()) {
@@ -1103,7 +1118,7 @@ namespace hex {
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
                     }
                 })
-            });
+            );
         }
 
     }
@@ -1113,7 +1128,7 @@ namespace hex {
         namespace impl {
 
             std::map<std::string, NetworkCallback> &getNetworkEndpoints() {
-                static std::map<std::string, NetworkCallback> endpoints;
+                static AutoReset<std::map<std::string, NetworkCallback>> endpoints;
 
                 return endpoints;
             }
@@ -1133,7 +1148,7 @@ namespace hex {
         namespace impl {
 
             std::map<std::string, Experiment> &getExperiments() {
-                static std::map<std::string, Experiment> experiments;
+                static AutoReset<std::map<std::string, Experiment>> experiments;
 
                 return experiments;
             }
@@ -1184,7 +1199,7 @@ namespace hex {
         namespace impl {
 
             std::vector<ReportGenerator> &getGenerators() {
-                static std::vector<ReportGenerator> generators;
+                static AutoReset<std::vector<ReportGenerator>> generators;
 
                 return generators;
             }

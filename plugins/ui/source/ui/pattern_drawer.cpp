@@ -342,6 +342,26 @@ namespace hex::ui {
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf) {
         drawFavoriteColumn(pattern);
 
+        bool shouldOpen = false;
+        if (m_jumpToPattern != nullptr) {
+            if (m_jumpToPattern == &pattern) {
+                ImGui::SetScrollHereY();
+                m_jumpToPattern = nullptr;
+            }
+            else {
+                auto parent = m_jumpToPattern->getParent();
+                while (parent != nullptr) {
+                    if (&pattern == parent) {
+                        ImGui::SetScrollHereY();
+                        shouldOpen = true;
+                        break;
+                    }
+
+                    parent = parent->getParent();
+                }
+            }
+        }
+
         if (pattern.isSealed() || leaf) {
             ImGui::Indent();
             highlightWhenSelected(pattern, [&]{ ImGui::TextUnformatted(this->getDisplayName(pattern).c_str()); });
@@ -350,6 +370,9 @@ namespace hex::ui {
         }
 
         return highlightWhenSelected(pattern, [&]{
+            if (shouldOpen)
+                ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+
             switch (m_treeStyle) {
                 using enum TreeStyle;
                 default:
@@ -368,7 +391,7 @@ namespace hex::ui {
         ImGui::PushID(pattern.getVariableName().c_str());
 
         if (ImGui::Selectable("##PatternLine", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap)) {
-            m_selectionCallback(Region { pattern.getOffset(), pattern.getSize() });
+            m_selectionCallback(&pattern);
 
             if (m_editingPattern != &pattern) {
                 this->resetEditing();

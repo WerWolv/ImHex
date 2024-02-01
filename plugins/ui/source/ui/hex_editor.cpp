@@ -74,8 +74,7 @@ namespace hex::ui {
     /* Hex Editor */
 
     HexEditor::HexEditor(prv::Provider *provider) : m_provider(provider) {
-        m_currDataVisualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit");
-        m_miniMapVisualizer  = ContentRegistry::HexEditor::impl::getMiniMapVisualizers().front();
+
     }
 
     HexEditor::~HexEditor() {
@@ -208,9 +207,9 @@ namespace hex::ui {
 
         constexpr static u64 RowCount = 256;
         const auto rowHeight = innerRect.GetSize().y / RowCount;
-        const auto scrollPos = m_scrollPosition.get();
+        const ImS64 scrollPos = m_scrollPosition.get();
         const auto grabSize = rowHeight * m_visibleRowCount;
-        const auto grabPos = (RowCount - m_visibleRowCount) * (double(scrollPos) / numRows);
+        const ImS64 grabPos = (RowCount - m_visibleRowCount) * (double(scrollPos) / numRows);
 
         auto drawList = ImGui::GetWindowDrawList();
 
@@ -238,8 +237,8 @@ namespace hex::ui {
         drawList->ChannelsSetCurrent(0);
 
         std::vector<u8> rowData(m_bytesPerRow);
-        const auto drawStart = scrollPos - grabPos;
-        for (u64 y = drawStart; y < std::min<u64>(drawStart + RowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
+        const auto drawStart = std::max<ImS64>(0, scrollPos - grabPos);
+        for (ImS64 y = drawStart; y < std::min<ImS64>(drawStart + RowCount, m_provider->getSize() / m_bytesPerRow); y += 1) {
             const auto rowStart = bb.Min + ImVec2(0, (y - drawStart) * rowHeight);
             const auto rowEnd = rowStart + ImVec2(bb.GetSize().x, rowHeight);
 
@@ -400,6 +399,13 @@ namespace hex::ui {
         const float SeparatorColumWidth   = 6_scaled;
         const auto CharacterSize          = ImGui::CalcTextSize("0");
 
+        if (const auto &visualizer = ContentRegistry::HexEditor::getVisualizerByName("hex.builtin.visualizer.hexadecimal.8bit"); m_currDataVisualizer == nullptr && visualizer != nullptr) {
+            m_currDataVisualizer = visualizer;
+            return;
+        }
+        if (const auto &visualizers = ContentRegistry::HexEditor::impl::getMiniMapVisualizers(); m_miniMapVisualizer == nullptr && !visualizers.empty())
+            m_miniMapVisualizer = visualizers.front();
+
         const auto bytesPerCell    = m_currDataVisualizer->getBytesPerCell();
         const u16 columnCount      = m_bytesPerRow / bytesPerCell;
         auto byteColumnCount = 2 + columnCount + getByteColumnSeparatorCount(columnCount) + 2 + 2;
@@ -483,8 +489,8 @@ namespace hex::ui {
                     }
 
 
-                    m_visibleRowCount = ImGui::GetWindowSize().y / CharacterSize.y;
-                    m_visibleRowCount = std::clamp<i64>(m_visibleRowCount, 1, numRows - m_scrollPosition);
+                    m_visibleRowCount = size.y / CharacterSize.y;
+                    m_visibleRowCount = std::max<i64>(m_visibleRowCount, 1);
 
                     // Loop over rows
                     for (ImS64 y = m_scrollPosition; y < (m_scrollPosition + m_visibleRowCount + 5) && y < numRows && numRows != 0; y++) {
@@ -762,9 +768,9 @@ namespace hex::ui {
                                 newSelection.address -= pageAddress;
 
                                 if ((newSelection.getStartAddress()) < u64(m_scrollPosition * m_bytesPerRow))
-                                    this->jumpToSelection(false);
+                                    this->jumpToSelection(0.0F);
                                 if ((newSelection.getEndAddress()) > u64((m_scrollPosition + m_visibleRowCount) * m_bytesPerRow))
-                                    this->jumpToSelection(false);
+                                    this->jumpToSelection(1.0F);
                             }
                         }
                     }
@@ -778,15 +784,10 @@ namespace hex::ui {
 
                         const auto pageAddress = m_provider->getCurrentPageAddress() + m_provider->getBaseAddress();
 
-                        if (m_centerOnJump) {
-                            m_scrollPosition = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
-                            m_scrollPosition -= (m_visibleRowCount / 2);
+                        m_scrollPosition = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
+                        m_scrollPosition -= m_visibleRowCount * m_jumpPivot;
 
-                        } else {
-                            m_scrollPosition = (newSelection.getStartAddress() - pageAddress) / m_bytesPerRow;
-                        }
-                        m_centerOnJump = false;
-
+                        m_jumpPivot = 0.0F;
                     }
 
                 }
@@ -1031,7 +1032,7 @@ namespace hex::ui {
                 this->setSelection(selectionStart.value_or(address), endAddress);
                 this->scrollToSelection();
             }
-            else if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+            else if (ImGui::IsMouseDown(ImGuiMouseButton_Left) || (ImGui::IsMouseDown(ImGuiMouseButton_Right) && (address < m_selectionStart || address > m_selectionEnd))) {
                 if (ImGui::GetIO().KeyShift)
                     this->setSelection(selectionStart.value_or(address), endAddress);
                 else

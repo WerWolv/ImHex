@@ -26,13 +26,13 @@ jobs:
         submodules: recursive
     
     - name: 📁 Restore docker /cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: cache
         key: web-cmakecache-${{ hashFiles('**/CMakeLists.txt') }}
     
     - name: 🐳 Inject /cache into docker
-      uses: reproducible-containers/buildkit-cache-dance@v2.1.2
+      uses: reproducible-containers/buildkit-cache-dance@v2
       with:
         cache-source: cache
         cache-target: /cache

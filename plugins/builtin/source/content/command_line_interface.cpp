@@ -130,6 +130,15 @@ namespace hex::plugin::builtin {
         }
     }
 
+    void handleLanguageCommand(const std::vector<std::string> &args) {
+        if (args.empty()) {
+            hex::log::println("usage: imhex --language <language>");
+            std::exit(EXIT_FAILURE);
+        }
+
+        ImHexApi::System::impl::addInitArgument("language", args[0]);
+    }
+
     void handleHashCommand(const std::vector<std::string> &args) {
         if (args.size() != 2) {
             hex::log::println("usage: imhex --hash <algorithm> <file>");

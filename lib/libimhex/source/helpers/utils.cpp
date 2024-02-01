@@ -11,6 +11,7 @@
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
+    #include <shellapi.h>
 #elif defined(OS_LINUX)
     #include <unistd.h>
     #include <hex/helpers/utils_linux.hpp>

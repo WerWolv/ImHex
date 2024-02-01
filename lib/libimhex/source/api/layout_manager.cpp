@@ -2,20 +2,20 @@
 
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/auto_reset.hpp>
 #include <wolv/utils/string.hpp>
 
 #include <imgui.h>
 #include <hex/api/content_registry.hpp>
-#include <hex/api/imhex_api.hpp>
 #include <hex/ui/view.hpp>
 
 namespace hex {
 
     namespace {
 
-        std::optional<std::fs::path> s_layoutPathToLoad;
-        std::optional<std::string> s_layoutStringToLoad;
-        std::vector<LayoutManager::Layout> s_layouts;
+        AutoReset<std::optional<std::fs::path>> s_layoutPathToLoad;
+        AutoReset<std::optional<std::string>> s_layoutStringToLoad;
+        AutoReset<std::vector<LayoutManager::Layout>> s_layouts;
 
         bool s_layoutLocked = false;
 
@@ -33,7 +33,7 @@ namespace hex {
     void LayoutManager::save(const std::string &name) {
         auto fileName = name;
         fileName = wolv::util::replaceStrings(fileName, " ", "_");
-        std::transform(fileName.begin(), fileName.end(), fileName.begin(), tolower);
+        std::ranges::transform(fileName, fileName.begin(), tolower);
         fileName += ".hexlyt";
 
         std::fs::path layoutPath;
@@ -71,8 +71,8 @@ namespace hex {
     }
 
     void LayoutManager::process() {
-        if (s_layoutPathToLoad.has_value()) {
-            const auto pathString = wolv::util::toUTF8String(*s_layoutPathToLoad);
+        if (s_layoutPathToLoad->has_value()) {
+            const auto pathString = wolv::util::toUTF8String(**s_layoutPathToLoad);
 
             LayoutManager::closeAllViews();
             ImGui::LoadIniSettingsFromDisk(pathString.c_str());
@@ -81,9 +81,9 @@ namespace hex {
             log::info("Loaded layout from {}", pathString);
         }
 
-        if (s_layoutStringToLoad.has_value()) {
+        if (s_layoutStringToLoad->has_value()) {
             LayoutManager::closeAllViews();
-            ImGui::LoadIniSettingsFromMemory(s_layoutStringToLoad->c_str());
+            ImGui::LoadIniSettingsFromMemory((*s_layoutStringToLoad)->c_str());
 
             s_layoutStringToLoad = std::nullopt;
             log::info("Loaded layout from string");
@@ -91,7 +91,7 @@ namespace hex {
     }
 
     void LayoutManager::reload() {
-        s_layouts.clear();
+        s_layouts->clear();
 
         for (const auto &directory : hex::fs::getDefaultPaths(fs::ImHexPath::Layouts)) {
             for (const auto &entry : std::fs::directory_iterator(directory)) {
@@ -107,7 +107,7 @@ namespace hex {
                         name[i] = char(std::toupper(name[i]));
                 }
 
-                s_layouts.push_back({
+                s_layouts->push_back({
                     name,
                     path
                 });
@@ -118,7 +118,7 @@ namespace hex {
     void LayoutManager::reset() {
         s_layoutPathToLoad.reset();
         s_layoutStringToLoad.reset();
-        s_layouts.clear();
+        s_layouts->clear();
     }
 
     bool LayoutManager::isLayoutLocked() {

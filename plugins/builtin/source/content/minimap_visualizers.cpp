@@ -13,9 +13,9 @@ namespace hex::plugin::builtin {
     namespace {
 
         ImColor entropyMiniMapVisualizer(const std::vector<u8> &data) {
-            std::array<u32, 256> frequencies = { 0 };
+            std::array<u8, 256> frequencies = { 0 };
             for (u8 byte : data)
-                frequencies[byte]++;
+                frequencies[byte] += 1;
 
             double entropy = 0.0;
             for (u32 frequency : frequencies) {
@@ -41,10 +41,20 @@ namespace hex::plugin::builtin {
             u32 zerosCount = 0;
             for (u8 byte : data) {
                 if (byte == 0x00)
-                    zerosCount++;
+                    zerosCount += 1;
             }
 
             return ImColor::HSV(0.0F, 0.0F, 1.0F - (double(zerosCount) / data.size()));
+        }
+
+        ImColor byteTypeMiniMapVisualizer(const std::vector<u8> &data) {
+            u8 asciiCount = 0;
+            for (u8 byte : data) {
+                if (std::isprint(byte))
+                    asciiCount += 1;
+            }
+
+            return ImColor::HSV(0.5F, 0.5F, (double(asciiCount) / data.size()));
         }
 
     }
@@ -52,6 +62,7 @@ namespace hex::plugin::builtin {
     void registerMiniMapVisualizers() {
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.entropy", entropyMiniMapVisualizer);
         ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.zeros", zerosMiniMapVisualizer);
+        ContentRegistry::HexEditor::addMiniMapVisualizer("hex.builtin.minimap_visualizer.ascii", byteTypeMiniMapVisualizer);
     }
 
 }

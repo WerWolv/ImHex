@@ -3,7 +3,7 @@
 
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
-#include <hex/helpers/utils.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -36,22 +36,26 @@ namespace hex {
             }
         #endif
 
-        m_functions.initializePluginFunction     = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
-        m_functions.initializeLibraryFunction    = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializeLibrary");
-        m_functions.getPluginNameFunction        = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
-        m_functions.getLibraryNameFunction       = getPluginFunction<PluginFunctions::GetLibraryNameFunc>("getLibraryName");
-        m_functions.getPluginAuthorFunction      = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
-        m_functions.getPluginDescriptionFunction = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
-        m_functions.getCompatibleVersionFunction = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
-        m_functions.setImGuiContextFunction      = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
-        m_functions.getSubCommandsFunction       = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
-        m_functions.getFeaturesFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
+        const auto fileName = path.stem().string();
+
+        m_functions.initializePluginFunction        = getPluginFunction<PluginFunctions::InitializePluginFunc>("initializePlugin");
+        m_functions.initializeLibraryFunction       = getPluginFunction<PluginFunctions::InitializePluginFunc>(hex::format("initializeLibrary_{}", fileName));
+        m_functions.getPluginNameFunction           = getPluginFunction<PluginFunctions::GetPluginNameFunc>("getPluginName");
+        m_functions.getLibraryNameFunction          = getPluginFunction<PluginFunctions::GetLibraryNameFunc>(hex::format("getLibraryName_{}", fileName));
+        m_functions.getPluginAuthorFunction         = getPluginFunction<PluginFunctions::GetPluginAuthorFunc>("getPluginAuthor");
+        m_functions.getPluginDescriptionFunction    = getPluginFunction<PluginFunctions::GetPluginDescriptionFunc>("getPluginDescription");
+        m_functions.getCompatibleVersionFunction    = getPluginFunction<PluginFunctions::GetCompatibleVersionFunc>("getCompatibleVersion");
+        m_functions.setImGuiContextFunction         = getPluginFunction<PluginFunctions::SetImGuiContextFunc>("setImGuiContext");
+        m_functions.setImGuiContextLibraryFunction  = getPluginFunction<PluginFunctions::SetImGuiContextFunc>(hex::format("setImGuiContext_{}", fileName));
+        m_functions.getSubCommandsFunction          = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getSubCommands");
+        m_functions.getFeaturesFunction             = getPluginFunction<PluginFunctions::GetSubCommandsFunc>("getFeatures");
     }
 
     Plugin::Plugin(const std::string &name, const hex::PluginFunctions &functions) {
         m_handle        = 0;
         m_functions     = functions;
         m_path          = name;
+        m_addedManually = true;
     }
 
 
@@ -60,6 +64,7 @@ namespace hex {
         other.m_handle = 0;
 
         m_path = std::move(other.m_path);
+        m_addedManually = other.m_addedManually;
 
         m_functions = other.m_functions;
         other.m_functions = {};
@@ -70,6 +75,7 @@ namespace hex {
         other.m_handle = 0;
 
         m_path = std::move(other.m_path);
+        m_addedManually = other.m_addedManually;
 
         m_functions = other.m_functions;
         other.m_functions = {};
@@ -217,6 +223,11 @@ namespace hex {
                m_functions.initializePluginFunction  == nullptr;
     }
 
+    bool Plugin::wasAddedManually() const {
+        return m_addedManually;
+    }
+
+
 
 
     void *Plugin::getPluginFunction(const std::string &symbol) const {
@@ -284,9 +295,15 @@ namespace hex {
 
         // Unload plugins in reverse order
         auto &plugins = getPlugins();
+
+        std::list<Plugin> savedPlugins;
         while (!plugins.empty()) {
+            if (plugins.back().wasAddedManually())
+                savedPlugins.emplace_front(std::move(plugins.back()));
             plugins.pop_back();
         }
+
+        getPlugins() = std::move(savedPlugins);
     }
 
     void PluginManager::addPlugin(const std::string &name, hex::PluginFunctions functions) {
@@ -300,13 +317,13 @@ namespace hex {
     }
 
     std::vector<std::fs::path> &PluginManager::getPluginPaths() {
-        static std::vector<std::fs::path> pluginPaths;
+        static AutoReset<std::vector<std::fs::path>> pluginPaths;
 
         return pluginPaths;
     }
 
     std::vector<std::fs::path> &PluginManager::getPluginLoadPaths() {
-        static std::vector<std::fs::path> pluginPaths;
+        static AutoReset<std::vector<std::fs::path>> pluginPaths;
 
         return pluginPaths;
     }

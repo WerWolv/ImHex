@@ -19,10 +19,12 @@
 #include <hex/api/workspace_manager.hpp>
 
 #include <wolv/io/file.hpp>
+#include <wolv/literals.hpp>
 
 #include <romfs/romfs.hpp>
 
 using namespace std::literals::string_literals;
+using namespace wolv::literals;
 
 namespace hex::plugin::builtin {
 
@@ -172,18 +174,43 @@ namespace hex::plugin::builtin {
                     wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
                     if (!outputFile.isValid()) {
                         TaskManager::doLater([] {
-                            ui::ToastError::open("hex.builtin.menu.file.export.base64.popup.export_error"_lang);
+                            ui::ToastError::open("hex.builtin.menu.file.export.error.create_file"_lang);
                         });
                         return;
                     }
 
                     auto provider = ImHexApi::Provider::get();
-                    std::vector<u8> bytes(3000);
-                    for (u64 address = 0; address < provider->getActualSize(); address += 3000) {
-                        bytes.resize(std::min<u64>(3000, provider->getActualSize() - address));
+                    std::vector<u8> bytes(5_MiB);
+                    for (u64 address = 0; address < provider->getActualSize(); address += bytes.size()) {
+                        bytes.resize(std::min<u64>(bytes.size(), provider->getActualSize() - address));
                         provider->read(provider->getBaseAddress() + address, bytes.data(), bytes.size());
 
                         outputFile.writeVector(crypt::encode64(bytes));
+                    }
+                });
+            });
+        }
+
+        void exportSelectionToFile() {
+            fs::openFileBrowser(fs::DialogMode::Save, {}, [](const auto &path) {
+                TaskManager::createTask("hex.ui.common.processing", TaskManager::NoProgress, [path](auto &) {
+                    wolv::io::File outputFile(path, wolv::io::File::Mode::Create);
+                    if (!outputFile.isValid()) {
+                        TaskManager::doLater([] {
+                            ui::ToastError::open("hex.builtin.menu.file.export.error.create_file"_lang);
+                        });
+                        return;
+                    }
+
+                    auto provider = ImHexApi::Provider::get();
+                    std::vector<u8> bytes(5_MiB);
+
+                    auto selection = ImHexApi::HexEditor::getSelection();
+                    for (u64 address = selection->getStartAddress(); address <= selection->getEndAddress(); address += bytes.size()) {
+                        bytes.resize(std::min<u64>(bytes.size(), selection->getEndAddress() - address));
+                        provider->read(address, bytes.data(), bytes.size());
+
+                        outputFile.writeVector(bytes);
                     }
                 });
             });
@@ -419,19 +446,25 @@ namespace hex::plugin::builtin {
         {
             ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export" }, ICON_VS_SIGN_OUT, 6000, []{}, isProviderDumpable);
 
+            /* Selection to File */
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.selection_to_file" }, ICON_VS_FILE_BINARY, 6010,
+                                                    Shortcut::None,
+                                                    exportSelectionToFile,
+                                                    ImHexApi::HexEditor::isSelectionValid);
+
             /* Base 64 */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.base64" }, 6005,
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.base64" }, ICON_VS_NOTE, 6020,
                                                     Shortcut::None,
                                                     exportBase64,
                                                     isProviderDumpable);
 
             /* Language */
-            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.as_language" }, ICON_VS_CODE, 6010,
+            ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.as_language" }, ICON_VS_CODE, 6030,
                                                     drawExportLanguageMenu,
                                                     isProviderDumpable);
 
             /* Report */
-            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.report" }, ICON_VS_MARKDOWN, 6020,
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.report" }, ICON_VS_MARKDOWN, 6040,
                                                     Shortcut::None,
                                                     exportReport,
                                                     ImHexApi::Provider::isValid);

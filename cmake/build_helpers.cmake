@@ -55,6 +55,7 @@ macro(detectOS)
         set(CMAKE_INSTALL_BINDIR ".")
         set(CMAKE_INSTALL_LIBDIR ".")
         set(PLUGINS_INSTALL_LOCATION "plugins")
+        add_compile_definitions(WIN32_LEAN_AND_MEAN)
     elseif (APPLE)
         add_compile_definitions(OS_MACOS)
         set(CMAKE_INSTALL_BINDIR ".")
@@ -298,6 +299,8 @@ macro(configureCMake)
     # Enable C and C++ languages
     enable_language(C CXX)
 
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code for all targets" FORCE)
+
     # Configure use of recommended build tools
     if (IMHEX_USE_DEFAULT_BUILD_SETTINGS)
         message(STATUS "Configuring CMake to use recommended build tools...")
@@ -482,7 +485,6 @@ endfunction()
 
 macro(setupCompilerFlags target)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-
         # Define strict compilation flags
         if (IMHEX_STRICT_WARNINGS)
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wall -Wextra -Wpedantic -Werror")
@@ -496,7 +498,9 @@ macro(setupCompilerFlags target)
 
         # Disable some warnings
         set(IMHEX_C_CXX_FLAGS "-Wno-unknown-warning-option -Wno-array-bounds -Wno-deprecated-declarations")
+    endif()
 
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         if (IMHEX_ENABLE_UNITY_BUILD AND WIN32)
             set(IMHEX_COMMON_FLAGS "${IMHEX_COMMON_FLAGS} -Wa,-mbig-obj")
         endif ()
@@ -540,23 +544,14 @@ macro(addBundledLibraries)
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/imgui)
 
     add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/microtar EXCLUDE_FROM_ALL)
-    set_target_properties(microtar PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/libwolv EXCLUDE_FROM_ALL)
-    set_property(TARGET libwolv-types       PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET libwolv-utils       PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET libwolv-io          PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET libwolv-hash        PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET libwolv-containers  PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET libwolv-net         PROPERTY POSITION_INDEPENDENT_CODE ON)
-    set_property(TARGET libwolv-math_eval   PROPERTY POSITION_INDEPENDENT_CODE ON)
 
     set(XDGPP_INCLUDE_DIRS "${THIRD_PARTY_LIBS_FOLDER}/xdgpp")
     set(FPHSA_NAME_MISMATCHED ON CACHE BOOL "")
 
     if(NOT USE_SYSTEM_FMT)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/fmt EXCLUDE_FROM_ALL)
-        set_target_properties(fmt PROPERTIES POSITION_INDEPENDENT_CODE ON)
         set(FMT_LIBRARIES fmt::fmt-header-only)
     else()
         find_package(fmt REQUIRED)
@@ -576,7 +571,6 @@ macro(addBundledLibraries)
         # nfd
         if (NOT USE_SYSTEM_NFD)
             add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/nativefiledialog EXCLUDE_FROM_ALL)
-            set_target_properties(nfd PROPERTIES POSITION_INDEPENDENT_CODE ON)
             set(NFD_LIBRARIES nfd)
         else()
             find_package(nfd)
@@ -594,7 +588,6 @@ macro(addBundledLibraries)
 
     if (NOT USE_SYSTEM_LLVM)
         add_subdirectory(${THIRD_PARTY_LIBS_FOLDER}/llvm-demangle EXCLUDE_FROM_ALL)
-        set_target_properties(LLVMDemangle PROPERTIES POSITION_INDEPENDENT_CODE ON)
     else()
         find_package(LLVM REQUIRED Demangle)
     endif()
@@ -617,13 +610,13 @@ macro(addBundledLibraries)
     set_target_properties(
             libpl
             PROPERTIES
-                POSITION_INDEPENDENT_CODE ON
                 RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
                 LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     )
+    enableUnityBuild(libpl)
 
     find_package(mbedTLS 3.4.0 REQUIRED)
-    find_library(MAGIC 5.39 magic REQUIRED)
+    find_package(Magic 5.39 REQUIRED)
 
     if (NOT IMHEX_DISABLE_STACKTRACE)
         if (WIN32)
@@ -685,13 +678,19 @@ function(generatePDBs)
             set(GENERATED_PDB plugins/${PDB})
         endif ()
 
+        if (IMHEX_REPLACE_DWARF_WITH_PDB)
+            set(PDB_OUTPUT_PATH ${CMAKE_BINARY_DIR}/${GENERATED_PDB})
+        else ()
+            set(PDB_OUTPUT_PATH)
+        endif()
+
         add_custom_target(${PDB}_pdb DEPENDS ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb)
         add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb
                 WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
                 COMMAND
                 (
                     ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}.pdb &&
-                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe $<TARGET_FILE:${PDB}> ${CMAKE_BINARY_DIR}/${GENERATED_PDB} &&
+                    ${cv2pdb_SOURCE_DIR}/cv2pdb64.exe $<TARGET_FILE:${PDB}> ${PDB_OUTPUT_PATH} &&
                     ${CMAKE_COMMAND} -E remove -f ${CMAKE_BINARY_DIR}/${GENERATED_PDB}
                 ) || (exit 0)
                 COMMAND_EXPAND_LISTS)
@@ -712,9 +711,9 @@ function(generateSDKDirectory)
         set(SDK_PATH "share/imhex/sdk")
     endif()
 
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib")
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib")
-    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party")
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/libimhex DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/external DESTINATION "${SDK_PATH}/lib" PATTERN "**/source/*" EXCLUDE)
+    install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/imgui DESTINATION "${SDK_PATH}/lib/third_party" PATTERN "**/source/*" EXCLUDE)
     if (NOT USE_SYSTEM_FMT)
         install(DIRECTORY ${CMAKE_SOURCE_DIR}/lib/third_party/fmt DESTINATION "${SDK_PATH}/lib/third_party")
     endif()
@@ -726,8 +725,6 @@ function(generateSDKDirectory)
     install(FILES ${CMAKE_SOURCE_DIR}/cmake/build_helpers.cmake DESTINATION "${SDK_PATH}/cmake")
     install(DIRECTORY ${CMAKE_SOURCE_DIR}/cmake/sdk/ DESTINATION "${SDK_PATH}")
     install(TARGETS libimhex ARCHIVE DESTINATION "${SDK_PATH}/lib")
-    install(TARGETS libimhex RUNTIME DESTINATION "${SDK_PATH}/lib")
-    install(TARGETS libimhex LIBRARY DESTINATION "${SDK_PATH}/lib")
 endfunction()
 
 function(addIncludesFromLibrary target library)

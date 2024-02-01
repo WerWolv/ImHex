@@ -31,9 +31,11 @@ namespace hex::ui {
         };
 
         void setTreeStyle(TreeStyle style) { m_treeStyle = style; }
-        void setSelectionCallback(std::function<void(Region)> callback) { m_selectionCallback = std::move(callback); }
+        void setSelectionCallback(std::function<void(const pl::ptrn::Pattern *)> callback) { m_selectionCallback = std::move(callback); }
         void enableRowColoring(bool enabled) { m_rowColoring = enabled; }
         void reset();
+
+        void jumpToPattern(const pl::ptrn::Pattern *pattern) { m_jumpToPattern = pattern; }
 
     private:
         void draw(pl::ptrn::Pattern& pattern);
@@ -100,6 +102,7 @@ namespace hex::ui {
         TreeStyle m_treeStyle = TreeStyle::Default;
         bool m_rowColoring = false;
         pl::ptrn::Pattern *m_currVisualizedPattern = nullptr;
+        const pl::ptrn::Pattern *m_jumpToPattern = nullptr;
 
         std::set<pl::ptrn::Pattern*> m_visualizedPatterns;
         std::string m_lastVisualizerError;
@@ -115,7 +118,7 @@ namespace hex::ui {
 
         TaskHolder m_favoritesUpdateTask;
 
-        std::function<void(Region)> m_selectionCallback = [](Region) { };
+        std::function<void(const pl::ptrn::Pattern *)> m_selectionCallback = [](const pl::ptrn::Pattern *) { };
 
         pl::gen::fmt::FormatterArray m_formatters;
     };

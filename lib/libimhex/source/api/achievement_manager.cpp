@@ -1,27 +1,29 @@
 #include <hex/api/achievement_manager.hpp>
 #include <hex/api/event_manager.hpp>
 
+#include <hex/helpers/auto_reset.hpp>
+
 #include <nlohmann/json.hpp>
 
 namespace hex {
 
     std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>> &AchievementManager::getAchievements() {
-        static std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>> achievements;
+        static AutoReset<std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>> achievements;
 
         return achievements;
     }
 
     std::unordered_map<std::string, std::list<AchievementManager::AchievementNode>>& AchievementManager::getAchievementNodes(bool rebuild) {
-        static std::unordered_map<std::string, std::list<AchievementNode>> nodeCategoryStorage;
+        static AutoReset<std::unordered_map<std::string, std::list<AchievementNode>>> nodeCategoryStorage;
 
-        if (!nodeCategoryStorage.empty() || !rebuild)
+        if (!nodeCategoryStorage->empty() || !rebuild)
             return nodeCategoryStorage;
 
-        nodeCategoryStorage.clear();
+        nodeCategoryStorage->clear();
 
         // Add all achievements to the node storage
         for (auto &[categoryName, achievements] : getAchievements()) {
-            auto &nodes = nodeCategoryStorage[categoryName];
+            auto &nodes = (*nodeCategoryStorage)[categoryName];
 
             for (auto &[achievementName, achievement] : achievements) {
                 nodes.emplace_back(achievement.get());
@@ -32,21 +34,21 @@ namespace hex {
     }
 
     std::unordered_map<std::string, std::vector<AchievementManager::AchievementNode*>>& AchievementManager::getAchievementStartNodes(bool rebuild) {
-        static std::unordered_map<std::string, std::vector<AchievementNode*>> startNodes;
+        static AutoReset<std::unordered_map<std::string, std::vector<AchievementNode*>>> startNodes;
 
-        if (!startNodes.empty() || !rebuild)
+        if (!startNodes->empty() || !rebuild)
             return startNodes;
 
         auto &nodeCategoryStorage = getAchievementNodes();
 
-        startNodes.clear();
+        startNodes->clear();
 
         // Add all parents and children to the nodes
         for (auto &[categoryName, achievements] : nodeCategoryStorage) {
             for (auto &achievementNode : achievements) {
                 for (auto &requirement : achievementNode.achievement->getRequirements()) {
                     for (auto &[requirementCategoryName, requirementAchievements] : nodeCategoryStorage) {
-                        auto iter = std::find_if(requirementAchievements.begin(), requirementAchievements.end(), [&requirement](auto &node) {
+                        auto iter = std::ranges::find_if(requirementAchievements, [&requirement](auto &node) {
                             return node.achievement->getUnlocalizedName() == requirement;
                         });
 
@@ -59,7 +61,7 @@ namespace hex {
 
                 for (auto &requirement : achievementNode.achievement->getVisibilityRequirements()) {
                     for (auto &[requirementCategoryName, requirementAchievements] : nodeCategoryStorage) {
-                        auto iter = std::find_if(requirementAchievements.begin(), requirementAchievements.end(), [&requirement](auto &node) {
+                        auto iter = std::ranges::find_if(requirementAchievements, [&requirement](auto &node) {
                             return node.achievement->getUnlocalizedName() == requirement;
                         });
 
@@ -74,12 +76,12 @@ namespace hex {
         for (auto &[categoryName, achievements] : nodeCategoryStorage) {
             for (auto &achievementNode : achievements) {
                 if (!achievementNode.hasParents()) {
-                    startNodes[categoryName].emplace_back(&achievementNode);
+                    (*startNodes)[categoryName].emplace_back(&achievementNode);
                 }
 
                 for (const auto &parent : achievementNode.parents) {
                     if (parent->achievement->getUnlocalizedCategory() != achievementNode.achievement->getUnlocalizedCategory())
-                        startNodes[categoryName].emplace_back(&achievementNode);
+                        (*startNodes)[categoryName].emplace_back(&achievementNode);
                 }
             }
         }
@@ -97,14 +99,12 @@ namespace hex {
 
         auto &[categoryName, achievements] = *categoryIter;
 
-        auto achievementIter = achievements.find(unlocalizedName);
-
+        const auto achievementIter = achievements.find(unlocalizedName);
         if (achievementIter == achievements.end()) {
             return;
         }
 
-        auto &nodes = getAchievementNodes()[categoryName];
-
+        const auto &nodes = getAchievementNodes()[categoryName];
         for (const auto &node : nodes) {
             auto &achievement = node.achievement;
 
@@ -238,7 +238,7 @@ namespace hex {
                 }
             }
 
-            auto result = json.dump(4);
+            const auto result = json.dump(4);
             file.setSize(0);
             file.writeString(result);
             break;

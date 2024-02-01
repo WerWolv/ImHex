@@ -124,7 +124,7 @@
         "hex.builtin.menu.file.export.as_language": "Text formatierte Bytes",
         "hex.builtin.menu.file.export.as_language.popup.export_error": "Exportieren von bytes als Datei fehlgeschlagen!",
         "hex.builtin.menu.file.export.base64": "Base64",
-        "hex.builtin.menu.file.export.base64.popup.export_error": "Erstellen der Base64 Datei fehlgeschlagen!",
+        "hex.builtin.menu.file.export.error.create_file": "Erstellen der Datei fehlgeschlagen!",
         "hex.builtin.menu.file.export.bookmark": "Lesezeichen",
         "hex.builtin.menu.file.export.data_processor": "Datenprozessors Arbeitsbereich",
         "hex.builtin.menu.file.export.ips": "IPS Patch",

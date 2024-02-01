@@ -26,14 +26,14 @@ jobs:
         languages: 'cpp'
 
     - name: 📜 Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+      uses: hendrikmuhs/ccache-action@v1
       with:
         key: ${{ runner.os }}-analysis-build-${{ github.run_id }}
         restore-keys: ${{ runner.os }}-analysis-build
         max-size: 50M
 
     - name: 📜 Restore CMakeCache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           build/CMakeCache.txt

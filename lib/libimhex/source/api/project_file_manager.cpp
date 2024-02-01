@@ -1,6 +1,6 @@
 #include <hex/api/project_file_manager.hpp>
 
-#include <hex/providers/provider.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <wolv/io/fs.hpp>
 
@@ -8,13 +8,13 @@ namespace hex {
 
     namespace {
 
-        std::vector<ProjectFile::Handler> s_handlers;
-        std::vector<ProjectFile::ProviderHandler> s_providerHandlers;
+        AutoReset<std::vector<ProjectFile::Handler>> s_handlers;
+        AutoReset<std::vector<ProjectFile::ProviderHandler>> s_providerHandlers;
 
-        std::fs::path s_currProjectPath;
+        AutoReset<std::fs::path> s_currProjectPath;
 
-        std::function<bool(const std::fs::path&)> s_loadProjectFunction;
-        std::function<bool(std::optional<std::fs::path>, bool)> s_storeProjectFunction;
+        AutoReset<std::function<bool(const std::fs::path&)>> s_loadProjectFunction;
+        AutoReset<std::function<bool(std::optional<std::fs::path>, bool)>> s_storeProjectFunction;
 
     }
 
@@ -28,19 +28,19 @@ namespace hex {
     }
 
     bool ProjectFile::load(const std::fs::path &filePath) {
-      return s_loadProjectFunction(filePath);
+      return (*s_loadProjectFunction)(filePath);
     }
 
     bool ProjectFile::store(std::optional<std::fs::path> filePath, bool updateLocation) {
-       return s_storeProjectFunction(std::move(filePath), updateLocation);
+       return (*s_storeProjectFunction)(std::move(filePath), updateLocation);
     }
 
     bool ProjectFile::hasPath() {
-        return !s_currProjectPath.empty();
+        return !s_currProjectPath->empty();
     }
 
     void ProjectFile::clearPath() {
-        s_currProjectPath.clear();
+        s_currProjectPath->clear();
     }
 
     std::fs::path ProjectFile::getPath() {

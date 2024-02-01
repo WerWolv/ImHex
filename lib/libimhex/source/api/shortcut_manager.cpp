@@ -1,6 +1,7 @@
 #include <hex/api/shortcut_manager.hpp>
 #include <imgui.h>
 #include <hex/api/content_registry.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #include <hex/ui/view.hpp>
 
@@ -8,7 +9,7 @@ namespace hex {
 
     namespace {
 
-        std::map<Shortcut, ShortcutManager::ShortcutEntry> s_globalShortcuts;
+        AutoReset<std::map<Shortcut, ShortcutManager::ShortcutEntry>> s_globalShortcuts;
         std::atomic<bool> s_paused;
         std::optional<Shortcut> s_prevShortcut;
 
@@ -16,7 +17,7 @@ namespace hex {
 
 
     void ShortcutManager::addGlobalShortcut(const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
-        s_globalShortcuts.insert({ shortcut, { shortcut, unlocalizedName, callback } });
+        s_globalShortcuts->insert({ shortcut, { shortcut, unlocalizedName, callback } });
     }
 
     void ShortcutManager::addShortcut(View *view, const Shortcut &shortcut, const UnlocalizedString &unlocalizedName, const std::function<void()> &callback) {
@@ -57,7 +58,7 @@ namespace hex {
     }
 
     void ShortcutManager::process(const std::unique_ptr<View> &currentView, bool ctrl, bool alt, bool shift, bool super, bool focused, u32 keyCode) {
-        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
+        const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, focused, keyCode);
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
@@ -65,7 +66,7 @@ namespace hex {
     }
 
     void ShortcutManager::processGlobals(bool ctrl, bool alt, bool shift, bool super, u32 keyCode) {
-        Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, keyCode);
+        const Shortcut pressedShortcut = getShortcut(ctrl, alt, shift, super, false, keyCode);
         if (keyCode != 0)
             s_prevShortcut = Shortcut(pressedShortcut.getKeys());
 
@@ -73,7 +74,7 @@ namespace hex {
     }
 
     void ShortcutManager::clearShortcuts() {
-        s_globalShortcuts.clear();
+        s_globalShortcuts->clear();
     }
 
     void ShortcutManager::resumeShortcuts() {
@@ -90,17 +91,18 @@ namespace hex {
     }
 
     std::vector<ShortcutManager::ShortcutEntry> ShortcutManager::getGlobalShortcuts() {
-        std::vector<ShortcutManager::ShortcutEntry> result;
+        std::vector<ShortcutEntry> result;
 
-        for (auto &[shortcut, entry] : s_globalShortcuts)
+        for (auto &[shortcut, entry] : *s_globalShortcuts)
             result.push_back(entry);
 
         return result;
     }
 
     std::vector<ShortcutManager::ShortcutEntry> ShortcutManager::getViewShortcuts(const View *view) {
-        std::vector<ShortcutManager::ShortcutEntry> result;
+        std::vector<ShortcutEntry> result;
 
+        result.reserve(view->m_shortcuts.size());
         for (auto &[shortcut, entry] : view->m_shortcuts)
             result.push_back(entry);
 

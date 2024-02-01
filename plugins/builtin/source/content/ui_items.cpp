@@ -285,6 +285,11 @@ namespace hex::plugin::builtin {
             rightClickedProvider = nullptr;
         });
 
+        static bool alwaysShowProviderTabs = false;
+        EventSettingsChanged::subscribe([] {
+            alwaysShowProviderTabs = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", false);
+        });
+
         ContentRegistry::Interface::addToolbarItem([] {
             std::set<const ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> menuItems;
 
@@ -330,7 +335,7 @@ namespace hex::plugin::builtin {
 
                 if (providerSelectorVisible) {
                     for (size_t i = 0; i < providers.size(); i++) {
-                        if (providers.size() == 1)
+                        if (providers.size() == 1 && !alwaysShowProviderTabs)
                             break;
 
                         auto &tabProvider = providers[i];

@@ -5,12 +5,12 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/utils_linux.hpp>
-
-#include <xdg.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shlobj.h>
+    #include <shellapi.h>
 #elif defined(OS_LINUX) || defined(OS_WEB)
     #include <xdg.hpp>
     #include <limits.h>
@@ -22,7 +22,6 @@
     #include <nfd.hpp>
 #endif
 
-#include <algorithm>
 #include <filesystem>
 
 #include <wolv/io/file.hpp>
@@ -31,7 +30,7 @@
 
 namespace hex::fs {
 
-    static std::function<void(const std::string&)> s_fileBrowserErrorCallback;
+    static AutoReset<std::function<void(const std::string&)>> s_fileBrowserErrorCallback;
     void setFileBrowserErrorCallback(const std::function<void(const std::string&)> &callback) {
         s_fileBrowserErrorCallback = callback;
     }
@@ -39,8 +38,9 @@ namespace hex::fs {
     // With help from https://github.com/owncloud/client/blob/cba22aa34b3677406e0499aadd126ce1d94637a2/src/gui/openfilemanager.cpp
     void openFileExternal(const std::fs::path &filePath) {
         // Make sure the file exists before trying to open it
-        if (!wolv::io::fs::exists(filePath))
+        if (!wolv::io::fs::exists(filePath)) {
             return;
+        }
 
         #if defined(OS_WINDOWS)
             hex::unused(
@@ -57,8 +57,9 @@ namespace hex::fs {
 
     void openFolderExternal(const std::fs::path &dirPath) {
         // Make sure the folder exists before trying to open it
-        if (!wolv::io::fs::exists(dirPath))
+        if (!wolv::io::fs::exists(dirPath)) {
             return;
+        }
 
         #if defined(OS_WINDOWS)
             hex::unused(system(
@@ -75,8 +76,9 @@ namespace hex::fs {
 
     void openFolderWithSelectionExternal(const std::fs::path &selectedFilePath) {
         // Make sure the file exists before trying to open it
-        if (!wolv::io::fs::exists(selectedFilePath))
+        if (!wolv::io::fs::exists(selectedFilePath)) {
             return;
+        }
 
         #if defined(OS_WINDOWS)
             hex::unused(system(
@@ -203,6 +205,7 @@ namespace hex::fs {
         bool openFileBrowser(DialogMode mode, const std::vector<ItemFilter> &validExtensions, const std::function<void(std::fs::path)> &callback, const std::string &defaultPath, bool multiple) {
             // Turn the content of the ItemFilter objects into something NFD understands
             std::vector<nfdfilteritem_t> validExtensionsNfd;
+            validExtensionsNfd.reserve(validExtensions.size());
             for (const auto &extension : validExtensions) {
                 validExtensionsNfd.emplace_back(nfdfilteritem_t{ extension.name.c_str(), extension.spec.c_str() });
             }
@@ -214,9 +217,9 @@ namespace hex::fs {
             if (NFD::Init() != NFD_OKAY) {
                 // Handle errors if initialization failed
                 log::error("NFD init returned an error: {}", NFD::GetError());
-                if (s_fileBrowserErrorCallback != nullptr) {
-                    auto error = NFD::GetError();
-                    s_fileBrowserErrorCallback(error != nullptr ? error : "No details");
+                if (*s_fileBrowserErrorCallback != nullptr) {
+                    const auto error = NFD::GetError();
+                    (*s_fileBrowserErrorCallback)(error != nullptr ? error : "No details");
                 }
 
                 return false;
@@ -266,9 +269,9 @@ namespace hex::fs {
 
                 log::error("Requested file dialog returned an error: {}", NFD::GetError());
 
-                if (s_fileBrowserErrorCallback != nullptr) {
-                    auto error = NFD::GetError();
-                    s_fileBrowserErrorCallback(error != nullptr ? error : "No details");
+                if (*s_fileBrowserErrorCallback != nullptr) {
+                    const auto error = NFD::GetError();
+                    (*s_fileBrowserErrorCallback)(error != nullptr ? error : "No details");
                 }
             }
 
@@ -325,7 +328,7 @@ namespace hex::fs {
 
         // Add additional data directories to the path
         auto additionalDirs = ImHexApi::System::getAdditionalFolderPaths();
-        std::copy(additionalDirs.begin(), additionalDirs.end(), std::back_inserter(paths));
+        std::ranges::copy(additionalDirs, std::back_inserter(paths));
 
         // Add the project file directory to the path, if one is loaded
         if (ProjectFile::hasPath()) {
@@ -456,7 +459,7 @@ namespace hex::fs {
         // Try to create a new file in the given path
         // If that fails, or the file cannot be deleted anymore afterward; the path is not writable
         wolv::io::File file(path / TestFileName, wolv::io::File::Mode::Create);
-        bool result = file.isValid();
+        const bool result = file.isValid();
         if (!file.remove())
             return false;
 

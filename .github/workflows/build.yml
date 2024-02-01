@@ -27,7 +27,7 @@ jobs:
         submodules: recursive
 
     - name: 📜 Setup ccache
-      uses:  hendrikmuhs/ccache-action@v1.2
+      uses:  hendrikmuhs/ccache-action@v1
       id:    cache-ccache
       with:
         key: ${{ runner.os }}-ccache-${{ github.run_id }}
@@ -60,16 +60,18 @@ jobs:
         mkdir -p build
         cd build
 
-        cmake -G "Ninja"                                \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}        \
-          -DCMAKE_INSTALL_PREFIX="$PWD/install"         \
-          -DIMHEX_GENERATE_PACKAGE=ON                   \
-          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON         \
-          -DIMHEX_PATTERNS_PULL_MASTER=ON               \
-          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
-          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
-          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
-          -DUSE_SYSTEM_CAPSTONE=ON                      \
+        cmake -G "Ninja"                                            \
+          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}                    \
+          -DCMAKE_INSTALL_PREFIX="$PWD/install"                     \
+          -DIMHEX_GENERATE_PACKAGE=ON                               \
+          -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
+          -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
+          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"              \
+          -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
+          -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
+          -DUSE_SYSTEM_CAPSTONE=ON                                  \
+          -DIMHEX_GENERATE_PDBS=ON                                  \
+          -DIMHEX_REPLACE_DWARF_WITH_PDB=ON                         \
           -DDOTNET_EXECUTABLE="C:/Program Files/dotnet/dotnet.exe"  \
           ..
     
@@ -141,7 +143,7 @@ jobs:
         echo "IMHEX_VERSION=`cat VERSION`" >> $GITHUB_ENV
 
     - name: 📜 Setup ccache
-      uses: hendrikmuhs/ccache-action@v1.2
+      uses: hendrikmuhs/ccache-action@v1
       with:
         key: ${{ runner.os }}${{ matrix.suffix }}-ccache-${{ github.run_id }}
         restore-keys: ${{ runner.os }}${{ matrix.suffix }}-ccache
@@ -239,13 +241,13 @@ jobs:
         submodules: recursive
     
     - name: 📁 Restore docker /cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: cache
         key: build-macos-arm64-cache
 
     - name: 🐳 Inject /cache into docker
-      uses: reproducible-containers/buildkit-cache-dance@v2.1.2 # Doesn't work with a MacOS runner ?
+      uses: reproducible-containers/buildkit-cache-dance@v2
       with:
         cache-source: cache
         cache-target: /cache
@@ -348,7 +350,7 @@ jobs:
           submodules: recursive
 
       - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1
         with:
           key: Ubuntu-${{matrix.release_num}}-ccache-${{ github.run_id }}
           restore-keys: Ubuntu-${{matrix.release_num}}-ccache
@@ -417,14 +419,14 @@ jobs:
           submodules: recursive
 
       - name: 📁 Restore docker /cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: cache
           key: appimage-ccache-${{ github.run_id }}
           restore-keys: appimage-cache
       
       - name: 🐳 Inject /cache into docker
-        uses: reproducible-containers/buildkit-cache-dance@v2.1.2
+        uses: reproducible-containers/buildkit-cache-dance@v2
         with:
           cache-source: cache
           cache-target: /cache
@@ -481,7 +483,7 @@ jobs:
           dotnet-version: '8.0.100'
 
       - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1
         with:
           key: archlinux-ccache-${{ github.run_id }}
           restore-keys: archlinux-ccache
@@ -589,7 +591,7 @@ jobs:
           submodules: recursive
 
       - name: 📜 Setup DNF Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /var/cache/dnf
           key: ${{ matrix.mock_release }}-dnf-${{ github.run_id }}
@@ -610,7 +612,7 @@ jobs:
           dotnet-version: '8.0.100'
 
       - name: 📜 Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2.5
+        uses: hendrikmuhs/ccache-action@v1
         with:
           key: ${{ matrix.mock_release }}-rpm-${{ github.run_id }}
           restore-keys: ${{ matrix.mock_release }}-rpm
@@ -651,7 +653,7 @@ jobs:
           EOT
 
       - name: 📜 Setup Mock Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /var/cache/mock
           key: ${{ matrix.mock_release }}-mock-${{ github.run_id }}

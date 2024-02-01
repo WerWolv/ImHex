@@ -1,5 +1,6 @@
 #include <hex/api/content_registry.hpp>
 #include <hex/api/localization_manager.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 namespace hex {
 
@@ -7,17 +8,17 @@ namespace hex {
 
         namespace {
 
-            std::string s_fallbackLanguage;
-            std::string s_selectedLanguage;
-            std::map<std::string, std::string> s_currStrings;
+            AutoReset<std::string> s_fallbackLanguage;
+            AutoReset<std::string> s_selectedLanguage;
+            AutoReset<std::map<std::string, std::string>> s_currStrings;
 
         }
 
         namespace impl {
 
             void resetLanguageStrings() {
-                s_currStrings.clear();
-                s_selectedLanguage.clear();
+                s_currStrings->clear();
+                s_selectedLanguage->clear();
             }
 
             void setFallbackLanguage(const std::string &language) {
@@ -41,24 +42,47 @@ namespace hex {
         }
 
         void loadLanguage(const std::string &language) {
-            s_currStrings.clear();
-
             auto &definitions = ContentRegistry::Language::impl::getLanguageDefinitions();
 
             if (!definitions.contains(language))
                 return;
 
+            s_currStrings->clear();
+
             for (auto &definition : definitions[language])
-                s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
+                s_currStrings->insert(definition.getEntries().begin(), definition.getEntries().end());
 
             const auto& fallbackLanguage = getFallbackLanguage();
             if (language != fallbackLanguage) {
                 for (auto &definition : definitions[fallbackLanguage])
-                    s_currStrings.insert(definition.getEntries().begin(), definition.getEntries().end());
+                    s_currStrings->insert(definition.getEntries().begin(), definition.getEntries().end());
             }
 
             s_selectedLanguage = language;
         }
+
+        std::string getLocalizedString(const std::string& unlocalizedString, const std::string& language) {
+            if (language.empty())
+                return getLocalizedString(unlocalizedString, getSelectedLanguage());
+
+            auto &languageDefinitions = ContentRegistry::Language::impl::getLanguageDefinitions();
+            if (!languageDefinitions.contains(language))
+                return "";
+
+            std::string localizedString;
+            for (const auto &definition : languageDefinitions[language]) {
+                if (definition.getEntries().contains(unlocalizedString)) {
+                    localizedString = definition.getEntries().at(unlocalizedString);
+                    break;
+                }
+            }
+
+            if (localizedString.empty())
+                return getLocalizedString(unlocalizedString, getFallbackLanguage());
+
+            return localizedString;
+        }
+
 
         const std::map<std::string, std::string> &getSupportedLanguages() {
             return ContentRegistry::Language::impl::getLanguages();
@@ -122,8 +146,8 @@ namespace hex {
 
     const std::string &Lang::get() const {
         auto &lang = LocalizationManager::s_currStrings;
-        if (lang.contains(m_unlocalizedString))
-            return lang[m_unlocalizedString];
+        if (lang->contains(m_unlocalizedString))
+            return lang->at(m_unlocalizedString);
         else
             return m_unlocalizedString;
     }

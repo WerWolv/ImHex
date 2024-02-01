@@ -124,7 +124,6 @@
         "hex.builtin.menu.file.export.as_language": "",
         "hex.builtin.menu.file.export.as_language.popup.export_error": "",
         "hex.builtin.menu.file.export.base64": "Base64",
-        "hex.builtin.menu.file.export.base64.popup.export_error": "無法建立新 Base64 檔案！",
         "hex.builtin.menu.file.export.bookmark": "書籤",
         "hex.builtin.menu.file.export.data_processor": "資料處理器工作區",
         "hex.builtin.menu.file.export.ips": "IPS 修補檔案",

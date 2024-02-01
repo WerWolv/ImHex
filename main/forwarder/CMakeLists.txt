@@ -10,5 +10,4 @@ add_dependencies(imhex_all main-forwarder)
 set_target_properties(main-forwarder PROPERTIES
         OUTPUT_NAME "imhex"
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../..
-        POSITION_INDEPENDENT_CODE ON
 )

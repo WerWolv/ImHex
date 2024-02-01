@@ -1,9 +1,10 @@
 #include <hex/ui/toast.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 namespace hex::impl {
 
     [[nodiscard]] std::list<std::unique_ptr<ToastBase>> &ToastBase::getQueuedToasts() {
-        static std::list<std::unique_ptr<ToastBase>> queuedToasts;
+        static AutoReset<std::list<std::unique_ptr<ToastBase>>> queuedToasts;
 
         return queuedToasts;
     }

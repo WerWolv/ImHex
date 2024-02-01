@@ -1,3 +1,67 @@
+let wasmSize = null;
+// See comment in dist/web/Dockerfile about imhex.wasm.size
+fetch("imhex.wasm.size").then(async (resp) => {
+    wasmSize = parseInt((await resp.text()).trim());
+    console.log(`wasm size was found to be ${wasmSize} bytes`);
+});
+
+// Monkeypatch WebAssembly to have a progress bar
+// inspired from: https://github.com/WordPress/wordpress-playground/pull/46 (but had to be modified)
+function monkeyPatch(progressFun) {
+    const _instantiateStreaming = WebAssembly.instantiateStreaming;
+    WebAssembly.instantiateStreaming = (response, ...args) => {
+        // Do not collect wasm content length here see above
+        const file = response.url.substring(
+            new URL(response.url).origin.length + 1
+        );
+        const reportingResponse = new Response(
+            new ReadableStream(
+                {
+                    async start(controller) {
+                        const reader = response.clone().body.getReader();
+                        let loaded = 0;
+                        for (; ;) {
+                            const { done, value } = await reader.read();
+                            if (done) {
+                                if(wasmSize) progressFun(file, wasmSize);
+                                break;
+                            }
+                            loaded += value.byteLength;
+                            progressFun(file, loaded);
+                            controller.enqueue(value);
+                        }
+                        controller.close();
+                    }
+                },
+                {
+                    status: response.status,
+                    statusText: response.statusText
+                }
+            )
+        );
+        for (const pair of response.headers.entries()) {
+            reportingResponse.headers.set(pair[0], pair[1]);
+        }
+
+        return _instantiateStreaming(reportingResponse, ...args);
+    }
+}
+monkeyPatch((file, done) =>  {
+    if (!wasmSize) return;
+    if (done > wasmSize) {
+        console.log(`Warning: downloaded size ${done} is larger than wasm size ${wasmSize}`);
+        return;
+    };
+
+    const percent  = ((done / wasmSize) * 100).toFixed(0);
+    const mibNow   = (done / 1024**2).toFixed(1);
+    const mibTotal = (wasmSize / 1024**2).toFixed(1);
+
+    let root = document.querySelector(':root');
+    root.style.setProperty("--progress", `${percent}%`)
+    document.getElementById("progress-bar-content").innerHTML = `${percent}% &nbsp;[${mibNow} MiB / ${mibTotal} MiB]`;
+});
+
 function glfwSetCursorCustom(wnd, shape) {
     let body = document.getElementsByTagName("body")[0]
     switch (shape) {
@@ -57,14 +121,25 @@ var Module = {
     })(),
     setStatus: function(text) { },
     totalDependencies: 0,
-    monitorRunDependencies: function(left) { },
+    monitorRunDependencies: function(left) {
+    },
     instantiateWasm: function(imports, successCallback) {
         imports.env.glfwSetCursor = glfwSetCursorCustom
         imports.env.glfwCreateStandardCursor = glfwCreateStandardCursorCustom
-        instantiateAsync(wasmBinary, wasmBinaryFile, imports, (result) => successCallback(result.instance, result.module));
-    }
+        instantiateAsync(wasmBinary, wasmBinaryFile, imports, (result) => {
+            successCallback(result.instance, result.module)
+        });
+    },
+    arguments: []
 };
 
+// Handle passing arguments to the wasm module
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+if (urlParams.has("lang")) {
+    Module["arguments"].push("--language");
+    Module["arguments"].push(urlParams.get("lang"));
+}
 
 window.addEventListener('resize', js_resizeCanvas, false);
 function js_resizeCanvas() {

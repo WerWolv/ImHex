@@ -1,4 +1,4 @@
-FROM emscripten/emsdk:latest as build
+FROM emscripten/emsdk:3.1.51 as build
 
 # Used to invalidate layer cache but not mount cache
 # See https://github.com/moby/moby/issues/41715#issuecomment-733976493
@@ -73,10 +73,15 @@ cp /imhex/dist/web/source/* /build
 ccache -s
 EOF
 
+# Create a file dedicated to store wasm size, because I know no way to get the wasm content length if the web server uses compression
+# See https://stackoverflow.com/questions/41701849/cannot-modify-accept-encoding-with-fetch https://github.com/AnthumChris/fetch-progress-indicators/issues/13
+RUN du -b /build/imhex.wasm | cut -f1 > imhex.wasm.size
+
 FROM scratch as raw
 COPY --from=build [             \
     # ImHex                     \
     "/build/imhex.wasm",        \
+    "/build/imhex.wasm.size",   \
     "/build/imhex.js",          \
     "/build/imhex.worker.js",   \
                                 \

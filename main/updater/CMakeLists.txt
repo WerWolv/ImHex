@@ -17,5 +17,4 @@ endif()
 set_target_properties(updater PROPERTIES
         OUTPUT_NAME "imhex-updater"
         RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}
-        POSITION_INDEPENDENT_CODE ON
 )

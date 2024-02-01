@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(ImHexSDK)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "" FORCE)
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_helpers.cmake")
 
 set(IMHEX_BASE_FOLDER ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
@@ -42,15 +43,16 @@ add_subdirectory(lib/libimhex)
 
 if (WIN32)
     set_target_properties(libimhex PROPERTIES
-            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex.dll"
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libimhex.dll"
             IMPORTED_IMPLIB "${CMAKE_CURRENT_SOURCE_DIR}/lib/liblibimhex.dll.a"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
 elseif (APPLE)
+    file(GLOB LIBIMHEX_DYLIB "${CMAKE_CURRENT_SOURCE_DIR}/../../Frameworks/libimhex.*.dylib")
     set_target_properties(libimhex PROPERTIES
-            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex.dylib"
+            IMPORTED_LOCATION "${LIBIMHEX_DYLIB}"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
 else()
     set_target_properties(libimhex PROPERTIES
-            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex.so"
+            IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/../libimhex.so"
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/lib/libimhex/include")
 endif()

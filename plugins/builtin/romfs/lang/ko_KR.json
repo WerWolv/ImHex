@@ -124,7 +124,6 @@
         "hex.builtin.menu.file.export.as_language": "텍스트 형식 바이트",
         "hex.builtin.menu.file.export.as_language.popup.export_error": "파일로 바이트를 내보내지 못했습니다!",
         "hex.builtin.menu.file.export.base64": "Base64",
-        "hex.builtin.menu.file.export.base64.popup.export_error": "새 Base64 파일을 만들지 못했습니다!",
         "hex.builtin.menu.file.export.bookmark": "북마크",
         "hex.builtin.menu.file.export.data_processor": "데이터 프로세서 작업 공간",
         "hex.builtin.menu.file.export.ips": "IPS 패치",
