@@ -1255,7 +1255,7 @@ namespace hex::plugin::builtin {
 
         if (!m_lastEvaluationProcessed) {
             if (!m_lastEvaluationResult) {
-                const auto processMessage = [this](const auto &message) {
+                const auto processMessage = [](const auto &message) {
                     auto lines = wolv::util::splitString(message, "\n");
 
                     std::ranges::transform(lines, lines.begin(), [](auto line) {
