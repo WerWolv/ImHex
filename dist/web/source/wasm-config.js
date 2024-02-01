@@ -47,8 +47,11 @@ function monkeyPatch(progressFun) {
     }
 }
 monkeyPatch((file, done) =>  {
-    if (!wasmSize || done > wasmSize)
+    if (!wasmSize) return;
+    if (done > wasmSize) {
+        console.log(`Warning: downloaded size ${done} is larger than wasm size ${wasmSize}`);
         return;
+    };
 
     const percent  = ((done / wasmSize) * 100).toFixed(0);
     const mibNow   = (done / 1024**2).toFixed(1);
