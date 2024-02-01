@@ -77,11 +77,14 @@ namespace hex {
 
         [[nodiscard]] bool isLibraryPlugin() const;
 
+        [[nodiscard]] bool wasAddedManually() const;
+
     private:
         uintptr_t m_handle = 0;
         std::fs::path m_path;
 
         mutable bool m_initialized = false;
+        bool m_addedManually = false;
 
         PluginFunctions m_functions = {};
 

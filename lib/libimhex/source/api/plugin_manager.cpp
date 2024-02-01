@@ -55,6 +55,7 @@ namespace hex {
         m_handle        = 0;
         m_functions     = functions;
         m_path          = name;
+        m_addedManually = true;
     }
 
 
@@ -63,6 +64,7 @@ namespace hex {
         other.m_handle = 0;
 
         m_path = std::move(other.m_path);
+        m_addedManually = other.m_addedManually;
 
         m_functions = other.m_functions;
         other.m_functions = {};
@@ -73,6 +75,7 @@ namespace hex {
         other.m_handle = 0;
 
         m_path = std::move(other.m_path);
+        m_addedManually = other.m_addedManually;
 
         m_functions = other.m_functions;
         other.m_functions = {};
@@ -220,6 +223,11 @@ namespace hex {
                m_functions.initializePluginFunction  == nullptr;
     }
 
+    bool Plugin::wasAddedManually() const {
+        return m_addedManually;
+    }
+
+
 
 
     void *Plugin::getPluginFunction(const std::string &symbol) const {
@@ -287,9 +295,15 @@ namespace hex {
 
         // Unload plugins in reverse order
         auto &plugins = getPlugins();
+
+        std::list<Plugin> savedPlugins;
         while (!plugins.empty()) {
+            if (plugins.back().wasAddedManually())
+                savedPlugins.emplace_front(std::move(plugins.back()));
             plugins.pop_back();
         }
+
+        getPlugins() = std::move(savedPlugins);
     }
 
     void PluginManager::addPlugin(const std::string &name, hex::PluginFunctions functions) {
