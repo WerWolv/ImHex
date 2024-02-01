@@ -1,8 +1,16 @@
+let wasmSize = null;
+// See comment in dist/web/Dockerfile about imhex.wasm.size
+fetch("imhex.wasm.size").then(async (resp) => {
+    wasmSize = parseInt((await resp.text()).trim());
+    console.log(`wasm size was found to be ${wasmSize} bytes`);
+});
+
 // Monkeypatch WebAssembly to have a progress bar
 // inspired from: https://github.com/WordPress/wordpress-playground/pull/46 (but had to be modified)
 function monkeyPatch(progressFun) {
     const _instantiateStreaming = WebAssembly.instantiateStreaming;
     WebAssembly.instantiateStreaming = (response, ...args) => {
+        // Do not collect wasm content length here see above
         const file = response.url.substring(
             new URL(response.url).origin.length + 1
         );
@@ -10,18 +18,16 @@ function monkeyPatch(progressFun) {
             new ReadableStream(
                 {
                     async start(controller) {
-                        const contentLength = response.headers.get("content-length");
-                        const total = parseInt(contentLength, 10);
                         const reader = response.clone().body.getReader();
                         let loaded = 0;
                         for (; ;) {
                             const { done, value } = await reader.read();
                             if (done) {
-                                progressFun(file, total, total);
+                                if(wasmSize) progressFun(file, wasmSize);
                                 break;
                             }
                             loaded += value.byteLength;
-                            progressFun(file, loaded, total);
+                            progressFun(file, loaded);
                             controller.enqueue(value);
                         }
                         controller.close();
@@ -40,13 +46,13 @@ function monkeyPatch(progressFun) {
         return _instantiateStreaming(reportingResponse, ...args);
     }
 }
-monkeyPatch((file, done, total) =>  {
-    if (total === 0 || done > total)
+monkeyPatch((file, done) =>  {
+    if (!wasmSize || done > wasmSize)
         return;
 
-    const percent  = ((done / total) * 100).toFixed(0);
+    const percent  = ((done / wasmSize) * 100).toFixed(0);
     const mibNow   = (done / 1024**2).toFixed(1);
-    const mibTotal = (total / 1024**2).toFixed(1);
+    const mibTotal = (wasmSize / 1024**2).toFixed(1);
 
     let root = document.querySelector(':root');
     root.style.setProperty("--progress", `${percent}%`)
