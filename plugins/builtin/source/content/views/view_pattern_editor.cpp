@@ -88,6 +88,9 @@ namespace hex::plugin::builtin {
             langDef.mAutoIndentation = true;
             langDef.mPreprocChar     = '#';
 
+            langDef.mGlobalDocComment = "/*!";
+            langDef.mDocComment      = "/**";
+
             langDef.mName = "Pattern Language";
 
             initialized = true;
@@ -675,6 +678,8 @@ namespace hex::plugin::builtin {
                     if (altCPressed)
                         matchCase = !matchCase;
                     findReplaceHandler->SetMatchCase(&m_textEditor,matchCase);
+                    position = findReplaceHandler->FindPosition(&m_textEditor,m_textEditor.GetCursorPosition(), true);
+                    count = findReplaceHandler->GetMatches().size();
                     updateCount = true;
                     requestFocusFind = true;
                 }

@@ -604,7 +604,7 @@ ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
         return mPalette[(int)PaletteIndex::Comment];
     if (aGlyph.mMultiLineComment)
         return mPalette[(int)PaletteIndex::MultiLineComment];
-    if (aGlyph.mDeactivated && !aGlyph.mPreprocessor)
+    if (aGlyph.mDeactivated)
         return mPalette[(int)PaletteIndex::PreprocessorDeactivated];
     auto const color = mPalette[(int)aGlyph.mColorIndex];
     if (aGlyph.mPreprocessor) {
@@ -905,7 +905,10 @@ void TextEditor::Render() {
             }
 
             if (mState.mCursorPosition.mLine == lineNo && mShowCursor) {
-                auto focused = ImGui::IsWindowFocused();
+                bool focused = false;
+                ImGuiViewport *viewport = ImGui::GetWindowViewport();
+                if (viewport->PlatformUserData != NULL && ImGui::GetPlatformIO().Platform_GetWindowFocus(viewport))
+                    focused = ImGui::IsWindowFocused();
 
                 // Highlight the current line (where the cursor is)
                 if (!HasSelection()) {
@@ -2537,19 +2540,10 @@ void TextEditor::ColorizeInternal() {
                     line[currentIndex].mDocComment       = withinDocComment;
                     line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
                     line[currentIndex].mDeactivated      = withinNotDef;
-                    if (c == '\"') {
-                        if (currentIndex > 2 && line[currentIndex - 1].mChar == '\\'  && line[currentIndex - 2].mChar != '\\') {
-                            currentIndex += 1;
-                            if (currentIndex < (int)line.size()) {
-                                line[currentIndex].mMultiLineComment = withinComment;
-                                line[currentIndex].mComment          = withinSingleLineComment;
-                                line[currentIndex].mDocComment       = withinDocComment;
-                                line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                                line[currentIndex].mDeactivated      = withinNotDef;
-                            }
-                        } else
-                            withinString = false;
-                    }
+                    if (c == '\\')
+                        currentIndex++;
+                    else if (c == '\"')
+                        withinString = false;
                 } else {
                     if (firstChar && c == mLanguageDefinition.mPreprocChar) {
                         withinPreproc = true;
@@ -2594,7 +2588,6 @@ void TextEditor::ColorizeInternal() {
                                     }
                                     if (!withinNotDef) {
                                         bool isConditionMet = std::find(mDefines.begin(),mDefines.end(),identifier) != mDefines.end();
-                                        withinNotDef = !isConditionMet;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
@@ -2608,7 +2601,6 @@ void TextEditor::ColorizeInternal() {
                                     }
                                     if (!withinNotDef) {
                                         bool isConditionMet =  std::find(mDefines.begin(),mDefines.end(),identifier) == mDefines.end();
-                                        withinNotDef = !isConditionMet;
                                         ifDefs.push_back(isConditionMet);
                                     } else
                                         ifDefs.push_back(false);
@@ -2616,9 +2608,10 @@ void TextEditor::ColorizeInternal() {
                             }
                         } else {
                             if (directive == "endif") {
-                                if (ifDefs.size() > 1)
+                                if (ifDefs.size() > 1) {
                                     ifDefs.pop_back();
-                                withinNotDef = !ifDefs.back();
+                                    withinNotDef = !ifDefs.back();
+                                }
                             }
                         }
                     }
@@ -2684,6 +2677,7 @@ void TextEditor::ColorizeInternal() {
                 
                 currentIndex += UTF8CharLength(c);
                 if (currentIndex >= (int)line.size()) {
+                    withinNotDef = !ifDefs.back();
                     currentIndex = 0;
                     ++currentLine;
                 }
