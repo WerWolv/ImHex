@@ -101,7 +101,7 @@ namespace hex::magic {
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
-            magic_t ctx = magic_open(MAGIC_COMPRESS | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
+            magic_t ctx = magic_open(firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE);
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
@@ -126,7 +126,7 @@ namespace hex::magic {
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
-            magic_t ctx = magic_open(MAGIC_COMPRESS | MAGIC_MIME_TYPE | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
+            magic_t ctx = magic_open(MAGIC_MIME_TYPE | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
