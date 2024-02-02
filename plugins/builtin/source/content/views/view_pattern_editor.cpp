@@ -3,13 +3,11 @@
 
 #include <hex/api/content_registry.hpp>
 #include <hex/api/project_file_manager.hpp>
-#include <hex/api/achievement_manager.hpp>
 
 #include <pl/patterns/pattern.hpp>
 #include <pl/core/preprocessor.hpp>
 #include <pl/core/parser.hpp>
 #include <pl/core/ast/ast_node_variable_decl.hpp>
-#include <pl/core/ast/ast_node_type_decl.hpp>
 #include <pl/core/ast/ast_node_builtin_type.hpp>
 
 #include <hex/helpers/fs.hpp>
@@ -22,17 +20,17 @@
 #include <hex/helpers/fmt.hpp>
 #include <fmt/chrono.h>
 
-#include <popups/popup_file_chooser.hpp>
 #include <popups/popup_question.hpp>
 #include <toasts/toast_notification.hpp>
 
-#include <nlohmann/json.hpp>
 #include <chrono>
 
 #include <wolv/io/file.hpp>
 #include <wolv/io/fs.hpp>
 #include <wolv/utils/guards.hpp>
 #include <wolv/utils/lock.hpp>
+
+#include <content/global_actions.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -229,6 +227,14 @@ namespace hex::plugin::builtin {
             bool clickedMenuFind = false;
             bool clickedMenuReplace = false;
             if (ImGui::BeginPopup("##pattern_editor_context_menu")) {
+                // no shortcut for this
+                if (ImGui::MenuItem("hex.builtin.menu.file.import.patternFile"_lang, nullptr, false))
+                    importPatternFile();
+                if (ImGui::MenuItem("hex.builtin.menu.file.export.patternFile"_lang, nullptr, false))
+                    exportPatternFile();
+
+                ImGui::Separator();
+
                 const bool hasSelection = m_textEditor.HasSelection();
                 if (ImGui::MenuItem("hex.builtin.view.hex_editor.menu.edit.cut"_lang, Shortcut(CTRLCMD + Keys::X).toString().c_str(), false, hasSelection)) {
                     m_textEditor.Cut();
@@ -299,6 +305,12 @@ namespace hex::plugin::builtin {
                     replace = true;
                     openFindPopup = true;
                 }
+                if (ImGui::IsKeyPressed(ImGuiKey_S, false) && ImGui::GetIO().KeyAlt)
+                    hex::plugin::builtin::saveProject();
+                if (ImGui::IsKeyPressed(ImGuiKey_O, false) && ImGui::GetIO().KeyAlt)
+                    hex::plugin::builtin::openProject();
+                if (ImGui::IsKeyPressed(ImGuiKey_S, false) && ImGui::GetIO().KeyAlt && ImGui::GetIO().KeyShift)
+                    hex::plugin::builtin::saveProjectAs();
             }
 
             static std::string findWord;
@@ -1725,39 +1737,11 @@ namespace hex::plugin::builtin {
     void ViewPatternEditor::registerMenuItems() {
         /* Import Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.import", "hex.builtin.menu.file.import.pattern" }, ICON_VS_FILE_CODE, 4050, Shortcut::None,
-                                                [this] {
-                                                    auto provider = ImHexApi::Provider::get();
-                                                    const auto basePaths = fs::getDefaultPaths(fs::ImHexPath::Patterns);
-                                                    std::vector<std::fs::path> paths;
-
-                                                    for (const auto &imhexPath : basePaths) {
-                                                        if (!wolv::io::fs::exists(imhexPath)) continue;
-
-                                                        std::error_code error;
-                                                        for (auto &entry : std::fs::recursive_directory_iterator(imhexPath, error)) {
-                                                            if (entry.is_regular_file() && entry.path().extension() == ".hexpat") {
-                                                                paths.push_back(entry.path());
-                                                            }
-                                                        }
-                                                    }
-
-                                                    ui::PopupFileChooser::open(basePaths, paths, std::vector<hex::fs::ItemFilter>{ { "Pattern File", "hexpat" } }, false,
-                                                                               [this, provider](const std::fs::path &path) {
-                                                                                   this->loadPatternFile(path, provider);
-                                                                                   AchievementManager::unlockAchievement("hex.builtin.achievement.patterns", "hex.builtin.achievement.patterns.load_existing.name");
-                                                                               });
-                                                }, ImHexApi::Provider::isValid);
+                                                importPatternFile, ImHexApi::Provider::isValid);
 
         /* Export Pattern */
         ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.file", "hex.builtin.menu.file.export", "hex.builtin.menu.file.export.pattern" }, ICON_VS_FILE_CODE, 7050, Shortcut::None,
-                                                [this] {
-                                                    fs::openFileBrowser(fs::DialogMode::Save, { {"Pattern", "hexpat"} },
-                                                                        [this](const auto &path) {
-                                                                            wolv::io::File file(path, wolv::io::File::Mode::Create);
-
-                                                                            file.writeString(wolv::util::trim(m_textEditor.GetText()));
-                                                                        });
-                                                }, [this] {
+                                                exportPatternFile, [this] {
                                                     return !wolv::util::trim(m_textEditor.GetText()).empty() && ImHexApi::Provider::isValid();
                                                 }
         );

@@ -2519,6 +2519,14 @@ void TextEditor::ColorizeInternal() {
         while (currentLine < endLine || currentIndex < endIndex) {
             auto &line = mLines[currentLine];
 
+            auto setGlyphFlags = [&](int index) {
+                line[index].mMultiLineComment = withinComment;
+                line[index].mComment          = withinSingleLineComment;
+                line[index].mDocComment       = withinDocComment;
+                line[index].mGlobalDocComment = withinGlobalDocComment;
+                line[index].mDeactivated      = withinNotDef;
+            };
+
             if (currentIndex == 0) {
                 withinSingleLineComment = false;
                 withinPreproc           = false;
@@ -2535,14 +2543,11 @@ void TextEditor::ColorizeInternal() {
                 bool inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
 
                 if (withinString) {
-                    line[currentIndex].mMultiLineComment = withinComment;
-                    line[currentIndex].mComment          = withinSingleLineComment;
-                    line[currentIndex].mDocComment       = withinDocComment;
-                    line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                    line[currentIndex].mDeactivated      = withinNotDef;
-                    if (c == '\\')
+                   setGlyphFlags(currentIndex);
+                    if (c == '\\') {
                         currentIndex++;
-                    else if (c == '\"')
+                        setGlyphFlags(currentIndex);
+                    } else if (c == '\"')
                         withinString = false;
                 } else {
                     if (firstChar && c == mLanguageDefinition.mPreprocChar) {
@@ -2618,11 +2623,7 @@ void TextEditor::ColorizeInternal() {
 
                     if (c == '\"') {
                         withinString                         = true;
-                        line[currentIndex].mMultiLineComment = withinComment;
-                        line[currentIndex].mComment          = withinSingleLineComment;
-                        line[currentIndex].mDocComment       = withinDocComment;
-                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                        line[currentIndex].mDeactivated      = withinNotDef;
+                        setGlyphFlags(currentIndex);
                     } else {
                         auto pred            = [](const char &a, const Glyph &b) { return a == b.mChar; };
 
@@ -2656,11 +2657,7 @@ void TextEditor::ColorizeInternal() {
                             }
                             inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
                         }
-                        line[currentIndex].mGlobalDocComment = withinGlobalDocComment;
-                        line[currentIndex].mDocComment       = withinDocComment;
-                        line[currentIndex].mMultiLineComment = withinComment;
-                        line[currentIndex].mComment          = withinSingleLineComment;
-                        line[currentIndex].mDeactivated      = withinNotDef;
+                        setGlyphFlags(currentIndex);
 
                         auto &endStr = mLanguageDefinition.mCommentEnd;
                         if (compareBack(endStr, line)) {
