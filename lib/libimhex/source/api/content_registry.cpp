@@ -155,27 +155,17 @@ namespace hex {
                 return entry->widget.get();
             }
 
+            void printSettingReadError(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json::exception& e) {
+                hex::log::error("Failed to read setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+            }
+
+
         }
 
         void setCategoryDescription(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedDescription) {
             const auto category = insertOrGetEntry(impl::getSettings(),     unlocalizedCategory);
 
             category->unlocalizedDescription = unlocalizedDescription;
-        }
-
-        nlohmann::json read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &defaultValue) {
-            auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
-
-            if (setting.is_number() && defaultValue.is_boolean())
-                setting = setting.get<int>() != 0;
-            if (setting.is_null())
-                setting = defaultValue;
-
-            return setting;
-        }
-
-        void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
-            impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
         }
 
         namespace Widgets {

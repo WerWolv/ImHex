@@ -196,17 +196,17 @@ namespace hex::plugin::builtin {
         });
 
         EventWindowInitialized::subscribe([] {
-            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
+            if (ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
                 EventFirstLaunch::post();
             }
 
-            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
         });
 
         EventWindowDeinitializing::subscribe([](GLFWwindow *window) {
             WorkspaceManager::exportToFile();
             if (auto workspace = WorkspaceManager::getCurrentWorkspace(); workspace != WorkspaceManager::getWorkspaces().end())
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
 
             {
                 int x = 0, y = 0, width = 0, height = 0, maximized = 0;
@@ -214,11 +214,11 @@ namespace hex::plugin::builtin {
                 glfwGetWindowSize(window, &width, &height);
                 maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
 
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
             }
         });
 

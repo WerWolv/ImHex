@@ -728,7 +728,7 @@ namespace hex::plugin::builtin {
 
         /* Proxy */
 
-        HttpRequest::setProxyUrl(ContentRegistry::Settings::read("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", "").get<std::string>());
+        HttpRequest::setProxyUrl(ContentRegistry::Settings::read<std::string>("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", ""));
 
         ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.description");
 
@@ -786,12 +786,12 @@ namespace hex::plugin::builtin {
     }
 
     static void loadLayoutSettings() {
-        const bool locked = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", false);
+        const bool locked = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.layout_locked", false);
         LayoutManager::lockLayout(locked);
     }
 
     static void loadThemeSettings() {
-        auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
+        auto theme = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
 
         if (theme == ThemeManager::NativeTheme) {
             ImHexApi::System::enableSystemThemeDetection(true);
@@ -802,7 +802,7 @@ namespace hex::plugin::builtin {
     }
 
     static void loadFolderSettings() {
-        auto folderPathStrings = ContentRegistry::Settings::read("hex.builtin.setting.folders", "hex.builtin.setting.folders", std::vector<std::string> { });
+        auto folderPathStrings = ContentRegistry::Settings::read<std::vector<std::string>>("hex.builtin.setting.folders", "hex.builtin.setting.folders", { });
 
         std::vector<std::fs::path> paths;
         for (const auto &pathString : folderPathStrings) {

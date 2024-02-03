@@ -13,11 +13,11 @@ namespace hex::plugin::builtin {
     ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE) {
         // Handle tree style setting changes
         EventSettingsChanged::subscribe(this, [this] {
-            m_treeStyle = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0);
+            m_treeStyle = ui::PatternDrawer::TreeStyle(ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0));
             for (auto &drawer : m_patternDrawer.all())
                 drawer->setTreeStyle(m_treeStyle);
 
-            m_rowColoring = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", false);
+            m_rowColoring = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", false);
             for (auto &drawer : m_patternDrawer.all())
                 drawer->enableRowColoring(m_rowColoring);
         });

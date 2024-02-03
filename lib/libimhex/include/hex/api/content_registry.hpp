@@ -277,6 +277,8 @@ namespace hex {
                 nlohmann::json &getSettingsData();
 
                 Widgets::Widget* add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
+
+                void printSettingReadError(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json::exception &e);
             }
 
             template<std::derived_from<Widgets::Widget> T>
@@ -291,8 +293,29 @@ namespace hex {
 
             void setCategoryDescription(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedDescription);
 
-            [[nodiscard]] nlohmann::json read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &defaultValue);
-            void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value);
+            template<typename T>
+            [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &defaultValue) {
+                auto setting = impl::getSetting(unlocalizedCategory, unlocalizedName, defaultValue);
+
+                try {
+                    if (setting.is_number() && std::same_as<T, bool>)
+                        setting = setting.template get<int>() != 0;
+                    if (setting.is_null())
+                        setting = defaultValue;
+
+                    return setting.template get<T>();
+                } catch (const nlohmann::json::exception &e) {
+                    impl::printSettingReadError(unlocalizedCategory, unlocalizedName, e);
+
+                    return defaultValue;
+                }
+            }
+
+            template<typename T>
+            void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &value) {
+                impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
+            }
+
         }
 
         /* Command Palette Command Registry. Allows adding of new commands to the command palette */
