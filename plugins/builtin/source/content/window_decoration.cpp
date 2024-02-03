@@ -383,7 +383,7 @@ namespace hex::plugin::builtin {
                 const auto sidebarPos   = ImGui::GetCursorPos();
                 const auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 
-                const auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
+                const auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2 + 1_scaled;
                 const auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
 
                 ImGui::SetCursorPosX(sidebarWidth);
