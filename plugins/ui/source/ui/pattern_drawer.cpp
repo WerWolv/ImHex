@@ -164,10 +164,7 @@ namespace hex::ui {
             if (i < filter.size() - 1 && c == '=' && filter[i + 1] == '=') {
                 pl::core::Lexer lexer;
 
-                pl::api::Source source = {
-                    .content = filter.substr(i + 2),
-                    .source = pl::api::Source::DefaultSource
-                };
+                pl::api::Source source(filter.substr(i + 2));
                 auto tokens = lexer.lex(&source);
 
                 if (!tokens.isOk() || tokens.unwrap().size() != 2)

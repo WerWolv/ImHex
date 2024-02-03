@@ -1392,10 +1392,7 @@ namespace hex::plugin::builtin {
 
                         auto &preprocessor = runtime.getInternals().preprocessor;
 
-                        pl::api::Source source {
-                            .content = file.readString(),
-                            .source = pl::api::Source::DefaultSource
-                        };
+                        pl::api::Source source(file.readString());
 
                         auto ret = preprocessor->preprocess(&runtime, &source);
                         if (ret.hasErrs()) {
