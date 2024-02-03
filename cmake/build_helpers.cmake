@@ -610,12 +610,15 @@ macro(addBundledLibraries)
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
     set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
-    set_target_properties(
-            libpl
-            PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-                LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
+
+    if (WIN32)
+        set_target_properties(
+                libpl
+                PROPERTIES
+                    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+                    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
+    endif()
     enableUnityBuild(libpl)
 
     find_package(mbedTLS 3.4.0 REQUIRED)
