@@ -96,10 +96,12 @@ namespace hex::magic {
     }
 
     std::string getDescription(const std::vector<u8> &data, bool firstEntryOnly) {
+        if (data.empty()) return "";
+
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
-            magic_t ctx = magic_open(MAGIC_COMPRESS | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
+            magic_t ctx = magic_open(firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE);
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
@@ -119,10 +121,12 @@ namespace hex::magic {
     }
 
     std::string getMIMEType(const std::vector<u8> &data, bool firstEntryOnly) {
+        if (data.empty()) return "";
+
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
-            magic_t ctx = magic_open(MAGIC_COMPRESS | MAGIC_MIME_TYPE | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
+            magic_t ctx = magic_open(MAGIC_MIME_TYPE | (firstEntryOnly ? MAGIC_NONE : MAGIC_CONTINUE));
             ON_SCOPE_EXIT { magic_close(ctx); };
 
             if (magic_load(ctx, magicFiles->c_str()) == 0) {
@@ -134,6 +138,13 @@ namespace hex::magic {
         return "";
     }
 
+    std::string getMIMEType(prv::Provider *provider, size_t size, bool firstEntryOnly) {
+        std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
+        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
+
+        return getMIMEType(buffer, firstEntryOnly);
+    }
+
     std::string getExtensions(prv::Provider *provider, size_t size, bool firstEntryOnly) {
         std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
         provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
@@ -142,6 +153,8 @@ namespace hex::magic {
     }
 
     std::string getExtensions(const std::vector<u8> &data, bool firstEntryOnly) {
+        if (data.empty()) return "";
+
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
@@ -165,6 +178,8 @@ namespace hex::magic {
     }
 
     std::string getAppleCreatorType(const std::vector<u8> &data, bool firstEntryOnly) {
+        if (data.empty()) return "";
+
         auto magicFiles = getMagicFiles();
 
         if (magicFiles.has_value()) {
@@ -178,13 +193,6 @@ namespace hex::magic {
         }
 
         return {};
-    }
-
-    std::string getMIMEType(prv::Provider *provider, size_t size, bool firstEntryOnly) {
-        std::vector<u8> buffer(std::min<u64>(provider->getSize(), size), 0x00);
-        provider->read(provider->getBaseAddress(), buffer.data(), buffer.size());
-
-        return getMIMEType(buffer, firstEntryOnly);
     }
 
     bool isValidMIMEType(const std::string &mimeType) {

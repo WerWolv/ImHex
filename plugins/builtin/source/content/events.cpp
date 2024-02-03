@@ -196,17 +196,17 @@ namespace hex::plugin::builtin {
         });
 
         EventWindowInitialized::subscribe([] {
-            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
+            if (ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", "") == "") {
                 EventFirstLaunch::post();
             }
 
-            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
+            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.prev_launch_version", ImHexApi::System::getImHexVersion());
         });
 
         EventWindowDeinitializing::subscribe([](GLFWwindow *window) {
             WorkspaceManager::exportToFile();
             if (auto workspace = WorkspaceManager::getCurrentWorkspace(); workspace != WorkspaceManager::getWorkspaces().end())
-                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
+                ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", workspace->first);
 
             {
                 int x = 0, y = 0, width = 0, height = 0, maximized = 0;
@@ -214,11 +214,11 @@ namespace hex::plugin::builtin {
                 glfwGetWindowSize(window, &width, &height);
                 maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
 
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
-                ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", x);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", y);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", width);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", height);
+                ContentRegistry::Settings::write<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", maximized);
             }
         });
 
@@ -226,6 +226,30 @@ namespace hex::plugin::builtin {
             const auto &initArgs = ImHexApi::System::getInitArguments();
             if (auto it = initArgs.find("language"); it != initArgs.end())
                 LocalizationManager::loadLanguage(it->second);
+        });
+
+        EventWindowFocused::subscribe([](bool focused) {
+            const auto ctx = ImGui::GetCurrentContext();
+            if (ctx == nullptr)
+                return;
+
+            // Get the currently focused window
+            const auto window = ctx->NavWindow;
+            if (window == nullptr)
+                return;
+
+            static ImGuiWindow *lastFocusedWindow = window;
+
+            if (focused) {
+                // If the main window gains focus again, restore the last focused window
+                ImGui::FocusWindow(lastFocusedWindow, ImGuiFocusRequestFlags_RestoreFocusedChild);
+            } else {
+                // If the main window loses focus, store the currently focused window
+                // and remove focus from it so it doesn't look like it's focused and
+                // cursor blink animations don't play
+                lastFocusedWindow = window;
+                ImGui::FocusWindow(nullptr);
+            }
         });
 
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){

@@ -87,7 +87,7 @@ namespace hex::plugin::builtin::recent {
     void registerEventHandlers() {
         // Save every opened provider as a "recent" shortcut
         (void)EventProviderOpened::subscribe([](const prv::Provider *provider) {
-            if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
+            if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
                 // Do not save to recents if the provider is part of a project
@@ -121,7 +121,7 @@ namespace hex::plugin::builtin::recent {
 
         // Save opened projects as a "recent" shortcut
         (void)EventProjectOpened::subscribe([] {
-             if (ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
+             if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.save_recent_providers", true)) {
                 auto fileName = hex::format("{:%y%m%d_%H%M%S}.json", fmt::gmtime(std::chrono::system_clock::now()));
 
                 auto projectFileName = ProjectFile::getPath().filename();

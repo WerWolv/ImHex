@@ -261,9 +261,12 @@ macro(createPackage)
             set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns")
             set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}/Contents/Info.plist")
 
-            find_program(CODESIGN_PATH codesign)
-            if (CODESIGN_PATH)
-                add_custom_command(TARGET imhex_all POST_BUILD COMMAND "codesign" ARGS "--force" "--deep" "--sign" "-" "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
+            if (IMHEX_RESIGN_BUNDLE)
+                message(STATUS "Resigning bundle...")
+                find_program(CODESIGN_PATH codesign)
+                if (CODESIGN_PATH)
+                    add_custom_command(TARGET imhex_all POST_BUILD COMMAND "codesign" ARGS "--force" "--deep" "--sign" "-" "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
+                endif()
             endif()
         endif()
     else()
@@ -607,12 +610,24 @@ macro(addBundledLibraries)
     set(LIBPL_BUILD_CLI_AS_EXECUTABLE OFF CACHE BOOL "" FORCE)
     set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
-    set_target_properties(
+
+    install(
+        TARGETS
             libpl
-            PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
-                LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+        DESTINATION
+            "${CMAKE_INSTALL_LIBDIR}"
+        PERMISSIONS
+            OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
     )
+
+    if (WIN32)
+        set_target_properties(
+                libpl
+                PROPERTIES
+                    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+                    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
+    endif()
     enableUnityBuild(libpl)
 
     find_package(mbedTLS 3.4.0 REQUIRED)

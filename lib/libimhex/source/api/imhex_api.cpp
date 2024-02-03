@@ -362,6 +362,7 @@ namespace hex {
 
             provider->close();
             EventProviderClosed::post(provider);
+            RequestUpdateWindowTitle::post();
 
             TaskManager::runWhenTasksFinished([provider] {
                 EventProviderDeleted::post(provider);

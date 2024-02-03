@@ -464,7 +464,7 @@ namespace hex::plugin::builtin {
         EventHighlightingChanged::unsubscribe(this);
         EventSettingsChanged::unsubscribe(this);
 
-        ContentRegistry::Settings::write("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
+        ContentRegistry::Settings::write<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow());
     }
 
     void ViewHexEditor::drawPopup() {
@@ -877,12 +877,12 @@ namespace hex::plugin::builtin {
             }
         });
 
-        m_hexEditor.setBytesPerRow(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow()));
+        m_hexEditor.setBytesPerRow(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.bytes_per_row", m_hexEditor.getBytesPerRow()));
         EventSettingsChanged::subscribe(this, [this] {
-            m_hexEditor.setSelectionColor(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080));
-            m_hexEditor.enableSyncScrolling(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", false));
-            m_hexEditor.setByteCellPadding(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0));
-            m_hexEditor.setCharacterCellPadding(ContentRegistry::Settings::read("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", 0));
+            m_hexEditor.setSelectionColor(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.highlight_color", 0x60C08080));
+            m_hexEditor.enableSyncScrolling(ContentRegistry::Settings::read<bool>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.sync_scrolling", false));
+            m_hexEditor.setByteCellPadding(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.byte_padding", 0));
+            m_hexEditor.setCharacterCellPadding(ContentRegistry::Settings::read<int>("hex.builtin.setting.hex_editor", "hex.builtin.setting.hex_editor.char_padding", 0));
         });
     }
 

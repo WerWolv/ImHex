@@ -709,6 +709,10 @@ namespace hex {
             win->m_unlockFrameRate = true;
         });
 
+        glfwSetWindowFocusCallback(m_window, [](GLFWwindow *, int focused) {
+            EventWindowFocused::post(focused == GLFW_TRUE);
+        });
+
         #if !defined(OS_WEB)
             // Register key press callback
             glfwSetInputMode(m_window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);

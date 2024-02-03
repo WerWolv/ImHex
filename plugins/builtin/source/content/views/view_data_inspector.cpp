@@ -44,7 +44,7 @@ namespace hex::plugin::builtin {
         });
 
         EventSettingsChanged::subscribe(this, [this] {
-            auto filterValues = ContentRegistry::Settings::read("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", nlohmann::json::array()).get<std::vector<std::string>>();
+            auto filterValues = ContentRegistry::Settings::read<std::vector<std::string>>("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", { });
 
             m_hiddenValues = std::set(filterValues.begin(), filterValues.end());
         });
@@ -319,7 +319,7 @@ namespace hex::plugin::builtin {
                             {
                                 std::vector filterValues(m_hiddenValues.begin(), m_hiddenValues.end());
 
-                                ContentRegistry::Settings::write("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", filterValues);
+                                ContentRegistry::Settings::write<std::vector<std::string>>("hex.builtin.setting.data_inspector", "hex.builtin.setting.data_inspector.hidden_rows", filterValues);
                             }
                         }
 

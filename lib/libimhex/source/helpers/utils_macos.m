@@ -46,13 +46,19 @@
 
     void setupMacosWindowStyle(GLFWwindow *window) {
         NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+
         cocoaWindow.titleVisibility = NSWindowTitleHidden;
+        cocoaWindow.titlebarAppearsTransparent = YES;
+        cocoaWindow.styleMask |= NSWindowStyleMaskFullSizeContentView;
 
-        NSVisualEffectView *visualEffectView = [[NSVisualEffectView alloc] init];
-        [visualEffectView setMaterial:NSVisualEffectMaterialAppearanceBased];
-        [visualEffectView setBlendingMode:NSVisualEffectBlendingModeBehindWindow];
+        [cocoaWindow setOpaque:NO];
+        [cocoaWindow setHasShadow:YES];
+        [cocoaWindow setBackgroundColor:[NSColor colorWithWhite: 0 alpha: 0.001f]];
+    }
 
-        [cocoaWindow.contentView addSubview:visualEffectView positioned:NSWindowBelow relativeTo:nil];
+    bool isMacosFullScreenModeEnabled(GLFWwindow *window) {
+        NSWindow* cocoaWindow = glfwGetCocoaWindow(window);
+        return (cocoaWindow.styleMask & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen;
     }
 
     @interface HexDocument : NSDocument

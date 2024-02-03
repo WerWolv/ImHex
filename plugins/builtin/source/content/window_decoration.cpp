@@ -132,52 +132,61 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
+            auto framePadding = ImGui::GetStyle().FramePadding * 2;
+
             const auto windowSize = ImHexApi::System::getMainWindowSize();
-            const auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight - 3_scaled);
-            const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 3_scaled);
+            const auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight);
+            const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, framePadding.y);
 
             s_searchBarPosition = searchBoxPos.x;
 
             // Custom titlebar buttons implementation for borderless window mode
+            auto window = ImHexApi::System::getMainWindowHandle();
+            bool titleBarButtonsVisible = false;
+            if (ImHexApi::System::isBorderlessWindowModeEnabled() && glfwGetWindowMonitor(window) == nullptr) {
+                #if defined(OS_WINDOWS)
+                    titleBarButtonsVisible = true;
+
+                    // Draw minimize, restore and maximize buttons
+                    ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
+                    if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
+                        glfwIconifyWindow(window);
+                    if (glfwGetWindowAttrib(window, GLFW_MAXIMIZED)) {
+                        if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
+                            glfwRestoreWindow(window);
+                    } else {
+                        if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
+                            glfwMaximizeWindow(window);
+                    }
+
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
+
+                    // Draw close button
+                    if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
+                        ImHexApi::System::closeImHex();
+                    }
+
+                    ImGui::PopStyleColor(2);
+
+                #endif
+            }
+
             auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
 
             // Draw custom title bar buttons
             if (!titleBarButtons.empty()) {
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * float(4 + titleBarButtons.size()));
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * float((titleBarButtonsVisible ? 4 : 0) + titleBarButtons.size()));
 
                 if (ImGui::GetCursorPosX() > (searchBoxPos.x + searchBoxSize.x)) {
-                    for (const auto &[icon, tooltip, callback]: titleBarButtons) {
+                    for (const auto &[icon, tooltip, callback] : titleBarButtons) {
+                        ImGui::SetCursorPosY(framePadding.y);
                         if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                             callback();
                         }
                         ImGuiExt::InfoTooltip(Lang(tooltip));
                     }
                 }
-            }
-
-            auto window = ImHexApi::System::getMainWindowHandle();
-            if (ImHexApi::System::isBorderlessWindowModeEnabled() && glfwGetWindowMonitor(window) == nullptr) {
-                // Draw minimize, restore and maximize buttons
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * 3);
-                if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MINIMIZE, buttonSize))
-                    glfwIconifyWindow(window);
-                if (glfwGetWindowAttrib(window, GLFW_MAXIMIZED)) {
-                    if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_RESTORE, buttonSize))
-                        glfwRestoreWindow(window);
-                } else {
-                    if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_MAXIMIZE, buttonSize))
-                        glfwMaximizeWindow(window);
-                }
-
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, 0xFF7A70F1);
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, 0xFF2311E8);
-
-                // Draw close button
-                if (ImGuiExt::TitleBarButton(ICON_VS_CHROME_CLOSE, buttonSize)) {
-                    ImHexApi::System::closeImHex();
-                }
-
-                ImGui::PopStyleColor(2);
             }
 
             ImGui::PopStyleColor(3);
@@ -213,22 +222,33 @@ namespace hex::plugin::builtin {
             }
         }
 
-        void drawMainMenu(float menuBarHeight) {
+        void drawMainMenu([[maybe_unused]] float menuBarHeight) {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0F);
             ImGui::SetNextWindowScroll(ImVec2(0, 0));
+
+            #if defined(OS_MACOS)
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetStyle().FramePadding.x, 8_scaled));
+            #endif
+
             if (ImGui::BeginMainMenuBar()) {
+                auto window = ImHexApi::System::getMainWindowHandle();
+
+                ImGui::PopStyleVar();
 
                 if (ImHexApi::System::isBorderlessWindowModeEnabled()) {
-                    ImGui::SetCursorPosX(5);
-
-                    ImGui::Image(s_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
-                    ImGui::SetCursorPosX(5);
-                    ImGui::InvisibleButton("##logo", ImVec2(menuBarHeight, menuBarHeight));
-                    ImGui::OpenPopupOnItemClick("WindowingMenu", ImGuiPopupFlags_MouseButtonLeft);
+                    #if defined(OS_WINDOWS)
+                        ImGui::SetCursorPosX(5_scaled);
+                        ImGui::Image(s_logoTexture, ImVec2(menuBarHeight, menuBarHeight));
+                        ImGui::SetCursorPosX(5_scaled);
+                        ImGui::InvisibleButton("##logo", ImVec2(menuBarHeight, menuBarHeight));
+                        ImGui::OpenPopupOnItemClick("WindowingMenu", ImGuiPopupFlags_MouseButtonLeft);
+                    #elif defined(OS_MACOS)
+                        if (!isMacosFullScreenModeEnabled(window))
+                            ImGui::SetCursorPosX(68_scaled);
+                    #endif
                 }
 
                 if (ImGui::BeginPopup("WindowingMenu")) {
-                    auto window = ImHexApi::System::getMainWindowHandle();
                     bool maximized = glfwGetWindowAttrib(window, GLFW_MAXIMIZED);
 
                     ImGui::BeginDisabled(!maximized);
@@ -289,7 +309,10 @@ namespace hex::plugin::builtin {
                 drawTitleBar();
 
                 ImGui::EndMainMenuBar();
+            } else {
+                ImGui::PopStyleVar();
             }
+
             ImGui::PopStyleVar();
         }
 
@@ -360,7 +383,7 @@ namespace hex::plugin::builtin {
                 const auto sidebarPos   = ImGui::GetCursorPos();
                 const auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 
-                const auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().FramePadding.y * 2 + 1_scaled;
+                const auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2 + 1_scaled;
                 const auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
 
                 ImGui::SetCursorPosX(sidebarWidth);

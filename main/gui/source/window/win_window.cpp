@@ -33,6 +33,7 @@ namespace hex {
     static LONG_PTR s_oldWndProc;
     static float s_titleBarHeight;
     static Microsoft::WRL::ComPtr<ITaskbarList4> s_taskbarList;
+    static bool s_mouseButtonDown = false;
 
     void nativeErrorMessage(const std::string &message) {
         log::fatal(message);
@@ -131,6 +132,12 @@ namespace hex {
         switch (uMsg) {
             case WM_MOUSELAST:
                 break;
+            case WM_NCLBUTTONDOWN:
+                s_mouseButtonDown = true;
+                break;
+            case WM_NCLBUTTONUP:
+                s_mouseButtonDown = false;
+                break;
             case WM_NCACTIVATE:
             case WM_NCPAINT:
                 // Handle Windows Aero Snap
@@ -222,12 +229,14 @@ namespace hex {
                         return HTBOTTOMRIGHT;
                     case RegionClient:
                     default:
-                        if (cursor.y < (window.top + s_titleBarHeight * 2)) {
+                        if (cursor.y < (window.top + s_titleBarHeight * 2) && !s_mouseButtonDown) {
                             if (hoveredWindowName == "##MainMenuBar" || hoveredWindowName == "ImHexDockSpace") {
                                 if (!ImGui::IsAnyItemHovered()) {
                                     return HTCAPTION;
                                 }
                             }
+                        } else {
+                            return HTCLIENT;
                         }
 
                         break;
