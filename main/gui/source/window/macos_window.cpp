@@ -41,6 +41,8 @@ namespace hex {
     }
 
     void Window::setupNativeWindow() {
+        ImHexApi::System::impl::setBorderlessWindowMode(true);
+
         bool themeFollowSystem = ImHexApi::System::usesSystemThemeDetection();
         EventOSThemeChanged::subscribe(this, [themeFollowSystem] {
             if (!themeFollowSystem) return;
