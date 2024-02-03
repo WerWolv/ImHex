@@ -23,7 +23,7 @@ namespace hex::plugin::builtin {
         using namespace std::literals::string_literals;
 
         bool checkForUpdatesSync() {
-            int checkForUpdates = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
+            int checkForUpdates = ContentRegistry::Settings::read<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 2);
 
             // Check if we should check for updates
             if (checkForUpdates == 1) {
@@ -58,12 +58,12 @@ namespace hex::plugin::builtin {
                     ImHexApi::System::impl::addInitArgument("update-available", latestVersion.data());
 
                 // Check if there is a telemetry uuid
-                auto uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
+                auto uuid = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
                 if (uuid.empty()) {
                     // Generate a new uuid
                     uuid = wolv::hash::generateUUID();
                     // Save
-                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
+                    ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", uuid);
                 }
 
                 TaskManager::createBackgroundTask("Sending statistics...", [uuid, versionString](auto&) {
@@ -106,7 +106,7 @@ namespace hex::plugin::builtin {
         }
 
         bool configureUIScale() {
-            int interfaceScaleSetting = int(ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F).get<float>() * 10.0F);
+            int interfaceScaleSetting = int(ContentRegistry::Settings::read<float>("hex.builtin.setting.interface", "hex.builtin.setting.interface.scaling_factor", 1.0F) * 10.0F);
 
             float interfaceScaling;
             if (interfaceScaleSetting == 0)
@@ -129,8 +129,8 @@ namespace hex::plugin::builtin {
             ImHexApi::Fonts::impl::setFontSize(defaultFontSize);
 
             // Load custom font related settings
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
-                std::fs::path fontFile = ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "").get<std::string>();
+            if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false)) {
+                std::fs::path fontFile = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.font", "hex.builtin.setting.font.font_path", "");
                 if (!fontFile.empty()) {
                     if (!wolv::io::fs::exists(fontFile) || !wolv::io::fs::isRegularFile(fontFile)) {
                         log::warn("Custom font file {} not found! Falling back to default font.", wolv::util::toUTF8String(fontFile));
@@ -158,7 +158,7 @@ namespace hex::plugin::builtin {
                 // If a custom font has been loaded now, also load the font size
                 float fontSize = defaultFontSize;
                 if (!fontFile.empty()) {
-                    fontSize = float(ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13).get<int>()) * ImHexApi::System::getGlobalScale();
+                    fontSize = float(ContentRegistry::Settings::read<int>("hex.builtin.setting.font", "hex.builtin.setting.font.font_size", 13)) * ImHexApi::System::getGlobalScale();
                 }
 
                 ImHexApi::Fonts::impl::setFontSize(fontSize);
@@ -211,12 +211,12 @@ namespace hex::plugin::builtin {
             if (fontFile.empty())
                 fonts->Clear();
 
-            if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false).get<bool>()) {
-                if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
+            if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font_enable", false)) {
+                if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.font_bold", false))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
-                if (ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
+                if (ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.font_italic", false))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
-                if (!ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", true))
+                if (!ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.font_antialias", true))
                     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Monochrome | ImGuiFreeTypeBuilderFlags_MonoHinting;
             }
 
@@ -322,7 +322,7 @@ namespace hex::plugin::builtin {
                     IM_DELETE(fonts);
 
                     // Disable unicode support in settings
-                    ContentRegistry::Settings::write("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false);
+                    ContentRegistry::Settings::write<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false);
 
                     // Try to load the font atlas again
                     return loadFontsImpl(false);
@@ -342,26 +342,26 @@ namespace hex::plugin::builtin {
             // Check if unicode support is enabled in the settings and that the user doesn't use the No GPU version on Windows
             // The Mesa3D software renderer on Windows identifies itself as "VMware, Inc."
             bool shouldLoadUnicode =
-                    ContentRegistry::Settings::read("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
+                    ContentRegistry::Settings::read<bool>("hex.builtin.setting.font", "hex.builtin.setting.font.load_all_unicode_chars", false) &&
                     ImHexApi::System::getGPUVendor() != "VMware, Inc.";
 
             return loadFontsImpl(shouldLoadUnicode);
         }
 
         bool loadWindowSettings() {
-            bool multiWindowEnabled = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", false);
+            bool multiWindowEnabled = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.multi_windows", false);
             ImHexApi::System::impl::setMultiWindowMode(multiWindowEnabled);
 
-            bool restoreWindowPos = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.restore_window_pos", false);
+            bool restoreWindowPos = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.restore_window_pos", false);
 
             if (restoreWindowPos) {
                 ImHexApi::System::InitialWindowProperties properties = {};
 
-                properties.maximized = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", 0).get<int>();
-                properties.x       = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", 0);
-                properties.y       = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", 0);
-                properties.width   = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", 0);
-                properties.height  = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", 0);
+                properties.maximized = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.maximized", 0);
+                properties.x       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.x", 0);
+                properties.y       = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.y", 0);
+                properties.width   = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.width", 0);
+                properties.height  = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window.height", 0);
 
                 ImHexApi::System::impl::setInitialWindowProperties(properties);
             }

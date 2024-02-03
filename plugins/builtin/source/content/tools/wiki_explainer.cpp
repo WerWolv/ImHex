@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
     using namespace std::literals::chrono_literals;
 
     std::string getWikipediaApiUrl() {
-        auto setting = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en").get<std::string>();
+        auto setting = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.wiki_explain_language", "en");
         return "https://" + setting + ".wikipedia.org/w/api.php?format=json&action=query&prop=extracts&explaintext&redirects=10&formatversion=2";
     }
 

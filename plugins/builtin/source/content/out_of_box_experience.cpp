@@ -318,8 +318,8 @@ namespace hex::plugin::builtin {
                             // Draw allow button
                             ImGui::SetCursorPosX(buttonPos(0));
                             if (ImGui::Button("hex.ui.common.allow"_lang, buttonSize)) {
-                                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
-                                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 1);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
                                 page += 1;
                             }
 
@@ -328,8 +328,8 @@ namespace hex::plugin::builtin {
                             // Draw crash logs only button
                             ImGui::SetCursorPosX(buttonPos(1));
                             if (ImGui::Button("hex.builtin.oobe.server_contact.crash_logs_only"_lang, buttonSize)) {
-                                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
-                                ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.server_contact", 0);
+                                ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", 1);
                                 page += 1;
                             }
 
@@ -415,14 +415,14 @@ namespace hex::plugin::builtin {
         #endif
 
         // Check if there is a telemetry uuid
-        s_uuid = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "").get<std::string>();
+        s_uuid = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", "");
 
         if (s_uuid.empty()) {
             // Generate a new UUID
             s_uuid = wolv::hash::generateUUID();
 
             // Save UUID to settings
-            ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", s_uuid);
+            ContentRegistry::Settings::write<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.uuid", s_uuid);
         }
 
         EventFirstLaunch::subscribe([] {

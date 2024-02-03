@@ -53,7 +53,7 @@ namespace hex::plugin::builtin {
                     m_restoreCallback(restoreCallback),
                     m_deleteCallback(deleteCallback) {
 
-                m_reportError = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
+                m_reportError = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", true);
             }
 
             void drawContent() override {
@@ -99,7 +99,7 @@ namespace hex::plugin::builtin {
                         }
                     }
 
-                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", m_reportError);
+                    ContentRegistry::Settings::write<int>("hex.builtin.setting.general", "hex.builtin.setting.general.upload_crash_logs", m_reportError);
 
                     this->close();
                 }
@@ -125,7 +125,7 @@ namespace hex::plugin::builtin {
 
                 static bool dontShowAgain = false;
                 if (ImGui::Checkbox("hex.ui.common.dont_show_again"_lang, &dontShowAgain)) {
-                    ContentRegistry::Settings::write("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
+                    ContentRegistry::Settings::write<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", !dontShowAgain);
                 }
 
                 ImGui::SameLine((ImGui::GetMainViewport()->Size / 3 - ImGui::CalcTextSize("hex.ui.common.close"_lang) - ImGui::GetStyle().FramePadding).x);
@@ -367,7 +367,7 @@ namespace hex::plugin::builtin {
                                 ImGuiExt::BeginSubWindow("hex.builtin.welcome.header.quick_settings"_lang, windowSize, ImGuiChildFlags_AutoResizeY);
                                 {
                                     if (ImGuiExt::ToggleSwitch("hex.builtin.welcome.quick_settings.simplified"_lang, &s_simplifiedWelcomeScreen)) {
-                                        ContentRegistry::Settings::write("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
+                                        ContentRegistry::Settings::write<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", s_simplifiedWelcomeScreen);
                                         WorkspaceManager::switchWorkspace(s_simplifiedWelcomeScreen ? "Minimal" : "Default");
                                     }
                                 }
@@ -453,7 +453,7 @@ namespace hex::plugin::builtin {
 
         (void)EventSettingsChanged::subscribe([] {
             {
-                auto theme = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>();
+                auto theme = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme);
 
                 if (theme != ThemeManager::NativeTheme) {
                     static std::string lastTheme;
@@ -464,18 +464,18 @@ namespace hex::plugin::builtin {
                     }
                 }
 
-                s_simplifiedWelcomeScreen = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", false);
+                s_simplifiedWelcomeScreen = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.simplified_welcome_screen", false);
             }
 
             {
-                auto language = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US").get<std::string>();
+                auto language = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "en-US");
 
                 if (language != LocalizationManager::getSelectedLanguage())
                     LocalizationManager::loadLanguage(language);
             }
 
             {
-                auto targetFps = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 14).get<int>();
+                auto targetFps = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.fps", 14);
 
                 ImHexApi::System::setTargetFPS(static_cast<float>(targetFps));
             }
@@ -575,7 +575,7 @@ namespace hex::plugin::builtin {
             auto chosenTip = chosenCategory[random()%chosenCategory.size()];
             s_tipOfTheDay = chosenTip.get<std::string>();
 
-            bool showTipOfTheDay = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", false);
+            bool showTipOfTheDay = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.show_tips", false);
             if (showTipOfTheDay)
                 PopupTipOfTheDay::open();
         }

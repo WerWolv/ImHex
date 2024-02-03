@@ -23,7 +23,7 @@ namespace hex::plugin::windows {
 static void detectSystemTheme() {
     // Setup system theme change detector
     EventOSThemeChanged::subscribe([] {
-        bool themeFollowSystem = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>() == ThemeManager::NativeTheme;
+        bool themeFollowSystem = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme) == ThemeManager::NativeTheme;
         if (!themeFollowSystem)
             return;
 
@@ -44,7 +44,7 @@ static void detectSystemTheme() {
     });
 
     EventWindowInitialized::subscribe([=] {
-        bool themeFollowSystem = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme).get<std::string>() == ThemeManager::NativeTheme;
+        bool themeFollowSystem = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.interface", "hex.builtin.setting.interface.color", ThemeManager::NativeTheme) == ThemeManager::NativeTheme;
 
         if (themeFollowSystem)
             EventOSThemeChanged::post();
@@ -52,7 +52,7 @@ static void detectSystemTheme() {
 }
 
 static void checkBorderlessWindowOverride() {
-    bool borderlessWindowForced = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.force_borderless_window_mode", false);
+    bool borderlessWindowForced = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.force_borderless_window_mode", false);
 
     if (borderlessWindowForced)
         ImHexApi::System::impl::setBorderlessWindowMode(true);

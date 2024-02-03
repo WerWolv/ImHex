@@ -1653,8 +1653,8 @@ namespace hex::plugin::builtin {
         });
 
         EventSettingsChanged::subscribe(this, [this] {
-            m_sourceCode.enableSync(ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", false));
-            m_autoLoadPatterns = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", true);
+            m_sourceCode.enableSync(ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.sync_pattern_source", false));
+            m_autoLoadPatterns = ContentRegistry::Settings::read<bool>("hex.builtin.setting.general", "hex.builtin.setting.general.auto_load_patterns", true);
         });
 
         EventProviderOpened::subscribe(this, [this](prv::Provider *provider) {

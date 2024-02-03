@@ -287,7 +287,7 @@ namespace hex::plugin::builtin {
 
         static bool alwaysShowProviderTabs = false;
         EventSettingsChanged::subscribe([] {
-            alwaysShowProviderTabs = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", false);
+            alwaysShowProviderTabs = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.always_show_provider_tabs", false);
         });
 
         ContentRegistry::Interface::addToolbarItem([] {

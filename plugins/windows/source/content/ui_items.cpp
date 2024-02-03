@@ -17,7 +17,7 @@ namespace hex::plugin::windows {
 
         static bool showResourceUsage = true;
         EventSettingsChanged::subscribe([]{
-            showResourceUsage = ContentRegistry::Settings::read("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_resource_usage", true);
+            showResourceUsage = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_resource_usage", true);
         });
 
         ContentRegistry::Interface::addFooterItem([] {

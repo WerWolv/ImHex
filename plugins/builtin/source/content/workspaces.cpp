@@ -20,7 +20,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        std::string currentWorkspace = ContentRegistry::Settings::read("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", "Default");
+        std::string currentWorkspace = ContentRegistry::Settings::read<std::string>("hex.builtin.setting.general", "hex.builtin.setting.general.curr_workspace", "Default");
 
         TaskManager::doLater([currentWorkspace] {
             WorkspaceManager::switchWorkspace(currentWorkspace);
