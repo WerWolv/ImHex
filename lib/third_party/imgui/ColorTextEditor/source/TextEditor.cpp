@@ -2508,6 +2508,7 @@ void TextEditor::ColorizeInternal() {
         auto firstChar               = true;     // there is no other non-whitespace characters in the line before
         auto currentLine             = 0;
         auto currentIndex            = 0;
+        auto commentLength           = 0;
         auto &startStr               = mLanguageDefinition.mCommentStart;
         auto &singleStartStr         = mLanguageDefinition.mSingleLineComment;
         auto &docStartStr            = mLanguageDefinition.mDocComment;
@@ -2647,12 +2648,16 @@ void TextEditor::ColorizeInternal() {
                                 if (isGlobalDocComment || isDocComment || isComment) {
                                     commentStartLine = currentLine;
                                     commentStartIndex = currentIndex;
-                                    if (isGlobalDocComment)
+                                    if (isGlobalDocComment) {
                                         withinGlobalDocComment = true;
-                                    else if (isDocComment)
+                                        commentLength = 3;
+                                    } else if (isDocComment) {
                                         withinDocComment = true;
-                                    else
+                                        commentLength = 3;
+                                    } else {
                                         withinComment = true;
+                                        commentLength = 2;
+                                    }
                                 }
                             }
                             inComment = (commentStartLine < currentLine || (commentStartLine == currentLine && commentStartIndex <= currentIndex));
@@ -2660,12 +2665,13 @@ void TextEditor::ColorizeInternal() {
                         setGlyphFlags(currentIndex);
 
                         auto &endStr = mLanguageDefinition.mCommentEnd;
-                        if (compareBack(endStr, line)) {
-                            withinComment = false;
-                            withinDocComment = false;
-                            withinGlobalDocComment = false;
-                            commentStartLine  = endLine;
-                            commentStartIndex = endIndex;
+                        if (compareBack(endStr, line) && ((commentStartLine != currentLine) || (commentStartIndex + commentLength < currentIndex))) {
+                            withinComment          = false;
+                            withinDocComment        = false;
+                            withinGlobalDocComment  = false;
+                            commentStartLine        = endLine;
+                            commentStartIndex       = endIndex;
+                            commentLength           = 0;
                         }
                     }
                 }
