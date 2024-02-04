@@ -41,7 +41,7 @@ namespace hex::plugin::builtin {
         static TextEditor::LanguageDefinition langDef;
         if (!initialized) {
             constexpr static std::array keywords = {
-                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch"
+                "using", "struct", "union", "enum", "bitfield", "be", "le", "if", "else", "match", "false", "true", "this", "parent", "addressof", "sizeof", "typenameof", "$", "while", "for", "fn", "return", "break", "continue", "namespace", "in", "out", "ref", "null", "const", "unsigned", "signed", "try", "catch", "import", "as"
             };
             for (auto &k : keywords)
                 langDef.mKeywords.insert(k);
@@ -1272,26 +1272,31 @@ namespace hex::plugin::builtin {
 
         if (!m_lastEvaluationProcessed) {
             if (!m_lastEvaluationResult) {
+                const auto processMessage = [](const auto &message) {
+                    auto lines = wolv::util::splitString(message, "\n");
+
+                    std::ranges::transform(lines, lines.begin(), [](auto line) {
+                        if (line.size() >= 128)
+                            line = wolv::util::trim(line);
+
+                        return hex::limitStringLength(line, 128);
+                    });
+
+                    return wolv::util::combineStrings(lines, "\n");
+                };
+
+                TextEditor::ErrorMarkers errorMarkers;
                 if (m_lastEvaluationError->has_value()) {
-                    const auto message = [this]{
-                        const auto &message = (*m_lastEvaluationError)->message;
-                        auto lines = wolv::util::splitString(message, "\n");
-
-                        std::ranges::transform(lines, lines.begin(), [](auto line) {
-                            if (line.size() >= 128)
-                                line = wolv::util::trim(line);
-
-                            return hex::limitStringLength(line, 128);
-                        });
-
-                        return wolv::util::combineStrings(lines, "\n");
-                    }();
-
-                    const TextEditor::ErrorMarkers errorMarkers = {
-                            { (*m_lastEvaluationError)->line, message }
-                    };
-                    m_textEditor.SetErrorMarkers(errorMarkers);
+                    errorMarkers[(*m_lastEvaluationError)->line] = processMessage((*m_lastEvaluationError)->message);
                 }
+
+                if (!m_lastCompileError->empty()) {
+                    for (const auto &error : *m_lastCompileError) {
+                        errorMarkers[error.getLocation().line] = processMessage(error.getMessage());
+                    }
+                }
+
+                m_textEditor.SetErrorMarkers(errorMarkers);
             } else {
                 for (auto &[name, variable] : *m_patternVariables) {
                     if (variable.outVariable && m_lastEvaluationOutVars->contains(name))
@@ -1402,14 +1407,13 @@ namespace hex::plugin::builtin {
                         if (!file.isValid())
                             continue;
 
-                        try {
-                            auto &preprocessor = runtime.getInternals().preprocessor;
-                            auto ret = preprocessor->preprocess(runtime, file.readString());
-                            if (!ret.has_value()) {
-                                log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), preprocessor->getError()->what());
-                            }
-                        } catch (pl::core::err::PreprocessorError::Exception &e) {
-                            log::warn("Failed to preprocess file {} during MIME analysis: {}", entry.path().string(), e.what());
+                        auto &preprocessor = runtime.getInternals().preprocessor;
+
+                        pl::api::Source source(file.readString());
+
+                        auto ret = preprocessor->preprocess(&runtime, &source);
+                        if (ret.hasErrs()) {
+                            log::warn("Failed to preprocess file {} during MIME analysis", entry.path().string());
                         }
 
                         if (foundCorrectType)
@@ -1505,7 +1509,7 @@ namespace hex::plugin::builtin {
         m_runningParsers += 1;
 
         ContentRegistry::PatternLanguage::configureRuntime(*m_editorRuntime, nullptr);
-        const auto &ast = m_editorRuntime->parseString(code);
+        const auto &ast = m_editorRuntime->parseString(code, pl::api::Source::DefaultSource);
 
         auto &patternVariables = m_patternVariables.get(provider);
         auto oldPatternVariables = std::move(patternVariables);
@@ -1633,9 +1637,10 @@ namespace hex::plugin::builtin {
             };
 
 
-            m_lastEvaluationResult = runtime.executeString(code, envVars, inVariables);
+            m_lastEvaluationResult = runtime.executeString(code, pl::api::Source::DefaultSource, envVars, inVariables);
             if (!m_lastEvaluationResult) {
                 *m_lastEvaluationError = runtime.getError();
+                *m_lastCompileError    = runtime.getCompileErrors();
             }
 
             TaskManager::doLater([code] {

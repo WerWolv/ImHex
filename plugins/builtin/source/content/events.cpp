@@ -228,6 +228,30 @@ namespace hex::plugin::builtin {
                 LocalizationManager::loadLanguage(it->second);
         });
 
+        EventWindowFocused::subscribe([](bool focused) {
+            const auto ctx = ImGui::GetCurrentContext();
+            if (ctx == nullptr)
+                return;
+
+            // Get the currently focused window
+            const auto window = ctx->NavWindow;
+            if (window == nullptr)
+                return;
+
+            static ImGuiWindow *lastFocusedWindow = window;
+
+            if (focused) {
+                // If the main window gains focus again, restore the last focused window
+                ImGui::FocusWindow(lastFocusedWindow, ImGuiFocusRequestFlags_RestoreFocusedChild);
+            } else {
+                // If the main window loses focus, store the currently focused window
+                // and remove focus from it so it doesn't look like it's focused and
+                // cursor blink animations don't play
+                lastFocusedWindow = window;
+                ImGui::FocusWindow(nullptr);
+            }
+        });
+
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){
             #if defined(NFD_PORTAL)
                 ui::PopupError::open(hex::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));

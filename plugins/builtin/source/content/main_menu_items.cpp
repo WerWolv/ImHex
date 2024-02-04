@@ -517,34 +517,38 @@ namespace hex::plugin::builtin {
     static void createViewMenu() {
         ContentRegistry::Interface::registerMainMenuItem("hex.builtin.menu.view", 3000);
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.always_on_top" }, ICON_VS_PINNED, 1000, Keys::F10, [] {
-            static bool state = false;
+        #if !defined(OS_WEB)
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.always_on_top" }, ICON_VS_PINNED, 1000, Keys::F10, [] {
+                static bool state = false;
 
-            state = !state;
-            glfwSetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING, state);
-        }, []{ return true; }, []{ return glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING); });
+                state = !state;
+                glfwSetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING, state);
+            }, []{ return true; }, []{ return glfwGetWindowAttrib(ImHexApi::System::getMainWindowHandle(), GLFW_FLOATING); });
+        #endif
 
-        ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.fullscreen" }, ICON_VS_SCREEN_FULL, 2000, Keys::F11, [] {
-            static bool state = false;
-            static ImVec2 position, size;
+        #if !defined(OS_MACOS) && !defined(OS_WEB)
+            ContentRegistry::Interface::addMenuItem({ "hex.builtin.menu.view", "hex.builtin.menu.view.fullscreen" }, ICON_VS_SCREEN_FULL, 2000, Keys::F11, [] {
+                static bool state = false;
+                static ImVec2 position, size;
 
-            state = !state;
+                state = !state;
 
 
-            const auto window = ImHexApi::System::getMainWindowHandle();
-            if (state) {
-                position = ImHexApi::System::getMainWindowPosition();
-                size     = ImHexApi::System::getMainWindowSize();
+                const auto window = ImHexApi::System::getMainWindowHandle();
+                if (state) {
+                    position = ImHexApi::System::getMainWindowPosition();
+                    size     = ImHexApi::System::getMainWindowSize();
 
-                const auto monitor = glfwGetPrimaryMonitor();
-                const auto videoMode = glfwGetVideoMode(monitor);
+                    const auto monitor = glfwGetPrimaryMonitor();
+                    const auto videoMode = glfwGetVideoMode(monitor);
 
-                glfwSetWindowMonitor(window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
-            } else {
-                glfwSetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
-            }
+                    glfwSetWindowMonitor(window, monitor, 0, 0, videoMode->width, videoMode->height, videoMode->refreshRate);
+                } else {
+                    glfwSetWindowMonitor(window, nullptr, position.x, position.y, size.x, size.y, 0);
+                }
 
-        }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
+            }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
+        #endif
 
         ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
 

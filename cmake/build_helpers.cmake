@@ -611,6 +611,15 @@ macro(addBundledLibraries)
     set(LIBPL_SHARED_LIBRARY ON CACHE BOOL "" FORCE)
     add_subdirectory(${EXTERNAL_LIBS_FOLDER}/pattern_language EXCLUDE_FROM_ALL)
 
+    install(
+        TARGETS
+            libpl
+        DESTINATION
+            "${CMAKE_INSTALL_LIBDIR}"
+        PERMISSIONS
+            OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+    )
+
     if (WIN32)
         set_target_properties(
                 libpl
