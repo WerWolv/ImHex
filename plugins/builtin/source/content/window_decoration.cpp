@@ -132,11 +132,19 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabActive));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
-            auto framePadding = ImGui::GetStyle().FramePadding * 2;
-
             const auto windowSize = ImHexApi::System::getMainWindowSize();
-            const auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight);
-            const auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, framePadding.y);
+            auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight);
+            auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 0);
+            auto titleBarButtonPosY = 0.0F;
+
+            #if defined(OS_MACOS)
+                searchBoxPos.y = ImGui::GetStyle().FramePadding.y * 2;
+                titleBarButtonPosY = searchBoxPos.y;
+            #else
+                titleBarButtonPosY = 0;
+                searchBoxPos.y = 3_scaled;
+                searchBoxSize.y -= 3_scaled;
+            #endif
 
             s_searchBarPosition = searchBoxPos.x;
 
@@ -180,7 +188,7 @@ namespace hex::plugin::builtin {
 
                 if (ImGui::GetCursorPosX() > (searchBoxPos.x + searchBoxSize.x)) {
                     for (const auto &[icon, tooltip, callback] : titleBarButtons) {
-                        ImGui::SetCursorPosY(framePadding.y);
+                        ImGui::SetCursorPosY(titleBarButtonPosY);
                         if (ImGuiExt::TitleBarButton(icon.c_str(), buttonSize)) {
                             callback();
                         }
@@ -312,8 +320,6 @@ namespace hex::plugin::builtin {
             } else {
                 ImGui::PopStyleVar();
             }
-
-            ImGui::PopStyleVar();
         }
 
         void drawToolbar() {
