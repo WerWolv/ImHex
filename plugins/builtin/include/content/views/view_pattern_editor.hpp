@@ -204,6 +204,7 @@ namespace hex::plugin::builtin {
         std::mutex m_logMutex;
 
         PerProvider<std::optional<pl::core::err::PatternLanguageError>> m_lastEvaluationError;
+        PerProvider<std::vector<pl::core::err::CompileError>> m_lastCompileError;
         PerProvider<std::map<std::string, pl::core::Token::Literal>> m_lastEvaluationOutVars;
         PerProvider<std::map<std::string, PatternVariable>> m_patternVariables;
         PerProvider<std::map<u64, pl::api::Section>> m_sections;
