@@ -4,6 +4,7 @@
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fmt.hpp>
 #include <hex/helpers/auto_reset.hpp>
+#include <hex/helpers/utils.hpp>
 
 #include <wolv/utils/string.hpp>
 
@@ -24,7 +25,7 @@ namespace hex {
             m_handle = uintptr_t(LoadLibraryW(path.c_str()));
 
             if (m_handle == uintptr_t(INVALID_HANDLE_VALUE) || m_handle == 0) {
-                log::error("Loading plugin '{}' failed: {} {}!", wolv::util::toUTF8String(path.filename()), ::GetLastError(), std::system_category().message(::GetLastError()));
+                log::error("Loading plugin '{}' failed: {} {}!", wolv::util::toUTF8String(path.filename()), ::GetLastError(), hex::formatSystemError(::GetLastError()));
                 return;
             }
         #else
@@ -91,7 +92,7 @@ namespace hex {
         #if defined(OS_WINDOWS)
             if (m_handle != 0)
                 if (FreeLibrary(HMODULE(m_handle)) == FALSE) {
-                    log::error("Error when unloading plugin '{}': {}!", wolv::util::toUTF8String(m_path.filename()), std::system_category().message(::GetLastError()));
+                    log::error("Error when unloading plugin '{}': {}!", wolv::util::toUTF8String(m_path.filename()), hex::formatSystemError(::GetLastError()));
                 }
         #else
             if (m_handle != 0)

@@ -750,4 +750,14 @@ namespace hex {
         return generateHexViewImpl(offset, data.begin(), data.end());
     }
 
+    std::string formatSystemError(i32 error) {
+        auto message = std::system_category().message(error);
+
+        #if defined(OS_WINDOWS)
+            return hex::utf16ToUtf8(hex::utf8ToUtf16(message));
+        #else
+            return message;
+        #endif
+    }
+
 }
