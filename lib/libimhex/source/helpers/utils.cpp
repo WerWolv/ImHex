@@ -754,7 +754,7 @@ namespace hex {
         auto message = std::system_category().message(error);
 
         #if defined(OS_WINDOWS)
-            return hex::utf16ToUtf8(hex::utf8ToUtf16(message));
+            return hex::utf16ToUtf8({ message.begin(), message.end() });
         #else
             return message;
         #endif
