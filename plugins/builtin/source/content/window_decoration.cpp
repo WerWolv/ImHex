@@ -236,6 +236,7 @@ namespace hex::plugin::builtin {
 
             #if defined(OS_MACOS)
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(ImGui::GetStyle().FramePadding.x, 8_scaled));
+                ON_SCOPE_EXIT { ImGui::PopStyleVar(); };
             #endif
 
             if (ImGui::BeginMainMenuBar()) {
@@ -389,7 +390,13 @@ namespace hex::plugin::builtin {
                 const auto sidebarPos   = ImGui::GetCursorPos();
                 const auto sidebarWidth = shouldDrawSidebar ? 20_scaled : 0;
 
-                const auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + ImGui::GetStyle().WindowPadding.y * 2 + 1_scaled;
+                auto footerHeight  = ImGui::GetTextLineHeightWithSpacing() + 1_scaled;
+                #if defined(OS_MACOS)
+                    footerHeight += ImGui::GetStyle().WindowPadding.y * 2;
+                #else
+                    footerHeight += ImGui::GetStyle().FramePadding.y * 2;
+                #endif
+
                 const auto dockSpaceSize = ImVec2(ImHexApi::System::getMainWindowSize().x - sidebarWidth, ImGui::GetContentRegionAvail().y - footerHeight);
 
                 ImGui::SetCursorPosX(sidebarWidth);
