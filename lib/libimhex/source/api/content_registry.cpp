@@ -919,7 +919,7 @@ namespace hex {
 
     namespace ContentRegistry::HexEditor {
 
-        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll;
+        const int DataVisualizer::TextInputFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoHorizontalScroll | ImGuiInputTextFlags_AlwaysOverwrite;
 
         bool DataVisualizer::drawDefaultScalarEditingTextBox(u64 address, const char *format, ImGuiDataType dataType, u8 *data, ImGuiInputTextFlags flags) const {
             struct UserData {
@@ -940,8 +940,10 @@ namespace hex {
             ImGuiExt::InputScalarCallback("##editing_input", dataType, data, format, flags | TextInputFlags | ImGuiInputTextFlags_CallbackEdit, [](ImGuiInputTextCallbackData *data) -> int {
                 auto &userData = *static_cast<UserData*>(data->UserData);
 
-                if (data->BufTextLen >= userData.maxChars)
+                if (data->CursorPos >= userData.maxChars)
                     userData.editingDone = true;
+
+                data->Buf[userData.maxChars] = 0x00;
 
                 return 0;
             }, &userData);
