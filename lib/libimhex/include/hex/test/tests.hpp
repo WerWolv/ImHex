@@ -30,14 +30,15 @@
 
 namespace hex::test {
 
+    using Function = int(*)();
     struct Test {
-        std::function<int()> function;
+        Function function;
         bool shouldFail;
     };
 
     class Tests {
     public:
-        static auto addTest(const std::string &name, const std::function<int()> &func, bool shouldFail) noexcept {
+        static auto addTest(const std::string &name, Function func, bool shouldFail) noexcept {
             s_tests.insert({
                 name, {func, shouldFail}
             });
@@ -50,7 +51,7 @@ namespace hex::test {
         }
 
     private:
-        static inline std::map<std::string, Test> s_tests;
+        static std::map<std::string, Test> s_tests;
     };
 
     template<class F>

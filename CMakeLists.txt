@@ -19,6 +19,7 @@ option(IMHEX_ENABLE_UNITY_BUILD "Enables building ImHex as a unity build." OFF)
 option(IMHEX_GENERATE_PDBS "Enable generating PDB files in non-debug builds (Windows only)" OFF)
 option(IMHEX_REPLACE_DWARF_WITH_PDB "Remove DWARF information from binaries when generating PDBS (Windows only)" OFF)
 option(IMHEX_ENABLE_STD_ASSERTS "Enable debug asserts in the C++ std library. (Breaks Plugin ABI!)" OFF)
+option(IMHEX_ENABLE_UNIT_TESTS "Enable building unit tests" OFF)
 
 # Basic compiler and cmake configurations
 set(CMAKE_CXX_STANDARD 23)
@@ -60,8 +61,10 @@ add_subdirectory(lib/libimhex)
 add_subdirectory(main)
 
 # Add unit tests
-enable_testing()
-add_subdirectory(tests EXCLUDE_FROM_ALL)
+if (IMHEX_ENABLE_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(tests EXCLUDE_FROM_ALL)
+endif ()
 
 # Configure more resources that will be added to the install package
 createPackage()
