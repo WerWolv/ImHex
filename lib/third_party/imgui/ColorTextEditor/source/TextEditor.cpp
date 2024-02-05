@@ -619,10 +619,20 @@ ImU32 TextEditor::GetGlyphColor(const Glyph &aGlyph) const {
 }
 
 void TextEditor::HandleKeyboardInputs() {
-    ImGuiIO &io = ImGui::GetIO();
-    auto shift  = io.KeyShift;
-    auto ctrl   = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-    auto alt    = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    ImGuiIO &io   = ImGui::GetIO();
+    auto shift    = io.KeyShift;
+    auto left     = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow));
+    auto right    = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow));
+    auto up       = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow));
+    auto down     = ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow));
+    auto ctrl     = io.ConfigMacOSXBehaviors ? io.KeyAlt : io.KeyCtrl;
+    auto alt      = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+    auto home     = io.ConfigMacOSXBehaviors ? io.KeySuper && left : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home));
+    auto end      = io.ConfigMacOSXBehaviors ? io.KeySuper && right : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End));
+    auto top      = io.ConfigMacOSXBehaviors ? io.KeySuper && up : ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home));
+    auto bottom   = io.ConfigMacOSXBehaviors ? io.KeySuper && down : ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End));
+    auto pageUp   = io.ConfigMacOSXBehaviors ? ctrl && up : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp));
+    auto pageDown = io.ConfigMacOSXBehaviors ? ctrl && down : ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown));
 
     if (ImGui::IsWindowFocused()) {
         if (ImGui::IsWindowHovered())
@@ -638,25 +648,25 @@ void TextEditor::HandleKeyboardInputs() {
             Undo();
         else if (!IsReadOnly() && ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Y)))
             Redo();
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_UpArrow)))
+        else if (!ctrl && !alt && up)
             MoveUp(1, shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_DownArrow)))
+        else if (!ctrl && !alt && down)
             MoveDown(1, shift);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_LeftArrow)))
+        else if (!alt && left)
             MoveLeft(1, shift, ctrl);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_RightArrow)))
+        else if (!alt && right)
             MoveRight(1, shift, ctrl);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageUp)))
+        else if (!alt && pageUp)
             MoveUp(GetPageSize() - 4, shift);
-        else if (!alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_PageDown)))
+        else if (!alt && pageDown)
             MoveDown(GetPageSize() - 4, shift);
-        else if (!alt && ctrl && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
+        else if (!alt && top)
             MoveTop(shift);
-        else if (ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
+        else if (!alt && bottom)
             MoveBottom(shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Home)))
+        else if (!ctrl && !alt && home)
             MoveHome(shift);
-        else if (!ctrl && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_End)))
+        else if (!ctrl && !alt && end)
             MoveEnd(shift);
         else if (!IsReadOnly() && !ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Delete)))
             Delete();
@@ -722,7 +732,7 @@ void TextEditor::HandleKeyboardInputs() {
 void TextEditor::HandleMouseInputs() {
     ImGuiIO &io = ImGui::GetIO();
     auto shift  = io.KeyShift;
-    auto ctrl   = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+    auto ctrl   = io.ConfigMacOSXBehaviors ? io.KeyAlt : io.KeyCtrl;
     auto alt    = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
     if (ImGui::IsWindowHovered()) {
