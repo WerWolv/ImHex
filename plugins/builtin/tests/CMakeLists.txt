@@ -9,7 +9,7 @@ add_library(${PROJECT_NAME} SHARED
     source/main.cpp
 )
 
-
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/plugins/builtin/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE libimhex)
 
