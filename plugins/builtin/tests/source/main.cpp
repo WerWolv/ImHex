@@ -2,13 +2,16 @@
 #include <hex/api/plugin_manager.hpp>
 #include <content/providers/memory_file_provider.hpp>
 #include <content/views/view_patches.hpp>
+#include <hex/api/task_manager.hpp>
 
 using namespace hex;
 using namespace hex::plugin::builtin;
 
 TEST_SEQUENCE("Providers/ReadWrite") {
-    ViewPatches view; // TODO remove this hack
-    MemoryFileProvider pr;
+    PluginManager::initializeNewPlugins();
+
+
+    auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
 
     TEST_ASSERT(pr.getSize() == 0);
     TEST_ASSERT(!pr.isDirty());
@@ -25,6 +28,12 @@ TEST_SEQUENCE("Providers/ReadWrite") {
     char buf2[] = "\x99\x99"; // temporary value that should be overwriten
     pr.read(0, buf2, 2);
     TEST_ASSERT(std::equal(buf2, buf2+2, "\xFF\xFF"));
+
+
+    TaskManager::exit();
+    EventImHexClosing::post();
+    EventManager::clear();
+    PluginManager::unload();
 
     TEST_SUCCESS();
 };
