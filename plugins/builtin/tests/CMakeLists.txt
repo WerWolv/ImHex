@@ -2,7 +2,7 @@ project(${IMHEX_PLUGIN_NAME}_tests)
 
 # Add new tests here #
 set(AVAILABLE_TESTS
-    Test1
+    Providers/ReadWrite
 )
 
 add_library(${PROJECT_NAME} SHARED
