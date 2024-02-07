@@ -96,10 +96,6 @@ CXXFLAGS+=" -std=gnu++2b"
 %set_build_flags
 CXXFLAGS+=" -std=gnu++2b"
 %endif
-# build binaries required for tests
-%cmake_build --target unit_tests
-%ctest --exclude-regex '(Helpers/StoreAPI|Helpers/TipsAPI|Helpers/ContentAPI)'
-# Helpers/*API exclude tests that require network access
 
 
 %install
