@@ -31,7 +31,7 @@ TEST_SEQUENCE("Providers/ReadWrite") {
 
 
     TaskManager::exit();
-    EventImHexClosing::post();
+    EventImHexClosing::post(); // this is the only line among the 4 necessary for this test not to crash. Idk if the others are useful
     EventManager::clear();
     PluginManager::unload();
 
