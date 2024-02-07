@@ -85,6 +85,8 @@ macro(add_imhex_plugin)
     # Fix rpath
     if (APPLE)
         set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH "@executable_path/../Frameworks;@executable_path/plugins")
+    elseif (UNIX)
+        set_target_properties(${IMHEX_PLUGIN_NAME} PROPERTIES INSTALL_RPATH_USE_ORIGIN ON INSTALL_RPATH "$ORIGIN/")
     endif()
 endmacro()
 
