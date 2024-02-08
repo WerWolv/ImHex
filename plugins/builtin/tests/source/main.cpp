@@ -33,11 +33,5 @@ TEST_SEQUENCE("Providers/ReadWrite") {
     pr.read(0, buf2, 2);
     TEST_ASSERT(std::equal(buf2, buf2+2, "\xFF\xFF"));
 
-
-    TaskManager::exit();
-    EventImHexClosing::post(); // this is the only line among the 4 necessary for this test not to crash. Idk if the others are useful
-    EventManager::clear();
-    PluginManager::unload();
-
     TEST_SUCCESS();
 };
