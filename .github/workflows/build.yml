@@ -540,6 +540,7 @@ jobs:
 
           # Replace the old file
           rm imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
+          rm *imhex-bin-debug* # rm debug package which is created for some reason
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst
