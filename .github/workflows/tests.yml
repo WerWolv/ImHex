@@ -2,9 +2,8 @@ name: "Unit Tests"
 
 on:
   push:
-    branches: [ master ]
+    branches: ["*"]
   pull_request:
-    branches: [ master ]
   workflow_dispatch:
 
 jobs:
