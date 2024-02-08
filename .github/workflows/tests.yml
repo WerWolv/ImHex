@@ -47,7 +47,7 @@ jobs:
         mkdir -p build
         cd build
         CC=gcc-12 CXX=g++-12 cmake                                                                      \
-          -DCMAKE_BUILD_TYPE=Debug                                                                      \  
+          -DCMAKE_BUILD_TYPE=Debug                                                                      \
           -DIMHEX_ENABLE_UNIT_TESTS=ON                                                                  \
           -DCMAKE_C_COMPILER_LAUNCHER=ccache                                                            \
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                                                          \
