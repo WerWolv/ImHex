@@ -17,6 +17,7 @@ namespace hex::test {
             return false;
         }
 
+        hex::log::info("Initialized plugin '{}' successfully", name);
         return true;
     }
 }
