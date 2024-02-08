@@ -8,7 +8,11 @@ using namespace hex;
 using namespace hex::plugin::builtin;
 
 TEST_SEQUENCE("Providers/ReadWrite") {
-    PluginManager::initializeNewPlugins();
+    Plugin *plugin = PluginManager::getPlugin("Built-in");
+    if(plugin == nullptr || !plugin->initializePlugin()) {
+        log::fatal("Failed to initialize builtin plugin");
+        TEST_FAIL();
+    }
 
 
     auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);

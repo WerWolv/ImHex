@@ -110,6 +110,7 @@ namespace hex {
         static void addPlugin(const std::string &name, PluginFunctions functions);
 
         static std::list<Plugin> &getPlugins();
+        static Plugin* getPlugin(const std::string &name);
         static std::vector<std::fs::path> &getPluginPaths();
         static std::vector<std::fs::path> &getPluginLoadPaths();
 
