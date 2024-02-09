@@ -81,34 +81,36 @@ namespace hex::ui {
             return highlightWhenSelected(pattern.getOffset(), pattern.getSize(), callback);
         }
 
-        void drawTypenameColumn(const pl::ptrn::Pattern& pattern, const std::string& pattern_name) {
-            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), pattern_name);
+        void drawTypeNameColumn(const pl::ptrn::Pattern& pattern, const std::string& structureTypeName) {
+            ImGui::TableNextColumn();
+            ImGuiExt::TextFormattedColored(ImColor(0xFFD69C56), structureTypeName);
             ImGui::SameLine();
             ImGui::TextUnformatted(pattern.getTypeName().c_str());
-            ImGui::TableNextColumn();
         }
 
         void drawOffsetColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
             if (pattern.isPatternLocal()) {
-                ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
                 ImGui::TableNextColumn();
+                ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
             } else {
+                ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset(), pattern.getBitOffsetForDisplay());
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormatted("0x{0:08X}, bit {1}", pattern.getOffset() + pattern.getSize(), pattern.getBitOffsetForDisplay() + pattern.getBitSize() - (pattern.getSize() == 0 ? 0 : 1));
-                ImGui::TableNextColumn();
             }
         }
 
-        void drawOffsetColumn(const pl::ptrn::Pattern& pattern) {
+        void drawOffsetColumns(const pl::ptrn::Pattern& pattern) {
             auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern);
             if (bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr) {
                 drawOffsetColumnForBitfieldMember(*bitfieldMember);
                 return;
             }
-            
+
+            ImGui::TableNextColumn();
+
             if (pattern.isPatternLocal()) {
                 ImGuiExt::TextFormatted("[{}]", "hex.ui.pattern_drawer.local"_lang);
             } else {
@@ -122,11 +124,10 @@ namespace hex::ui {
             } else {
                 ImGuiExt::TextFormatted("0x{0:08X}", pattern.getOffset() + pattern.getSize() - (pattern.getSize() == 0 ? 0 : 1));
             }
-
-            ImGui::TableNextColumn();
         }
 
         void drawSizeColumnForBitfieldMember(const pl::ptrn::PatternBitfieldMember &pattern) {
+            ImGui::TableNextColumn();
             if (pattern.getBitSize() == 1)
                 ImGuiExt::TextFormatted("1 bit");
             else
@@ -134,12 +135,11 @@ namespace hex::ui {
         }
 
         void drawSizeColumn(const pl::ptrn::Pattern& pattern) {
+            ImGui::TableNextColumn();
             if (auto *bitfieldMember = dynamic_cast<const pl::ptrn::PatternBitfieldMember*>(&pattern); bitfieldMember != nullptr && bitfieldMember->getParentBitfield() != nullptr)
                 drawSizeColumnForBitfieldMember(*bitfieldMember);
             else
                 ImGuiExt::TextFormatted("0x{0:04X}", pattern.getSize());
-
-            ImGui::TableNextColumn();
         }
 
         void drawCommentTooltip(const pl::ptrn::Pattern &pattern) {
@@ -220,8 +220,8 @@ namespace hex::ui {
     }
 
     void PatternDrawer::drawFavoriteColumn(const pl::ptrn::Pattern& pattern) {
+        ImGui::TableNextColumn();
         if (!m_showFavoriteStars) {
-            ImGui::TableNextColumn();
             return;
         }
 
@@ -239,19 +239,30 @@ namespace hex::ui {
         }
 
         ImGui::PopStyleVar();
+    }
 
-        ImGui::TableNextColumn();
+    bool PatternDrawer::drawNameColumn(const pl::ptrn::Pattern &pattern, bool leaf) {
+        bool open = createTreeNode(pattern, leaf);
+        ImGui::SameLine(0, 0);
+        makeSelectable(pattern);
+        drawCommentTooltip(pattern);
+
+        return open;
     }
 
     void PatternDrawer::drawColorColumn(const pl::ptrn::Pattern& pattern) {
+        ImGui::TableNextColumn();
         if (pattern.getVisibility() == pl::ptrn::Visibility::Visible) {
             ImGui::ColorButton("color", ImColor(pattern.getColor()), ImGuiColorEditFlags_NoTooltip, ImVec2(ImGui::GetColumnWidth(), ImGui::GetTextLineHeight()));
 
             if (m_rowColoring)
                 ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, (pattern.getColor() & 0x00'FF'FF'FF) | 0x30'00'00'00);
         }
+    }
 
+    void PatternDrawer::drawCommentColumn(const pl::ptrn::Pattern& pattern) {
         ImGui::TableNextColumn();
+        ImGui::TextUnformatted(pattern.getComment().c_str());
     }
 
     void PatternDrawer::drawVisualizer(const std::map<std::string, ContentRegistry::PatternLanguage::impl::Visualizer> &visualizers, const std::vector<pl::core::Token::Literal> &arguments, pl::ptrn::Pattern &pattern, pl::ptrn::IIterable &iterable, bool reset) {
@@ -281,8 +292,9 @@ namespace hex::ui {
     }
 
     void PatternDrawer::drawValueColumn(pl::ptrn::Pattern& pattern) {
-        std::string value;
+        ImGui::TableNextColumn();
 
+        std::string value;
         try {
             value = pattern.getFormattedValue();
         } catch (const std::exception &e) {
@@ -337,6 +349,8 @@ namespace hex::ui {
     }
 
     bool PatternDrawer::createTreeNode(const pl::ptrn::Pattern& pattern, bool leaf) {
+        ImGui::TableNextRow();
+
         drawFavoriteColumn(pattern);
 
         bool shouldOpen = false;
@@ -358,6 +372,8 @@ namespace hex::ui {
                 }
             }
         }
+
+        ImGui::TableNextColumn();
 
         if (pattern.isSealed() || leaf) {
             ImGui::Indent();
@@ -408,18 +424,21 @@ namespace hex::ui {
     }
 
     void PatternDrawer::createDefaultEntry(const pl::ptrn::Pattern &pattern) {
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-        createTreeNode(pattern, true);
-        ImGui::SameLine(0, 0);
-        makeSelectable(pattern);
-        drawCommentTooltip(pattern);
-        ImGui::TableNextColumn();
+        // Draw Name column
+        drawNameColumn(pattern, true);
+
+        // Draw Color column
         drawColorColumn(pattern);
-        drawOffsetColumn(pattern);
+
+        // Draw Start / End columns
+        drawOffsetColumns(pattern);
+
+        // Draw Size column
         drawSizeColumn(pattern);
-        ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
+
+        // Draw type column
         ImGui::TableNextColumn();
+        ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName().empty() ? pattern.getTypeName() : pattern.getFormattedName());
     }
 
     void PatternDrawer::closeTreeNode(bool inlined) const {
@@ -437,58 +456,52 @@ namespace hex::ui {
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternBitfieldField& pattern) {
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-        createTreeNode(pattern, true);
-        ImGui::SameLine(0, 0);
-        makeSelectable(pattern);
-        drawCommentTooltip(pattern);
-        ImGui::TableNextColumn();
+        drawNameColumn(pattern, true);
         drawColorColumn(pattern);
         drawOffsetColumnForBitfieldMember(pattern);
         drawSizeColumnForBitfieldMember(pattern);
         ImGui::TableNextColumn();
         ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "bits");
-        ImGui::TableNextColumn();
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
-            return;
+        } else {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+            auto value = pattern.getValue();
+            auto valueString = pattern.toString();
+
+            if (pattern.getBitSize() == 1) {
+                bool boolValue = value.toBoolean();
+                if (ImGui::Checkbox("##boolean", &boolValue)) {
+                    pattern.setValue(boolValue);
+                }
+            } else if (std::holds_alternative<i128>(value)) {
+                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    wolv::math_eval::MathEvaluator<i128> mathEvaluator;
+
+                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
+                        pattern.setValue(result.value());
+
+                    this->resetEditing();
+                }
+            } else if (std::holds_alternative<u128>(value)) {
+                if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    wolv::math_eval::MathEvaluator<u128> mathEvaluator;
+
+                    if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
+                        pattern.setValue(result.value());
+
+                    this->resetEditing();
+                }
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-
-        auto value = pattern.getValue();
-        auto valueString = pattern.toString();
-
-        if (pattern.getBitSize() == 1) {
-            bool boolValue = value.toBoolean();
-            if (ImGui::Checkbox("##boolean", &boolValue)) {
-                pattern.setValue(boolValue);
-            }
-        } else if (std::holds_alternative<i128>(value)) {
-            if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<i128> mathEvaluator;
-
-                if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                    pattern.setValue(result.value());
-
-                this->resetEditing();
-            }
-        } else if (std::holds_alternative<u128>(value)) {
-            if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                wolv::math_eval::MathEvaluator<u128> mathEvaluator;
-
-                if (auto result = mathEvaluator.evaluate(valueString); result.has_value())
-                    pattern.setValue(result.value());
-
-                this->resetEditing();
-            }
-        }
-
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternBitfieldArray& pattern) {
@@ -498,24 +511,19 @@ namespace hex::ui {
     void PatternDrawer::visit(pl::ptrn::PatternBitfield& pattern) {
         bool open = true;
         if (!pattern.isInlined() && m_treeStyle != TreeStyle::Flattened) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            open = createTreeNode(pattern);
-            ImGui::SameLine(0, 0);
-            makeSelectable(pattern);
-            drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            open = drawNameColumn(pattern);
 
             if (pattern.isSealed())
                 drawColorColumn(pattern);
             else
                 ImGui::TableNextColumn();
 
-            drawOffsetColumn(pattern);
+            drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
-            drawTypenameColumn(pattern, "bitfield");
+            drawTypeNameColumn(pattern, "bitfield");
 
             drawValueColumn(pattern);
+            drawCommentColumn(pattern);
         }
 
         if (!open) {
@@ -539,19 +547,20 @@ namespace hex::ui {
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
-            return;
+        } else {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+            bool value = pattern.getValue().toBoolean();
+            if (ImGui::Checkbox("##boolean", &value)) {
+                pattern.setValue(value);
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-
-        bool value = pattern.getValue().toBoolean();
-        if (ImGui::Checkbox("##boolean", &value)) {
-            pattern.setValue(value);
-        }
-
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternCharacter& pattern) {
@@ -559,65 +568,61 @@ namespace hex::ui {
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
-            return;
-        }
-            
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-        auto value = hex::encodeByteString(pattern.getBytes());
-        if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            if (!value.empty()) {
-                auto result = hex::decodeByteString(value);
-                if (!result.empty())
-                    pattern.setValue(char(result[0]));
+        } else {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            auto value = hex::encodeByteString(pattern.getBytes());
+            if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                if (!value.empty()) {
+                    auto result = hex::decodeByteString(value);
+                    if (!result.empty())
+                        pattern.setValue(char(result[0]));
 
-                this->resetEditing();
+                    this->resetEditing();
+                }
             }
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
         }
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternEnum& pattern) {
-        ImGui::TableNextRow();
-        ImGui::TableNextColumn();
-        createTreeNode(pattern, true);
-        ImGui::SameLine(0, 0);
-        makeSelectable(pattern);
-        drawCommentTooltip(pattern);
-        ImGui::TableNextColumn();
+        drawNameColumn(pattern, true);
         drawColorColumn(pattern);
-        drawOffsetColumn(pattern);
+        drawOffsetColumns(pattern);
         drawSizeColumn(pattern);
-        drawTypenameColumn(pattern, "enum");
+        drawTypeNameColumn(pattern, "enum");
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
-            return;
-        }
-    
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+        } else {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-        if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
-            auto currValue = pattern.getValue().toUnsigned();
-            for (auto &value : pattern.getEnumValues()) {
-                auto min = value.min.toUnsigned();
-                auto max = value.max.toUnsigned();
+            if (ImGui::BeginCombo("##Enum", pattern.getFormattedValue().c_str())) {
+                auto currValue = pattern.getValue().toUnsigned();
+                for (auto &value : pattern.getEnumValues()) {
+                    auto min = value.min.toUnsigned();
+                    auto max = value.max.toUnsigned();
 
-                bool isSelected = min <= currValue && max >= currValue;
-                if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
-                    pattern.setValue(value.min);
-                    this->resetEditing();
+                    bool isSelected = min <= currValue && max >= currValue;
+                    if (ImGui::Selectable(fmt::format("{}::{} (0x{:0{}X})", pattern.getTypeName(), value.name, min, pattern.getSize() * 2).c_str(), isSelected)) {
+                        pattern.setValue(value.min);
+                        this->resetEditing();
+                    }
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
                 }
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
+                ImGui::EndCombo();
             }
-            ImGui::EndCombo();
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
         }
 
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternFloat& pattern) {
@@ -625,24 +630,25 @@ namespace hex::ui {
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
-            return;
+        } else {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+            auto value = pattern.toString();
+            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                wolv::math_eval::MathEvaluator<long double> mathEvaluator;
+
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(double(result.value()));
+
+                this->resetEditing();
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-
-        auto value = pattern.toString();
-        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wolv::math_eval::MathEvaluator<long double> mathEvaluator;
-
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(double(result.value()));
-
-            this->resetEditing();
-        }
-
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternPadding& pattern) {
@@ -654,19 +660,14 @@ namespace hex::ui {
         bool open = true;
 
         if (!pattern.isInlined() && m_treeStyle != TreeStyle::Flattened) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            open = createTreeNode(pattern);
-            ImGui::SameLine(0, 0);
-            makeSelectable(pattern);
-            drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            open = drawNameColumn(pattern);
             drawColorColumn(pattern);
-            drawOffsetColumn(pattern);
+            drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
-            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
             ImGui::TableNextColumn();
+            ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{}", pattern.getFormattedName());
             drawValueColumn(pattern);
+            drawCommentColumn(pattern);
         }
 
         if (open) {
@@ -681,24 +682,25 @@ namespace hex::ui {
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
-            return;
+        } else {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+
+            auto value = pattern.getFormattedValue();
+            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                wolv::math_eval::MathEvaluator<i128> mathEvaluator;
+
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(result.value());
+
+                this->resetEditing();
+            }
+
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
         }
-    
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-        auto value = pattern.getFormattedValue();
-        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wolv::math_eval::MathEvaluator<i128> mathEvaluator;
-
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(result.value());
-
-            this->resetEditing();
-        }
-
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternString& pattern) {
@@ -707,20 +709,21 @@ namespace hex::ui {
 
             if (!this->isEditingPattern(pattern)) {
                 drawValueColumn(pattern);
-                return;
-            }
-            
-            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            } else {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+                ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
-            auto value = pattern.toString();
-            if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-                pattern.setValue(value);
-                this->resetEditing();
+                auto value = pattern.toString();
+                if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                    pattern.setValue(value);
+                    this->resetEditing();
+                }
+
+                ImGui::PopItemWidth();
+                ImGui::PopStyleVar();
             }
 
-            ImGui::PopItemWidth();
-            ImGui::PopStyleVar();
+            drawCommentColumn(pattern);
         }
     }
 
@@ -728,20 +731,14 @@ namespace hex::ui {
         bool open = true;
 
         if (!pattern.isInlined() && m_treeStyle != TreeStyle::Flattened) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            open = createTreeNode(pattern);
-            ImGui::SameLine(0, 0);
-            makeSelectable(pattern);
-            drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            open = drawNameColumn(pattern);
             if (pattern.isSealed())
                 drawColorColumn(pattern);
             else
                 ImGui::TableNextColumn();
-            drawOffsetColumn(pattern);
+            drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
-            drawTypenameColumn(pattern, "struct");
+            drawTypeNameColumn(pattern, "struct");
 
             if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -757,6 +754,7 @@ namespace hex::ui {
                 drawValueColumn(pattern);
             }
 
+            drawCommentColumn(pattern);
         }
 
         if (!open) {
@@ -778,20 +776,14 @@ namespace hex::ui {
         bool open = true;
 
         if (!pattern.isInlined() && m_treeStyle != TreeStyle::Flattened) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            open = createTreeNode(pattern);
-            ImGui::SameLine(0, 0);
-            makeSelectable(pattern);
-            drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
+            open = drawNameColumn(pattern);
             if (pattern.isSealed())
                 drawColorColumn(pattern);
             else
                 ImGui::TableNextColumn();
-            drawOffsetColumn(pattern);
+            drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
-            drawTypenameColumn(pattern, "union");
+            drawTypeNameColumn(pattern, "union");
 
             if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
@@ -806,6 +798,8 @@ namespace hex::ui {
             } else {
                 drawValueColumn(pattern);
             }
+
+            drawCommentColumn(pattern);
         }
 
         if (!open) {
@@ -829,33 +823,36 @@ namespace hex::ui {
 
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
-            return;
+        } else {
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+            ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            auto value = pattern.toString();
+            if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
+                wolv::math_eval::MathEvaluator<u128> mathEvaluator;
+
+                if (auto result = mathEvaluator.evaluate(value); result.has_value())
+                    pattern.setValue(result.value());
+
+                this->resetEditing();
+            }
+            ImGui::PopItemWidth();
+            ImGui::PopStyleVar();
         }
 
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
-        auto value = pattern.toString();
-        if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
-            wolv::math_eval::MathEvaluator<u128> mathEvaluator;
-
-            if (auto result = mathEvaluator.evaluate(value); result.has_value())
-                pattern.setValue(result.value());
-
-            this->resetEditing();
-        }
-        ImGui::PopItemWidth();
-        ImGui::PopStyleVar();
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternWideCharacter& pattern) {
         createDefaultEntry(pattern);
         drawValueColumn(pattern);
+        drawCommentColumn(pattern);
     }
 
     void PatternDrawer::visit(pl::ptrn::PatternWideString& pattern) {
         if (pattern.getSize() > 0) {
             createDefaultEntry(pattern);
             drawValueColumn(pattern);
+            drawCommentColumn(pattern);
         }
     }
 
@@ -889,20 +886,15 @@ namespace hex::ui {
 
         bool open = true;
         if (!isInlined && m_treeStyle != TreeStyle::Flattened) {
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            open = createTreeNode(pattern);
-            ImGui::SameLine(0, 0);
-            makeSelectable(pattern);
-            drawCommentTooltip(pattern);
-            ImGui::TableNextColumn();
-
+            open = drawNameColumn(pattern);
             if (pattern.isSealed())
                 drawColorColumn(pattern);
             else
                 ImGui::TableNextColumn();
-            drawOffsetColumn(pattern);
+            drawOffsetColumns(pattern);
             drawSizeColumn(pattern);
+
+            ImGui::TableNextColumn();
             ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
             ImGui::SameLine(0, 0);
 
@@ -912,9 +904,8 @@ namespace hex::ui {
             ImGui::SameLine(0, 0);
             ImGui::TextUnformatted("]");
 
-            ImGui::TableNextColumn();
-
             drawValueColumn(pattern);
+            drawCommentColumn(pattern);
         }
 
         if (!open) {
@@ -956,8 +947,10 @@ namespace hex::ui {
                 });
 
                 ImGui::TableNextColumn();
+
+                drawOffsetColumns(pattern);
+
                 ImGui::TableNextColumn();
-                drawOffsetColumn(pattern);
                 ImGuiExt::TextFormatted("0x{0:04X}", chunkSize);
                 ImGui::TableNextColumn();
                 ImGuiExt::TextFormattedColored(ImColor(0xFF9BC64D), "{0}", pattern.getTypeName());
@@ -1005,48 +998,31 @@ namespace hex::ui {
     }
 
     bool PatternDrawer::sortPatterns(const ImGuiTableSortSpecs* sortSpecs, const pl::ptrn::Pattern * left, const pl::ptrn::Pattern * right) const {
+        auto result = std::strong_ordering::less;
+
         if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("name")) {
-            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return this->getDisplayName(*left) < this->getDisplayName(*right);
-            else
-                return this->getDisplayName(*left) > this->getDisplayName(*right);
+            result = this->getDisplayName(*left) <=> this->getDisplayName(*right);
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("start")) {
-            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getOffsetForSorting() < right->getOffsetForSorting();
-            else
-                return left->getOffsetForSorting() > right->getOffsetForSorting();
+            result = left->getOffsetForSorting() <=> right->getOffsetForSorting();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("end")) {
-            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getOffsetForSorting() + left->getSize() < right->getOffsetForSorting() + right->getSize();
-            else
-                return left->getOffsetForSorting() + left->getSize() > right->getOffsetForSorting() + right->getSize();
+            result = (left->getOffsetForSorting() + left->getSizeForSorting()) <=> (right->getOffsetForSorting() + right->getSizeForSorting());
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("size")) {
-            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getSizeForSorting() < right->getSizeForSorting();
-            else
-                return left->getSizeForSorting() > right->getSizeForSorting();
+            result = left->getSizeForSorting() <=> right->getSizeForSorting();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("value")) {
-            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getValue().toString(true) < right->getValue().toString(true);
-            else
-                return left->getValue().toString(true) > right->getValue().toString(true);
+            result = left->getValue() <=> right->getValue();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("type")) {
-            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getTypeName() < right->getTypeName();
-            else
-                return left->getTypeName() > right->getTypeName();
+            result = left->getTypeName() <=> right->getTypeName();
         } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("color")) {
-            if (sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending)
-                return left->getColor() < right->getColor();
-            else
-                return left->getColor() > right->getColor();
+            result = left->getColor() <=> right->getColor();
+        } else if (sortSpecs->Specs->ColumnUserID == ImGui::GetID("comment")) {
+            result = left->getComment() <=> right->getComment();
         }
 
-        return false;
+        return sortSpecs->Specs->SortDirection == ImGuiSortDirection_Ascending ? result == std::strong_ordering::less : result == std::strong_ordering::greater;
     }
 
     bool PatternDrawer::beginPatternTable(const std::vector<std::shared_ptr<pl::ptrn::Pattern>> &patterns, std::vector<pl::ptrn::Pattern*> &sortedPatterns, float height) const {
-        if (!ImGui::BeginTable("##Patterntable", 8, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
+        if (!ImGui::BeginTable("##Patterntable", 9, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Sortable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY, ImVec2(0, height))) {
             return false;
         }
     
@@ -1059,6 +1035,7 @@ namespace hex::ui {
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.size"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("size"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.type"_lang,     ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("type"));
         ImGui::TableSetupColumn("hex.ui.pattern_drawer.value"_lang,    ImGuiTableColumnFlags_PreferSortAscending, 0, ImGui::GetID("value"));
+        ImGui::TableSetupColumn("hex.ui.pattern_drawer.comment"_lang,    ImGuiTableColumnFlags_PreferSortAscending | ImGuiTableColumnFlags_DefaultHide, 0, ImGui::GetID("comment"));
 
         auto sortSpecs = ImGui::TableGetSortSpecs();
 
