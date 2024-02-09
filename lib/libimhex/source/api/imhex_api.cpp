@@ -655,20 +655,15 @@ namespace hex {
         }
 
         std::string getCommitHash(bool longHash) {
-            if (longHash) {
-                #if defined GIT_COMMIT_HASH_LONG
+            #if defined GIT_COMMIT_HASH_LONG
+                if (longHash) {
                     return GIT_COMMIT_HASH_LONG;
-                #else
-                    return "Unknown";
-                #endif
-            }
-            else {
-                #if defined GIT_COMMIT_HASH_SHORT
-                    return GIT_COMMIT_HASH_SHORT;
-                #else
-                    return "Unknown";
-                #endif
-            }
+                } else {
+                    return std::string(GIT_COMMIT_HASH_LONG).substr(0, 7);
+                }
+            #else
+                return "Unknown";
+            #endif
         }
 
         std::string getCommitBranch() {
