@@ -190,6 +190,10 @@ namespace hex {
 
             m_lastFrameTime = glfwGetTime() - m_lastStartFrameTime;
         }
+
+        // Hide the window as soon as the render loop exits to make the window
+        // disappear as soon as it's closed
+        glfwHideWindow(m_window);
     }
 
     void Window::frameBegin() {
