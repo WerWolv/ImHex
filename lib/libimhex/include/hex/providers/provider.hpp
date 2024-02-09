@@ -148,7 +148,7 @@ namespace hex::prv {
          * @brief Gets the type name of this provider
          * @note This is mainly used to be stored in project files and recents to be able to later on
          * recreate this exact provider type. This needs to be unique across all providers, this is usually something
-         * like "hex.builtin.provider.memory" or "hex.builtin.provider.file"
+         * like "hex.builtin.provider.mem_file" or "hex.builtin.provider.file"
          * @return The provider's type name
          */
         [[nodiscard]] virtual std::string getTypeName() const = 0;
