@@ -55,7 +55,7 @@ namespace hex {
                     if (data == nullptr) {
                         store();
                     } else {
-                        getSettingsData() = nlohmann::json::parse(data);
+                        s_settings = nlohmann::json::parse(data);
                     }
                 }
 
