@@ -18,9 +18,9 @@
 
 namespace hex {
 
-    std::list<Plugin> PluginManager::s_plugins;
-    std::vector<std::fs::path> PluginManager::s_pluginLoadPaths;
-    std::vector<std::fs::path> PluginManager::s_pluginPaths;
+    static std::list<Plugin> s_plugins;
+    static AutoReset<std::vector<std::fs::path>> s_pluginPaths;
+    static AutoReset<std::vector<std::fs::path>> s_pluginLoadPaths;
 
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
         log::info("Loading plugin '{}'", wolv::util::toUTF8String(path.filename()));
@@ -244,7 +244,7 @@ namespace hex {
     }
 
     void PluginManager::addLoadPath(const std::fs::path& path) {
-        s_pluginLoadPaths.emplace_back(path);
+        s_pluginLoadPaths->emplace_back(path);
     }
 
 
@@ -261,7 +261,7 @@ namespace hex {
         if (!wolv::io::fs::exists(pluginFolder))
             return false;
 
-        s_pluginPaths.push_back(pluginFolder);
+        s_pluginPaths->push_back(pluginFolder);
 
         // Load library plugins first
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
@@ -296,16 +296,14 @@ namespace hex {
     }
 
     void PluginManager::unload() {
-        s_pluginPaths.clear();
+        s_pluginPaths->clear();
 
         // Unload plugins in reverse order
-        auto &plugins = s_plugins;
-
         std::list<Plugin> savedPlugins;
-        while (!plugins.empty()) {
-            if (plugins.back().wasAddedManually())
-                savedPlugins.emplace_front(std::move(plugins.back()));
-            plugins.pop_back();
+        while (!s_plugins.empty()) {
+            if (s_plugins.back().wasAddedManually())
+                savedPlugins.emplace_front(std::move(s_plugins.back()));
+            s_plugins.pop_back();
         }
 
         s_plugins = std::move(savedPlugins);
@@ -319,11 +317,11 @@ namespace hex {
         return s_plugins;
     }
 
-    const std::vector<std::fs::path>& PluginManager::getPluginPaths() {
+    const std::vector<std::fs::path> &PluginManager::getPluginPaths() {
         return s_pluginPaths;
     }
 
-    const std::vector<std::fs::path>& PluginManager::getPluginLoadPaths() {
+    const std::vector<std::fs::path> &PluginManager::getPluginLoadPaths() {
         return s_pluginLoadPaths;
     }
 

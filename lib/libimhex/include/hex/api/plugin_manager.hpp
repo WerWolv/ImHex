@@ -114,11 +114,6 @@ namespace hex {
         static const std::vector<std::fs::path>& getPluginLoadPaths();
 
         static bool isPluginLoaded(const std::fs::path &path);
-
-    private:
-        static std::list<Plugin> s_plugins;
-        static std::vector<std::fs::path> s_pluginLoadPaths;
-        static std::vector<std::fs::path> s_pluginPaths;
     };
 
 }
