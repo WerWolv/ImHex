@@ -53,7 +53,6 @@ CC=gcc-12 CXX=g++-12 cmake -G "Ninja"                  \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache                 \
     -DCMAKE_CXX_COMPILER_LAUNCHER=ccache               \
     -DIMHEX_PATTERNS_PULL_MASTER=ON                    \
-    -DIMHEX_COMMIT_HASH_SHORT="${GIT_COMMIT_HASH::7}"  \
     -DIMHEX_COMMIT_HASH_LONG="${GIT_COMMIT_HASH}"      \
     -DIMHEX_COMMIT_BRANCH="${GIT_BRANCH}"              \
     -DIMHEX_ENABLE_LTO=${LTO}                          \
