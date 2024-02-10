@@ -219,11 +219,11 @@ namespace hex {
     }
 
 
-    std::map<std::string, ThemeManager::ThemeHandler> &ThemeManager::getThemeHandlers() {
+    const std::map<std::string, ThemeManager::ThemeHandler> &ThemeManager::getThemeHandlers() {
         return s_themeHandlers;
     }
 
-    std::map<std::string, ThemeManager::StyleHandler> &ThemeManager::getStyleHandlers() {
+    const std::map<std::string, ThemeManager::StyleHandler> &ThemeManager::getStyleHandlers() {
         return s_styleHandlers;
     }
 

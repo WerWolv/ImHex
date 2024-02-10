@@ -443,7 +443,7 @@ namespace hex::plugin::builtin {
 
                             // Find all menu items that are in the toolbar and sort them by their toolbar index
                             std::set<ContentRegistry::Interface::impl::MenuItem*, MenuItemSorter> toolbarItems;
-                            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                            for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
                                 if (menuItem.toolbarIndex == -1)
                                     continue;
 
@@ -580,10 +580,10 @@ namespace hex::plugin::builtin {
                 if (toolbarItems.empty())
                     return;
 
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems())
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable())
                     menuItem.toolbarIndex = -1;
 
-                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItems()) {
+                for (auto &[priority, menuItem] : ContentRegistry::Interface::impl::getMenuItemsMutable()) {
                     for (const auto &[index, value] : toolbarItems) {
                         const auto &[name, color] = value;
                         if (menuItem.unlocalizedNames.back().get() == name) {

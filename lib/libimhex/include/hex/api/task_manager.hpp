@@ -176,7 +176,7 @@ namespace hex {
         static size_t getRunningTaskCount();
         static size_t getRunningBackgroundTaskCount();
 
-        static std::list<std::shared_ptr<Task>> &getRunningTasks();
+        static const std::list<std::shared_ptr<Task>>& getRunningTasks();
         static void runDeferredCalls();
 
     private:

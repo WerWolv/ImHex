@@ -18,6 +18,10 @@
 
 namespace hex {
 
+    std::list<Plugin> PluginManager::s_plugins;
+    std::vector<std::fs::path> PluginManager::s_pluginLoadPaths;
+    std::vector<std::fs::path> PluginManager::s_pluginPaths;
+
     Plugin::Plugin(const std::fs::path &path) : m_path(path) {
         log::info("Loading plugin '{}'", wolv::util::toUTF8String(path.filename()));
 
@@ -240,7 +244,7 @@ namespace hex {
     }
 
     void PluginManager::addLoadPath(const std::fs::path& path) {
-        getPluginLoadPaths().emplace_back(path);
+        s_pluginLoadPaths.emplace_back(path);
     }
 
 
@@ -257,13 +261,13 @@ namespace hex {
         if (!wolv::io::fs::exists(pluginFolder))
             return false;
 
-        getPluginPaths().push_back(pluginFolder);
+        s_pluginPaths.push_back(pluginFolder);
 
         // Load library plugins first
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexpluglib") {
                 if (!isPluginLoaded(pluginPath.path())) {
-                    getPlugins().emplace_back(pluginPath.path());
+                    s_plugins.emplace_back(pluginPath.path());
                 }
             }
         }
@@ -272,12 +276,12 @@ namespace hex {
         for (auto &pluginPath : std::fs::directory_iterator(pluginFolder)) {
             if (pluginPath.is_regular_file() && pluginPath.path().extension() == ".hexplug") {
                 if (!isPluginLoaded(pluginPath.path())) {
-                    getPlugins().emplace_back(pluginPath.path());
+                    s_plugins.emplace_back(pluginPath.path());
                 }
             }
         }
 
-        std::erase_if(getPlugins(), [](const Plugin &plugin) {
+        std::erase_if(s_plugins, [](const Plugin &plugin) {
             return !plugin.isValid();
         });
 
@@ -292,10 +296,10 @@ namespace hex {
     }
 
     void PluginManager::unload() {
-        getPluginPaths().clear();
+        s_pluginPaths.clear();
 
         // Unload plugins in reverse order
-        auto &plugins = getPlugins();
+        auto &plugins = s_plugins;
 
         std::list<Plugin> savedPlugins;
         while (!plugins.empty()) {
@@ -304,29 +308,23 @@ namespace hex {
             plugins.pop_back();
         }
 
-        getPlugins() = std::move(savedPlugins);
+        s_plugins = std::move(savedPlugins);
     }
 
     void PluginManager::addPlugin(const std::string &name, hex::PluginFunctions functions) {
-        getPlugins().emplace_back(name, functions);
+        s_plugins.emplace_back(name, functions);
     }
 
-    std::list<Plugin> &PluginManager::getPlugins() {
-        static std::list<Plugin> plugins;
-
-        return plugins;
+    const std::list<Plugin> &PluginManager::getPlugins() {
+        return s_plugins;
     }
 
-    std::vector<std::fs::path> &PluginManager::getPluginPaths() {
-        static AutoReset<std::vector<std::fs::path>> pluginPaths;
-
-        return pluginPaths;
+    const std::vector<std::fs::path>& PluginManager::getPluginPaths() {
+        return s_pluginPaths;
     }
 
-    std::vector<std::fs::path> &PluginManager::getPluginLoadPaths() {
-        static AutoReset<std::vector<std::fs::path>> pluginPaths;
-
-        return pluginPaths;
+    const std::vector<std::fs::path>& PluginManager::getPluginLoadPaths() {
+        return s_pluginLoadPaths;
     }
 
     bool PluginManager::isPluginLoaded(const std::fs::path &path) {

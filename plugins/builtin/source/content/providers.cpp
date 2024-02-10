@@ -61,7 +61,7 @@ namespace hex::plugin::builtin {
                                 task->interrupt();
 
                             TaskManager::runWhenTasksFinished([]{
-                                for (auto provider : ImHexApi::Provider::getProviders())
+                                for (const auto &provider : ImHexApi::Provider::getProviders())
                                     ImHexApi::Provider::remove(provider, true);
                             });
                         }

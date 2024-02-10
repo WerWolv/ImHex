@@ -272,9 +272,9 @@ namespace hex {
                 void store();
                 void clear();
 
-                std::vector<Category> &getSettings();
+                const std::vector<Category>& getSettings();
                 nlohmann::json& getSetting(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &defaultValue);
-                nlohmann::json &getSettingsData();
+                const nlohmann::json& getSettingsData();
 
                 Widgets::Widget* add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
 
@@ -352,8 +352,8 @@ namespace hex {
                     DisplayCallback displayCallback;
                 };
 
-                std::vector<Entry> &getEntries();
-                std::vector<Handler> &getHandlers();
+                const std::vector<Entry>& getEntries();
+                const std::vector<Handler>& getHandlers();
 
             }
 
@@ -408,10 +408,10 @@ namespace hex {
                     VisualizerFunctionCallback callback;
                 };
 
-                std::map<std::string, Visualizer> &getVisualizers();
-                std::map<std::string, Visualizer> &getInlineVisualizers();
-                std::map<std::string, pl::api::PragmaHandler> &getPragmas();
-                std::vector<FunctionDefinition> &getFunctions();
+                const std::map<std::string, Visualizer>& getVisualizers();
+                const std::map<std::string, Visualizer>& getInlineVisualizers();
+                const std::map<std::string, pl::api::PragmaHandler>& getPragmas();
+                const std::vector<FunctionDefinition>& getFunctions();
 
             }
 
@@ -504,7 +504,7 @@ namespace hex {
             namespace impl {
 
                 void add(std::unique_ptr<View> &&view);
-                std::map<std::string, std::unique_ptr<View>> &getEntries();
+                const std::map<std::string, std::unique_ptr<View>>& getEntries();
 
             }
 
@@ -535,12 +535,11 @@ namespace hex {
                 using Callback = std::function<void()>;
 
                 struct Entry {
-                    std::string name;
+                    UnlocalizedString unlocalizedName;
                     Callback function;
-                    bool detached;
                 };
 
-                std::vector<Entry> &getEntries();
+                const std::vector<Entry>& getEntries();
 
             }
 
@@ -576,7 +575,7 @@ namespace hex {
                     std::optional<EditingFunction> editingFunction;
                 };
 
-                std::vector<Entry> &getEntries();
+                const std::vector<Entry>& getEntries();
 
             }
 
@@ -627,7 +626,7 @@ namespace hex {
 
                 void add(const Entry &entry);
 
-                std::vector<Entry> &getEntries();
+                const std::vector<Entry>& getEntries();
             }
 
 
@@ -670,8 +669,8 @@ namespace hex {
 
             namespace impl {
 
-                std::map<std::string, std::string> &getLanguages();
-                std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>> &getLanguageDefinitions();
+                const std::map<std::string, std::string>& getLanguages();
+                const std::map<std::string, std::vector<LocalizationManager::LanguageDefinition>>& getLanguageDefinitions();
 
             }
 
@@ -725,14 +724,16 @@ namespace hex {
                 constexpr static auto SeparatorValue = "$SEPARATOR$";
                 constexpr static auto SubMenuValue = "$SUBMENU$";
 
-                std::multimap<u32, MainMenuItem> &getMainMenuItems();
-                std::multimap<u32, MenuItem> &getMenuItems();
+                const std::multimap<u32, MainMenuItem>& getMainMenuItems();
 
-                std::vector<DrawCallback> &getWelcomeScreenEntries();
-                std::vector<DrawCallback> &getFooterItems();
-                std::vector<DrawCallback> &getToolbarItems();
-                std::vector<SidebarItem> &getSidebarItems();
-                std::vector<TitleBarButton> &getTitleBarButtons();
+                const std::multimap<u32, MenuItem>& getMenuItems();
+                std::multimap<u32, MenuItem>& getMenuItemsMutable();
+
+                const std::vector<DrawCallback>& getWelcomeScreenEntries();
+                const std::vector<DrawCallback>& getFooterItems();
+                const std::vector<DrawCallback>& getToolbarItems();
+                const std::vector<SidebarItem>& getSidebarItems();
+                const std::vector<TitleBarButton>& getTitlebarButtons();
 
             }
 
@@ -901,10 +902,10 @@ namespace hex {
 
                 void addProviderName(const UnlocalizedString &unlocalizedName);
 
-                using ProviderCreationFunction = prv::Provider*(*)();
+                using ProviderCreationFunction = std::unique_ptr<prv::Provider>(*)();
                 void add(const std::string &typeName, ProviderCreationFunction creationFunction);
 
-                std::vector<std::string> &getEntries();
+                const std::vector<std::string>& getEntries();
 
             }
 
@@ -917,8 +918,8 @@ namespace hex {
             void add(bool addToList = true) {
                 auto typeName = T().getTypeName();
 
-                impl::add(typeName, [] -> prv::Provider* {
-                    return new T();
+                impl::add(typeName, [] -> std::unique_ptr<prv::Provider> {
+                    return std::make_unique<T>();
                 });
 
                 if (addToList)
@@ -938,7 +939,7 @@ namespace hex {
                     Callback callback;
                 };
 
-                std::vector<Entry> &getEntries();
+                const std::vector<Entry>& getEntries();
 
             }
 
@@ -963,7 +964,7 @@ namespace hex {
                     Callback callback;
                 };
 
-                std::vector<Entry> &getEntries();
+                const std::vector<Entry>& getEntries();
 
             }
 
@@ -1019,8 +1020,8 @@ namespace hex {
 
                 void addDataVisualizer(std::shared_ptr<DataVisualizer> &&visualizer);
 
-                std::vector<std::shared_ptr<DataVisualizer>> &getVisualizers();
-                std::vector<std::shared_ptr<MiniMapVisualizer>> &getMiniMapVisualizers();
+                const std::vector<std::shared_ptr<DataVisualizer>>& getVisualizers();
+                const std::vector<std::shared_ptr<MiniMapVisualizer>>& getMiniMapVisualizers();
 
             }
 
@@ -1082,7 +1083,7 @@ namespace hex {
 
             namespace impl {
 
-                std::vector<std::unique_ptr<Algorithm>> &getAlgorithms();
+                const std::vector<std::unique_ptr<Algorithm>>& getAlgorithms();
 
                 void addAlgorithm(std::unique_ptr<Algorithm> &&hash);
 
@@ -1119,7 +1120,7 @@ namespace hex {
 
                     [[nodiscard]] Hash *getType() { return m_type; }
                     [[nodiscard]] const Hash *getType() const { return m_type; }
-                    [[nodiscard]] const std::string &getName() const { return m_name; }
+                    [[nodiscard]] const std::string& getName() const { return m_name; }
 
                     const std::vector<u8>& get(const Region& region, prv::Provider *provider) {
                         if (m_cache.empty()) {
@@ -1147,7 +1148,7 @@ namespace hex {
                 [[nodiscard]] virtual nlohmann::json store() const = 0;
                 virtual void load(const nlohmann::json &json) = 0;
 
-                [[nodiscard]] const UnlocalizedString &getUnlocalizedName() const {
+                [[nodiscard]] const UnlocalizedString& getUnlocalizedName() const {
                     return m_unlocalizedName;
                 }
 
@@ -1162,7 +1163,7 @@ namespace hex {
 
             namespace impl {
 
-                std::vector<std::unique_ptr<Hash>> &getHashes();
+                const std::vector<std::unique_ptr<Hash>>& getHashes();
 
                 void add(std::unique_ptr<Hash> &&hash);
 
@@ -1199,7 +1200,7 @@ namespace hex {
             namespace impl {
                 using NetworkCallback = std::function<nlohmann::json(const nlohmann::json &)>;
 
-                std::map<std::string, NetworkCallback> &getNetworkEndpoints();
+                const std::map<std::string, NetworkCallback>& getNetworkEndpoints();
             }
 
             void registerNetworkEndpoint(const std::string &endpoint, const impl::NetworkCallback &callback);
@@ -1216,7 +1217,7 @@ namespace hex {
                     bool enabled;
                 };
 
-                std::map<std::string, Experiment> &getExperiments();
+                const std::map<std::string, Experiment>& getExperiments();
             }
 
             void addExperiment(
@@ -1240,7 +1241,7 @@ namespace hex {
                     Callback callback;
                 };
 
-                std::vector<ReportGenerator>& getGenerators();
+                const std::vector<ReportGenerator>& getGenerators();
 
             }
 

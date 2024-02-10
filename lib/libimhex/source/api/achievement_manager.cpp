@@ -7,41 +7,43 @@
 
 namespace hex {
 
-    std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>> &AchievementManager::getAchievements() {
-        static AutoReset<std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>> achievements;
-
-        return achievements;
+    static AutoReset<std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>> s_achievements;
+    const std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>> &AchievementManager::getAchievements() {
+        return *s_achievements;
     }
 
-    std::unordered_map<std::string, std::list<AchievementManager::AchievementNode>>& AchievementManager::getAchievementNodes(bool rebuild) {
-        static AutoReset<std::unordered_map<std::string, std::list<AchievementNode>>> nodeCategoryStorage;
+    static AutoReset<std::unordered_map<std::string, std::list<AchievementManager::AchievementNode>>> s_nodeCategoryStorage;
+    std::unordered_map<std::string, std::list<AchievementManager::AchievementNode>>& getAchievementNodesMutable(bool rebuild) {
+        if (!s_nodeCategoryStorage->empty() || !rebuild)
+            return s_nodeCategoryStorage;
 
-        if (!nodeCategoryStorage->empty() || !rebuild)
-            return nodeCategoryStorage;
-
-        nodeCategoryStorage->clear();
+        s_nodeCategoryStorage->clear();
 
         // Add all achievements to the node storage
-        for (auto &[categoryName, achievements] : getAchievements()) {
-            auto &nodes = (*nodeCategoryStorage)[categoryName];
+        for (auto &[categoryName, achievements] : AchievementManager::getAchievements()) {
+            auto &nodes = (*s_nodeCategoryStorage)[categoryName];
 
             for (auto &[achievementName, achievement] : achievements) {
                 nodes.emplace_back(achievement.get());
             }
         }
 
-        return nodeCategoryStorage;
+        return s_nodeCategoryStorage;
     }
 
-    std::unordered_map<std::string, std::vector<AchievementManager::AchievementNode*>>& AchievementManager::getAchievementStartNodes(bool rebuild) {
-        static AutoReset<std::unordered_map<std::string, std::vector<AchievementNode*>>> startNodes;
+    const std::unordered_map<std::string, std::list<AchievementManager::AchievementNode>>& AchievementManager::getAchievementNodes(bool rebuild) {
+        return getAchievementNodesMutable(rebuild);
+    }
 
-        if (!startNodes->empty() || !rebuild)
-            return startNodes;
+    static AutoReset<std::unordered_map<std::string, std::vector<AchievementManager::AchievementNode*>>> s_startNodes;
+    const std::unordered_map<std::string, std::vector<AchievementManager::AchievementNode*>>& AchievementManager::getAchievementStartNodes(bool rebuild) {
 
-        auto &nodeCategoryStorage = getAchievementNodes();
+        if (!s_startNodes->empty() || !rebuild)
+            return s_startNodes;
 
-        startNodes->clear();
+        auto &nodeCategoryStorage = getAchievementNodesMutable(rebuild);
+
+        s_startNodes->clear();
 
         // Add all parents and children to the nodes
         for (auto &[categoryName, achievements] : nodeCategoryStorage) {
@@ -76,17 +78,17 @@ namespace hex {
         for (auto &[categoryName, achievements] : nodeCategoryStorage) {
             for (auto &achievementNode : achievements) {
                 if (!achievementNode.hasParents()) {
-                    (*startNodes)[categoryName].emplace_back(&achievementNode);
+                    (*s_startNodes)[categoryName].emplace_back(&achievementNode);
                 }
 
                 for (const auto &parent : achievementNode.parents) {
                     if (parent->achievement->getUnlocalizedCategory() != achievementNode.achievement->getUnlocalizedCategory())
-                        (*startNodes)[categoryName].emplace_back(&achievementNode);
+                        (*s_startNodes)[categoryName].emplace_back(&achievementNode);
                 }
             }
         }
 
-        return startNodes;
+        return s_startNodes;
     }
 
     void AchievementManager::unlockAchievement(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName)  {
@@ -104,8 +106,11 @@ namespace hex {
             return;
         }
 
-        const auto &nodes = getAchievementNodes()[categoryName];
-        for (const auto &node : nodes) {
+        const auto &nodes = getAchievementNodes();
+        if (!nodes.contains(categoryName))
+            return;
+
+        for (const auto &node : nodes.at(categoryName)) {
             auto &achievement = node.achievement;
 
             if (achievement->getUnlocalizedCategory() != unlocalizedCategory) {
@@ -134,14 +139,8 @@ namespace hex {
         }
     }
 
-    void AchievementManager::clear() {
-        getAchievements().clear();
-        getAchievementStartNodes(false).clear();
-        getAchievementNodes(false).clear();
-    }
-
     void AchievementManager::clearTemporary() {
-        auto &categories = getAchievements();
+        auto &categories = *s_achievements;
         for (auto &[categoryName, achievements] : categories) {
             std::erase_if(achievements, [](auto &data) {
                 auto &[achievementName, achievement] = data;
@@ -154,8 +153,8 @@ namespace hex {
             return achievements.empty();
         });
 
-        getAchievementStartNodes(false).clear();
-        getAchievementNodes(false).clear();
+        s_startNodes->clear();
+        s_nodeCategoryStorage->clear();
     }
 
     std::pair<u32, u32> AchievementManager::getProgress() {
@@ -175,9 +174,25 @@ namespace hex {
     }
 
     void AchievementManager::achievementAdded() {
-        getAchievementStartNodes(false).clear();
-        getAchievementNodes(false).clear();
+        s_startNodes->clear();
+        s_nodeCategoryStorage->clear();
     }
+
+    Achievement &AchievementManager::addAchievementImpl(std::unique_ptr<Achievement> &&newAchievement) {
+        const auto &category = newAchievement->getUnlocalizedCategory();
+        const auto &name = newAchievement->getUnlocalizedName();
+
+        auto [categoryIter, categoryInserted] = s_achievements->insert({ category, std::unordered_map<std::string, std::unique_ptr<Achievement>>{} });
+        auto &[categoryKey, achievements] = *categoryIter;
+
+        auto [achievementIter, achievementInserted] = achievements.insert({ name, std::move(newAchievement) });
+        auto &[achievementKey, achievement] = *achievementIter;
+
+        achievementAdded();
+
+        return *achievement;
+    }
+
 
     constexpr static auto AchievementsFile = "achievements.json";
 

@@ -47,7 +47,7 @@ namespace hex::plugin::builtin {
                 ui::PopupQuestion::open("hex.builtin.popup.exit_application.desc"_lang,
                     [] {
                         imhexClosing = true;
-                        for (const auto &provider : auto(ImHexApi::Provider::getProviders()))
+                        for (const auto &provider : ImHexApi::Provider::getProviders())
                             ImHexApi::Provider::remove(provider);
                     },
                     [] { }

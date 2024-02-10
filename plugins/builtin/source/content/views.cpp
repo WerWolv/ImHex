@@ -20,6 +20,8 @@
 #include "content/views/view_highlight_rules.hpp"
 #include "content/views/view_tutorials.hpp"
 
+#include <hex/api/layout_manager.hpp>
+
 namespace hex::plugin::builtin {
 
     void registerViews() {
@@ -44,6 +46,20 @@ namespace hex::plugin::builtin {
         ContentRegistry::Views::add<ViewAchievements>();
         ContentRegistry::Views::add<ViewHighlightRules>();
         ContentRegistry::Views::add<ViewTutorials>();
+
+
+        LayoutManager::registerLoadCallback([](std::string_view line) {
+            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+                std::string format = hex::format("{}=%d", view->getUnlocalizedName().get());
+                sscanf(line.data(), format.c_str(), &view->getWindowOpenState());
+            }
+        });
+
+        LayoutManager::registerStoreCallback([](ImGuiTextBuffer *buffer) {
+            for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
+                buffer->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
+            }
+        });
     }
 
 }
