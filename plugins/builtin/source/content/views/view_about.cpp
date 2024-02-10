@@ -135,6 +135,9 @@ namespace hex::plugin::builtin {
                     {
                         // Draw basic information about ImHex and its version
                         ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv", ImHexApi::System::getImHexVersion());
+                        ImGui::Indent(25_scaled);
+                        ImGuiExt::TextFormatted("Powered by Dear ImGui v{}", ImGui::GetVersion());
+                        ImGui::Unindent(25_scaled);
                     }
 
                     ImGui::TableNextColumn();
