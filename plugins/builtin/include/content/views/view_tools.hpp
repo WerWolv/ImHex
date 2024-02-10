@@ -16,7 +16,7 @@ namespace hex::plugin::builtin {
         void drawAlwaysVisibleContent() override;
 
     private:
-        std::vector<const ContentRegistry::Tools::impl::Entry>::iterator m_dragStartIterator;
+        std::vector<ContentRegistry::Tools::impl::Entry>::const_iterator m_dragStartIterator;
 
         std::map<ImGuiWindow*, float> m_windowHeights;
         std::map<UnlocalizedString, bool> m_detachedTools;
