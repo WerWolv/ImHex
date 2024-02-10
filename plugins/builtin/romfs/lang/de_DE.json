@@ -483,6 +483,7 @@
         "hex.builtin.setting.imhex.recent_files": "Zuletzt geöffnete Dateien",
         "hex.builtin.setting.interface": "Aussehen",
         "hex.builtin.setting.interface.color": "Farbdesign",
+        "hex.builtin.setting.interface.crisp_scaling": "Gestochen scharfe Skallierung aktivieren",
         "hex.builtin.setting.interface.fps": "FPS Limit",
         "hex.builtin.setting.interface.fps.native": "Nativ",
         "hex.builtin.setting.interface.fps.unlocked": "Unbegrenzt",

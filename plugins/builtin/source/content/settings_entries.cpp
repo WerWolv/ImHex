@@ -604,184 +604,208 @@ namespace hex::plugin::builtin {
     }
 
     void registerSettings() {
-
-        /* General */
-
         namespace Widgets = ContentRegistry::Settings::Widgets;
 
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
-        ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
+        /* General */
+        {
 
-        #if !defined(OS_WEB)
-            ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
-            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
-        #endif
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.show_tips", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "", "hex.builtin.setting.general.save_recent_providers", true);
+            ContentRegistry::Settings::add<AutoBackupWidget>("hex.builtin.setting.general", "", "hex.builtin.setting.general.auto_backup_time");
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.auto_load_patterns", true);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.patterns", "hex.builtin.setting.general.sync_pattern_source", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.network_interface", false);
 
-        /* Interface */
-
-        auto themeNames = ThemeManager::getThemeNames();
-        std::vector<nlohmann::json> themeJsons = { };
-        for (const auto &themeName : themeNames)
-            themeJsons.emplace_back(themeName);
-
-        themeNames.emplace(themeNames.begin(), ThemeManager::NativeTheme);
-        themeJsons.emplace(themeJsons.begin(), ThemeManager::NativeTheme);
-
-        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.color",
-                                                          themeNames,
-                                                          themeJsons,
-                                                          "Dark").setChangedCallback([](auto &widget) {
-                                                              auto dropDown = static_cast<Widgets::DropDown *>(&widget);
-
-                                                              if (dropDown->getValue() == ThemeManager::NativeTheme)
-                                                                  ImHexApi::System::enableSystemThemeDetection(true);
-                                                              else {
-                                                                  ImHexApi::System::enableSystemThemeDetection(false);
-                                                                  ThemeManager::changeTheme(dropDown->getValue());
-                                                              }
-                                                          });
-
-        ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor").requiresRestart();
-
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.pattern_data_row_bg", false);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.always_show_provider_tabs", false);
-
-        std::vector<std::string> languageNames;
-        std::vector<nlohmann::json> languageCodes;
-
-        for (auto &[languageCode, languageName] : LocalizationManager::getSupportedLanguages()) {
-            languageNames.emplace_back(languageName);
-            languageCodes.emplace_back(languageCode);
+            #if !defined(OS_WEB)
+                ContentRegistry::Settings::add<ServerContactWidget>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.server_contact");
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.general", "hex.builtin.setting.general.network", "hex.builtin.setting.general.upload_crash_logs", true);
+            #endif
         }
 
-        ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+        /* Interface */
+        {
+            auto themeNames = ThemeManager::getThemeNames();
+            std::vector<nlohmann::json> themeJsons = { };
+            for (const auto &themeName : themeNames)
+                themeJsons.emplace_back(themeName);
 
-        ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
-        ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.fps");
+            themeNames.emplace(themeNames.begin(), ThemeManager::NativeTheme);
+            themeJsons.emplace(themeJsons.begin(), ThemeManager::NativeTheme);
 
-        #if defined (OS_LINUX)
-            constexpr static auto MultiWindowSupportEnabledDefault = 0;
-        #else
-            constexpr static auto MultiWindowSupportEnabledDefault = 1;
-        #endif
+            ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.color",
+                                                              themeNames,
+                                                              themeJsons,
+                                                              "Dark").setChangedCallback([](auto &widget) {
+                                                                  auto dropDown = static_cast<Widgets::DropDown *>(&widget);
 
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault).requiresRestart();
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
+                                                                  if (dropDown->getValue() == ThemeManager::NativeTheme)
+                                                                      ImHexApi::System::enableSystemThemeDetection(true);
+                                                                  else {
+                                                                      ImHexApi::System::enableSystemThemeDetection(false);
+                                                                      ThemeManager::changeTheme(dropDown->getValue());
+                                                                  }
+                                                              });
 
-        ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
-        ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.byte_padding", 0, 0, 50);
-        ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.char_padding", 0, 0, 50);
+            ContentRegistry::Settings::add<ScalingWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.scaling_factor").requiresRestart();
 
+            #if defined (OS_WEB)
+                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.crisp_scaling", false)
+                .setChangedCallback([](Widgets::Widget &widget) {
+                    auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
+
+                    EM_ASM({
+                        var canvas = document.getElementById('canvas');
+                        if ($0)
+                            canvas.style.imageRendering = 'pixelated';
+                        else
+                            canvas.style.imageRendering = 'smooth';
+                    }, checkBox->isChecked());
+                });
+            #endif
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.pattern_data_row_bg", false);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.style", "hex.builtin.setting.interface.always_show_provider_tabs", false);
+
+            std::vector<std::string> languageNames;
+            std::vector<nlohmann::json> languageCodes;
+
+            for (auto &[languageCode, languageName] : LocalizationManager::getSupportedLanguages()) {
+                languageNames.emplace_back(languageName);
+                languageCodes.emplace_back(languageCode);
+            }
+
+            ContentRegistry::Settings::add<Widgets::DropDown>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.language", languageNames, languageCodes, "en-US");
+
+            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.language", "hex.builtin.setting.interface.wiki_explain_language", "en");
+            ContentRegistry::Settings::add<FPSWidget>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.fps");
+
+            #if defined (OS_LINUX)
+                constexpr static auto MultiWindowSupportEnabledDefault = 0;
+            #else
+                constexpr static auto MultiWindowSupportEnabledDefault = 1;
+            #endif
+
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.multi_windows", MultiWindowSupportEnabledDefault).requiresRestart();
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.interface", "hex.builtin.setting.interface.window", "hex.builtin.setting.interface.restore_window_pos", false);
+
+            ContentRegistry::Settings::add<Widgets::ColorPicker>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.highlight_color", ImColor(0x80, 0x80, 0xC0, 0x60));
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.sync_scrolling", false);
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.byte_padding", 0, 0, 50);
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.hex_editor", "", "hex.builtin.setting.hex_editor.char_padding", 0, 0, 50);
+        }
 
         /* Fonts */
+        {
 
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
-            .requiresRestart();
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.glyphs", "hex.builtin.setting.font.load_all_unicode_chars", false)
+                .requiresRestart();
 
-        auto customFontEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_enable", false).requiresRestart();
+            auto customFontEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_enable", false).requiresRestart();
 
-        const auto customFontsEnabled = [customFontEnabledSetting] {
-            auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+            const auto customFontsEnabled = [customFontEnabledSetting] {
+                auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
 
-            return customFontsEnabled.isChecked();
-        };
+                return customFontsEnabled.isChecked();
+            };
 
-        auto customFontPathSetting = ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
-                .requiresRestart()
-                .setEnabledCallback(customFontsEnabled);
+            auto customFontPathSetting = ContentRegistry::Settings::add<Widgets::FilePicker>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_path")
+                    .requiresRestart()
+                    .setEnabledCallback(customFontsEnabled);
 
-        const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
-            auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
-            auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
+            const auto customFontSettingsEnabled = [customFontEnabledSetting, customFontPathSetting] {
+                auto &customFontsEnabled = static_cast<Widgets::Checkbox &>(customFontEnabledSetting.getWidget());
+                auto &fontPath = static_cast<Widgets::FilePicker &>(customFontPathSetting.getWidget());
 
-            return customFontsEnabled.isChecked() && !fontPath.getPath().empty();
-        };
+                return customFontsEnabled.isChecked() && !fontPath.getPath().empty();
+            };
 
-        ContentRegistry::Settings::add<Widgets::Label>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_info")
-                .setEnabledCallback(customFontsEnabled);
-
-
-        ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
-                .requiresRestart()
-                .setEnabledCallback(customFontSettingsEnabled);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
-                .requiresRestart()
-                .setEnabledCallback(customFontSettingsEnabled);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
-                .requiresRestart()
-                .setEnabledCallback(customFontSettingsEnabled);
-        ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", true)
-                .requiresRestart()
-                .setEnabledCallback(customFontSettingsEnabled);
+            ContentRegistry::Settings::add<Widgets::Label>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.custom_font_info")
+                    .setEnabledCallback(customFontsEnabled);
 
 
+            ContentRegistry::Settings::add<Widgets::SliderInteger>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_size", 13, 0, 100)
+                    .requiresRestart()
+                    .setEnabledCallback(customFontSettingsEnabled);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_bold", false)
+                    .requiresRestart()
+                    .setEnabledCallback(customFontSettingsEnabled);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_italic", false)
+                    .requiresRestart()
+                    .setEnabledCallback(customFontSettingsEnabled);
+            ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.font", "hex.builtin.setting.font.custom_font", "hex.builtin.setting.font.font_antialias", true)
+                    .requiresRestart()
+                    .setEnabledCallback(customFontSettingsEnabled);
+        }
 
         /* Folders */
-
-        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.folders", "hex.builtin.setting.folders.description");
-        ContentRegistry::Settings::add<UserFolderWidget>("hex.builtin.setting.folders", "", "hex.builtin.setting.folders.description");
+        {
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.folders", "hex.builtin.setting.folders.description");
+            ContentRegistry::Settings::add<UserFolderWidget>("hex.builtin.setting.folders", "", "hex.builtin.setting.folders.description");
+        }
 
         /* Proxy */
+        {
+            HttpRequest::setProxyUrl(ContentRegistry::Settings::read<std::string>("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", ""));
 
-        HttpRequest::setProxyUrl(ContentRegistry::Settings::read<std::string>("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.url", ""));
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.description");
 
-        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.proxy", "hex.builtin.setting.proxy.description");
+            auto proxyEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.enable", false)
+            .setChangedCallback([](Widgets::Widget &widget) {
+                auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 
-        auto proxyEnabledSetting = ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.enable", false).setChangedCallback([](Widgets::Widget &widget) {
-            auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
+                HttpRequest::setProxyState(checkBox->isChecked());
+            });
 
-            HttpRequest::setProxyState(checkBox->isChecked());
-        });
+            ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.url", "")
+            .setEnabledCallback([proxyEnabledSetting] {
+                auto &checkBox = static_cast<Widgets::Checkbox &>(proxyEnabledSetting.getWidget());
 
-        ContentRegistry::Settings::add<Widgets::TextBox>("hex.builtin.setting.proxy", "", "hex.builtin.setting.proxy.url", "")
-        .setEnabledCallback([proxyEnabledSetting] {
-            auto &checkBox = static_cast<Widgets::Checkbox &>(proxyEnabledSetting.getWidget());
+                return checkBox.isChecked();
+            })
+            .setChangedCallback([](Widgets::Widget &widget) {
+                auto textBox = static_cast<Widgets::TextBox *>(&widget);
 
-            return checkBox.isChecked();
-        })
-        .setChangedCallback([](Widgets::Widget &widget) {
-            auto textBox = static_cast<Widgets::TextBox *>(&widget);
-
-            HttpRequest::setProxyUrl(textBox->getValue());
-        });
-
+                HttpRequest::setProxyUrl(textBox->getValue());
+            });
+        }
 
         /* Experiments */
-        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.experiments", "hex.builtin.setting.experiments.description");
-        EventImHexStartupFinished::subscribe([]{
-            for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
-                ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
+        {
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.experiments", "hex.builtin.setting.experiments.description");
+            EventImHexStartupFinished::subscribe([]{
+                for (const auto &[name, experiment] : ContentRegistry::Experiments::impl::getExperiments()) {
+                    ContentRegistry::Settings::add<Widgets::Checkbox>("hex.builtin.setting.experiments", "", experiment.unlocalizedName, false)
                         .setTooltip(Lang(experiment.unlocalizedDescription))
                         .setChangedCallback([name](Widgets::Widget &widget) {
                             auto checkBox = static_cast<Widgets::Checkbox *>(&widget);
 
                             ContentRegistry::Experiments::enableExperiement(name, checkBox->isChecked());
                         });
-            }
-        });
+                }
+            });
+        }
 
         /* Shorcuts */
-        EventImHexStartupFinished::subscribe([]{
-            for (const auto &shortcutEntry : ShortcutManager::getGlobalShortcuts()) {
-                ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", "hex.builtin.setting.shortcuts.global", shortcutEntry.unlocalizedName, nullptr, shortcutEntry.shortcut);
-            }
-
-            for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
-                for (const auto &shortcutEntry : ShortcutManager::getViewShortcuts(view.get())) {
-                    ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", viewName, shortcutEntry.unlocalizedName, view.get(), shortcutEntry.shortcut);
+        {
+            EventImHexStartupFinished::subscribe([]{
+                for (const auto &shortcutEntry : ShortcutManager::getGlobalShortcuts()) {
+                    ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", "hex.builtin.setting.shortcuts.global", shortcutEntry.unlocalizedName, nullptr, shortcutEntry.shortcut);
                 }
-            }
-       });
 
-       /* Toolbar icons */
-        ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.toolbar", "hex.builtin.setting.toolbar.description");
+                for (auto &[viewName, view] : ContentRegistry::Views::impl::getEntries()) {
+                    for (const auto &shortcutEntry : ShortcutManager::getViewShortcuts(view.get())) {
+                        ContentRegistry::Settings::add<KeybindingWidget>("hex.builtin.setting.shortcuts", viewName, shortcutEntry.unlocalizedName, view.get(), shortcutEntry.shortcut);
+                    }
+                }
+           });
+        }
 
-       ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
+        /* Toolbar icons */
+        {
+            ContentRegistry::Settings::setCategoryDescription("hex.builtin.setting.toolbar", "hex.builtin.setting.toolbar.description");
+
+            ContentRegistry::Settings::add<ToolbarIconsWidget>("hex.builtin.setting.toolbar", "", "hex.builtin.setting.toolbar.icons");
+        }
 
     }
 
