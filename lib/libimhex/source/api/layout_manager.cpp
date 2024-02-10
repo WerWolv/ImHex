@@ -17,6 +17,9 @@ namespace hex {
         AutoReset<std::optional<std::string>> s_layoutStringToLoad;
         AutoReset<std::vector<LayoutManager::Layout>> s_layouts;
 
+        AutoReset<std::vector<LayoutManager::LoadCallback>>  s_loadCallbacks;
+        AutoReset<std::vector<LayoutManager::StoreCallback>> s_storeCallbacks;
+
         bool s_layoutLocked = false;
 
     }
@@ -129,5 +132,25 @@ namespace hex {
         log::info("Layout {}", locked ? "locked" : "unlocked");
         s_layoutLocked = locked;
     }
+
+    void LayoutManager::registerLoadCallback(const LoadCallback &callback) {
+        s_loadCallbacks->push_back(callback);
+    }
+
+    void LayoutManager::registerStoreCallback(const StoreCallback &callback) {
+        s_storeCallbacks->push_back(callback);
+    }
+
+    void LayoutManager::onLoad(std::string_view line) {
+        for (const auto &callback : *s_loadCallbacks)
+            callback(line);
+    }
+
+    void LayoutManager::onStore(ImGuiTextBuffer *buffer) {
+        for (const auto &callback : *s_storeCallbacks)
+            callback(buffer);
+    }
+
+
 
 }

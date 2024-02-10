@@ -180,7 +180,7 @@ namespace hex::plugin::builtin {
                 #endif
             }
 
-            auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
+            auto &titleBarButtons = ContentRegistry::Interface::impl::getTitlebarButtons();
 
             // Draw custom title bar buttons
             if (!titleBarButtons.empty()) {

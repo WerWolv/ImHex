@@ -331,18 +331,7 @@ namespace hex {
         static Achievement& addAchievement(auto && ... args) {
             auto newAchievement = std::make_unique<T>(std::forward<decltype(args)>(args)...);
 
-            const auto &category = newAchievement->getUnlocalizedCategory();
-            const auto &name = newAchievement->getUnlocalizedName();
-
-            auto [categoryIter, categoryInserted] = getAchievements().insert({ category, std::unordered_map<std::string, std::unique_ptr<Achievement>>{} });
-            auto &[categoryKey, achievements] = *categoryIter;
-
-            auto [achievementIter, achievementInserted] = achievements.insert({ name, std::move(newAchievement) });
-            auto &[achievementKey, achievement] = *achievementIter;
-
-            achievementAdded();
-
-            return *achievement;
+            return addAchievementImpl(std::move(newAchievement));
         }
 
         /**
@@ -371,7 +360,7 @@ namespace hex {
          * @brief Returns all registered achievements
          * @return All achievements
          */
-        static std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>& getAchievements();
+        static const std::unordered_map<std::string, std::unordered_map<std::string, std::unique_ptr<Achievement>>>& getAchievements();
 
         /**
          * @brief Returns all achievement start nodes
@@ -379,14 +368,14 @@ namespace hex {
          * @param rebuild Whether to rebuild the list of start nodes
          * @return All achievement start nodes
          */
-        static std::unordered_map<std::string, std::vector<AchievementNode*>>& getAchievementStartNodes(bool rebuild = true);
+        static const std::unordered_map<std::string, std::vector<AchievementNode*>>& getAchievementStartNodes(bool rebuild = true);
 
         /**
          * @brief Returns all achievement nodes
          * @param rebuild Whether to rebuild the list of nodes
          * @return All achievement nodes
          */
-        static std::unordered_map<std::string, std::list<AchievementNode>>& getAchievementNodes(bool rebuild = true);
+        static const std::unordered_map<std::string, std::list<AchievementNode>>& getAchievementNodes(bool rebuild = true);
 
         /**
          * @brief Loads the progress of all achievements from the achievements save file
@@ -397,11 +386,6 @@ namespace hex {
          * @brief Stores the progress of all achievements to the achievements save file
          */
         static void storeProgress();
-
-        /**
-         * @brief Removes all registered achievements from the tree
-         */
-        static void clear();
 
         /**
          * @brief Removes all temporary achievements from the tree
@@ -416,6 +400,8 @@ namespace hex {
 
     private:
         static void achievementAdded();
+
+        static Achievement& addAchievementImpl(std::unique_ptr<Achievement> &&newAchievement);
     };
 
 }

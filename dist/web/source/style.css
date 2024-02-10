@@ -17,6 +17,7 @@ body {
     margin-right: auto;
     display: none;
     border: 0 none;
+    image-rendering: smooth;
 }
 
 h1, h2, h5 {

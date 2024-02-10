@@ -6,7 +6,9 @@
 #include <string>
 
 #include <wolv/io/fs.hpp>
+
 #include <hex/helpers/logger.hpp>
+#include <hex/helpers/auto_reset.hpp>
 
 struct ImGuiContext;
 
@@ -109,12 +111,17 @@ namespace hex {
 
         static void addPlugin(const std::string &name, PluginFunctions functions);
 
-        static std::list<Plugin> &getPlugins();
         static Plugin* getPlugin(const std::string &name);
-        static std::vector<std::fs::path> &getPluginPaths();
-        static std::vector<std::fs::path> &getPluginLoadPaths();
+        static const std::list<Plugin>& getPlugins();
+        static const std::vector<std::fs::path>& getPluginPaths();
+        static const std::vector<std::fs::path>& getPluginLoadPaths();
 
         static bool isPluginLoaded(const std::fs::path &path);
+
+    private:
+        static std::list<Plugin>& getPluginsMutable();
+
+        static AutoReset<std::vector<std::fs::path>> s_pluginPaths, s_pluginLoadPaths;
     };
 
 }
