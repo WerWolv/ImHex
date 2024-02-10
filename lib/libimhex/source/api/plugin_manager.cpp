@@ -322,9 +322,11 @@ namespace hex {
     }
 
     Plugin* PluginManager::getPlugin(const std::string &name) {
-        for (auto &plugin : getPlugins()) {
-            if(plugin.getPluginName() == name) return &plugin;
+        for (auto &plugin : getPluginsMutable()) {
+            if (plugin.getPluginName() == name)
+                return &plugin;
         }
+
         return nullptr;
     }
 
