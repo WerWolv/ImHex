@@ -107,17 +107,17 @@ namespace hex::subcommands {
     void registerSubCommand(const std::string &cmdName, const ForwardCommandHandler &handler) {
         log::debug("Registered new forward command handler: {}", cmdName);
 
-        ImHexApi::Messaging::impl::getHandlers().insert({ hex::format("command/{}", cmdName), [handler](const std::vector<u8> &eventData){
-            std::string str(reinterpret_cast<const char *>(eventData.data()), eventData.size());
+        ImHexApi::Messaging::registerHandler(hex::format("command/{}", cmdName), [handler](const std::vector<u8> &eventData){
+            std::string string(reinterpret_cast<const char *>(eventData.data()), eventData.size());
 
             std::vector<std::string> args;
 
-            for (const auto &arg_view : std::views::split(str, '\0')) {
+            for (const auto &arg_view : std::views::split(string, char(0x00))) {
                 std::string arg(arg_view.data(), arg_view.size());
                 args.push_back(arg);
             }
 
             handler(args);
-        }});
+        });
     }
 }

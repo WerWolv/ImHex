@@ -35,8 +35,8 @@ namespace hex {
                 Highlighting() = default;
                 Highlighting(Region region, color_t color);
 
-                [[nodiscard]] const Region &getRegion() const { return m_region; }
-                [[nodiscard]] const color_t &getColor() const { return m_color; }
+                [[nodiscard]] const Region& getRegion() const { return m_region; }
+                [[nodiscard]] const color_t& getColor() const { return m_color; }
 
             private:
                 Region m_region = {};
@@ -48,9 +48,9 @@ namespace hex {
                 Tooltip() = default;
                 Tooltip(Region region, std::string value, color_t color);
 
-                [[nodiscard]] const Region &getRegion() const { return m_region; }
-                [[nodiscard]] const color_t &getColor() const { return m_color; }
-                [[nodiscard]] const std::string &getValue() const { return m_value; }
+                [[nodiscard]] const Region& getRegion() const { return m_region; }
+                [[nodiscard]] const color_t& getColor() const { return m_color; }
+                [[nodiscard]] const std::string& getValue() const { return m_value; }
 
             private:
                 Region m_region = {};
@@ -70,12 +70,12 @@ namespace hex {
 
                 using HighlightingFunction = std::function<std::optional<color_t>(u64, const u8*, size_t, bool)>;
 
-                std::map<u32, Highlighting> &getBackgroundHighlights();
-                std::map<u32, HighlightingFunction> &getBackgroundHighlightingFunctions();
-                std::map<u32, Highlighting> &getForegroundHighlights();
-                std::map<u32, HighlightingFunction> &getForegroundHighlightingFunctions();
-                std::map<u32, Tooltip> &getTooltips();
-                std::map<u32, TooltipFunction> &getTooltipFunctions();
+                const std::map<u32, Highlighting>& getBackgroundHighlights();
+                const std::map<u32, HighlightingFunction>& getBackgroundHighlightingFunctions();
+                const std::map<u32, Highlighting>& getForegroundHighlights();
+                const std::map<u32, HighlightingFunction>& getForegroundHighlightingFunctions();
+                const std::map<u32, Tooltip>& getTooltips();
+                const std::map<u32, TooltipFunction>& getTooltipFunctions();
 
                 void setCurrentSelection(const std::optional<ProviderRegion> &region);
             }
@@ -279,7 +279,7 @@ namespace hex {
              * @brief Gets a list of all currently loaded data providers
              * @return The currently loaded data providers
              */
-            const std::vector<prv::Provider *> &getProviders();
+            std::vector<prv::Provider*> getProviders();
 
             /**
              * @brief Sets the currently selected data provider
@@ -323,7 +323,7 @@ namespace hex {
              * @param skipLoadInterface Whether to skip the provider's loading interface (see property documentation)
              * @param select Whether to select the provider after adding it
              */
-            void add(prv::Provider *provider, bool skipLoadInterface = false, bool select = true);
+            void add(std::unique_ptr<prv::Provider> &&provider, bool skipLoadInterface = false, bool select = true);
 
             /**
              * @brief Creates a new provider and adds it to the list of providers
@@ -332,7 +332,7 @@ namespace hex {
              */
             template<std::derived_from<prv::Provider> T>
             void add(auto &&...args) {
-                add(new T(std::forward<decltype(args)>(args)...));
+                add(std::make_unique<T>(std::forward<decltype(args)>(args)...));
             }
 
             /**
@@ -497,7 +497,14 @@ namespace hex {
              * @brief Gets the init arguments passed to ImHex from the splash screen
              * @return Init arguments
              */
-            std::map<std::string, std::string> &getInitArguments();
+            const std::map<std::string, std::string>& getInitArguments();
+
+            /**
+             * @brief Gets a init arguments passed to ImHex from the splash screen
+             * @param key The key of the init argument
+             * @return Init argument
+            */
+            std::string getInitArgument(const std::string &key);
 
             /**
              * @brief Sets if ImHex should follow the system theme
@@ -516,7 +523,7 @@ namespace hex {
              * @brief Gets the currently set additional folder paths
              * @return The currently set additional folder paths
              */
-            std::vector<std::filesystem::path> &getAdditionalFolderPaths();
+            const std::vector<std::filesystem::path>& getAdditionalFolderPaths();
 
             /**
              * @brief Sets the additional folder paths
@@ -529,7 +536,7 @@ namespace hex {
              * @brief Gets the current GPU vendor
              * @return The current GPU vendor
              */
-            const std::string &getGPUVendor();
+            const std::string& getGPUVendor();
 
             /**
              * @brief Checks if ImHex is running in portable mode
@@ -633,11 +640,12 @@ namespace hex {
         namespace Messaging {
             
             namespace impl {
+
                 using MessagingHandler = std::function<void(const std::vector<u8> &)>;
 
-                std::map<std::string, MessagingHandler> &getHandlers();
-
+                const std::map<std::string, MessagingHandler>& getHandlers();
                 void runHandler(const std::string &eventName, const std::vector<u8> &args);
+
             }
 
             /**
@@ -661,7 +669,7 @@ namespace hex {
 
             namespace impl {
 
-                std::vector<Font>& getFonts();
+                const std::vector<Font>& getFonts();
 
                 void setCustomFontPath(const std::fs::path &path);
                 void setFontSize(float size);
@@ -687,7 +695,7 @@ namespace hex {
              * @brief Gets the current custom font path
              * @return The current custom font path
              */
-            std::filesystem::path &getCustomFontPath();
+            const std::filesystem::path& getCustomFontPath();
 
             /**
              * @brief Gets the current font size

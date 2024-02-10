@@ -78,8 +78,8 @@ namespace hex {
             StyleMap styleMap;
         };
 
-        static std::map<std::string, ThemeHandler>& getThemeHandlers();
-        static std::map<std::string, StyleHandler>& getStyleHandlers();
+        static const std::map<std::string, ThemeHandler>& getThemeHandlers();
+        static const std::map<std::string, StyleHandler>& getStyleHandlers();
 
     private:
         ThemeManager() = default;

@@ -51,11 +51,19 @@ namespace hex {
         s_currProjectPath = path;
     }
 
-    std::vector<ProjectFile::Handler> &ProjectFile::getHandlers() {
+    void ProjectFile::registerHandler(const Handler &handler) {
+        s_handlers->push_back(handler);
+    }
+
+    void ProjectFile::registerPerProviderHandler(const ProviderHandler &handler) {
+        s_providerHandlers->push_back(handler);
+    }
+
+    const std::vector<ProjectFile::Handler>& ProjectFile::getHandlers() {
         return s_handlers;
     }
 
-    std::vector<ProjectFile::ProviderHandler> &ProjectFile::getProviderHandlers() {
+    const std::vector<ProjectFile::ProviderHandler>& ProjectFile::getProviderHandlers() {
         return s_providerHandlers;
     }
 

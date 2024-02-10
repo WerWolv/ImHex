@@ -2,6 +2,7 @@
 #include <imgui_internal.h>
 
 #include <hex/api/content_registry.hpp>
+#include <hex/api/layout_manager.hpp>
 
 #include <fonts/codicons_font.h>
 
@@ -9,6 +10,21 @@ namespace hex::plugin::builtin {
 
     ViewTools::ViewTools() : View::Window("hex.builtin.view.tools.name", ICON_VS_TOOLS) {
         m_dragStartIterator = ContentRegistry::Tools::impl::getEntries().end();
+
+        LayoutManager::registerLoadCallback([this](std::string_view line) {
+            auto parts = wolv::util::splitString(std::string(line), "=");
+            if (parts.size() != 2)
+                return;
+
+            m_detachedTools[parts[0]] = parts[1] == "1";
+        });
+
+        LayoutManager::registerStoreCallback([this](ImGuiTextBuffer *buffer) {
+            for (auto &[unlocalizedName, function] : ContentRegistry::Tools::impl::getEntries()) {
+                auto detached = m_detachedTools[unlocalizedName];
+                buffer->appendf("%s=%d\n", unlocalizedName.get().c_str(), detached);
+            }
+        });
     }
 
     void ViewTools::drawContent() {
@@ -16,13 +32,13 @@ namespace hex::plugin::builtin {
 
         // Draw all tools
         for (auto iter = tools.begin(); iter != tools.end(); ++iter) {
-            auto &[name, function, detached] = *iter;
+            auto &[unlocalizedName, function] = *iter;
 
             // If the tool has been detached from the main window, don't draw it here anymore
-            if (detached) continue;
+            if (m_detachedTools[unlocalizedName]) continue;
 
             // Draw the tool
-            if (ImGui::CollapsingHeader(Lang(name))) {
+            if (ImGui::CollapsingHeader(Lang(unlocalizedName))) {
                 function();
                 ImGui::NewLine();
             } else {
@@ -38,7 +54,7 @@ namespace hex::plugin::builtin {
 
                 // Detach the tool if the user dragged it out of the main window
                 if (!ImGui::IsItemHovered() && m_dragStartIterator == iter) {
-                    detached = true;
+                    m_detachedTools[unlocalizedName] = true;
                 }
 
             }
@@ -53,19 +69,19 @@ namespace hex::plugin::builtin {
         auto &tools = ContentRegistry::Tools::impl::getEntries();
 
         for (auto iter = tools.begin(); iter != tools.end(); ++iter) {
-            auto &[name, function, detached] = *iter;
+            auto &[unlocalizedName, function] = *iter;
 
             // If the tool is still attached to the main window, don't draw it here
-            if (!detached) continue;
+            if (!m_detachedTools[unlocalizedName]) continue;
 
             // Load the window height that is dependent on the tool content
-            const auto windowName = View::toWindowName(name);
+            const auto windowName = View::toWindowName(unlocalizedName);
             const auto height = m_windowHeights[ImGui::FindWindowByName(windowName.c_str())];
             if (height > 0)
                 ImGui::SetNextWindowSizeConstraints(ImVec2(400_scaled, height), ImVec2(FLT_MAX, height));
 
             // Create a new window for the tool
-            if (ImGui::Begin(windowName.c_str(), &detached, ImGuiWindowFlags_NoCollapse)) {
+            if (ImGui::Begin(windowName.c_str(), &m_detachedTools[unlocalizedName], ImGuiWindowFlags_NoCollapse)) {
                 // Draw the tool content
                 function();
 

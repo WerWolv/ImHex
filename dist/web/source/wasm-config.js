@@ -2,7 +2,7 @@ let wasmSize = null;
 // See comment in dist/web/Dockerfile about imhex.wasm.size
 fetch("imhex.wasm.size").then(async (resp) => {
     wasmSize = parseInt((await resp.text()).trim());
-    console.log(`wasm size was found to be ${wasmSize} bytes`);
+    console.log(`Real WASM binary size is ${wasmSize} bytes`);
 });
 
 // Monkeypatch WebAssembly to have a progress bar
@@ -49,9 +49,9 @@ function monkeyPatch(progressFun) {
 monkeyPatch((file, done) =>  {
     if (!wasmSize) return;
     if (done > wasmSize) {
-        console.log(`Warning: downloaded size ${done} is larger than wasm size ${wasmSize}`);
+        console.warn(`Downloaded binary size ${done} is larger than expected WASM size ${wasmSize}`);
         return;
-    };
+    }
 
     const percent  = ((done / wasmSize) * 100).toFixed(0);
     const mibNow   = (done / 1024**2).toFixed(1);

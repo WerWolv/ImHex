@@ -49,12 +49,12 @@ namespace hex {
 
             s_currStrings->clear();
 
-            for (auto &definition : definitions[language])
+            for (const auto &definition : definitions.at(language))
                 s_currStrings->insert(definition.getEntries().begin(), definition.getEntries().end());
 
             const auto& fallbackLanguage = getFallbackLanguage();
-            if (language != fallbackLanguage) {
-                for (auto &definition : definitions[fallbackLanguage])
+            if (language != fallbackLanguage && definitions.contains(fallbackLanguage)) {
+                for (const auto &definition : definitions.at(fallbackLanguage))
                     s_currStrings->insert(definition.getEntries().begin(), definition.getEntries().end());
             }
 
@@ -70,7 +70,7 @@ namespace hex {
                 return "";
 
             std::string localizedString;
-            for (const auto &definition : languageDefinitions[language]) {
+            for (const auto &definition : languageDefinitions.at(language)) {
                 if (definition.getEntries().contains(unlocalizedString)) {
                     localizedString = definition.getEntries().at(unlocalizedString);
                     break;

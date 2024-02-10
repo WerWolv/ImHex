@@ -61,7 +61,7 @@ namespace hex::plugin::diffing {
 
             ImGui::PushID(&column);
 
-            auto &providers = ImHexApi::Provider::getProviders();
+            auto providers = ImHexApi::Provider::getProviders();
             auto &providerIndex = column.provider;
 
             // Get the name of the currently selected provider

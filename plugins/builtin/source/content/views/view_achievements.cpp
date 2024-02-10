@@ -160,7 +160,7 @@ namespace hex::plugin::builtin {
     }
 
     void drawOverlay(ImDrawList *drawList, ImVec2 windowMin, ImVec2 windowMax, const std::string &currCategory) {
-        auto &achievements = AchievementManager::getAchievements()[currCategory];
+        auto &achievements = AchievementManager::getAchievements().at(currCategory);
 
         // Calculate number of achievements that have been unlocked
         const auto unlockedCount = std::count_if(achievements.begin(), achievements.end(), [](const auto &entry) {
@@ -313,7 +313,7 @@ namespace hex::plugin::builtin {
 
             // Draw each individual achievement category
             for (const auto &categoryName : categories) {
-                const auto &achievements = startNodes[categoryName];
+                const auto &achievements = startNodes.at(categoryName);
 
                 // Check if any achievements in the category are unlocked or unlockable
                 bool visible = false;
