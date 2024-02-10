@@ -45,6 +45,8 @@
                     emscripten_set_beforeunload_callback(nullptr, [](int eventType, const void *reserved, void *userData) {
                         hex::unused(eventType, reserved, userData);
 
+                        emscripten_cancel_main_loop();
+
                         try {
                             saveFsData();
                             deinitializeImHex();
