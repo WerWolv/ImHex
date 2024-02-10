@@ -17,9 +17,12 @@ add_executable(main ${APPLICATION_TYPE}
     source/messaging/win.cpp
     source/messaging/web.cpp
 
-
     source/init/splash_window.cpp
     source/init/tasks.cpp
+
+    source/init/run/common.cpp
+    source/init/run/native.cpp
+    source/init/run/web.cpp
 
     ${IMHEX_ICON}
 )

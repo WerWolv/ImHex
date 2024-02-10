@@ -803,7 +803,7 @@ namespace hex::plugin::builtin {
         RequestHexEditorSelectionChange::subscribe(this, [this](Region region) {
             auto provider = ImHexApi::Provider::get();
 
-            if (region == Region::Invalid()) {
+            if (region == Region::Invalid() || provider == nullptr) {
                 m_selectionStart->reset();
                 m_selectionEnd->reset();
                 EventRegionSelected::post(ImHexApi::HexEditor::ProviderRegion({ Region::Invalid(), nullptr }));
