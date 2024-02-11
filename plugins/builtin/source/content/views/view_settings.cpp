@@ -35,6 +35,7 @@ namespace hex::plugin::builtin {
                             widget->onChanged();
                         } catch (const std::exception &e) {
                             log::error("Failed to load setting [{} / {}]: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                            widget->store();
                         }
                     }
                 }
