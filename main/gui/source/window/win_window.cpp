@@ -487,6 +487,8 @@ namespace hex {
             }
         });
 
+        ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
+
     }
 
     void Window::beginNativeWindowFrame() {
