@@ -19,7 +19,8 @@ namespace hex::log {
         [[maybe_unused]] void redirectToFile();
         [[maybe_unused]] void enableColorPrinting();
 
-        extern std::mutex g_loggerMutex;
+        [[nodiscard]] std::mutex& getLoggerMutex();
+        [[nodiscard]] bool isLoggingSuspended();
 
         struct LogEntry {
             std::string project;
@@ -33,7 +34,10 @@ namespace hex::log {
         [[maybe_unused]] void printPrefix(FILE *dest, const fmt::text_style &ts, const std::string &level, const char *projectName);
 
         [[maybe_unused]] void print(const fmt::text_style &ts, const std::string &level, const std::string &fmt, auto && ... args) {
-            std::scoped_lock lock(g_loggerMutex);
+            if (isLoggingSuspended()) [[unlikely]]
+                return;
+
+            std::scoped_lock lock(getLoggerMutex());
 
             auto dest = getDestination();
             printPrefix(dest, ts, level, IMHEX_PROJECT_NAME);
@@ -46,6 +50,9 @@ namespace hex::log {
         }
 
     }
+
+    void suspendLogging();
+    void resumeLogging();
 
     [[maybe_unused]] void debug(const std::string &fmt, auto && ... args) {
         #if defined(DEBUG)
@@ -73,7 +80,7 @@ namespace hex::log {
 
 
     [[maybe_unused]] void print(const std::string &fmt, auto && ... args) {
-        std::scoped_lock lock(impl::g_loggerMutex);
+        std::scoped_lock lock(impl::getLoggerMutex());
 
         auto dest = impl::getDestination();
         auto message = fmt::format(fmt::runtime(fmt), args...);
@@ -82,7 +89,7 @@ namespace hex::log {
     }
 
     [[maybe_unused]] void println(const std::string &fmt, auto && ... args) {
-        std::scoped_lock lock(impl::g_loggerMutex);
+        std::scoped_lock lock(impl::getLoggerMutex());
 
         auto dest = impl::getDestination();
         auto message = fmt::format(fmt::runtime(fmt), args...);

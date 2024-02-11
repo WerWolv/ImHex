@@ -86,7 +86,7 @@ namespace hex {
 
     Plugin::~Plugin() {
         if (isLoaded()) {
-            log::debug("Trying to unload plugin '{}'", getPluginName());
+            log::info("Trying to unload plugin '{}'", getPluginName());
         }
 
         #if defined(OS_WINDOWS)

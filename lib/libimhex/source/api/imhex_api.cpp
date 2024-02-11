@@ -453,11 +453,6 @@ namespace hex {
                 s_gpuVendor = vendor;
             }
 
-            static bool s_portableVersion = false;
-            void setPortableVersion(bool enabled) {
-                s_portableVersion = enabled;
-            }
-
             static AutoReset<std::map<std::string, std::string>> s_initArguments;
             void addInitArgument(const std::string &key, const std::string &value) {
                 static std::mutex initArgumentsMutex;
@@ -588,7 +583,19 @@ namespace hex {
         }
 
         bool isPortableVersion() {
-            return impl::s_portableVersion;
+            static std::optional<bool> portable;
+            if (portable.has_value())
+                return portable.value();
+
+            if (const auto executablePath = wolv::io::fs::getExecutablePath(); executablePath.has_value()) {
+                const auto flagFile = executablePath->parent_path() / "PORTABLE";
+
+                portable = wolv::io::fs::exists(flagFile) && wolv::io::fs::isRegularFile(flagFile);
+            } else {
+                portable = false;
+            }
+
+            return portable.value();
         }
 
         std::string getOSName() {
