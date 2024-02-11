@@ -7,6 +7,8 @@
 namespace hex::plugin::builtin {
 
     void loadWorkspaces() {
+        WorkspaceManager::reset();
+
         for (const auto &defaultPath : fs::getDefaultPaths(fs::ImHexPath::Workspaces)) {
             for (const auto &entry : std::fs::directory_iterator(defaultPath)) {
                 if (!entry.is_regular_file())

@@ -12,7 +12,7 @@
         bool isMacosFullScreenModeEnabled(GLFWwindow *window);
         float getBackingScaleFactor();
 
-        void setupMacosWindowStyle(GLFWwindow *window);
+        void setupMacosWindowStyle(GLFWwindow *window, bool borderlessWindowMode);
 
     }
 

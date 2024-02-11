@@ -23,6 +23,7 @@ add_executable(main ${APPLICATION_TYPE}
     source/init/run/common.cpp
     source/init/run/native.cpp
     source/init/run/web.cpp
+    source/init/run/cli.cpp
 
     ${IMHEX_ICON}
 )

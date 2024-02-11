@@ -296,8 +296,6 @@ namespace hex {
             log::impl::redirectToFile();
         }
 
-        ImHexApi::System::impl::setBorderlessWindowMode(true);
-
         // Add plugin library folders to dll search path
         for (const auto &path : hex::fs::getDefaultPaths(fs::ImHexPath::Libraries))  {
             if (std::fs::exists(path))
@@ -486,6 +484,8 @@ namespace hex {
                 }
             }
         });
+
+        ImGui::GetIO().ConfigDebugIsDebuggerPresent = ::IsDebuggerPresent();
 
     }
 

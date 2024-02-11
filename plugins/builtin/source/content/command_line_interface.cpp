@@ -319,6 +319,7 @@ namespace hex::plugin::builtin {
         }
 
         log::println("{}", llvm::demangle(args[0]));
+        std::exit(EXIT_SUCCESS);
     }
 
 

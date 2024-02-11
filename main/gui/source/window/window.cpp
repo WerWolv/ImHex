@@ -877,6 +877,7 @@ namespace hex {
             ImGui_ImplOpenGL3_Init("#version 150");
         #elif defined(OS_WEB)
             ImGui_ImplOpenGL3_Init();
+            ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
         #else
             ImGui_ImplOpenGL3_Init("#version 130");
         #endif

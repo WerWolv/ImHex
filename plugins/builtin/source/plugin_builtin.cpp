@@ -121,6 +121,5 @@ IMHEX_PLUGIN_SETUP("Built-in", "WerWolv", "Default ImHex functionality") {
     addToolbarItems();
     addGlobalUIItems();
 
-    handleBorderlessWindowMode();
     setupOutOfBoxExperience();
 }

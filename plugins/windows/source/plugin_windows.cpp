@@ -35,11 +35,7 @@ static void detectSystemTheme() {
             auto error = RegQueryValueEx(hkey, "AppsUseLightTheme", nullptr, nullptr, reinterpret_cast<LPBYTE>(&value), &size);
             if (error == ERROR_SUCCESS) {
                 RequestChangeTheme::post(value == 0 ? "Dark" : "Light");
-            } else {
-                ImHexApi::System::impl::setBorderlessWindowMode(false);
             }
-        } else {
-            ImHexApi::System::impl::setBorderlessWindowMode(false);
         }
     });
 
@@ -49,13 +45,6 @@ static void detectSystemTheme() {
         if (themeFollowSystem)
             EventOSThemeChanged::post();
     });
-}
-
-static void checkBorderlessWindowOverride() {
-    bool borderlessWindowForced = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.force_borderless_window_mode", false);
-
-    if (borderlessWindowForced)
-        ImHexApi::System::impl::setBorderlessWindowMode(true);
 }
 
 IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
@@ -71,5 +60,4 @@ IMHEX_PLUGIN_SETUP("Windows", "WerWolv", "Windows-only features") {
     registerSettings();
 
     detectSystemTheme();
-    checkBorderlessWindowOverride();
 }
