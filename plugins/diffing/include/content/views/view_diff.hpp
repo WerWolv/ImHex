@@ -24,6 +24,7 @@ namespace hex::plugin::diffing {
         struct Column {
             ui::HexEditor hexEditor;
             ContentRegistry::Diffing::DiffTree diffTree;
+            std::vector<ContentRegistry::Diffing::DiffTree::Data> differences;
 
             int provider = -1;
             i32 scrollLock = 0;
@@ -32,6 +33,8 @@ namespace hex::plugin::diffing {
     private:
         std::function<std::optional<color_t>(u64, const u8*, size_t)> createCompareFunction(size_t otherIndex) const;
         void analyze(prv::Provider *providerA, prv::Provider *providerB);
+
+        void reset();
 
     private:
         std::array<Column, 2> m_columns;
