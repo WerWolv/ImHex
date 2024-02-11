@@ -552,7 +552,9 @@ namespace hex::plugin::builtin {
             }, []{ return true; }, []{ return glfwGetWindowMonitor(ImHexApi::System::getMainWindowHandle()) != nullptr; });
         #endif
 
-        ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
+        #if !defined(OS_WEB)
+            ContentRegistry::Interface::addMenuItemSeparator({ "hex.builtin.menu.view" }, 3000);
+        #endif
 
         ContentRegistry::Interface::addMenuItemSubMenu({ "hex.builtin.menu.view" }, 4000, [] {
             for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
