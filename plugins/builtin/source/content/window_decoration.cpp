@@ -180,11 +180,11 @@ namespace hex::plugin::builtin {
                 #endif
             }
 
-            auto &titleBarButtons = ContentRegistry::Interface::impl::getTitleBarButtons();
+            auto &titleBarButtons = ContentRegistry::Interface::impl::getTitlebarButtons();
 
             // Draw custom title bar buttons
             if (!titleBarButtons.empty()) {
-                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - buttonSize.x * float((titleBarButtonsVisible ? 4 : 0) + titleBarButtons.size()));
+                ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 7_scaled - buttonSize.x * float((titleBarButtonsVisible ? 4 : 0) + titleBarButtons.size()));
 
                 if (ImGui::GetCursorPosX() > (searchBoxPos.x + searchBoxSize.x)) {
                     for (const auto &[icon, tooltip, callback] : titleBarButtons) {

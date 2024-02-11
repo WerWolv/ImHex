@@ -290,7 +290,7 @@ namespace hex::plugin::builtin {
                     queryRange.push_back(0x00);
 
                     // Build the font atlas with the query range
-                    auto newFont = atlas.AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, queryRange.Data);
+                    auto newFont = atlas.AddFontFromMemoryTTF(const_cast<u8 *>(font.fontData.data()), int(font.fontData.size()), 0, &cfg, queryRange.Data);
                     atlas.Build();
 
                     return newFont->Descent;
@@ -300,7 +300,7 @@ namespace hex::plugin::builtin {
                 std::memset(cfg.Name, 0x00, sizeof(cfg.Name));
                 std::strncpy(cfg.Name, font.name.c_str(), sizeof(cfg.Name) - 1);
                 cfg.GlyphOffset = { font.offset.x, font.offset.y - defaultFont->Descent + descent };
-                fonts->AddFontFromMemoryTTF(font.fontData.data(), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
+                fonts->AddFontFromMemoryTTF(const_cast<u8 *>(font.fontData.data()), int(font.fontData.size()), 0, &cfg, ranges.back().Data);
             }
             cfg.FontBuilderFlags = startFlags;
 

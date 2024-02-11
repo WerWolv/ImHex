@@ -57,8 +57,7 @@ namespace hex::plugin::builtin {
             }
         }
 
-        auto providers = auto(ImHexApi::Provider::getProviders());
-        for (const auto &provider : providers) {
+        for (const auto &provider : ImHexApi::Provider::getProviders()) {
             ImHexApi::Provider::remove(provider);
         }
 

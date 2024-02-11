@@ -126,15 +126,19 @@ namespace hex::plugin::builtin {
 
             ImGui::TableNextColumn();
 
-            ImGuiExt::BeginSubWindow("Build Information", ImVec2(0, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
+            ImGuiExt::BeginSubWindow("Build Information", ImVec2(450_scaled, 0), ImGuiChildFlags_AutoResizeX | ImGuiChildFlags_AutoResizeY);
             {
                 if (ImGui::BeginTable("Information", 1, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInner)) {
-                    ImGui::TableNextRow();
+                    ImGui::Indent();
 
+                    ImGui::TableNextRow();
                     ImGui::TableNextColumn();
                     {
                         // Draw basic information about ImHex and its version
                         ImGuiExt::TextFormatted("ImHex Hex Editor v{} by WerWolv", ImHexApi::System::getImHexVersion());
+                        ImGui::Indent(25_scaled);
+                        ImGuiExt::TextFormatted("Powered by Dear ImGui v{}", ImGui::GetVersion());
+                        ImGui::Unindent(25_scaled);
                     }
 
                     ImGui::TableNextColumn();
@@ -168,9 +172,12 @@ namespace hex::plugin::builtin {
                         ImGui::SameLine();
 
                         // Draw a clickable link to the GitHub repository
-                        if (ImGuiExt::Hyperlink("WerWolv/ImHex"))
+                        if (ImGuiExt::Hyperlink(ICON_VS_LOGO_GITHUB " " "WerWolv/ImHex"))
                             hex::openWebpage("https://github.com/WerWolv/ImHex");
                     }
+
+                    ImGui::Unindent();
+
                     ImGui::EndTable();
                 }
             }
@@ -182,9 +189,12 @@ namespace hex::plugin::builtin {
         // Draw donation links
         ImGuiExt::Header("hex.builtin.view.help.about.donations"_lang);
 
-        ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x * 0.8F);
-        ImGuiExt::TextFormattedWrapped("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
-        ImGui::PopTextWrapPos();
+        if (ImGui::BeginChild("##ThanksWrapper", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetTextLineHeightWithSpacing() * 3))) {
+            ImGui::PushTextWrapPos(ImGui::GetContentRegionAvail().x * 0.8F);
+            ImGuiExt::TextFormattedCentered("{}", static_cast<const char *>("hex.builtin.view.help.about.thanks"_lang));
+            ImGui::PopTextWrapPos();
+        }
+        ImGui::EndChild();
 
         ImGui::NewLine();
 
@@ -221,6 +231,8 @@ namespace hex::plugin::builtin {
 
             ImGui::EndTable();
         }
+
+        ImGui::NewLine();
     }
 
     void ViewAbout::drawContributorPage() {

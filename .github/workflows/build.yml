@@ -66,7 +66,6 @@ jobs:
           -DIMHEX_GENERATE_PACKAGE=ON                               \
           -DIMHEX_USE_DEFAULT_BUILD_SETTINGS=ON                     \
           -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"              \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
           -DUSE_SYSTEM_CAPSTONE=ON                                  \
@@ -213,7 +212,6 @@ jobs:
           -DCMAKE_OBJC_COMPILER_LAUNCHER=ccache                                                     \
           -DCMAKE_OBJCXX_COMPILER_LAUNCHER=ccache                                                   \
           -DIMHEX_PATTERNS_PULL_MASTER=ON                                                           \
-          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"                                              \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"   \
@@ -380,7 +378,6 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache                        \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache                      \
             -DIMHEX_PATTERNS_PULL_MASTER=ON                           \
-            -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"              \
             -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                  \
             -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                 \
             -DIMHEX_ENABLE_LTO=ON                                     \
@@ -505,7 +502,6 @@ jobs:
           -DUSE_SYSTEM_NLOHMANN_JSON=ON                 \
           -DUSE_SYSTEM_CAPSTONE=OFF                     \
           -DIMHEX_PATTERNS_PULL_MASTER=ON               \
-          -DIMHEX_COMMIT_HASH_SHORT="${GITHUB_SHA::7}"  \
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"      \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"     \
           -DIMHEX_ENABLE_LTO=ON                         \
@@ -540,6 +536,7 @@ jobs:
 
           # Replace the old file
           rm imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
+          rm *imhex-bin-debug* # rm debug package which is created for some reason
           mv *.pkg.tar.zst imhex-${{env.IMHEX_VERSION}}-ArchLinux-x86_64.pkg.tar.zst
 
       - name: ⬆️ Upload imhex-archlinux.pkg.tar.zst

@@ -21,6 +21,14 @@ namespace hex::plugin::builtin {
             return ImGuiWindowFlags_AlwaysAutoResize;
         }
 
+        ImVec2 getMinSize() const override {
+            return scaled({ 700, 450 });
+        }
+
+        ImVec2 getMaxSize() const override {
+            return scaled({ 700, 450 });
+        }
+
     private:
         void drawAboutPopup();
 

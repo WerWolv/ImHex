@@ -106,6 +106,17 @@ namespace hex {
 
             m_popupsToOpen.push_back(name);
         });
+
+        LayoutManager::registerLoadCallback([this](std::string_view line) {
+            int width = 0, height = 0;
+                sscanf(line.data(), "MainWindowSize=%d,%d", &width, &height);
+
+                if (width > 0 && height > 0) {
+                    TaskManager::doLater([width, height, this]{
+                        glfwSetWindowSize(m_window, width, height);
+                    });
+                }
+        });
     }
 
     void Window::fullFrame() {
@@ -190,6 +201,10 @@ namespace hex {
 
             m_lastFrameTime = glfwGetTime() - m_lastStartFrameTime;
         }
+
+        // Hide the window as soon as the render loop exits to make the window
+        // disappear as soon as it's closed
+        glfwHideWindow(m_window);
     }
 
     void Window::frameBegin() {
@@ -598,9 +613,9 @@ namespace hex {
         #else
             glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
             glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+            glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
         #endif
 
-        glfwWindowHint(GLFW_DECORATED, ImHexApi::System::isBorderlessWindowModeEnabled() ? GL_FALSE : GL_TRUE);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -836,39 +851,14 @@ namespace hex {
 
             handler.ReadOpenFn = [](ImGuiContext *ctx, ImGuiSettingsHandler *, const char *) -> void* { return ctx; };
 
-            handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line) {
-                auto window = static_cast<Window*>(handler->UserData);
-
-                for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
-                    std::string format = view->getUnlocalizedName().get() + "=%d";
-                    sscanf(line, format.c_str(), &view->getWindowOpenState());
-                }
-                for (auto &[name, function, detached] : ContentRegistry::Tools::impl::getEntries()) {
-                    std::string format = name + "=%d";
-                    sscanf(line, format.c_str(), &detached);
-                }
-
-                int width = 0, height = 0;
-                sscanf(line, "MainWindowSize=%d,%d", &width, &height);
-
-                if (width > 0 && height > 0) {
-                    TaskManager::doLater([width, height, window]{
-                        glfwSetWindowSize(window->m_window, width, height);
-                    });
-                }
+            handler.ReadLineFn = [](ImGuiContext *, ImGuiSettingsHandler *, void *, const char *line) {
+                LayoutManager::onLoad(line);
             };
 
-            handler.WriteAllFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf) {
-                buf->appendf("[%s][General]\n", handler->TypeName);
-
-                for (auto &[name, view] : ContentRegistry::Views::impl::getEntries()) {
-                    buf->appendf("%s=%d\n", name.c_str(), view->getWindowOpenState());
-                }
-                for (auto &[name, function, detached] : ContentRegistry::Tools::impl::getEntries()) {
-                    buf->appendf("%s=%d\n", name.c_str(), detached);
-                }
-
-                buf->append("\n");
+            handler.WriteAllFn = [](ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buffer) {
+                buffer->appendf("[%s][General]\n", handler->TypeName);
+                LayoutManager::onStore(buffer);
+                buffer->append("\n");
             };
 
             handler.UserData   = this;

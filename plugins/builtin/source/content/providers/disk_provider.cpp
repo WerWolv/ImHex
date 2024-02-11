@@ -48,15 +48,11 @@
 namespace hex::plugin::builtin {
 
     bool DiskProvider::isAvailable() const {
-#if defined(OS_WINDOWS)
-
-        return m_diskHandle != INVALID_HANDLE_VALUE;
-
-#else
-
-        return m_diskHandle != -1;
-
-#endif
+        #if defined(OS_WINDOWS)
+            return m_diskHandle != INVALID_HANDLE_VALUE;
+        #else
+            return m_diskHandle != -1;
+        #endif
     }
 
     bool DiskProvider::isReadable() const {
@@ -146,9 +142,9 @@ namespace hex::plugin::builtin {
         m_readable = true;
         m_writable = true;
 
-#if defined(OS_WINDOWS)
+        #if defined(OS_WINDOWS)
 
-        const auto &path = m_path.native();
+            const auto &path = m_path.native();
 
             m_diskHandle = CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
             if (m_diskHandle == INVALID_HANDLE_VALUE) {
@@ -156,7 +152,7 @@ namespace hex::plugin::builtin {
                 m_writable   = false;
 
                 if (m_diskHandle == INVALID_HANDLE_VALUE) {
-                    this->setErrorMessage(std::system_category().message(::GetLastError()));
+                    this->setErrorMessage(hex::formatSystemError(::GetLastError()));
                     return false;
                 }
             }
@@ -180,7 +176,7 @@ namespace hex::plugin::builtin {
             }
 
             if (m_diskHandle == nullptr || m_diskHandle == INVALID_HANDLE_VALUE) {
-                this->setErrorMessage(std::system_category().message(::GetLastError()));
+                this->setErrorMessage(hex::formatSystemError(::GetLastError()));
                 m_readable   = false;
                 m_diskHandle = nullptr;
                 CloseHandle(m_diskHandle);
@@ -188,59 +184,59 @@ namespace hex::plugin::builtin {
                 return false;
             }
 
-#else
+        #else
 
-        const auto &path = m_path.native();
+            const auto &path = m_path.native();
 
-        m_diskHandle = ::open(path.c_str(), O_RDWR);
-        if (m_diskHandle == -1) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_rw"_lang, path, ::strerror(errno)));
-            log::warn(this->getErrorMessage());
-            m_diskHandle = ::open(path.c_str(), O_RDONLY);
-            m_writable   = false;
-        }
+            m_diskHandle = ::open(path.c_str(), O_RDWR);
+            if (m_diskHandle == -1) {
+                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_rw"_lang, path, ::strerror(errno)));
+                log::warn(this->getErrorMessage());
+                m_diskHandle = ::open(path.c_str(), O_RDONLY);
+                m_writable   = false;
+            }
 
-        if (m_diskHandle == -1) {
-            this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_ro"_lang, path, ::strerror(errno)));
-            log::warn(this->getErrorMessage());
-            m_readable = false;
-            return false;
-        }
+            if (m_diskHandle == -1) {
+                this->setErrorMessage(hex::format("hex.builtin.provider.disk.error.read_ro"_lang, path, ::strerror(errno)));
+                log::warn(this->getErrorMessage());
+                m_readable = false;
+                return false;
+            }
 
-        u64 diskSize = 0;
-        blkdev_get_size(m_diskHandle, &diskSize);
-        m_diskSize = diskSize;
-        blkdev_get_sector_size(m_diskHandle, reinterpret_cast<int *>(&m_sectorSize));
+            u64 diskSize = 0;
+            blkdev_get_size(m_diskHandle, &diskSize);
+            m_diskSize = diskSize;
+            blkdev_get_sector_size(m_diskHandle, reinterpret_cast<int *>(&m_sectorSize));
 
-        m_sectorBuffer.resize(m_sectorSize);
+            m_sectorBuffer.resize(m_sectorSize);
 
-#endif
+        #endif
 
         return true;
     }
 
     void DiskProvider::close() {
-#if defined(OS_WINDOWS)
+        #if defined(OS_WINDOWS)
 
-        if (m_diskHandle != INVALID_HANDLE_VALUE)
-            ::CloseHandle(m_diskHandle);
+            if (m_diskHandle != INVALID_HANDLE_VALUE)
+                ::CloseHandle(m_diskHandle);
 
-        m_diskHandle = INVALID_HANDLE_VALUE;
+            m_diskHandle = INVALID_HANDLE_VALUE;
 
-#else
+        #else
 
-        if (m_diskHandle != -1)
-            ::close(m_diskHandle);
+            if (m_diskHandle != -1)
+                ::close(m_diskHandle);
 
-        m_diskHandle = -1;
+            m_diskHandle = -1;
 
-#endif
+        #endif
     }
 
     void DiskProvider::readRaw(u64 offset, void *buffer, size_t size) {
-#if defined(OS_WINDOWS)
+        #if defined(OS_WINDOWS)
 
-        DWORD bytesRead = 0;
+            DWORD bytesRead = 0;
 
             u64 startOffset = offset;
 
@@ -261,36 +257,36 @@ namespace hex::plugin::builtin {
                 offset += m_sectorSize;
             }
 
-#else
+        #else
 
-        u64 startOffset    = offset;
+            u64 startOffset    = offset;
 
-        while (size > 0) {
-            u64 seekPosition = offset - (offset % m_sectorSize);
+            while (size > 0) {
+                u64 seekPosition = offset - (offset % m_sectorSize);
 
-            if (m_sectorBufferAddress != seekPosition || m_sectorBufferAddress == 0) {
-                ::lseek(m_diskHandle, seekPosition, SEEK_SET);
-                if (::read(m_diskHandle, m_sectorBuffer.data(), m_sectorBuffer.size()) == -1)
-                    break;
+                if (m_sectorBufferAddress != seekPosition || m_sectorBufferAddress == 0) {
+                    ::lseek(m_diskHandle, seekPosition, SEEK_SET);
+                    if (::read(m_diskHandle, m_sectorBuffer.data(), m_sectorBuffer.size()) == -1)
+                        break;
 
-                m_sectorBufferAddress = seekPosition;
+                    m_sectorBufferAddress = seekPosition;
+                }
+
+                std::memcpy(reinterpret_cast<u8 *>(buffer) + (offset - startOffset),
+                            m_sectorBuffer.data() + (offset & (m_sectorSize - 1)),
+                            std::min<u64>(m_sectorSize, size));
+
+                size = std::max<ssize_t>(static_cast<ssize_t>(size) - m_sectorSize, 0);
+                offset += m_sectorSize;
             }
 
-            std::memcpy(reinterpret_cast<u8 *>(buffer) + (offset - startOffset),
-                        m_sectorBuffer.data() + (offset & (m_sectorSize - 1)),
-                        std::min<u64>(m_sectorSize, size));
-
-            size = std::max<ssize_t>(static_cast<ssize_t>(size) - m_sectorSize, 0);
-            offset += m_sectorSize;
-        }
-
-#endif
+        #endif
     }
 
     void DiskProvider::writeRaw(u64 offset, const void *buffer, size_t size) {
-#if defined(OS_WINDOWS)
+        #if defined(OS_WINDOWS)
 
-        DWORD bytesWritten = 0;
+            DWORD bytesWritten = 0;
 
             u64 startOffset = offset;
 
@@ -311,33 +307,36 @@ namespace hex::plugin::builtin {
                 ::SetFilePointer(m_diskHandle, seekPosition.LowPart, &seekPosition.HighPart, FILE_BEGIN);
                 ::WriteFile(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size(), &bytesWritten, nullptr);
 
+                //Print last error
+                log::error("{}", hex::formatSystemError(::GetLastError()));
+
                 offset += currSize;
                 size -= currSize;
             }
 
-#else
+        #else
 
-        u64 startOffset = offset;
+            u64 startOffset = offset;
 
-        std::vector<u8> modifiedSectorBuffer;
-        modifiedSectorBuffer.resize(m_sectorSize);
+            std::vector<u8> modifiedSectorBuffer;
+            modifiedSectorBuffer.resize(m_sectorSize);
 
-        while (size > 0) {
-            u64 sectorBase  = offset - (offset % m_sectorSize);
-            size_t currSize = std::min<u64>(size, m_sectorSize);
+            while (size > 0) {
+                u64 sectorBase  = offset - (offset % m_sectorSize);
+                size_t currSize = std::min<u64>(size, m_sectorSize);
 
-            this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
-            std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
+                this->readRaw(sectorBase, modifiedSectorBuffer.data(), modifiedSectorBuffer.size());
+                std::memcpy(modifiedSectorBuffer.data() + ((offset - sectorBase) % m_sectorSize), reinterpret_cast<const u8 *>(buffer) + (startOffset - offset), currSize);
 
-            ::lseek(m_diskHandle, sectorBase, SEEK_SET);
-            if (::write(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
-                break;
+                ::lseek(m_diskHandle, sectorBase, SEEK_SET);
+                if (::write(m_diskHandle, modifiedSectorBuffer.data(), modifiedSectorBuffer.size()) < 0)
+                    break;
 
-            offset += currSize;
-            size -= currSize;
-        }
+                offset += currSize;
+                size -= currSize;
+            }
 
-#endif
+        #endif
     }
 
     u64 DiskProvider::getActualSize() const {

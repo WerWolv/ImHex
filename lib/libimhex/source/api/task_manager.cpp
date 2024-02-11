@@ -335,7 +335,7 @@ namespace hex {
     }
 
 
-    std::list<std::shared_ptr<Task>> &TaskManager::getRunningTasks() {
+    const std::list<std::shared_ptr<Task>>& TaskManager::getRunningTasks() {
         return s_tasks;
     }
 

@@ -93,30 +93,26 @@ namespace hex {
          *
          * @param handler The handler to register
          */
-        static void registerHandler(const Handler &handler) {
-            getHandlers().push_back(handler);
-        }
+        static void registerHandler(const Handler &handler);
 
         /**
          * @brief Register a handler for storing and loading per-provider data from a project file
          *
          * @param handler The handler to register
          */
-        static void registerPerProviderHandler(const ProviderHandler &handler) {
-            getProviderHandlers().push_back(handler);
-        }
+        static void registerPerProviderHandler(const ProviderHandler &handler);
 
         /**
          * @brief Get the list of registered handlers
          * @return List of registered handlers
          */
-        static std::vector<Handler>& getHandlers();
+        static const std::vector<Handler>& getHandlers();
 
         /**
          * @brief Get the list of registered per-provider handlers
          * @return List of registered per-provider handlers
          */
-        static std::vector<ProviderHandler>& getProviderHandlers();
+        static const std::vector<ProviderHandler>& getProviderHandlers();
 
     private:
         ProjectFile() = default;

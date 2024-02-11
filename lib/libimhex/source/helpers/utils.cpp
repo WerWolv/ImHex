@@ -12,6 +12,8 @@
 #if defined(OS_WINDOWS)
     #include <windows.h>
     #include <shellapi.h>
+
+    #include <wolv/utils/guards.hpp>
 #elif defined(OS_LINUX)
     #include <unistd.h>
     #include <hex/helpers/utils_linux.hpp>
@@ -748,6 +750,28 @@ namespace hex {
 
     std::string generateHexView(u64 offset, const std::vector<u8> &data) {
         return generateHexViewImpl(offset, data.begin(), data.end());
+    }
+
+    std::string formatSystemError(i32 error) {
+        #if defined(OS_WINDOWS)
+            wchar_t *message = nullptr;
+            auto wLength = FormatMessageW(
+                FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                nullptr, error,
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (wchar_t*)&message, 0,
+                nullptr
+            );
+            ON_SCOPE_EXIT { LocalFree(message); };
+
+            auto length = ::WideCharToMultiByte(CP_UTF8, 0, message, wLength, nullptr, 0, nullptr, nullptr);
+            std::string result(length, '\x00');
+            ::WideCharToMultiByte(CP_UTF8, 0, message, wLength, result.data(), length, nullptr, nullptr);
+
+            return result;
+        #else
+            return std::system_category().message(error);
+        #endif
     }
 
 }

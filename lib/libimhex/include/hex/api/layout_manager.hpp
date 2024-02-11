@@ -4,6 +4,8 @@
 
 #include <string>
 
+struct ImGuiTextBuffer;
+
 namespace hex {
 
     class LayoutManager {
@@ -12,6 +14,9 @@ namespace hex {
             std::string name;
             std::fs::path path;
         };
+
+        using LoadCallback = std::function<void(std::string_view)>;
+        using StoreCallback = std::function<void(ImGuiTextBuffer *)>;
 
         /**
          * @brief Save the current layout
@@ -75,6 +80,12 @@ namespace hex {
          * @brief Closes all views
          */
         static void closeAllViews();
+
+        static void registerLoadCallback(const LoadCallback &callback);
+        static void registerStoreCallback(const StoreCallback &callback);
+
+        static void onStore(ImGuiTextBuffer *buffer);
+        static void onLoad(std::string_view line);
 
     private:
         LayoutManager() = default;

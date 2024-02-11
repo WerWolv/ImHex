@@ -37,34 +37,34 @@ namespace hex {
 
         namespace impl {
 
-            std::map<u32, Highlighting> &getBackgroundHighlights() {
-                static AutoReset<std::map<u32, Highlighting>> backgroundHighlights;
-                return backgroundHighlights;
+            static AutoReset<std::map<u32, Highlighting>> s_backgroundHighlights;
+            const std::map<u32, Highlighting>& getBackgroundHighlights() {
+                return *s_backgroundHighlights;
             }
 
-            std::map<u32, HighlightingFunction> &getBackgroundHighlightingFunctions() {
-                static AutoReset<std::map<u32, HighlightingFunction>> backgroundHighlightingFunctions;
-                return backgroundHighlightingFunctions;
+            static AutoReset<std::map<u32, HighlightingFunction>> s_backgroundHighlightingFunctions;
+            const std::map<u32, HighlightingFunction>& getBackgroundHighlightingFunctions() {
+                return *s_backgroundHighlightingFunctions;
             }
 
-            std::map<u32, Highlighting> &getForegroundHighlights() {
-                static AutoReset<std::map<u32, Highlighting>> foregroundHighlights;
-                return foregroundHighlights;
+            static AutoReset<std::map<u32, Highlighting>> s_foregroundHighlights;
+            const std::map<u32, Highlighting>& getForegroundHighlights() {
+                return *s_foregroundHighlights;
             }
 
-            std::map<u32, HighlightingFunction> &getForegroundHighlightingFunctions() {
-                static AutoReset<std::map<u32, HighlightingFunction>> foregroundHighlightingFunctions;
-                return foregroundHighlightingFunctions;
+            static AutoReset<std::map<u32, HighlightingFunction>> s_foregroundHighlightingFunctions;
+            const std::map<u32, HighlightingFunction>& getForegroundHighlightingFunctions() {
+                return *s_foregroundHighlightingFunctions;
             }
 
-            std::map<u32, Tooltip> &getTooltips() {
-                static AutoReset<std::map<u32, Tooltip>> tooltips;
-                return tooltips;
+            static AutoReset<std::map<u32, Tooltip>> s_tooltips;
+            const std::map<u32, Tooltip>& getTooltips() {
+                return *s_tooltips;
             }
 
-            std::map<u32, TooltipFunction> &getTooltipFunctions() {
-                static AutoReset<std::map<u32, TooltipFunction>> tooltipFunctions;
-                return tooltipFunctions;
+            static AutoReset<std::map<u32, TooltipFunction>> s_tooltipFunctions;
+            const std::map<u32, TooltipFunction>& getTooltipFunctions() {
+                return *s_tooltipFunctions;
             }
 
             static AutoReset<std::optional<ProviderRegion>> s_currentSelection;
@@ -79,8 +79,8 @@ namespace hex {
 
             id++;
 
-            impl::getBackgroundHighlights().insert({
-                id, Highlighting {region, color}
+            impl::s_backgroundHighlights->insert({
+                id, Highlighting { region, color }
             });
 
             EventHighlightingChanged::post();
@@ -89,7 +89,7 @@ namespace hex {
         }
 
         void removeBackgroundHighlight(u32 id) {
-            impl::getBackgroundHighlights().erase(id);
+            impl::s_backgroundHighlights->erase(id);
 
             EventHighlightingChanged::post();
         }
@@ -99,7 +99,7 @@ namespace hex {
 
             id++;
 
-            impl::getBackgroundHighlightingFunctions().insert({ id, function });
+            impl::s_backgroundHighlightingFunctions->insert({ id, function });
 
             EventHighlightingChanged::post();
 
@@ -107,7 +107,7 @@ namespace hex {
         }
 
         void removeBackgroundHighlightingProvider(u32 id) {
-            impl::getBackgroundHighlightingFunctions().erase(id);
+            impl::s_backgroundHighlightingFunctions->erase(id);
 
             EventHighlightingChanged::post();
         }
@@ -117,8 +117,8 @@ namespace hex {
 
             id++;
 
-            impl::getForegroundHighlights().insert({
-                id, Highlighting {region, color}
+            impl::s_foregroundHighlights->insert({
+                id, Highlighting { region, color }
             });
 
             EventHighlightingChanged::post();
@@ -127,7 +127,7 @@ namespace hex {
         }
 
         void removeForegroundHighlight(u32 id) {
-            impl::getForegroundHighlights().erase(id);
+            impl::s_foregroundHighlights->erase(id);
 
             EventHighlightingChanged::post();
         }
@@ -137,7 +137,7 @@ namespace hex {
 
             id++;
 
-            impl::getForegroundHighlightingFunctions().insert({ id, function });
+            impl::s_foregroundHighlightingFunctions->insert({ id, function });
 
             EventHighlightingChanged::post();
 
@@ -145,7 +145,7 @@ namespace hex {
         }
 
         void removeForegroundHighlightingProvider(u32 id) {
-            impl::getForegroundHighlightingFunctions().erase(id);
+            impl::s_foregroundHighlightingFunctions->erase(id);
 
             EventHighlightingChanged::post();
         }
@@ -153,25 +153,25 @@ namespace hex {
         static u32 tooltipId = 0;
         u32 addTooltip(Region region, std::string value, color_t color) {
             tooltipId++;
-            impl::getTooltips().insert({ tooltipId, { region, std::move(value), color } });
+            impl::s_tooltips->insert({ tooltipId, { region, std::move(value), color } });
 
             return tooltipId;
         }
 
         void removeTooltip(u32 id) {
-            impl::getTooltips().erase(id);
+            impl::s_tooltips->erase(id);
         }
 
         static u32 tooltipFunctionId;
         u32 addTooltipProvider(TooltipFunction function) {
             tooltipFunctionId++;
-            impl::getTooltipFunctions().insert({ tooltipFunctionId, std::move(function) });
+            impl::s_tooltipFunctions->insert({ tooltipFunctionId, std::move(function) });
 
             return tooltipFunctionId;
         }
 
         void removeTooltipProvider(u32 id) {
-            impl::getTooltipFunctions().erase(id);
+            impl::s_tooltipFunctions->erase(id);
         }
 
         bool isSelectionValid() {
@@ -228,7 +228,7 @@ namespace hex {
     namespace ImHexApi::Provider {
 
         static i64 s_currentProvider = -1;
-        static AutoReset<std::vector<prv::Provider *>> s_providers;
+        static AutoReset<std::vector<std::unique_ptr<prv::Provider>>> s_providers;
 
         namespace impl {
 
@@ -247,11 +247,16 @@ namespace hex {
             if (!ImHexApi::Provider::isValid())
                 return nullptr;
 
-            return (*s_providers)[s_currentProvider];
+            return (*s_providers)[s_currentProvider].get();
         }
 
-        const std::vector<prv::Provider *> &getProviders() {
-            return s_providers;
+        std::vector<prv::Provider*> getProviders() {
+            std::vector<prv::Provider*> result;
+            result.reserve(s_providers->size());
+            for (const auto &provider : *s_providers)
+                result.push_back(provider.get());
+
+            return result;
         }
 
         void setCurrentProvider(u32 index) {
@@ -288,15 +293,15 @@ namespace hex {
             });
         }
 
-        void add(prv::Provider *provider, bool skipLoadInterface, bool select) {
+        void add(std::unique_ptr<prv::Provider> &&provider, bool skipLoadInterface, bool select) {
             if (TaskManager::getRunningTaskCount() > 0)
                 return;
 
             if (skipLoadInterface)
                 provider->skipLoadInterface();
 
-            s_providers->push_back(provider);
-            EventProviderCreated::post(provider);
+            EventProviderCreated::post(provider.get());
+            s_providers->emplace_back(std::move(provider));
 
             if (select || s_providers->size() == 1)
                 setCurrentProvider(s_providers->size() - 1);
@@ -318,7 +323,10 @@ namespace hex {
                     return;
             }
 
-            const auto it = std::ranges::find(*s_providers, provider);
+            const auto it = std::ranges::find_if(*s_providers, [provider](const auto &p) {
+                return p.get() == provider;
+            });
+
             if (it == s_providers->end())
                 return;
 
@@ -328,7 +336,7 @@ namespace hex {
                     setCurrentProvider(0);
 
                     if (s_providers->size() > 1)
-                        EventProviderChanged::post(s_providers->at(0), s_providers->at(1));
+                        EventProviderChanged::post(s_providers->at(0).get(), s_providers->at(1).get());
                 }
                 else if (std::distance(s_providers->begin(), it) == s_currentProvider) {
                     // If the current provider is being closed, select the one that's before it
@@ -337,7 +345,9 @@ namespace hex {
                 else {
                     // If any other provider is being closed, find the current provider in the list again and select it again
                     const auto currentProvider = get();
-                    const auto currentIt = std::ranges::find(*s_providers, currentProvider);
+                    const auto currentIt = std::ranges::find_if(*s_providers, [currentProvider](const auto &p) {
+                        return p.get() == currentProvider;
+                    });
 
                     if (currentIt != s_providers->end()) {
                         auto newIndex = std::distance(s_providers->begin(), currentIt);
@@ -353,21 +363,20 @@ namespace hex {
                 }
             }
 
-            s_providers->erase(it);
-            if (s_currentProvider >= i64(s_providers->size()))
-                setCurrentProvider(0);
-
-            if (s_providers->empty())
-                EventProviderChanged::post(provider, nullptr);
-
             provider->close();
             EventProviderClosed::post(provider);
             RequestUpdateWindowTitle::post();
 
-            TaskManager::runWhenTasksFinished([provider] {
+            TaskManager::runWhenTasksFinished([it, provider] {
                 EventProviderDeleted::post(provider);
                 std::erase(impl::s_closingProviders, provider);
-                delete provider;
+
+                s_providers->erase(it);
+                if (s_currentProvider >= i64(s_providers->size()))
+                    setCurrentProvider(0);
+
+                if (s_providers->empty())
+                    EventProviderChanged::post(provider, nullptr);
             });
         }
 
@@ -449,11 +458,12 @@ namespace hex {
                 s_portableVersion = enabled;
             }
 
+            static AutoReset<std::map<std::string, std::string>> s_initArguments;
             void addInitArgument(const std::string &key, const std::string &value) {
                 static std::mutex initArgumentsMutex;
                 std::scoped_lock lock(initArgumentsMutex);
 
-                getInitArguments()[key] = value;
+                (*s_initArguments)[key] = value;
             }
 
             static double s_lastFrameTime;
@@ -538,11 +548,17 @@ namespace hex {
             return impl::s_initialWindowProperties;
         }
 
-        std::map<std::string, std::string> &getInitArguments() {
-            static AutoReset<std::map<std::string, std::string>> initArgs;
-
-            return initArgs;
+        const std::map<std::string, std::string>& getInitArguments() {
+            return *impl::s_initArguments;
         }
+
+        std::string getInitArgument(const std::string &key) {
+            if (impl::s_initArguments->contains(key))
+                return impl::s_initArguments->at(key);
+            else
+                return "";
+        }
+
 
 
         static bool s_systemThemeDetection;
@@ -557,13 +573,13 @@ namespace hex {
         }
 
 
-        std::vector<std::fs::path> &getAdditionalFolderPaths() {
-            static AutoReset<std::vector<std::fs::path>> additionalFolderPaths;
-            return additionalFolderPaths;
+        static AutoReset<std::vector<std::fs::path>> s_additionalFolderPaths;
+        const std::vector<std::fs::path>& getAdditionalFolderPaths() {
+            return *s_additionalFolderPaths;
         }
 
         void setAdditionalFolderPaths(const std::vector<std::fs::path> &paths) {
-            getAdditionalFolderPaths() = paths;
+            s_additionalFolderPaths = paths;
         }
 
 
@@ -655,20 +671,16 @@ namespace hex {
         }
 
         std::string getCommitHash(bool longHash) {
-            if (longHash) {
-                #if defined GIT_COMMIT_HASH_LONG
+            #if defined GIT_COMMIT_HASH_LONG
+                if (longHash) {
                     return GIT_COMMIT_HASH_LONG;
-                #else
-                    return "Unknown";
-                #endif
-            }
-            else {
-                #if defined GIT_COMMIT_HASH_SHORT
-                    return GIT_COMMIT_HASH_SHORT;
-                #else
-                    return "Unknown";
-                #endif
-            }
+                } else {
+                    return std::string(GIT_COMMIT_HASH_LONG).substr(0, 7);
+                }
+            #else
+                hex::unused(longHash);
+                return "Unknown";
+            #endif
         }
 
         std::string getCommitBranch() {
@@ -746,14 +758,13 @@ namespace hex {
 
         namespace impl {
 
-            std::map<std::string, MessagingHandler> &getHandlers() {
-                static AutoReset<std::map<std::string, MessagingHandler>> handlers;
-
-                return handlers;
+            static AutoReset<std::map<std::string, MessagingHandler>> s_handlers;
+            const std::map<std::string, MessagingHandler>& getHandlers() {
+                return *s_handlers;
             }
 
             void runHandler(const std::string &eventName, const std::vector<u8> &args) {
-                const auto& handlers = impl::getHandlers();
+                const auto& handlers = getHandlers();
                 const auto matchHandler = handlers.find(eventName);
                 
                 if (matchHandler == handlers.end()) {
@@ -769,7 +780,7 @@ namespace hex {
         void registerHandler(const std::string &eventName, const impl::MessagingHandler &handler) {
             log::debug("Registered new forward event handler: {}", eventName);
 
-            impl::getHandlers().insert({ eventName, handler });
+            impl::s_handlers->insert({ eventName, handler });
         }
 
     }
@@ -778,10 +789,9 @@ namespace hex {
 
         namespace impl {
 
-            std::vector<Font>& getFonts() {
-                static AutoReset<std::vector<Font>> fonts;
-
-                return fonts;
+            static AutoReset<std::vector<Font>> s_fonts;
+            const std::vector<Font>& getFonts() {
+                return *s_fonts;
             }
 
             static AutoReset<std::fs::path> s_customFontPath;
@@ -849,7 +859,7 @@ namespace hex {
                 return;
             }
 
-            impl::getFonts().emplace_back(Font {
+            impl::s_fonts->emplace_back(Font {
                 wolv::util::toUTF8String(path.filename()),
                 fontFile.readVector(),
                 glyphRanges,
@@ -859,7 +869,7 @@ namespace hex {
         }
 
         void loadFont(const std::string &name, const std::span<const u8> &data, const std::vector<GlyphRange> &glyphRanges, Offset offset, u32 flags) {
-            impl::getFonts().emplace_back(Font {
+            impl::s_fonts->emplace_back(Font {
                 name,
                 { data.begin(), data.end() },
                 glyphRanges,
@@ -868,7 +878,7 @@ namespace hex {
             });
         }
 
-        std::fs::path &getCustomFontPath() {
+        const std::fs::path& getCustomFontPath() {
             return impl::s_customFontPath;
         }
 

@@ -326,7 +326,7 @@ namespace hex::plugin::builtin {
 
             ImGui::BeginDisabled(!providerValid || tasksRunning);
             {
-                auto &providers = ImHexApi::Provider::getProviders();
+                auto providers = ImHexApi::Provider::getProviders();
 
                 ImGui::PushStyleColor(ImGuiCol_TabActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
                 ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, ImGui::GetColorU32(ImGuiCol_MenuBarBg));
