@@ -96,10 +96,12 @@ namespace hex::plugin::diffing {
         m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &) {
             auto differences = m_algorithm->analyze(providerA, providerB);
 
+            auto providers = ImHexApi::Provider::getProviders();
+
             // Move the calculated differences over so they can be displayed
             for (size_t i = 0; i < m_columns.size(); i++) {
                 auto &column = m_columns[i];
-                auto &provider = ImHexApi::Provider::getProviders()[column.provider];
+                auto &provider = providers[column.provider];
 
                 column.differences = differences[i].overlapping({ provider->getBaseAddress(), provider->getBaseAddress() + provider->getActualSize() });
                 std::ranges::sort(
