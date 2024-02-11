@@ -88,10 +88,23 @@ namespace hex::plugin::diffing {
             edlibConfig.mode = EdlibAlignMode::EDLIB_MODE_NW;
             edlibConfig.task = EdlibAlignTask::EDLIB_TASK_PATH;
 
-            const auto windowStart = std::min(providerA->getBaseAddress(), providerB->getBaseAddress());
-            const auto windowEnd   = std::max(providerA->getBaseAddress() + providerA->getActualSize(), providerB->getBaseAddress() + providerB->getActualSize());
+            const auto providerAStart = providerA->getBaseAddress();
+            const auto providerBStart = providerB->getBaseAddress();
+            const auto providerAEnd = providerAStart + providerA->getActualSize();
+            const auto providerBEnd = providerBStart + providerB->getActualSize();
+
+            const auto windowStart = std::max(providerAStart, providerBStart);
+            const auto windowEnd   = std::min(providerAEnd, providerBEnd);
 
             auto &task = TaskManager::getCurrentTask();
+
+            if (providerAStart > providerBStart) {
+                differencesA.insert({ providerBStart, providerAStart }, DifferenceType::Deletion);
+                differencesB.insert({ providerBStart, providerAStart }, DifferenceType::Deletion);
+            } else if (providerAStart < providerBStart) {
+                differencesA.insert({ providerAStart, providerBStart }, DifferenceType::Insertion);
+                differencesB.insert({ providerAStart, providerBStart }, DifferenceType::Insertion);
+            }
 
             for (u64 address = windowStart; address < windowEnd; address += m_windowSize) {
                 if (task.wasInterrupted())
@@ -99,20 +112,21 @@ namespace hex::plugin::diffing {
 
                 auto currWindowSizeA = std::min<u64>(m_windowSize, providerA->getActualSize() - address);
                 auto currWindowSizeB = std::min<u64>(m_windowSize, providerB->getActualSize() - address);
-                std::vector<u8> dataA(currWindowSizeA), dataB(currWindowSizeB);
+                std::vector<u8> dataA(currWindowSizeA, 0x00), dataB(currWindowSizeB, 0x00);
 
                 providerA->read(address, dataA.data(), dataA.size());
                 providerB->read(address, dataB.data(), dataB.size());
 
+                const auto commonSize = std::min(dataA.size(), dataB.size());
                 EdlibAlignResult result = edlibAlign(
-                    reinterpret_cast<const char*>(dataA.data()), dataA.size(),
-                    reinterpret_cast<const char*>(dataB.data()), dataB.size(),
+                    reinterpret_cast<const char*>(dataA.data()), commonSize,
+                    reinterpret_cast<const char*>(dataB.data()), commonSize,
                     edlibConfig
                 );
 
                 auto currentOperation = DifferenceType(0xFF);
                 Region regionA = {}, regionB = {};
-                u64 currentAddressA = 0x00, currentAddressB = 0x00;
+                u64 currentAddressA = address, currentAddressB = address;
 
                 const auto insertDifference = [&] {
                     switch (currentOperation) {
@@ -166,6 +180,13 @@ namespace hex::plugin::diffing {
                 task.update(address);
             }
 
+            if (providerAEnd > providerBEnd) {
+                differencesA.insert({ providerBEnd, providerAEnd }, DifferenceType::Insertion);
+                differencesB.insert({ providerBEnd, providerAEnd }, DifferenceType::Insertion);
+            } else if (providerAEnd < providerBEnd) {
+                differencesA.insert({ providerAEnd, providerBEnd }, DifferenceType::Deletion);
+                differencesB.insert({ providerAEnd, providerBEnd }, DifferenceType::Deletion);
+            }
 
             return { differencesA, differencesB };
         }

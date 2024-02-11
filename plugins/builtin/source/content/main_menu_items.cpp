@@ -397,6 +397,8 @@ namespace hex::plugin::builtin {
             provider->close();
             if (!provider->open())
                 ImHexApi::Provider::remove(provider, true);
+
+            EventDataChanged::post(provider);
         }, noRunningTaskAndValidProvider);
 
 

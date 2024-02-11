@@ -15,12 +15,10 @@ namespace hex::plugin::diffing {
     ViewDiff::ViewDiff() : View::Window("hex.diffing.view.diff.name", ICON_VS_DIFF_SIDEBYSIDE) {
         // Clear the selected diff providers when a provider is closed
         EventProviderClosed::subscribe(this, [this](prv::Provider *) {
-            for (auto &column : m_columns) {
-                column.provider = -1;
-                column.hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
-                column.diffTree.clear();
-            }
-
+            this->reset();
+        });
+        EventDataChanged::subscribe(this, [this](prv::Provider *) {
+            m_analyzed = false;
         });
 
         // Set the background highlight callbacks for the two hex editor columns
@@ -30,6 +28,7 @@ namespace hex::plugin::diffing {
 
     ViewDiff::~ViewDiff() {
         EventProviderClosed::unsubscribe(this);
+        EventDataChanged::unsubscribe(this);
     }
 
     namespace {
@@ -93,18 +92,36 @@ namespace hex::plugin::diffing {
     }
 
     void ViewDiff::analyze(prv::Provider *providerA, prv::Provider *providerB) {
-        auto commonSize = std::min(providerA->getActualSize(), providerB->getActualSize());
+        auto commonSize = std::max(providerA->getActualSize(), providerB->getActualSize());
         m_diffTask = TaskManager::createTask("Diffing...", commonSize, [this, providerA, providerB](Task &) {
             auto differences = m_algorithm->analyze(providerA, providerB);
 
             // Move the calculated differences over so they can be displayed
             for (size_t i = 0; i < m_columns.size(); i++) {
                 auto &column = m_columns[i];
+                auto &provider = ImHexApi::Provider::getProviders()[column.provider];
+
+                column.differences = differences[i].overlapping({ provider->getBaseAddress(), provider->getBaseAddress() + provider->getActualSize() });
+                std::ranges::sort(
+                    column.differences,
+                    std::less(),
+                    [](const auto &a) { return a.interval; }
+                );
+
                 column.diffTree = std::move(differences[i]);
             }
             m_analyzed = true;
         });
     }
+
+    void ViewDiff::reset() {
+        for (auto &column : m_columns) {
+            column.provider = -1;
+            column.hexEditor.setSelectionUnchecked(std::nullopt, std::nullopt);
+            column.diffTree.clear();
+        }
+    }
+
 
     std::function<std::optional<color_t>(u64, const u8*, size_t)> ViewDiff::createCompareFunction(size_t otherIndex) const {
         const auto currIndex = otherIndex == 0 ? 1 : 0;
@@ -265,45 +282,33 @@ namespace hex::plugin::diffing {
             if (m_analyzed) {
                 ImGuiListClipper clipper;
 
-                auto &diffTreeA = m_columns[0].diffTree;
-                auto &diffTreeB = m_columns[1].diffTree;
-                clipper.Begin(int(diffTreeA.size()));
+                auto &differencesA = m_columns[0].differences;
+                auto &differencesB = m_columns[1].differences;
+                clipper.Begin(int(std::min(differencesA.size(), differencesB.size())));
 
-                auto diffIterA = diffTreeA.begin();
-                auto diffIterB = diffTreeB.begin();
                 while (clipper.Step()) {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
                         ImGui::TableNextRow();
 
-                        // Prevent the list from trying to access non-existing diffs
-                        if (size_t(i) >= diffTreeA.size())
-                            break;
-
                         ImGui::PushID(i);
 
-                        const auto &[startA, restA] = *diffIterA;
-                        const auto &[endA, typeA] = restA;
-
-                        const auto &[startB, restB] = *diffIterB;
-                        const auto &[endB, typeB] = restB;
-
-                        std::advance(diffIterA, 1);
-                        std::advance(diffIterB, 1);
+                        const auto &[regionA, typeA] = differencesA[i];
+                        const auto &[regionB, typeB] = differencesB[i];
 
                         // Draw a clickable row for each difference that will select the difference in both hex editors
 
                         // Draw start address
                         ImGui::TableNextColumn();
-                        if (ImGui::Selectable(hex::format("0x{:02X}", startA).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
-                            a.hexEditor.setSelection({ startA, ((endA - startA) + 1) });
+                        if (ImGui::Selectable(hex::format("0x{:02X}", regionA.start).c_str(), false, ImGuiSelectableFlags_SpanAllColumns)) {
+                            a.hexEditor.setSelection({ regionA.start, ((regionA.end - regionA.start) + 1) });
                             a.hexEditor.jumpToSelection();
-                            b.hexEditor.setSelection({ startB, ((endB - startB) + 1) });
+                            b.hexEditor.setSelection({ regionB.start, ((regionB.end - regionB.start) + 1) });
                             b.hexEditor.jumpToSelection();
                         }
 
                         // Draw end address
                         ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(hex::format("0x{:02X}", endA).c_str());
+                        ImGui::TextUnformatted(hex::format("0x{:02X}", regionA.start).c_str());
 
                         // Draw difference type
                         ImGui::TableNextColumn();
