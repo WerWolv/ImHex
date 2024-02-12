@@ -32,11 +32,11 @@ add_imhex_plugin(
         ZSTD
 )
 
-find_package(zstd)
-if (TARGET zstd::libzstd_static)
-    addOptionalLibrary(zstd libzstd_static)
-elseif(TARGET zstd::libzstd_shared)
-    addOptionalLibrary(zstd libzstd_shared)
+find_package(ZSTD)
+if(ZSTD_FOUND)
+    set(LIBRARIES ${LIBRARIES} "${ZSTD_LIBRARY}")
+    message(STATUS "Enabling decompression support using ZSTD (${ZSTD_VERSION})")
+    enable_plugin_feature(ZSTD)
 endif()
 
 addOptionalLibrary(ZLIB ZLIB)
