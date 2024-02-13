@@ -466,6 +466,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -548,6 +549,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -569,6 +571,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             auto value = hex::encodeByteString(pattern.getBytes());
@@ -598,6 +601,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -631,6 +635,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -683,6 +688,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -710,6 +716,7 @@ namespace hex::ui {
             if (!this->isEditingPattern(pattern)) {
                 drawValueColumn(pattern);
             } else {
+                ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
 
@@ -741,6 +748,7 @@ namespace hex::ui {
             drawTypeNameColumn(pattern, "struct");
 
             if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
+                ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 auto value = pattern.toString();
@@ -786,6 +794,7 @@ namespace hex::ui {
             drawTypeNameColumn(pattern, "union");
 
             if (this->isEditingPattern(pattern) && !pattern.getWriteFormatterFunction().empty()) {
+                ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
                 auto value = pattern.toString();
@@ -824,6 +833,7 @@ namespace hex::ui {
         if (!this->isEditingPattern(pattern)) {
             drawValueColumn(pattern);
         } else {
+            ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
             auto value = pattern.toString();
