@@ -107,6 +107,11 @@
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #include <emscripten/html5.h>
+// IMHEX PATCH BEGIN
+#include <emscripten_browser_clipboard.h>
+
+static std::string clipboardContent;
+// IMHEX PATCH END
 #endif
 
 // We gather version tests as define in order to easily see which features are version-dependent.
@@ -198,12 +203,24 @@ static void ImGui_ImplGlfw_ShutdownPlatformInterface();
 // Functions
 static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data)
 {
+// IMHEX PATCH BEGIN
+#ifdef __EMSCRIPTEN__
+    return clipboardContent.c_str();
+#else
     return glfwGetClipboardString((GLFWwindow*)user_data);
+#endif
+// IMHEX PATCH END
 }
 
 static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
 {
     glfwSetClipboardString((GLFWwindow*)user_data, text);
+// IMHEX PATCH BEGIN
+#ifdef __EMSCRIPTEN__
+    clipboardContent = text;
+    emscripten_browser_clipboard::copy(clipboardContent);
+#endif
+// IMHEX PATCH END
 }
 
 static ImGuiKey ImGui_ImplGlfw_KeyToImGuiKey(int key)
@@ -593,6 +610,15 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
     bd->Window = window;
     bd->Time = 0.0;
     bd->WantUpdateMonitors = true;
+
+// IMHEX PATCH BEGIN
+#ifdef __EMSCRIPTEN__
+    // Callback to handle clipboard paste from browser
+    emscripten_browser_clipboard::paste([](std::string const &paste_data, void *callback_data [[maybe_unused]]) {
+        clipboardContent = std::move(paste_data);
+    });
+#endif
+// IMHEX PATCH END
 
     io.SetClipboardTextFn = ImGui_ImplGlfw_SetClipboardText;
     io.GetClipboardTextFn = ImGui_ImplGlfw_GetClipboardText;
