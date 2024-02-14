@@ -30,8 +30,7 @@
     } while (0)
 
 #define INIT_PLUGIN(name) \
-    if (hex::test::initPluginImpl(name)) TEST_SUCCESS(); \
-    else TEST_FAIL();
+    if (!hex::test::initPluginImpl(name)) TEST_FAIL();
 
 namespace hex::test {
 
