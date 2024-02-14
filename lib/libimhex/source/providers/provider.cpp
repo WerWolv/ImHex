@@ -69,6 +69,9 @@ namespace hex::prv {
     }
 
     void Provider::resize(u64 newSize) {
+        if (newSize >> 63) {
+            throw std::invalid_argument("new provider size is very large. Is it a negative number ?");
+        }
         i64 difference = newSize - this->getActualSize();
 
         if (difference > 0)

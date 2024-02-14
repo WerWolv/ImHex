@@ -1,3 +1,4 @@
+#include <iostream>
 #include <hex/test/tests.hpp>
 #include <hex/api/plugin_manager.hpp>
 #include <content/providers/memory_file_provider.hpp>
@@ -29,4 +30,17 @@ TEST_SEQUENCE("Providers/ReadWrite") {
     TEST_ASSERT(std::equal(buf2, buf2+2, "\xFF\xFF"));
 
     TEST_SUCCESS();
+};
+
+TEST_SEQUENCE("Providers/InvalidReadWrite") {
+    INIT_PLUGIN("Built-in");
+
+    auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
+
+    try {
+        pr.resize(-1);
+    } catch(const std::invalid_argument &e) {
+        TEST_SUCCESS();
+    }
+    TEST_FAIL();
 };
