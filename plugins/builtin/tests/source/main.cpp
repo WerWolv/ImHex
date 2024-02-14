@@ -32,7 +32,7 @@ TEST_SEQUENCE("Providers/ReadWrite") {
     TEST_SUCCESS();
 };
 
-TEST_SEQUENCE("Providers/InvalidReadWrite") {
+TEST_SEQUENCE("Providers/InvalidResize") {
     INIT_PLUGIN("Built-in");
 
     auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);

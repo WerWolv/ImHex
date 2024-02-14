@@ -3,7 +3,7 @@ project(${IMHEX_PLUGIN_NAME}_tests)
 # Add new tests here #
 set(AVAILABLE_TESTS
     Providers/ReadWrite
-    Providers/InvalidReadWrite
+    Providers/InvalidResize
 )
 
 add_library(${PROJECT_NAME} SHARED
