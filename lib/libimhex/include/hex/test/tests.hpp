@@ -30,7 +30,7 @@
     } while (0)
 
 #define INIT_PLUGIN(name) \
-    if (hex::test::initPluginInt(name)) TEST_SUCCESS(); \
+    if (hex::test::initPluginImpl(name)) TEST_SUCCESS(); \
     else TEST_FAIL();
 
 namespace hex::test {
@@ -92,5 +92,5 @@ namespace hex::test {
         return TestSequence<F>(executor.getName(), std::forward<F>(f), executor.shouldFail());
     }
 
-    bool initPluginInt(std::string name);
+    bool initPluginImpl(std::string name);
 }

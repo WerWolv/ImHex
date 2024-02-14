@@ -3,9 +3,9 @@
 namespace hex::test {
     std::map<std::string, Test> Tests::s_tests;
 
-    bool initPluginInt(std::string name) {
+    bool initPluginImpl(std::string name) {
         if (name != "Built-in") {
-            if(!initPluginInt("Built-in")) return false;
+            if(!initPluginImpl("Built-in")) return false;
         }
 
         hex::Plugin *plugin = hex::PluginManager::getPlugin(name);
