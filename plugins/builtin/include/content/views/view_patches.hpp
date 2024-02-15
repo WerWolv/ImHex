@@ -9,7 +9,7 @@ namespace hex::plugin::builtin {
     class ViewPatches : public View::Window {
     public:
         explicit ViewPatches();
-        ~ViewPatches() override = default;
+        ~ViewPatches() override;
 
         void drawContent() override;
         void drawAlwaysVisibleContent() override;

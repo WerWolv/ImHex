@@ -38,6 +38,11 @@ namespace hex::plugin::builtin {
             }
         });
 
+        MovePerProviderData::subscribe(this, [this](prv::Provider *from, prv::Provider *to) {
+             m_savedOperations.get(from) = 0;
+             m_savedOperations.get(to)   = 0;
+        });
+
         ImHexApi::HexEditor::addForegroundHighlightingProvider([this](u64 offset, const u8* buffer, size_t, bool) -> std::optional<color_t> {
             hex::unused(buffer);
 
@@ -103,6 +108,15 @@ namespace hex::plugin::builtin {
             provider->getUndoStack().add<undo::OperationRemove>(offset, size);
         });
     }
+
+    ViewPatches::~ViewPatches() {
+        MovePerProviderData::unsubscribe(this);
+        EventProviderSaved::unsubscribe(this);
+        EventProviderDataModified::unsubscribe(this);
+        EventProviderDataInserted::unsubscribe(this);
+        EventProviderDataRemoved::unsubscribe(this);
+    }
+
 
     void ViewPatches::drawContent() {
         auto provider = ImHexApi::Provider::get();
