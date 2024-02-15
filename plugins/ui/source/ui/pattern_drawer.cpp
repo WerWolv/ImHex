@@ -479,6 +479,7 @@ namespace hex::ui {
                     pattern.setValue(boolValue);
                 }
             } else if (std::holds_alternative<i128>(value)) {
+                ImGui::SetKeyboardFocusHere();
                 if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     wolv::math_eval::MathEvaluator<i128> mathEvaluator;
 
@@ -488,6 +489,7 @@ namespace hex::ui {
                     this->resetEditing();
                 }
             } else if (std::holds_alternative<u128>(value)) {
+                ImGui::SetKeyboardFocusHere();
                 if (ImGui::InputText("##Value", valueString, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     wolv::math_eval::MathEvaluator<u128> mathEvaluator;
 
@@ -574,6 +576,8 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
+
             auto value = hex::encodeByteString(pattern.getBytes());
             if (ImGui::InputText("##Character", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 if (!value.empty()) {
@@ -638,6 +642,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
 
             auto value = pattern.toString();
             if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -691,6 +696,7 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
 
             auto value = pattern.getFormattedValue();
             if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -719,6 +725,7 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::SetKeyboardFocusHere();
 
                 auto value = pattern.toString();
                 if (ImGui::InputText("##Value", value.data(), value.size() + 1, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
@@ -751,6 +758,8 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::SetKeyboardFocusHere();
+
                 auto value = pattern.toString();
                 if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     pattern.setValue(value);
@@ -797,6 +806,8 @@ namespace hex::ui {
                 ImGui::TableNextColumn();
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
                 ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+                ImGui::SetKeyboardFocusHere();
+
                 auto value = pattern.toString();
                 if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                     pattern.setValue(value);
@@ -836,6 +847,8 @@ namespace hex::ui {
             ImGui::TableNextColumn();
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
             ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x);
+            ImGui::SetKeyboardFocusHere();
+
             auto value = pattern.toString();
             if (ImGui::InputText("##Value", value, ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_EnterReturnsTrue)) {
                 wolv::math_eval::MathEvaluator<u128> mathEvaluator;
