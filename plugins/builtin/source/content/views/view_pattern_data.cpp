@@ -60,12 +60,15 @@ namespace hex::plugin::builtin {
             auto &runtime = ContentRegistry::PatternLanguage::getRuntime();
 
             const auto height = std::max(ImGui::GetContentRegionAvail().y - ImGui::GetTextLineHeightWithSpacing() - ImGui::GetStyle().FramePadding.y * 2, ImGui::GetTextLineHeightWithSpacing() * 5);
-            if (!runtime.arePatternsValid()) {
-                (*m_patternDrawer)->draw({ }, nullptr, height);
-            } else {
-                // If the runtime has finished evaluating, draw the patterns
-                if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
-                    (*m_patternDrawer)->draw(runtime.getPatterns(), &runtime, height);
+
+            if (*m_patternDrawer != nullptr) {
+                if (!runtime.arePatternsValid()) {
+                    (*m_patternDrawer)->draw({ }, nullptr, height);
+                } else {
+                    // If the runtime has finished evaluating, draw the patterns
+                    if (TRY_LOCK(ContentRegistry::PatternLanguage::getRuntimeLock())) {
+                        (*m_patternDrawer)->draw(runtime.getPatterns(), &runtime, height);
+                    }
                 }
             }
         }
