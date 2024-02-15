@@ -15,6 +15,7 @@
 #include <emscripten.h>
 #endif
 
+#include <hex/api/task_manager.hpp>
 #include <nlohmann/json.hpp>
 
 #include <wolv/io/file.hpp>
@@ -1081,7 +1082,8 @@ namespace hex {
 
             impl::s_services->emplace_back(
                 unlocalizedName,
-                std::jthread([callback = auto(callback)](const std::stop_token &stopToken){
+                std::jthread([=](const std::stop_token &stopToken){
+                    TaskManager::setCurrentThreadName(Lang(unlocalizedName));
                     while (!stopToken.stop_requested()) {
                         callback();
                         std::this_thread::sleep_for(std::chrono::milliseconds(50));
