@@ -24,7 +24,6 @@ namespace hex::plugin::builtin {
     ViewDataInspector::ViewDataInspector() : View::Window("hex.builtin.view.data_inspector.name", ICON_VS_INSPECT) {
         // Handle region selection
         EventRegionSelected::subscribe(this, [this](const auto &region) {
-
             // Save current selection
             if (!ImHexApi::Provider::isValid() || region == Region::Invalid()) {
                 m_validBytes = 0;
@@ -37,6 +36,11 @@ namespace hex::plugin::builtin {
 
             // Invalidate inspector rows
             m_shouldInvalidate = true;
+        });
+
+        EventDataChanged::subscribe(this, [this](const auto &provider) {
+            if (provider == m_selectedProvider)
+                m_shouldInvalidate = true;
         });
 
         EventProviderClosed::subscribe(this, [this](const auto*) {
