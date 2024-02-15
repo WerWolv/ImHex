@@ -57,15 +57,16 @@ namespace hex::plugin::builtin {
     }
 
     void FileProvider::save() {
+        m_file.flush();
+
         #if defined(OS_WINDOWS)
             FILETIME ft;
             SYSTEMTIME st;
 
-            wolv::io::File file(m_path, wolv::io::File::Mode::Write);
-            if (file.isValid()) {
+            if (m_file.isValid()) {
                 GetSystemTime(&st);
                 if (SystemTimeToFileTime(&st, &ft)) {
-                    auto fileHandle = HANDLE(_get_osfhandle(_fileno(file.getHandle())));
+                    auto fileHandle = HANDLE(_get_osfhandle(_fileno(m_file.getHandle())));
                     SetFileTime(fileHandle, nullptr, nullptr, &ft);
                 }
             }
