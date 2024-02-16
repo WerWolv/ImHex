@@ -37,10 +37,7 @@ TEST_SEQUENCE("Providers/InvalidResize") {
 
     auto &pr = *ImHexApi::Provider::createProvider("hex.builtin.provider.mem_file", true);
 
-    try {
-        pr.resize(-1);
-    } catch(const std::invalid_argument &e) {
-        TEST_SUCCESS();
-    }
-    TEST_FAIL();
+    
+    TEST_ASSERT(!pr.resize(-1));
+    TEST_SUCCESS();
 };
