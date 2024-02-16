@@ -11,7 +11,6 @@
 #include <content/providers/process_memory_provider.hpp>
 #include <content/providers/base64_provider.hpp>
 #include <popups/popup_notification.hpp>
-#include "content/helpers/notification.hpp"
 
 #include <hex/api/project_file_manager.hpp>
 #include <hex/api/task_manager.hpp>
@@ -70,7 +69,7 @@ namespace hex::plugin::builtin {
                     if (newProvider == nullptr) {
                         // If a provider is not created, it will be overwritten when saving the project,
                         // so we should prevent the project from loading at all
-                        showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+                        log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
                             hex::format("hex.builtin.popup.error.project.load.create_provider"_lang, providerType)
                         ));
                         success = false;
@@ -104,7 +103,7 @@ namespace hex::plugin::builtin {
                 // If no providers were opened, display an error with
                 // the warnings that happened when opening them 
                 if (ImHexApi::Provider::getProviders().size() == 0) {
-                    showError(hex::format("hex.builtin.popup.error.project.load"_lang,
+                    log::showError(hex::format("hex.builtin.popup.error.project.load"_lang,
                         hex::format("hex.builtin.popup.error.project.load.no_providers"_lang)) + warningMsg);
 
                     return false;
@@ -114,7 +113,7 @@ namespace hex::plugin::builtin {
                     if (warningMsg.empty()) {
                         return true;
                     } else {
-                        showWarning(
+                        log::showWarning(
                             hex::format("hex.builtin.popup.error.project.load.some_providers_failed"_lang, warningMsg));
                     }
                     return success;

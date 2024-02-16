@@ -113,8 +113,6 @@ add_imhex_plugin(
         source/content/views/view_achievements.cpp
         source/content/views/view_highlight_rules.cpp
         source/content/views/view_tutorials.cpp
-
-        source/content/helpers/notification.cpp
     INCLUDES
         include
 

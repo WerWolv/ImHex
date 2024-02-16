@@ -1,3 +1,4 @@
+#include <hex/api/event_manager.hpp>
 #include <hex/helpers/logger.hpp>
 #include <hex/helpers/fs.hpp>
 #include <hex/helpers/fmt.hpp>
@@ -106,6 +107,16 @@ namespace hex::log::impl {
                 std::abort();
             #endif
         }
+    }
+
+    void showWarning(const std::string &message) {
+        log::warn(message);
+        ShowToast::post(false, message);
+    }
+
+    void showError(const std::string &message) {
+        log::error(message);
+        ShowToast::post(true, message);
     }
 
 }

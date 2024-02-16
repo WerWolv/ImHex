@@ -252,6 +252,14 @@ namespace hex::plugin::builtin {
             }
         });
 
+        ShowToast::subscribe([](bool isError, std::string message) {
+            if (isError) {
+                ui::ToastError::open(message);
+            } else {
+                ui::ToastWarning::open(message);
+            }
+        });
+
         fs::setFileBrowserErrorCallback([](const std::string& errMsg){
             #if defined(NFD_PORTAL)
                 ui::PopupError::open(hex::format("hex.builtin.popup.error.file_dialog.portal"_lang, errMsg));
