@@ -137,7 +137,7 @@ namespace hex::plugin::hashes {
     class HashCRC : public ContentRegistry::Hashes::Hash {
     public:
         HashCRC() : Hash("Cyclic Redundancy Check (CRC)") {
-            m_crcs.push_back(HashFactory::Checksum::CreateCRC(3, 0, 0, false, false, 0, 0, { "hex.hashes.hash.common.standard.custom"_lang }));
+            m_crcs.push_back(HashFactory::Checksum::CreateCRC(3, 0, 0, false, false, 0, 0, { "hex.hashes.hash.common.standard.custom" }));
 
             for (CRCStandard standard = CRC3_GSM; standard < CRC64_XZ; standard = CRCStandard(int(standard) + 1)) {
                 m_crcs.push_back(HashFactory::Checksum::CreateCRC(standard));
@@ -145,10 +145,10 @@ namespace hex::plugin::hashes {
         }
 
         void draw() override {
-            if (ImGui::BeginCombo("hex.hashes.hash.common.standard"_lang, m_crcs[m_selectedCrc]->GetName().c_str())) {
+            if (ImGui::BeginCombo("hex.hashes.hash.common.standard"_lang, Lang(m_crcs[m_selectedCrc]->GetName()))) {
                 for (size_t i = 0; i < m_crcs.size(); i++) {
                     const bool selected = m_selectedCrc == i;
-                    if (ImGui::Selectable(m_crcs[i]->GetName().c_str(), selected))
+                    if (ImGui::Selectable(Lang(m_crcs[i]->GetName()), selected))
                         m_selectedCrc = i;
                     if (selected)
                         ImGui::SetItemDefaultFocus();
