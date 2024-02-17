@@ -108,9 +108,8 @@ macro(configurePackingResources)
             )
             set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/resources/dist/windows/LICENSE.rtf")
         endif()
-    elseif (APPLE OR ${CMAKE_HOST_SYSTEM_NAME} MATCHES "Darwin")
-        set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
-        set(BUNDLE_NAME "imhex.app")
+    elseif (APPLE)
+        set (IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
 
         if (IMHEX_GENERATE_PACKAGE)
             set(APPLICATION_TYPE MACOSX_BUNDLE)
@@ -128,9 +127,9 @@ macro(configurePackingResources)
             string(TIMESTAMP CURR_YEAR "%Y")
             set(MACOSX_BUNDLE_COPYRIGHT "Copyright © 2020 - ${CURR_YEAR} WerWolv. All rights reserved." )
             if ("${CMAKE_GENERATOR}" STREQUAL "Xcode")
-                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/${BUNDLE_NAME}")
+                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/imhex.app")
             else ()
-                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
+                set (IMHEX_BUNDLE_PATH "${CMAKE_BINARY_DIR}/imhex.app")
             endif()
 
             set(PLUGINS_INSTALL_LOCATION "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
@@ -234,42 +233,36 @@ macro(createPackage)
 
     endif()
 
-    if (APPLE)
-        if (IMHEX_GENERATE_PACKAGE)
-            include(PostprocessBundle)
+    if (IMHEX_GENERATE_PACKAGE AND APPLE)
+        include(PostprocessBundle)
 
-            set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
+        set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
 
-            set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
+        set_property(TARGET main PROPERTY MACOSX_BUNDLE_INFO_PLIST ${MACOSX_BUNDLE_INFO_PLIST})
 
-            # Fix rpath
-            add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main> || true)
+        # Fix rpath
+        add_custom_command(TARGET imhex_all POST_BUILD COMMAND ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../Frameworks/" $<TARGET_FILE:main>)
 
-            add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
-            add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
+        # FIXME: Remove this once we move/integrate the plugins directory.
+        add_custom_target(build-time-make-plugins-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/MacOS/plugins")
+        add_custom_target(build-time-make-resources-directory ALL COMMAND ${CMAKE_COMMAND} -E make_directory "${IMHEX_BUNDLE_PATH}/Contents/Resources")
 
-            downloadImHexPatternsFiles("${IMHEX_BUNDLE_PATH}/Contents/MacOS")
+        downloadImHexPatternsFiles("${IMHEX_BUNDLE_PATH}/Contents/MacOS")
 
-            install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
-            install(TARGETS main BUNDLE DESTINATION ".")
+        install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
+        install(TARGETS main BUNDLE DESTINATION ".")
+        install(TARGETS updater BUNDLE DESTINATION ".")
+        install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
+        install(FILES $<TARGET_FILE:updater> DESTINATION "${IMHEX_BUNDLE_PATH}")
 
-            # Update library references to make the bundle portable
-            postprocess_bundle(imhex_all main)
+        # Update library references to make the bundle portable
+        postprocess_bundle(imhex_all main)
 
-            # Enforce DragNDrop packaging.
-            set(CPACK_GENERATOR "DragNDrop")
+        # Enforce DragNDrop packaging.
+        set(CPACK_GENERATOR "DragNDrop")
 
-            set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns")
-            set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}/Contents/Info.plist")
-
-            if (IMHEX_RESIGN_BUNDLE)
-                message(STATUS "Resigning bundle...")
-                find_program(CODESIGN_PATH codesign)
-                if (CODESIGN_PATH)
-                    add_custom_command(TARGET imhex_all POST_BUILD COMMAND "codesign" ARGS "--force" "--deep" "--sign" "-" "${CMAKE_BINARY_DIR}/${BUNDLE_NAME}")
-                endif()
-            endif()
-        endif()
+        set(CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
+        set(CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/imhex.app/Contents/Info.plist")
     else()
         install(TARGETS main RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
         if (TARGET updater)
@@ -730,7 +723,7 @@ function(generateSDKDirectory)
     if (WIN32)
         set(SDK_PATH "./sdk")
     elseif (APPLE)
-        set(SDK_PATH "${BUNDLE_NAME}/Contents/Resources/sdk")
+        set(SDK_PATH "imhex.app/Contents/Resources/sdk")
     else()
         set(SDK_PATH "share/imhex/sdk")
     endif()
