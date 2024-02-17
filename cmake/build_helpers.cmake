@@ -252,6 +252,8 @@ macro(createPackage)
 
             install(FILES ${IMHEX_ICON} DESTINATION "${IMHEX_BUNDLE_PATH}/Contents/Resources")
             install(TARGETS main BUNDLE DESTINATION ".")
+        install(FILES $<TARGET_FILE:main> DESTINATION "${IMHEX_BUNDLE_PATH}")
+        install(FILES $<TARGET_FILE:updater> DESTINATION "${IMHEX_BUNDLE_PATH}")
 
             # Update library references to make the bundle portable
             postprocess_bundle(imhex_all main)

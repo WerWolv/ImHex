@@ -36,7 +36,6 @@ message(STATUS "Fixing up application bundle: ${BUNDLE_PATH}")
 
 # Make sure to fix up any included ImHex plugin.
 file(GLOB_RECURSE plugins "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexplug")
-file(GLOB_RECURSE plugin_libs "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexpluglib")
 
 
 # BundleUtilities doesn't support DYLD_FALLBACK_LIBRARY_PATH behavior, which
@@ -69,3 +68,12 @@ endif()
 
 # Add a necessary rpath to the imhex binary
 get_bundle_main_executable("${BUNDLE_PATH}" IMHEX_EXECUTABLE)
+
+file(GLOB_RECURSE plugin_libs "${BUNDLE_PATH}/Contents/MacOS/*.hexpluglib")
+foreach(plugin_lib ${plugin_libs})
+	get_filename_component(plugin_lib_name ${plugin_lib} NAME)
+	set(plugin_lib_dest "${BUNDLE_PATH}/Contents/MacOS/plugins/${plugin_lib_name}")
+
+	configure_file(${plugin_lib} "${plugin_lib_dest}" COPYONLY)
+	message(STATUS "Copying plugin library: ${plugin_lib} to ${plugin_lib_dest}")
+endforeach ()
