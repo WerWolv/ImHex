@@ -71,5 +71,9 @@ get_bundle_main_executable("${BUNDLE_PATH}" IMHEX_EXECUTABLE)
 
 file(GLOB_RECURSE plugin_libs "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexpluglib")
 foreach(plugin_lib ${plugin_libs})
-	configure_file(${plugin_lib} "${BUNDLE_PATH}/Contents/MacOS/plugins/" COPYONLY)
+	get_filename_component(plugin_lib_name ${plugin_lib} NAME)
+	set(plugin_lib_dest "${BUNDLE_PATH}/Contents/MacOS/plugins/${plugin_lib_name}")
+
+	configure_file(${plugin_lib} "${plugin_lib_dest}" COPYONLY)
+	message(STATUS "Copying plugin library: ${plugin_lib} to ${plugin_lib_dest}")
 endforeach ()
