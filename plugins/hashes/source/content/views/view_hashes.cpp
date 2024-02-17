@@ -83,6 +83,16 @@ namespace hex::plugin::hashes {
                         if (ImGui::BeginTable("##hashes_tooltip", 3, ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit)) {
                             auto provider  = ImHexApi::Provider::get();
                             for (auto &function : hashFunctions) {
+                                if (provider == nullptr)
+                                    continue;
+
+                                std::vector<u8> bytes;
+                                try {
+                                    bytes = function.get(*selection, provider);
+                                } catch (const std::exception &) {
+                                    continue;
+                                }
+
                                 ImGui::TableNextRow();
                                 ImGui::TableNextColumn();
                                 ImGuiExt::TextFormatted("{}", function.getName());
@@ -91,8 +101,7 @@ namespace hex::plugin::hashes {
                                 ImGuiExt::TextFormatted("    ");
 
                                 ImGui::TableNextColumn();
-                                if (provider != nullptr)
-                                    ImGuiExt::TextFormatted("{}", crypt::encode16(function.get(*selection, provider)));
+                                ImGuiExt::TextFormatted("{}", crypt::encode16(bytes));
                             }
 
                             ImGui::EndTable();
@@ -218,8 +227,13 @@ namespace hex::plugin::hashes {
 
                 ImGui::TableNextColumn();
                 std::string result;
-                if (provider != nullptr && selection.has_value())
-                    result = crypt::encode16(function.get(*selection, provider));
+                if (provider != nullptr && selection.has_value()) {
+                    try {
+                        result = crypt::encode16(function.get(*selection, provider));
+                    } catch (const std::exception &e) {
+                        result = e.what();
+                    }
+                }
                 else
                     result = "???";
 
