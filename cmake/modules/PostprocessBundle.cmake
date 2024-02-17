@@ -69,7 +69,7 @@ endif()
 # Add a necessary rpath to the imhex binary
 get_bundle_main_executable("${BUNDLE_PATH}" IMHEX_EXECUTABLE)
 
-file(GLOB_RECURSE plugin_libs "${BUNDLE_PATH}/Contents/MacOS/plugins/*.hexpluglib")
+file(GLOB_RECURSE plugin_libs "${BUNDLE_PATH}/Contents/MacOS/*.hexpluglib")
 foreach(plugin_lib ${plugin_libs})
 	get_filename_component(plugin_lib_name ${plugin_lib} NAME)
 	set(plugin_lib_dest "${BUNDLE_PATH}/Contents/MacOS/plugins/${plugin_lib_name}")
