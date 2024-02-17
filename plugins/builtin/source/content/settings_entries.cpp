@@ -143,6 +143,8 @@ namespace hex::plugin::builtin {
                     for (const auto &pathString : pathStrings) {
                         m_paths.emplace_back(pathString);
                     }
+
+                    ImHexApi::System::setAdditionalFolderPaths(m_paths);
                 }
             }
 
