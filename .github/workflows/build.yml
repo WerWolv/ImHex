@@ -215,7 +215,6 @@ jobs:
           -DIMHEX_COMMIT_HASH_LONG="${GITHUB_SHA}"                                                  \
           -DIMHEX_COMMIT_BRANCH="${GITHUB_REF##*/}"                                                 \
           -DCPACK_PACKAGE_FILE_NAME="imhex-${{env.IMHEX_VERSION}}-macOS${{matrix.suffix}}-x86_64"   \
-          -DIMHEX_RESIGN_BUNDLE=ON                                                                  \
           ..
       
     - name: 🛠️ Build
