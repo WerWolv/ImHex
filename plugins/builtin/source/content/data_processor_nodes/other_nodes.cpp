@@ -10,6 +10,7 @@
 #include <wolv/utils/core.hpp>
 
 #include <content/helpers/diagrams.hpp>
+#include <pl/patterns/pattern.hpp>
 
 namespace hex::plugin::builtin {
 
@@ -389,8 +390,10 @@ namespace hex::plugin::builtin {
 
             if (outVars.contains(m_name)) {
                 std::visit(wolv::util::overloaded {
-                    [](const std::string &) {},
-                    [](pl::ptrn::Pattern *) {},
+                    [this](const std::string &) {
+                    },
+                    [this](const std::shared_ptr<pl::ptrn::Pattern> &) {
+                    },
                     [this](auto &&value) {
                         std::vector<u8> buffer(std::min<size_t>(sizeof(value), 8));
                         std::memcpy(buffer.data(), &value, buffer.size());

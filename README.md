@@ -25,17 +25,23 @@
   <a title="Translation" href="https://weblate.werwolv.net/projects/imhex/">
     <img alt="Translation" src="https://img.shields.io/weblate/progress/imhex?logo=weblate&logoColor=%23FFFFFF&server=https%3A%2F%2Fweblate.werwolv.net&style=for-the-badge">
   </a>
-  <a title="Documentation" href="https://imhex.werwolv.net/docs">
-    <img alt="Documentation" src="https://img.shields.io/badge/Docs-Available-brightgreen?logo=gitbook&logoColor=%23FFFFFF&style=for-the-badge">
-  </a>
   <a title="Plugins" href="https://github.com/WerWolv/ImHex/blob/master/PLUGINS.md">
     <img alt="Plugins" src="https://img.shields.io/badge/Plugins-Supported-brightgreen?logo=stackedit&logoColor=%23FFFFFF&style=for-the-badge">
   </a>
 </p>
 
 <p align="center">
+  <a title="Download the latest version of ImHex" href="https://imhex.download">
+    <img alt="Download the latest version of ImHex!" src="resources/dist/common/get_release_banner.png">
+  </a>
+  <a title="Download the latest nightly pre-release version of ImHex" href="https://imhex.download/#nightly">
+    <img alt="Download the latest nightly pre-release version of ImHex" src="resources/dist/common/get_nightly_banner.png">
+  </a>
   <a title="Use the Web version of ImHex right in your browser!" href="https://web.imhex.werwolv.net">
     <img alt="Use the Web version of ImHex right in your browser!" src="resources/dist/common/try_online_banner.png">
+  </a>
+  <a title="Read the documentation of ImHex!" href="https://docs.werwolv.net">
+    <img alt="Read the documentation of ImHex!" src="resources/dist/common/read_docs_banner.png">
   </a>
 </p>
 
