@@ -22,6 +22,7 @@ namespace hex::plugin::builtin {
         std::string s_windowTitle, s_windowTitleFull;
         u32 s_searchBarPosition = 0;
         ImGuiExt::Texture s_logoTexture;
+        bool s_showSearchBar = true;
 
         void createNestedMenu(std::span<const UnlocalizedString> menuItems, const char *icon, const Shortcut &shortcut, const ContentRegistry::Interface::impl::MenuCallback &callback, const ContentRegistry::Interface::impl::EnabledCallback &enabledCallback, const ContentRegistry::Interface::impl::SelectedCallback &selectedCallback) {
             const auto &name = menuItems.front();
@@ -133,7 +134,7 @@ namespace hex::plugin::builtin {
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImGui::GetColorU32(ImGuiCol_ScrollbarGrabHovered));
 
             const auto windowSize = ImHexApi::System::getMainWindowSize();
-            auto searchBoxSize = ImVec2(windowSize.x / 2.5, titleBarHeight);
+            auto searchBoxSize = ImVec2(s_showSearchBar ? windowSize.x / 2.5 : ImGui::CalcTextSize(s_windowTitle.c_str()).x, titleBarHeight);
             auto searchBoxPos = ImVec2((windowSize / 2 - searchBoxSize / 2).x, 0);
             auto titleBarButtonPosY = 0.0F;
 
@@ -142,8 +143,11 @@ namespace hex::plugin::builtin {
                 titleBarButtonPosY = searchBoxPos.y;
             #else
                 titleBarButtonPosY = 0;
-                searchBoxPos.y = 3_scaled;
-                searchBoxSize.y -= 3_scaled;
+
+                if (s_showSearchBar) {
+                    searchBoxPos.y = 3_scaled;
+                    searchBoxSize.y -= 3_scaled;
+                }
             #endif
 
             s_searchBarPosition = searchBoxPos.x;
@@ -201,32 +205,38 @@ namespace hex::plugin::builtin {
             ImGui::PopStyleVar();
 
             {
-                const auto buttonColor = [](float alpha) {
-                    return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
-                };
-
-                ImGui::PushStyleColor(ImGuiCol_Button, buttonColor(0.5F));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, buttonColor(0.7F));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, buttonColor(0.9F));
-                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
-                ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
-                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, scaled({ 1, 1 }));
-
                 ImGui::SetCursorPos(searchBoxPos);
-                if (ImGui::Button(s_windowTitle.c_str(), searchBoxSize)) {
-                    EventSearchBoxClicked::post(ImGuiMouseButton_Left);
+
+                if (s_showSearchBar) {
+                    const auto buttonColor = [](float alpha) {
+                        return ImU32(ImColor(ImGui::GetStyleColorVec4(ImGuiCol_DockingEmptyBg) * ImVec4(1, 1, 1, alpha)));
+                    };
+
+                    ImGui::PushStyleColor(ImGuiCol_Button, buttonColor(0.5F));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, buttonColor(0.7F));
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, buttonColor(0.9F));
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0_scaled);
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4_scaled);
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, scaled({ 1, 1 }));
+
+
+                    if (ImGui::Button(s_windowTitle.c_str(), searchBoxSize)) {
+                        EventSearchBoxClicked::post(ImGuiMouseButton_Left);
+                    }
+
+                    if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
+                        EventSearchBoxClicked::post(ImGuiMouseButton_Right);
+
+                    ImGui::PushTextWrapPos(300_scaled);
+                    if (!s_windowTitleFull.empty())
+                        ImGui::SetItemTooltip("%s", s_windowTitleFull.c_str());
+                    ImGui::PopTextWrapPos();
+
+                    ImGui::PopStyleVar(3);
+                    ImGui::PopStyleColor(3);
+                } else {
+                    ImGui::TextUnformatted(s_windowTitle.c_str());
                 }
-
-                if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-                    EventSearchBoxClicked::post(ImGuiMouseButton_Right);
-
-                ImGui::PushTextWrapPos(300_scaled);
-                if (!s_windowTitleFull.empty())
-                    ImGui::SetItemTooltip("%s", s_windowTitleFull.c_str());
-                ImGui::PopTextWrapPos();
-
-                ImGui::PopStyleVar(3);
-                ImGui::PopStyleColor(3);
             }
         }
 
@@ -476,6 +486,10 @@ namespace hex::plugin::builtin {
 
                 glfwSetWindowTitle(window, title.c_str());
             }
+        });
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_header_command_palette", [](const ContentRegistry::Settings::SettingsValue &value) {
+            s_showSearchBar = value.get<bool>(true);
         });
     }
 

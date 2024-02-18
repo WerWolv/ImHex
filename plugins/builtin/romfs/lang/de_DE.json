@@ -494,6 +494,7 @@
         "hex.builtin.setting.interface.restore_window_pos": "Fensterposition und Grösse wiederherstellen",
         "hex.builtin.setting.interface.scaling.native": "Nativ",
         "hex.builtin.setting.interface.scaling_factor": "Skalierung",
+        "hex.builtin.setting.interface.show_header_command_palette": "Befehlspalette in Titelbar anzeigen",
         "hex.builtin.setting.interface.style": "Stil",
         "hex.builtin.setting.interface.wiki_explain_language": "Wikipedia Sprache",
         "hex.builtin.setting.interface.window": "Fenster",
