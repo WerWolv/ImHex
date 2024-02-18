@@ -279,6 +279,8 @@ namespace hex {
                 Widgets::Widget* add(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedSubCategory, const UnlocalizedString &unlocalizedName, std::unique_ptr<Widgets::Widget> &&widget);
 
                 void printSettingReadError(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json::exception &e);
+
+                void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value);
             }
 
             template<std::derived_from<Widgets::Widget> T>
@@ -292,6 +294,28 @@ namespace hex {
             }
 
             void setCategoryDescription(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedDescription);
+
+            class SettingsValue {
+            public:
+                SettingsValue(nlohmann::json value) : m_value(std::move(value)) {}
+
+                template<typename T>
+                T get(std::common_type_t<T> defaultValue) const {
+                    try {
+                        auto result = m_value;
+                        if (result.is_number() && std::same_as<T, bool>)
+                            result = m_value.get<int>() != 0;
+                        if (m_value.is_null())
+                            result = defaultValue;
+
+                        return result.get<T>();
+                    } catch (const nlohmann::json::exception &e) {
+                        return defaultValue;
+                    }
+                }
+            private:
+                nlohmann::json m_value;
+            };
 
             template<typename T>
             [[nodiscard]] T read(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &defaultValue) {
@@ -314,7 +338,11 @@ namespace hex {
             template<typename T>
             void write(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const std::common_type_t<T> &value) {
                 impl::getSetting(unlocalizedCategory, unlocalizedName, value) = value;
+                impl::runOnChangeHandlers(unlocalizedCategory, unlocalizedName, value);
             }
+
+            using OnChangeCallback = std::function<void(const SettingsValue &)>;
+            u64 onChange(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const OnChangeCallback &callback);
 
         }
 

@@ -71,7 +71,8 @@ namespace hex {
         this->registerEventHandlers();
 
         ContentRegistry::Settings::impl::store();
-        EventSettingsChanged::post();
+        ContentRegistry::Settings::impl::load();
+
         EventWindowInitialized::post();
         EventImHexStartupFinished::post();
     }

@@ -16,8 +16,8 @@ namespace hex::plugin::windows {
     void addFooterItems() {
 
         static bool showResourceUsage = true;
-        EventSettingsChanged::subscribe([]{
-            showResourceUsage = ContentRegistry::Settings::read<bool>("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_resource_usage", true);
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.show_resource_usage", [](const ContentRegistry::Settings::SettingsValue &value) {
+            showResourceUsage = value.get<bool>(false);
         });
 
         ContentRegistry::Interface::addFooterItem([] {

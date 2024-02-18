@@ -215,7 +215,6 @@ namespace hex {
     EVENT_DEF(EventHighlightingChanged);
     EVENT_DEF(EventWindowClosing, GLFWwindow *);
     EVENT_DEF(EventRegionSelected, ImHexApi::HexEditor::ProviderRegion);
-    EVENT_DEF(EventSettingsChanged);
     EVENT_DEF(EventAbnormalTermination, int);
     EVENT_DEF(EventThemeChanged);
     EVENT_DEF(EventOSThemeChanged);

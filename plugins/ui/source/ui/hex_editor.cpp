@@ -78,7 +78,7 @@ namespace hex::ui {
     }
 
     HexEditor::~HexEditor() {
-        EventSettingsChanged::unsubscribe(this);
+
     }
 
     constexpr static u16 getByteColumnSeparatorCount(u16 columnCount) {

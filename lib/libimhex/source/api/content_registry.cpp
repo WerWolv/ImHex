@@ -8,6 +8,7 @@
 #include <hex/ui/view.hpp>
 #include <hex/data_processor/node.hpp>
 
+#include <algorithm>
 #include <filesystem>
 #include <jthread.hpp>
 
@@ -28,6 +29,13 @@ namespace hex {
         [[maybe_unused]] constexpr auto SettingsFile = "settings.json";
 
         namespace impl {
+
+            struct OnChange {
+                u32 id;
+                OnChangeCallback callback;
+            };
+
+            static AutoReset<std::map<std::string, std::map<std::string, std::vector<OnChange>>>> s_onChangeCallbacks;
 
             static AutoReset<nlohmann::json> s_settings;
             const nlohmann::json& getSettingsData() {
@@ -89,6 +97,14 @@ namespace hex {
 
                     if (!loaded)
                         store();
+
+                    for (const auto &[category, rest] : *impl::s_onChangeCallbacks) {
+                        for (const auto &[name, callbacks] : rest) {
+                            for (const auto &[id, callback] : callbacks) {
+                                callback(getSetting(category, name, {}));
+                            }
+                        }
+                    }
                 }
 
                 void store() {
@@ -160,6 +176,19 @@ namespace hex {
                 hex::log::error("Failed to read setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
             }
 
+            void runOnChangeHandlers(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const nlohmann::json &value) {
+                if (auto categoryIt = s_onChangeCallbacks->find(unlocalizedCategory); categoryIt != s_onChangeCallbacks->end()) {
+                    if (auto nameIt = categoryIt->second.find(unlocalizedName); nameIt != categoryIt->second.end()) {
+                        for (const auto &[id, callback] : nameIt->second) {
+                            try {
+                                callback(value);
+                            } catch (const nlohmann::json::exception &e) {
+                                log::error("Failed to run onChange handler for setting {}/{}: {}", unlocalizedCategory.get(), unlocalizedName.get(), e.what());
+                            }
+                        }
+                    }
+                }
+            }
 
         }
 
@@ -167,6 +196,43 @@ namespace hex {
             const auto category = insertOrGetEntry(*impl::s_categories, unlocalizedCategory);
 
             category->unlocalizedDescription = unlocalizedDescription;
+        }
+
+        u64 onChange(const UnlocalizedString &unlocalizedCategory, const UnlocalizedString &unlocalizedName, const OnChangeCallback &callback) {
+            static u64 id = 1;
+            (*impl::s_onChangeCallbacks)[unlocalizedCategory][unlocalizedName].emplace_back(id, callback);
+
+            auto result = id;
+            id += 1;
+
+            return result;
+        }
+
+        void removeOnChangeHandler(u64 id) {
+            bool done = false;
+            auto categoryIt = impl::s_onChangeCallbacks->begin();
+            for (; categoryIt != impl::s_onChangeCallbacks->end(); ++categoryIt) {
+                auto nameIt = categoryIt->second.begin();
+                for (; nameIt != categoryIt->second.end(); ++nameIt) {
+                    done = std::erase_if(nameIt->second, [id](const impl::OnChange &entry) {
+                        return entry.id == id;
+                    }) > 0;
+
+                    if (done) break;
+                }
+
+                if (done) {
+                    if (nameIt->second.empty())
+                        categoryIt->second.erase(nameIt);
+
+                    break;
+                }
+            }
+
+            if (done) {
+                if (categoryIt->second.empty())
+                    impl::s_onChangeCallbacks->erase(categoryIt);
+            }
         }
 
         namespace Widgets {

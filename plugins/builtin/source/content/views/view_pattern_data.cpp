@@ -12,12 +12,15 @@ namespace hex::plugin::builtin {
 
     ViewPatternData::ViewPatternData() : View::Window("hex.builtin.view.pattern_data.name", ICON_VS_DATABASE) {
         // Handle tree style setting changes
-        EventSettingsChanged::subscribe(this, [this] {
-            m_treeStyle = ui::PatternDrawer::TreeStyle(ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", 0));
+
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_tree_style", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_treeStyle = ui::PatternDrawer::TreeStyle(value.get<int>(0));
             for (auto &drawer : m_patternDrawer.all())
                 drawer->setTreeStyle(m_treeStyle);
+        });
 
-            m_rowColoring = ContentRegistry::Settings::read<int>("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", false);
+        ContentRegistry::Settings::onChange("hex.builtin.setting.interface", "hex.builtin.setting.interface.pattern_data_row_bg", [this](const ContentRegistry::Settings::SettingsValue &value) {
+            m_rowColoring = bool(value.get<int>(false));
             for (auto &drawer : m_patternDrawer.all())
                 drawer->enableRowColoring(m_rowColoring);
         });
@@ -48,7 +51,6 @@ namespace hex::plugin::builtin {
     }
 
     ViewPatternData::~ViewPatternData() {
-        EventSettingsChanged::unsubscribe(this);
         EventPatternEvaluating::unsubscribe(this);
         EventPatternExecuted::unsubscribe(this);
     }
