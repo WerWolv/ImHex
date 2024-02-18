@@ -95,7 +95,7 @@ namespace hex::plugin::builtin {
         if (buffer.size() < Size)
             return { };
 
-        auto format = (style == Style::Decimal) ? "{0}{1:d}" : ((style == Style::Hexadecimal) ? hex::format("{{0}}0x{{1:0{}X}}", Size * 2) : hex::format("{{0}}0o{{1:0{}o}}", Size * 3));
+        auto format = (style == Style::Decimal) ? "{0:d}" : ((style == Style::Hexadecimal) ? hex::format("0x{{0:0{}X}}", Size * 2) : hex::format("0o{{0:0{}o}}", Size * 3));
 
         T value = 0x00;
         std::memcpy(&value, buffer.data(), std::min(sizeof(T), Size));
@@ -103,9 +103,7 @@ namespace hex::plugin::builtin {
         if (Size != sizeof(T))
             number = hex::signExtend(Size * 8, number);
 
-        bool negative = number < 0;
-
-        return hex::format(format, negative ? "-" : "", std::abs(number));
+        return hex::format(format, number);
     }
 
     template<std::integral T, size_t Size = sizeof(T)>
