@@ -390,10 +390,8 @@ namespace hex::plugin::builtin {
 
             if (outVars.contains(m_name)) {
                 std::visit(wolv::util::overloaded {
-                    [this](const std::string &) {
-                    },
-                    [this](const std::shared_ptr<pl::ptrn::Pattern> &) {
-                    },
+                    [](const std::string &) {},
+                    [](const std::shared_ptr<pl::ptrn::Pattern> &) {},
                     [this](auto &&value) {
                         std::vector<u8> buffer(std::min<size_t>(sizeof(value), 8));
                         std::memcpy(buffer.data(), &value, buffer.size());
