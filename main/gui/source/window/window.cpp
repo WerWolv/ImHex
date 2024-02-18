@@ -37,6 +37,7 @@
 #include <GLFW/glfw3.h>
 #include <hex/ui/toast.hpp>
 #include <wolv/utils/guards.hpp>
+#include <fmt/printf.h>
 
 namespace hex {
 
@@ -119,23 +120,39 @@ namespace hex {
         });
     }
 
-    void Window::fullFrame() {
-        m_lastStartFrameTime = glfwGetTime();
-
-        glfwPollEvents();
-
-        static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
-        if (ImHexApi::System::impl::isWindowResizable()) {
-            glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
-            lastWindowSize = ImHexApi::System::getMainWindowSize();
-        } else {
-            glfwSetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
+    void handleException() {
+        try {
+            throw;
+        } catch (const std::exception &e) {
+            log::fatal("Unhandled exception: {}", e.what());
+        } catch (...) {
+            log::fatal("Unhandled exception: Unknown exception");
         }
+    }
 
-        // Render frame
-        this->frameBegin();
-        this->frame();
-        this->frameEnd();
+    void errorRecoverLogCallback(void*, const char* fmt, ...) {
+        va_list args;
+        va_start(args, fmt);
+
+        std::string message;
+        message.resize(std::vsnprintf(nullptr, 0, fmt, args));
+        std::vsnprintf(message.data(), message.size(), fmt, args);
+        message.resize(message.size() - 1);
+
+        va_end(args);
+
+        log::error("{}", message);
+    }
+
+    void Window::fullFrame() {
+        try {
+            this->frameBegin();
+            this->frame();
+            this->frameEnd();
+        } catch (...) {
+            ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
+            handleException();
+        }
     }
 
     void Window::loop() {
@@ -174,7 +191,19 @@ namespace hex {
                     const double timeout = std::max(0.0, (1.0 / LongSleepFPS) - (glfwGetTime() - m_lastStartFrameTime));
 
                     glfwWaitEventsTimeout(timeout);
+                } else {
+                    glfwPollEvents();
                 }
+            }
+
+            m_lastStartFrameTime = glfwGetTime();
+
+            static ImVec2 lastWindowSize = ImHexApi::System::getMainWindowSize();
+            if (ImHexApi::System::impl::isWindowResizable()) {
+                glfwSetWindowSizeLimits(m_window, 480_scaled, 360_scaled, GLFW_DONT_CARE, GLFW_DONT_CARE);
+                lastWindowSize = ImHexApi::System::getMainWindowSize();
+            } else {
+                glfwSetWindowSizeLimits(m_window, lastWindowSize.x, lastWindowSize.y, lastWindowSize.x, lastWindowSize.y);
             }
 
             this->fullFrame();
@@ -531,6 +560,8 @@ namespace hex {
 
         this->endNativeWindowFrame();
 
+        ImGui::ErrorCheckEndFrameRecover(errorRecoverLogCallback, nullptr);
+
         // Finalize ImGui frame
         ImGui::Render();
 
@@ -697,9 +728,7 @@ namespace hex {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
-            win->frameBegin();
-            win->frame();
-            win->frameEnd();
+            win->fullFrame();
         });
 
         // Register window resize callback
@@ -712,9 +741,7 @@ namespace hex {
             auto win = static_cast<Window *>(glfwGetWindowUserPointer(window));
             win->m_unlockFrameRate = true;
 
-            win->frameBegin();
-            win->frame();
-            win->frameEnd();
+            win->fullFrame();
         });
 
         glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double, double) {
