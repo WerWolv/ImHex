@@ -234,26 +234,26 @@ namespace hex {
     }
 
     void AchievementManager::storeProgress() {
+        nlohmann::json json;
+        for (const auto &[categoryName, achievements] : getAchievements()) {
+            json[categoryName] = nlohmann::json::object();
+
+            for (const auto &[achievementName, achievement] : achievements) {
+                json[categoryName][achievementName] = achievement->getProgress();
+            }
+        }
+
+        if (json.empty())
+            return;
+
         for (const auto &directory : fs::getDefaultPaths(fs::ImHexPath::Config)) {
             auto path = directory / AchievementsFile;
 
             wolv::io::File file(path, wolv::io::File::Mode::Create);
-            if (!file.isValid()) {
+            if (!file.isValid())
                 continue;
-            }
 
-            nlohmann::json json;
-
-            for (const auto &[categoryName, achievements] : getAchievements()) {
-                json[categoryName] = nlohmann::json::object();
-
-                for (const auto &[achievementName, achievement] : achievements) {
-                    json[categoryName][achievementName] = achievement->getProgress();
-                }
-            }
-
-            const auto result = json.dump(4);
-            file.writeString(result);
+            file.writeString(json.dump(4));
             break;
         }
     }
