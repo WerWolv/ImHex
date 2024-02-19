@@ -312,16 +312,14 @@ namespace hex::plugin::builtin {
                     }
                 };
 
-                if (ImGui::GetTime() > 0.2F) {
-                    static u32 menuEndPos = 0;
-                    if (menuEndPos < s_searchBarPosition) {
+                static u32 menuEndPos = 0;
+                if (menuEndPos <= s_searchBarPosition || ImGui::GetTime() < 0.2F) {
+                    drawMenu();
+                    menuEndPos = ImGui::GetCursorPosX();
+                } else {
+                    if (ImGui::BeginMenu(ICON_VS_MENU)) {
                         drawMenu();
-                        menuEndPos = ImGui::GetCursorPosX();
-                    } else {
-                        if (ImGui::BeginMenu(ICON_VS_MENU)) {
-                            drawMenu();
-                            ImGui::EndMenu();
-                        }
+                        ImGui::EndMenu();
                     }
                 }
 
